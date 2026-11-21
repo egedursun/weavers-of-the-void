@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named
+from aerona.agents.context.family_lines import family_lines
 from aerona.agents.context.scope import Scope
 from aerona.core.grammar import an, spoken
 from aerona.db.tables.entities import EntityRow
@@ -43,4 +44,5 @@ async def mortal_kin_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.append(
             f"your kin group {group.name}{joined}: {an(spoken(group.form))} by {spoken(group.membership)}, head {head}, exogamy {group.exogamy} of 100{land}"
         )
+    found.extend(await family_lines(scope, me))
     return found

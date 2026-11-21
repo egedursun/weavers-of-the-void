@@ -22,6 +22,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.interpretation import InterpretedEvent
 from aerona.domain.enums.mind import MemoryKind, PressureKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, LawKind
@@ -32,11 +33,13 @@ from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
 from aerona.engine.divine.politics import god_grudge
 from aerona.engine.divine.standing import neglect_of
+from aerona.engine.divine_conceptions.conception import syncretism_fit
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.economy.routes import link_partners
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.zealotry import drifted, record_heresy
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interpretation.work import interpret, reach_of
 from aerona.engine.lore.language import intelligibility, interpreter, register_barrier, tongues_of
 from aerona.engine.lore.traditions import absorb_festivals
 from aerona.engine.mind.book import ValueIndex
@@ -146,6 +149,7 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.ciphers",
     "table.creator",
     "table.cult_doctrines",
+    "table.deterrence_postures",
     "table.dimensions",
     "table.entities",
     "table.foreign_gods",
@@ -153,6 +157,7 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
+    "table.league_members",
     "table.name_registry",
     "table.node_births",
     "table.nodes",
@@ -422,10 +427,21 @@ async def preaching_barrier(ctx: TickContext, converter_id: int, community_id: i
     if not theirs or liturgy in theirs:
         return 1.0
     best = max([await intelligibility(ctx.session, ctx.rules, liturgy, other, ctx.epoch) for other in theirs] or [PERCENT])
-    if best >= PERCENT or await interpreter(ctx.session, ctx.rules, converter_id, community_id):
-        return 1.0
     floor = ctx.rules.interpreters.barrier_floor_pct / PERCENT
+    if best >= PERCENT:
+        return 1.0
+    if await interpreter(ctx.session, ctx.rules, converter_id, community_id):
+        return reach_of(ctx, await interpret(ctx, InterpretedEvent.SERMON, converter_id, community_id))
     return floor + (1 - floor) * best / PERCENT
+
+
+async def conceived_fit(ctx: TickContext, world: SpreadWorld, community_id: int, god_id: int) -> float:
+    if world.churches is None:
+        return 1.0
+    holder = world.churches.church_of(community_id)
+    newcomer = next(iter(world.churches.by_god.get(god_id, [])), None)
+    cults = (holder.cult.id if holder is not None else None, newcomer.cult.id if newcomer is not None else None)
+    return await syncretism_fit(ctx.session, ctx.rules.divine_conceptions.syncretism_fit_pct, *cults)
 
 
 def syncretism_weight(rules: Rules, world: SpreadWorld, community_id: int, god_id: int) -> float:
@@ -572,12 +588,14 @@ def nearness(ctx: TickContext, dominion: DominionBook, atlas: RegionAtlas, commu
     "table.language_registers",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.node_births",
     "table.nodes",
     "table.personality_values",
     "table.polity_members",
     "table.pressures",
     "table.region_dominion",
     "table.reverences",
+    "table.son_relations",
     "table.sons",
     "table.speaker_cohorts",
     "table.stars",
@@ -585,9 +603,21 @@ def nearness(ctx: TickContext, dominion: DominionBook, atlas: RegionAtlas, commu
     "table.trade_route_profiles",
     "table.trade_route_regions",
     "table.trade_route_tolls",
+    "table.tradition_profiles",
+    "table.traits",
     "table.treaty_clauses",
     "table.worlds",
     "trade_route.culture",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.son_relations",
 )
 async def religion_spread(ctx: TickContext) -> None:
     settings = ctx.rules.religion
@@ -636,7 +666,7 @@ async def religion_spread(ctx: TickContext) -> None:
             min(1.0, chosen.pull * understood * lenience * drift * nearness(ctx, dominion, atlas, community, chosen.god_id))
         ):
             continue
-        weight = syncretism_weight(ctx.rules, world, community.id, chosen.god_id)
+        weight = syncretism_weight(ctx.rules, world, community.id, chosen.god_id) * await conceived_fit(ctx, world, community.id, chosen.god_id)
         syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct * god_kinship(world, old, chosen.god_id) * weight)
         if (syncretisms if syncretic else conversions) >= (syncretism_cap if syncretic else conversion_cap):
             continue

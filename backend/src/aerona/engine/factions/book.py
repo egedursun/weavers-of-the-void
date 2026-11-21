@@ -65,6 +65,7 @@ CLASS_OF_KIND = MappingProxyType(
         FactionKind.SMUGGLING_RING: SocialClass.OUTCAST,
         FactionKind.PIRATE_CONFEDERACY: SocialClass.OUTCAST,
         FactionKind.WORKERS_UNION: SocialClass.ARTISAN,
+        FactionKind.WORKER_BODY: SocialClass.WORKER,
         FactionKind.ENGINEERS_SOCIETY: SocialClass.PROFESSIONAL,
         FactionKind.FINANCIERS: SocialClass.MERCHANT,
         FactionKind.VETERANS: SocialClass.WARRIOR,
@@ -96,6 +97,15 @@ class FactionBook:
             if member.faction_entity_id in entities:
                 book.members[member.faction_entity_id].append(member)
         return book
+
+
+async def move_member(session: AsyncSession, row: FactionMembershipRow, faction_id: int, epoch: int) -> FactionMembershipRow:
+    moved = FactionMembershipRow(
+        faction_entity_id=faction_id, mortal_entity_id=row.mortal_entity_id, rank=row.rank, joined_epoch=epoch, locked=list(row.locked or [])
+    )
+    await session.delete(row)
+    session.add(moved)
+    return moved
 
 
 def default_kind(faction: EntityRow) -> FactionKind:

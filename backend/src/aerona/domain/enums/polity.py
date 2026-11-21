@@ -173,6 +173,7 @@ class LawKind(StrEnum):
     MIND_STATUS = "mind_status"
     COPY_LAW = "copy_law"
     COPY_SUCCESSION = "copy_succession"
+    COMPETITION_LAW = "competition_law"
     ERASURE_LAW = "erasure_law"
     AUGMENT_LAW = "augment_law"
     NETWORK_LAW = "network_law"
@@ -268,6 +269,7 @@ class TreatyKind(StrEnum):
     COALITION = "coalition"
     DIVINE_PACT = "divine_pact"
     NAVAL_LIMIT = "naval_limit"
+    ARMS_LIMIT = "arms_limit"
 
 
 class InterworldTreatyKind(StrEnum):
@@ -311,6 +313,7 @@ class ClauseKind(StrEnum):
     NO_MIND_COMPULSION = "no_mind_compulsion"
     NO_PLAGUE_POWERS = "no_plague_powers"
     NO_DESIGNED_DISEASE = "no_designed_disease"
+    MASS_WEAPON_LIMIT = "mass_weapon_limit"
 
 
 class PartyRole(StrEnum):

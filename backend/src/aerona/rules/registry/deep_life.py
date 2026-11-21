@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 
 @dataclass(frozen=True)
-class DeepLifeRules:
+class DeepLifeRules(Spanned):
     lifespan_cap: int = rule(50000, 10, 1000000, RuleGroup.HEROES_AND_MORTALS, "Longest lifespan of a mortal (years)")
     role_farmer_leader_strength: int = rule(10, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Born folk leader: strength tendency")
     role_farmer_leader_charisma: int = rule(15, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Born folk leader: charisma tendency")
@@ -78,6 +78,7 @@ class DeepLifeRules:
     ruler_lifespan_bonus: int = rule(10, 0, 500, RuleGroup.HEROES_AND_MORTALS, "Extra lifespan of a ruler taking the throne (years)")
     first_village_chance: int = rule(60, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "A people without a homeland founds its first homeland (%)")
     extra_village_chance: int = rule(30, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "A populous people founds an additional village (%)")
+    village_years: int = span(5, 1, 500, RuleGroup.POPULATION_AND_GROWTH, "Years a crowded people takes to found each further village")
     village_migration_pct: int = rule(8, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Share of population migrating to the new village (%)")
     village_prosperity: int = rule(40, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Prosperity of a new village")
     village_defense: int = rule(20, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Defense of a new village")

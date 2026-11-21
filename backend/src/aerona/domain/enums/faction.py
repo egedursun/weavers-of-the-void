@@ -36,6 +36,7 @@ class FactionKind(StrEnum):
     ENGINEERS_SOCIETY = "engineers_society"
     FINANCIERS = "financiers"
     VETERANS = "veterans"
+    WORKER_BODY = "worker_body"
 
 
 class FactionScale(StrEnum):
@@ -118,3 +119,4 @@ class MovementCause(StrEnum):
     LAND_REFORM = "land_reform"
     FRANCHISE = "franchise"
     PEACE = "peace"
+    CONSERVATION = "conservation"

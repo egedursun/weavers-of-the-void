@@ -139,7 +139,7 @@ async def bond(session: AsyncSession, source: int, target: int, kind: BondKind, 
     await BondRepository(session).connect(BondDraft(source, target, kind, epoch))
 
 
-async def mortal(session: AsyncSession, name: str, world: CoreWorld, location_id: int, **stats: int) -> EntityRow:
+async def mortal(session: AsyncSession, name: str, world: CoreWorld, location_id: int | None, **stats: int) -> EntityRow:
     values = {"hp": 60, "strength": 40, "agility": 40, "intellect": 40, "charisma": 40, "age": 25, "lifespan": 70} | stats
     return await entity(session, name, EntityType.MORTAL, MortalStats(**values), world_id=world.world.id, location_id=location_id)
 

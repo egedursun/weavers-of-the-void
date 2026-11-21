@@ -20,6 +20,7 @@ from aerona.domain.enums.made import IntrusionAim, ReplicatorOutput, ReplicatorS
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind
 from aerona.engine.context import TickContext
+from aerona.engine.mass_weapons.limits import past_limit
 
 WEAPON_ORDERS = frozenset({OrderKind.DESTROY, OrderKind.GUARD})
 METHOD_CLAUSES = frozenset(
@@ -33,6 +34,7 @@ METHOD_CLAUSES = frozenset(
         ClauseKind.NO_MIND_COMPULSION,
         ClauseKind.NO_PLAGUE_POWERS,
         ClauseKind.NO_DESIGNED_DISEASE,
+        ClauseKind.MASS_WEAPON_LIMIT,
     }
 )
 SEIZED = "it seized what the other side's minds and machines obeyed"
@@ -155,9 +157,10 @@ async def method_breached(ctx: TickContext, clause: TreatyClauseRow) -> str | No
         ClauseKind.SOLDIER_COPY_BAN: (lambda: copied_soldiers(ctx, actors), "it copied its soldiers"),
         ClauseKind.AUTONOMOUS_WEAPONS_BAN: (lambda: armed_with_orders(ctx, actors, victims), "it set instructed weapons on the other side"),
         ClauseKind.REPLICATOR_WEAPON_BAN: (lambda: replicator_weapons(ctx, actors, victims), "it loosed self-making machines on the other side's lands"),
-        ClauseKind.NO_MIND_COMPULSION: (lambda: compelled(ctx, actors, victims), "it bent the minds of the other side's people by a power"),
+        ClauseKind.NO_MIND_COMPULSION: (lambda: compelled(ctx, actors, victims), "it compelled the minds of the other side's people by a power"),
         ClauseKind.NO_PLAGUE_POWERS: (lambda: plague_powers(ctx, actors), "it used powers that harm the body"),
         ClauseKind.NO_DESIGNED_DISEASE: (lambda: designed_against(ctx, actors, victims), "it made a disease aimed at the other side"),
+        ClauseKind.MASS_WEAPON_LIMIT: (lambda: past_limit(ctx, actors, clause), "it built or tested weapons of mass harm past its limit"),
     }
     test, reason = checks[kind]
     return reason if await test() else None

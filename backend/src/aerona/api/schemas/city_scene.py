@@ -1,5 +1,6 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.city_rules import ConurbationGovernance
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand, TerrainKind
 from aerona.domain.enums.place import PlaceKind
@@ -67,6 +68,12 @@ class ZoneShare(ApiModel):
     buildings: int
 
 
+class CityConurbation(ApiModel):
+    core: NodeRef
+    members: list[NodeRef]
+    governance: ConurbationGovernance
+
+
 class CitySceneView(ApiModel):
     town: NodeRef
     morphology: Morphology
@@ -84,6 +91,7 @@ class CitySceneView(ApiModel):
     castes: list[CasteQuarter]
     buildings: list[CityBuildingView]
     zones: list[ZoneShare]
+    conurbation: CityConurbation | None
 
 
 class LandTileView(ApiModel):

@@ -29,6 +29,7 @@ from aerona.engine.economy.routes import found_route, load_routes
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.environment.control import world_seam_id
 from aerona.engine.environment.works import works_by_region
+from aerona.engine.monetary.authorities import establish
 from aerona.engine.primitives.queries import active_bonds
 
 BACKFILL_FIXUP = "economy.w4_backfill"
@@ -178,6 +179,7 @@ async def backfill_currencies(ctx: TickContext, book: EconomyBook) -> int:
         )
         ctx.session.add(currency)
         await ctx.session.flush()
+        await establish(ctx, currency)
         for bond in await active_bonds(ctx.session, [BondKind.OWNS], targets=[coin.id]):
             row = await ctx.session.get(CommunitySocietyRow, bond.source_node_id)
             if row is not None and row.currency_id is None:

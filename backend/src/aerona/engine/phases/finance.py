@@ -30,6 +30,7 @@ from aerona.engine.phase import Phase
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_leagues",
     "table.polity_members",
     "table.polity_profiles",
     "table.pressures",
@@ -74,7 +75,9 @@ async def trade_policy(ctx: TickContext) -> None:
     "table.cult_doctrines",
     "table.currencies",
     "table.faction_profiles",
+    "table.issued_securities",
     "table.loans",
+    "table.polity_members",
     "table.polity_profiles",
 )
 @writes("table.credit_profiles", "table.currencies", "table.war_sides", "table.wars")

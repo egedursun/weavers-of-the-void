@@ -29,6 +29,7 @@ from aerona.engine.cycles.book import asabiyya_factor
 from aerona.engine.cycles.breeding import breeding_factor, fixed_sexes_at
 from aerona.engine.cycles.sides import first_sex, system_of_people
 from aerona.engine.demography.cohorts import cohort_rows
+from aerona.engine.fertility_means.factor import people_factor
 from aerona.engine.mind.book import stored_values
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -157,6 +158,8 @@ async def fertility_factor(ctx: TickContext, community_id: int) -> float:
     transition = await ctx.session.get(DemographicTransitionRow, community_id)
     factor = (transition.fertility_pct if transition is not None else PERCENT) / PERCENT
     factor *= await breeding_factor(ctx.session, ctx.rules, community_id)
+    community = await ctx.session.get(EntityRow, community_id)
+    factor *= await people_factor(ctx.session, ctx.rules, await people_id_of(ctx.session, community))
     ratio = await ctx.session.get(SexRatioRow, community_id) if await fixed_sexes_at(ctx.session, community_id) else None
     if ratio is not None and ratio.males_per_hundred < table.skew_at:
         several = await scarce_side_plural(ctx, community_id)

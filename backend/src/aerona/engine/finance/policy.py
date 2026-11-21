@@ -29,6 +29,7 @@ from aerona.engine.economy.stocks import goods_of
 from aerona.engine.finance.contraband import BannedMaterials, banned_materials
 from aerona.engine.industry.energy import industry_row
 from aerona.engine.intrigue.beliefs import evidence_trusts
+from aerona.engine.leagues.book import unions_of
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import StepDraft, record
@@ -81,6 +82,8 @@ class PolicyBook:
     access: dict[int, int] = field(default_factory=dict)
     informed: dict[int, float] = field(default_factory=dict)
     banned: dict[int, BannedMaterials] = field(default_factory=dict)
+    unions: dict[int, set[int]] = field(default_factory=dict)
+    union_tariffs: dict[int, int] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, ctx: TickContext, book: EconomyBook) -> "PolicyBook":
@@ -101,6 +104,7 @@ class PolicyBook:
             if gang.home_entity_id is not None:
                 found.outlaws.setdefault(gang.home_entity_id, gang.faction_entity_id)
         found.banned = await banned_materials(ctx, laws, [community.id for community in book.communities])
+        found.unions, found.union_tariffs = await unions_of(ctx.session)
         evidence = await evidence_trusts(ctx.session, [community.id for community in book.communities])
         for community in book.communities:
             banned = {good for law, goods in ILLEGAL_GOODS.items() if laws.in_force(community.id, law) is not None for good in goods}
@@ -145,11 +149,16 @@ class PolicyBook:
     def terms(self, seller: int, buyer: int, commodity: CommodityKind) -> Terms:
         seller_realm, buyer_realm = self.realm_of(seller), self.realm_of(buyer)
         foreign = seller_realm != buyer_realm
+        shared = self.unions.get(buyer_realm or -1, set()) & self.unions.get(seller_realm or -1, set())
         free = foreign and (
-            self.rate(buyer_realm, TradePolicyKind.FREE_TRADE, commodity, seller_realm) > 0
-            and self.rate(seller_realm, TradePolicyKind.FREE_TRADE, commodity, buyer_realm) > 0
+            bool(shared)
+            or (
+                self.rate(buyer_realm, TradePolicyKind.FREE_TRADE, commodity, seller_realm) > 0
+                and self.rate(seller_realm, TradePolicyKind.FREE_TRADE, commodity, buyer_realm) > 0
+            )
         )
-        tariff = self.rate(buyer_realm, TradePolicyKind.TARIFF, commodity, seller_realm) if foreign and not free else 0
+        common = max((self.union_tariffs.get(league, 0) for league in self.unions.get(buyer_realm or -1, set())), default=0)
+        tariff = max(self.rate(buyer_realm, TradePolicyKind.TARIFF, commodity, seller_realm), common) if foreign and not free else 0
         embargo = foreign and (
             any(self.rate(buyer_realm, kind, commodity, seller_realm) > 0 or self.rate(seller_realm, kind, commodity, buyer_realm) > 0 for kind in BARRING)
             or self.rate(seller_realm, TradePolicyKind.EXPORT_BAN, commodity, None) > 0

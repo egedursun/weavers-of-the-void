@@ -1175,9 +1175,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You bind two or more parties (realms, communities, houses, cults, beasts) by a typed treaty sealed in your name: its kind decides how it behaves "
         "and its clauses run every age. Costs essence.",
         {
-            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact or naval_limit",
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact, naval_limit or arms_limit",
             "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
-            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit, autonomous_weapons_ban, mind_seizure_ban, soldier_copy_ban, replicator_weapon_ban, civil_network_shield, civil_host_shield, no_mind_compulsion, no_plague_powers, no_designed_disease), who owes it, who gains, and its terms by name, as the clause kind requires",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit, autonomous_weapons_ban, mind_seizure_ban, soldier_copy_ban, replicator_weapon_ban, civil_network_shield, civil_host_shield, no_mind_compulsion, no_plague_powers, no_designed_disease, mass_weapon_limit), who owes it, who gains, and its terms by name, as the clause kind requires",
             "epochs": "How many ages it holds; empty for ever",
             "parties.party_id": "The party's id",
             "parties.role": "Its role: signatory, overlord, vassal or guarantor",
@@ -1864,6 +1864,146 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "stance": "The value it leans on",
             "lean": "How far it leans, from -100 against to 100 for",
             "reason": "Why you turn it",
+        },
+    ),
+    T.BREAK_MARKET: ToolText(
+        "Open a market within your reach to newcomers for one good: its barriers to entry fall, the compact that fixes its terms breaks, "
+        "a price war in it ends and a single seller there is split in two.",
+        {"market_id": "The market town", "goods_kind": "The good whose market you open", "reason": "Why you open it"},
+    ),
+    T.REVEAL_NATURE: ToolText(
+        "Show a faith within your reach how the divine is on one axis: how many gods there are, how near they are, whether they are "
+        "persons, forces or a principle, or the place of the Creator.",
+        {
+            "faith_id": "The faith",
+            "axis": "The axis ({{ conception_axes | join(', ') }})",
+            "stance": "How the divine is on it: for count {{ divine_counts | join(', ') }}; for nearness {{ divine_nearness | join(', ') }}; "
+            "for personhood {{ divine_personhood | join(', ') }}; for creator {{ creator_places | join(', ') }}",
+            "reason": "Why you show it",
+        },
+    ),
+    T.LEAD_CREATURES: ToolText(
+        "Lead a group of creatures within your reach for a while: to raid the settlements of its land, to withdraw "
+        "from it, to guard it and leave its towns be, or to grow.",
+        {"group_id": "The group", "aim": "What they turn to ({{ group_aims | join(', ') }})", "reason": "Why you lead them"},
+    ),
+    T.RAISE_SEA: ToolText(
+        "Raise a sea within your reach in a great wave that strikes all its coasts, higher where they funnel it, harming the warned less.",
+        {"sea_id": "The sea, as one of its waters", "strength": "How strong the wave is, from 1 to 100", "reason": "Why you raise it"},
+    ),
+    T.HONOUR_SERVANT: ToolText(
+        "Honour a being within your reach who has served you, with your own honour; they gain renown and goodwill toward you.",
+        {"holder_id": "The one you honour", "reason": "Why you honour them"},
+    ),
+    T.MOVE_FERTILITY: ToolText(
+        "Change how well a means of preventing, seeking or ending conception works for a people within your reach, teaching it to them if they lack it.",
+        {
+            "community_id": "The people, or a community of it",
+            "means": "The means",
+            "reliability_change": "How much more or less reliable it becomes, from -50 to 50",
+            "reason": "Why you change it",
+        },
+    ),
+    T.EASE_BODY: ToolText(
+        "Ease a lasting condition of a being within your reach, whatever brought it on; each touch lightens it by one step and the lightest goes entirely.",
+        {"being_id": "The being", "condition_id": "The condition", "reason": "Why you ease it"},
+    ),
+    T.KEEP_THE_DEAD: ToolText(
+        "Set a guard over a grave within your reach: hidden, sealed, watched, trapped, or, where the laws of the land allow, cursed or warded.",
+        {"grave_id": "The grave", "guard": "The guard to set", "reason": "Why you keep it"},
+    ),
+    T.CONFUSE_TONGUES: ToolText(
+        "Confuse the tongues of an exchange within your reach, so that what was said between its sides is carried wrongly.",
+        {"event_id": "The exchange", "reason": "Why you confuse it"},
+    ),
+    T.MOVE_HEARTS: ToolText(
+        "Give the people of a settlement within your reach a feeling, which then spreads among its people, feeds its crowd and leans its choices.",
+        {"place_id": "The settlement", "feeling": "The feeling", "strength": "How strong, from 1 to 100", "reason": "Why you move them"},
+    ),
+    T.STIR_KIN: ToolText(
+        "Stir the family of a house within your reach: toward favour for a child, rivalry between children, mending those cast out, or more sway for its elder.",
+        {"household_or_house_id": "The house", "kind": "Toward what: favour, rivalry, reconcile or elder", "reason": "Why you stir it"},
+    ),
+    T.HALLOW_WILD: ToolText(
+        "Hallow a land within your reach as wild, so that hunting and logging there are barred by divine decree and its protection grows.",
+        {"region_id": "The land", "reason": "Why you hallow it"},
+    ),
+    T.BLESS_CITY: ToolText(
+        "Bless a settlement within your reach in one of its services, raising how well it is kept, or in one of its rules, raising how well it is kept to.",
+        {
+            "settlement_id": "The settlement",
+            "service_or_rule": "A service (refuse, lighting, water_distribution, street_cleaning, night_watch, burial_ground or market_inspection) or a rule (allowed_uses, banned_uses, height_limit, density_limit, build_material, fire_spacing, frontage_rule or green_share)",
+            "reason": "Why you bless it",
+        },
+    ),
+    T.CLOSE_THE_WAY: ToolText(
+        "Close a way between worlds for some epochs, so that no host, people or trade crosses it.",
+        {"route_id": "The way", "epochs": "For how many epochs, from 1 to 5", "reason": "Why you close it"},
+    ),
+    T.STILL_WEAPON: ToolText(
+        "Still a weapon of mass harm within your reach: whatever was made of it is undone and its making starts again.",
+        {"weapon_id": "The weapon", "reason": "Why you still it"},
+    ),
+    T.SWAY_OCCUPATION: ToolText(
+        "Turn an occupation within your reach to another rule, or have a measure imposed on the occupied land.",
+        {
+            "occupation_id": "The occupation",
+            "rule_or_measure": "A rule (military, civil_by_occupier, local_puppet, annexation or protectorate) or a measure (curfew, hostages, collective_punishment, deportation, requisition, ban_on_gathering or amnesty_offer)",
+            "reason": "Why you sway it",
+        },
+    ),
+    T.STIR_MEMORY: ToolText(
+        "Stir the memory of a fallen realm within your reach, so that a movement to raise it again grows stronger.",
+        {"fallen_polity_id": "The fallen realm", "reason": "Why you stir it"},
+    ),
+    T.SWAY_CULT: ToolText(
+        "Raise or lower the intensity of the cult of a living leader within your reach.",
+        {"cult_id": "The cult", "intensity_change": "How far its intensity moves, from -30 to 30", "reason": "Why you move it"},
+    ),
+    T.WEIGH_RECKONING: ToolText(
+        "Strengthen one measure of a reckoning in a realm within your reach, or add it if the reckoning lacks it.",
+        {
+            "reckoning_id": "The reckoning",
+            "measure": "Which measure: tribunal, truth_inquiry, office_bar, amnesty, amnesty_for_confession, restitution, reparation_to_victims, memorial or record_opening",
+            "reason": "Why you weigh it",
+        },
+    ),
+    T.SWAY_VOTE: ToolText(
+        "Turn a vote of the people within your reach toward yes or no before it is held.",
+        {"referendum_id": "The vote", "side": "Which way it turns: yes or no", "reason": "Why you turn it"},
+    ),
+    T.CALL_TO_STEP_ASIDE: ToolText(
+        "Call one within your reach who holds an office of a realm or heads an organisation to step aside. Most heed it and leave by "
+        "abdication, retirement, resignation, withdrawal or exile, as their state asks; some refuse.",
+        {"holder_id": "The one you call", "reason": "Why you call them"},
+    ),
+    T.BIND_LEAGUE: ToolText(
+        "Strengthen or loosen a league of realms whose members are within your reach. Its strength weighs on whether members obey "
+        "its decisions and pay its dues.",
+        {"league_id": "The league", "strength_change": "How far its strength moves, from -30 to 30", "reason": "Why you move it"},
+    ),
+    T.STIR_MARKET_MOOD: ToolText(
+        "Lift or sink the mood of an exchange in a town within your reach. Mood moves every price listed there; a lifted mood feeds "
+        "bubbles, a sunk one feeds crashes.",
+        {"exchange_id": "The exchange", "direction": "Which way the mood turns: up or down", "reason": "Why you move it"},
+    ),
+    T.SHAKE_COIN: ToolText(
+        "Shake or steady trust in a currency whose issuer is within your reach. Trust moves prices, the value of the currency against "
+        "others and whether a peg can be held.",
+        {"currency_id": "The currency", "trust_change": "How far trust moves, from -30 to 30", "reason": "Why you move it"},
+    ),
+    T.STIR_LABOUR: ToolText(
+        "Stir the workers of one trade in a town within your reach: the body that speaks for them gains solidarity, or they found one "
+        "if none does. Solidarity strengthens them when they bargain and keeps them out longer in a dispute.",
+        {"settlement_id": "The town", "trade": "The trade whose workers you stir", "reason": "Why you stir them"},
+    ),
+    T.SWAY_ORG: ToolText(
+        "Set the course of an organisation within your reach, over the head of its decision body; the course decides what it spends, "
+        "whom it lobbies, what it researches and whom it bids for.",
+        {
+            "org_id": "The organisation",
+            "strategy": "Its new course: grow, hold, specialise, diversify, expand_abroad, integrate_up, integrate_down, lobby, research or withdraw",
+            "reason": "Why you set it",
         },
     ),
     T.STIR_REVIVAL: ToolText(

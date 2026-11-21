@@ -472,7 +472,8 @@ async def advance(ctx: TickContext, row: OrderTransitionRow, tally: OrderTally) 
         await record(ctx, "economy.transition_stage", roles={IncidentRole.AUTHORITY: realm.id}, facts={"transition": row.kind, "stage": row.stage})
         return
     await transfer_holdings(ctx, row, realm, tally)
-    if row.resistance >= table.fail_from:
+    resistance = await lagged(ctx, BalanceLoop.COLLECTIVISATION_REVERSAL, realm.id, row.resistance, subject=row.id)
+    if resistance >= table.fail_from:
         row.stage, row.ended_epoch = TransitionStage.FAILED, ctx.epoch
         profile = await ctx.session.get(PolityProfileRow, realm.id)
         if profile is not None and "stability" not in profile.locked:

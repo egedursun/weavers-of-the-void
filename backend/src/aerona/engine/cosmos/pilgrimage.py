@@ -13,9 +13,9 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.environment.places import holy_place_ids
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import add_flag, canon, connect, flags_by_entity, living_entity
-from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
@@ -59,7 +59,7 @@ async def reach_holy_site(ctx: TickContext, rules: Rules, pilgrims: EntityRow, w
     await add_flag(ctx.session, site.id, EntityFlag.PILGRIMAGE_SITE, ctx.epoch)
     if not await BondRepository(ctx.session).exists_between(pilgrims.id, site.id, BondKind.CELEBRATES):
         await connect(ctx.session, pilgrims.id, site.id, BondKind.CELEBRATES, ctx.epoch, description="pilgrimage")
-    shift_stat(pilgrims, "piety", rules.travel.pilgrimage_piety)
+    await shift_standing(ctx.session, pilgrims, "piety", rules.travel.pilgrimage_piety, ctx.epoch)
     if patron is not None:
         patron.fame += rules.travel.pilgrimage_renown
     return site, StepDraft(

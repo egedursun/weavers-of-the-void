@@ -18,6 +18,7 @@ from aerona.domain.enums.settlement import DistrictKind, WaterSupply
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import STANDING_STATES
 from aerona.domain.enums.urban import Morphology, UrbanService
+from aerona.engine.city_rules.effects import municipal_cover
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -128,9 +129,10 @@ async def cover_town(ctx: TickContext, settlement: EntityRow, tally: CoverageTal
         (row.district_id, row.service): row
         for row in await ctx.session.scalars(select(DistrictServiceRow).where(DistrictServiceRow.district_id.in_([d.id for d in districts])))
     }
+    municipal = await municipal_cover(ctx.session, [district.id for district in districts], settlement.id)
     for district in districts:
         for service in UrbanService:
-            share = supply[service][district.id] / max(1.0, people[district.id]) * PERCENT
+            share = max(supply[service][district.id] / max(1.0, people[district.id]) * PERCENT, municipal.get((district.id, service), 0))
             if service is UrbanService.WATER and infrastructure is not None:
                 share = max(share, WATER_OF[infrastructure.water])
             row = stored.get((district.id, service))

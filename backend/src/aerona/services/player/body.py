@@ -5,6 +5,7 @@ from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, digit_keys, digit
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an, spoken
+from aerona.db.tables.agentless_conditions import AgentlessConditionRow
 from aerona.db.tables.body import (
     ARMOUR_COLUMNS,
     CAPACITY_COLUMNS,
@@ -22,6 +23,7 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mortal import KindVariantRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.agentless_conditions import ConditionCause
 from aerona.domain.enums.body import (
     BodyBuild,
     BodyFunction,
@@ -140,6 +142,8 @@ class EditCondition(Command):
     severity: int | None = Field(default=None, ge=SEVERITY_MIN, le=SEVERITY_MAX)
     visible: bool | None = None
     part: BodyPart | None = None
+    cause: ConditionCause | None = None
+    kind_id: int | None = None
 
 
 class EditProsthesis(Command):
@@ -171,6 +175,8 @@ class AddCondition(BearerTarget):
     variant_id: int | None = None
     severity: int = Field(default=SEVERITY_MIN, ge=SEVERITY_MIN, le=SEVERITY_MAX)
     part: str | None = Field(default=None, pattern=PART_PATTERN)
+    cause: ConditionCause | None = None
+    kind_id: int | None = None
 
 
 class ConditionTarget(Command):
@@ -374,13 +380,19 @@ async def world_material(scope: PlayerScope, material_id: int | None) -> WorldMa
     return found
 
 
+async def known_kind(scope: PlayerScope, kind_id: int | None) -> None:
+    if kind_id is not None and await scope.session.get(AgentlessConditionRow, kind_id) is None:
+        raise NotFoundError("No such kind of condition.")
+
+
 @player_action("body:condition_edit", ActionKind.OTHER)
 async def edit_condition(scope: PlayerScope, command: EditCondition) -> Effect:
     row = await scope.session.get(ConditionRow, command.condition_id)
     if row is None:
         raise NotFoundError("No such condition.")
     bearer = await bearer_of(scope, row.bearer_node_id)
-    for name in ("severity", "visible", "part"):
+    await known_kind(scope, command.kind_id)
+    for name in ("severity", "visible", "part", "cause", "kind_id"):
         value = getattr(command, name)
         if value is not None:
             setattr(row, name, value)
@@ -475,6 +487,8 @@ async def add_condition(scope: PlayerScope, command: AddCondition) -> Effect:
         if variant is None or variant.family is not KindFamily.CONDITION or variant.base != command.kind.value:
             raise ValidationFailedError(f"That is not a kind of {_label(command.kind.value)}.")
         row.variant_id = variant.id
+    await known_kind(scope, command.kind_id)
+    row.cause, row.kind_id = command.cause or row.cause, command.kind_id or row.kind_id
     return Effect(f"{bearer.name} now lives with {_label(command.kind.value)}.", target_node_id=bearer.id, values={"condition_id": row.id})
 
 

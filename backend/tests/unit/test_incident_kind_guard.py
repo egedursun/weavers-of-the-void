@@ -37,6 +37,17 @@ def test_a_name_handed_to_a_number_fact_is_caught() -> None:
     assert module.shape_problems(spec, right) == []
 
 
+def test_several_nodes_handed_to_a_single_role_are_caught() -> None:
+    module = guard()
+    spec = INCIDENT_KINDS["tongue.fault_found"]
+    single = next(role for role in spec.roles if not role.many)
+    name = single.role.name
+    wrong = call_of(f'record(ctx, "tongue.fault_found", roles={{IncidentRole.{name}: [one.id for one in folk]}}, facts={{}})')
+    assert module.many_problems(spec, wrong) == [f"gives several nodes to the single role {single.role.value} of tongue.fault_found; declare it many"]
+    many = replace(spec, roles=tuple(replace(role, many=True) if role is single else role for role in spec.roles))
+    assert module.many_problems(many, wrong) == []
+
+
 def test_a_step_built_for_a_kind_that_does_not_declare_it_is_caught(monkeypatch: pytest.MonkeyPatch) -> None:
     module = guard()
     arrival = INCIDENT_KINDS["travel.arrival"]

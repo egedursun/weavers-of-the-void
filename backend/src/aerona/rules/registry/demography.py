@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.POPULATION_AND_GROWTH
 S = RuleGroup.ECONOMY
@@ -47,7 +47,7 @@ class DemographyRules:
 
 
 @dataclass(frozen=True)
-class LabourRules:
+class LabourRules(Spanned):
     satisfaction_pct: int = rule(20, 0, 100, S, "Output gained by a content class and lost by a bitter one, at the extremes (%)")
     soldier_pct: int = rule(60, 0, 100, S, "Share of warriors who soldier rather than farm in peace (%)")
     price_pull_pct: int = rule(30, 0, 100, S, "How strongly dear goods pull workers into the trades that make them (%)")
@@ -61,6 +61,39 @@ class LabourRules:
     resource_workers_per_thousand: int = rule(15, 0, 1000, S, "Further workers each worked deposit draws per thousand people of its community")
     corvee_unrest: int = rule(8, 0, 100, S, "Unrest a corvee of the whole people raises in a settlement each epoch")
     corvee_satisfaction: int = rule(15, 0, 100, S, "Contentment farmers and serfs lose under a corvee of the whole people")
+    fund_per_member: int = rule(2, 0, 50, S, "Coin each member of a worker body pays into its strike fund in an epoch")
+    strike_output_loss_pct: int = rule(80, 0, 100, S, "Share of a trade's output a full strike of its workers stops (%)")
+    lockout_cost_pct: int = rule(30, 0, 100, S, "Share of the wages it holds back that a hirer loses each epoch it locks its workers out (%)")
+    substitute_strength_pct: int = rule(
+        50, 0, 100, S, "Strength a hirer gains in bargaining when bound workers, made minds or constructs could do the work (%)"
+    )
+    spread_chance_pct: int = rule(10, 0, 100, S, "Chance in an epoch that a won dispute stirs the same trade in another town (%)")
+    banned_body_prosecution_pct: int = rule(20, 0, 100, S, "Chance in an epoch that a banned worker body is prosecuted (%)")
+    found_chance_pct: int = rule(8, 0, 100, S, "Chance in an epoch that the bitter workers of a trade found a worker body (%)")
+    found_min_workers: int = rule(80, 1, 1000000, S, "Workers a trade must hold in a town before they found a worker body")
+    strike_pay: int = rule(1, 0, 100, S, "Coin a worker body's fund pays each worker out in an epoch")
+    wage_per_strength: int = rule(50, 0, 200, S, "How far wages move from the customary for each hundred points of difference in strength (%)")
+    dispute_gap: int = rule(15, 0, 100, S, "Strength a hirer must hold over a worker body before the body takes to a dispute rather than agree")
+    lockout_gap: int = rule(30, 0, 100, S, "Strength a hirer must hold over a worker body before it locks the workers out")
+    lockout_chance_pct: int = rule(20, 0, 100, S, "Chance in an epoch that a much stronger hirer locks out a body that bargains with it (%)")
+    contract_term_years: int = span(5, 1, 500, S, "Years a labour contract runs before it is bargained again")
+    dispute_max_years: int = span(2, 1, 500, S, "Years after which a labour dispute that neither side has won is settled")
+    satisfaction_per_term: int = rule(5, 0, 100, S, "Contentment the workers of a trade gain or lose when their contract is good or bad, at the extremes")
+    solidarity_won: int = rule(15, 0, 100, S, "Solidarity a worker body gains when it wins a dispute and loses when it loses one")
+    strikebreaker_substitutes_pct: int = rule(40, 0, 100, S, "Share of substitute workers above which a hirer brings in strikebreakers (%)")
+    strikebreaker_hits: int = rule(2, 0, 20, S, "Members of a worker body hurt when strikebreakers are brought in")
+    prosecution_fund_pct: int = rule(50, 0, 100, S, "Share of a banned body's fund seized when it is prosecuted (%)")
+    cooperative_payout_pct: int = rule(
+        30, 0, 100, S, "Share of a cooperative's treasury above its reserve paid out to its workers by their work in an epoch (%)"
+    )
+
+    @property
+    def contract_term_epochs(self) -> int:
+        return self.epochs(self.contract_term_years)
+
+    @property
+    def dispute_max_epochs(self) -> int:
+        return self.epochs(self.dispute_max_years)
 
 
 @dataclass(frozen=True)

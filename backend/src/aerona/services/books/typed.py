@@ -77,6 +77,14 @@ INDEXED_LISTS: dict[str, list[str]] = {"biome_mix": [biome.name.lower().replace(
 ID_LISTS = frozenset(
     {
         "witness_node_ids",
+        "items",
+        "territory",
+        "promoters",
+        "territories",
+        "seen_by",
+        "administrators",
+        "imposed_laws",
+        "members",
         "witnesses",
         "excommunicated",
         "prior_journey_ids",
@@ -105,12 +113,15 @@ ID_LISTS = frozenset(
         "content",
         "stops",
         "circuit",
-        "members",
         "species",
+        "creditors",
+        "markets",
+        "targets",
     }
 )
 PERCENT_LISTS = frozenset({"milestones"})
-REFERENCE_LISTS = {"revealed_aims": "war_aims"}
+NODE_SHARES = frozenset({"sellers"})
+REFERENCE_LISTS = {"rivals": "creature_groups", "revealed_aims": "war_aims", "works": "workshops", "incident_ids": "incidents", "journey_ids": "journeys"}
 PAIRED_LISTS = {"martial_record": ("won", "lost")}
 PERCENT_SIGN = "%"
 NOTHING = "none"
@@ -268,9 +279,11 @@ REFERENCE_LABELS: dict[str, Callable[[Any, dict[int, str]], str]] = {
     "incidents": _incident,
     "bonds": lambda row, names: f"{words(str(getattr(row.kind, 'value', row.kind))).lower()} {_named(names, row.target_node_id)}".strip(),
     "routes": lambda row, names: f"the way between {_named(names, row.world_a_id)} and {_named(names, row.world_b_id)}",
+    "journeys": lambda row, names: f"the crossing of {_named(names, row.traveller_entity_id) or 'travellers'} begun in epoch {row.start_epoch}",
     "wars": lambda row, names: _named(names, row.event_entity_id) or f"the war of epoch {row.started_epoch}",
     "sieges": lambda row, names: f"the siege of {_named(names, row.besieged_entity_id)}",
     "war_aims": lambda row, names: f"{words(str(getattr(row.kind, 'value', row.kind))).lower()} {_named(names, row.target_entity_id)}".strip(),
+    "workshops": lambda row, names: f"the {spoken(row.kind)} of {_named(names, row.community_entity_id) or 'a lost town'}",
     "oaths": lambda row, names: f"the {words(str(getattr(row.kind, 'value', row.kind))).lower()} oath of {_named(names, row.swearer_entity_id)}",
     "law_proposals": lambda row, names: (
         f"the {words(str(row.kind.value)).lower()} proposal of epoch {row.proposed_epoch} in {_named(names, row.polity_entity_id)}"
@@ -318,6 +331,7 @@ class TypedIndex:
             for foreign in column.foreign_keys
             if foreign.column.table.name not in NAMED_TABLES
         }
+        targets |= set(REFERENCE_LISTS.values())
         for mapper in Base.registry.mappers:
             table = table_name(mapper)
             if table not in targets:
@@ -401,10 +415,17 @@ class TypedIndex:
         composite = self.composite(column, value)
         return composite if composite is not None else str(value)
 
-    def composite(self, column: KeyedColumnElement[Any], value: Any) -> str | None:
+    def formatted(self, column: KeyedColumnElement[Any], value: dict[str, Any]) -> str | None:
         special = COLUMN_FORMATS.get(column.key)
-        if special is not None and isinstance(value, dict):
+        if special is not None:
             return special(value)
+        if column.key in NODE_SHARES:
+            return ", ".join(f"{self.names.get(int(key), f'#{key}')} {share}{PERCENT_SIGN}" for key, share in value.items() if str(key).isdigit())
+        return None
+
+    def composite(self, column: KeyedColumnElement[Any], value: Any) -> str | None:
+        if isinstance(value, dict) and (text := self.formatted(column, value)) is not None:
+            return text
         if isinstance(value, list | tuple) and any(isinstance(item, dict) for item in value):
             return "; ".join(f"({self.value(column, item) or NOTHING})" for item in value)
         if isinstance(value, list | tuple | set | frozenset):

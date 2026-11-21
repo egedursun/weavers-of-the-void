@@ -481,6 +481,7 @@ async def alliance_lifetimes(ctx: TickContext, communities: int) -> int:
     "table.deeds",
     "table.dimensions",
     "table.entities",
+    "table.feeling_spread",
     "table.feuds",
     "table.foreign_gods",
     "table.galaxies",

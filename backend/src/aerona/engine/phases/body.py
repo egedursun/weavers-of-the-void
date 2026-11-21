@@ -261,6 +261,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.gardens",
     "table.genomes",
     "table.goods_flows",
+    "table.grave_goods",
     "table.griefs",
     "table.holder_levels",
     "table.holder_techniques",
@@ -328,6 +329,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.entities",
     "table.entity_flags",
     "table.goods_flows",
+    "table.grave_goods",
     "table.griefs",
     "table.incident_facts",
     "table.incident_participants",
@@ -603,7 +605,10 @@ async def body_conditions(ctx: TickContext) -> None:
 async def _wholeness(ctx: TickContext) -> None:
     for bond in await active_bonds(ctx.session, [BondKind.RULES]):
         ruler = await living_entity(ctx.session, bond.source_node_id)
-        if ruler is None or ruler.entity_type is not EntityType.MORTAL:
+        if ruler is None or ruler.entity_type is not EntityType.MORTAL or held(ruler.id):
+            continue
+        people = await people_of(ctx.session, ruler)
+        if people is None or held(people.id):
             continue
         custom = await customs_of(ctx.session, ctx.rules, ruler)
         if not maimed_for_rule(custom, await injuries_of(ctx.session, ruler.id)):
@@ -611,12 +616,7 @@ async def _wholeness(ctx: TickContext) -> None:
         heir = await pass_rule(ctx, ruler)
         if heir is None:
             continue
-        people = await people_of(ctx.session, ruler)
-        roles: dict[IncidentRole, RoleValue] = {
-            IncidentRole.PREDECESSOR: ruler.id,
-            IncidentRole.SUCCESSOR: heir.id,
-            IncidentRole.AUTHORITY: people.id if people is not None else None,
-        }
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.PREDECESSOR: ruler.id, IncidentRole.SUCCESSOR: heir.id, IncidentRole.AUTHORITY: people.id}
         await record(ctx, "body.ruler_set_aside", roles=roles, facts={"injuries": len(await injuries_of(ctx.session, ruler.id))})
         ctx.count("set_aside")
 

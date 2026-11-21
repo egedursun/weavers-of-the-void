@@ -49,6 +49,10 @@ export const LAYER_MODES = [
   'dress',
   'organisations',
   'money',
+  'remnants',
+  'protected',
+  'waves',
+  'groups',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -90,6 +94,10 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   dress: 'Dress',
   organisations: 'Organisations',
   money: 'Forms of money',
+  remnants: 'Remnants of war',
+  waves: 'Sea waves',
+  groups: 'Creature groups',
+  protected: 'Protected lands',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -124,6 +132,10 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   dress: 'map-layer-dress',
   organisations: 'map-layer-organisations',
   money: 'map-layer-money',
+  remnants: 'map-layer-remnants',
+  waves: 'map-layer-waves',
+  groups: 'map-layer-groups',
+  protected: 'map-layer-protected',
 }
 
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {

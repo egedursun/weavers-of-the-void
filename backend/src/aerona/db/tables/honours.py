@@ -9,6 +9,8 @@ from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
 NAMED_UNIT_FIELDS = ("name", "nickname", "esprit", "battles", "unit_id", "owner_entity_id", "raised_from_entity_id", "disbanded_epoch")
 UNIT_HONOUR_FIELDS = ("kind", "note")
+HONOUR_RANK_MIN = 1
+HONOUR_RANK_MAX = 10
 VETERAN_GRANT_FIELDS = ("kind", "veterans", "settlement_entity_id")
 
 
@@ -57,4 +59,41 @@ class VeteranGrantRow(Base):
     settlement_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     war_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class HonourKindRow(Base):
+    __tablename__ = "honour_kinds"
+    __table_args__ = (
+        between("rank", HONOUR_RANK_MIN, HONOUR_RANK_MAX),
+        between("worth", PERCENT_MIN, PERCENT_MAX),
+        at_least("holder_limit", 0),
+        Index("ix_honour_kinds_conferrer", "conferrer_node_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conferrer_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
+    rank: Mapped[int] = mapped_column(default=1)
+    privileges: Mapped[list[str]] = mapped_column(JSON, default=list)
+    holder_limit: Mapped[int] = mapped_column(default=0)
+    hereditary: Mapped[bool] = mapped_column(default=False)
+    worth: Mapped[int] = mapped_column(default=100)
+    founded_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class HonourHeldRow(Base):
+    __tablename__ = "honours_held"
+    __table_args__ = (at_least("epoch", 0), Index("ix_honours_held_holder", "holder_node_id"), Index("ix_honours_held_kind", "kind_id"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    kind_id: Mapped[int] = mapped_column(ForeignKey("honour_kinds.id", ondelete="CASCADE"))
+    conferred_by_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    deed_incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
+    epoch: Mapped[int] = mapped_column(default=0)
+    revoked_epoch: Mapped[int | None]
+    sold: Mapped[bool] = mapped_column(default=False)
+    inherited: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

@@ -75,6 +75,7 @@ async def art_market(ctx: TickContext) -> None:
 
 
 @reads(
+    "people.population",
     "settlement.population",
     "table.art_movements",
     "table.artwork_profiles",
@@ -82,8 +83,19 @@ async def art_market(ctx: TickContext) -> None:
     "table.entities",
     "table.faction_memberships",
     "table.faction_profiles",
+    "table.node_births",
     "table.nodes",
     "table.structure_profiles",
+)
+@writes(
+    "table.artwork_profiles",
+    "table.canon_works",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
 )
 async def art_movements(ctx: TickContext) -> None:
     tally = MovementTally()

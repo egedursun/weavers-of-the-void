@@ -20,6 +20,7 @@ TIER_CAPABILITY = total(
             checked_by=(),
             used_by=(
                 "catalog.civilization.TIER_UNLOCKS",
+                "engine.interworld.migrations.blocked",
                 "engine.phases.travel.choose_intent",
                 "engine.phases.travel.send_expedition",
                 "tools.mortal.cosmos.INTENT_TIERS",

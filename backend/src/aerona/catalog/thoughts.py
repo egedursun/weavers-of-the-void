@@ -226,6 +226,7 @@ THOUGHTS: MappingProxyType[ThoughtKind, ThoughtSpec] = MappingProxyType(
         T.LOST_STANDING: th(E.SHAME, 40, "Fell in the pecking order"),
         T.PASSION_STIRRED: th(E.AWE, 60, "Was carried by a passion"),
         T.PASSION_BROKE: th(E.DESPAIR, 65, "Was broken by a passion", {}, {"vulnerability": 3}),
+        T.CAUGHT_FEELING: th(E.CONTENTMENT, 20, "Caught the feeling of those around them"),
     }
 )
 

@@ -8,6 +8,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intrigue import HookDemand
 from aerona.domain.enums.unions import UnionPurpose
 from aerona.engine.context import TickContext
+from aerona.engine.departures.book import note_resignation
 from aerona.engine.intrigue.favours import call_favour, hook_on, owed_to, use_hook
 from aerona.engine.mortal.kin import partners_of
 from aerona.engine.mortal.kinship import marry
@@ -39,6 +40,7 @@ async def step_down(ctx: TickContext, holder: EntityRow, target: EntityRow) -> s
     if not offices:
         return None
     for office in offices:
+        note_resignation(ctx, target, office)
         office.holder_entity_id, office.since_epoch = None, ctx.epoch
     return f"{target.name} gave up {len(offices)} office{'s' if len(offices) != 1 else ''}"
 

@@ -71,7 +71,12 @@ COLLECTION_KIND = total(
         ),
         CollectionKind.PURGE: Defined(
             "Purge",
-            checked_by=("catalog.gatherings.NEST_PARENTS",),
+            checked_by=(
+                "catalog.gatherings.NEST_PARENTS",
+                "engine.reckoning.measures.victims_of",
+                "engine.reckoning.opening.apply_legacy",
+                "engine.reckoning.opening.victims_pressure",
+            ),
             used_by=(
                 "catalog.gatherings.NEST_PARENTS",
                 "engine.collective.accounts.GREAT_KINDS",

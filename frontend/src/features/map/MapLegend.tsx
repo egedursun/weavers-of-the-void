@@ -70,6 +70,7 @@ const LINE_TOKEN: Record<LineKind, ThemeColorName> = {
   hostility: 'destructive',
   rule: 'rarity-epic',
   hunt: 'destructive',
+  conurbation: 'brand-gold',
   route: 'brand-gold',
   route_busy: 'brand-gold',
   route_blocked: 'destructive',
@@ -84,6 +85,7 @@ const LINE_NOTE: Partial<Record<LineKind, string>> = {
   trade: 'trade with no road between',
   rule: 'arrow points at the ruled',
   hunt: 'arrow points at the prey',
+  conurbation: 'settlements grown into one city',
 }
 
 type MapLegendProps = {

@@ -290,6 +290,42 @@ export const CAUSES: Record<components['schemas']['HarmCause'], string> = {
   decompression: 'Decompression',
   experiment: 'An experiment',
   power: 'A power',
+  body: 'The body itself',
+}
+
+export const CONDITION_CAUSES: Record<
+  components['schemas']['ConditionCause'],
+  string
+> = {
+  age: 'Age',
+  diet: 'Diet',
+  exposure: 'Foul air, water or soil',
+  heredity: 'Inherited',
+  injury_aftermath: 'An old wound',
+  strain: 'Strain',
+  unknown: 'No known cause',
+}
+
+export const BODY_SYSTEMS: Record<components['schemas']['BodySystem'], string> =
+  {
+    breath: 'Breath',
+    circulation: 'Circulation',
+    digestion: 'Digestion',
+    regulation: 'Regulation',
+    nerves: 'Nerves',
+    immunity: 'Immunity',
+    reproduction: 'Reproduction',
+    structure: 'Frame',
+    none: 'No system',
+  }
+
+export const CONDITION_COURSES: Record<
+  components['schemas']['ConditionCourse'],
+  string
+> = {
+  stable: 'Stays as it is',
+  worsening: 'Worsens over time',
+  episodic: 'Comes and goes',
 }
 
 export const CONDITIONS: Record<string, Named> = {

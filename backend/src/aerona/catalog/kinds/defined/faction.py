@@ -155,8 +155,8 @@ FACTION_SCALE = total(
                 "db.kind_concepts.society.BUILT_IN_ORGANISATIONS",
                 "db.tables.factions.FactionProfileRow",
                 "engine.factions.agenda.dues",
-                "engine.factions.agenda.schisms",
                 "engine.factions.book.new_profile",
+                "engine.factions.offshoots.found_offshoot",
             ),
         ),
         FactionScale.COMPANY: Defined(

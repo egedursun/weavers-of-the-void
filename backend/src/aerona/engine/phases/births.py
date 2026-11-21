@@ -37,6 +37,7 @@ from aerona.engine.cycles.breeding import assign_caste, bearer_among, born_sex
 from aerona.engine.cycles.lineage import breeds, system_of, union_of
 from aerona.engine.demography.urban import founding_factor
 from aerona.engine.eras.effects import MODERN_FROM, era_at, era_order
+from aerona.engine.fertility_means.factor import user_factor
 from aerona.engine.folkways.fed import fed_fertility
 from aerona.engine.genetics.life import express, fertility_factor, found_genome, raise_child, upbringing_pct
 from aerona.engine.gods.queries import community_of
@@ -576,17 +577,18 @@ async def villages(ctx: TickContext, atlas: RegionAtlas, namer: Namer) -> None:
         existing = len(await kin_settlements(ctx, atlas, people))
         if existing and population < world_rules.extra_village_population:
             continue
-        if existing >= math.ceil(population / world_rules.people_per_village):
-            continue
+        room = math.ceil(population / world_rules.people_per_village) - existing
         culture = await ctx.session.get(PeopleCultureRow, people.id)
-        if not rng.chance(min(PERCENT, (life.extra_village_chance if existing else life.first_village_chance) * founding_factor(rules, culture))):
-            continue
-        migrants = village_migrants(rules, population)
-        if migrants < world_rules.village_min_population:
-            continue
-        site = await gap_site(ctx.session, rules, atlas, region.id) if existing else None
-        land = await living_entity(ctx.session, site) if site is not None else None
-        await found_settlement(ctx, atlas, people, land or region, migrants=migrants, existing=existing, namer=namer)
+        for _try in range(min(room, max(1, life.years_per_epoch // life.village_years)) if existing else min(1, room)):
+            if not rng.chance(min(PERCENT, (life.extra_village_chance if existing else life.first_village_chance) * founding_factor(rules, culture))):
+                continue
+            migrants = village_migrants(rules, stat(people, "population") or 0)
+            if migrants < world_rules.village_min_population:
+                break
+            site = await gap_site(ctx.session, rules, atlas, region.id) if existing else None
+            land = await living_entity(ctx.session, site) if site is not None else None
+            await found_settlement(ctx, atlas, people, land or region, migrants=migrants, existing=existing, namer=namer)
+            existing += 1
 
 
 async def ethnogenesis(ctx: TickContext, atlas: RegionAtlas, settlement: EntityRow, ancestor: EntityRow, namer: Namer) -> EntityRow:
@@ -742,8 +744,10 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, born: WorldQuota) -> No
     "mortal.wisdom",
     "people.piety",
     "people.population",
+    "settlement.defense",
     "settlement.piety",
     "settlement.population",
+    "settlement.prosperity",
     "species.intelligence",
     "table.allele_pools",
     "table.bonds",
@@ -783,7 +787,9 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, born: WorldQuota) -> No
     "mortal.lifespan",
     "mortal.strength",
     "people.population",
+    "settlement.defense",
     "settlement.population",
+    "settlement.prosperity",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -943,6 +949,7 @@ async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, k
         chance *= fertility_factor(rules, await ctx.session.get(GenomeRow, parent.id))
         chance *= await fed_fertility(ctx.session, rules, parent.id)
         chance *= await rested_fertility(ctx.session, rules, parent)
+        chance *= await user_factor(ctx.session, rules, parent)
     culture = await culture_of(ctx.session, first.location_id) if first.location_id is not None else {}
     chance *= max(0.0, 1 + culture.get(ValueAxis.KINSHIP, 0) * table.kinship_pct / PERCENT / PERCENT)
     return chance if await breeds(ctx.session, first, second) else 0.0
@@ -1065,6 +1072,7 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.endemic_diseases",
     "table.entities",
     "table.entity_flags",
+    "table.fertility_uses",
     "table.gardens",
     "table.genomes",
     "table.holder_levels",

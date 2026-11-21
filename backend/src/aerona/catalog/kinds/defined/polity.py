@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.polity import ClaimBasis, ClauseKind, DebtRemedy, Jurisdiction, LegitimacyBasis, OathKind
+from aerona.domain.enums.polity import ClaimBasis, ClauseKind, Jurisdiction, LegitimacyBasis, OathKind
 
 CLAIM_BASIS = total(
     ClaimBasis,
@@ -187,31 +187,10 @@ CLAUSE_KIND = total(
         ClauseKind.NO_DESIGNED_DISEASE: Defined(
             "No designed disease", checked_by=("engine.minds.war_methods.method_breached",), used_by=("engine.minds.war_methods.METHOD_CLAUSES",)
         ),
-    },
-)
-
-DEBT_REMEDY = total(
-    DebtRemedy,
-    {
-        DebtRemedy.BONDAGE: Defined(
-            "Bondage",
-            checked_by=("engine.economy.money.default", "engine.economy.realm_credit.realm_default", "engine.phases.market.by_debt_law"),
-            used_by=("engine.cycles.bondage.bind_debtors", "engine.demography.mobility.ruin_merchants"),
-        ),
-        DebtRemedy.PRISON: Defined(
-            "Prison",
-            checked_by=("engine.economy.money.default", "engine.economy.realm_credit.realm_default", "engine.phases.market.by_debt_law"),
-            used_by=("api.routers.economy_depth.debt_laws", "catalog.laws.LAW_PARAMS", "engine.demography.mobility.ruin_merchants"),
-        ),
-        DebtRemedy.JUBILEE: Defined(
-            "Jubilee",
-            checked_by=(
-                "engine.economy.money.default",
-                "engine.economy.realm_credit.realm_default",
-                "engine.phases.market.by_debt_law",
-                "engine.phases.market.jubilee_now",
-            ),
-            used_by=("engine.cycles.bondage.bind_debtors", "engine.demography.mobility.ruin_merchants"),
+        ClauseKind.MASS_WEAPON_LIMIT: Defined(
+            "Mass weapon limit",
+            checked_by=("engine.mass_weapons.limits.bound_pair", "engine.minds.war_methods.method_breached"),
+            used_by=("engine.mass_weapons.limits.bind_arsenals", "engine.minds.war_methods.METHOD_CLAUSES", "engine.polity.accords.DEFAULT_CLAUSES"),
         ),
     },
 )
@@ -220,7 +199,11 @@ JURISDICTION = total(
     Jurisdiction,
     {
         Jurisdiction.POLITY: Defined("Polity", checked_by=(), used_by=("engine.polity.laws.jurisdiction_of",)),
-        Jurisdiction.SETTLEMENT: Defined("Settlement", checked_by=(), used_by=("engine.polity.laws.jurisdiction_of",)),
+        Jurisdiction.SETTLEMENT: Defined(
+            "Settlement",
+            checked_by=(),
+            used_by=("engine.city_rules.conurbations.spread_laws", "engine.occupation_regime.rule.impose_laws", "engine.polity.laws.jurisdiction_of"),
+        ),
         Jurisdiction.CULT: Defined("Cult", checked_by=("engine.polity.laws.faithful_cults",), used_by=("engine.polity.laws.jurisdiction_of",)),
     },
 )
@@ -287,6 +270,7 @@ OATH_KIND = total(
             "Fealty",
             checked_by=("engine.polity.oaths.lapse",),
             used_by=(
+                "engine.leader_cults.cults.swear",
                 "engine.phases.society.raise_rebels",
                 "engine.polity.accords.accept",
                 "engine.polity.accords.sign",

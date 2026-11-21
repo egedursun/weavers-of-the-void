@@ -20,15 +20,31 @@ ORDER_LABOUR = total(
         ),
         OrderLabour.KIN: Defined("Kin", checked_by=(), used_by=("engine.orders.economy.BUILT_IN",)),
         OrderLabour.CORVEE: Defined(
-            "Corvée", checked_by=(), used_by=("engine.orders.economy.BOUND_LABOUR", "engine.orders.economy.BUILT_IN", "engine.orders.economy.read_order")
+            "Corvée",
+            checked_by=(),
+            used_by=(
+                "engine.orders.economy.BOUND_LABOUR",
+                "engine.orders.economy.BUILT_IN",
+                "engine.orders.economy.read_order",
+                "engine.orders.pressures.BOUND_LABOUR",
+            ),
         ),
         OrderLabour.SERF: Defined(
             "Tied to the land",
             checked_by=("engine.orders.economy.read_order",),
-            used_by=("engine.orders.economy.BOUND_LABOUR", "engine.orders.economy.BUILT_IN", "engine.orders.economy.read_order"),
+            used_by=(
+                "engine.orders.economy.BOUND_LABOUR",
+                "engine.orders.economy.BUILT_IN",
+                "engine.orders.economy.read_order",
+                "engine.orders.pressures.BOUND_LABOUR",
+            ),
         ),
-        OrderLabour.BOUND: Defined("Bound", checked_by=(), used_by=("engine.orders.economy.BOUND_LABOUR",)),
-        OrderLabour.ENSLAVED: Defined("Enslaved", checked_by=(), used_by=("engine.orders.economy.BOUND_LABOUR", "engine.orders.economy.read_order")),
+        OrderLabour.BOUND: Defined("Bound", checked_by=(), used_by=("engine.orders.economy.BOUND_LABOUR", "engine.orders.pressures.BOUND_LABOUR")),
+        OrderLabour.ENSLAVED: Defined(
+            "Enslaved",
+            checked_by=(),
+            used_by=("engine.orders.economy.BOUND_LABOUR", "engine.orders.economy.read_order", "engine.orders.pressures.BOUND_LABOUR"),
+        ),
         OrderLabour.CONSCRIPTED: Defined("Conscripted", checked_by=(), used_by=("engine.orders.economy.BOUND_LABOUR", "engine.orders.economy.BUILT_IN")),
         OrderLabour.COOPERATIVE: Defined("Cooperative", checked_by=(), used_by=("engine.orders.economy.FREE_LABOUR",)),
         OrderLabour.MADE: Defined("Made minds", checked_by=(), used_by=()),
@@ -52,17 +68,30 @@ OWNERSHIP_REGIME = total(
             ),
         ),
         OwnershipRegime.KIN_GROUP: Defined("Kin groups", checked_by=("engine.orders.economy.owner_for",), used_by=("engine.orders.economy.BUILT_IN",)),
-        OwnershipRegime.COMMUNITY: Defined("The community", checked_by=("engine.orders.economy.owner_for",), used_by=()),
-        OwnershipRegime.TEMPLE: Defined("Temples", checked_by=(), used_by=("engine.orders.economy.BUILT_IN", "engine.orders.economy.read_order")),
+        OwnershipRegime.COMMUNITY: Defined("The community", checked_by=("engine.orders.economy.owner_for",), used_by=("engine.orders.pressures.CENTRAL_LAND",)),
+        OwnershipRegime.TEMPLE: Defined(
+            "Temples", checked_by=(), used_by=("engine.orders.economy.BUILT_IN", "engine.orders.economy.read_order", "engine.orders.pressures.HELD_LAND")
+        ),
         OwnershipRegime.RULER: Defined(
-            "The ruler", checked_by=("engine.orders.economy.owner_for",), used_by=("engine.orders.economy.BUILT_IN", "engine.orders.economy.read_order")
+            "The ruler",
+            checked_by=("engine.orders.economy.owner_for",),
+            used_by=(
+                "engine.orders.economy.BUILT_IN",
+                "engine.orders.economy.read_order",
+                "engine.orders.pressures.CENTRAL_LAND",
+                "engine.orders.pressures.HELD_LAND",
+            ),
         ),
         OwnershipRegime.STATE: Defined(
-            "The state", checked_by=("engine.orders.economy.owner_for",), used_by=("engine.orders.economy.BUILT_IN", "engine.orders.economy.TARGETS")
+            "The state",
+            checked_by=("engine.orders.economy.owner_for",),
+            used_by=("engine.orders.economy.BUILT_IN", "engine.orders.economy.TARGETS", "engine.orders.pressures.CENTRAL_LAND"),
         ),
-        OwnershipRegime.PRIVATE: Defined("Private owners", checked_by=("engine.orders.economy.owner_for",), used_by=("engine.orders.economy.TARGETS",)),
+        OwnershipRegime.PRIVATE: Defined(
+            "Private owners", checked_by=("engine.orders.economy.owner_for",), used_by=("engine.orders.economy.TARGETS", "engine.orders.pressures.HELD_LAND")
+        ),
         OwnershipRegime.COOPERATIVE: Defined("Cooperatives", checked_by=("engine.orders.economy.owner_for",), used_by=("engine.orders.economy.TARGETS",)),
-        OwnershipRegime.COMPANY: Defined("Companies", checked_by=("engine.orders.economy.owner_for",), used_by=()),
+        OwnershipRegime.COMPANY: Defined("Companies", checked_by=("engine.orders.economy.owner_for",), used_by=("engine.orders.pressures.HELD_LAND",)),
         OwnershipRegime.COMMON: Defined("Held in common", checked_by=("engine.orders.economy.owner_for",), used_by=()),
         OwnershipRegime.NONE: Defined("No one", checked_by=(), used_by=()),
     },

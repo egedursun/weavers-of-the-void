@@ -85,6 +85,8 @@ async def finish(ctx: TickContext, book: DiseaseBook, outbreak: OutbreakRow) -> 
     people = sum(stat(community, "population") or 0 for community in communities)
     reached = min(1.0, outbreak.infected / max(1, people))
     for community in communities:
+        if held(community.id, outbreak.disease_entity_id):
+            continue
         rows = book.immunity.setdefault((community.id, outbreak.disease_entity_id), {})
         survived = await lagged(ctx, BalanceLoop.ENDEMIC_IMMUNITY, community.id, reached, subject=outbreak.disease_entity_id)
         for band in AgeBand:

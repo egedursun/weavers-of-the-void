@@ -17,7 +17,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.secrets import expose
 from aerona.engine.lifecycle.wounds import apply_hits
-from aerona.engine.mortal.standing import add_stress
+from aerona.engine.mortal.standing import add_stress, shift_standing
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import shift_stat
@@ -34,7 +34,7 @@ class Cursed:
 
 
 async def barren(ctx: TickContext, cursed: Cursed) -> None:
-    shift_stat(cursed.bearer, "fertility", -cursed.part(ctx.rules.item_curses.wider_pct), 0)
+    await shift_standing(ctx.session, cursed.bearer, "fertility", -cursed.part(ctx.rules.item_curses.wider_pct), ctx.epoch, default=0)
 
 
 async def transform(ctx: TickContext, cursed: Cursed) -> None:
@@ -48,7 +48,7 @@ async def sleep(ctx: TickContext, cursed: Cursed) -> None:
 
 
 async def silence(ctx: TickContext, cursed: Cursed) -> None:
-    shift_stat(cursed.bearer, "renown", -cursed.part(ctx.rules.item_curses.wider_pct), 0)
+    await shift_standing(ctx.session, cursed.bearer, "renown", -cursed.part(ctx.rules.item_curses.wider_pct), ctx.epoch, default=0)
 
 
 async def hunger(ctx: TickContext, cursed: Cursed) -> None:

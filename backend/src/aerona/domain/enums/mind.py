@@ -691,6 +691,7 @@ class ThoughtKind(StrEnum):
     LOST_STANDING = "lost_standing"
     PASSION_STIRRED = "passion_stirred"
     PASSION_BROKE = "passion_broke"
+    CAUGHT_FEELING = "caught_feeling"
 
 
 class LifeGoal(StrEnum):

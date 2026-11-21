@@ -14,6 +14,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import BookContentRow, CustomKindRow, HolderCustomTechniqueRow, HolderLevelRow, HolderTechniqueRow, ItemProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.governance import OrgResearchRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.networks import NetworkNodeRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -24,6 +25,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.agrarian.book import farming_boost
@@ -43,6 +45,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount, set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.engine.regime.book import freedom_factor, school_factor, schooled
 from aerona.engine.structures.readers import working
 from aerona.rules.registry import Rules
@@ -332,9 +335,18 @@ async def steal_technique(ctx: TickContext, thief_id: int, victim_id: int) -> Te
     for technique in sorted(set(secret) - mine):
         if ctx.rng(f"steal_technique.{thief_id}.{technique.value}.{ctx.epoch}").chance(ctx.rules.tech_graph.steal_chance):
             ctx.session.add(HolderTechniqueRow(holder_entity_id=thief_id, technique=technique, since_epoch=ctx.epoch, secret=True))
+            await research_stolen(ctx, victim_id, thief_id, technique)
             return technique
     await steal_level(ctx, thief_id, victim_id)
     return None
+
+
+async def research_stolen(ctx: TickContext, victim_id: int, thief_id: int, technique: Technique) -> None:
+    researched = await ctx.session.scalar(
+        select(OrgResearchRow.id).where(OrgResearchRow.org_node_id == victim_id, OrgResearchRow.technique == technique, OrgResearchRow.done_epoch.is_not(None))
+    )
+    if researched is not None:
+        await record(ctx, "org.research_stolen", roles={IncidentRole.VICTIM: victim_id, IncidentRole.ACTOR: thief_id}, facts={"technique": technique})
 
 
 async def steal_level(ctx: TickContext, thief_id: int, victim_id: int) -> KnowledgeBranch | None:
@@ -360,15 +372,15 @@ async def read_books(ctx: TickContext) -> int:
         owner = await ctx.session.scalar(
             select(BondRow.source_node_id).where(BondRow.target_node_id == book, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE).limit(1)
         )
-        record = await ctx.session.get(EntityRow, knowledge)
+        known_record = await ctx.session.get(EntityRow, knowledge)
         reader = await ctx.session.get(EntityRow, owner) if owner is not None else None
-        if reader is None or record is None or record.knowledge_branch is None:
+        if reader is None or known_record is None or known_record.knowledge_branch is None:
             continue
         holder = reader.location_id if reader.entity_type is EntityType.MORTAL else reader.id
         if await banned_for(ctx.session, holder, book) and not await read_in_secret(ctx, reader.id, book):
             continue
-        row = await ctx.session.get(HolderLevelRow, (holder, record.knowledge_branch)) if holder is not None else None
-        if row is None or "progress" in row.locked or row.level >= raw_level(record.stats):
+        row = await ctx.session.get(HolderLevelRow, (holder, known_record.knowledge_branch)) if holder is not None else None
+        if row is None or "progress" in row.locked or row.level >= raw_level(known_record.stats):
             continue
         paper = ctx.rules.technique_effects.paper_pct if await has_technique(ctx.session, holder, Technique.PAPER) else 0
         monks = ctx.rules.technique_effects.monastic_pct if await has_technique(ctx.session, holder, Technique.MONASTICISM) else 0

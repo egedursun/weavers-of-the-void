@@ -24,7 +24,7 @@ from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import TREASURY_LOCK, receive_coin
+from aerona.engine.economy.purse import TREASURY_LOCK, points_of, receive_coin, shift_points
 from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.spy_depth import compromise, motivate
@@ -32,7 +32,6 @@ from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import held_captive, take_captive
 
@@ -262,10 +261,10 @@ async def blackmail_office(ctx: TickContext, owner: EntityRow, target: EntityRow
         await change_relation(ctx, target.id, owner.id, table.blackmail_relation, MemoryKind.GOODWILL, note=f"{holder.name} spoke for them")
     else:
         record, _ = await ensure_profile(ctx.session, holder.id, ctx.epoch)
-        room = PERCENT - stat_or(owner, "wealth", PERCENT)
+        room = PERCENT - await points_of(ctx.session, owner)
         paid = 0 if is_held(record, "wealth") else min(record.wealth, table.blackmail_wealth, room)
         record.wealth -= paid
-        shift_stat(owner, "wealth", paid)
+        await shift_points(ctx.session, owner, paid)
     return holder.id
 
 

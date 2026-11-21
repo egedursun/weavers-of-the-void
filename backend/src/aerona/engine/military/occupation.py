@@ -18,10 +18,12 @@ from aerona.engine.military.support import peace_pressure
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.space import value_distance
+from aerona.engine.mortal.standing import shift_standing
+from aerona.engine.occupation_regime.effects import partisan_share, tax_share
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import record
 
 ATROCITIES = (MemoryKind.KILLED_KIN, MemoryKind.FOUGHT_US)
@@ -65,7 +67,8 @@ async def partisans(ctx: TickContext) -> int:
     table = ctx.rules.occupation
     lost = 0
     for row in list(await ctx.session.scalars(select(OccupationRow).order_by(OccupationRow.region_entity_id))):
-        if not ctx.rng(f"partisans.{row.region_entity_id}.{ctx.epoch}").chance(table.partisan_chance * row.resistance / PERCENT):
+        kept = await partisan_share(ctx.session, ctx.rules, row.region_entity_id)
+        if not ctx.rng(f"partisans.{row.region_entity_id}.{ctx.epoch}").chance(table.partisan_chance * row.resistance / PERCENT * kept):
             continue
         armies = await ctx.session.scalars(
             select(ArmyProfileRow)
@@ -100,10 +103,11 @@ async def end_occupations(ctx: TickContext) -> int:
     return ended
 
 
-def occupation_tax(ctx: TickContext, income: int, row: OccupationRow | None) -> int:
+async def occupation_tax(ctx: TickContext, income: int, row: OccupationRow | None) -> int:
     if row is None or income <= 0:
         return 0
-    return round_half_up(income * ctx.rules.occupation.tax_pct / PERCENT * row.control / PERCENT)
+    share = await tax_share(ctx.session, ctx.rules, row.region_entity_id)
+    return round_half_up(income * share / PERCENT * row.control / PERCENT)
 
 
 async def weary(ctx: TickContext, war: WarRow, side: WarSideRow, *, dead: int, maimed: int, occupied: int) -> int:
@@ -145,4 +149,4 @@ async def pay_occupier(ctx: TickContext, occupier_id: int, amount: int) -> None:
         return
     occupier = await living_entity(ctx.session, occupier_id)
     if occupier is not None:
-        shift_stat(occupier, "wealth", amount // max(1, ctx.rules.taxation.wealth_per_treasury))
+        await shift_standing(ctx.session, occupier, "wealth", amount // max(1, ctx.rules.taxation.wealth_per_treasury), ctx.epoch)

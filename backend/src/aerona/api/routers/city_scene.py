@@ -10,6 +10,7 @@ from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.city_scene import (
     CasteQuarter,
     CityBuildingView,
+    CityConurbation,
     CityDistrictView,
     CitySceneView,
     DwellingTypeView,
@@ -29,6 +30,7 @@ from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.urban import AMENITIES, NUISANCES, SERVICE_OF
 from aerona.catalog.zones import CIVIC_SERVICE_OF, ZONE_OF_DISTRICT, ZONE_OF_STRUCTURE
 from aerona.core.errors import NotFoundError
+from aerona.db.tables.city_rules import ConurbationRow
 from aerona.db.tables.dominion import MagicSiteRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -97,7 +99,16 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
         for held_turf in await session.scalars(select(TurfRow).where(TurfRow.district_id.in_([d.id for d in districts]))):
             turf[held_turf.district_id] = max(turf[held_turf.district_id], held_turf.strength)
         buildings = list(await session.scalars(select(StructureProfileRow).where(StructureProfileRow.host_entity_id == town.id)))
-        refs = await node_refs(session, [town.id, *(row.structure_entity_id for row in buildings)])
+        city = next(
+            (
+                row
+                for row in await session.scalars(select(ConurbationRow).where(ConurbationRow.split_epoch.is_(None)).order_by(ConurbationRow.id))
+                if town.id == row.core_entity_id or town.id in (row.members or [])
+            ),
+            None,
+        )
+        city_ids = [city.core_entity_id, *(city.members or [])] if city is not None else []
+        refs = await node_refs(session, [town.id, *(row.structure_entity_id for row in buildings), *city_ids])
         buildings = [row for row in buildings if row.structure_entity_id in refs]
         slots = slots_of(layout, buildings, districts, await perimeter_of(session, buildings))
         household = rules.city_plan.household
@@ -126,6 +137,11 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
         )
         quarters = {caste.id: caste for caste in castes}
         return CitySceneView(
+            conurbation=CityConurbation(
+                core=refs[city.core_entity_id], members=[refs[member] for member in city.members or [] if member in refs], governance=city.governance
+            )
+            if city is not None and city.core_entity_id in refs
+            else None,
             town=refs[town.id],
             morphology=morphology,
             tier=profile.size_tier if profile is not None else SizeTier.HAMLET,

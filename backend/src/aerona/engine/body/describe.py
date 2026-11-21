@@ -8,6 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.grammar import an, spoken
 from aerona.core.total import partial
 from aerona.db.tables.afflictions import AfflictionRow
+from aerona.db.tables.agentless_conditions import AgentlessConditionRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -138,6 +139,13 @@ async def afflictions_text(session: AsyncSession, bearer_id: int, *, private: bo
     return found
 
 
+async def condition_text(session: AsyncSession, row: ConditionRow, *, private: bool) -> str:
+    kind = await session.get(AgentlessConditionRow, row.kind_id) if row.kind_id is not None and private else None
+    named = f" ({kind.name})" if kind is not None else ""
+    cause = f", brought on by {spoken(row.cause)}" if row.cause is not None and private else ""
+    return f"{CONDITION_TEXT[row.kind]}{named}{cause}, condition {row.id} at severity {row.severity}" if private else CONDITION_TEXT[row.kind]
+
+
 async def _bearer_lines(session: AsyncSession, rules: Rules, body: BodyRow, bearer_id: int, *, private: bool) -> list[str]:
     anatomy = anatomy_for(body)
     injuries = list(await session.scalars(select(InjuryRow).where(InjuryRow.bearer_node_id == bearer_id, InjuryRow.state != InjuryState.LETHAL)))
@@ -167,8 +175,12 @@ async def _bearer_lines(session: AsyncSession, rules: Rules, body: BodyRow, bear
     borne = await afflictions_text(session, bearer_id, private=private)
     if borne:
         lines.append("Bears: " + "; ".join(borne))
-    conditions = list(await session.scalars(select(ConditionRow).where(ConditionRow.bearer_node_id == bearer_id, ConditionRow.ended_epoch.is_(None))))
-    known = [CONDITION_TEXT[row.kind] for row in conditions if row.visible or private]
+    conditions = list(
+        await session.scalars(
+            select(ConditionRow).where(ConditionRow.bearer_node_id == bearer_id, ConditionRow.ended_epoch.is_(None)).order_by(ConditionRow.id)
+        )
+    )
+    known = [await condition_text(session, row, private=private) for row in conditions if row.visible or private]
     if known:
         lines.append("Lives with: " + "; ".join(known))
     weak = weakened(body, rules) if private else []

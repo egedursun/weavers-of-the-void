@@ -20,8 +20,12 @@ BIRTH_COMPLICATION = total(
 RELATION_CONTEXT = total(
     RelationContext,
     {
-        RelationContext.BEFORE_UNION: Defined("Before union", checked_by=(), used_by=("engine.intimacy.norms.contexts_of",)),
-        RelationContext.WITHIN_UNION: Defined("Within union", checked_by=(), used_by=("engine.intimacy.norms.contexts_of",)),
+        RelationContext.BEFORE_UNION: Defined(
+            "Before union", checked_by=(), used_by=("engine.fertility_means.tend.first_stance", "engine.intimacy.norms.contexts_of")
+        ),
+        RelationContext.WITHIN_UNION: Defined(
+            "Within union", checked_by=(), used_by=("engine.fertility_means.tend.first_stance", "engine.intimacy.norms.contexts_of")
+        ),
         RelationContext.OUTSIDE_UNION: Defined(
             "Outside union",
             checked_by=(),

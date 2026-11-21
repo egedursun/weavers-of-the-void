@@ -18,6 +18,11 @@ class InterpretersRules(Spanned):
     shared_lexicon_pct: int = rule(60, 0, 100, R, "Weight of a shared lexicon in intelligibility (%)")
     phonology_pct: int = rule(20, 0, 100, R, "Intelligibility a shared sound system adds to tongues that already share words")
     misread_breach_chance: int = rule(25, 0, 100, R, "Chance each epoch that the party wronged by a misread treaty clause counts it a breach (%)")
+    fault_base_pct: int = rule(10, 0, 100, R, "Chance that an interpretation errs before the distance between its tongues is counted (%)")
+    fault_per_distance_pct: int = rule(20, 0, 100, R, "Further chance of error at the greatest distance between two tongues (%)")
+    slant_loyalty_threshold: int = rule(60, 0, 100, R, "Regard for one side at which an interpreter slants what is said toward it")
+    fault_found_pct: int = rule(15, 0, 100, R, "Chance in an epoch that an error in an interpretation comes to light (%)")
+    found_grievance: int = rule(10, 0, 100, R, "Regard the wronged side loses for the other when an error comes to light")
     remeasure_years: int = span(25, 0, 2500, R, "Years between new measures of how well two tongues understand each other (0 never)")
 
     @property

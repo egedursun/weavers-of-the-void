@@ -240,6 +240,452 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "manager_id": "Who manages it: an official, a company or a made mind, or none",
         },
     ),
+    T.FORM_CARTEL: ToolText(
+        "You bind sellers of one good in a market into a compact, for an organisation you head that sells there. The compact raises "
+        "prices while its discipline holds; it weakens each epoch and breaks when cheating pays, and a law against cartels can expose and fine it. 1 action.",
+        {
+            "member_ids": "The sellers who join, your own organisation among them",
+            "goods_kind": "The good they agree on",
+            "market_id": "The market town",
+            "aim": "What they agree on: price, quota, territory or bid_rigging",
+            "terms": "The price or the quota they agree, or none",
+        },
+    ),
+    T.START_PRICE_WAR: ToolText(
+        "An organisation you head sells a good below its usual price in a market to drive its rivals out. It pays for the cut each epoch "
+        "from its treasury, and its rivals lose too; whoever runs out first loses, and beaten rivals go before the court for their debts. 1 action.",
+        {"market_id": "The market town", "goods_kind": "The good", "cut": "How far below the usual price you sell, in a hundred"},
+    ),
+    T.REPORT_CARTEL: ToolText(
+        "You tell of a compact between sellers. Where the law forbids cartels it is broken and its members are fined; where it does not, "
+        "it is no longer secret. 1 action.",
+        {"cartel_id": "The compact you tell of"},
+    ),
+    T.ARGUE_DOCTRINE: ToolText(
+        "As one of a faith's clergy, argue how it should hold the divine on one axis; your theology decides whether it is heard. 1 action.",
+        {
+            "faith_id": "The faith you serve",
+            "conception_axis": "The axis ({{ conception_axes | join(', ') }})",
+            "stance": "How the divine is on it: for count {{ divine_counts | join(', ') }}; for nearness {{ divine_nearness | join(', ') }}; "
+            "for personhood {{ divine_personhood | join(', ') }}; for creator {{ creator_places | join(', ') }}",
+        },
+    ),
+    T.DRIVE_OFF_GROUP: ToolText(
+        "Drive at a group of creatures in your land: hunt them to thin their numbers, drive them off with fire or noise into the next land, "
+        "or appease them with an offering so they leave your towns be for a while. 1 action.",
+        {"group_id": "The group", "means": "How you drive at them ({{ drive_means | join(', ') }})"},
+    ),
+    T.WARN_COAST: ToolText(
+        "Warn the coast you stand on of the sea by a way your people watch the waters, so that a wave in the coming epoch finds them ready "
+        "and kills fewer. 1 action.",
+        {"region_id": "The coast you stand on", "method": "How you watch the waters ({{ observation_methods | join(', ') }})"},
+    ),
+    T.CONFER_HONOUR: ToolText(
+        "As head of a realm, faith or order, confer one of its honours on someone for a deed on record. They gain renown, goodwill toward "
+        "it and its privileges. 1 action.",
+        {"honour_kind_id": "The honour", "holder_id": "The one you honour", "deed_incident_id": "The deed it rewards"},
+    ),
+    T.REVOKE_HONOUR: ToolText(
+        "As head of the realm, faith or order that conferred it, take an honour back; its holder is shamed. 1 action.",
+        {"honour_id": "The honour held"},
+    ),
+    T.FOUND_HONOUR: ToolText(
+        "As head of a realm, faith or order, found a new honour it can confer, ranked above those it has, with its privileges and a "
+        "limit on holders (0 for none). 1 action.",
+        {
+            "conferrer_id": "The realm, faith or order you head",
+            "name_reason": "The name of the honour",
+            "privileges": "What it grants ({{ honour_privileges | join(', ') }})",
+            "limit": "How many may hold it at once, 0 for any number",
+        },
+    ),
+    T.USE_FERTILITY_MEANS: ToolText(
+        "Take up a means your people know to prevent, seek or end conception. Where your people frown on it you use it in secret, and it "
+        "may come to light. 1 action.",
+        {"means": "The means you take up"},
+    ),
+    T.PLACE_GRAVE_GOODS: ToolText(
+        "Lay things you own with the dead in a grave where you are. They leave you and stay with the dead. 1 action.",
+        {"grave_id": "The grave", "item_ids": "The things you lay"},
+    ),
+    T.ROB_GRAVE: ToolText(
+        "Rob a grave where you are of the goods laid in it. A watched or trapped grave may catch you, a cursed one may answer where the land "
+        "allows, and the kin and people of the dead hold it against you. 1 action.",
+        {"grave_id": "The grave"},
+    ),
+    T.GUARD_GRAVE: ToolText(
+        "Pay to set a guard over a grave where you are: hidden, sealed, watched, trapped, or, where the laws of the land allow, cursed or warded. 1 action.",
+        {"grave_id": "The grave", "guard": "The guard to set"},
+    ),
+    T.INTERPRET: ToolText(
+        "Skilled in tongues, you carry the words of an exchange between two sides who share none, faithfully or slanted toward your own "
+        "side. A slant may win your side more and may come to light, wronging the other and you with it. 1 action.",
+        {"event_id": "The exchange", "slant": "Whether you slant it toward your own side"},
+    ),
+    T.STIR_FEELING: ToolText(
+        "You stir a feeling in the place you are in or in your own household, the further the more charismatic you are. Strong feelings "
+        "spread to those around and along bonds, feed crowds and lean the choices of a town. 1 action.",
+        {"place_or_household_id": "The place you are in, or your household", "feeling": "The feeling"},
+    ),
+    T.FAVOUR_CHILD: ToolText(
+        "You favour one of your children, or of the house you head. Where the custom of inheritance leaves a choice, the favoured child "
+        "comes first to it; the others may grow rivals. 1 action.",
+        {"child_id": "The child"},
+    ),
+    T.DISOWN: ToolText(
+        "You cast one of your children, or of the house you head, out of the family: they lose their place in the house and the inheritance, "
+        "may found a line of their own, and hold it against you. It can be mended. 1 action.",
+        {"member_id": "The one you cast out", "reason": "Why: disobedience, marriage, faith, crime or rivalry"},
+    ),
+    T.RECONCILE_KIN: ToolText(
+        "You take back one you cast out of the family, restoring their place. 1 action.",
+        {"member_id": "The one you take back"},
+    ),
+    T.PROTECT_AREA: ToolText(
+        "You set a land or a site within it under protection, barring uses there. Barred uses fall by the protection's strength and its "
+        "wardens, and the land and its wildlife recover; want around it draws poachers, and towns whose livelihood it bars grow poorer and "
+        "restless. Protection by law needs one who rules the land. 1 action.",
+        {
+            "region_or_site_id": "The land, or a site within it",
+            "basis": "By what right: law, faith, custom, charter or divine_decree",
+            "banned_uses": "The uses barred: hunting, logging, farming, mining, settlement, entry, fishing or building",
+        },
+    ),
+    T.PROTECT_SPECIES: ToolText(
+        "You set a living kind under protection. A hunting ban spares it; a trade ban starves its poachers of buyers; a breeding programme "
+        "raises its numbers; reintroduction brings it back to lands it left that can still hold it; a habitat guard lets its lands' forests "
+        "regrow. 1 action.",
+        {
+            "species_id": "The living kind",
+            "measures": "The measures: hunting_ban, trade_ban, breeding_programme, reintroduction or habitat_guard",
+            "basis": "By what right: law, faith, custom, charter or divine_decree",
+        },
+    ),
+    T.REINTRODUCE: ToolText(
+        "You try to bring a living kind back to a land it left, if that land can still hold it. It may not take. 1 action.",
+        {"species_id": "The living kind", "region_id": "The land"},
+    ),
+    T.SET_LAND_USE_RULE: ToolText(
+        "As one who rules a settlement you set a rule for its land, for the whole place or one district. Rules of use decide which districts "
+        "may grow there and ease the nuisance next to homes; limits cap how high homes rise or how dense districts grow; a required material "
+        "or fire spacing cuts the spread of fire; frontage and green share make districts more desirable. Every rule raises the cost of "
+        "building, and a weakly enforced rule on valuable land is evaded. 1 action.",
+        {
+            "settlement_id": "The settlement",
+            "district_id": "One district; leave empty for the whole place",
+            "rule": "The rule: allowed_uses, banned_uses, height_limit, density_limit, build_material, fire_spacing, frontage_rule or green_share",
+            "values": "What the rule names: kinds (district kinds) for allowed or banned uses, level for a height or density limit, material for a build material",
+        },
+    ),
+    T.PROVIDE_SERVICE: ToolText(
+        "As one who rules a settlement you found or fund one of its services. A service reaches its districts as far as its budget pays for "
+        "them: refuse and street cleaning keep it clean, water distribution brings water, night watch keeps order, burial grounds take the "
+        "dead, market inspection keeps the markets honest, lighting cuts night crime and lengthens trade. 1 action.",
+        {
+            "settlement_id": "The settlement",
+            "service": "The service: refuse, lighting, water_distribution, street_cleaning, night_watch, burial_ground or market_inspection",
+            "provider_id": "A body you lead that pays for it; leave empty for the settlement itself",
+            "budget": "What it may spend each epoch",
+        },
+    ),
+    T.JOIN_SETTLEMENTS: ToolText(
+        "As one who rules several settlements of one world you join them into one city around the first, which keeps the others as quarters. "
+        "Under one council or the core's rule the core's laws spread to them; under one council their unrest is shared. 1 action.",
+        {
+            "settlement_ids": "The settlements; the first is the core",
+            "governance": "How it is governed: one_council, federated_councils or ruled_by_core",
+        },
+    ),
+    T.LAUNCH_CAMPAIGN: ToolText(
+        "As the leader of a realm you send one of its hosts along a way to another world. Its carriers set how many cross; some are lost "
+        "on the crossing; on arrival it must win the space around the world before it can land, and once landed it is supplied along the "
+        "way, starving if the space is lost. 1 action.",
+        {"attacker_id": "The realm that sends it", "target_world_id": "The world it goes to", "route_id": "The way it crosses", "army_id": "The host"},
+    ),
+    T.CONTEST_ORBIT: ToolText(
+        "As the leader of a realm whose host is at a world you fight for the space around it, by the host's vessels and numbers. Who holds it "
+        "may strike the enemy below, take a toll of every way that reaches the world, and cut the enemy's signals. 1 action.",
+        {"world_id": "The world", "fleet_id": "The host that fights"},
+    ),
+    T.LEAD_MIGRATION: ToolText(
+        "You lead the people of the settlement you live in or rule to another world joined to yours by an open way. They leave over epochs, "
+        "as many as the way carries and the world they seek lets in. 1 action.",
+        {
+            "community_id": "The settlement",
+            "to_world_id": "The world they seek",
+            "cause": "Why they go: flight, land_hunger, faith_call, exile, labour_draw, world_dying or resettlement",
+        },
+    ),
+    T.BEGIN_MASS_WEAPON: ToolText(
+        "As the leader of a realm, organisation, faith or league you begin making a weapon whose harm reaches a whole settlement, region "
+        "or world. It needs the means its harm and reach call for, costs the treasury each epoch, and passes through stages its rivals "
+        "may see and answer by making their own. 1 action.",
+        {
+            "holder_id": "Whose arsenal it joins",
+            "harm": "Its harm: blast, fire, poison, disease, radiation, swarm, field, rite or divine_relic",
+            "reach": "Its reach: settlement, region or world",
+        },
+    ),
+    T.DECLARE_POSTURE: ToolText(
+        "As the leader of an arsenal's holder you declare how it would use its weapons, toward one rival or all. A credible posture holds "
+        "rivals back from attacking; a posture with no ready weapon behind it may be exposed as a bluff. 1 action.",
+        {
+            "holder_id": "Whose posture it is",
+            "toward_id": "Toward whom; leave empty for all",
+            "posture": "The posture: none, declared, ambiguous, first_use, retaliation_only or shared_with_league",
+        },
+    ),
+    T.USE_MASS_WEAPON: ToolText(
+        "As the leader of an arsenal's holder you loose a ready weapon of mass harm on a target within its reach. It kills across its "
+        "reach, may burn, sicken or leave its harm in the land, is remembered by those it struck and brings the end of the world nearer. 1 action.",
+        {"weapon_id": "The weapon", "target_id": "What it strikes: a settlement, or a place within its region or world"},
+    ),
+    T.CLEAR_REMNANTS: ToolText(
+        "You pay to clear what war left in a land, which harms those who live there until it fades or is cleared. 1 action.",
+        {"region_id": "The land", "budget": "What you spend, from 100"},
+    ),
+    T.SET_OCCUPATION_RULE: ToolText(
+        "As the ruler of an occupier you set how an occupied land is ruled. Each rule sets what you take, how fast your control grows, "
+        "how much the locals resent it and what ruling them costs; civil rule and annexation extend your laws over the land and bring "
+        "settlers, and annexation takes the land once your control is high enough. 1 action.",
+        {"occupation_id": "The occupation", "rule": "The rule: military, civil_by_occupier, local_puppet, annexation or protectorate"},
+    ),
+    T.COLLABORATE: ToolText(
+        "Living under an occupation, you serve the occupier for a reward. Those who serve cut the cost of ruling and, informing or "
+        "policing, the partisans' raids; the partisans may come to know and kill them, and a liberated land may judge them. 1 action.",
+        {"occupation_id": "The occupation", "kind": "How you serve: administration, police, informing, trade, militia or propaganda"},
+    ),
+    T.IMPOSE_MEASURE: ToolText(
+        "As the ruler of an occupier you impose a measure on an occupied land. Measures cut the partisans' raids while they last; most "
+        "raise resentment, and hostages, collective punishment and deportation are remembered against you. Deportation carries people "
+        "off as captives; requisition takes from the towns' treasuries; an amnesty offer lowers resistance. 1 action.",
+        {
+            "occupation_id": "The occupation",
+            "measure": "The measure: curfew, hostages, collective_punishment, deportation, requisition, ban_on_gathering or amnesty_offer",
+            "strength": "How hard it is pressed, from 1 to 100",
+        },
+    ),
+    T.EXPOSE_COLLABORATOR: ToolText(
+        "Living under an occupation, you expose one who serves the occupier, so that the partisans know them. 1 action.",
+        {"collaboration_id": "The service to expose"},
+    ),
+    T.RAISE_RESTORATION: ToolText(
+        "From the old lands of a fallen realm, or by your claim to it, you begin a movement to raise it again under its old name, "
+        "laws and rights. Its memory fades unless it is kept, grows with grievance and rises when strong enough. 1 action.",
+        {
+            "fallen_polity_id": "The fallen realm",
+            "bases": "The grounds: bloodline, faith, law, memory or foreign_backing",
+            "territory_ids": "The old lands it seeks; empty seeks them all",
+        },
+    ),
+    T.RESTORE_POLITY: ToolText(
+        "As the leader of a restoration whose memory is strong enough, you raise the fallen realm again, unless the realms that hold "
+        "its old lands are steady enough to put the rising down. Old laws that no longer fit cost the new realm stability. 1 action.",
+        {"restoration_id": "The restoration"},
+    ),
+    T.PROMOTE_CULT: ToolText(
+        "You promote the cult of yourself, or of the ruler of the realm you live or serve in, by instruments. The cult lends the ruler "
+        "legitimacy and quiets dissent at a cost to the treasury and to the public's sincerity, which falls when the cult runs ahead of "
+        "the realm's results; a ban on criticism punishes mockery. 1 action.",
+        {
+            "leader_id": "The leader",
+            "instruments": "The instruments: images_in_public, official_biography, holidays, oaths_of_loyalty, naming_of_places, teaching_in_schools, staged_gatherings or ban_on_criticism",
+        },
+    ),
+    T.TEAR_DOWN_CULT: ToolText(
+        "As the ruler of a realm you tear down the cult of a leader in it. 1 action.",
+        {"cult_id": "The cult"},
+    ),
+    T.OPEN_RECKONING: ToolText(
+        "As the ruler of a realm you open a reckoning with the servants of a fallen regime by the measures you choose. Harsh measures may "
+        "drive the old servants to revolt or flight; weak ones leave them in power and the victims aggrieved. 1 action.",
+        {
+            "polity_id": "Your realm",
+            "fallen_regime_id": "The fallen ruler or regime, if one is named",
+            "measures": "The measures: tribunal, truth_inquiry, office_bar, amnesty, amnesty_for_confession, restitution, reparation_to_victims, memorial or record_opening",
+        },
+    ),
+    T.TRY_SERVANT: ToolText(
+        "As the ruler of the realm you bring one to trial in an open reckoning for deeds the record ties to them; the tribunal convicts or acquits at once. 1 action.",
+        {"reckoning_id": "The reckoning", "accused_id": "The accused", "incident_ids": "The recorded deeds you name"},
+    ),
+    T.CALL_REFERENDUM: ToolText(
+        "As the ruler of a realm, town or league you put a question to its people, voted by those its law lets vote. A binding vote "
+        "changes the law or the state at once; a vote that does not bind presses the ruler, who loses legitimacy by ignoring it. 1 action.",
+        {
+            "polity_id": "The realm, town or league whose people vote",
+            "subject": "What is asked: law, constitution, independence, union, treaty, war, transition, recall or faith",
+            "question_target_id": "What the question is about: the law, the town that would leave, the realm to join, the treaty, the foe, the office holder or the faith",
+            "binding": "Whether the result binds",
+        },
+    ),
+    T.CAMPAIGN_FOR_VOTE: ToolText(
+        "You campaign for one side of a vote still to be held: with money, through an outlet you own, by a speech you gave that was "
+        "heard, or by fraud, which may be found out and void the vote. 1 action.",
+        {"referendum_id": "The vote", "side": "yes or no", "means": "money, media, speech or fraud"},
+    ),
+    T.LEAVE_OFFICE: ToolText(
+        "You leave an office of a realm you hold, or the headship of an organisation, by your own choice, handing it to one you name "
+        "or to the rule of succession, on the conditions you ask. One who leaves keeps some standing and may come back while the office "
+        "stands empty or weak. 1 action.",
+        {
+            "office_id": "The office of a realm you hold, if you leave one",
+            "org_id": "The organisation you head, if you leave its headship",
+            "kind": "How you leave: abdication, retirement, resignation, withdrawal_to_religion or exile_by_choice",
+            "in_favour_of_id": "Whom you hand it to, or none to leave it to succession",
+            "conditions": "What you keep: keep_title, keep_lands, pension or safe_conduct",
+        },
+    ),
+    T.RETURN_TO_OFFICE: ToolText(
+        "You come back to an office you left, while it stands empty or weak; one who retired does not come back. 1 action.",
+        {"departure_id": "The leaving you take back"},
+    ),
+    T.FOUND_LEAGUE: ToolText(
+        "As the ruler of a realm you found a standing league with other realms at peace with each other. Members pay dues, vote by "
+        "the basis you choose and are bound by what passes; the aims decide its organs and what it does for its members. 1 action.",
+        {
+            "polity_ids": "The founding realms, yours among them",
+            "aims": "What it is for: defence, trade, customs_union, currency_union, law, faith, peace, research or migration",
+            "vote_basis": "How it decides: one_member_one_vote, by_population, by_dues or by_veto_holders",
+        },
+    ),
+    T.JOIN_LEAGUE: ToolText(
+        "As the ruler of a realm you ask a league to take it in; its assembly votes at once. 1 action.",
+        {"league_id": "The league", "polity_id": "Your realm"},
+    ),
+    T.TABLE_LEAGUE_MOTION: ToolText(
+        "As the ruler of a voting member you lay a motion before an organ of the league; it is voted at once by the league's basis, "
+        "and a veto blocks it. What passes binds the members as far as they obey. 1 action.",
+        {
+            "league_id": "The league",
+            "organ": "Which organ hears it: assembly, council, court, secretariat or force",
+            "kind": "What is moved: admit, expel, sanction, common_tariff, common_force, ruling, budget or mediation",
+            "subject_id": "Whom or what it concerns: a realm to admit, expel, sanction or mediate, a foe for the common force, or a law to rule on",
+        },
+    ),
+    T.LIST_SECURITY: ToolText(
+        "You list claims on an issuer you rule or head on an exchange: shares in its results, or bonds, annuities or notes it pays "
+        "interest on and repays when they fall due, or futures. The issuer pays the listing fee and holds every unit until it sells "
+        "them. 1 action.",
+        {
+            "issuer_id": "The issuer",
+            "kind": "What is listed: share, bond, annuity, note or future",
+            "amount": "How many units",
+            "exchange_id": "The exchange",
+        },
+    ),
+    T.TRADE_SECURITY: ToolText(
+        "You buy a listed claim from its largest holder or sell yours back to its issuer at the price of the exchange. You may buy partly "
+        "on credit up to the exchange's margin; if the price falls far, what you hold on credit is sold off and you owe the rest. 1 action.",
+        {"security_id": "The listed claim", "amount": "How many units", "side": "buy or sell"},
+    ),
+    T.SET_MONETARY_POLICY: ToolText(
+        "You set the policy of a monetary authority you hold or rule: its rate and its aim. Lenders take the rate as their base a season "
+        "later; a low rate raises borrowing and prices, a high rate the reverse. Issuing to fund the state fills the treasury and lowers "
+        "trust; a peg holds the currency to another currency or a good while reserves last. 1 action.",
+        {
+            "authority_id": "The authority",
+            "rate": "Its policy rate, from 0 to 100",
+            "aim": "Its aim: stable_value, cheap_credit, fund_the_state, peg, growth or none",
+            "peg_currency_id": "The currency to hold it to, for a peg",
+            "peg_goods_kind": "The good to hold it to, for a peg, instead of a currency",
+        },
+    ),
+    T.FOUND_MONETARY_AUTHORITY: ToolText(
+        "As the ruler of a currency's issuer you set someone over it as its monetary authority, with an independence that decides how "
+        "far rulers can press it to issue before wars and elections, and an aim. 1 action.",
+        {
+            "currency_id": "The currency",
+            "holder_id": "Who holds the authority: a ruler, an office, a temple, a bank, a company or a council",
+            "independence": "How far it stands apart from rulers, from 0 to 100",
+            "aim": "Its aim: stable_value, cheap_credit, fund_the_state, peg, growth or none",
+        },
+    ),
+    T.FOUND_WORKER_BODY: ToolText(
+        "You found a body of the workers of your town for one or more trades: it gathers members and dues into a strike fund, bargains "
+        "with those who hire them and can call them out. The law of the town decides whether it is banned, tolerated, recognised or "
+        "compulsory. 1 action.",
+        {
+            "form": "Its form: craft_union, industrial_union, general_union, companion_society, mutual_aid, worker_cooperative or made_mind_collective",
+            "trades": "The trades it speaks for: farming, herding, fishing, mining, crafting, trade, soldiering, clergy, scholarship, building, service or idle",
+            "settlement_id": "Your town",
+        },
+    ),
+    T.BARGAIN_CONTRACT: ToolText(
+        "You bargain for a worker body you lead with one who hires its trade. Terms follow the strength of each side: the body's members, "
+        "fund, solidarity and standing in law against the hirer's riches and the bound workers or made minds who could do the work. A much "
+        "stronger hirer may lock the workers out; a body far weaker may take to a strike instead of agreeing. 1 action.",
+        {
+            "worker_body_id": "The body you lead",
+            "hirer_id": "The one who hires its trade",
+            "demands": "What you press for: wage, hours, safety, rest, keep or recognition",
+        },
+    ),
+    T.CALL_DISPUTE: ToolText(
+        "You call the members of a worker body you lead out against the one who hires its first trade. Output stops in that trade while it "
+        "lasts; the fund pays those out until it is spent, and the hirer loses each epoch. 1 action.",
+        {
+            "worker_body_id": "The body you lead",
+            "act": "How they press: strike, go_slow, boycott, occupation_of_works or sabotage",
+            "demand": "What they press for: wage, hours, safety, rest, keep or recognition",
+        },
+    ),
+    T.LOCK_OUT: ToolText(
+        "As a hirer, or the head of one, you shut a worker body's members out of your works until they yield. You lose what they would "
+        "have made; their fund pays them while it lasts. 1 action.",
+        {
+            "hirer_id": "Yourself or the organisation you head that hires them",
+            "worker_body_id": "The body whose members you shut out",
+            "demand": "What you press for: wage, hours, safety, rest, keep or recognition",
+        },
+    ),
+    T.CAST_ORG_VOTE: ToolText(
+        "You cast your vote on the decision body of an organisation where you hold a seat, for or against a course; your vote joins those "
+        "who back the same course, and the body votes at once. A course passes when it gains the quorum. 1 action.",
+        {
+            "org_id": "The organisation whose body you sit on",
+            "motion": "The course voted on: grow, hold, specialise, diversify, expand_abroad, integrate_up, integrate_down, lobby, research or withdraw",
+            "vote": "Your vote: for or against",
+        },
+    ),
+    T.SEEK_HEADSHIP: ToolText(
+        "You stand for the headship of an organisation you belong to or own. Where the headship is bought you pay for it at once; where it is "
+        "chosen, you gather backers on its body and win when the term ends and its selection rule chooses you. 1 action.",
+        {"org_id": "The organisation"},
+    ),
+    T.SPLIT_ORG: ToolText(
+        "You lead your clique out of an organisation and found a rival, taking members and a share of its holdings as large as the clique's "
+        "votes. A clique needs enough of the body's votes to leave with a share. 1 action.",
+        {"org_id": "The organisation", "clique_id": "The clique you lead", "name_reason": "The name of the new organisation"},
+    ),
+    T.BID_FOR_ORG: ToolText(
+        "You bid, for an organisation you head or a realm you rule, to take in another organisation. Its body may accept, or resist a hostile "
+        "bid by seeking a friendly buyer or setting harsher terms; a closed bid joins its members, holdings and debts to yours. 1 action.",
+        {
+            "acquirer_id": "The organisation you head, or the realm you rule for an absorption",
+            "target_id": "The organisation you bid for",
+            "kind": "The bid: merger, friendly_acquisition, hostile_takeover, buyout or absorption_by_polity",
+            "price": "The price you offer, or none to offer its worth",
+        },
+    ),
+    T.FUND_RESEARCH: ToolText(
+        "You set aside a budget from an organisation you head to research a technique its home could reach next, or a design. Its staff "
+        "draw on the budget each epoch; when the work is done the organisation holds what it found, secret until it leaks out or is stolen. 1 action.",
+        {
+            "org_id": "The organisation you head",
+            "technique": "The technique to pursue, or none when you pursue a design",
+            "design_id": "The design to pursue, or none when you pursue a technique",
+            "budget": "The treasury you set aside",
+        },
+    ),
+    T.FILE_INSOLVENCY: ToolText(
+        "You take an organisation you head before its realm's court for its debts: creditors claim, its holdings are weighed and shared, and "
+        "the case ends by the path you ask for. 1 action.",
+        {
+            "org_id": "The organisation you head",
+            "path": "How it is settled: liquidation, restructuring, rescue_by_owner, rescue_by_polity or seizure_by_creditor",
+        },
+    ),
     T.FOUND_OUTLET: ToolText(
         "You found an outlet in your town that puts out word to its audience each season. Its reach grows with its staff and medium; "
         "its stance and lean colour what it tells, and its trust falls when what it spreads is found false. 1 action.",
@@ -498,8 +944,13 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.SEEK_CURE: ToolText(
         "You work at a cure for a sickness at the hospital, academy or monastery where you live; your medicine adds to the search, and the "
         "cure, once found, belongs to your community and can be sold along its trade routes. A search by a kind of cure that fits what the "
-        "sickness is goes faster, and one that does not fit goes slower. 1 action.",
-        {"disease_id": "The sickness", "cure_class": "The kind of cure you seek ({{ cure_classes | join(', ') }}), or none"},
+        "sickness is goes faster, and one that does not fit goes slower. Or you seek relief there for a condition you or your close kin "
+        "bear, whatever its cause; your medicine decides whether it eases. 1 action.",
+        {
+            "disease_id": "The sickness, or none when you seek relief for a condition",
+            "condition_id": "The condition to seek relief for, or none when you work at a cure for a sickness",
+            "cure_class": "The kind of cure you seek ({{ cure_classes | join(', ') }}), or none",
+        },
     ),
     T.FIND_CARRIER: ToolText(
         "With deep medicine you find that a mortal in your land carries a sickness without falling ill; once found, a carrier spreads it no further. 1 action.",
@@ -724,7 +1175,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "location_id": "Your own region or a place in your region",
             "domain": "One of: {{ domains | join(', ') }}",
             "image_prompt": IMAGE_PROMPT_FIELD,
-            "commodity": "What your people draw from it: {{ commodities | join(', ') }}; ore goes to smithing",
+            "commodity": "What your people draw from it: {{ commodities | join(', ') }}; ore goes to metalworking",
             "material": "If it is a seam or a grove, its material: {{ materials | join(', ') }}",
             "mechanics": "The resource's particular rules, at most {{ rules.mechanics.resource_max }} (empty: read from its name and text): {{ resource_mechanics }}",
         },
@@ -976,7 +1427,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You offer a typed treaty to another community or realm; it takes force when they accept. 1 action, {{ " + M + ".propose_treaty_per_epoch }} per age.",
         {
             "target_id": "The community or realm you offer it to",
-            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage (you become the vassal), tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact or naval_limit",
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage (you become the vassal), tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact, naval_limit or arms_limit",
             "clauses": "Typed clauses with who owes, who gains and their terms by name, as each clause kind requires",
             "epochs": "How many ages it should hold",
             "clauses.kind": "The clause's kind",
@@ -1168,7 +1619,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.FORGE_MODEL: ToolText(
         "You make a new equipment model for your realm or town: a named weapon, armour, shield or piece of materiel, as good as your "
-        "smithing or engineering and your craft allow, made of your town's own material; its metalworkers make it from then on. 1 action.",
+        "metalworking or engineering and your craft allow, made of your town's own material; its metalworkers make it from then on. 1 action.",
         {
             "family": "What kind of piece it is; one of: {{ equipment_families }}",
             "name": "What the model is called; left empty, your people names it in its own tongue",

@@ -11,6 +11,7 @@ from aerona.api.schemas.body import (
     BodyView,
     CapacityView,
     CohortView,
+    ConditionKindChoice,
     ConditionView,
     DigitView,
     FunctionView,
@@ -24,6 +25,7 @@ from aerona.catalog.stats import max_hp
 from aerona.catalog.tissues import DIGIT_LIMBS, TISSUES, covering_of, digit_keys, digit_label, digit_weight
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
+from aerona.db.tables.agentless_conditions import AgentlessConditionRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -144,6 +146,9 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
         anatomy = anatomy_for(body)
         injuries = await injuries_of(session, node_id)
         prostheses = await prostheses_of(session, node_id)
+        home_world = getattr(bearer, "world_id", None)
+        catalogue = select(AgentlessConditionRow).where(AgentlessConditionRow.world_id == home_world).order_by(AgentlessConditionRow.id)
+        kinds = {kind.id: kind for kind in await session.scalars(catalogue)}
         conditions = list(
             await session.scalars(select(ConditionRow).where(ConditionRow.bearer_node_id == node_id).order_by(ConditionRow.since_epoch, ConditionRow.id))
         )
@@ -292,8 +297,16 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
                     since_epoch=row.since_epoch,
                     ended_epoch=row.ended_epoch,
                     visible=row.visible,
+                    cause=row.cause,
+                    kind_id=row.kind_id,
+                    kind_name=kinds[row.kind_id].name if row.kind_id in kinds else None,
                 )
                 for row in sorted(conditions, key=lambda row: (row.ended_epoch is not None, -row.since_epoch))
+            ],
+            condition_kinds=[
+                ConditionKindChoice(id=kind.id, name=kind.name, cause=kind.cause, system=kind.system, course=kind.course)
+                for kind in kinds.values()
+                if kind.world_id == home_world
             ],
             locked=list(body.locked),
             patients_healed=body.patients_healed,

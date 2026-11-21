@@ -118,6 +118,7 @@ async def spatial_economy(ctx: TickContext) -> None:
     "table.households",
     "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.intensification",
     "table.mandates",

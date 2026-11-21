@@ -46,6 +46,7 @@ from aerona.engine.cosmos.encounters import draw, meet, seed_encounters
 from aerona.engine.cosmos.fauna import stowaway
 from aerona.engine.cosmos.features import slingshot
 from aerona.engine.cosmos.journey_record import journey_step
+from aerona.engine.cosmos.landing import landing_region
 from aerona.engine.cosmos.lifeforms import habitability
 from aerona.engine.cosmos.pilgrimage import has_holy_site, reach_holy_site
 from aerona.engine.cosmos.placement import cosmography_of
@@ -732,13 +733,6 @@ async def kinship(session: AsyncSession, entity_id: int) -> set[int]:
     for bond in await active_bonds(session, [BondKind.RULES], sources=list(members)) + await active_bonds(session, [BondKind.RULES], targets=list(members)):
         members.update((bond.source_node_id, bond.target_node_id))
     return members | {entity_id}
-
-
-async def landing_region(session: AsyncSession, rules: Rules, world_id: int) -> EntityRow | None:
-    regions = await canon(session, [EntityType.REGION], world_id)
-    if not regions:
-        return None
-    return max(regions, key=lambda region: (stat_or(region, FERTILITY_KEY, rules.travel.default_fertility), -region.id))
 
 
 @dataclass

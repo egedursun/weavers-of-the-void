@@ -26,10 +26,18 @@ AUTHENTICITY = total(
         Authenticity.GENUINE: Defined(
             "Genuine",
             checked_by=("engine.made.trust.tend",),
-            used_by=("db.tables.collective.AccountRow", "engine.collective.accounts.record", "engine.made.trust.find_forgeries", "tools.mortal.minds.publish"),
+            used_by=(
+                "db.tables.collective.AccountRow",
+                "engine.collective.accounts.record",
+                "engine.made.trust.find_forgeries",
+                "engine.reckoning.measures.testify",
+                "tools.mortal.minds.publish",
+            ),
         ),
         Authenticity.ALTERED: Defined(
-            "Altered", checked_by=(), used_by=("engine.made.intrusion.land", "engine.made.trust.FALSE", "engine.powers.effects.alter_record")
+            "Altered",
+            checked_by=(),
+            used_by=("engine.leader_cults.cults.chronicle", "engine.made.intrusion.land", "engine.made.trust.FALSE", "engine.powers.effects.alter_record"),
         ),
         Authenticity.FORGED: Defined(
             "Forged",

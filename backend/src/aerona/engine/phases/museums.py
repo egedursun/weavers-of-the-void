@@ -26,6 +26,7 @@ async def collections(ctx: TickContext) -> None:
 
 
 @reads(
+    "settlement.population",
     "settlement.prosperity",
     "settlement.wealth",
     "table.bonds",

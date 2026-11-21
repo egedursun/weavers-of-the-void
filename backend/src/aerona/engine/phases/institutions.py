@@ -577,6 +577,7 @@ async def swallowed_places(ctx: TickContext) -> int:
     "table.bonds",
     "table.entities",
     "table.entity_flags",
+    "table.node_births",
     "table.nodes",
     "table.routes",
 )
@@ -588,6 +589,7 @@ async def swallowed_places(ctx: TickContext) -> int:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
 )

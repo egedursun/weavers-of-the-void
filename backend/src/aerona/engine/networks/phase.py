@@ -20,6 +20,7 @@ from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.values import liberty_of
+from aerona.engine.monetary.authorities import establish
 from aerona.engine.networks.backfill import keep_relays, relay_backfill
 from aerona.engine.networks.book import carrier_days, running, shake_ledger
 from aerona.engine.networks.energy import CARRIER_ENERGY, starved
@@ -192,6 +193,7 @@ async def keep_ledger(ctx: TickContext, network: EntityRow, profile: NetworkProf
         )
         ctx.session.add(ledger)
         await ctx.session.flush()
+        await establish(ctx, ledger)
         await record_incident(ctx, "network.ledger", roles={IncidentRole.SUBJECT: network.id}, facts={"trust": trust})
     elif not ledger.held:
         ledger.trust = clamp_percent(ledger.trust + (trust - ledger.trust) * ctx.rules.money.trust_drift_pct / PERCENT)

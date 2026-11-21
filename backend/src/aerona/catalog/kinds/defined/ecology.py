@@ -86,6 +86,7 @@ RANGE_TREND = total(
                 "engine.ecology.ranges.spread",
                 "engine.living.lines.run_wild",
                 "engine.plants.bodies.spread",
+                "engine.protected_nature.species.reintroduce",
                 "tools.mortal.fossils.revive",
             ),
         ),

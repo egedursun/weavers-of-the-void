@@ -1,10 +1,12 @@
 from sqlalchemy import select
 
+from aerona.agents.context.cycle_lines import named as name_of
 from aerona.agents.context.scope import Scope
 from aerona.catalog.means import AIDS, CONTAINERS, LIFTS, MEDIA
 from aerona.core.grammar import plural, several
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.honours import NamedUnitRow, VeteranGrantRow
+from aerona.db.tables.governance import OrgGovernanceRow
+from aerona.db.tables.honours import HonourHeldRow, HonourKindRow, NamedUnitRow, VeteranGrantRow
 from aerona.db.tables.households import HouseholdMemberRow
 from aerona.db.tables.means import ContainerStockRow, NavigationKitRow, WaterLiftRow, WritingCustomRow
 from aerona.db.tables.military import ArmyUnitRow
@@ -15,6 +17,7 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.orders import TransitionStage
 from aerona.engine.body.customs import people_id_of
+from aerona.engine.honours.persons import head_of, holders_of
 from aerona.engine.sacred.places import town_of
 
 LIST_LINES = 3
@@ -88,13 +91,33 @@ async def mortal_economy_lines(scope: Scope, me: EntityRow) -> list[str]:
     return found
 
 
+async def person_honour_lines(scope: Scope, me: EntityRow) -> list[str]:
+    session = scope.session
+    found: list[str] = []
+    for row in await session.scalars(
+        select(HonourHeldRow).where(HonourHeldRow.holder_node_id == me.id, HonourHeldRow.revoked_epoch.is_(None)).order_by(HonourHeldRow.id)
+    ):
+        kind = await session.get(HonourKindRow, row.kind_id)
+        if kind is not None:
+            found.append(f"you hold {kind.name} of {await name_of(scope, kind.conferrer_node_id)}, rank {kind.rank}, worth {kind.worth}")
+    conferrers = [node for node in await session.scalars(select(OrgGovernanceRow.org_node_id).where(OrgGovernanceRow.head_node_id == me.id))]
+    town = await town_of(session, me)
+    realm = await realm_of_town(scope, town.id if town is not None else None)
+    if realm is not None and await head_of(session, realm) == me.id:
+        conferrers.append(realm)
+    for kind in await session.scalars(select(HonourKindRow).where(HonourKindRow.conferrer_node_id.in_(conferrers)).order_by(HonourKindRow.id)):
+        holders = [row.id for row in await holders_of(session, kind.id)]
+        found.append(f"honour {kind.id}, {kind.name}, is yours to confer; held as honours {', '.join(map(str, holders)) or 'by no one yet'}")
+    return found
+
+
 async def mortal_honours_lines(scope: Scope, me: EntityRow) -> list[str]:
     session = scope.session
+    found = await person_honour_lines(scope, me)
     town = await town_of(session, me)
     realm = await realm_of_town(scope, town.id if town is not None else None)
     if realm is None:
-        return []
-    found = []
+        return found
     armies = select(ArmyRow.entity_id).where(ArmyRow.owner_entity_id == realm, ArmyRow.disbanded_epoch.is_(None))
     units = select(ArmyUnitRow.id).where(ArmyUnitRow.army_entity_id.in_(armies))
     for named in await session.scalars(select(NamedUnitRow).where(NamedUnitRow.unit_id.in_(units)).order_by(NamedUnitRow.esprit.desc()).limit(LIST_LINES)):

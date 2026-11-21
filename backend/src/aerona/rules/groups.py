@@ -56,6 +56,7 @@ class RuleGroup(StrEnum):
     MORTALS = "Mortals"
     NOTIFICATIONS = "Notifications"
     OPPORTUNITIES = "Opportunities"
+    ORGANISATIONS = "Organisations"
     PHENOMENA = "Phenomena and cosmic beings"
     POLITY = "Realms, law and treaties"
     POPULATION_AND_GROWTH = "Population and growth"

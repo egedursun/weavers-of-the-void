@@ -254,6 +254,7 @@ async def _seize_from_neighbours(
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
+    "table.feeling_spread",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",

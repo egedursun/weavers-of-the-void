@@ -46,6 +46,9 @@ function serveHeavens() {
     world_types: [],
     places: [],
     communities: [],
+    campaigns: [],
+    migrations: [],
+    orbits: [],
   })
   onApi('GET', '/api/cosmography/nodes/301/wiki', {
     node_id: 301,

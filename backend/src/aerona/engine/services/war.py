@@ -36,6 +36,7 @@ from aerona.engine.demography.labour import fighting_age, mobilisation
 from aerona.engine.economy.equipment import equip_army
 from aerona.engine.gods.incitement import held_incitement
 from aerona.engine.interconnect.flows import flowing
+from aerona.engine.mass_weapons.deterrence import deterred
 from aerona.engine.military.support import new_side, reluctance, support_of
 from aerona.engine.military.units import muster, resize
 from aerona.engine.mind.hooks import freed, taken_captive
@@ -364,6 +365,16 @@ async def can_open_war(
     )
 
 
+async def held_back(ctx: TickContext, first_id: int, second_id: int, *, brokered: bool) -> bool:
+    if await war_forbidden(ctx, first_id):
+        ctx.count("wars_held_by_omens")
+        return True
+    if not brokered and await deterred(ctx, first_id, second_id):
+        ctx.count("wars_deterred")
+        return True
+    return False
+
+
 async def declare_war(
     ctx: TickContext,
     first_id: int,
@@ -384,8 +395,7 @@ async def declare_war(
         return False
     if await forbidden_war(ctx, first_id, second_id, cause):
         return False
-    if await war_forbidden(ctx, first_id):
-        ctx.count("wars_held_by_omens")
+    if await held_back(ctx, first_id, second_id, brokered=brokered):
         return False
     if not brokered and await crisis_instead(ctx, first_id, second_id, cause):
         return False

@@ -148,6 +148,7 @@ async def cohort_upkeep(ctx: TickContext) -> None:
     "table.corvee_levies",
     "table.disease_profiles",
     "table.entities",
+    "table.labour_disputes",
     "table.labour_reasons",
     "table.law_jurisdictions",
     "table.law_profiles",

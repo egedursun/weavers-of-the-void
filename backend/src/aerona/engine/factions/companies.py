@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.economy import LoanRow, TradeRouteProfileRow
+from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow, CompanyShareRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -11,15 +11,14 @@ from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
-from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import GovernmentKind
 from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import shift_points
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import found_polity, refresh_realms
 from aerona.engine.primitives.naming import seed_of
@@ -28,7 +27,6 @@ from aerona.engine.primitives.queries import active_bonds, add_flag, close
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.recording.record import StepDraft, record
-from aerona.engine.services.community_relations import change_relation
 
 POWER = 3
 WEALTH = "wealth"
@@ -40,10 +38,8 @@ FOUNDER_SHARE = 60
 class CompanyTally:
     chartered: int = 0
     dividends: int = 0
-    collapsed: int = 0
     conquered: int = 0
     guarded: int = 0
-    defaulted: int = 0
     dominions: int = 0
 
 
@@ -136,7 +132,7 @@ async def pay_dividends(ctx: TickContext, company: EntityRow, row: CompanyProfil
         paid = min(purse, round_half_up(table.dividend_wealth * share.share / PERCENT * row.dividend_pct / PERCENT * PERCENT / 10))
         if paid:
             purse -= paid
-            set_stats(holder, wealth=clamp_int((stat(holder, WEALTH) or 0) + paid, 0, PERCENT))
+            await shift_points(ctx.session, holder, paid)
             tally.dividends += 1
     set_stats(company, wealth=purse)
 
@@ -149,35 +145,6 @@ async def hire_guards(ctx: TickContext, company: EntityRow, tally: CompanyTally)
         return
     set_stats(company, wealth=wealth - table.guard_wage, strength=clamp_int(strength + table.guard_strength, 0, PERCENT))
     tally.guarded += 1
-
-
-async def default_loans(ctx: TickContext, company: EntityRow, tally: CompanyTally) -> None:
-    table = ctx.rules.banking
-    for loan in list(
-        await ctx.session.scalars(
-            select(LoanRow).where(LoanRow.borrower_entity_id == company.id, LoanRow.status == LoanStatus.OPEN, LoanRow.held.is_(False)).order_by(LoanRow.id)
-        )
-    ):
-        lender = await ctx.session.get(EntityRow, loan.lender_entity_id)
-        loan.status = LoanStatus.DEFAULTED
-        if lender is not None and not held(lender.id):
-            set_stats(lender, wealth=clamp_int((stat(lender, WEALTH) or 0) - table.default_bank_loss, 0, PERCENT))
-            await change_relation(ctx, lender.id, company.id, -table.default_relation_loss, MemoryKind.BETRAYED_ME, note="a company failed owing a loan")
-        tally.defaulted += 1
-
-
-async def collapse(ctx: TickContext, company: EntityRow, row: CompanyProfileRow, tally: CompanyTally) -> None:
-    table = ctx.rules.companies
-    for share in await ctx.session.scalars(select(CompanyShareRow).where(CompanyShareRow.company_entity_id == company.id)):
-        holder = await ctx.session.get(EntityRow, share.holder_node_id)
-        if holder is not None and not held(holder.id):
-            set_stats(holder, wealth=clamp_int((stat(holder, WEALTH) or 0) - table.collapse_loss, 0, PERCENT))
-    await default_loans(ctx, company, tally)
-    await retire_in(ctx, company, "the company failed and its shareholders lost their stakes", close_bonds=True)
-    await record(
-        ctx, "companies.collapsed", roles={IncidentRole.SUBJECT: company.id}, facts={"loss_per_holder": table.collapse_loss}, place=company.location_id
-    )
-    tally.collapsed += 1
 
 
 async def conquer(ctx: TickContext, company: EntityRow, row: CompanyProfileRow, tally: CompanyTally) -> None:
@@ -253,7 +220,6 @@ async def tend_companies(ctx: TickContext, tally: CompanyTally) -> None:
             set_stats(company, wealth=clamp_int((stat(company, WEALTH) or 0) + table.route_profit, 0, PERCENT))
         row.value = stat(company, WEALTH) or 0
         if row.value < table.collapse_wealth:
-            await collapse(ctx, company, row, tally)
             continue
         await pay_dividends(ctx, company, row, tally)
         await hire_guards(ctx, company, tally)

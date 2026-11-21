@@ -18,9 +18,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.lore.history import record
 from aerona.engine.lore.items import standard_item
 from aerona.engine.military.battle import BattleResult, Side
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import record as record_incident
 from aerona.language.generator import NameKind
 
@@ -187,7 +187,7 @@ async def disband_units(ctx: TickContext, army_id: int, tally: HonourTally) -> N
         tally.disbanded += 1
         owner = await ctx.session.get(EntityRow, named.owner_entity_id) if named.owner_entity_id is not None else None
         if honours and owner is not None and not held(owner.id):
-            shift_stat(owner, "renown", -table.disband_renown, 0)
+            await shift_standing(ctx.session, owner, "renown", -table.disband_renown, ctx.epoch, default=0)
             await record_incident(
                 ctx,
                 "honours.disbanded",

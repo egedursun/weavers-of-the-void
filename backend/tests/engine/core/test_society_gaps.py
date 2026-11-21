@@ -67,6 +67,19 @@ async def test_crowded_people_found_a_village_when_no_ruin_stands(session: Async
     assert "births.village" in await keys(session)
 
 
+async def test_a_crowded_people_founds_several_villages_in_an_epoch_but_no_more_than_its_years_allow(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "villages", tuned_rules(deep_life={"first_village_chance": 100, "extra_village_chance": 100}))
+    set_stats(world.people, population=90000)
+    before = await count_settlements(session)
+    await villages(ctx, await RegionAtlas.load(session), Namer(session, ctx.rules))
+    assert await count_settlements(session) == before + 1
+    room = -(-(stat(world.people, "population") or 0) // ctx.rules.deep_world.people_per_village) - 1
+    allowed = ctx.rules.deep_life.years_per_epoch // ctx.rules.deep_life.village_years
+    assert room > allowed > 1
+    await villages(ctx, await RegionAtlas.load(session), Namer(session, ctx.rules))
+    assert await count_settlements(session) - before == 1 + allowed
+
+
 async def faction_town(session: AsyncSession, world: CoreWorld, **shares: float) -> EntityRow:
     town = await settlement(session, "Marketholm", world, world.regions[1], population=3000, prosperity=70)
     await seed_society(session, town.id, warrior=shares.get("warrior", 1.0), merchant=shares.get("merchant", 1.0), priest=shares.get("priest", 1.0))

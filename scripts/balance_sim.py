@@ -15,25 +15,51 @@ from aerona.db import tables
 from aerona.db.base import Base
 from aerona.db.migrations import build_config
 from aerona.db.session import Database
-from aerona.db.tables.body import InjuryRow
+from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.body_systems import BodySystemRow
 from aerona.db.tables.childhood import PedagogyRow
+from aerona.db.tables.city_rules import ConurbationRow
 from aerona.db.tables.commerce import ShopRow
+from aerona.db.tables.competition import CartelRow, MarketStructureRow
 from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.creature_groups import CreatureGroupRow
 from aerona.db.tables.death_work import DeathWorkRow
+from aerona.db.tables.departures import DepartureRow
 from aerona.db.tables.disease_agents import DiseaseAgentRow
+from aerona.db.tables.divine_conceptions import DivineConceptionRow
 from aerona.db.tables.endowments import EndowmentRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.feeling_spread import FeelingSpreadRow
+from aerona.db.tables.fertility_means import FertilityMeansRow
 from aerona.db.tables.folk_knowledge import FolkClassRow
 from aerona.db.tables.forecasting import WeatherWorkRow
 from aerona.db.tables.fossils import FossilBedRow
+from aerona.db.tables.governance import OrgGovernanceRow
+from aerona.db.tables.grave_goods import GraveGoodsRow
+from aerona.db.tables.honours import HonourHeldRow
 from aerona.db.tables.households import HouseholdRow
+from aerona.db.tables.interpretation import InterpretationRow
+from aerona.db.tables.interworld import InterworldCampaignRow
 from aerona.db.tables.intimacy import RestraintCustomRow
 from aerona.db.tables.kin import KinGroupRow
+from aerona.db.tables.kin_dynamics import KinDynamicRow
+from aerona.db.tables.labour import LabourDisputeRow
+from aerona.db.tables.leader_cults import LeaderCultRow
+from aerona.db.tables.leagues import PolityLeagueRow
+from aerona.db.tables.mass_weapons import MassWeaponRow
 from aerona.db.tables.media import MediaOutletRow
+from aerona.db.tables.monetary import MonetaryAuthorityRow
+from aerona.db.tables.occupation_regimes import OccupationRegimeRow
+from aerona.db.tables.orders import EconomicOrderRow
 from aerona.db.tables.plants import PlantAnatomyRow, PlantPartRow
 from aerona.db.tables.population import PopulationPolicyRow
+from aerona.db.tables.protected_nature import ProtectedAreaRow
+from aerona.db.tables.reckoning import ReckoningRow
+from aerona.db.tables.referendums import ReferendumRow
+from aerona.db.tables.restoration import RestorationRow
 from aerona.db.tables.rule_override import RuleOverrideRow
+from aerona.db.tables.sea_waves import SeaWaveRow
+from aerona.db.tables.securities import IssuedSecurityRow, SecurityHoldingRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.space_weather import WorldFieldRow
 from aerona.db.tables.speech import SpeechRow
@@ -43,6 +69,7 @@ from aerona.db.tables.water import CoastRow
 from aerona.db.tables.works import PublicWorksRow
 from aerona.db.tables.youth import YouthGroupMemberRow, YouthGroupRow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.interpretation import InterpretationFault
 from aerona.domain.enums.works import WorksStatus
 from aerona.engine.body.marks import marked
 from aerona.engine.pipeline import simulate
@@ -157,6 +184,104 @@ async def family_measures(session: AsyncSession, epochs: int) -> dict[str, float
     }
 
 
+async def order_measures(session: AsyncSession, epochs: int) -> dict[str, float]:
+    polities, towns = (
+        await living(session, EntityType.POLITY),
+        await living(session, EntityType.SETTLEMENT),
+    )
+    peoples, regions = (
+        await living(session, EntityType.PEOPLE),
+        await living(session, EntityType.REGION),
+    )
+    mortals, factions = (
+        await living(session, EntityType.MORTAL),
+        await living(session, EntityType.FACTION),
+    )
+    faiths, houses = (
+        await living(session, EntityType.CULT),
+        await living(session, EntityType.HOUSE),
+    )
+    per_epoch = max(1, epochs)
+    return {
+        "economic_orders_per_polity": await count(session, EconomicOrderRow)
+        / max(1, polities),
+        "governed_share_of_factions_pct": share(
+            await count(
+                session,
+                OrgGovernanceRow,
+                OrgGovernanceRow.org_node_id.in_(
+                    select(EntityRow.id).where(
+                        EntityRow.entity_type == EntityType.FACTION,
+                        EntityRow.status == EntityStatus.CANON,
+                    )
+                ),
+            ),
+            factions,
+        ),
+        "cartels_per_market": await count(session, CartelRow)
+        / max(1, await count(session, MarketStructureRow)),
+        "labour_disputes_per_epoch": await count(session, LabourDisputeRow) / per_epoch,
+        "monetary_authorities_per_polity": await count(session, MonetaryAuthorityRow)
+        / max(1, polities),
+        "holdings_per_security": await count(session, SecurityHoldingRow)
+        / max(1, await count(session, IssuedSecurityRow)),
+        "leagues_per_polity": await count(session, PolityLeagueRow) / max(1, polities),
+        "conurbations_per_town": await count(session, ConurbationRow) / max(1, towns),
+        "protected_regions_share_pct": share(
+            await count(
+                session, ProtectedAreaRow, ProtectedAreaRow.lifted_epoch.is_(None)
+            ),
+            regions,
+        ),
+        "departures_per_epoch": await count(session, DepartureRow) / per_epoch,
+        "referendums_per_epoch": await count(session, ReferendumRow) / per_epoch,
+        "reckonings_per_epoch": await count(session, ReckoningRow) / per_epoch,
+        "leader_cults_per_polity": await count(session, LeaderCultRow)
+        / max(1, polities),
+        "restorations_per_epoch": await count(session, RestorationRow) / per_epoch,
+        "occupation_regimes_per_epoch": await count(session, OccupationRegimeRow)
+        / per_epoch,
+        "mass_weapons_per_polity": await count(session, MassWeaponRow)
+        / max(1, polities),
+        "interworld_campaigns_per_epoch": await count(session, InterworldCampaignRow)
+        / per_epoch,
+        "kin_dynamics_per_house": await count(session, KinDynamicRow) / max(1, houses),
+        "moods_per_town": await count(
+            session,
+            FeelingSpreadRow,
+            FeelingSpreadRow.settlement_entity_id.is_not(None),
+        )
+        / max(1, towns),
+        "faulty_interpretations_share_pct": share(
+            await count(
+                session,
+                InterpretationRow,
+                InterpretationRow.fault != InterpretationFault.NONE,
+            ),
+            await count(session, InterpretationRow),
+        ),
+        "robbed_graves_share_pct": share(
+            await count(
+                session, GraveGoodsRow, GraveGoodsRow.robbed_epoch.is_not(None)
+            ),
+            await count(session, GraveGoodsRow),
+        ),
+        "agentless_conditions_per_hundred_mortals": 100
+        * await count(session, ConditionRow, ConditionRow.kind_id.is_not(None))
+        / max(1, mortals),
+        "fertility_means_per_people": await count(session, FertilityMeansRow)
+        / max(1, peoples),
+        "honours_held_per_hundred_mortals": 100
+        * await count(session, HonourHeldRow, HonourHeldRow.revoked_epoch.is_(None))
+        / max(1, mortals),
+        "sea_waves_per_epoch": await count(session, SeaWaveRow) / per_epoch,
+        "creature_groups_per_region": await count(session, CreatureGroupRow)
+        / max(1, regions),
+        "conceptions_per_faith": await count(session, DivineConceptionRow)
+        / max(1, faiths),
+    }
+
+
 async def community_count(database: Database) -> int:
     async with database.read() as session:
         return int(
@@ -193,11 +318,7 @@ async def measure(
         ]
         living = [row for row in mortals if row.status is EntityStatus.CANON]
         maimed = set(
-            await session.scalars(
-                select(InjuryRow.bearer_node_id).where(
-                    marked()
-                )
-            )
+            await session.scalars(select(InjuryRow.bearer_node_id).where(marked()))
         )
         communities = int(
             await session.scalar(
@@ -212,7 +333,9 @@ async def measure(
         )
         relations = list(await session.scalars(select(CommunityRelationRow.value)))
         cosmos = await session.get(CosmosRow, 1)
-        families = await family_measures(session, epochs)
+        families = await family_measures(session, epochs) | await order_measures(
+            session, epochs
+        )
     return families | {
         "wars_per_epoch": wars / max(1, epochs),
         "mean_age_at_death": sum(base_stat(row, "age") or 0 for row in dead) / len(dead)
@@ -258,7 +381,9 @@ async def run(
             await simulate(database, settled)
             settled_communities = await community_count(database)
             await simulate(database, epochs - settled)
-            return await measure(database, epochs, start_doom, settled_communities, epochs - settled)
+            return await measure(
+                database, epochs, start_doom, settled_communities, epochs - settled
+            )
         finally:
             await database.dispose()
 

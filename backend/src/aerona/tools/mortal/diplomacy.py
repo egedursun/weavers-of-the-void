@@ -13,6 +13,7 @@ from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, DiplomacyOutcome, TreatyKind
 from aerona.domain.enums.war import WarCause, WarEnding
+from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.polity.accords import Clause
 from aerona.engine.polity.treaties import sign_derived
 from aerona.engine.primitives.prosperity import add_prosperity
@@ -87,14 +88,12 @@ async def _tribute(call: MortalCall, target: EntityRow, args: DiplomacyInput) ->
         )
         await change_relation(call.tick, call.me.id, target.id, -tools.tribute_insolence_relation, MemoryKind.HUMILIATED_ME, note=lines.INSOLENT_TRIBUTE)
         return DiplomacyOutcome.TRIBUTE_SCORNED
-    for key in ("wealth", "prosperity"):
-        paid = stat(target, key)
-        if paid is not None:
-            set_stats(target, **{key: max(0, paid - tools.tribute_payer_loss)})
+    await shift_points(call.session, target, -min(await points_of(call.session, target), tools.tribute_payer_loss))
+    prosperity = stat(target, "prosperity")
+    if prosperity is not None:
+        set_stats(target, prosperity=max(0, prosperity - tools.tribute_payer_loss))
     if add_prosperity(call.rules, call.me, tools.tribute_taker_gain) is None:
-        wealth = stat(call.me, "wealth")
-        if wealth is not None:
-            set_stats(call.me, wealth=min(PERCENT, wealth + tools.tribute_taker_gain))
+        await shift_points(call.session, call.me, tools.tribute_taker_gain)
     await impose_tribute(call.tick, target, call.me, None, args.terms)
     await change_relation(call.tick, call.me.id, target.id, -tools.tribute_relation, MemoryKind.DEMANDED_TRIBUTE, note=spoken(args.kind))
     return DiplomacyOutcome.TRIBUTE_AGREED

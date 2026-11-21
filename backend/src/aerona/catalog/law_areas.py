@@ -65,5 +65,6 @@ LAW_AREAS: Mapping[LawKind, LawArea] = total(
         LawKind.CLONE_STATUS: LawArea.SOCIAL,
         LawKind.GERMLINE_LAW: LawArea.PUBLIC_HEALTH,
         LawKind.DESIGNED_STATUS: LawArea.SOCIAL,
+        LawKind.COMPETITION_LAW: LawArea.FISCAL,
     },
 )

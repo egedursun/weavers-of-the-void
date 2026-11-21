@@ -547,6 +547,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.galaxies",
     "table.galaxy_clusters",
     "table.geasa",
+    "table.grave_goods",
     "table.griefs",
     "table.holder_levels",
     "table.house_members",

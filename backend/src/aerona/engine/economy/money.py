@@ -29,6 +29,8 @@ from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.finance.credit import interest_for, on_default, refuses
 from aerona.engine.loops.delay import lagged
+from aerona.engine.monetary.authorities import borrow_factor, establish
+from aerona.engine.monetary.rescue import rescue_bank, spread_run
 from aerona.engine.polity.law_effects import may_coin
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
@@ -51,6 +53,8 @@ class MoneyTally:
     repaid: int = 0
     defaulted: int = 0
     collapsed: int = 0
+    rescued: int = 0
+    runs: int = 0
 
 
 def riches(entity: EntityRow) -> int:
@@ -125,6 +129,7 @@ async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKin
     )
     ctx.session.add(currency)
     await ctx.session.flush()
+    await establish(ctx, currency)
     row = await ctx.session.get(CommunitySocietyRow, issuer.id)
     if row is not None:
         row.currency_id = currency.id
@@ -319,7 +324,9 @@ async def lend(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
         if riches(borrower) >= table.borrower_wealth_below or not await _at_war(ctx, borrower.id):
             continue
         open_loan = await ctx.session.scalar(select(LoanRow.id).where(LoanRow.borrower_entity_id == borrower.id, LoanRow.status == LoanStatus.OPEN).limit(1))
-        if open_loan is not None or not ctx.rng(f"lend.{borrower.id}.{ctx.epoch}").chance(table.lend_chance):
+        row = book.societies.get(borrower.id)
+        lending = table.lend_chance * await borrow_factor(ctx, row.currency_id if row is not None else None)
+        if open_loan is not None or not ctx.rng(f"lend.{borrower.id}.{ctx.epoch}").chance(lending):
             continue
         lender = min(lenders, key=lambda bank: (bank.world_id != borrower.world_id, -riches(bank), bank.id))
         risky = await defaulted_before(ctx, borrower.id)
@@ -377,9 +384,14 @@ async def collect(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> Non
         elif ctx.epoch >= loan.due_epoch and payment < owed(loan):
             await default(ctx, book, loan, borrower, lender)
             tally.defaulted += 1
-            if riches(lender) < table.collapse_wealth:
-                await collapse(ctx, book, lender)
-                tally.collapsed += 1
+            if riches(lender) >= table.collapse_wealth:
+                continue
+            if await rescue_bank(ctx, lender):
+                tally.rescued += 1
+                continue
+            await collapse(ctx, book, lender)
+            tally.runs += 1 if await spread_run(ctx, lender, await banks(ctx, book)) else 0
+            tally.collapsed += 1
 
 
 async def default(ctx: TickContext, book: EconomyBook, loan: LoanRow, borrower: EntityRow, lender: EntityRow) -> None:

@@ -2,6 +2,7 @@ import { type ReactNode, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Activity,
+  Stethoscope,
   Check,
   Hand,
   X,
@@ -68,7 +69,10 @@ import {
   BUILDS,
   CAPACITIES,
   CONSCIOUSNESS,
+  BODY_SYSTEMS,
   CAUSES,
+  CONDITION_CAUSES,
+  CONDITION_COURSES,
   CONDITIONS,
   DAMAGE,
   EXERTION_ICON,
@@ -100,6 +104,7 @@ type InjuryKind = components['schemas']['InjuryKind']
 type DamageType = components['schemas']['DamageType']
 type HarmCause = components['schemas']['HarmCause']
 type ConditionKind = components['schemas']['ConditionKind']
+type ConditionCause = components['schemas']['ConditionCause']
 type MaterialKind = components['schemas']['MaterialKind']
 type BodyFunction = components['schemas']['BodyFunction']
 type HeightClass = components['schemas']['HeightClass']
@@ -615,6 +620,16 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
                         {madeKind.name}
                       </Badge>
                     )}
+                    {row.cause !== null && (
+                      <Badge size='sm' variant='outline'>
+                        {`Cause: ${plain(CONDITION_CAUSES, row.cause)}`}
+                      </Badge>
+                    )}
+                    {row.kind_name !== null && (
+                      <Badge size='sm' variant='info'>
+                        {row.kind_name}
+                      </Badge>
+                    )}
                   </div>
                   <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
                     <Muted variant='caption'>{`Since epoch ${row.since_epoch} · ${plain(CAUSES, row.source)}`}</Muted>
@@ -658,6 +673,33 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
                       <Plus />
                     </Button>
                   </div>
+                )}
+                {row.ended_epoch === null && (
+                  <RowAction
+                    path='/api/actions/body:condition_edit'
+                    icon={Stethoscope}
+                    label='Set what brought it on'
+                    iconOnly
+                    fixed={{ condition_id: row.id }}
+                    defaults={{
+                      cause: row.cause ?? null,
+                      kind_id: row.kind_id ?? null,
+                    }}
+                    labels={{
+                      cause: 'What brought it on',
+                      kind_id: 'Kind of condition',
+                    }}
+                    choices={{
+                      cause: Object.entries(CONDITION_CAUSES).map(
+                        ([value, label]) => ({ value, label })
+                      ),
+                      kind_id: body.condition_kinds.map((item) => ({
+                        value: String(item.id),
+                        label: `${item.name} · ${plain(CONDITION_CAUSES, item.cause)} · ${plain(BODY_SYSTEMS, item.system)} · ${plain(CONDITION_COURSES, item.course)}`,
+                      })),
+                    }}
+                    hide={['severity', 'visible', 'part']}
+                  />
                 )}
                 {row.ended_epoch === null && kinds.length > 0 && (
                   <RowAction
@@ -1334,6 +1376,8 @@ function ConditionForm({
   const [variant, setVariant] = useState('')
   const [kind, setKind] = useState('chronic_illness')
   const [severity, setSeverity] = useState('2')
+  const [cause, setCause] = useState('')
+  const [made, setMade] = useState('')
   const give = useGodAction({
     run: () =>
       unwrap(
@@ -1343,6 +1387,8 @@ function ConditionForm({
             kind: kind as ConditionKind,
             variant_id: variant === '' ? null : Number(variant),
             severity: Number(severity),
+            cause: cause === '' ? null : (cause as ConditionCause),
+            kind_id: made === '' ? null : Number(made),
           },
         })
       ),
@@ -1367,6 +1413,25 @@ function ConditionForm({
           )}
           blocked={reason}
           onPick={setSeverity}
+        />
+        <Picker
+          label='What brought it on'
+          value={cause}
+          table={{ '': 'Not said', ...CONDITION_CAUSES }}
+          blocked={reason}
+          onPick={setCause}
+        />
+        <Picker
+          label='Kind of condition in this world'
+          value={made}
+          table={{
+            '': 'None named',
+            ...Object.fromEntries(
+              body.condition_kinds.map((item) => [String(item.id), item.name])
+            ),
+          }}
+          blocked={reason}
+          onPick={setMade}
         />
         {Object.keys(variantChoices(variants.data, 'condition', kind)).length >
           0 && (

@@ -4949,10 +4949,15 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `economic_orders.uncompensated_grievance` | 40 | 0–100 |
 | `economic_orders.flight_per_grievance_pct` | 10 | 0–100 |
 | `economic_orders.centre_collapse_spread_pct` | 60 | 0–100 |
+| `economic_orders.demand_support` | 40 | 0–100 |
+| `economic_orders.demand_chance_pct` | 10 | 0–100 |
+| `economic_orders.creed_hold_pct` | 50 | 0–100 |
+
+A realm with no change in course is pressed toward one, read in this order: a movement for abolition or land reform with enough support asks for emancipation of bound labour or reform of held land; a creed held in enough of its towns asks for emancipation or land reform where it teaches equality and for privatisation of state, ruler or common holdings where it teaches trade; a failed plan or a fallen centre in the last epoch asks a commanded or redistributing economy to decollectivise; bitter serfs in most towns ask for emancipation. With the demand chance the realm begins the change with partial compensation.
 
 **Codex and book.** A designed "Economic order" section in polity entries: the four axes per sector with labels, the named order, the shares of each class and every transition with its stages and transfers. A table of orders in the Records.
 
-**Integrity.** Each sector is a good kind or service of the world; a transition's from-values equal the order in place when it began; holdings moved by a transition exist.
+**Integrity.** Each sector is a good kind of the world (a typed column); a realm holds one order for itself and one per sector; the axes a change moves from and to are known axes with values they can take; a change in course belongs to a realm that still stands.
 
 **Legacy.** Each polity gets an order from its laws: `serfdom` gives `serf` labour, `slavery` gives `enslaved` for the sectors that hold slaves, temple and palace stores give `redistribution`, guild charters and markets give `market`. Polities with nothing to read get `household` ownership with `market` allocation.
 
@@ -4991,7 +4996,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
   - `seek_headship` (`org_id`);
   - `split_org` (`org_id`, `clique_id`, `name_reason`);
   - `bid_for_org` (`acquirer_id`, `target_id`, `kind`, `price`);
-  - `fund_research` (`org_id`, `target_technique_or_design`, `budget`);
+  - `fund_research` (`org_id`, `technique` or `design_id`, `budget`);
   - `file_insolvency` (`org_id`, `path`).
 - Son tool `sway_org` (`org_id`, `strategy`, `reason`).
 - God levers `org_governance:*`, `org_seat:*`, `org_clique:*`, `org_merger:create/edit/delete/hold/advance`, `org_research:*`, `insolvency_case:*`.
@@ -5082,7 +5087,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`worker_bodies`.** A faction kind `worker_body` with a `WorkerBodyForm` (`craft_union`, `industrial_union`, `general_union`, `journeyman_society`, `mutual_aid`, `worker_cooperative`, `made_mind_collective`), the trades and works it covers, members, dues, strike fund, standing in law (`banned`, `tolerated`, `recognised`, `compulsory`).
+- **`worker_bodies`.** A faction kind `worker_body` with a `WorkerBodyForm` (`craft_union`, `industrial_union`, `general_union`, `companion_society`, `mutual_aid`, `worker_cooperative`, `made_mind_collective`), the trades and works it covers, members, dues, strike fund, standing in law (`banned`, `tolerated`, `recognised`, `compulsory`).
 - **`labour_contracts`.** Hirer (a node), worker body or worker, terms: wage, hours, conditions (typed axes: safety, rest, keep), term, `ContractStatus` (`proposed`, `bargaining`, `agreed`, `broken`, `expired`).
 - **`labour_disputes`.** Parties, demand, `DisputeAct` (`strike`, `go_slow`, `lockout`, `boycott`, `occupation_of_works`, `sabotage`), workers out, losses each side, mediator, outcome.
 
@@ -5102,7 +5107,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 - A "Labour" section in settlement and organisation drawers; a dispute page.
 - Context block `labour`.
 
-**Incidents.** `labour.body_founded`, `labour.body_banned`, `labour.contract_agreed`, `labour.contract_broken`, `labour.strike_begun`, `labour.lockout_begun`, `labour.dispute_ended`, `labour.strikebreakers_used`.
+**Incidents.** `labour.body_founded`, `labour.body_banned`, `labour.contract_agreed`, `labour.contract_broken`, `labour.strike_begun`, `labour.lockout_begun`, `labour.dispute_ended`, `labour.strikebreakers_used`, `labour.works_claimed` (a cooperative takes unowned works of its trades), `labour.body_stirred` (a son stirs a body).
 
 **Rules namespace.** `labour`:
 
@@ -5114,14 +5119,31 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `labour.substitute_strength_pct` | 50 | 0–100 |
 | `labour.spread_chance_pct` | 10 | 0–100 |
 | `labour.banned_body_prosecution_pct` | 20 | 0–100 |
+| `labour.found_chance_pct` | 8 | 0–100 |
+| `labour.found_min_workers` | 80 | 1–1000000 |
+| `labour.strike_pay` | 1 | 0–100 |
+| `labour.wage_per_strength` | 50 | 0–200 |
+| `labour.dispute_gap` | 15 | 0–100 |
+| `labour.lockout_gap` | 30 | 0–100 |
+| `labour.lockout_chance_pct` | 20 | 0–100 |
+| `labour.contract_term_epochs` | 2 | 1–50 |
+| `labour.dispute_max_epochs` | 3 | 1–50 |
+| `labour.satisfaction_per_term` | 5 | 0–100 |
+| `labour.solidarity_won` | 15 | 0–100 |
+| `labour.strikebreaker_substitutes_pct` | 40 | 0–100 |
+| `labour.strikebreaker_hits` | 2 | 0–20 |
+| `labour.prosecution_fund_pct` | 50 | 0–100 |
+| `labour.cooperative_payout_pct` | 30 | 0–100 |
+
+The keys join the existing `labour` namespace beside the allocation rules. The labour law gains a `bodies` parameter (`banned`, `tolerated`, `recognised`, `compulsory`); `unions: false` bans every body, and `max_hours` caps the hours of every contract. A worker body is any organisation of kind `worker_body` or the older `workers_union`; members follow the trade's workers by standing (banned 15, tolerated 35, recognised 60, compulsory all) moved by solidarity. Disputes stop output in the labour allocation step. A dispute's outcome is told from the workers' side: `won` when the hirer can no longer pay its losses, `lost` when the fund cannot pay those out. The god ends a dispute with `labour_dispute:end`.
 
 **Codex and book.** Worker bodies in settlement and organisation entries; contracts and disputes with their terms and outcomes in the Records.
 
-**Integrity.** A contract's parties exist; a dispute's workers belong to the body or the works; fund never negative.
+**Integrity.** A contract made by a body names an organisation that still has one; a running dispute has no more workers out than its trade or body holds; every trade of a body is known; the fund is never negative (a schema check).
 
-**Legacy.** Craft guilds that struck become `journeyman_society` bodies where their members are not masters; existing strikes become disputes with act `strike` and their recorded end.
+**Legacy.** Craft guilds that struck become `companion_society` bodies where their members are not masters; existing strikes become disputes with act `strike` and their recorded end.
 
-**Applies to.** Every era and world with hired or bound work: temple workers who stop work, guild journeymen, factory unions, ship crews, made-mind collectives. Shown in settlements and organisation drawers.
+**Applies to.** Every era and world with hired or bound work: temple workers who stop work, guild fellows, factory unions, ship crews, made-mind collectives. Shown in settlements and organisation drawers.
 
 **Couplings.** Wages, living standards, production, class and identity salience (W32), law and police, cooperatives, economic orders (51.1), media, revolts.
 
@@ -5144,14 +5166,14 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **Tools and control.**
 
-- Mortal tool `set_monetary_policy` (`authority_id`, `rate`, `aim`, `peg_target`).
+- Mortal tool `set_monetary_policy` (`authority_id`, `rate`, `aim`, `peg_currency_id` or `peg_goods_kind`).
 - Mortal tool `found_monetary_authority` (`currency_id`, `holder_id`, `independence`, `aim`).
 - Son tool `shake_coin` (`currency_id`, `trust_change`, `reason`).
 - God levers `monetary_authority:create/edit/delete/hold`.
 - A "Money" section in polity and currency drawers.
 - Context block `money_policy`.
 
-**Incidents.** `money.rate_set`, `money.peg_held`, `money.peg_broken`, `money.bank_rescued`, `money.bank_run`, `money.printed_for_state`.
+**Incidents.** `money.rate_set`, `money.peg_held`, `money.peg_broken`, `money.bank_rescued`, `money.bank_run`, `money.printed_for_state`, `money.authority_founded` (a ruler sets a holder over a currency), `money.coin_shaken` (a son moves trust).
 
 **Rules namespace.** `monetary`:
 
@@ -5162,8 +5184,29 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `monetary.state_issue_trust_loss` | 5 | 0–50 |
 | `monetary.peg_reserve_floor_pct` | 20 | 0–100 |
 | `monetary.run_spread_pct` | 30 | 0–100 |
+| `monetary.neutral_rate` | 5 | 0–100 |
+| `monetary.state_issue_pct` | 10 | 0–100 |
+| `monetary.state_issue_coin` | 40 | 0–100000 |
+| `monetary.rate_step` | 1 | 0–20 |
+| `monetary.cheap_rate` | 1 | 0–100 |
+| `monetary.growth_rate_gap` | 2 | 0–50 |
+| `monetary.trust_rate_pct` | 10 | 0–100 |
+| `monetary.peg_defence_cost` | 4 | 0–1000 |
+| `monetary.peg_shock_rate` | 10 | 0–100 |
+| `monetary.peg_shock_trust` | 15 | 0–100 |
+| `monetary.reserve_gain` | 5 | 0–100000 |
+| `monetary.rescue_cost` | 50 | 0–100000 |
+| `monetary.rescue_wealth` | 30 | 0–100 |
+| `monetary.rescue_supply_pct` | 5 | 0–100 |
+| `monetary.rescue_trust_loss` | 3 | 0–50 |
+| `monetary.borrow_per_rate_point_pct` | 5 | 0–50 |
+| `monetary.reserve_lending_pct` | 50 | 0–100 |
+| `monetary.bend_chance_pct` | 60 | 0–100 |
+| `monetary.resist_favour_loss` | 5 | 0–100 |
 
-**Codex and book.** Authorities and their policies in polity and currency entries; rate history in the economy chapter.
+The authority row also names the currency's issuer and its coin, kept in step with the currency, so it shows in the drawers of both, and keeps its `reserves`, the reserves held when its peg was set and the epoch a peg broke. Each epoch the rate set the epoch before becomes the rate lenders feel (`effective_rate`), and a row of `monetary_rates` keeps the rate, aim, supply and trust for the rate history. Every currency the engine or a god strikes gets its authority at once; a source guard proves every place that makes a currency calls `establish`.
+
+**Codex and book.** Authorities and their policies in the entries of their holder, issuer and coin; the rate history in the Records of the Cosmos.
 
 **Integrity.** An authority issues an existing currency; a peg target is another currency or a good kind.
 
@@ -5181,10 +5224,10 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`exchanges`.** Settlement or network (F51), owner (polity, guild, company), rules (listing, margin), members (brokers).
-- **`securities`.** Issuer (company, polity, settlement, endowment 50.10), `SecurityKind` (`share`, `bond`, `annuity`, `note`, `future`), face value, coupon, maturity, listed exchange.
-- **`security_holdings`.** Holder node, security, amount, bought price.
-- **`security_prices`.** Security, epoch, price, volume.
+- **`stock_exchanges`.** Settlement or network (F51), owner (polity, guild, company), rules (listing fee, margin), members (brokers), mood.
+- **`issued_securities`.** Issuer (company, polity, settlement, endowment 50.10), `SecurityKind` (`share`, `bond`, `annuity`, `note`, `future`), amount, face value, coupon, maturity, listed exchange, the crown loan it stands for, price, belief, bubble, default and delisting epochs. (`securities` already names the vault table of 7.1.)
+- **`security_holdings`.** Holder node, security, amount, bought price, the part bought on credit.
+- **`security_prices`.** Security, its issuer, epoch, price, volume.
 
 **Behaviour.**
 
@@ -5197,11 +5240,11 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 - Mortal tools `list_security` (`issuer_id`, `kind`, `amount`, `exchange_id`), `trade_security` (`security_id`, `amount`, `side`).
 - Son tool `stir_market_mood` (`exchange_id`, `direction`, `reason`).
-- God levers `exchange:*`, `security:*`, `security_holding:*`, `security_price:edit`.
-- An exchange drawer page with prices and charts; holdings in holder drawers.
+- God levers `stock_exchange:*`, `issued_security:*`, `security_holding:*`, `security_price:*` (`security:*` already names the vault levers).
+- A "Securities" section in every drawer: exchanges in their town's and owner's, claims and their price history in the issuer's, holdings in the holder's.
 - Context block `securities`.
 
-**Incidents.** `securities.listed`, `securities.bubble_formed`, `securities.crash`, `securities.bond_defaulted`, `securities.insider_exposed`.
+**Incidents.** `securities.listed`, `securities.bubble_formed`, `securities.crash`, `securities.bond_defaulted`, `securities.insider_exposed`, `securities.exchange_opened`, `securities.margin_called`, `securities.bond_issued`, `securities.delisted`, `securities.traded`, `securities.mood_stirred`.
 
 **Rules namespace.** `securities`:
 
@@ -5212,12 +5255,28 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `securities.crash_drop_pct` | 40 | 0–100 |
 | `securities.margin_call_pct` | 30 | 0–100 |
 | `securities.default_rate_rise` | 5 | 0–50 |
+| `securities.anchor_pct` | 25 | 0–100 |
+| `securities.mood_pct` | 10 | 0–100 |
+| `securities.mood_decay` | 10 | 0–100 |
+| `securities.burst_chance_pct` | 20 | 0–100 |
+| `securities.crash_mood` | 40 | 0–100 |
+| `securities.stir_mood` | 30 | 0–100 |
+| `securities.exchange_min_population` | 3000 | 0–100000000 |
+| `securities.exchange_chance_pct` | 10 | 0–100 |
+| `securities.bond_treasury_below` | 50 | 0–100000000 |
+| `securities.bond_amount` | 20 | 1–100000 |
+| `securities.bond_face` | 10 | 1–100000 |
+| `securities.bond_term_epochs` | 4 | 1–100 |
+| `securities.insider_fine_pct` | 30 | 0–100 |
+| `securities.insider_exposure_pct` | 25 | 0–100 |
 
-**Codex and book.** Exchanges in settlement entries; securities in issuers' entries; holdings in holders' entries; a prices table in the economy chapter.
+A town with a bank, banking and enough people opens an exchange; claims list on the exchange of their issuer's town. What a claim is worth follows its issuer's riches for shares and futures, and its credit rating, coupon and the felt rate (51.5) for bonds, annuities and notes. Every open crown loan trades as a bond tied to the loan: its largest holder becomes the loan's lender, the loan's default defaults the bond and its repayment retires it, and each defaulted bond adds its rise to the issuer's interest. Other debt claims pay their coupons and face from the issuer's purse or default. Listed shares set `company_shares`, so trading moves the votes of owners, and an acquirer holding most of a target's listed shares closes its bid unresisted. Shocks are a credit default, a lost war, a collapse, a liquidation, an exposed cartel or an exposed insider. The law of fair dealing gains `insider_ban`: a keeper of a secret about an issuer sells at the price before its crash, and where the clause stands it may be exposed and fined.
 
-**Integrity.** Holdings of a security never exceed its amount; issuers exist; prices are per existing security.
+**Codex and book.** Exchanges in their town's and owner's entries; securities and their prices in the issuer's entries; holdings in the holder's entries.
 
-**Legacy.** Each company's shares become a `share` security of its amount; polity loans to lenders become `bond` securities.
+**Integrity.** Holdings of a security never exceed its amount; a listed security's issuer still stands; a price names its security's issuer.
+
+**Legacy.** Each company's shares become a `share` security of a hundred units held in proportion; every open crown loan is listed as a `bond` held by its lender.
 
 **Applies to.** Every world with tradeable claims; worlds without them show the section idle with that reason.
 
@@ -5246,11 +5305,11 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 - Mortal tools `found_league` (`polity_ids`, `aims`, `vote_basis`), `join_league` (`league_id`, `polity_id`), `table_league_motion` (`league_id`, `organ`, `kind`, `subject_id`).
 - Son tool `bind_league` (`league_id`, `strength_change`, `reason`).
-- God levers `polity_league:*`, `league_member:*`, `league_decision:*`.
-- A league drawer page (charter, members, organs, decisions), leagues on the atlas as a layer.
+- God levers `polity_league:*`, `league_member:*`, `league_decision:*`, `league:found` (a league of three or more realms with its aims and vote basis) and `league:dissolve`.
+- A "Leagues" section in every drawer with the charter, members, organs and decisions, and a card to found a league from a realm's drawer or dissolve one from its own; leagues stand in the atlas as their own type.
 - Context block `leagues`.
 
-**Incidents.** `league.founded`, `league.joined`, `league.left`, `league.expelled`, `league.sanction`, `league.ruling`, `league.dissolved`, `league.federated`.
+**Incidents.** `league.founded`, `league.joined`, `league.left`, `league.expelled`, `league.sanction`, `league.ruling`, `league.dissolved`, `league.federated`, `league.motion_tabled`, `league.bound`.
 
 **Rules namespace.** `leagues`:
 
@@ -5261,10 +5320,23 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `leagues.sanction_trade_cut_pct` | 50 | 0–100 |
 | `leagues.federate_depth_threshold` | 80 | 0–100 |
 | `leagues.court_binding_pct` | 50 | 0–100 |
+| `leagues.depth_gain` | 3 | 0–50 |
+| `leagues.depth_loss` | 8 | 0–100 |
+| `leagues.strength_per_member` | 10 | 0–100 |
+| `leagues.defiance_to_expel` | 3 | 1–50 |
+| `leagues.admit_chance_pct` | 15 | 0–100 |
+| `leagues.exit_chance_pct` | 10 | 0–100 |
+| `leagues.found_chance_pct` | 3 | 0–100 |
+| `leagues.found_min_members` | 3 | 2–50 |
+| `leagues.common_tariff_pct` | 10 | 0–100 |
+| `leagues.interworld_strength_loss` | 10 | 0–100 |
+| `leagues.bind_step` | 15 | 0–100 |
+
+The charter also keeps a treasury, a depth (how bound the members are), a common tariff, the monetary authority of a currency union and the treaty it grew from; a member keeps its defiance. Aims give organs: defence a force, law and peace a court, trade, unions, research and migration a secretariat, faith a council; every league has an assembly and gains a council at five members. Realms bound by a coalition, an interworld treaty, a defensive alliance or a trade pact of three or more parties may found a league. A customs union trades freely inside and lays its common tariff on goods from outside in the trade terms; a sanction is a duty the league lays on every sale of the sanctioned realm's goods; a currency union moves every member town to the money of its authority. A defiant member is suspended and sanctioned, then voted out; an attack on a member brings a motion to the force, and war between members a mediation by the court. A deep league bound for defence and trade, or defence and a customs union, founds a federation on its seat, whose realm takes every member's towns and treasury.
 
 **Codex and book.** League entries with charter, members, organs and every decision; membership in polity entries.
 
-**Integrity.** Members are polities; a currency union names one authority; decisions name existing organs.
+**Integrity.** Members are realms; a currency union names one authority, else the aim is struck; decisions name an organ the league has.
 
 **Legacy.** Coalitions and interworld federations with three or more parties become leagues; their treaties stay as the founding charter.
 
@@ -5280,9 +5352,9 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`land_use_rules`.** Settlement, district or ring, `LandUseRule` (`allowed_uses` of district kinds, `banned_uses`, `height_limit`, `density_limit`, `build_material` requirement, `fire_spacing`, `frontage_rule`, `green_share`), maker (council, ruler, guild, faith), strength, enforcement.
-- **`municipal_services`.** Settlement, `MunicipalService` (`refuse`, `lighting`, `water_distribution`, `street_cleaning`, `night_watch`, `burial_ground`, `market_inspection`), provider (settlement, guild, company, endowment, made minds), coverage by district, cost, quality.
-- **`conurbations`.** Member settlements, core, joined epoch, governance (`one_council`, `federated_councils`, `ruled_by_core`).
+- **`land_use_rules`.** Settlement, district (or the whole place) or ring, `LandUseRule` (`allowed_uses` of district kinds, `banned_uses`, `height_limit`, `density_limit`, `build_material` requirement, `fire_spacing`, `frontage_rule`, `green_share`), its values (district kinds, a level, a material), `RuleMaker` (`council`, `ruler`, `guild`, `faith`) and who made it, strength, enforcement, evasion (0–100), when it was set.
+- **`municipal_services`.** Settlement, `MunicipalService` (`refuse`, `lighting`, `water_distribution`, `street_cleaning`, `night_watch`, `burial_ground`, `market_inspection`), provider (the settlement itself or any body that pays), coverage by district, budget, what it cost last epoch, quality, when it was founded and when it failed.
+- **`conurbations`.** Core, member settlements, `ConurbationGovernance` (`one_council`, `federated_councils`, `ruled_by_core`), the core's laws spread to its members, joined epoch and split epoch.
 
 **Behaviour.**
 
@@ -5296,10 +5368,10 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 - Mortal tools `set_land_use_rule` (`settlement_id`, `district_or_ring`, `rule`, `values`), `provide_service` (`settlement_id`, `service`, `provider_id`, `budget`), `join_settlements` (`settlement_ids`, `governance`).
 - Son tool `bless_city` (`settlement_id`, `service_or_rule`, `reason`).
 - God levers `land_use_rule:*`, `municipal_service:*`, `conurbation:create/edit/delete/hold/split`.
-- "City rules" and "Services" sections in the settlement drawer; conurbations on the atlas and in the city scene.
+- A "City rules and services" section in every drawer, with a step to split a city; conurbations as "One city" lines from core to quarters on the world map, and named in the city scene.
 - Context block `city_rules`.
 
-**Incidents.** `city.rule_set`, `city.rule_evaded`, `city.service_founded`, `city.service_failed`, `city.settlements_joined`, `city.conurbation_split`, `city.planned_rebuild`.
+**Incidents.** `city.rule_set`, `city.rule_evaded`, `city.service_founded`, `city.service_failed`, `city.settlements_joined`, `city.conurbation_split`, `city.planned_rebuild`, `city.blessed`, `city.rule_blessed`.
 
 **Rules namespace.** `city_rules`:
 
@@ -5311,10 +5383,21 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `city_rules.lighting_crime_cut_pct` | 15 | 0–100 |
 | `city_rules.join_tie_threshold` | 70 | 0–100 |
 | `city_rules.evasion_per_land_value_pct` | 10 | 0–100 |
+| `city_rules.service_cost_per_thousand` | 5 | 0–1000 |
+| `city_rules.lighting_prosperity` | 3 | 0–100 |
+| `city_rules.green_desirability` | 10 | 0–100 |
+| `city_rules.frontage_desirability` | 5 | 0–100 |
+| `city_rules.split_unrest_gap` | 40 | 0–100 |
+| `city_rules.rebuild_condition` | 30 | 0–100 |
+| `city_rules.rebuild_cost` | 200 | 0–100000 |
+| `city_rules.service_start_chance_pct` | 10 | 0–100 |
+| `city_rules.rule_start_chance_pct` | 5 | 0–100 |
+
+A rule acts by its strength times its enforcement, less its evasion; evasion is the share left unenforced times the place's mean land value times `evasion_per_land_value_pct`. A rule of use acting at a quarter or more strikes banned district kinds (or kinds outside the allowed ones) from what the town wants to build, and every rule of use eases the nuisance districts and buildings put on their neighbours. A height limit stops homes rising past its level; a density limit caps how many levels a district may reach; a required material is what the town then builds in; fire spacing and a required material cut the town's fire risk by `fire_spread_cut_pct`; green share and frontage rules raise the desirability of the districts they cover. Every rule raises the cost of building a district by `build_cost_rise_pct` at full strength. A town with rules rebuilds districts wrecked below `rebuild_condition` to plan, in stone, and becomes `planned`. A service costs `service_cost_per_thousand` for each thousand people, paid by its provider up to its budget; it reaches each district as far as it is paid for, and its coverage (times quality) stands in for the matching coverage of the town (refuse and street cleaning for sanitation, water distribution for water, the night watch for the watch, burial grounds for burial, market inspection for markets). Refuse also raises the town's sanitation and lighting cuts crime and raises prosperity. A service left unpaid fails. Crowded towns may set a rule and towns found services they lack. In each region the largest town and any other whose ties to it (same realm 40, same people 30, a spreading form 20, together over twenty thousand people 10) reach `join_tie_threshold` grow into one city under federated councils. Under one council or the core's rule the core's laws spread to the members; under one council their unrest is shared. A city splits when the core and a member go to war, when a member's unrest stands `split_unrest_gap` above the core's, or when its core or all its members are gone, and its spread laws are lifted.
 
 **Codex and book.** City rules and services in settlement entries; conurbations with their members and history.
 
-**Integrity.** Rules name districts or rings of their settlement; a conurbation's members are distinct settlements of one world.
+**Integrity.** A rule for one district names a district of its own settlement; a city's quarters are distinct settlements of its core's world, other than its core.
 
 **Legacy.** Settlements with `planned` morphology get the land use rules their plan implies; existing wells, watch posts and burial grounds become services of those kinds.
 
@@ -5330,9 +5413,9 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`protected_areas`.** Region or site, protector (polity, faith, community, company, son), `ProtectionBasis` (`law`, `faith`, `custom`, `charter`, `divine_decree`), protected uses banned (`ProtectedUse`: `hunting`, `logging`, `farming`, `mining`, `settlement`, `entry`, `fishing`, `building`), wardens, strength.
-- **`species_protections`.** Species, holder, basis, measures (`hunting_ban`, `trade_ban`, `breeding_programme`, `reintroduction`, `habitat_guard`), since.
-- **`conservation_movements`.** A movement (W20) with aims typed by these measures, support share per cohort.
+- **`protected_areas`.** Region or site, protector (polity, faith, community, company, son), `ProtectionBasis` (`law`, `faith`, `custom`, `charter`, `divine_decree`), protected uses banned (`ProtectedUse`: `hunting`, `logging`, `farming`, `mining`, `settlement`, `entry`, `fishing`, `building`), wardens, strength, poaching (0–100), since and lifted.
+- **`species_protections`.** Species, holder, basis, measures (`ProtectionMeasure`: `hunting_ban`, `trade_ban`, `breeding_programme`, `reintroduction`, `habitat_guard`), whether the kind was in danger when protected, since and when it recovered.
+- **`conservation_movements`.** The aims (barred uses and measures) and support per social class of a movement (W20) whose cause is `MovementCause.CONSERVATION`.
 
 **Behaviour.**
 
@@ -5346,10 +5429,10 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 - Mortal tools `protect_area` (`region_or_site_id`, `basis`, `banned_uses`), `protect_species` (`species_id`, `measures`), `reintroduce` (`species_id`, `region_id`).
 - Son tool `hallow_wild` (`region_id`, `reason`).
 - God levers `protected_area:*`, `species_protection:*`, movements through existing levers.
-- Protected areas on the atlas; a "Protection" section in region and species drawers.
+- Protected lands as a "Protected lands" layer of the world map, tinted by the right that protects them; a "Protection" section in every drawer.
 - Context block `protected_nature`.
 
-**Incidents.** `nature.area_protected`, `nature.protection_lifted`, `nature.poached`, `nature.species_protected`, `nature.species_reintroduced`, `nature.species_recovered`.
+**Incidents.** `nature.area_protected`, `nature.protection_lifted`, `nature.poached`, `nature.species_protected`, `nature.species_reintroduced`, `nature.species_recovered`, `nature.hallowed`.
 
 **Rules namespace.** `protected_nature`:
 
@@ -5360,10 +5443,18 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `protected_nature.poaching_per_price_pct` | 10 | 0–100 |
 | `protected_nature.reintroduction_success_pct` | 40 | 0–100 |
 | `protected_nature.displacement_grievance` | 20 | 0–100 |
+| `protected_nature.warden_strength` | 5 | 0–100 |
+| `protected_nature.poached_at` | 30 | 0–100 |
+| `protected_nature.habitat_fit` | 30 | 0–100 |
+| `protected_nature.reintroduced_abundance` | 5 | 0–100 |
+| `protected_nature.livelihood_prosperity` | 3 | 0–100 |
+| `protected_nature.conservation_loss_pct` | 50 | 0–200 |
+
+A protected land starts at a strength set by its right (law 60, faith 50, custom 40, charter 50, divine decree 70) and acts by its strength plus its wardens' strength, less its poaching. A land barring hunting cuts the hunting of every kind there like a game reserve, by `use_cut_per_strength_pct`; a kind under a hunting ban is hunted that much less everywhere. A land barring logging regrows forest toward its natural cover, one barring farming sheds fields, one barring settlement or building sheds clearings, and one barring hunting, fishing or entry sees its wildlife grow. Want around a protected land (a hungry year and poor towns) draws poaching, which wears its protection. Towns of a land whose livelihoods (logging, farming, mining, settlement, fishing, building) are barred lose prosperity for each and grow restless. A breeding programme raises a kind's numbers wherever it lives, a habitat guard regrows forest in its lands, and reintroduction brings it back to a land it left that still fits it, by chance. A kind protected while in danger is told to have recovered once it is out of danger. Lost forest and kinds in danger in a town's land push a movement for the wild, which farmers and workers resist; a rising one protects its home land by law against its aims instead of taking up arms, and its support is reckoned for each class.
 
 **Codex and book.** Protected areas in region entries; protections in species entries; movements in their own entries.
 
-**Integrity.** Areas lie in existing regions; reintroduction targets regions whose habitat the species can hold.
+**Integrity.** A protected land lies in an existing region; a protection of a living kind protects a species; the aims of a movement for the wild belong to a movement whose cause is the wild. Reintroduction only ever reaches lands whose fit is at least `habitat_fit`.
 
 **Legacy.** Game reserves become protected areas with basis `law` and banned use `hunting`; sacred groves become areas with basis `faith`.
 
@@ -5379,7 +5470,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`departures`.** Office holder, office, `DepartureKind` (`abdication`, `retirement`, `resignation`, `withdrawal_to_religion`, `exile_by_choice`), in favour of (a node or the succession rule), conditions (keep title, keep lands, pension, safe conduct), epoch, the departed holder's later standing.
+- **`departures`.** Office holder, the office of a realm (with its kind and realm) or the organisation whose headship was left, `DepartureKind` (`abdication`, `retirement`, `resignation`, `withdrawal_to_religion`, `exile_by_choice`), in favour of (a node, or empty for the succession rule), conditions (`keep_title`, `keep_lands`, `pension`, `safe_conduct`), epoch, years held, the departed holder's later standing and the epoch they came back.
 
 **Behaviour.**
 
@@ -5390,14 +5481,14 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **Tools and control.**
 
-- Mortal tool `leave_office` (`office_id`, `kind`, `in_favour_of_id`, `conditions`).
+- Mortal tool `leave_office` (`office_id` or `org_id`, `kind`, `in_favour_of_id`, `conditions`).
 - Mortal tool `return_to_office` (`departure_id`).
 - Son tool `call_to_step_aside` (`holder_id`, `reason`).
 - God levers `departure:create/edit/delete/hold`.
 - Departures in office and holder drawers.
 - Context block `offices` gains departures.
 
-**Incidents.** `office.abdicated`, `office.retired`, `office.resigned`, `office.withdrew`, `office.returned`.
+**Incidents.** `office.abdicated`, `office.retired`, `office.resigned`, `office.withdrew`, `office.returned`, `office.call_refused` (a holder will not heed a son's call).
 
 **Rules namespace.** `departures`:
 
@@ -5407,10 +5498,22 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `departures.scandal_weight` | 40 | 0–100 |
 | `departures.return_chance_pct` | 5 | 0–100 |
 | `departures.retirement_age_share_pct` | 80 | 0–100 |
+| `departures.health_weight` | 20 | 0–100 |
+| `departures.failure_weight` | 25 | 0–100 |
+| `departures.leave_chance_pct` | 20 | 0–100 |
+| `departures.pension` | 5 | 0–100000 |
+| `departures.rally_standing` | 60 | 0–100 |
+| `departures.rally_stability_loss` | 2 | 0–100 |
+| `departures.standing_per_year` | 1 | 0–100 |
+| `departures.standing_decay` | 3 | 0–100 |
+| `departures.scandal_unrest_relief` | 10 | 0–100 |
+| `departures.call_heed_pct` | 70 | 0–100 |
+
+Every mortal who holds an office of a realm or heads an organisation (faiths, companies and guilds rule themselves through 51.2) weighs leaving each epoch: old age against the people's span of life, a scandal of the last epoch (a crime case opened against them, or a told exposure naming them), a lasting wound and, for a ruler, a realm's lost stability. A scandal gives resignation, failure exile by choice, a devout ruler withdrawal to religion, another ruler abdication and lesser holders retirement; custom retires lesser holders past the retirement share of a life. A ruler's office passes to the named heir or the first of the line of succession; another office or headship passes to the named heir or stands empty. A resignation eases the unrest at the holder's seat; an exile with safe conduct moves the holder to a town outside the realm. The realm pays a pension to one who left with one; one who abdicated keeps standing that decays and, while it is high, costs the realm stability as a rallying point; anyone but a retiree may come back while the office stands empty or, for a ruler, weak. A step-down forced by leverage is told as a resignation.
 
 **Codex and book.** Departures in holder and office entries.
 
-**Integrity.** The departed held the office at the epoch; the successor exists.
+**Integrity.** One who leaves never hands the office to themselves; a leaving names the realm and kind of its office; a return comes no earlier than the leaving.
 
 **Legacy.** Step-downs forced by leverage become `resignation` departures.
 
@@ -5426,7 +5529,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`referendums`.** Polity, settlement or league, question typed by subject (`law`, `constitution`, `independence`, `union`, `treaty`, `war`, `transition` of 51.1, `recall` of an office holder, `faith`), the franchise used, `binding` (yes or no), threshold, campaign sides with their spending, turnout, result.
+- **`referendums`.** Polity, settlement or league, question typed by subject (`law`, `constitution`, `independence`, `union`, `treaty`, `war`, `transition` of 51.1, `recall` of an office holder, `faith`) and what it is about, who called it and by which right (`ruler`, `assembly`, `petition`, `league`, `god`), the franchise used (`nobles`, `landholders`, `citizens`, `free`, `all`), `binding`, threshold, the spending of each side, fraud, the share for it, turnout, result (`pending`, `passed`, `failed`, `void`), whether it was ignored, and the epochs it was called and held.
 
 **Behaviour.**
 
@@ -5436,13 +5539,13 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **Tools and control.**
 
-- Mortal tools `call_referendum` (`polity_id`, `subject`, `question_target_id`, `binding`), `campaign_for_vote` (`referendum_id`, `side`, `means`).
+- Mortal tools `call_referendum` (`polity_id`, `subject`, `question_target_id`, `binding`), `campaign_for_vote` (`referendum_id`, `side`: `yes` or `no`, `means`: `money`, `media`, `speech` or `fraud`).
 - Son tool `sway_vote` (`referendum_id`, `side`, `reason`).
 - God levers `referendum:create/edit/delete/hold/decide`.
-- Referendum pages; a "Votes" list in polity drawers.
+- A "Votes" section in every drawer, with a step to decide a vote still to be held.
 - Context block `votes`.
 
-**Incidents.** `vote.called`, `vote.held`, `vote.result`, `vote.ignored`, `vote.fraud_exposed`.
+**Incidents.** `vote.called`, `vote.held`, `vote.result`, `vote.ignored`, `vote.fraud_exposed`, `vote.campaigned`, `vote.swayed`.
 
 **Rules namespace.** `referendums`:
 
@@ -5452,10 +5555,20 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `referendums.ignore_legitimacy_loss` | 20 | 0–100 |
 | `referendums.campaign_shift_pct` | 10 | 0–100 |
 | `referendums.fraud_detect_pct` | 20 | 0–100 |
+| `referendums.opinion_weight_pct` | 30 | 0–100 |
+| `referendums.media_shift` | 5 | 0–100 |
+| `referendums.speech_shift` | 5 | 0–100 |
+| `referendums.fraud_shift_pct` | 50 | 0–100 |
+| `referendums.assembly_call_pct` | 5 | 0–100 |
+| `referendums.obey_chance_pct` | 60 | 0–100 |
+| `referendums.fraud_step` | 20 | 0–100 |
+| `referendums.salience_turnout_pct` | 60 | 0–100 |
+
+A vote is held the epoch after it is called. A realm ruled by an assembly may put its constitution to its people; a movement with enough support petitions a vote on its cause (independence of its town, the faith it would revive, the constitution its franchise demand would change, war or peace with its foe). The share for it starts even and moves with the people's opinion of what is asked, the difference in spending, outlets, heard speeches and fraud. Turnout is the share of people the franchise lets vote, weighed by how much the question touches them. Fraud may be found out and void the vote. A passed or failed binding vote is carried at once: a law or constitution voted down is repealed, a town votes itself free of its realm, a realm joins the holder (or a league takes it in), a treaty voted down is broken, a vote for war declares it and one against makes peace, a change of order voted down fails, a recall empties the officer's seats and a faith voted in becomes the realm's. A passed vote that does not bind is carried as far as the rulers heed it; otherwise it is ignored at a cost in legitimacy.
 
 **Codex and book.** Referendums with question, sides, turnout and result in polity entries.
 
-**Integrity.** The franchise matches the polity's law; the subject exists.
+**Integrity.** A vote still to be held is open to those its realm's law lets vote; it asks about something that exists; it is held no earlier than called.
 
 **Legacy.** None; referendums start empty.
 
@@ -5471,9 +5584,9 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`reckonings`.** Polity, the fallen regime (a ruler, a government kind, an occupation, 51.15).
-- **`reckoning_measures`.** Child rows of a reckoning, one per `ReckoningMeasure`: `tribunal`, `truth_inquiry`, `office_bar`, `amnesty`, `amnesty_for_confession`, `restitution`, `reparation_to_victims`, `memorial`, `record_opening` (opening the old regime's archives); each with scope, strength, stage.
-- **`reckoning_cases`.** Reckoning, the accused or the inquired, acts named (recorded incidents, F58), measure, outcome.
+- **`reckonings`.** Polity, the fallen regime (a ruler or node, its government kind, the epoch it fell), who opened it, the old servants' resistance, the victims' pressure, opening and closing epochs.
+- **`reckoning_measures`.** Child rows of a reckoning, one per `ReckoningMeasure`: `tribunal`, `truth_inquiry`, `office_bar`, `amnesty`, `amnesty_for_confession`, `restitution`, `reparation_to_victims`, `memorial`, `record_opening` (opening the old regime's archives); each with scope, strength, stage (`planned`, `active`, `done`) and the administration a bar holds back.
+- **`reckoning_cases`.** Reckoning, the accused or the inquired, acts named (recorded incidents, F58), measure, outcome (`pending`, `convicted`, `acquitted`, `pardoned`, `confessed`, `barred`).
 
 **Behaviour.**
 
@@ -5487,10 +5600,10 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 - Mortal tools `open_reckoning` (`polity_id`, `fallen_regime_id`, `measures`), `try_servant` (`reckoning_id`, `accused_id`, `incident_ids`).
 - Son tool `weigh_reckoning` (`reckoning_id`, `measure`, `reason`).
 - God levers `reckoning:*`, `reckoning_measure:*`, `reckoning_case:*`.
-- A reckoning page linked from the polity drawer.
+- A "Reckoning" section in every drawer: the realm's reckonings with their measures and cases, the fallen ruler's and the accused's.
 - Context block `reckoning`.
 
-**Incidents.** `reckoning.opened`, `reckoning.trial`, `reckoning.verdict`, `reckoning.amnesty`, `reckoning.inquiry_report`, `reckoning.restitution`, `reckoning.closed`.
+**Incidents.** `reckoning.opened`, `reckoning.trial`, `reckoning.verdict`, `reckoning.amnesty`, `reckoning.inquiry_report`, `reckoning.restitution`, `reckoning.closed`, `reckoning.weighed` (a son strengthens a measure).
 
 **Rules namespace.** `reckoning`:
 
@@ -5500,10 +5613,23 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `reckoning.amnesty_grievance_shift` | 15 | 0–100 |
 | `reckoning.restitution_cost_pct` | 30 | 0–100 |
 | `reckoning.harsh_revolt_chance_pct` | 10 | 0–100 |
+| `reckoning.open_chance_pct` | 50 | 0–100 |
+| `reckoning.convict_pct` | 60 | 0–100 |
+| `reckoning.measure_epochs` | 2 | 1–50 |
+| `reckoning.harsh_from` | 120 | 0–200 |
+| `reckoning.weak_below` | 30 | 0–200 |
+| `reckoning.weak_unrest` | 5 | 0–100 |
+| `reckoning.flight_chance_pct` | 20 | 0–100 |
+| `reckoning.reparation_coin` | 20 | 0–100000 |
+| `reckoning.memorial_legitimacy` | 5 | 0–100 |
+| `reckoning.inquiry_fidelity` | 80 | 0–100 |
+| `reckoning.servant_resistance` | 5 | 0–100 |
+
+One who seizes rule by a coup may open a reckoning. The old servants are the holders of the realm's lesser offices who held them before the fall or were placed by the fallen ruler. A weak realm reckons by amnesty; a merciful ruler by amnesty for confession and a truth inquiry; a harsh one by tribunal and office bar; others by tribunal, inquiry and the opening of records at half strength; victims who press hard add reparation, a memorial and restitution. Each measure runs its epochs: tribunals try servants for the deeds the record names (killings, executions, massacres, purges, torture, oppression) and convict by strength, removing them from office; bars remove them and hold back administration until the bar ends; amnesties pardon; confessions are written as testimony; inquiries write an account of the fallen regime; opened records reveal its hidden truths to the capital; restitution costs the treasury; reparation pays the living victims of its purges; a memorial lends legitimacy. Tribunals and bars stronger together than the harsh threshold may drive the servants to revolt (a rebel faction that makes war on the realm) or flight; weaker than the weak threshold, they stir unrest at the seat.
 
 **Codex and book.** Reckonings with measures, cases and outcomes in polity entries; accounts from inquiries in historiography.
 
-**Integrity.** Cases name recorded incidents; the fallen regime is earlier than the reckoning.
+**Integrity.** Cases name only recorded happenings; a reckoning opens no earlier than the fall; a measure names its reckoning's realm.
 
 **Legacy.** Recorded purges after coups become reckonings with measure `tribunal` and their victims as cases.
 
@@ -5519,7 +5645,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`leader_cults`.** Leader (a mortal or made mind; never a son, foreign god or the Creator, who are worshipped through faith), promoters (offices, outlets, a party), instruments (`CultInstrument`: `images_in_public`, `official_biography`, `holidays`, `oaths_of_loyalty`, `naming_of_places`, `teaching_in_schools`, `staged_gatherings`, `ban_on_criticism`), intensity (0–100), sincerity of the public (derived).
+- **`leader_cults`.** Leader (a mortal or made mind; never a son, foreign god or the Creator, who are worshipped through faith), promoters (offices, outlets, a party), instruments (`CultInstrument`: `images_in_public`, `official_biography`, `holidays`, `oaths_of_loyalty`, `naming_of_places`, `teaching_in_schools`, `staged_gatherings`, `ban_on_criticism`), intensity (0–100), sincerity of the public, the realm it is raised in, its fate (`living`, `passed_on`, `faded`, `became_faith`, `torn_down`), the heir it passed to, the faith it became, and its beginning and end.
 
 **Behaviour.**
 
@@ -5532,10 +5658,10 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 - Mortal tools `promote_cult` (`leader_id`, `instruments`), `tear_down_cult` (`cult_id`).
 - Son tool `sway_cult` (`cult_id`, `intensity_change`, `reason`).
 - God levers `leader_cult:create/edit/delete/hold`.
-- A "Cult" block in the leader's drawer.
+- A "Cult of a leader" section in every drawer: the leader's own, their realm's and their promoters'.
 - Context block `leader_cult`.
 
-**Incidents.** `cult.begun`, `cult.instrument_added`, `cult.critic_punished`, `cult.passed_on`, `cult.torn_down`, `cult.became_faith`.
+**Incidents.** `cult.begun`, `cult.instrument_added`, `cult.critic_punished`, `cult.passed_on`, `cult.torn_down`, `cult.became_faith`, `cult.faded`, `cult.swayed`.
 
 **Rules namespace.** `leader_cults`:
 
@@ -5545,10 +5671,17 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `leader_cults.sincerity_decay` | 5 | 0–50 |
 | `leader_cults.cost_per_instrument` | 3 | 0–50 |
 | `leader_cults.apotheosis_chance_pct` | 5 | 0–100 |
+| `leader_cults.start_chance_pct` | 3 | 0–100 |
+| `leader_cults.intensity_step` | 5 | 0–50 |
+| `leader_cults.dissent_relief` | 5 | 0–100 |
+| `leader_cults.pass_on_from` | 50 | 0–100 |
+| `leader_cults.bind_step` | 15 | 0–100 |
+
+A sole ruler may have a cult raised to them, beginning with images in public. Each instrument raises the intensity the cult climbs toward and costs the treasury; an unpaid cult sinks. An official biography is written as an altered official chronicle; oaths of loyalty bind the realm's officers to the leader by fealty; a ban on criticism punishes mockery of the leader, which then no longer vents dissent. Staged gatherings, oaths, images, naming and the ban wear the public's sincerity, teaching in schools restores it, and it falls when the cult's intensity stands above the realm's stability. At the leader's death a cult strong enough passes to the next ruler at half its intensity; otherwise it may become a faith worshipping the dead leader, or fades. A reckoning with a fallen leader tears their cult down.
 
 **Codex and book.** The cult in the leader's entry with its instruments and fate.
 
-**Integrity.** The leader is mortal or a made mind; promoters exist.
+**Integrity.** A living cult venerates a mortal or made mind; its promoters exist; a living cult has no end and an ended one has one.
 
 **Legacy.** None; cults start empty.
 
@@ -5564,7 +5697,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`restorations`.** Fallen polity (kept as a dead node), movement or claimant, territories sought, legitimacy sources (`RestorationBasis`: `bloodline`, `faith`, `law`, `memory`, `foreign_backing`), stage (`memory`, `movement`, `rising`, `restored`, `failed`), restored polity (when founded).
+- **`restorations`.** Fallen polity (kept as a dead node), movement or claimant, territories sought, legitimacy sources (`RestorationBasis`: `bloodline`, `faith`, `law`, `memory`, `foreign_backing`), stage (`memory`, `movement`, `rising`, `restored`, `failed`), memory (0–100), restored polity (when founded), beginning and end. A failed restoration names why (`RestorationFailure`: `memory_faded`, `put_down`, `no_lands`).
 
 **Behaviour.**
 
@@ -5577,10 +5710,10 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 - Mortal tools `raise_restoration` (`fallen_polity_id`, `basis`, `territory_ids`), `restore_polity` (`restoration_id`).
 - Son tool `stir_memory` (`fallen_polity_id`, `reason`).
 - God levers `restoration:create/edit/delete/hold/advance`.
-- Restorations on the dead polity's page and the new polity's drawer.
+- A "Restorations" section in every drawer: the fallen realm's, the restored realm's and the claimant's; its step carries a restoration to its next stage.
 - Context block `restoration`.
 
-**Incidents.** `polity.restoration_begun`, `polity.restoration_rising`, `polity.restored`, `polity.restoration_failed`.
+**Incidents.** `polity.restoration_begun`, `polity.restoration_rising`, `polity.restored`, `polity.restoration_failed`, `polity.memory_stirred`.
 
 **Rules namespace.** `restoration`:
 
@@ -5589,10 +5722,18 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `restoration.memory_decay_per_epoch` | 3 | 0–50 |
 | `restoration.movement_grievance_threshold` | 50 | 0–100 |
 | `restoration.old_law_stability_loss` | 10 | 0–100 |
+| `restoration.rising_memory` | 60 | 0–100 |
+| `restoration.rising_chance_pct` | 20 | 0–100 |
+| `restoration.resistance_stability` | 60 | 0–100 |
+| `restoration.stir_memory` | 20 | 0–100 |
+| `restoration.basis_memory` | 10 | 0–100 |
+| `restoration.old_law_cap` | 5 | 0–50 |
+
+A fallen realm is remembered by the accounts written about it, the claims still held on it and the titles it held; each adds to the memory a new movement starts with, and each basis adds more. Grievance in its old lands (their mean unrest) at the threshold turns memory into a movement. Memory fades each epoch while the movement has not risen, and a movement whose memory is gone fails. A movement whose memory reaches `rising_memory` may rise; a rising is put down when a realm holding its old lands is at `resistance_stability` or steadier, and otherwise the old lands are set free and a new realm is founded in them under the old name, emblem and government, takes back up to `old_law_cap` of the old laws (losing stability for each), takes over the old realm's open claims and titles, crowns the claimant when a mortal leads it, and descends from the old realm. Each ground lends the restored realm legitimacy (bloodline 10, faith 15, law 5, memory 5); memory as a ground halves the fading, law as a ground halves the stability old laws cost, and foreign backing raises the steadiness a holder needs to put the rising down by 20.
 
 **Codex and book.** Restorations in the entries of the fallen and the restored polity, linked as one line.
 
-**Integrity.** The fallen polity is dead; the restored polity names it as predecessor.
+**Integrity.** A restoration under way seeks a realm that has fallen; a restored realm descends from the fallen one; a restoration under way has no end and an ended one has one.
 
 **Legacy.** Pretenders who press a dormant title gain a restoration at stage `movement`.
 
@@ -5608,9 +5749,9 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`occupation_regimes`.** Occupation, `OccupationRule` (`military`, `civil_by_occupier`, `local_puppet`, `annexation`, `protectorate`), administrators, laws imposed, extraction (tax, levies, labour, goods), settlement of occupiers' people (count).
-- **`collaborations`.** Collaborator node (mortal, faction, polity), occupation, `CollaborationKind` (`administration`, `police`, `informing`, `trade`, `militia`, `propaganda`), reward, exposure.
-- **`occupation_measures`.** Occupation, `OccupationMeasure` (`curfew`, `hostages`, `collective_punishment`, `deportation`, `requisition`, `ban_on_gathering`, `amnesty_offer`), strength, epoch.
+- **`occupation_regimes`.** The occupied region and its occupier, the realm the land was taken from, `OccupationRule` (`military`, `civil_by_occupier`, `local_puppet`, `annexation`, `protectorate`), administrators, laws imposed, extraction (share of taxes, share of levies, rate of forced labour; goods are taken by requisition), settlers of the occupier's people (count), beginning, end and `OccupationEnding` (`liberated`, `annexed`, `withdrawn`).
+- **`collaborations`.** Collaborator node (mortal, faction, polity), occupation, `CollaborationKind` (`administration`, `police`, `informing`, `trade`, `militia`, `propaganda`), reward, exposure, `CollaborationFate` (`serving`, `killed`, `ended`), beginning and end.
+- **`occupation_measures`.** Regime and the region it presses, `OccupationMeasure` (`curfew`, `hostages`, `collective_punishment`, `deportation`, `requisition`, `ban_on_gathering`, `amnesty_offer`), strength, epoch and end.
 
 **Behaviour.**
 
@@ -5627,7 +5768,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 - An "Occupation" section in occupied settlements, regions and occupier polities.
 - Context block `occupation`.
 
-**Incidents.** `occupation.rule_set`, `occupation.collaborator_joined`, `occupation.collaborator_killed`, `occupation.measure_imposed`, `occupation.deportation`, `occupation.annexed`, `occupation.liberated`.
+**Incidents.** `occupation.rule_set`, `occupation.collaborator_joined`, `occupation.collaborator_killed`, `occupation.collaborator_exposed`, `occupation.measure_imposed`, `occupation.oppression_enforced`, `occupation.deportation`, `occupation.annexed`, `occupation.liberated`.
 
 **Rules namespace.** `occupation`:
 
@@ -5638,10 +5779,24 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `occupation.measure_grievance` | 20 | 0–100 |
 | `occupation.exposure_kill_pct` | 15 | 0–100 |
 | `occupation.extraction_cap_pct` | 50 | 0–100 |
+| `occupation.rule_upkeep` | 20 | 0–1000 |
+| `occupation.collaborator_intel_pct` | 10 | 0–100 |
+| `occupation.exposure_gain` | 10 | 0–100 |
+| `occupation.measure_decay` | 25 | 0–100 |
+| `occupation.settle_per_epoch` | 200 | 0–100000 |
+| `occupation.annex_control` | 80 | 0–100 |
+| `occupation.deport_pct` | 5 | 0–100 |
+| `occupation.requisition_pct` | 20 | 0–100 |
+| `occupation.recruit_chance_pct` | 30 | 0–100 |
+| `occupation.measure_chance_pct` | 30 | 0–100 |
+| `occupation.labour_prosperity` | 10 | 0–100 |
+| `occupation.rule_shift_chance_pct` | 20 | 0–100 |
+
+Every occupation gains a military regime, which records the realm the land was taken from. Each rule scales the occupier's share of taxes, moves control and resistance each epoch and sets the cost of ruling, paid from the occupier's treasury and cut by each collaborator; an occupier with enough control may move from military to civil rule. Civil rule and annexation extend the occupier's laws over the land's towns and bring settlers into its largest town; annexation at `annex_control` closes the old rule over the towns, binds them to the occupier's heartland and ends the occupation, after which the old realm's titles press claims on the land. The regime's share of taxes and levies (capped) sets what the occupier takes; forced labour lowers the towns' prosperity. The occupier wins collaborators among those who live there; each is paid a reward, informers and police cut the partisans' raids, and exposure grows with resistance until partisans may kill them. Measures cut the raids while they last and fade each epoch; most raise resistance, hostages, collective punishment and deportation are remembered by the locals as atrocities (which raise resistance) and are enforced by police and militia collaborators, deportation carries people off as captives, requisition takes from the towns' treasuries, and an amnesty offer lowers resistance. When the occupation ends otherwise, the regime ends as liberated (or withdrawn if the old realm is gone), its laws are lifted, its collaborators' service ends, and the old realm may open a reckoning with the occupier in which those collaborators are judged as its servants.
 
 **Codex and book.** The regime, collaborators and measures in the occupied place's and the occupier's entries.
 
-**Integrity.** A regime belongs to an open occupation; collaborators are of the occupied place or its neighbours.
+**Integrity.** A regime in force rules a land its occupier still holds; collaborators are of the occupied place or its neighbours; a service still given has no end and an ended one has one; a measure in force belongs to a regime in force and presses its land.
 
 **Legacy.** Each open occupation gets a `military` regime with its existing tax as extraction.
 
@@ -5657,9 +5812,9 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`mass_weapons`.** Holder, `MassHarm` (`blast`, `fire`, `poison`, `disease`, `radiation`, `swarm`, `field` (powers, W45), `rite` (8.6), `divine_relic`), reach (settlement, region, world), count, readiness, delivery (units or carriers able to bring it), the technique and materials it needs (F24, F23), visible stage of the programme (0.8 rule 3).
-- **`deterrence_postures`.** Holder, toward whom, `Posture` (`none`, `declared`, `ambiguous`, `first_use`, `retaliation_only`, `shared_with_league`), credibility (0–100).
-- **`war_remnants`.** Region or orbit, `RemnantKind` (`buried_charges`, `poisoned_ground`, `fallout`, `wreck_field`, `unquiet_dead` (where the world's laws let the dead rise), `cursed_ground`, `abandoned_machines`), density, decay rate, origin war, clearance progress.
+- **`mass_weapons`.** Holder, `MassHarm` (`blast`, `fire`, `poison`, `disease`, `radiation`, `swarm`, `field` (powers, W45), `rite` (8.6), `divine_relic`), reach (`MassReach`: `settlement`, `region`, `world`), count ready, readiness (0–100), the rivals who have seen it, the visible stage of the programme (`ProgrammeStage`: `sought`, `building`, `ready`, `tested`; 0.8 rule 3), and when it was begun, last tested and last used. The technique it needs follows from its harm and reach; its materials are paid for from the treasury each epoch.
+- **`deterrence_postures`.** Holder, toward whom, `Posture` (`none`, `declared`, `ambiguous`, `first_use`, `retaliation_only`, `shared_with_league`), credibility (0–100), when it was declared. Toward no one means toward all.
+- **`war_remnants`.** Region or orbit, `RemnantKind` (`buried_charges`, `poisoned_ground`, `fallout`, `wreck_field`, `unquiet_dead` (where the world's laws let the dead rise), `cursed_ground`, `abandoned_machines`), density, decay rate, origin war or weapon, clearance progress, when it was left.
 
 **Behaviour.**
 
@@ -5674,10 +5829,10 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 - Mortal tools `begin_mass_weapon` (`holder_id`, `harm`, `reach`), `declare_posture` (`holder_id`, `toward_id`, `posture`), `use_mass_weapon` (`weapon_id`, `target_id`), `clear_remnants` (`region_id`, `budget`).
 - Son tool `still_weapon` (`weapon_id`, `reason`).
 - God levers `mass_weapon:*`, `deterrence_posture:*`, `war_remnant:*`.
-- An "Arsenal" section in polity drawers; remnants as an atlas layer and in region drawers.
+- An "Arsenal and remnants of war" section in every drawer (holders, those aimed at, regions and worlds); remnants as a "Remnants of war" layer of the world map, tinted by the densest remnant of each region.
 - Context block `mass_weapons`.
 
-**Incidents.** `war.mass_weapon_stage`, `war.mass_weapon_tested`, `war.mass_weapon_used`, `war.posture_declared`, `war.bluff_exposed`, `war.remnant_harm`, `war.remnants_cleared`.
+**Incidents.** `war.mass_weapon_stage`, `war.mass_weapon_tested`, `war.mass_weapon_used`, `war.mass_weapon_stilled`, `war.posture_declared`, `war.bluff_exposed`, `war.remnant_harm`, `war.remnants_cleared`.
 
 **Rules namespace.** `mass_weapons`:
 
@@ -5689,10 +5844,26 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `mass_weapons.remnant_decay_per_epoch` | 3 | 0–50 |
 | `mass_weapons.clearance_per_budget` | 1 | 0–20 |
 | `mass_weapons.stage_visibility_pct` | 30 | 0–100 |
+| `mass_weapons.readiness_step` | 20 | 0–100 |
+| `mass_weapons.programme_cost` | 100 | 0–100000 |
+| `mass_weapons.test_chance_pct` | 20 | 0–100 |
+| `mass_weapons.test_credibility` | 15 | 0–100 |
+| `mass_weapons.bluff_exposure_pct` | 10 | 0–100 |
+| `mass_weapons.bluff_loss` | 30 | 0–100 |
+| `mass_weapons.arms_race_pct` | 25 | 0–100 |
+| `mass_weapons.use_kill_pct` | 20 | 0–100 |
+| `mass_weapons.remnant_density` | 40 | 0–100 |
+| `mass_weapons.clearance_chance_pct` | 20 | 0–100 |
+| `mass_weapons.clearance_spend` | 200 | 0–100000 |
+| `mass_weapons.limit_treaty_chance_pct` | 10 | 0–100 |
+| `mass_weapons.resident_harm_chance_pct` | 20 | 0–100 |
+| `mass_weapons.seek_chance_pct` | 5 | 0–100 |
+
+The means a weapon needs follow from its harm and reach: a weapon of settlement reach needs gunpowder (blast), alchemy (fire), herbalism (poison), inoculation (disease), nuclear power (radiation) or machine tools (swarm); one of wider reach needs nuclear weapons (blast, radiation), industrial chemistry (fire, poison), genetic engineering (disease) or artificial minds (swarm); fields, rites and divine relics need no technique. A holder that tracks no techniques is not held back. A realm with rivals that knows how to make such a weapon may begin one; a programme gains readiness each epoch it is paid for (cost by reach), moves from sought to building to ready and then adds one weapon each time it is full, and a ready weapon may be tested, which lends its holder's postures credibility. Each new stage may be seen by the holder's rivals (by chance) and is always seen by its league partners; a rival who knows how may answer with its own programme. A posture cuts the chance that anyone it is held toward declares war on the holder or its members (and on league partners, when shared with a league) by its credibility and kind; declaring one makes the holder's arsenal known to its rivals. A posture with no ready weapon behind it may be exposed as a bluff. A use kills a share of the people of every settlement within its reach (by harm), burns their structures (blast, fire, swarm), starts a plague (disease), is remembered by every struck town, leaves a remnant of its kind in every region it struck (blast, poison, radiation, swarm, field, rite, divine relic) and adds doom by reach. Remnants kill a share of their land's people, lower its prosperity and may kill one who lives there (which reads as an accident), fade each epoch, and are cleared by the realm that holds the land or by anyone who pays. A war that ends leaves buried charges where it was fought if a side knew gunpowder, unquiet dead if a side knew necromancy, and a field of wrecks in orbit if a side knew rocketry. Two armed holders on one world, not at war, may sign an arms treaty (`TreatyKind.ARMS_LIMIT`) whose `mass_weapon_limit` clauses cap each side's weapons at their present count; building past the cap or testing breaks it.
 
 **Codex and book.** Arsenals and postures in polity entries; remnants in region entries with their origin war; uses in war entries.
 
-**Integrity.** A weapon's holder has the technique; remnants name an ended war.
+**Integrity.** What is made of a weapon was made by a holder with the means; a remnant names only an ended war; a remnant lies in one land or one orbit; a posture is never held toward its own holder.
 
 **Legacy.** None for weapons; ended wars with sieges and battles in a region leave `wreck_field` or `buried_charges` remnants only where their units used such arms.
 
@@ -5708,9 +5879,9 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`interworld_campaigns`.** Attacker, defender, target world, `CampaignStage` (`gathering`, `transit`, `supremacy`, `landing`, `holding`, `withdrawn`), carriers and their capacity, the route or gate, transit length, supply line length and delay (signals 47.2.5, light lag where the world's physics has it).
-- **`orbital_control`.** World, holder, strength, contested by.
-- **`interworld_migrations`.** People or community, from world, to world, `MigrationCause` (`flight`, `land_hunger`, `faith_call`, `exile`, `labour_draw`, `world_dying`, `resettlement`), count per epoch, carriers, reception (welcome, quota, refusal).
+- **`interworld_campaigns`.** Attacker, defender, the world it sets out from and the target world, the way it crosses, the host it carries, `CampaignStage` (`gathering`, `transit`, `supremacy`, `landing`, `holding`, `withdrawn`), carriers and the soldiers they can bear, forces, epochs of crossing left, supply line length in epochs and supply (0–100), beginning and end.
+- **`orbital_control`.** World (one row each), holder, strength, contested by, since when.
+- **`interworld_migrations`.** The settlement whose people move, from world, to world, the way, `MigrationCause` (`flight`, `land_hunger`, `faith_call`, `exile`, `labour_draw`, `world_dying`, `resettlement`), people per epoch, `MigrationReception` (`welcome`, `quota`, `refusal`), how many have gone, arrived and wait, the crossings under way, beginning and end.
 
 **Behaviour.**
 
@@ -5724,10 +5895,10 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 - Mortal tools `launch_campaign` (`attacker_id`, `target_world_id`, `route_id`, `forces`), `contest_orbit` (`world_id`, `fleet_id`), `lead_migration` (`community_id`, `to_world_id`, `cause`).
 - Son tool `close_the_way` (`route_or_gate_id`, `epochs`, `reason`).
 - God levers `interworld_campaign:*`, `orbital_control:*`, `interworld_migration:*`.
-- Campaigns and migrations on the cosmography map; an "Orbit" block in world drawers.
+- Campaigns (dashed), migrations (dotted) and held orbits (a ring around the world) on the cosmos map; a "Between worlds" section in every drawer, the world's own showing who holds the space around it.
 - Context block `interworld`.
 
-**Incidents.** `war.campaign_launched`, `war.transit_lost`, `war.orbit_won`, `war.orbit_lost`, `war.landing`, `war.bombardment`, `war.campaign_withdrawn`, `migration.interworld_began`, `migration.interworld_arrived`, `migration.interworld_refused`.
+**Incidents.** `war.campaign_launched`, `war.transit_lost`, `war.orbit_won`, `war.orbit_lost`, `war.landing`, `war.bombardment`, `war.campaign_withdrawn`, `migration.interworld_began`, `migration.interworld_arrived`, `migration.interworld_refused`, `travel.way_closed`.
 
 **Rules namespace.** `interworld`:
 
@@ -5739,10 +5910,19 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `interworld.bombard_harm_per_strength` | 2 | 0–50 |
 | `interworld.migration_push_threshold` | 60 | 0–100 |
 | `interworld.carrier_people_per_capacity` | 100 | 1–100000 |
+| `interworld.campaign_chance_pct` | 10 | 0–100 |
+| `interworld.starving_supply` | 30 | 0–100 |
+| `interworld.orbit_hold_supply` | 80 | 0–100 |
+| `interworld.blockade_toll_pct` | 30 | 0–100 |
+| `interworld.migration_share_pct` | 5 | 0–100 |
+| `interworld.migration_chance_pct` | 10 | 0–100 |
+| `interworld.migration_cap_pct` | 50 | 0–100 |
+
+A realm at war with a realm whose seat is on another world, joined by an open way, may send one of its idle hosts across. The host is cut to what its carriers (space, orbital lift and teleport transport) and a tenth of the way's capacity can bear; it loses a share in each epoch of crossing and waits while the way is closed. On arrival it fights for the space around the world by its vessels' power and its numbers against the holder's strength; the loser's fleet is battered. A host whose side holds the orbit at `landing_needs_control_pct` lands in the world's most fertile region and joins the war there (it is declared if it was not), after which it marches, besieges and occupies like any host (51.15). A landed host keeps its supply while its side holds the orbit; otherwise supply falls by the length of its line each epoch, the host withers below `starving_supply`, and at none it is withdrawn and disbanded. The holder of an orbit strikes the towns below it is at war with (killing a share by its strength and burning their structures), takes a toll of every way that reaches the world, and cuts the signals of the networks its enemies own there; when the holder falls the toll is lifted. A town under push (occupation of its region, or crowding and unrest) may begin to move to another world joined by an open way, if it has grown enough to found colonies and may use the way; its people leave in journeys as large as the way carries and its hosts let in (a host at war with them refuses, a crowded world takes them by quota), the journeys found colonies on arrival (and carry disease as journeys do), and the movement ends once half the town has gone. Each cause sets how fast people leave.
 
 **Codex and book.** Campaigns in war and world entries; orbital control in world entries; migrations in people and world entries.
 
-**Integrity.** The route joins the two worlds; landed forces lie on the target world; migrants' destination exists.
+**Integrity.** A campaign's way joins its two worlds; a campaign holding the land has its host on the target world; a movement goes to another world along a way that joins the two.
 
 **Legacy.** None; campaigns and migrations start empty. Existing colonies keep their founding records.
 
@@ -5761,7 +5941,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 - **`kin_dynamics`.** Per household or house, a parent row with five typed child tables:
   - `kin_favours` (parent, child, strength);
   - `kin_rivalries` (two members, cause `RivalryCause`: `inheritance`, `favour`, `office`, `love`, `standing`);
-  - `kin_disownings` (disowner, disowned, reason, reversible);
+  - `kin_disownings` (disowner, disowned, `DisownReason`: `disobedience`, `marriage`, `faith`, `crime`, `rivalry`, reversible, when it was mended);
   - `kin_blends` (members joined by a later union, standing of step kin by the culture);
   - `elder_sway` (a surviving elder, such as a ruler's widowed spouse or the eldest kin by the culture's rule, whose sway over the household or house is held as a value 0–100).
 
@@ -5776,12 +5956,12 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 **Tools and control.**
 
 - Mortal tools `favour_child` (`child_id`), `disown` (`member_id`, `reason`), `reconcile_kin` (`member_id`).
-- Son tool `stir_kin` (`household_or_house_id`, `kind`, `reason`).
+- Son tool `stir_kin` (`household_or_house_id`, `kind`: `KinStir` `favour`, `rivalry`, `reconcile`, `elder`, `reason`).
 - God levers `kin_dynamic:*`, `kin_favour:*`, `kin_rivalry:*`, `kin_disowning:*`, `kin_blend:*`, `elder_sway:*`.
-- A "Family" block in household, house and mortal drawers.
+- A "Family" section in every drawer, the house's and each member's showing their own.
 - Context block `kin` gains family dynamics.
 
-**Incidents.** `kin.favoured`, `kin.rivalry_began`, `kin.disowned`, `kin.reconciled`, `kin.elder_steered`, `kin.house_split`.
+**Incidents.** `kin.favoured`, `kin.rivalry_began`, `kin.disowned`, `kin.reconciled`, `kin.elder_steered`, `kin.elder_overthrown`, `kin.house_split`, `kin.stirred`.
 
 **Rules namespace.** `kin_dynamics`:
 
@@ -5791,10 +5971,21 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `kin_dynamics.rivalry_from_favour_pct` | 15 | 0–100 |
 | `kin_dynamics.split_threshold` | 70 | 0–100 |
 | `kin_dynamics.reconcile_chance_pct` | 10 | 0–100 |
+| `kin_dynamics.favour_chance_pct` | 10 | 0–100 |
+| `kin_dynamics.heat_step` | 10 | 0–100 |
+| `kin_dynamics.relation_loss` | 5 | 0–100 |
+| `kin_dynamics.elder_sway` | 60 | 0–100 |
+| `kin_dynamics.sway_decay` | 10 | 0–100 |
+| `kin_dynamics.overthrow_below` | 30 | 0–100 |
+| `kin_dynamics.overthrow_chance_pct` | 25 | 0–100 |
+| `kin_dynamics.step_standing` | 50 | 0–100 |
+| `kin_dynamics.line_chance_pct` | 50 | 0–100 |
+
+Each epoch the head of each house may favour one of two or more children; each sibling of the favoured may turn rival. Where the people's custom of inheritance leaves a choice (elective, by merit or in equal shares), a ruling head names the favoured child heir, and the favoured child comes first to the inheritance (a favour of at least `100 − 4 × favour_inheritance_pct`). A ruling head who names a favoured heir sets the passed-over children against the heir over the inheritance, and children who hold office in one realm turn rivals over office. Rivalries heat each epoch by their cause (inheritance fastest, then love, office, favour, standing) and cost the rivals regard for each other; at `split_threshold` a rivalry between siblings sends one away to found a cadet house, and one between parent and child ends in the child's disowning. The disowned lose their place in the house and are passed over in every inheritance, hold it against the parent by the reason (crime most, then faith and rivalry, marriage, disobedience), a disowning for crime cannot be undone, may found a line of their own, and are taken back by chance while the disowning is reversible. Children of a head's spouse by another who live in the house join as step kin with the standing the rule gives them; step kin below even standing may turn rival with the head's own children. A living parent of the head holds sway as its elder, favouring a grandchild while the sway holds, and losing sway each epoch until the head may throw it off.
 
 **Codex and book.** Family dynamics in household, house and mortal entries.
 
-**Integrity.** Both sides of a dynamic belong to the household or house; elder power names a living member.
+**Integrity.** A family's dynamics are kept for one house or one household; a favour is shown to another; a rivalry joins two different members, the lower first; an elder holding sway is living.
 
 **Legacy.** None; dynamics start empty and form from relations.
 
@@ -5810,7 +6001,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`feeling_spread`.** One row per settlement and per household: the dominant feelings (values of the emotion enum) with strength, and `locked`. A being's susceptibility is derived each epoch from traits and bonds and is not stored.
+- **`feeling_spread`.** One row per settlement and per household: the three strongest shared feelings (values of the emotion enum) with strength, the leading feeling, when it was last updated, and `locked`. A caught feeling is a thought of kind `caught_feeling`. A being's susceptibility is derived each epoch from traits and bonds and is not stored.
 
 **Behaviour.**
 
@@ -5822,11 +6013,11 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 - Mortal tool `stir_feeling` (`place_or_household_id`, `feeling`), read by charisma and bonds.
 - Son tool `move_hearts` (`place_id`, `feeling`, `strength`, `reason`).
-- God levers `feeling_spread:edit/hold` per place.
-- A "Mood" block in settlement and household drawers.
+- God levers `feeling_spread:create/edit/delete` (and hold) per place or household.
+- A "Mood" section in every drawer.
 - Context block `mood`.
 
-**Incidents.** `mood.spread`, `mood.faded`.
+**Incidents.** `mood.spread`, `mood.faded`, `mood.stirred`, `mood.moved`.
 
 **Rules namespace.** `feeling_spread`:
 
@@ -5835,10 +6026,18 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `feeling_spread.per_bond_pct` | 10 | 0–100 |
 | `feeling_spread.per_place_pct` | 5 | 0–100 |
 | `feeling_spread.fade_per_epoch` | 20 | 0–100 |
+| `feeling_spread.spread_floor` | 30 | 0–100 |
+| `feeling_spread.crowd_pct` | 20 | 0–100 |
+| `feeling_spread.charisma_reach_pct` | 50 | 0–200 |
+| `feeling_spread.told_at` | 50 | 0–100 |
+| `feeling_spread.caught_per_place` | 12 | 0–1000 |
+| `feeling_spread.spreaders` | 200 | 0–100000 |
+
+Each epoch the strongest feelings of the epoch (at least `spread_floor`, up to `spreaders` of them) pass along kin, marriage, love, companionship, sworn kinship, apprenticeship and following, by `per_bond_pct` and further by the feeler's charisma, as caught feelings. Each settlement's mood is its people's feelings of the epoch per head blended with what is left of its mood after fading; its leading feeling, once at `spread_floor`, is caught by up to `caught_per_place` of its people by `per_place_pct`. Each household's mood is gathered the same way from its members. A town's fear and anxiety, anger and rage, and awe, joy and pride feed its crowd's anxiety, anger and fervour by `crowd_pct`; its fear leans it toward peace, retreat, surrender and flight and away from war, raids and schemes, and its anger the other way. Caught feelings are thoughts like any other, so gods who feed on feeling harvest them too.
 
 **Codex and book.** Moods of places in settlement entries.
 
-**Integrity.** Feelings are values of the emotion enum; strength 0–100.
+**Integrity.** A mood belongs to one place or one household and holds only values of the emotion enum, each of strength 0–100.
 
 **Legacy.** None; computed from existing emotions on the first epoch.
 
@@ -5854,7 +6053,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`interpretations`.** Event (a parley, a treaty, a trial, a trade, a sermon), interpreter, languages, fidelity (from skill, the languages' distance and the subject), `InterpretationFault` (`none`, `lost_meaning`, `wrong_term`, `softened`, `hardened`, `slanted`, `invented`), whether the fault was found.
+- **`interpretations`.** Event (`InterpretedEvent`: `parley`, `treaty`, `trial`, `trade`, `sermon`) and the node it served, the two sides and the tongue of each, interpreter, fidelity (from skill and the languages' distance), `InterpretationFault` (`none`, `lost_meaning`, `wrong_term`, `softened`, `hardened`, `slanted`, `invented`), the side a slant favoured, whether the fault was found, the epoch, and `locked`.
 
 **Behaviour.**
 
@@ -5866,11 +6065,11 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 - Mortal tool `interpret` (`event_id`, `slant`).
 - Son tool `confuse_tongues` (`event_id`, `reason`).
-- God levers `interpretation:*`.
-- Interpretations on treaty, trial and incident pages.
+- God levers `interpretation:create/edit/delete` (and hold).
+- A "Words between tongues" section in every drawer, so the sides, the interpreter and the treaty or sermon each show what was carried.
 - Context block `interpretation`.
 
-**Incidents.** `tongue.mistranslated`, `tongue.slanted`, `tongue.fault_found`.
+**Incidents.** `tongue.mistranslated`, `tongue.slanted`, `tongue.fault_found`, `tongue.confused`.
 
 **Rules namespace.** `interpreters` gains:
 
@@ -5879,6 +6078,10 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `interpreters.fault_base_pct` | 10 | 0–100 |
 | `interpreters.fault_per_distance_pct` | 20 | 0–100 |
 | `interpreters.slant_loyalty_threshold` | 60 | 0–100 |
+| `interpreters.fault_found_pct` | 15 | 0–100 |
+| `interpreters.found_grievance` | 10 | 0–100 |
+
+When a treaty clause or a sermon passes between sides with no shared tongue and an interpreter is present, the most skilled one present carries it. Fidelity is the interpreter's skill less half the distance between the tongues. The chance of a fault is `fault_base_pct` plus `fault_per_distance_pct` scaled by distance, doubled at no fidelity and nothing at full. An interpreter who lives among one side only, at a fidelity of at least `slant_loyalty_threshold`, slants toward it at twice that chance. A fault halves the clause's numbers (a hardening doubles them; a slant moves them toward the favoured side), and a faulty sermon persuades by its fidelity. Each epoch a hidden fault comes to light by `fault_found_pct`: the clause is restored, the wronged side loses `found_grievance` of regard for the other, and a slanting interpreter loses as much renown. A faithful interpretation gives the interpreter a point of skill and of renown.
 
 **Codex and book.** Interpretations in the entries of the events they served, with fidelity and fault.
 
@@ -5898,7 +6101,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`grave_goods`.** Grave (a tomb structure, a site or a burial in a necropolis), the dead, items and goods placed, the custom that required them, protections (`GraveGuard`: `none`, `hidden`, `sealed`, `guarded`, `trapped`, `cursed` where the world's laws allow, `warded`).
+- **`grave_goods`.** One row per dead: the grave (a tomb structure where the dead lay, else the site or settlement), the custom that kept them (`RemainsTreatment`), the items laid (held by the dead), the worth of goods laid (wealth points), the guard (`GraveGuard`: `none`, `hidden`, `sealed`, `guarded`, `trapped`, `cursed` and `warded` where the land holds magic), when it was laid, when and by whom it was robbed or found, and `locked`.
 
 **Behaviour.**
 
@@ -5910,11 +6113,11 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 - Mortal tools `place_grave_goods` (`grave_id`, `item_ids`), `rob_grave` (`grave_id`), `guard_grave` (`grave_id`, `guard`).
 - Son tool `keep_the_dead` (`grave_id`, `guard`, `reason`).
-- God levers `grave_good:*`.
-- Grave goods in tomb and site drawers.
+- God levers `grave_good:create/edit/delete` (and hold).
+- A "Grave goods" section in every drawer, so the dead, their tomb, site or town, and those who robbed or found the grave each show it.
 - Context block `the_dead` gains grave goods.
 
-**Incidents.** `dead.goods_placed`, `dead.grave_robbed`, `dead.robber_caught`, `dead.grave_found`.
+**Incidents.** `dead.goods_placed`, `dead.grave_robbed`, `dead.robber_caught`, `dead.grave_found`, `dead.grave_guarded`.
 
 **Rules namespace.** `grave_goods`:
 
@@ -5923,6 +6126,15 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `grave_goods.share_by_rank_pct` | 10 | 0–100 |
 | `grave_goods.rob_chance_per_value_pct` | 5 | 0–100 |
 | `grave_goods.guard_cut_pct` | 50 | 0–100 |
+| `grave_goods.sealed_value` | 30 | 0–100 |
+| `grave_goods.caught_pct` | 30 | 0–100 |
+| `grave_goods.curse_pct` | 50 | 0–100 |
+| `grave_goods.grief` | 25 | 0–100 |
+| `grave_goods.find_fidelity` | 70 | 0–100 |
+| `grave_goods.guard_cost` | 5 | 0–100 |
+| `grave_goods.robbers` | 50 | 0–10000 |
+
+At death, where the custom of the dead keeps them in a place (burial, preservation, storage), a share of their wealth and of their things, `share_by_rank_pct` raised by their renown, is laid with them, the most renowned things first; those things stay held by the dead and are passed over by inheritance, and the wealth leaves the economy. Goods worth at least `sealed_value` are sealed. Each epoch every untouched grave may be robbed, by `rob_chance_per_value_pct` for every ten points of worth (each thing counting ten), less `guard_cut_pct` for each step of its guard (hidden or sealed one, guarded or trapped two, cursed one and warded two, the last two only where the land holds magic). A local mortal who is not kin robs it and takes the goods, else they go to the place; a guarded or trapped grave catches its robber by `caught_pct`, who gains infamy and a case of theft. The kin and people of the dead remember the robbery as a desecration, and a cursed grave curses its robber by `curse_pct` times the land's magic. A dig at a site finds the untouched graves there and in its tombs: the finder takes the goods and the finder's town gains an inscription account of the dead.
 
 **Codex and book.** Grave goods in the entries of the dead and their tombs.
 
@@ -5942,7 +6154,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`agentless_conditions`.** A catalogue of condition kinds (authored, F57), each typed by `ConditionCause` (`age`, `diet`, `exposure`, `heredity`, `injury_aftermath`, `strain`, `unknown`) and by the body system it affects (50.25), with onset, course (`stable`, `worsening`, `episodic`) and effects through the existing condition rows. The `conditions` table gains `cause` (`ConditionCause`) and `kind_id` (a row of this catalogue).
+- **`agentless_conditions`.** A catalogue of condition kinds per world, each typed by `ConditionCause` (`age`, `diet`, `exposure`, `heredity`, `injury_aftermath`, `strain`, `unknown`) and by the body system it affects (50.25), with the condition it shows as (a value of the condition enum), its course (`ConditionCourse`: `stable`, `worsening`, `episodic`), its onset as a share of the life span, its first severity, its weight beside the others, and `locked`. Each world is given one kind for every cause and system the first time it turns, named from those typed values; the god names, edits and strikes more. The `conditions` table gains `cause` (`ConditionCause`) and `kind_id` (a row of this catalogue), and the harm causes gain `body` (the body itself) for conditions with no outer cause.
 
 **Behaviour.**
 
@@ -5954,11 +6166,11 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 - Mortal tool `seek_cure` (existing) gains `condition_id` for conditions of any cause.
 - Son tool `ease_body` (`being_id`, `condition_id`, `reason`).
-- God levers `agentless_condition:*` for the catalogue, and the existing condition levers with the new `cause` and `kind_id` fields.
-- Conditions in the body section of every being.
-- Context block `body` gains causes.
+- God levers `agentless_condition:create/edit/delete` (and hold) for the catalogue, and the existing `body:condition` and `body:condition_edit` levers with the new `cause` and `kind_id` fields.
+- Conditions with their cause and kind in the body section of every being, editable there; the catalogue in a "Conditions the body brings on" section on each world's drawer.
+- Context block `body` gains each condition's id, kind and cause.
 
-**Incidents.** `body.condition_arose`, `body.condition_worsened`, `body.condition_eased`.
+**Incidents.** `body.condition_arose`, `body.condition_worsened`, `body.condition_eased`, `body.condition_healed`.
 
 **Rules namespace.** `agentless_conditions`:
 
@@ -5968,10 +6180,22 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `agentless_conditions.diet_rate_pct` | 2 | 0–100 |
 | `agentless_conditions.exposure_rate_pct` | 2 | 0–100 |
 | `agentless_conditions.heredity_weight_pct` | 30 | 0–100 |
+| `agentless_conditions.strain_rate_pct` | 2 | 0–100 |
+| `agentless_conditions.aftermath_rate_pct` | 3 | 0–100 |
+| `agentless_conditions.unknown_rate_pct` | 1 | 0–100 |
+| `agentless_conditions.worsen_pct` | 20 | 0–100 |
+| `agentless_conditions.ease_pct` | 10 | 0–100 |
+| `agentless_conditions.medicine_ease_pct` | 5 | 0–100 |
+| `agentless_conditions.lifespan_cost` | 1 | 0–20 |
+| `agentless_conditions.care_cost` | 1 | 0–20 |
+| `agentless_conditions.strain_floor` | 60 | 0–100 |
+| `agentless_conditions.aftermath_severity` | 4 | 1–5 |
+
+Each epoch every living mortal with a body (made minds and peoples with no body system are skipped) rolls once per cause: age by `age_rate_pct` times the share of the life span lived; diet by `diet_rate_pct` times the want of its town (the shortfall of prosperity); exposure by `exposure_rate_pct` times the fouling of air, water and soil in its region; heredity by `heredity_weight_pct` for each parent bearing an inherited kind; an old wound by `aftermath_rate_pct` when a wound of at least `aftermath_severity` healed this epoch; strain by `strain_rate_pct` as stress rises past `strain_floor`; and no known cause by `unknown_rate_pct`, which may also begin a new inherited line. A kind is drawn by weight among those of the world, of that cause, of a system the biology has, not yet borne, and whose onset the age has passed. Each epoch every condition with a cause may ease by `ease_pct` plus `medicine_ease_pct` for each level of medicine its community knows, times the people's folk knowledge of the body, and goes when it eases below the lightest; a worsening or episodic one otherwise grows heavier by `worsen_pct`. A borne condition takes `lifespan_cost` years of life span and `care_cost` of wealth for each step of severity each epoch.
 
 **Codex and book.** Conditions with their causes in body sections.
 
-**Integrity.** The body system exists for the biology.
+**Integrity.** A condition of a named kind touches a body system its bearer's biology has; otherwise it loses its kind.
 
 **Legacy.** Existing chronic illnesses with no recorded disease gain cause `unknown`.
 
@@ -5987,7 +6211,8 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`fertility_means`.** Per people and per biology: `FertilityMeans` (`prevention`, `remedy_for_barrenness`, `ending_pregnancy`, `assisted_conception`, `surrogacy`, `made_birth` (W46)), each with method source (folk, medicine tier, rite, power), reliability, risk, and the culture's stance (from 50.8 stances).
+- **`fertility_means`.** One row per people and means: `FertilityMeans` (`prevention`, `remedy_for_barrenness`, `ending_pregnancy`, `assisted_conception`, `surrogacy`, `made_birth` (W46)), with its source (`MeansSource`: `folk`, `medicine`, `rite`, `power`), reliability, risk, the people's stance (a value of the 50.8 stances), the share who use it, since when, and `locked`. Only peoples whose biology conceives hold means.
+- **`fertility_uses`.** One row per being and means taken up: the user, the people whose means it is, whether the use is hidden (the people forbid or discourage it) and whether it has come to light, since when, and `locked`.
 
 **Behaviour.**
 
@@ -5999,11 +6224,11 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 - Mortal tool `use_fertility_means` (`means`).
 - Son tool `move_fertility` (`community_id`, `means`, `reliability_change`, `reason`).
-- God levers `fertility_means:*`.
-- A block in the "Unions and birth" section of culture drawers.
+- God levers `fertility_means:create/edit/delete` and `fertility_use:create/edit/delete` (and hold).
+- A "Means of conception" section in every drawer, so the people, its towns and each user show what is known and used.
 - Context block `unions_and_birth` gains means, plain and closed-door.
 
-**Incidents.** `birth.means_used`, `birth.means_exposed`, `birth.means_banned`.
+**Incidents.** `birth.means_found`, `birth.means_used`, `birth.means_exposed`, `birth.means_banned`, `birth.fertility_moved`.
 
 **Rules namespace.** `fertility_means`:
 
@@ -6012,10 +6237,20 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `fertility_means.prevention_reliability_pct` | 50 | 0–100 |
 | `fertility_means.remedy_success_pct` | 20 | 0–100 |
 | `fertility_means.risk_pct` | 5 | 0–100 |
+| `fertility_means.ending_pct` | 50 | 0–100 |
+| `fertility_means.discover_level` | 2 | 0–10 |
+| `fertility_means.discover_pct` | 10 | 0–100 |
+| `fertility_means.spread_pct` | 10 | 0–100 |
+| `fertility_means.medicine_gain` | 5 | 0–50 |
+| `fertility_means.policy_push` | 10 | 0–100 |
+| `fertility_means.ban_force_pct` | 60 | 0–100 |
+| `fertility_means.drift` | 5 | 0–100 |
+
+Each epoch every people that conceives may find, by `discover_pct`, each means it lacks within its reach: prevention, remedies and ending at any level; aid to conception and bearing for another once its medicine reaches twice `discover_level`; made birth where a population policy over its towns makes births. Below `discover_level` of medicine a means comes by rite where the people's towns celebrate a rite, else from folk knowledge, at `prevention_reliability_pct`; at or above it from medicine, `medicine_gain` more reliable for each level. Its risk is `risk_pct` from folk knowledge, half that from medicine and none from a rite or a power. Its first stance is the people's stance on intimacy before union (for prevention and ending) or within union (for the rest). A means used by at least a fifth passes along trade routes to peoples that lack it by `spread_pct`, ten points less reliable. A population policy that aims to grow or shrink moves the use of each means of the peoples in its scope by `policy_push` times its force (strength times enforcement), against the means that work against its aim; at a force of `ban_force_pct` it forbids them. A forbidden means loses `drift` of use each epoch and a tolerated, accepted or honoured one gains it. A people's births are scaled by each means in use: prevention by its reliability, ending by its reliability times `ending_pct`, and the rest raise them by reliability times `remedy_success_pct`, each in the share who use it; a being's own chance of a child is scaled the same way, in full, for each means it uses. A hidden use comes to light by the means' risk each epoch and shames its user.
 
 **Codex and book.** Means per culture, described plainly.
 
-**Integrity.** Means read only the biology's reproductive system.
+**Integrity.** Means belong only to peoples whose biology conceives; a use belongs to a means its people know.
 
 **Legacy.** None; means come from genesis and the model's authoring.
 
@@ -6031,8 +6266,8 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`honour_kinds`.** Authored per conferrer (F57): name in the world's language, rank among the conferrer's honours, privileges (`HonourPrivilege`: `precedence`, `pension`, `land`, `seat`, `immunity`, `title`, `none`), limit on holders.
-- **`honours_held`.** Holder (any node that can serve), honour kind, conferred by, deed (a recorded incident), epoch, revoked.
+- **`honour_kinds`.** Per conferrer (a realm, faith, order or god): name, rank among the conferrer's honours (1–10), privileges (values of `HonourPrivilege`: `precedence`, `pension`, `land`, `seat`, `immunity`, `title`, `none`), limit on holders (0 for none), whether it passes to an heir, its worth (100 at founding), when it was founded, and `locked`.
+- **`honours_held`.** Holder, honour kind, conferred by, deed (a recorded incident), epoch, when revoked, whether it was sold, whether it was inherited, and `locked`.
 
 **Behaviour.**
 
@@ -6044,11 +6279,11 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 - Mortal tools `confer_honour` (`honour_kind_id`, `holder_id`, `deed_incident_id`), `revoke_honour` (`honour_id`), `found_honour` (`conferrer_id`, `name_reason`, `privileges`, `limit`).
 - Son tool `honour_servant` (`holder_id`, `reason`).
-- God levers `honour_kind:*`, `honour_held:*`.
+- God levers `honour_kind:create/edit/delete` and `honour_held:create/edit/delete` (and hold).
 - An "Honours" block in `ThingSections` for every node that can hold one.
 - Context block `honours`.
 
-**Incidents.** `honour.conferred`, `honour.revoked`, `honour.sold`.
+**Incidents.** `honour.conferred`, `honour.revoked`, `honour.sold`, `honour.founded`.
 
 **Rules namespace.** `honours`:
 
@@ -6057,10 +6292,18 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `honours.prestige_per_rank` | 5 | 0–50 |
 | `honours.sale_worth_loss_pct` | 20 | 0–100 |
 | `honours.loyalty_gain` | 10 | 0–100 |
+| `honours.deed_floor` | 30 | 0–100 |
+| `honours.confer_cap` | 3 | 0–100 |
+| `honours.pension_points` | 2 | 0–50 |
+| `honours.land_points` | 10 | 0–100 |
+| `honours.favour_pct` | 5 | 0–100 |
+| `honours.revoke_infamy` | 15 | 0–100 |
+
+Each epoch every conferrer honours the greatest deeds done in its places that epoch: a deed of at least `deed_floor`, ten more for each step of rank above the first, done by one who does not hold the honour, up to `confer_cap` honours a conferrer and the honour's limit. A conferred honour gives its holder `prestige_per_rank` renown for each step of rank at its worth (and the rank again with precedence), `loyalty_gain` goodwill toward the conferrer, and its privileges: land gives `land_points` of wealth once, a seat raises the holder's standing, a title names them by the honour if they bear none, a pension pays `pension_points` each epoch from the conferrer's purse while it can, and immunity drops any case against the holder in the conferrer's courts. By `favour_pct` an epoch the head sells an honour to the richest in its places who does not hold it, and the honour loses `sale_worth_loss_pct` of its worth. A revoked honour shames its holder by `revoke_infamy` and takes back the title it gave. A hereditary honour passes to the heir of a holder who died that epoch.
 
 **Codex and book.** Honours in holders' entries with the deed and conferrer; honour kinds in conferrers' entries.
 
-**Integrity.** The holder count stays within the limit; the deed is a recorded incident.
+**Integrity.** The holder count stays within the limit (the latest past it lose the honour); an honour grants only privileges of the enum; the deed is a recorded incident (enforced by its key).
 
 **Legacy.** None; honours start empty.
 
@@ -6076,7 +6319,9 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`sea_waves`.** Origin (a quake, an eruption, a slide, a storm, an impact, a divine act), sea, coasts reached with height and arrival delay, warning given (50.28 observation methods).
+- **`sea_waves`.** World, origin (`WaveOrigin`: `quake`, `eruption`, `slide`, `storm`, `impact`, `divine`), the region it rose by, its sea (one of its waters), strength, the god that raised it if any, epoch, and `locked`.
+- **`sea_wave_coasts`.** Each coast a wave struck: height, arrival delay (regions crossed), whether the coast was warned, the dead, whether the land was salted, and `locked`.
+- **`wave_warnings`.** A warning given on a coast: the observation method (50.28), who gave it, when, until which epoch it holds, and `locked`.
 
 **Behaviour.**
 
@@ -6088,11 +6333,11 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 - Mortal tool `warn_coast` (`region_id`, `method`), read by observation methods (50.28).
 - Son tool `raise_sea` (`sea_id`, `strength`, `reason`) under the existing disaster acts.
-- God levers `sea_wave:*`.
-- Waves on the atlas and in region entries.
-- Context block `disasters` gains waves.
+- God levers `sea_wave:create/edit/delete`, `sea_wave_coast:create/edit/delete` and `wave_warning:create/edit/delete` (and hold).
+- A "Sea waves" map layer showing the coasts struck in the last two epochs by height and origin, and a "Sea waves" section in every drawer.
+- A context block `disasters` telling a mortal whether they live on a coast, the waves that struck it lately and the warnings that hold.
 
-**Incidents.** `land.sea_wave`, `land.wave_warned`, `land.coast_salted`.
+**Incidents.** `land.sea_wave`, `land.wave_warned`, `land.coast_salted`, `land.coast_warning`.
 
 **Rules namespace.** `sea_waves`:
 
@@ -6102,10 +6347,20 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `sea_waves.storm_surge_chance_pct` | 10 | 0–100 |
 | `sea_waves.harm_per_height` | 5 | 0–50 |
 | `sea_waves.warning_death_cut_pct` | 60 | 0–100 |
+| `sea_waves.decay_per_hop` | 15 | 0–100 |
+| `sea_waves.floor` | 10 | 0–100 |
+| `sea_waves.salt_height` | 50 | 0–100 |
+| `sea_waves.salt_fertility` | 10 | 0–100 |
+| `sea_waves.observation_floor` | 40 | 0–100 |
+| `sea_waves.warning_epochs` | 1 | 0–10 |
+| `sea_waves.slide_pct` | 30 | 0–100 |
+| `sea_waves.storm_floor_pct` | 50 | 0–100 |
+
+A sea is the waters joined to one another; its coasts are the lands beside any of them. A quake, eruption or blow from the sky in or beside a sea raises a wave by `quake_wave_chance_pct` times its strength, an eruption sends its flank sliding instead by `slide_pct` (half again as strong), and a storm of at least `storm_floor_pct` drives a surge by `storm_surge_chance_pct` times its strength; a god's wave always rises. A wave of a strength strikes every coast of its sea at that strength less `decay_per_hop` for each region between, scaled by the coast's form (a cliff half, a beach as it is, a delta 130 percent, a marsh 120, a reef 60, an ice shelf 40, a fjord 150, a lagoon 80). Below `floor` it does nothing; otherwise it floods the coast with a harm of `harm_per_height` per point of height (a hundred points at five is a full strike), less `warning_death_cut_pct` where the coast was warned: by a warning given there that still holds, or by a people there whose watching of the waters or land is at least `observation_floor` accurate. A wave of at least `salt_height` salts the land, which loses `salt_fertility` of soil fertility.
 
 **Codex and book.** Waves in the entries of every coast they struck.
 
-**Integrity.** Coasts reached lie on the wave's sea.
+**Integrity.** Coasts reached lie on the wave's sea; others are struck from it.
 
 **Legacy.** None.
 
@@ -6121,7 +6376,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`creature_groups`.** Species, region or lair, `GroupForm` (`pack`, `herd`, `colony`, `hive`, `troop`, `flock`, `solitary_range`), size, leader, ranks, territory, rival groups.
+- **`creature_groups`.** Species, region and lair, `GroupForm` (`pack`, `herd`, `colony`, `hive`, `troop`, `flock`, `solitary_range`), size, leader and since when, ranks, territory (regions ranged over), rival groups, hunger, a god's aim (`GroupAim`: `raid`, `withdraw`, `guard`, `grow`) and until when, when it formed, and `locked`. A mortal drives a group off by `DriveMeans` (`hunt`, `fire`, `noise`, `offering`).
 
 **Behaviour.**
 
@@ -6133,11 +6388,11 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 - Mortal tool `drive_off_group` (`group_id`, `means`), beside the existing hunting tools.
 - Son tool `lead_creatures` (`group_id`, `aim`, `reason`).
-- God levers `creature_group:*`.
-- Groups on the atlas and in region and species drawers.
-- Context block `wilds` gains groups.
+- God levers `creature_group:create/edit/delete` (and hold).
+- A "Creature groups" map layer showing the largest group of each region by form, and a "Creature groups" section in every drawer.
+- A context block `wilds` listing the groups of a mortal's land.
 
-**Incidents.** `beasts.group_formed`, `beasts.leader_fell`, `beasts.territory_war`, `beasts.group_raid`, `beasts.group_moved`.
+**Incidents.** `beasts.group_formed`, `beasts.leader_fell`, `beasts.territory_war`, `beasts.group_raid`, `beasts.group_moved`, `beasts.group_driven`, `beasts.group_led`.
 
 **Rules namespace.** `creature_groups`:
 
@@ -6146,10 +6401,21 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `creature_groups.raid_hunger_threshold` | 60 | 0–100 |
 | `creature_groups.contest_chance_pct` | 10 | 0–100 |
 | `creature_groups.territory_war_pct` | 5 | 0–100 |
+| `creature_groups.form_floor` | 20 | 0–100 |
+| `creature_groups.size_per_abundance` | 5 | 0–1000 |
+| `creature_groups.raid_loss` | 5 | 0–100 |
+| `creature_groups.war_loss_pct` | 30 | 0–100 |
+| `creature_groups.push_population` | 5000 | 0–10000000 |
+| `creature_groups.move_pct` | 20 | 0–100 |
+| `creature_groups.travel_danger_pct` | 10 | 0–100 |
+| `creature_groups.hunt_bonus_pct` | 10 | 0–100 |
+| `creature_groups.aim_epochs` | 2 | 0–20 |
+
+A kind at least `form_floor` abundant in a region gathers there into one group by its nature: a hive mind into a hive, a swarm breeder into a colony, a pack hunter into a pack, a flier into a flock, a kind of wit 50 or more into a troop, an ambush predator into a lone range, and any other into a herd; its first leader is a named beast of its kind in that land if there is one. Each epoch a group numbers `size_per_abundance` for each point of its kind's abundance there (a fifth more when a god bids it grow), and its hunger is the shortfall of the land's fit plus up to fifty for the people settled there. A pack, hive or troop at `raid_hunger_threshold` hunger raids a settlement of its land, which loses `raid_loss` prosperity, unless a god or an offering has set it to guard. By `contest_chance_pct` its leader falls and another of its kind in the land rises. Two packs, hives or troops of one land are rivals, and by `territory_war_pct` they fight, the smaller losing `war_loss_pct` of its numbers. Where `push_population` people have settled, a group moves to the least settled neighbouring land by `move_pct` (twice that for herds and flocks, which roam), taking half its kind's abundance, unless its land is protected; a god's bidding to withdraw moves it at once. Each pack, hive or troop adds `travel_danger_pct` of danger to roads through its land for each thousand of its numbers, and each herd or flock gives hunters of its kind there `hunt_bonus_pct` more yield for each thousand.
 
 **Codex and book.** Groups in region and species entries.
 
-**Integrity.** Group members are of one species, unless the form allows mixed groups.
+**Integrity.** A group is led by one of its own kind, unless its form gathers mixed kinds (herds and flocks).
 
 **Legacy.** Species with large counts in a region get groups by their social traits.
 
@@ -6165,7 +6431,8 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **State.**
 
-- **`divine_conceptions`.** Per faith: `DivineCount` (`one`, `one_above_many`, `many`, `pairs`, `all_is_divine`, `none`), `DivineNearness` (`distant`, `present`, `within`), `DivinePersonhood` (`persons`, `forces`, `principle`, `mixed`), place of the Creator in it (acknowledged, unknown, denied, rival), and how the real gods of the world map onto it (each god as true, as servant, as demon, as unknown).
+- **`divine_conceptions`.** Per faith: `DivineCount` (`one`, `one_above_many`, `many`, `pairs`, `all_is_divine`, `none`), `DivineNearness` (`distant`, `present`, `within`), `DivinePersonhood` (`persons`, `forces`, `principle`, `mixed`), the place of the Creator (`CreatorPlace`: `acknowledged`, `unknown`, `denied`, `rival`), the strain its belief bears, since when it has held so, and `locked`.
+- **`god_readings`.** Per faith and god (a son or a foreign god): how it reads that god (`GodReading`: `true`, `servant`, `demon`, `unknown`), and `locked`.
 
 **Behaviour.**
 
@@ -6175,13 +6442,13 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 
 **Tools and control.**
 
-- Son tool `reveal_nature` (`faith_id`, `axis`, `value`, `reason`).
-- Mortal tool `argue_doctrine` gains `conception_axis`.
-- God levers `divine_conception:*`.
-- A "Conception" block in faith drawers.
-- Context block `faith` gains the conception.
+- Son tool `reveal_nature` (`faith_id`, `axis`, `value`, `reason`), the axis a value of `ConceptionAxis` (`count`, `nearness`, `personhood`, `creator`).
+- Mortal tool `argue_doctrine` (`faith_id`, `conception_axis`, `value`) for the clergy of a faith.
+- God levers `divine_conception:create/edit/delete` and `god_reading:create/edit/delete` (and hold).
+- A "Conception of the divine" section in every drawer, so the faith and each god it reads show it.
+- A context block `faith` telling a mortal how the faith of their town holds the divine and reads each god.
 
-**Incidents.** `faith.conception_changed`, `faith.conception_tested`, `faith.conception_split`.
+**Incidents.** `faith.conception_changed`, `faith.conception_tested`, `faith.conception_split`, `faith.creator_tested`.
 
 **Rules namespace.** `divine_conceptions`:
 
@@ -6190,10 +6457,14 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `divine_conceptions.drift_per_epoch_pct` | 2 | 0–100 |
 | `divine_conceptions.denied_god_crisis_pct` | 30 | 0–100 |
 | `divine_conceptions.syncretism_fit_pct` | 50 | 0–100 |
+| `divine_conceptions.theologian_pull_pct` | 10 | 0–100 |
+| `divine_conceptions.split_pct` | 30 | 0–100 |
+
+Each epoch every faith without a conception conceives one: worshipping no god it holds all to be divine (with ancestor veneration) or none; worshipping one it holds one where it is exclusive or its world has one god, many where it is open to syncretism, pairs where its world has two gods, and one above many otherwise; ancestor veneration holds the divine present, asceticism or monastic learning within, and other faiths distant; sanctified magic holds the gods forces, others persons; the Creator's place is at first unknown. It reads the gods it worships as true and the others by its count: a demon to the one, a servant to one above many, true to all-is-divine, unknown otherwise. A faith's theodicy crises weigh half where its gods are distant, three quarters where they are within, and not at all where it holds no god. Syncretism between faiths is eased by `syncretism_fit_pct` where both hold open counts (many, pairs, all, one above many) and hindered by as much where either holds one. Each epoch a faith's strain eases by ten; a god it reads as a demon or unknown that acts openly in its lands raises it by `denied_god_crisis_pct`, and at full strain the faith splits by `split_pct` (the sect holding many gods, present, and worshipping that god) or yields (reading the god as true or a servant and, if it held one, coming to hold one above many). A faith's conception shifts one step on one axis by `drift_per_epoch_pct`, plus `theologian_pull_pct` for each theologian among its clergy. The strain a god's act brings is weighed by how the faith holds the divine: in full where it holds persons, three quarters where mixed, half where forces and a quarter where a principle. When the Creator acts openly in a faith's lands, a faith that did not know the Creator comes to acknowledge it; one that acknowledges it eases by half the crisis, one that holds the Creator a rival strains by half and one that denies it by the whole, each weighed by its personhood, and at full strain it comes to acknowledge the Creator.
 
 **Codex and book.** The conception in faith entries, with how each god is read.
 
-**Integrity.** Mapped gods exist in the world.
+**Integrity.** A faith reads only gods that exist, the sons and the foreign gods.
 
 **Legacy.** Faiths get conceptions from their tenets and the number of gods they worship.
 

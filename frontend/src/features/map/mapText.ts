@@ -37,6 +37,7 @@ export const LINE_LABEL: Record<LineKind, string> = {
   hostility: 'Hostility',
   rule: 'Rule',
   hunt: 'Hunt',
+  conurbation: 'One city',
   route: 'Trade route',
   route_busy: 'Busy trade route',
   route_blocked: 'Blockaded trade route',

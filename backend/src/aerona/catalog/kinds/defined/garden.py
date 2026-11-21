@@ -10,7 +10,11 @@ GARDEN_KIND = total(
         GardenKind.MONASTERY: Defined("Monastery garden", checked_by=(), used_by=("engine.museums.gardens.LAID_OUT",)),
         GardenKind.PARK: Defined("Park", checked_by=(), used_by=("engine.museums.gardens.LAID_OUT",)),
         GardenKind.HUNTING_PARK: Defined("Hunting park", checked_by=("engine.museums.gardens.PLANTED",), used_by=("engine.museums.gardens.found_gardens",)),
-        GardenKind.SACRED_GROVE: Defined("Sacred grove", checked_by=("engine.museums.gardens.love_groves",), used_by=("engine.museums.gardens.found_gardens",)),
+        GardenKind.SACRED_GROVE: Defined(
+            "Sacred grove",
+            checked_by=("engine.museums.gardens.love_groves", "engine.protected_nature.areas.apply_legacy"),
+            used_by=("engine.museums.gardens.found_gardens",),
+        ),
         GardenKind.CEMETERY: Defined("Cemetery", checked_by=(), used_by=("engine.museums.gardens.LAID_OUT",)),
     },
 )

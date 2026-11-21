@@ -1,4 +1,5 @@
 from aerona.api.schemas.common import ApiModel
+from aerona.domain.enums.agentless_conditions import ConditionCause, ConditionCourse
 from aerona.domain.enums.body import (
     BodyBuild,
     BodyFunction,
@@ -20,6 +21,7 @@ from aerona.domain.enums.body import (
     TissueKind,
     TreatmentStep,
 )
+from aerona.domain.enums.body_systems import BodySystem
 from aerona.domain.enums.material import MaterialKind
 
 
@@ -83,6 +85,17 @@ class ConditionView(ApiModel):
     ended_epoch: int | None
     variant_id: int | None = None
     visible: bool
+    cause: ConditionCause | None
+    kind_id: int | None
+    kind_name: str | None
+
+
+class ConditionKindChoice(ApiModel):
+    id: int
+    name: str
+    cause: ConditionCause
+    system: BodySystem
+    course: ConditionCourse
 
 
 class PartView(ApiModel):
@@ -158,6 +171,7 @@ class BodyView(ApiModel):
     parts: list[PartView]
     injuries: list[InjuryView]
     conditions: list[ConditionView]
+    condition_kinds: list[ConditionKindChoice]
     locked: list[str]
     patients_healed: int
     patients_lost: int

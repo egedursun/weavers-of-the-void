@@ -25,8 +25,66 @@ from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.services.integrity.ages_links import free_keeper_seat, keepers_not_mortal
+from aerona.services.integrity.arsenal_links import (
+    dismantle,
+    forget_war,
+    misplaced_remnants,
+    place_remnant,
+    self_postures,
+    unended_wars,
+    unskilled_weapons,
+    widen_posture,
+)
+from aerona.services.integrity.city_links import mend_conurbation, odd_conurbations, stray_rules, widen_rule
+from aerona.services.integrity.competition_links import (
+    call_off_war,
+    drop_outsiders,
+    even_shares,
+    marketless_wars,
+    outside_members,
+    uneven_shares,
+)
+from aerona.services.integrity.conception_links import false_gods, strike_false_god
+from aerona.services.integrity.condition_links import absent_systems, unkind_condition
+from aerona.services.integrity.cult_links import end_godly, godly_cults, keep_promoters, lost_promoters, mend_end, mismatched_ends
+from aerona.services.integrity.departure_links import align_office, clear_successor, early_returns, handed_to_self, mend_return, stray_offices
+from aerona.services.integrity.fertility_links import barren_means, strike_barren_means, strike_unknown_use, unknown_uses
 from aerona.services.integrity.genome_alleles import mend_alleles, stray_alleles
+from aerona.services.integrity.governance_links import (
+    claimless_creditors,
+    even_votes,
+    partyless_mergers,
+    prune_creditors,
+    strangers_seated,
+    uneven_votes,
+    unseat_stranger,
+    withdraw_merger,
+)
+from aerona.services.integrity.grave_links import gather_grave_goods, loose_grave_goods
+from aerona.services.integrity.group_links import foreign_leaders, unseat_leader
+from aerona.services.integrity.honour_links import lapse_honour, mend_privileges, odd_privileges, overfull_honours
+from aerona.services.integrity.interpretation_links import unseat_reader, unskilled_readers
+from aerona.services.integrity.interworld_links import astray_campaigns, astray_migrations, end_migration, stranded_landings, withdraw_campaign
+from aerona.services.integrity.kin_dynamic_links import (
+    dead_elders,
+    drop_self_favour,
+    end_elder,
+    lopsided_rivalries,
+    order_rivalry,
+    scope_dynamic,
+    self_ties,
+    unscoped_dynamics,
+)
 from aerona.services.integrity.kind_links import bring_into_range, cut_lineage, drop_holding, kinds_out_of_range, stray_holdings, tangled_lineage
+from aerona.services.integrity.labour_links import (
+    bodiless_contracts,
+    drop_body,
+    drop_unknown_trades,
+    overfull_disputes,
+    trim_out,
+    unknown_trades,
+)
+from aerona.services.integrity.league_links import back_union, give_organ, non_polity_members, organless_decisions, strike_member, unbacked_unions
 from aerona.services.integrity.life_links import (
     adopt_stranger,
     clear_head,
@@ -67,7 +125,24 @@ from aerona.services.integrity.life_links import (
     venueless_speeches,
     void_lease,
 )
+from aerona.services.integrity.monetary_links import align_issuer, bad_pegs, clear_peg, stray_issuers
 from aerona.services.integrity.money_links import clear_metal, clear_source, metal_paper, stray_sources
+from aerona.services.integrity.mood_links import mend_mood, odd_moods
+from aerona.services.integrity.nature_links import drop_aims, drop_protection, kindless_protections, landless_areas, lift_landless, stray_aims
+from aerona.services.integrity.occupation_links import (
+    end_loose_measure,
+    end_orphan,
+    end_stranger,
+    loose_measures,
+    mend_service,
+    mismatched_service,
+    misplaced_measures,
+    orphan_regimes,
+    place_measure,
+    strangers,
+)
+from aerona.services.integrity.order_links import bad_axes, clean_axes, doubled_orders, drop_order, fail_transition, orphan_transitions
+from aerona.services.integrity.reckoning_links import align_measure, keep_recorded, mend_fall, reckonings_before_the_fall, stray_measures, unrecorded_acts
 from aerona.services.integrity.record_links import (
     absent_witnesses,
     ahead_of_births,
@@ -96,6 +171,12 @@ from aerona.services.integrity.record_links import (
     unknown_kinds,
     unscoped_changes,
 )
+from aerona.services.integrity.referendum_links import aimless_votes, align_franchise, early_votes, mend_held, stray_franchises, void_vote
+from aerona.services.integrity.restoration_links import end_living_fallen, link_restored, living_fallen, unlinked_restored
+from aerona.services.integrity.restoration_links import mend_end as mend_restoration_end
+from aerona.services.integrity.restoration_links import mismatched_ends as restoration_ends
+from aerona.services.integrity.securities_links import align_price, delist, issuerless, overheld, scale_holdings, stray_prices
+from aerona.services.integrity.wave_links import stray_coasts, strike_stray_coast
 
 LOCKED = "locked"
 NODE_ID_LIST = "_node_ids"
@@ -423,6 +504,74 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "lease_owner": (unowned_leases, void_lease),
     "works_place": (foreign_works, drop_works),
     "media_reach": (overreaching_items, fit_item),
+    "god_reading_real": (false_gods, strike_false_god),
+    "creature_group_one_kind": (foreign_leaders, unseat_leader),
+    "wave_coast_on_sea": (stray_coasts, strike_stray_coast),
+    "honour_holder_limit": (overfull_honours, lapse_honour),
+    "honour_privileges": (odd_privileges, mend_privileges),
+    "fertility_means_conceive": (barren_means, strike_barren_means),
+    "fertility_use_known": (unknown_uses, strike_unknown_use),
+    "condition_body_system": (absent_systems, unkind_condition),
+    "grave_goods_held": (loose_grave_goods, gather_grave_goods),
+    "interpretation_reader": (unskilled_readers, unseat_reader),
+    "feeling_spread_values": (odd_moods, mend_mood),
+    "kin_dynamic_scope": (unscoped_dynamics, scope_dynamic),
+    "kin_favour_other": (self_ties, drop_self_favour),
+    "kin_rivalry_pair": (lopsided_rivalries, order_rivalry),
+    "elder_sway_living": (dead_elders, end_elder),
+    "protected_area_region": (landless_areas, lift_landless),
+    "species_protection_kind": (kindless_protections, drop_protection),
+    "conservation_movement_cause": (stray_aims, drop_aims),
+    "land_use_rule_district": (stray_rules, widen_rule),
+    "conurbation_members": (odd_conurbations, mend_conurbation),
+    "interworld_campaign_route": (astray_campaigns, withdraw_campaign),
+    "interworld_campaign_landed": (stranded_landings, withdraw_campaign),
+    "interworld_migration_route": (astray_migrations, end_migration),
+    "mass_weapon_technique": (unskilled_weapons, dismantle),
+    "war_remnant_war": (unended_wars, forget_war),
+    "war_remnant_place": (misplaced_remnants, place_remnant),
+    "deterrence_posture_self": (self_postures, widen_posture),
+    "occupation_regime_open": (orphan_regimes, end_orphan),
+    "collaboration_place": (strangers, end_stranger),
+    "collaboration_end": (mismatched_service, mend_service),
+    "occupation_measure_regime": (loose_measures, end_loose_measure),
+    "occupation_measure_region": (misplaced_measures, place_measure),
+    "restoration_fallen": (living_fallen, end_living_fallen),
+    "restoration_predecessor": (unlinked_restored, link_restored),
+    "restoration_end": (restoration_ends, mend_restoration_end),
+    "leader_cult_leader": (godly_cults, end_godly),
+    "leader_cult_promoters": (lost_promoters, keep_promoters),
+    "leader_cult_end": (mismatched_ends, mend_end),
+    "reckoning_case_acts": (unrecorded_acts, keep_recorded),
+    "reckoning_after_fall": (reckonings_before_the_fall, mend_fall),
+    "reckoning_measure_realm": (stray_measures, align_measure),
+    "referendum_franchise": (stray_franchises, align_franchise),
+    "referendum_subject": (aimless_votes, void_vote),
+    "referendum_held": (early_votes, mend_held),
+    "departure_successor": (handed_to_self, clear_successor),
+    "departure_office": (stray_offices, align_office),
+    "departure_return": (early_returns, mend_return),
+    "economic_order_single": (doubled_orders, drop_order),
+    "order_transition_axes": (bad_axes, clean_axes),
+    "order_transition_realm": (orphan_transitions, fail_transition),
+    "league_members_polities": (non_polity_members, strike_member),
+    "league_currency_union": (unbacked_unions, back_union),
+    "league_decision_organ": (organless_decisions, give_organ),
+    "security_holdings_within": (overheld, scale_holdings),
+    "security_issuer_living": (issuerless, delist),
+    "security_price_issuer": (stray_prices, align_price),
+    "monetary_peg_target": (bad_pegs, clear_peg),
+    "monetary_issuer": (stray_issuers, align_issuer),
+    "labour_contract_body": (bodiless_contracts, drop_body),
+    "labour_dispute_workers": (overfull_disputes, trim_out),
+    "worker_body_trades": (unknown_trades, drop_unknown_trades),
+    "market_shares_whole": (uneven_shares, even_shares),
+    "cartel_sellers": (outside_members, drop_outsiders),
+    "price_war_market": (marketless_wars, call_off_war),
+    "org_seats_members": (strangers_seated, unseat_stranger),
+    "org_votes_whole": (uneven_votes, even_votes),
+    "org_merger_parties": (partyless_mergers, withdraw_merger),
+    "insolvency_claims": (claimless_creditors, prune_creditors),
     "speech_venue": (venueless_speeches, move_to_square),
     "folk_class_kind": (misfit_classes, strike_class),
     "stage_builder": (strayed_stages, return_stage),

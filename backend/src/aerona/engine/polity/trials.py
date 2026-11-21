@@ -19,6 +19,7 @@ from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.interpretation import InterpretationFault, InterpretedEvent
 from aerona.domain.enums.intrigue import HookDemand, IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, Deposition, TrialKind, Verdict
 from aerona.domain.enums.mind import ActKind, HonourModel, MemoryKind, SkillKind, TraitKind, ValueAxis
@@ -33,6 +34,8 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.customs.rights import has_right
 from aerona.engine.faith.book import patron_node
+from aerona.engine.honours.persons import immune
+from aerona.engine.interpretation.work import interpret, reach_of, slant_of
 from aerona.engine.intrigue.favours import hook_on, use_hook
 from aerona.engine.intrigue.identities import EXPOSURE
 from aerona.engine.intrigue.secrets import learn
@@ -563,6 +566,20 @@ async def tamper(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) -> No
             ctx.count("case_witness_turned")
 
 
+async def heard(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, guilty: bool) -> bool:
+    people = await people_of(ctx.session, accused)
+    if people is None or case.settlement_entity_id is None:
+        return guilty
+    reading = await interpret(ctx, InterpretedEvent.TRIAL, case.settlement_entity_id, people.id, event_node=accused.id)
+    slant = slant_of(reading, case.settlement_entity_id, people.id)
+    if slant:
+        return slant > 0
+    misheard = reading is not None and reading.fault is not InterpretationFault.NONE
+    if misheard and ctx.rng(f"trials.misheard.{case.id}").chance(PERCENT - reach_of(ctx, reading) * PERCENT):
+        return not guilty
+    return guilty
+
+
 async def try_case(ctx: TickContext, case: CrimeCaseRow, laws: LawBook, tally: TrialTally) -> None:
     accused = await living_entity(ctx.session, case.accused_entity_id) if case.accused_entity_id is not None else None
     if accused is None or accused.location_id != case.settlement_entity_id:
@@ -571,11 +588,15 @@ async def try_case(ctx: TickContext, case: CrimeCaseRow, laws: LawBook, tally: T
         if accused is not None:
             await declare_outlaw(ctx, accused, case.polity_entity_id)
         return
+    if await immune(ctx.session, accused.id, case.polity_entity_id):
+        close(ctx, case, Verdict.DROPPED)
+        ctx.count("case_immune")
+        return
     await tamper(ctx, case, accused)
     await claimed_court(ctx, case, accused)
     await plead(ctx, case, accused)
     trial: TrialKind = case.trial or TrialKind.JUDGE
-    guilty = erred(ctx, case, trial, await by_system(ctx, case, accused, await TRIALS[trial](ctx, case, accused)))
+    guilty = await heard(ctx, case, accused, erred(ctx, case, trial, await by_system(ctx, case, accused, await TRIALS[trial](ctx, case, accused))))
     tally.tried += 1
     await weigh_trial(ctx, trial, case.settlement_entity_id, case.polity_entity_id)
     if guilty:

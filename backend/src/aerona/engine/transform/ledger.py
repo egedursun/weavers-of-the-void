@@ -1,17 +1,34 @@
 import enum
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from sqlalchemy import CheckConstraint, Table
 from sqlalchemy import inspect as inspect_row
 
 from aerona.db.tables.entities import EntityRow
 from aerona.db.types import PydanticJSON
+from aerona.domain.enums.entity import EntityType
 from aerona.engine.primitives.stats import set_stats, stat
 
 CHANGE = "change"
 ADDED = "added"
 MADE = "made"
 STAT = "stat"
+TYPE_BOUND_RULE = re.compile(r"^(\w+) IS NULL OR entity_type = '(\w+)'$")
+
+
+def type_bound_columns() -> dict[str, str]:
+    found: dict[str, str] = {}
+    table = EntityRow.__table__
+    for constraint in table.constraints if isinstance(table, Table) else ():
+        matched = TYPE_BOUND_RULE.match(str(constraint.sqltext)) if isinstance(constraint, CheckConstraint) else None
+        if matched is not None:
+            found[matched.group(1)] = matched.group(2)
+    return found
+
+
+TYPE_BOUND = type_bound_columns()
 
 
 def plain(value: Any) -> Any:
@@ -42,6 +59,12 @@ class Ledger:
             self.seen.add(mark)
             self.steps.append({"op": CHANGE, "table": table, "key": key, "column": column, "before": stored(row, column, getattr(row, column))})
         setattr(row, column, value)
+
+    def retype(self, row: EntityRow, kind: EntityType) -> None:
+        for column, owner in sorted(TYPE_BOUND.items()):
+            if owner != kind.value and getattr(row, column) is not None:
+                self.set(row, column, None)
+        self.set(row, "entity_type", kind)
 
     def stat(self, entity: EntityRow, key: str, value: int) -> None:
         mark = ("stats", (entity.id,), key)

@@ -37,6 +37,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.protected_nature.movement import loss_of_wild, protect_for_movement
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.war import declare_war
 
@@ -49,11 +50,13 @@ GOALS: dict[MovementCause, FactionGoalKind] = {
     MovementCause.LAND_REFORM: FactionGoalKind.ABOLISH_LAW,
     MovementCause.FRANCHISE: FactionGoalKind.ENACT_LAW,
     MovementCause.PEACE: FactionGoalKind.PEACE_WITH,
+    MovementCause.CONSERVATION: FactionGoalKind.ENACT_LAW,
 }
 LAW_TARGETS: dict[MovementCause, LawKind] = {
     MovementCause.ABOLITION: LawKind.SLAVERY,
     MovementCause.LAND_REFORM: LawKind.SERFDOM,
 }
+ENACTED = {MovementCause.FRANCHISE: LawKind.FRANCHISE, MovementCause.CONSERVATION: LawKind.ENVIRONMENT_LAW}
 ASSEMBLIES = frozenset({DecisionRule.ASSEMBLY, DecisionRule.COUNCIL})
 POWER = 2
 
@@ -170,6 +173,10 @@ async def press_for_peace(ctx: TickContext, realm: Realm) -> int:
     return pressed
 
 
+async def conservation(ctx: TickContext, ground: Ground) -> float:
+    return await loss_of_wild(ctx, ground.community) - ground.shares.get(SocialClass.FARMER, 0.0) / 2
+
+
 PRESSURES: dict[MovementCause, Callable[[TickContext, Ground], Awaitable[float]]] = {
     MovementCause.ABOLITION: abolition,
     MovementCause.INDEPENDENCE: independence,
@@ -177,6 +184,7 @@ PRESSURES: dict[MovementCause, Callable[[TickContext, Ground], Awaitable[float]]
     MovementCause.LAND_REFORM: land_reform,
     MovementCause.FRANCHISE: franchise,
     MovementCause.PEACE: peace,
+    MovementCause.CONSERVATION: conservation,
 }
 
 
@@ -215,7 +223,7 @@ async def found_movement(ctx: TickContext, realm: Realm, cause: MovementCause, h
     target = LAW_TARGETS.get(cause)
     law_row = laws.in_force(realm.entity.id, target) if target is not None else None
     law = law_row.law_entity_id if law_row is not None else None
-    key = LawKind.FRANCHISE.value if cause is MovementCause.FRANCHISE else target.value if target is not None else None
+    key = ENACTED[cause].value if cause in ENACTED else target.value if target is not None else None
     ctx.session.add(
         FactionGoalRow(
             faction_entity_id=faction.id,
@@ -253,6 +261,8 @@ async def protest(ctx: TickContext, community: EntityRow, share: int) -> bool:
 async def rise(ctx: TickContext, realm: Realm, row: MovementProfileRow, strongest: EntityRow, *, tally: MovementTally, book: RealmBook) -> None:
     if row.cause is MovementCause.PEACE:
         await press_for_peace(ctx, realm)
+    elif row.cause is MovementCause.CONSERVATION:
+        await protect_for_movement(ctx, realm, row)
     elif row.cause is MovementCause.INDEPENDENCE and strongest.id in realm.members:
         await secede(ctx, book, realm, strongest)
     else:

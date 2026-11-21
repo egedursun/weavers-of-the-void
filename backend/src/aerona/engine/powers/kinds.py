@@ -32,6 +32,7 @@ from aerona.domain.enums.powers import (
     TideCycle,
 )
 from aerona.engine.context import TickContext
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import shift_stat, stat_or
@@ -263,4 +264,4 @@ async def harm(ctx: TickContext, user: EntityRow, power: PowerRow, kind: str) ->
     elif kind == "strain" and "state" not in power.locked:
         power.state = PowerState.STRAINED
     elif kind == "notice" and user.location_id is not None:
-        shift_stat(user, "renown", table.hazard_stress // 2, 0)
+        await shift_standing(ctx.session, user, "renown", table.hazard_stress // 2, ctx.epoch, default=0)

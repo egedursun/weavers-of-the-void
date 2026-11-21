@@ -40,6 +40,7 @@ from aerona.engine.divine.wounds import avatar_slain
 from aerona.engine.faith.judgement import profile_for
 from aerona.engine.folkways.wrongs import wrongly_condemned
 from aerona.engine.gods.god_death import fallen_body_died
+from aerona.engine.grave_goods.furnish import furnish_grave
 from aerona.engine.interconnect.causes import killing_incident
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
@@ -223,9 +224,9 @@ def left_behind(mortal: EntityRow) -> tuple[ItemDeed, int, str]:
     return ItemDeed.LOST, mortal.id, f"lost with {mortal.name}, who died far from any grave"
 
 
-async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
+async def _bequeath(ctx: TickContext, mortal: EntityRow, buried: frozenset[int] = frozenset()) -> None:
     session = ctx.session
-    items = await active_bonds(session, [BondKind.OWNS], sources=[mortal.id])
+    items = [bond for bond in await active_bonds(session, [BondKind.OWNS], sources=[mortal.id]) if bond.target_node_id not in buried]
     if not items:
         return
     children: list[EntityRow] = []
@@ -388,7 +389,8 @@ async def after_death(ctx: TickContext, mortal: EntityRow) -> None:
     if underworld is not None:
         await connect(ctx.session, mortal.id, underworld.id, BondKind.SOUL_DESCENDED_TO, ctx.epoch, description="the soul descended there")
     await _reward_death_domains(ctx)
-    await _bequeath(ctx, mortal)
+    grave = await furnish_grave(ctx, mortal)
+    await _bequeath(ctx, mortal, frozenset(grave.items or []) if grave is not None else frozenset())
     flags = await EntityRepository(ctx.session).flags(mortal.id)
     if not await _is_famous(ctx, mortal, flags):
         return

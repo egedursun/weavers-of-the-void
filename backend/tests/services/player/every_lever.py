@@ -17,6 +17,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.tables.agency import CreationRewardRow
+from aerona.db.tables.agentless_conditions import AgentlessConditionRow
 from aerona.db.tables.ages import EcoTransformationRow
 from aerona.db.tables.agrarian import BrandRow, CommonsRow
 from aerona.db.tables.arts import ArtMovementRow, ClubRow, LeagueRow
@@ -24,16 +25,20 @@ from aerona.db.tables.body_systems import BodySystemRow, SensitivityRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.childhood import PedagogyRow
+from aerona.db.tables.city_rules import ConurbationRow, LandUseRuleRow, MunicipalServiceRow
 from aerona.db.tables.collective import LearningEventRow
 from aerona.db.tables.commerce import LeaseRow, PromotionRow, ShopRow, SupplyTierRow
+from aerona.db.tables.competition import CartelRow, MarketStructureRow, PriceWarRow
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.couplings import SociolectRow
+from aerona.db.tables.creature_groups import CreatureGroupRow
 from aerona.db.tables.culture import ArtworkProfileRow, BookContentRow
 from aerona.db.tables.cycles import ManumissionRow
 from aerona.db.tables.daily_life import HouseworkRow, LeisurePursuitRow
 from aerona.db.tables.death_work import DeathWorkRow
+from aerona.db.tables.departures import DepartureRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import CurrencyRow, WorkshopRow
 from aerona.db.tables.endowments import EndowmentRow
@@ -42,32 +47,52 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.epochs import DeferredStepRow, EpochRow
 from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.facets import FacetPracticeRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.faith import CultDoctrineRow
+from aerona.db.tables.feeling_spread import FeelingSpreadRow
+from aerona.db.tables.fertility_means import FertilityUseRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.folk_knowledge import FolkClassRow, FolkKnowledgeRow
 from aerona.db.tables.forecasting import ObservationMethodRow, WeatherWorkRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.gatherings import CollectionRow
-from aerona.db.tables.honours import NamedUnitRow
+from aerona.db.tables.governance import InsolvencyCaseRow, OrgCliqueRow, OrgMergerRow, OrgResearchRow, OrgSeatRow
+from aerona.db.tables.grave_goods import GraveGoodsRow
+from aerona.db.tables.honours import HonourHeldRow, HonourKindRow, NamedUnitRow
 from aerona.db.tables.households import HouseholdRow
+from aerona.db.tables.interpretation import InterpretationRow
+from aerona.db.tables.interworld import InterworldCampaignRow, InterworldMigrationRow, OrbitalControlRow
 from aerona.db.tables.intimacy import RestraintCustomRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.kin import KinGroupRow
+from aerona.db.tables.kin_dynamics import ElderSwayRow, KinBlendRow, KinDisowningRow, KinDynamicRow, KinFavourRow, KinRivalryRow
+from aerona.db.tables.labour import LabourContractRow, LabourDisputeRow
 from aerona.db.tables.law_depth import MoleHuntRow
+from aerona.db.tables.leader_cults import LeaderCultRow
+from aerona.db.tables.leagues import LeagueDecisionRow, LeagueMemberRow
 from aerona.db.tables.lore import HistorianViewRow, MessageRow
+from aerona.db.tables.mass_weapons import DeterrencePostureRow, MassWeaponRow, WarRemnantRow
 from aerona.db.tables.media import MediaItemRow, MediaOutletRow, RecordMediumRow
 from aerona.db.tables.military import ArmyUnitRow, OccupationRow
+from aerona.db.tables.monetary import MonetaryAuthorityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.museums import MuseumPieceRow
+from aerona.db.tables.occupation_regimes import CollaborationRow, OccupationMeasureRow, OccupationRegimeRow
 from aerona.db.tables.operations import SupplyFlowRow
 from aerona.db.tables.orders import BillOfExchangeRow
 from aerona.db.tables.plants import PlantPartRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.population import PopulationPolicyRow
 from aerona.db.tables.prehistory import DeepTimeEventRow, DeepTimeRunRow, PrehistoryEventRow, PrehistoryRow
+from aerona.db.tables.protected_nature import ConservationMovementRow, ProtectedAreaRow, SpeciesProtectionRow
+from aerona.db.tables.reckoning import ReckoningCaseRow, ReckoningMeasureRow, ReckoningRow
+from aerona.db.tables.referendums import ReferendumRow
 from aerona.db.tables.region import RegionDangerRow
+from aerona.db.tables.restoration import RestorationRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
 from aerona.db.tables.sacred import DivinationSystemRow, DoctrineSacramentRow, GeniusLocusRow
+from aerona.db.tables.sea_waves import SeaWaveCoastRow, SeaWaveRow, WaveWarningRow
+from aerona.db.tables.securities import IssuedSecurityRow, SecurityHoldingRow, SecurityPriceRow, StockExchangeRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.space_weather import SpaceWeatherEventRow
@@ -101,6 +126,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.epoch import DeferredStepStatus
 from aerona.domain.enums.facets import FacetKind
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import MoleHuntOutcome
@@ -426,6 +452,53 @@ def after(*steps: str | tuple[str, Mapping[str, Any]], **values: Any) -> Lever:
 
 def given(**values: Any) -> Lever:
     return Lever(values=values)
+
+
+async def first_world_mortal(session: AsyncSession, skip: int) -> int | None:
+    world = select(func.min(WorldRow.id)).scalar_subquery()
+    query = select(EntityRow.id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.world_id == world)
+    return await session.scalar(query.order_by(EntityRow.id).offset(skip).limit(1))
+
+
+async def ruling_mortal(session: AsyncSession) -> int | None:
+    rulers = select(BondRow.source_node_id).where(BondRow.kind == BondKind.RULES, BondRow.state == BondState.ACTIVE)
+    query = select(EntityRow.id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.in_(rulers))
+    return await session.scalar(query.order_by(EntityRow.id).limit(1))
+
+
+async def heir_beside(session: AsyncSession) -> int | None:
+    ruler = await ruling_mortal(session)
+    query = select(EntityRow.id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id != ruler)
+    return await session.scalar(query.order_by(EntityRow.id).limit(1))
+
+
+async def town_without_guild(session: AsyncSession) -> int | None:
+    guilded = select(FactionProfileRow.home_entity_id).where(FactionProfileRow.kind == FactionKind.CRAFT_GUILD, FactionProfileRow.home_entity_id.is_not(None))
+    query = select(EntityRow.id).where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(guilded))
+    return await session.scalar(query.order_by(EntityRow.id).limit(1))
+
+
+async def known_bond(session: AsyncSession) -> BondRow | None:
+    lore = select(EntityRow.id).where(EntityRow.entity_type == EntityType.KNOWLEDGE, EntityRow.status == EntityStatus.CANON)
+    knowers = select(EntityRow.id).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.CANON)
+    query = select(BondRow).where(
+        BondRow.kind == BondKind.KNOWS, BondRow.state == BondState.ACTIVE, BondRow.target_node_id.in_(lore), BondRow.source_node_id.in_(knowers)
+    )
+    return await session.scalar(query.order_by(BondRow.id).limit(1))
+
+
+async def knower(session: AsyncSession) -> int | None:
+    bond = await known_bond(session)
+    return bond.source_node_id if bond is not None else None
+
+
+async def known_lore(session: AsyncSession) -> int | None:
+    bond = await known_bond(session)
+    return bond.target_node_id if bond is not None else None
+
+
+HOME_MORTAL = Computed(lambda session: first_world_mortal(session, 0))
+HOME_NEIGHBOUR = Computed(lambda session: first_world_mortal(session, 1))
 
 
 REALM = EntityType.POLITY
@@ -1137,6 +1210,10 @@ LEVERS: dict[str, Lever] = {
     "attention:clear": after(("attention:set", {"world_id": Pick("world"), "values": {"watched": True}}), world_id=Pick("world")),
     "divine_pact:seal": setup_then(foreign_god, son_id=Pick("son"), god_id=Pick("foreign_god")),
     "ruling:decree": given(motion="cosmic_truce"),
+    "decree": given(entity_id=HOME_MORTAL, target_id=HOME_NEIGHBOUR),
+    "opinion:delete": after(("opinion:set", {"approval": 10})),
+    "standing:remove": after(("standing:set", {"prestige": 10})),
+    "ruler:heir": given(ruler_id=Computed(ruling_mortal), heir_id=Computed(heir_beside)),
     **{name: after(DECREE, ruling_id=Where("council_rulings", "id")) for name in ("ruling:edit", "ruling:revoke")},
     "law_profile:edit": given(law_id=Computed(natural_law)),
     "outer_profile:edit": given(being_id=Computed(outer_being)),
@@ -1180,10 +1257,10 @@ LEVERS: dict[str, Lever] = {
     },
     "case:open": given(settlement_id=Pick(TOWN), crime="theft", accused_id=Pick(MORTAL)),
     **{
-        name: after(("case:open", {"settlement_id": Pick(TOWN), "crime": "theft", "accused_id": Pick(MORTAL)}), case_id=Newest("case"))
+        name: after(("case:open", {"settlement_id": Pick(TOWN), "crime": "theft", "accused_id": Pick(MORTAL)}), case_id=Newest("crime_case"))
         for name in ("case:hold", "case:try", "case:delete")
     },
-    "case:edit": after(("case:open", {"settlement_id": Pick(TOWN), "crime": "theft", "accused_id": Pick(MORTAL)}), case_id=Newest("case"), evidence=50),
+    "case:edit": after(("case:open", {"settlement_id": Pick(TOWN), "crime": "theft", "accused_id": Pick(MORTAL)}), case_id=Newest("crime_case"), evidence=50),
     "chronicle:edit": given(text="The plain account was written again."),
     **{
         name: after(("cipher:set", {"owner_id": Pick(TOWN), "strength": 40}), owner_id=Pick(TOWN), breaker_id=Pick(MORTAL))
@@ -1286,7 +1363,7 @@ LEVERS: dict[str, Lever] = {
     "feud:end": after(("feud:start", {"first_id": Pick(TOWN), "second_id": Pick(TOWN, 1)})),
     **{name: setup_then(foreign_god, god_id=Pick("foreign_god")) for name in ("foreign_god:raise_land", "kill:foreign_god", "drain:foreign_god")},
     "foreign_god:edit": setup_then(foreign_god, god_id=Pick("foreign_god"), stance=10),
-    "foreign_god:strike": setup_then(foreign_god, god_id=Pick("foreign_god"), entity_id=Pick(MORTAL)),
+    "foreign_god:strike": setup_then(foreign_god, god_id=Pick("foreign_god"), entity_id=HOME_MORTAL),
     "foreign_god:raid_temple": setup_then(foreign_god, TEMPLE, FINISHED, god_id=Pick("foreign_god"), temple_id=Newest(EntityType.STRUCTURE)),
     "genome:edit": given(beauty=60),
     "genome:gene": given(locus="height", first="tall", second="short"),
@@ -1322,7 +1399,8 @@ LEVERS: dict[str, Lever] = {
     "kin:marry": given(first_id=Pick(MORTAL), second_id=Pick(MORTAL, 1)),
     "kind:create": given(catalog="technique", base="phalanx_drill"),
     **{name: after(CUSTOM_KIND, kind_id=Newest("custom_kind")) for name in ("kind:delete", "kind:edit")},
-    "knowledge:set": given(known=False),
+    "knowledge:set": given(entity_id=Computed(knower), knowledge_id=Computed(known_lore), known=False),
+    "body:condition_end": given(condition_id=Where("conditions", "id", {"ended_epoch": None})),
     "land:shape": given(region_id=Pick(EntityType.REGION), desertification=20),
     "land:release": after(
         ("land:shape", {"region_id": Pick(EntityType.REGION), "desertification": 20, "hold": True}), region_id=Pick(EntityType.REGION), field="desertification"
@@ -1671,11 +1749,11 @@ LEVERS: dict[str, Lever] = {
         name: after(("weather:force", {"region_id": Pick(EntityType.REGION)}), forced_id=Newest("forced_weather"))
         for name in ("weather:edit", "weather:release")
     },
-    "witness:set": after(CASE, case_id=Newest("case"), witness_id=Pick(MORTAL, 1)),
+    "witness:set": after(CASE, case_id=Newest("crime_case"), witness_id=Pick(MORTAL, 1)),
     "witness:remove": after(
         CASE,
-        ("witness:set", {"case_id": Newest("case"), "witness_id": Pick(MORTAL, 1), "testimony": "accuses", "reliability": 50}),
-        case_id=Newest("case"),
+        ("witness:set", {"case_id": Newest("crime_case"), "witness_id": Pick(MORTAL, 1), "testimony": "accuses", "reliability": 50}),
+        case_id=Newest("crime_case"),
         witness_id=Pick(MORTAL, 1),
     ),
     **{
@@ -1732,7 +1810,7 @@ LEVERS: dict[str, Lever] = {
     "de_jure:set": given(member_id=Pick(EntityType.REGION)),
     "de_jure:remove": after(("de_jure:set", {"title_id": Pick(EntityType.TITLE), "member_id": Pick(EntityType.REGION)}), member_id=Pick(EntityType.REGION)),
     "event:release": after(("event:phase", {"event_id": Pick(EntityType.EVENT), "phase": "peak", "hold": True}), event_id=Pick(EntityType.EVENT)),
-    "exile": given(world_id=Pick("world", 1)),
+    "exile": given(entity_id=HOME_MORTAL, world_id=Pick("world", 1)),
     "faction:contract": after(
         ("faction:found", {"community_id": Pick(TOWN, 2), "kind": "mercenary_company"}), faction_id=Newest(EntityType.FACTION), polity_id=Pick(REALM)
     ),
@@ -1745,8 +1823,8 @@ LEVERS: dict[str, Lever] = {
     ),
     "furnishing:remove": after(("furnishing:add", {"household_id": Pick("household"), "item_id": Pick(EntityType.ITEM)}), item_id=Pick(EntityType.ITEM)),
     "guild:secret": after(
-        ("research:technique", {"holder_id": Pick(TOWN, 2), "technique": "phalanx_drill"}),
-        ("faction:found", {"community_id": Pick(TOWN, 2), "kind": "craft_guild"}),
+        ("research:technique", {"holder_id": Computed(town_without_guild), "technique": "phalanx_drill"}),
+        ("faction:found", {"community_id": Computed(town_without_guild), "kind": "craft_guild"}),
         guild_id=Newest(EntityType.FACTION),
     ),
     "hero:hunt": given(monster_id=Pick(EntityType.SPECIES)),
@@ -2156,8 +2234,8 @@ LEVERS: dict[str, Lever] = {
     "precedent:add": given(holder_id=Pick(REALM), crime="theft", verdict="guilty"),
     **{name: after(PRECEDENT, precedent_id=Newest("precedent")) for name in ("precedent:edit", "precedent:delete")},
     "appeal:file": given(case_id=CONVICTION, to_court="provincial", fee=0),
-    **{name: after(APPEAL, case_id=Newest("case")) for name in ("appeal:edit", "appeal:hear", "appeal:delete")},
-    "oracle:answer": after(CASE, case_id=Newest("case"), verdict="acquitted"),
+    **{name: after(APPEAL, case_id=Newest("crime_case")) for name in ("appeal:edit", "appeal:hear", "appeal:delete")},
+    "oracle:answer": after(CASE, case_id=Newest("crime_case"), verdict="acquitted"),
     "registry:add": given(holder_id=Pick(REALM), kind="debt", owner_id=Pick(MORTAL), counterparty_id=Pick(MORTAL, 1), amount=30),
     **{name: after(DEED, registry_id=Newest("registry")) for name in ("registry:edit", "registry:delete")},
     "jurisdiction:set": given(holder_id=Pick(REALM), claimant_id=Pick(EntityType.CULT), claim="clergy", strength=40),
@@ -3615,19 +3693,19 @@ async def unleagued_realm(session: AsyncSession) -> int | None:
     )
 
 
-WORK = Newest(EntityType.ARTWORK)
+ART_WORK = Newest(EntityType.ARTWORK)
 MAKER_TOWN = Computed(maker_town)
 CLUB = Computed(newest_club)
 OTHER_CLUB = Computed(older_club)
-LEAGUE = Computed(newest_league)
-SCHOOL = Computed(newest_movement)
+CLUB_LEAGUE = Computed(newest_league)
+ART_SCHOOL = Computed(newest_movement)
 CONSTRUCT = Computed(newest_construct)
 FREE_REALM = Computed(unleagued_realm)
-PRICE_UP = ("art_price:set", {"artwork_id": WORK, "price": 20})
-SALE_UP = ("art_sale:create", {"artwork_id": WORK, "buyer_id": Pick(MORTAL, 1), "price": 0})
+PRICE_UP = ("art_price:set", {"artwork_id": ART_WORK, "price": 20})
+SALE_UP = ("art_sale:create", {"artwork_id": ART_WORK, "buyer_id": Pick(MORTAL, 1), "price": 0})
 COLLECTOR_UP = ("collector:create", {"holder_id": Pick(MORTAL, 2), "role": "dealer"})
-FORGERY_UP = ("forgery:create", {"original_id": WORK, "forger_id": Pick(MORTAL)})
-CANON_UP = ("canon_work:create", {"people_id": Pick(EntityType.PEOPLE), "artwork_id": WORK, "path": "renown"})
+FORGERY_UP = ("forgery:create", {"original_id": ART_WORK, "forger_id": Pick(MORTAL)})
+CANON_UP = ("canon_work:create", {"people_id": Pick(EntityType.PEOPLE), "artwork_id": ART_WORK, "path": "renown"})
 SCHOOL_UP = ("art_movement:create", {"town_id": MAKER_TOWN})
 CLUB_UP = ("club:create", {"town_id": Pick(TOWN), "kind": "racing"})
 CLUB_TOO = ("club:create", {"town_id": Pick(TOWN, 1), "kind": "combat"})
@@ -3647,7 +3725,7 @@ ARTS_EDITS: Mapping[str, Mapping[str, Any]] = {
     "forgery:edit": {
         "kind": "artwork",
         "forger_entity_id": Pick(MORTAL),
-        "original_entity_id": WORK,
+        "original_entity_id": ART_WORK,
         "skill": 70,
         "status": "hidden",
         "exposed_by_entity_id": None,
@@ -3710,24 +3788,24 @@ ARTS_EDITS: Mapping[str, Mapping[str, Any]] = {
 EDITS = {**EDITS, **ARTS_EDITS}
 LEVERS.update(
     {
-        "art_price:set": after(ARTWORK, artwork_id=WORK, price=30),
-        **{name: after(ARTWORK, PRICE_UP, artwork_id=WORK) for name in ("art_price:edit", "art_price:delete")},
-        "art_sale:create": after(ARTWORK, artwork_id=WORK, buyer_id=Pick(MORTAL, 1), price=0),
+        "art_price:set": after(ARTWORK, artwork_id=ART_WORK, price=30),
+        **{name: after(ARTWORK, PRICE_UP, artwork_id=ART_WORK) for name in ("art_price:edit", "art_price:delete")},
+        "art_sale:create": after(ARTWORK, artwork_id=ART_WORK, buyer_id=Pick(MORTAL, 1), price=0),
         **{name: after(ARTWORK, SALE_UP, sale_id=Newest("art_sale")) for name in ("art_sale:edit", "art_sale:delete")},
         "collector:create": given(holder_id=Pick(MORTAL, 2), role="patron"),
         **{name: after(COLLECTOR_UP, holder_id=Pick(MORTAL, 2)) for name in ("collector:edit", "collector:delete")},
-        "forgery:create": after(ARTWORK, original_id=WORK, forger_id=Pick(MORTAL)),
+        "forgery:create": after(ARTWORK, original_id=ART_WORK, forger_id=Pick(MORTAL)),
         **{name: after(ARTWORK, FORGERY_UP, forgery_id=Newest("forgery")) for name in ("forgery:edit", "forgery:delete")},
         "forgery:expose": after(ARTWORK, FORGERY_UP, forgery_id=Newest("forgery"), expert_id=Pick(MORTAL, 1)),
-        "canon_work:create": after(ARTWORK, people_id=Pick(EntityType.PEOPLE), artwork_id=WORK, path="copying"),
-        **{name: after(ARTWORK, CANON_UP, people_id=Pick(EntityType.PEOPLE), artwork_id=WORK) for name in ("canon_work:edit", "canon_work:delete")},
+        "canon_work:create": after(ARTWORK, people_id=Pick(EntityType.PEOPLE), artwork_id=ART_WORK, path="copying"),
+        **{name: after(ARTWORK, CANON_UP, people_id=Pick(EntityType.PEOPLE), artwork_id=ART_WORK) for name in ("canon_work:edit", "canon_work:delete")},
         "art_movement:create": Lever(values={"town_id": MAKER_TOWN}, before=(ARTWORK,), then=authored_town),
-        **{name: Lever(values={"faction_id": SCHOOL}, before=(ARTWORK,), then=authored_school) for name in ("art_movement:edit", "art_movement:delete")},
-        "art_movement:manifesto": Lever(values={"faction_id": SCHOOL, "axis": "honour", "value": 60}, before=(ARTWORK,), then=authored_school),
+        **{name: Lever(values={"faction_id": ART_SCHOOL}, before=(ARTWORK,), then=authored_school) for name in ("art_movement:edit", "art_movement:delete")},
+        "art_movement:manifesto": Lever(values={"faction_id": ART_SCHOOL, "axis": "honour", "value": 60}, before=(ARTWORK,), then=authored_school),
         "club:create": given(town_id=Pick(TOWN), kind="team_game"),
         **{name: after(CLUB_UP, faction_id=CLUB) for name in ("club:edit", "club:delete")},
         "league:create": given(realm_id=FREE_REALM, town_id=Pick(TOWN)),
-        **{name: after(LEAGUE_UP, faction_id=LEAGUE) for name in ("league:edit", "league:delete")},
+        **{name: after(LEAGUE_UP, faction_id=CLUB_LEAGUE) for name in ("league:edit", "league:delete")},
         "match:create": after(CLUB_UP, CLUB_TOO, home_id=CLUB, away_id=OTHER_CLUB, winner_id=CLUB),
         **{name: after(CLUB_UP, CLUB_TOO, MATCH_UP, match_id=Newest("match")) for name in ("match:edit", "match:delete")},
         "bet:create": after(CLUB_UP, CLUB_TOO, MATCH_UP, match_id=Newest("match"), town_id=Pick(TOWN, 1), club_id=OTHER_CLUB, stake=6),
@@ -3770,7 +3848,7 @@ SEASON_UP = ("irregular_season:create", {"world_id": WORLD})
 FORMATION_UP = ("formation:read", {"world_id": WORLD, "reshape": False})
 FORECAST_UP = ("winter_forecast:set", {"world_id": WORLD, "people_id": Pick(EntityType.PEOPLE), "predicted_end_epoch": 9})
 CYCLE_UP = ("age:cycle", {"cycle": "cyclic"})
-TURN_UP = ("age:turn", {})
+TURN_UP: tuple[str, dict[str, Any]] = ("age:turn", {})
 ECHO_UP = ("age_echo:create", {"age_id": Newest("age"), "template": "quest", "source_id": Pick(MORTAL), "weight": 50})
 ARC_UP = ("arc:create", {"subject_id": Pick(MORTAL), "template": "rivalry", "figure_id": Pick(MORTAL, 1), "role": "rival"})
 BEAT_UP = ("arc_beat:create", {"arc_id": Newest("arc"), "stage": "crisis", "text": "They met at the ford."})
@@ -4017,7 +4095,10 @@ NUMBERS_UP = ("number_system:set", {"people_id": Pick(PEOPLE), "base": 12, "nota
 MATERIAL_UP = ("material:edit", {"world_id": Pick("world"), "material": "iron", "values": {"hardness": 60}})
 AFFINITY_UP = ("material_affinity:set", {"material_id": Newest("world_material"), "school": "earth", "mode": "worn", "power": 30})
 LINK_UP = ("sympathetic_link:create", {"holder_node_id": Pick(MORTAL), "target_node_id": Pick(MORTAL, 1), "token": "hair", "strength": 50})
-SPIRIT_UP = ("emotion_spirit:create", {"region_entity_id": Pick(EntityType.REGION), "emotion": "joy", "strength": 30, "lifetime": 3, "bound_by_node_id": None})
+MOOD_SPIRIT_UP = (
+    "emotion_spirit:create",
+    {"region_entity_id": Pick(EntityType.REGION), "emotion": "joy", "strength": 30, "lifetime": 3, "bound_by_node_id": None},
+)
 CRAFTS_EDITS: Mapping[str, Mapping[str, Any]] = {
     "catch_ground:edit": {
         "ground": "trapping",
@@ -4075,8 +4156,8 @@ LEVERS.update(
         },
         "sympathetic_link:create": given(**LINK_UP[1]),
         **{name: after(LINK_UP, record_id=Newest("sympathetic_link")) for name in ("sympathetic_link:edit", "sympathetic_link:delete")},
-        "emotion_spirit:create": given(**SPIRIT_UP[1]),
-        **{name: after(SPIRIT_UP, record_id=Newest("emotion_spirit")) for name in ("emotion_spirit:edit", "emotion_spirit:delete")},
+        "emotion_spirit:create": given(**MOOD_SPIRIT_UP[1]),
+        **{name: after(MOOD_SPIRIT_UP, record_id=Newest("emotion_spirit")) for name in ("emotion_spirit:edit", "emotion_spirit:delete")},
     }
 )
 
@@ -4690,7 +4771,7 @@ LEVERS.update(
 
 
 SOURCE_UP = ("source:create", {"name": "The Deep Well", "scope_id": Pick(EntityType.REGION), "locus": "place"})
-SYSTEM_UP = ("magic_system:create", {"name": "The Old Way", "scope_id": Pick("world"), "structure": "innate"})
+MAGIC_SYSTEM_UP = ("magic_system:create", {"name": "The Old Way", "scope_id": Pick("world"), "structure": "innate"})
 POWER_UP = ("power:create", {"holder_id": Pick(MORTAL), "technique": "perceive", "form": "mind", "strength": 4})
 GRANTED_UP = ("power:grant", {"holder_id": Pick(MORTAL), "god_id": Pick("son"), "technique": "control", "form": "fate", "strength": 2})
 TRUTH_UP = ("truth:create", {"title": "those who walk unseen", "subject_id": Pick(MORTAL), "kind": "presence", "methods": ["by_oath"]})
@@ -4716,11 +4797,11 @@ LEVERS.update(
         "source_part:edit": after(SOURCE_UP, COST_UP, part_id=Newest("power_source_costs"), part="cost", values=POWER_EDITS["source_part:edit"]),
         "source_part:delete": after(SOURCE_UP, COST_UP, part_id=Newest("power_source_costs"), part="cost"),
         "magic_system:create": given(name="The Old Way", scope_id=Pick("world"), structure="innate"),
-        "magic_system:edit": after(SYSTEM_UP, system_id=Newest("magic_systems"), values=POWER_EDITS["magic_system:edit"], release=[]),
-        "magic_system:delete": after(SYSTEM_UP, system_id=Newest("magic_systems")),
-        "system_part:create": after(SYSTEM_UP, owner_id=Newest("magic_systems"), part="grammar", values={"technique": "ward", "form": "mind"}),
-        "system_part:edit": after(SYSTEM_UP, GRAMMAR_UP, part_id=Newest("magic_system_grammar"), part="grammar", values=POWER_EDITS["system_part:edit"]),
-        "system_part:delete": after(SYSTEM_UP, GRAMMAR_UP, part_id=Newest("magic_system_grammar"), part="grammar"),
+        "magic_system:edit": after(MAGIC_SYSTEM_UP, system_id=Newest("magic_systems"), values=POWER_EDITS["magic_system:edit"], release=[]),
+        "magic_system:delete": after(MAGIC_SYSTEM_UP, system_id=Newest("magic_systems")),
+        "system_part:create": after(MAGIC_SYSTEM_UP, owner_id=Newest("magic_systems"), part="grammar", values={"technique": "ward", "form": "mind"}),
+        "system_part:edit": after(MAGIC_SYSTEM_UP, GRAMMAR_UP, part_id=Newest("magic_system_grammar"), part="grammar", values=POWER_EDITS["system_part:edit"]),
+        "system_part:delete": after(MAGIC_SYSTEM_UP, GRAMMAR_UP, part_id=Newest("magic_system_grammar"), part="grammar"),
         "power:create": given(holder_id=Pick(MORTAL), technique="perceive", form="mind", strength=4),
         "power:edit": after(POWER_UP, power_id=Newest("powers"), values=POWER_EDITS["power:edit"], release=[]),
         "power:delete": after(POWER_UP, power_id=Newest("powers")),
@@ -5460,6 +5541,614 @@ LEVERS.update(
             {"polity_entity_id": DAILY_FOLK, "sector": "tools", "form": "monopoly", "output": 20},
             {"id": newest_row(StateEnterpriseRow, "id")},
             {"corruption": 40, "form": "arsenal"},
+        ),
+    }
+)
+
+
+LEVERS.update(
+    {
+        **row_levers(
+            "market_structure",
+            "market_structures",
+            {"market_entity_id": Pick(TOWN, 1), "commodity": "cloth", "concentration": 40, "form": "few_sellers"},
+            {"id": newest_row(MarketStructureRow, "id")},
+            {"concentration": 60, "form": "one_seller"},
+        ),
+        **row_levers(
+            "cartel",
+            "cartels",
+            {"name": "the cloth compact", "leader_node_id": Pick(FACTION, 0), "commodity": "cloth", "aim": "price", "agreed_price": 12},
+            {"id": newest_row(CartelRow, "id")},
+            {"discipline": 50, "aim": "quota"},
+        ),
+        **row_levers(
+            "price_war",
+            "price_wars",
+            {"aggressor_node_id": Pick(FACTION, 0), "market_entity_id": Pick(TOWN, 1), "commodity": "cloth", "cut_pct": 25},
+            {"id": newest_row(PriceWarRow, "id")},
+            {"cut_pct": 35, "outcome": "called_off"},
+        ),
+    }
+)
+
+
+LEVERS.update(
+    {
+        **row_levers(
+            "departure",
+            "departures",
+            {"holder_node_id": Pick(MORTAL, 0), "kind": "retirement", "conditions": ["pension"], "standing": 20},
+            {"id": newest_row(DepartureRow, "id")},
+            {"standing": 50, "kind": "resignation"},
+        ),
+    }
+)
+
+
+LEVERS.update(
+    {
+        **row_levers(
+            "leader_cult",
+            "leader_cults",
+            {"leader_node_id": Pick(MORTAL, 0), "instruments": ["holidays"], "intensity": 30},
+            {"id": newest_row(LeaderCultRow, "id")},
+            {"intensity": 60, "sincerity": 40},
+        ),
+    }
+)
+
+
+RESTORATION_VALUES = {"fallen_polity_id": Pick(REALM, 0), "memory": 30}
+LEVERS.update(
+    {
+        **row_levers("restoration", "restorations", RESTORATION_VALUES, {"id": newest_row(RestorationRow, "id")}, {"memory": 60, "bases": ["law"]}),
+        "restoration:advance": after(
+            ("restoration:create", {"table": "restorations", "values": RESTORATION_VALUES}), record_id=newest_row(RestorationRow, "id")
+        ),
+    }
+)
+
+
+LEVERS.update(
+    {
+        **row_levers(
+            "mass_weapon",
+            "mass_weapons",
+            {"holder_entity_id": Pick(REALM, 0), "harm": "rite", "reach": "region"},
+            {"id": newest_row(MassWeaponRow, "id")},
+            {"stage": "ready", "count": 2, "readiness": 40},
+        ),
+        **row_levers(
+            "deterrence_posture",
+            "deterrence_postures",
+            {"holder_entity_id": Pick(REALM, 0), "posture": "ambiguous"},
+            {"id": newest_row(DeterrencePostureRow, "id")},
+            {"credibility": 70, "posture": "retaliation_only"},
+        ),
+        **row_levers(
+            "war_remnant",
+            "war_remnants",
+            {"region_entity_id": Pick(REGION, 0), "kind": "fallout", "density": 50},
+            {"id": newest_row(WarRemnantRow, "id")},
+            {"density": 20, "cleared": 30},
+        ),
+    }
+)
+
+
+LEVERS.update(
+    {
+        **row_levers(
+            "interworld_campaign",
+            "interworld_campaigns",
+            {"attacker_entity_id": Pick(REALM, 0), "from_world_id": Pick("world"), "target_world_id": Pick("world"), "stage": "gathering"},
+            {"id": newest_row(InterworldCampaignRow, "id")},
+            {"stage": "transit", "supply": 70, "forces": 300},
+        ),
+        **row_levers(
+            "orbital_control",
+            "orbital_control",
+            {"world_id": Pick("world"), "holder_entity_id": Pick(REALM, 0), "strength": 40},
+            {"id": newest_row(OrbitalControlRow, "id")},
+            {"strength": 75},
+        ),
+        **row_levers(
+            "interworld_migration",
+            "interworld_migrations",
+            {"community_entity_id": Pick(TOWN, 0), "from_world_id": Pick("world"), "to_world_id": Pick("world"), "cause": "exile"},
+            {"id": newest_row(InterworldMigrationRow, "id")},
+            {"reception": "quota", "per_epoch": 40},
+        ),
+    }
+)
+
+
+LEVERS.update(
+    {
+        **row_levers(
+            "protected_area",
+            "protected_areas",
+            {"region_entity_id": Pick(LAND, 0), "basis": "custom", "banned_uses": ["hunting"]},
+            {"id": newest_row(ProtectedAreaRow, "id")},
+            {"strength": 70, "wardens": 3},
+        ),
+        **row_levers(
+            "species_protection",
+            "species_protections",
+            {"species_entity_id": Pick(EntityType.SPECIES, 0), "measures": ["breeding_programme"]},
+            {"id": newest_row(SpeciesProtectionRow, "id")},
+            {"basis": "faith"},
+        ),
+        **row_levers(
+            "conservation_movement",
+            "conservation_movements",
+            {"movement_entity_id": Pick(EntityType.FACTION, 0), "aims": ["hunting"]},
+            {"movement_entity_id": newest_row(ConservationMovementRow, "movement_entity_id")},
+            {"aims": ["logging"]},
+        ),
+    }
+)
+
+
+LEVERS.update(
+    row_levers(
+        "feeling_spread",
+        "feeling_spread",
+        {"settlement_entity_id": Pick(TOWN, 0), "feelings": {"joy": 40}, "leading": "joy"},
+        {"id": newest_row(FeelingSpreadRow, "id")},
+        {"feelings": {"fear": 55}, "leading": "fear"},
+    )
+)
+LEVERS.update(
+    row_levers(
+        "interpretation",
+        "interpretations",
+        {"first_party_id": Pick(TOWN, 0), "second_party_id": Pick(TOWN, 1), "fidelity": 60, "event": "parley"},
+        {"id": newest_row(InterpretationRow, "id")},
+        {"fidelity": 30, "fault": "softened"},
+    )
+)
+LEVERS.update(
+    row_levers(
+        "grave_good",
+        "grave_goods",
+        {"dead_entity_id": Pick(MORTAL, 1), "grave_entity_id": Pick(TOWN, 0), "goods_value": 30, "guard": "sealed"},
+        {"id": newest_row(GraveGoodsRow, "id")},
+        {"goods_value": 10, "guard": "guarded"},
+    )
+)
+LEVERS.update(
+    row_levers(
+        "agentless_condition",
+        "agentless_conditions",
+        {"world_id": Pick("world"), "name": "A wearing of the breath", "cause": "age", "system": "breath", "course": "worsening", "onset_pct": 50},
+        {"id": newest_row(AgentlessConditionRow, "id")},
+        {"weight": 20, "course": "episodic"},
+    )
+)
+LEVERS.update(
+    row_levers(
+        "fertility_means",
+        "fertility_means",
+        {"people_entity_id": Pick(EntityType.PEOPLE, 0), "means": "prevention", "reliability": 50, "use_pct": 10},
+        {"people_entity_id": Pick(EntityType.PEOPLE, 0), "means": "prevention"},
+        {"reliability": 70, "stance": "discouraged"},
+    )
+)
+LEVERS.update(
+    row_levers(
+        "fertility_use",
+        "fertility_uses",
+        {"user_entity_id": Pick(MORTAL, 0), "people_entity_id": Pick(EntityType.PEOPLE, 0), "means": "prevention"},
+        {"id": newest_row(FertilityUseRow, "id")},
+        {"hidden": True},
+    )
+)
+LEVERS.update(
+    row_levers(
+        "honour_kind",
+        "honour_kinds",
+        {"conferrer_node_id": Pick(EntityType.POLITY, 0), "name": "Order of the Lever", "rank": 1, "privileges": ["title"]},
+        {"id": newest_row(HonourKindRow, "id")},
+        {"rank": 2, "hereditary": True},
+    )
+)
+HONOUR_KIND_VALUES = {"conferrer_node_id": Pick(EntityType.POLITY, 0), "name": "Order of the Held", "rank": 1}
+HONOUR_KIND_MADE = ("honour_kind:create", {"table": "honour_kinds", "values": HONOUR_KIND_VALUES})
+HONOUR_HELD_VALUES = {"holder_node_id": Pick(MORTAL, 0), "kind_id": newest_row(HonourKindRow, "id")}
+HONOUR_HELD_MADE = ("honour_held:create", {"table": "honours_held", "values": HONOUR_HELD_VALUES})
+HONOUR_HELD_KEY = {"id": newest_row(HonourHeldRow, "id")}
+LEVERS.update(
+    {
+        "honour_held:create": after(HONOUR_KIND_MADE, table="honours_held", values=HONOUR_HELD_VALUES),
+        "honour_held:edit": after(HONOUR_KIND_MADE, HONOUR_HELD_MADE, table="honours_held", key=HONOUR_HELD_KEY, values={"sold": True}),
+        "honour_held:delete": after(HONOUR_KIND_MADE, HONOUR_HELD_MADE, table="honours_held", key=HONOUR_HELD_KEY),
+    }
+)
+SEA_WAVE_VALUES = {"world_id": Pick("world"), "origin": "quake", "origin_region_id": Pick(EntityType.REGION, 0), "strength": 40}
+SEA_WAVE_MADE = ("sea_wave:create", {"table": "sea_waves", "values": SEA_WAVE_VALUES})
+LEVERS.update(row_levers("sea_wave", "sea_waves", SEA_WAVE_VALUES, {"id": newest_row(SeaWaveRow, "id")}, {"strength": 60}))
+STRUCK_VALUES = {"wave_id": newest_row(SeaWaveRow, "id"), "region_entity_id": Pick(EntityType.REGION, 0), "height": 30}
+STRUCK_MADE = ("sea_wave_coast:create", {"table": "sea_wave_coasts", "values": STRUCK_VALUES})
+STRUCK_KEY = {"id": newest_row(SeaWaveCoastRow, "id")}
+LEVERS.update(
+    {
+        "sea_wave_coast:create": after(SEA_WAVE_MADE, table="sea_wave_coasts", values=STRUCK_VALUES),
+        "sea_wave_coast:edit": after(SEA_WAVE_MADE, STRUCK_MADE, table="sea_wave_coasts", key=STRUCK_KEY, values={"warned": True, "height": 20}),
+        "sea_wave_coast:delete": after(SEA_WAVE_MADE, STRUCK_MADE, table="sea_wave_coasts", key=STRUCK_KEY),
+    }
+)
+LEVERS.update(
+    row_levers(
+        "wave_warning",
+        "wave_warnings",
+        {"region_entity_id": Pick(EntityType.REGION, 0), "method": "sight", "until_epoch": 2},
+        {"id": newest_row(WaveWarningRow, "id")},
+        {"until_epoch": 3},
+    )
+)
+LEVERS.update(
+    row_levers(
+        "creature_group",
+        "creature_groups",
+        {"species_entity_id": Pick(EntityType.SPECIES, 0), "region_entity_id": Pick(EntityType.REGION, 0), "form": "herd", "size": 300},
+        {"id": newest_row(CreatureGroupRow, "id")},
+        {"size": 200, "hunger": 70, "form": "pack"},
+    )
+)
+FRESH_CULT = ("horror:cult", {"entity_id": Pick(TOWN)})
+CONCEPTION_VALUES = {"cult_entity_id": Newest(EntityType.CULT), "count": "one", "nearness": "distant"}
+CONCEPTION_MADE = ("divine_conception:create", {"table": "divine_conceptions", "values": CONCEPTION_VALUES})
+CONCEPTION_KEY = {"cult_entity_id": Newest(EntityType.CULT)}
+READING_VALUES = {"cult_entity_id": Pick(EntityType.CULT, 0), "god_node_id": Pick("foreign_god"), "reading": "servant"}
+READING_MADE = ("god_reading:create", {"table": "god_readings", "values": READING_VALUES})
+READING_KEY = {"cult_entity_id": Pick(EntityType.CULT, 0), "god_node_id": Pick("foreign_god")}
+LEVERS.update(
+    {
+        "divine_conception:create": after(FRESH_CULT, table="divine_conceptions", values=CONCEPTION_VALUES),
+        "divine_conception:edit": after(FRESH_CULT, CONCEPTION_MADE, table="divine_conceptions", key=CONCEPTION_KEY, values={"count": "many"}),
+        "divine_conception:delete": after(FRESH_CULT, CONCEPTION_MADE, table="divine_conceptions", key=CONCEPTION_KEY),
+        "god_reading:create": setup_then(foreign_god, table="god_readings", values=READING_VALUES),
+        "god_reading:edit": setup_then(foreign_god, READING_MADE, table="god_readings", key=READING_KEY, values={"reading": "true"}),
+        "god_reading:delete": setup_then(foreign_god, READING_MADE, table="god_readings", key=READING_KEY),
+    }
+)
+KIN_DYNAMIC = ("kin_dynamic:create", {"table": "kin_dynamics", "values": {"house_entity_id": Pick(EntityType.HOUSE, 0)}})
+NEWEST_DYNAMIC = newest_row(KinDynamicRow, "id")
+KIN_ROWS: dict[str, tuple[str, type[Base], dict[str, Any], dict[str, Any]]] = {
+    "kin_favour": ("kin_favours", KinFavourRow, {"parent_node_id": Pick(MORTAL, 0), "child_node_id": Pick(MORTAL, 1), "strength": 40}, {"strength": 70}),
+    "kin_rivalry": ("kin_rivalries", KinRivalryRow, {"first_node_id": Pick(MORTAL, 0), "second_node_id": Pick(MORTAL, 1), "cause": "love"}, {"heat": 50}),
+    "kin_disowning": ("kin_disownings", KinDisowningRow, {"disowner_node_id": Pick(MORTAL, 0), "disowned_node_id": Pick(MORTAL, 1)}, {"reason": "faith"}),
+    "kin_blend": ("kin_blends", KinBlendRow, {"member_node_id": Pick(MORTAL, 1), "standing": 40}, {"standing": 60}),
+    "elder_sway": ("elder_sway", ElderSwayRow, {"elder_node_id": Pick(MORTAL, 0), "sway": 50}, {"sway": 30}),
+}
+LEVERS.update(row_levers("kin_dynamic", "kin_dynamics", {"house_entity_id": Pick(EntityType.HOUSE, 0)}, {"id": NEWEST_DYNAMIC}, {"tension": 40}))
+for family, (table, row, values, edits) in KIN_ROWS.items():
+    made = {"dynamic_id": NEWEST_DYNAMIC, **values}
+    LEVERS.update(
+        {
+            f"{family}:create": after(KIN_DYNAMIC, table=table, values=made),
+            f"{family}:edit": after(
+                KIN_DYNAMIC, (f"{family}:create", {"table": table, "values": made}), table=table, key={"id": newest_row(row, "id")}, values=edits
+            ),
+            f"{family}:delete": after(KIN_DYNAMIC, (f"{family}:create", {"table": table, "values": made}), table=table, key={"id": newest_row(row, "id")}),
+        }
+    )
+
+
+CITY_VALUES = {"core_entity_id": Pick(TOWN, 0), "members": [Pick(TOWN, 1)], "governance": "federated_councils"}
+LEVERS.update(
+    {
+        **row_levers(
+            "land_use_rule",
+            "land_use_rules",
+            {"settlement_entity_id": Pick(TOWN, 0), "rule": "green_share", "strength": 60},
+            {"id": newest_row(LandUseRuleRow, "id")},
+            {"enforcement": 80, "rule": "fire_spacing"},
+        ),
+        **row_levers(
+            "municipal_service",
+            "municipal_services",
+            {"settlement_entity_id": Pick(TOWN, 0), "service": "lighting", "budget": 40},
+            {"id": newest_row(MunicipalServiceRow, "id")},
+            {"quality": 70, "budget": 60},
+        ),
+        **row_levers("conurbation", "conurbations", CITY_VALUES, {"id": newest_row(ConurbationRow, "id")}, {"governance": "one_council"}),
+        "conurbation:split": after(("conurbation:create", {"table": "conurbations", "values": CITY_VALUES}), record_id=newest_row(ConurbationRow, "id")),
+    }
+)
+
+
+REGIME_VALUES = {"region_entity_id": Pick(REGION, 0), "occupier_entity_id": Pick(REALM, 0), "rule": "military", "tax_pct": 30}
+REGIMED = ("occupation_regime:create", {"table": "occupation_regimes", "values": REGIME_VALUES})
+NEWEST_REGIME = newest_row(OccupationRegimeRow, "id")
+SERVICE_VALUES = {"regime_id": NEWEST_REGIME, "collaborator_node_id": Pick(MORTAL, 0), "kind": "informing"}
+PRESSED_VALUES = {"regime_id": NEWEST_REGIME, "region_entity_id": Pick(REGION, 0), "measure": "curfew", "strength": 40}
+LEVERS.update(
+    {
+        **row_levers("occupation_regime", "occupation_regimes", REGIME_VALUES, {"id": NEWEST_REGIME}, {"rule": "protectorate", "labour_pct": 20}),
+        "collaboration:create": after(REGIMED, table="collaborations", values=SERVICE_VALUES),
+        "collaboration:edit": after(
+            REGIMED,
+            ("collaboration:create", {"table": "collaborations", "values": SERVICE_VALUES}),
+            table="collaborations",
+            key={"id": newest_row(CollaborationRow, "id")},
+            values={"exposure": 60, "reward": 5},
+        ),
+        "collaboration:delete": after(
+            REGIMED,
+            ("collaboration:create", {"table": "collaborations", "values": SERVICE_VALUES}),
+            table="collaborations",
+            key={"id": newest_row(CollaborationRow, "id")},
+        ),
+        "occupation_measure:create": after(REGIMED, table="occupation_measures", values=PRESSED_VALUES),
+        "occupation_measure:edit": after(
+            REGIMED,
+            ("occupation_measure:create", {"table": "occupation_measures", "values": PRESSED_VALUES}),
+            table="occupation_measures",
+            key={"id": newest_row(OccupationMeasureRow, "id")},
+            values={"strength": 70, "measure": "hostages"},
+        ),
+        "occupation_measure:delete": after(
+            REGIMED,
+            ("occupation_measure:create", {"table": "occupation_measures", "values": PRESSED_VALUES}),
+            table="occupation_measures",
+            key={"id": newest_row(OccupationMeasureRow, "id")},
+        ),
+    }
+)
+
+
+RECKONED = ("reckoning:create", {"table": "reckonings", "values": {"polity_entity_id": Pick(REALM, 0), "fallen_epoch": 0}})
+NEWEST_RECKONING = newest_row(ReckoningRow, "id")
+MEASURE_VALUES = {"reckoning_id": NEWEST_RECKONING, "polity_entity_id": Pick(REALM, 0), "measure": "memorial", "strength": 40}
+CASE_VALUES = {"reckoning_id": NEWEST_RECKONING, "accused_node_id": Pick(MORTAL, 0), "measure": "tribunal"}
+LEVERS.update(
+    {
+        **row_levers("reckoning", "reckonings", {"polity_entity_id": Pick(REALM, 0), "fallen_epoch": 0}, {"id": NEWEST_RECKONING}, {"resistance": 40}),
+        "reckoning_measure:create": after(RECKONED, table="reckoning_measures", values=MEASURE_VALUES),
+        "reckoning_measure:edit": after(
+            RECKONED,
+            ("reckoning_measure:create", {"table": "reckoning_measures", "values": MEASURE_VALUES}),
+            table="reckoning_measures",
+            key={"id": newest_row(ReckoningMeasureRow, "id")},
+            values={"strength": 70, "stage": "active"},
+        ),
+        "reckoning_measure:delete": after(
+            RECKONED,
+            ("reckoning_measure:create", {"table": "reckoning_measures", "values": MEASURE_VALUES}),
+            table="reckoning_measures",
+            key={"id": newest_row(ReckoningMeasureRow, "id")},
+        ),
+        "reckoning_case:create": after(RECKONED, table="reckoning_cases", values=CASE_VALUES),
+        "reckoning_case:edit": after(
+            RECKONED,
+            ("reckoning_case:create", {"table": "reckoning_cases", "values": CASE_VALUES}),
+            table="reckoning_cases",
+            key={"id": newest_row(ReckoningCaseRow, "id")},
+            values={"outcome": "pardoned"},
+        ),
+        "reckoning_case:delete": after(
+            RECKONED,
+            ("reckoning_case:create", {"table": "reckoning_cases", "values": CASE_VALUES}),
+            table="reckoning_cases",
+            key={"id": newest_row(ReckoningCaseRow, "id")},
+        ),
+    }
+)
+
+
+VOTE_VALUES = {"holder_node_id": Pick(REALM, 0), "subject": "law", "name": "the vote on the old law", "yes_pct": 70}
+LEVERS.update(
+    {
+        **row_levers("referendum", "referendums", VOTE_VALUES, {"id": newest_row(ReferendumRow, "id")}, {"yes_pct": 30, "binding": False}),
+        "referendum:decide": after(
+            ("referendum:create", {"table": "referendums", "values": VOTE_VALUES}), record_id=newest_row(ReferendumRow, "id"), result="failed"
+        ),
+    }
+)
+
+
+FOUNDED = ("league:found", {"founder_id": Pick(REALM, 0), "partner_ids": [Pick(REALM, 1), Pick(REALM, 2)], "aims": ["defence", "law"]})
+NEWEST_LEAGUE = Newest(EntityType.LEAGUE)
+CHARTER_KEY = {"league_entity_id": NEWEST_LEAGUE}
+LEVERS.update(
+    {
+        "league:found": given(founder_id=Pick(REALM, 0), partner_ids=[Pick(REALM, 1), Pick(REALM, 2)], aims=["trade"], vote_basis="by_dues"),
+        "league:dissolve": after(FOUNDED, league_id=NEWEST_LEAGUE),
+        "polity_league:create": after(
+            FOUNDED,
+            ("polity_league:delete", {"table": "polity_leagues", "key": CHARTER_KEY}),
+            table="polity_leagues",
+            values={"league_entity_id": NEWEST_LEAGUE, "aims": ["peace"], "vote_basis": "by_population"},
+        ),
+        "polity_league:edit": after(FOUNDED, table="polity_leagues", key=CHARTER_KEY, values={"depth": 40, "common_tariff_pct": 15}),
+        "polity_league:delete": after(FOUNDED, table="polity_leagues", key=CHARTER_KEY),
+        "league_member:create": after(
+            FOUNDED, table="league_members", values={"league_entity_id": NEWEST_LEAGUE, "polity_entity_id": Pick(REALM, 3), "standing": "observer"}
+        ),
+        "league_member:edit": after(FOUNDED, table="league_members", key={"id": newest_row(LeagueMemberRow, "id")}, values={"veto": True, "defiance": 1}),
+        "league_member:delete": after(FOUNDED, table="league_members", key={"id": newest_row(LeagueMemberRow, "id")}),
+        "league_decision:create": after(
+            FOUNDED, table="league_decisions", values={"league_entity_id": NEWEST_LEAGUE, "organ": "assembly", "kind": "budget", "rate_pct": 10}
+        ),
+        "league_decision:edit": after(
+            FOUNDED,
+            ("league_decision:create", {"table": "league_decisions", "values": {"league_entity_id": NEWEST_LEAGUE, "organ": "court", "kind": "ruling"}}),
+            table="league_decisions",
+            key={"id": newest_row(LeagueDecisionRow, "id")},
+            values={"outcome": "passed", "votes_for": 3},
+        ),
+        "league_decision:delete": after(
+            FOUNDED,
+            ("league_decision:create", {"table": "league_decisions", "values": {"league_entity_id": NEWEST_LEAGUE, "organ": "court", "kind": "ruling"}}),
+            table="league_decisions",
+            key={"id": newest_row(LeagueDecisionRow, "id")},
+        ),
+    }
+)
+
+
+ISSUED = (
+    "issued_security:create",
+    {"table": "issued_securities", "values": {"name": "the bonds of the guild", "issuer_node_id": Pick(FACTION, 0), "kind": "bond"}},
+)
+NEWEST_SECURITY = newest_row(IssuedSecurityRow, "id")
+HOLDING_VALUES = {"holder_node_id": Pick(FACTION, 0), "security_id": NEWEST_SECURITY, "amount": 5}
+HELD = ("security_holding:create", {"table": "security_holdings", "values": HOLDING_VALUES})
+PRICE_VALUES = {"security_id": NEWEST_SECURITY, "issuer_node_id": Pick(FACTION, 0), "epoch": 0, "price": 12}
+LEVERS.update(
+    {
+        **row_levers(
+            "stock_exchange",
+            "stock_exchanges",
+            {"name": "the exchange of the hill", "settlement_entity_id": Pick(TOWN, 1), "margin_pct": 20},
+            {"id": newest_row(StockExchangeRow, "id")},
+            {"mood": 30, "listing_fee": 5},
+        ),
+        **row_levers(
+            "issued_security",
+            "issued_securities",
+            {"name": "the notes of the guild", "issuer_node_id": Pick(FACTION, 0), "kind": "note", "amount": 50},
+            {"id": NEWEST_SECURITY},
+            {"price": 14, "bubble": True},
+        ),
+        "security_holding:create": after(ISSUED, table="security_holdings", values=HOLDING_VALUES),
+        "security_holding:edit": after(
+            ISSUED,
+            (
+                "security_holding:create",
+                {"table": "security_holdings", "values": {"holder_node_id": Pick(FACTION, 0), "security_id": NEWEST_SECURITY, "amount": 5}},
+            ),
+            table="security_holdings",
+            key={"id": newest_row(SecurityHoldingRow, "id")},
+            values={"amount": 8, "on_margin": 3},
+        ),
+        "security_holding:delete": after(
+            ISSUED,
+            (
+                "security_holding:create",
+                {"table": "security_holdings", "values": {"holder_node_id": Pick(FACTION, 0), "security_id": NEWEST_SECURITY, "amount": 5}},
+            ),
+            table="security_holdings",
+            key={"id": newest_row(SecurityHoldingRow, "id")},
+        ),
+        "security_price:create": after(ISSUED, table="security_prices", values=PRICE_VALUES),
+        "security_price:edit": after(
+            ISSUED,
+            ("security_price:create", {"table": "security_prices", "values": PRICE_VALUES}),
+            table="security_prices",
+            key={"id": newest_row(SecurityPriceRow, "id")},
+            values={"price": 15, "volume": 4},
+        ),
+        "security_price:delete": after(
+            ISSUED,
+            ("security_price:create", {"table": "security_prices", "values": PRICE_VALUES}),
+            table="security_prices",
+            key={"id": newest_row(SecurityPriceRow, "id")},
+        ),
+    }
+)
+
+
+STRUCK = ("currency:create", {"issuer_id": Pick(TOWN), "name": "Ledger Crown"})
+NEWEST_AUTHORITY = {"id": newest_row(MonetaryAuthorityRow, "id")}
+UNSET = ("monetary_authority:delete", {"table": "monetary_authorities", "key": NEWEST_AUTHORITY})
+LEVERS.update(
+    {
+        "monetary_authority:create": after(
+            STRUCK,
+            UNSET,
+            table="monetary_authorities",
+            values={"currency_id": Newest("currency"), "holder_node_id": Pick(FACTION, 0), "aim": "growth", "lender_of_last_resort": True},
+        ),
+        "monetary_authority:edit": after(STRUCK, table="monetary_authorities", key=NEWEST_AUTHORITY, values={"rate": 9, "aim": "cheap_credit"}),
+        "monetary_authority:delete": after(STRUCK, table="monetary_authorities", key=NEWEST_AUTHORITY),
+    }
+)
+
+
+BODY_VALUES = {"faction_node_id": Pick(FACTION, 1), "form": "craft_union", "trades": ["crafting"], "members": 40, "fund": 100}
+BODY_UP = ("worker_body:create", {"table": "worker_bodies", "values": BODY_VALUES})
+DISPUTE_UP = (
+    "labour_dispute:create",
+    {"table": "labour_disputes", "values": {"body_node_id": Pick(FACTION, 1), "hirer_node_id": Pick(FACTION, 0), "act": "strike", "workers_out": 10}},
+)
+LEVERS.update(
+    {
+        "worker_body:create": given(table="worker_bodies", values=BODY_VALUES),
+        "worker_body:edit": after(
+            BODY_UP, table="worker_bodies", key={"faction_node_id": Pick(FACTION, 1)}, values={"solidarity": 70, "standing": "recognised"}
+        ),
+        "worker_body:delete": after(BODY_UP, table="worker_bodies", key={"faction_node_id": Pick(FACTION, 1)}),
+        **row_levers(
+            "labour_contract",
+            "labour_contracts",
+            {"hirer_node_id": Pick(FACTION, 0), "settlement_entity_id": Pick(TOWN, 1), "trade": "mining", "wage": 120},
+            {"id": newest_row(LabourContractRow, "id")},
+            {"hours": 48, "status": "agreed"},
+        ),
+        **row_levers(
+            "labour_dispute",
+            "labour_disputes",
+            {"body_node_id": Pick(FACTION, 1), "hirer_node_id": Pick(FACTION, 0), "act": "go_slow", "workers_out": 5},
+            {"id": newest_row(LabourDisputeRow, "id")},
+            {"workers_out": 8, "demand": "rest"},
+        ),
+        "labour_dispute:end": after(DISPUTE_UP, BODY_UP, record_id=newest_row(LabourDisputeRow, "id"), outcome="won"),
+    }
+)
+
+
+MERGER_UP = (
+    "org_merger:create",
+    {"table": "org_mergers", "values": {"acquirer_node_id": Pick(FACTION, 0), "target_node_id": Pick(FACTION, 1), "kind": "merger", "price": 50}},
+)
+LEVERS.update(
+    {
+        **seeded_levers(
+            "org_governance",
+            "org_governance",
+            {"org_node_id": Pick(FACTION, 0), "decision_body": "chapter", "head_selection": "seniority", "strategy": "grow"},
+            {"org_node_id": Pick(FACTION, 0)},
+            {"quorum_pct": 60, "strategy": "lobby"},
+        ),
+        **row_levers(
+            "org_seat",
+            "org_seats",
+            {"org_node_id": Pick(FACTION, 0), "member_node_id": Pick(MORTAL, 3), "vote_weight": 10},
+            {"id": newest_row(OrgSeatRow, "id")},
+            {"vote_weight": 20},
+        ),
+        **row_levers(
+            "org_clique",
+            "org_cliques",
+            {"org_node_id": Pick(FACTION, 0), "name": "the reformers", "aim": "strategy", "aim_strategy": "grow", "strength": 20},
+            {"id": newest_row(OrgCliqueRow, "id")},
+            {"strength": 30, "aim": "split"},
+        ),
+        **row_levers(
+            "org_merger",
+            "org_mergers",
+            {"acquirer_node_id": Pick(FACTION, 0), "target_node_id": Pick(FACTION, 1), "kind": "merger", "price": 50},
+            {"id": newest_row(OrgMergerRow, "id")},
+            {"price": 80, "kind": "buyout"},
+        ),
+        "org_merger:advance": after(MERGER_UP, record_id=newest_row(OrgMergerRow, "id")),
+        **row_levers(
+            "org_research",
+            "org_research",
+            {"org_node_id": Pick(FACTION, 0), "technique": LAST_TECHNIQUE, "budget": 100},
+            {"id": newest_row(OrgResearchRow, "id")},
+            {"budget": 200, "staff": 3},
+        ),
+        **row_levers(
+            "insolvency_case",
+            "insolvency_cases",
+            {"debtor_node_id": Pick(FACTION, 0), "path": "liquidation", "owed": 100},
+            {"id": newest_row(InsolvencyCaseRow, "id")},
+            {"path": "restructuring", "recovered_pct": 40},
         ),
     }
 )

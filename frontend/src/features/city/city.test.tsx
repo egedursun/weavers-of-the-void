@@ -112,6 +112,11 @@ const CITY: CityScene = {
     { zone: 'civic', districts: 0, cells: 0, buildings: 1 },
     { zone: 'green', districts: 1, cells: 1, buildings: 0 },
   ],
+  conurbation: {
+    core: { id: 1, name: 'Kethra', entity_type: 'settlement' },
+    members: [{ id: 2, name: 'Lowford', entity_type: 'settlement' }],
+    governance: 'one_council',
+  },
 } as unknown as CityScene
 
 const LAND: LandScene = {
@@ -244,6 +249,13 @@ describe('city', () => {
         screen.getByRole('img', {
           name: /Plan of Harrowmere: 2 districts and 1 building/,
         })
+      )
+      .toBeVisible()
+    await expect
+      .element(
+        screen.getByText(
+          /Part of one city around Kethra with Lowford, under one council/
+        )
       )
       .toBeVisible()
     await expect

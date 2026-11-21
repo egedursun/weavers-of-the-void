@@ -187,7 +187,7 @@ export const CRIMES: Record<Schema['CrimeKind'], Named> = {
     tone: 'warning',
   },
   mind_compulsion: {
-    label: 'Bending a mind by a power',
+    label: 'Compelling a mind by a power',
     icon: Skull,
     tone: 'danger',
   },

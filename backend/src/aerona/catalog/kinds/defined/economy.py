@@ -5,8 +5,10 @@ from aerona.domain.enums.economy import CurrencyIssuer, GoodsFlow, MoneyBacking
 CURRENCY_ISSUER = total(
     CurrencyIssuer,
     {
-        CurrencyIssuer.COMMUNITY: Defined("Community", checked_by=(), used_by=("catalog.money.issuer_kind_of", "db.tables.economy.CurrencyRow")),
-        CurrencyIssuer.POLITY: Defined("Polity", checked_by=(), used_by=("catalog.money.issuer_kind_of",)),
+        CurrencyIssuer.COMMUNITY: Defined(
+            "Community", checked_by=(), used_by=("catalog.money.issuer_kind_of", "db.tables.economy.CurrencyRow", "engine.monetary.authorities.RULER_ISSUERS")
+        ),
+        CurrencyIssuer.POLITY: Defined("Polity", checked_by=(), used_by=("catalog.money.issuer_kind_of", "engine.monetary.authorities.RULER_ISSUERS")),
         CurrencyIssuer.BANK: Defined("Bank", checked_by=(), used_by=("catalog.money.issuer_kind_of",)),
         CurrencyIssuer.TEMPLE: Defined("Temple", checked_by=(), used_by=("catalog.money.issuer_kind_of",)),
         CurrencyIssuer.COMPANY: Defined("Company", checked_by=(), used_by=("catalog.money.issuer_kind_of",)),

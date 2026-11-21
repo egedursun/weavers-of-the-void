@@ -10,9 +10,11 @@ from aerona.constants.maintenance import SQLITE_CACHE_KIB, SQLITE_MMAP_BYTES
 from aerona.constants.timeouts import SQLITE_BUSY_TIMEOUT_MS
 from aerona.db.activity import install_activity_capture
 from aerona.db.bond_index import drop_lookup
+from aerona.db.cascades import install_cascade_following
 from aerona.db.fast_session import FastSession
 from aerona.db.flush_batch import install_flush_batching
 from aerona.db.inline_sqlite import inline_engine
+from aerona.db.key_moves import install_key_guard
 from aerona.db.ledger_capture import install_change_capture
 from aerona.db.ordered_reads import install_ordered_reads
 from aerona.db.read_memo import KEEP_KEY, forget_all
@@ -31,6 +33,8 @@ class Database:
         install_ordered_reads()
         install_read_only_guard()
         install_change_capture()
+        install_cascade_following()
+        install_key_guard()
 
     @staticmethod
     def _configure_connection(connection: Any, _record: Any) -> None:

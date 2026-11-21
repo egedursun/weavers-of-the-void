@@ -1,4 +1,5 @@
 import {
+  type ReactNode,
   createContext,
   useCallback,
   useContext,
@@ -1063,9 +1064,11 @@ const LeversContext = createContext<(table: string) => RowLevers>(
 export function RecordRowsSection({
   nodeId,
   family,
+  controls,
 }: {
   nodeId: number
   family?: RecordFamily
+  controls?: ReactNode
 }) {
   const { reason } = useGodGate()
   const [query, setQuery] = useState('')
@@ -1128,6 +1131,7 @@ export function RecordRowsSection({
         icon={family?.icon ?? Database}
         tone={family?.tone ?? 'info'}
       >
+        {controls}
         {view.isError ? (
           <EmptyState
             icon={TriangleAlert}

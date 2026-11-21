@@ -226,6 +226,7 @@ TECHNIQUE = total(
                 "catalog.technology.FAMILY_TECHNIQUES",
                 "engine.body.afflictions.other_cures",
                 "engine.crafts.chemistry.RECIPES",
+                "engine.mass_weapons.book.NEAR_TECH",
             ),
         ),
         Technique.SURGERY: Defined(
@@ -248,7 +249,9 @@ TECHNIQUE = total(
         Technique.QUARANTINE: Defined(
             "Quarantine", checked_by=(), used_by=("catalog.civics.TRIGGERS", "catalog.techniques.TECHNIQUES", "engine.polity.governance.law_effects")
         ),
-        Technique.INOCULATION: Defined("Inoculation", checked_by=("engine.disease.book.DiseaseBook.load",), used_by=("catalog.techniques.TECHNIQUES",)),
+        Technique.INOCULATION: Defined(
+            "Inoculation", checked_by=("engine.disease.book.DiseaseBook.load",), used_by=("catalog.techniques.TECHNIQUES", "engine.mass_weapons.book.NEAR_TECH")
+        ),
         Technique.IRRIGATION: Defined(
             "Irrigation",
             checked_by=("engine.economy.extraction.craft_factor",),
@@ -502,6 +505,7 @@ TECHNIQUE = total(
                 "catalog.techniques.TECHNIQUES",
                 "engine.economy.money.banks",
                 "engine.phases.factions.FINANCE",
+                "engine.securities.exchanges.open_exchanges",
             ),
         ),
         Technique.WARDING: Defined(
@@ -526,7 +530,7 @@ TECHNIQUE = total(
         Technique.NECROMANCY: Defined(
             "Necromancy",
             checked_by=("catalog.civics.SOCIAL_CHANGE", "catalog.discovery.DANGEROUS_TECHNIQUES"),
-            used_by=("catalog.techniques.TECHNIQUES", "engine.lore.rites.SCHOOL_TECHNIQUES"),
+            used_by=("catalog.techniques.TECHNIQUES", "engine.lore.rites.SCHOOL_TECHNIQUES", "engine.mass_weapons.remnants.LAND_ARMS"),
         ),
         Technique.ALCHEMY: Defined(
             "Alchemy",
@@ -539,6 +543,7 @@ TECHNIQUE = total(
                 "catalog.vehicles.FAMILY_TECHNIQUES",
                 "engine.communication.signals.KIND_TECHNIQUES",
                 "engine.crafts.chemistry.RECIPES",
+                "engine.mass_weapons.book.NEAR_TECH",
                 "engine.sites.digs.LOST_TECHNIQUES",
             ),
         ),
@@ -747,6 +752,8 @@ TECHNIQUE = total(
                 "catalog.techniques.TECHNIQUES",
                 "catalog.techniques.UNIT_TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.mass_weapons.book.NEAR_TECH",
+                "engine.mass_weapons.remnants.LAND_ARMS",
             ),
         ),
         Technique.FIREARMS: Defined(
@@ -812,6 +819,7 @@ TECHNIQUE = total(
                 "catalog.methods.METHODS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.mass_weapons.book.NEAR_TECH",
                 "engine.military.sabotage.has_machines",
                 "engine.phases.factions.ENGINEERING",
             ),
@@ -859,6 +867,7 @@ TECHNIQUE = total(
                 "catalog.taxes.TAXES",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.mass_weapons.book.WIDE_TECH",
                 "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
@@ -1020,16 +1029,22 @@ TECHNIQUE = total(
                 "catalog.preservation.PRESERVATION",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.mass_weapons.book.NEAR_TECH",
             ),
         ),
         Technique.NUCLEAR_WEAPONS: Defined(
             "Nuclear weapons",
             checked_by=("catalog.eras.ERA_EFFECTS",),
-            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.techniques.TECHNIQUES", "catalog.technology.FAMILY_TECHNIQUES"),
+            used_by=(
+                "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.techniques.TECHNIQUES",
+                "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.mass_weapons.book.WIDE_TECH",
+            ),
         ),
         Technique.ROCKETRY: Defined(
             "Rocketry",
-            checked_by=("catalog.eras.ERA_EFFECTS", "engine.eras.progress.finish"),
+            checked_by=("catalog.eras.ERA_EFFECTS", "engine.eras.progress.finish", "engine.mass_weapons.remnants.left_by"),
             used_by=(
                 "catalog.carriers.CARRIERS",
                 "catalog.eras.TECHNIQUE_ERAS",
@@ -1055,6 +1070,7 @@ TECHNIQUE = total(
                 "engine.communication.signals.KIND_TECHNIQUES",
                 "engine.cosmos.routes.VEHICLE_TECHNIQUES",
                 "engine.living.lines.CRAFTS",
+                "engine.mass_weapons.book.WIDE_TECH",
                 "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
@@ -1069,6 +1085,7 @@ TECHNIQUE = total(
                 "catalog.technology.FAMILY_TECHNIQUES",
                 "engine.communication.signals.KIND_TECHNIQUES",
                 "engine.cosmos.routes.VEHICLE_TECHNIQUES",
+                "engine.mass_weapons.book.WIDE_TECH",
                 "engine.polity.trials.trial_open",
                 "engine.structures.needs.KIND_TECHNIQUES",
             ),

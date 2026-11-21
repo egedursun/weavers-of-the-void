@@ -298,6 +298,7 @@ WORKS_WRITES = (
     "table.name_registry",
     "table.node_births",
     "table.node_materials",
+    "table.professions_of_value",
     "table.reputations",
     "table.settlement_profiles",
     "table.settlement_treasury",

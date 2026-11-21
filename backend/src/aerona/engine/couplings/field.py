@@ -8,12 +8,14 @@ from aerona.db.tables.warfare import ArmyRow, CaptiveRow, SiegeRow, WarRow, WarS
 from aerona.db.write_guard import held
 from aerona.domain.enums.couplings import FieldAgreementKind, FieldAgreementState
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.interpretation import InterpretationFault, InterpretedEvent
 from aerona.domain.enums.military import ArmyRole
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import CaptiveStatus, SiegeStatus, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interpretation.work import interpret, slant_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
@@ -89,7 +91,9 @@ async def parley(ctx: TickContext, war: WarRow, sides: tuple[EntityRow, EntityRo
     if not ctx.rng(f"parley.{war.id}.{war.battles}.{ctx.epoch}").chance(table.parley_chance):
         return False
     margin = stat_or(first, "charisma", 0) - stat_or(second, "charisma", 0)
-    averted = abs(margin) <= table.parley_margin
+    reading = await interpret(ctx, InterpretedEvent.PARLEY, sides[0].id, sides[1].id, event_node=war.event_entity_id)
+    margin += slant_of(reading, sides[0].id, sides[1].id) * table.parley_margin
+    averted = abs(margin) <= table.parley_margin and (reading is None or reading.fault in {InterpretationFault.NONE, InterpretationFault.SLANTED})
     kind = FieldAgreementKind.TRUCE if averted else FieldAgreementKind.PARLEY
     await agree(
         ctx,

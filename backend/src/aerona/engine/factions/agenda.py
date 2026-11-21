@@ -29,12 +29,13 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import CoupCause, LawKind, OfficeKind
 from aerona.domain.enums.records import FactUnit, StepAction
-from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.factions.book import CLASS_OF_KIND, FactionBook, log
+from aerona.engine.factions.offshoots import found_offshoot
 from aerona.engine.faith.book import patron_node
 from aerona.engine.finance.contraband import OUTLAWS, smuggle_books
+from aerona.engine.labour.walkouts import strike_as_body
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.memories import remember
 from aerona.engine.polity.book import Realm, RealmBook
@@ -44,7 +45,6 @@ from aerona.engine.polity.offices import seize_throne
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import StepDraft
 from aerona.engine.recording.record import record as record_incident
@@ -96,11 +96,13 @@ GOAL_PLANS: dict[FactionKind, tuple[FactionGoalKind, ...]] = {
     FactionKind.ENGINEERS_SOCIETY: (G.PROTECT_CRAFT, G.ENACT_LAW),
     FactionKind.FINANCIERS: (G.MONOPOLY_ON, G.LOWER_TAXES, G.PEACE_WITH),
     FactionKind.VETERANS: (G.ENACT_LAW, G.INSTALL_CLAIMANT, G.WAR_ON),
+    FactionKind.WORKER_BODY: (G.ENACT_LAW, G.ABOLISH_LAW, G.LOWER_TAXES),
 }
 LAW_WISHES: dict[FactionKind, tuple[LawKind, dict[str, int | str | bool]]] = {
     FactionKind.PRIESTHOOD: (LawKind.TITHE, {"rate": 10, "enforced": True}),
     FactionKind.WARRIOR_ORDER: (LawKind.VETERAN_PENSION, {"amount": 30}),
     FactionKind.VETERANS: (LawKind.VETERAN_PENSION, {"amount": 30}),
+    FactionKind.WORKER_BODY: (LawKind.LABOUR_LAW, {"max_hours": 48, "unions": True, "bodies": "recognised"}),
     FactionKind.SCHOLARS_ACADEMY: (LawKind.LICENSED_MAGIC, {"fee": 10}),
     FactionKind.CRAFT_GUILD: (LawKind.GUILD_CHARTER, {"monopoly": True}),
     FactionKind.MERCHANT_GUILD: (LawKind.GUILD_CHARTER, {"monopoly": True}),
@@ -428,6 +430,7 @@ async def strike(move: Move) -> bool:
     if realm is not None:
         gain_influence(profile, realm.entity.id, table.lobby_influence)
     log(ctx, profile.faction_entity_id, A.STRIKE, target=place.id, goal=goal)
+    await strike_as_body(ctx, profile.faction_entity_id, place)
     await record_incident(
         ctx,
         "faction.strike",
@@ -625,49 +628,15 @@ async def schisms(ctx: TickContext, factions: FactionBook) -> int:
         if not ctx.rng(f"schism.{faction_id}.{ctx.epoch}").chance(table.schism_chance):
             continue
         parent = factions.entities[faction_id]
-        child = await create_record(
+        child = await found_offshoot(
             ctx,
-            RecordSpec(
-                entity_type=EntityType.FACTION,
-                name=f"the true {parent.name.removeprefix('the ')}",
-                body=f"Those who left {parent.name}, saying it had strayed from its aims.",
-                stats=FactionStats(
-                    strength=(stat(parent, "strength") or 0) // 2, wealth=(stat(parent, "wealth") or 0) // 2, sway=(stat(parent, "sway") or 0) // 2
-                ),
-                power=max(1, parent.power_level - 1),
-                location_id=parent.location_id,
-                world_id=parent.world_id,
-                subtype=parent.subtype,
-                engine_kind=parent.engine_kind,
-                affiliated_entity_id=parent.affiliated_entity_id,
-                pending=False,
-            ),
+            parent,
+            profile,
+            name=f"the true {parent.name.removeprefix('the ')}",
+            body=f"Those who left {parent.name}, saying it had strayed from its aims.",
+            share_pct=PERCENT // 2,
+            leaving=members[len(members) // 2 :],
         )
-        twin = FactionProfileRow(
-            faction_entity_id=child.id,
-            kind=profile.kind,
-            scale=FactionScale.BAND,
-            treasury=profile.treasury // 2,
-            cohesion=80,
-            secrecy=profile.secrecy,
-            armed=profile.armed,
-            reputation=profile.reputation,
-            influence_over={},
-            cohort_share={},
-            home_entity_id=profile.home_entity_id,
-            outlawed=profile.outlawed,
-            pay=profile.pay,
-            loyalty=50,
-            unpaid_epochs=0,
-            founded_epoch=ctx.epoch,
-            updated_epoch=ctx.epoch,
-            locked=[],
-        )
-        ctx.session.add(twin)
-        profile.treasury -= profile.treasury // 2
-        profile.cohesion = clamp_int(profile.cohesion + 30, 0, PERCENT)
-        for row in members[len(members) // 2 :]:
-            row.faction_entity_id = child.id
         log(ctx, faction_id, A.SCHISM, target=child.id)
         await record_incident(
             ctx,

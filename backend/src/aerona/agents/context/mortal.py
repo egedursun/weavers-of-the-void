@@ -2,16 +2,20 @@ from sqlalchemy import select
 
 from aerona.agents.context.ages_lines import mortal_ages_lines
 from aerona.agents.context.agrarian_lines import mortal_agrarian_lines
+from aerona.agents.context.arsenal_lines import mortal_arsenal_lines
 from aerona.agents.context.arts_lines import mortal_arts_lines
 from aerona.agents.context.belonging_lines import mortal_belonging_lines
 from aerona.agents.context.biology_lines import mortal_biology_lines
 from aerona.agents.context.body_system_lines import mortal_body_system_lines, mortal_standing_lines
 from aerona.agents.context.childhood_lines import mortal_childhood_lines
+from aerona.agents.context.city_lines import mortal_city_lines
 from aerona.agents.context.climes_lines import mortal_climes_lines
 from aerona.agents.context.collective_lines import mortal_collective_lines
 from aerona.agents.context.commerce_lines import mortal_commerce_lines
+from aerona.agents.context.conception_lines import mortal_conception_lines
 from aerona.agents.context.coupling_lines import register_lines
 from aerona.agents.context.crafts_lines import mortal_crafts_lines
+from aerona.agents.context.cult_lines import mortal_cult_lines
 from aerona.agents.context.customs_lines import mortal_customs_lines
 from aerona.agents.context.cycle_lines import mortal_cycle_lines
 from aerona.agents.context.daily_lines import mortal_daily_lines
@@ -28,31 +32,46 @@ from aerona.agents.context.folkways_lines import mortal_folkways_lines
 from aerona.agents.context.fortune_lines import mortal_fortune_lines
 from aerona.agents.context.gatherings import gathering_lines, site_lines
 from aerona.agents.context.geography import environment_facts, region_records, weather_words
+from aerona.agents.context.governance_lines import mortal_governance_lines
+from aerona.agents.context.group_lines import mortal_group_lines
+from aerona.agents.context.interpretation_lines import mortal_interpretation_lines
+from aerona.agents.context.interworld_lines import mortal_interworld_lines
 from aerona.agents.context.intimacy_lines import mortal_intimacy_lines
 from aerona.agents.context.intrigue import estate_lines, intrigue_lines, letter_lines, title_lines
 from aerona.agents.context.justice import case_lines, proposal_lines
 from aerona.agents.context.keeper_lines import mortal_keeper_lines
 from aerona.agents.context.kin_lines import mortal_kin_lines
 from aerona.agents.context.kinds_lines import mortal_kinds_lines
+from aerona.agents.context.labour_lines import mortal_labour_lines
 from aerona.agents.context.language_lines import language_lines
 from aerona.agents.context.law_lines import mortal_law_lines
+from aerona.agents.context.league_lines import mortal_league_lines
 from aerona.agents.context.lifecycle_lines import mortal_grounds_lines
 from aerona.agents.context.lineage import lineage_lines
 from aerona.agents.context.living_lines import mortal_living_lines
+from aerona.agents.context.market_lines import mortal_market_lines
 from aerona.agents.context.means_lines import mortal_economy_lines, mortal_honours_lines, mortal_means_lines
 from aerona.agents.context.media_lines import mortal_media_lines
 from aerona.agents.context.minds_lines import mortal_minds_lines
+from aerona.agents.context.money_policy_lines import mortal_money_policy_lines
+from aerona.agents.context.mood_lines import mortal_mood_lines
 from aerona.agents.context.mythic_lines import mortal_magic_lines
 from aerona.agents.context.nature_lines import mortal_nature_lines
+from aerona.agents.context.occupation_lines import mortal_occupation_lines
+from aerona.agents.context.office_lines import mortal_office_lines
 from aerona.agents.context.operations_lines import mortal_operations_lines
 from aerona.agents.context.population_lines import mortal_population_lines
 from aerona.agents.context.powers_lines import mortal_power_lines
 from aerona.agents.context.practice_lines import mortal_practice_lines
+from aerona.agents.context.protection_lines import mortal_protection_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
+from aerona.agents.context.reckoning_lines import mortal_reckoning_lines
 from aerona.agents.context.regime_lines import mortal_regime_lines
 from aerona.agents.context.research import research_for
+from aerona.agents.context.restoration_lines import mortal_restoration_lines
 from aerona.agents.context.sacred_lines import mortal_sacred_lines
 from aerona.agents.context.scope import Scope
+from aerona.agents.context.securities_lines import mortal_securities_lines
 from aerona.agents.context.sky_weather_lines import mortal_forecast_lines, mortal_plant_lines, mortal_sky_lines, mortal_water_lines
 from aerona.agents.context.society import home_for
 from aerona.agents.context.speech_lines import mortal_speech_lines
@@ -61,6 +80,8 @@ from aerona.agents.context.thin_b_lines import mortal_depth_lines
 from aerona.agents.context.tongue_lines import mortal_tongue_lines
 from aerona.agents.context.transform_lines import mantling_line, prospect_lines
 from aerona.agents.context.urban_lines import mortal_urban_lines
+from aerona.agents.context.vote_lines import mortal_vote_lines
+from aerona.agents.context.wave_lines import mortal_wave_lines
 from aerona.agents.context.works_lines import mortal_works_lines
 from aerona.agents.context.world_header import world_header
 from aerona.agents.context.world_line import world_line
@@ -252,6 +273,27 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "commerce": await mortal_commerce_lines(scope, me),
             "public_works": await mortal_works_lines(scope, me),
             "media": await mortal_media_lines(scope, me),
+            "governance": await mortal_governance_lines(scope, me),
+            "market_structure": await mortal_market_lines(scope, me),
+            "labour": await mortal_labour_lines(scope, me),
+            "money_policy": await mortal_money_policy_lines(scope, me),
+            "securities": await mortal_securities_lines(scope, me),
+            "leagues": await mortal_league_lines(scope, me),
+            "offices": await mortal_office_lines(scope, me),
+            "votes": await mortal_vote_lines(scope, me),
+            "reckoning": await mortal_reckoning_lines(scope, me),
+            "leader_cult": await mortal_cult_lines(scope, me),
+            "restoration": await mortal_restoration_lines(scope, me),
+            "occupation": await mortal_occupation_lines(scope, me),
+            "mass_weapons": await mortal_arsenal_lines(scope, me),
+            "interworld": await mortal_interworld_lines(scope, me),
+            "city_rules": await mortal_city_lines(scope, me),
+            "protected_nature": await mortal_protection_lines(scope, me),
+            "mood": await mortal_mood_lines(scope, me),
+            "interpretation": await mortal_interpretation_lines(scope, me),
+            "disasters": await mortal_wave_lines(scope, me),
+            "wilds": await mortal_group_lines(scope, me),
+            "faith": await mortal_conception_lines(scope, me),
             "oratory": await mortal_speech_lines(scope, me),
             "folk_knowledge": await mortal_folk_knowledge_lines(scope, me),
             "endowments": await mortal_endowment_lines(scope, me),

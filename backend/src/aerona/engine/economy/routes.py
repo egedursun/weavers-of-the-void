@@ -33,6 +33,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, Tra
 from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.eras import EraChannel
+from aerona.domain.enums.interpretation import InterpretedEvent
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -65,6 +66,7 @@ from aerona.engine.eras.effects import channel_value, tech_relief
 from aerona.engine.finance.policy import PolicyBook, PolicyTally, Terms, smuggle
 from aerona.engine.folkways.shunning import outsider_barrier
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.interpretation.work import interpret, reach_of
 from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.research_depth import capable_among
 from aerona.engine.lore.truth import theory_factor
@@ -234,6 +236,7 @@ def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[i
 async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, works: dict[int, Works]) -> int:
     first, second = route.ends
     capacity = capacity_of(ctx, book, route, works) * await trade_barrier(ctx.session, ctx.rules, first, second, ctx.epoch)
+    capacity *= reach_of(ctx, await interpret(ctx, InterpretedEvent.TRADE, first, second, event_node=route.entity.id))
     capacity *= await outsider_barrier(ctx.session, ctx.rules, first, second)
     known = book.techniques.get(first, set()) | book.techniques.get(second, set())
     if Technique.JOINT_STOCK in known:

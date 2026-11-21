@@ -2,17 +2,21 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Query
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.actions import Alias, mount_all
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.cosmos import (
     AddictionView,
+    CampaignMark,
     CosmosView,
     CosmosWorld,
     CravingImmunityView,
     DiscoverySummary,
     DiscoveryWorld,
+    MigrationMark,
+    OrbitMark,
     SensedWorld,
     SkyEventRecord,
     TravellerGuideView,
@@ -30,6 +34,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.cosmic_state import AddictionImmunityRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interworld import InterworldCampaignRow, InterworldMigrationRow, OrbitalControlRow
 from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
 from aerona.db.tables.society import AddictionRow
 from aerona.db.tables.sons import SonRow
@@ -73,6 +78,23 @@ ALIASES = (
     Alias("POST", "/cosmic/soul-bind", "cosmic:soul_bind"),
     Alias("POST", "/cosmic/legendary-quest", "cosmic:legendary_quest"),
 )
+
+
+async def campaign_marks(session: AsyncSession, rows: list[InterworldCampaignRow]) -> list[CampaignMark]:
+    attackers = sorted({row.attacker_entity_id for row in rows})
+    names = {entity.id: entity.name for entity in await session.scalars(select(EntityRow).where(EntityRow.id.in_(attackers)).order_by(EntityRow.id))}
+    return [
+        CampaignMark(
+            id=row.id,
+            attacker_entity_id=row.attacker_entity_id,
+            attacker_name=names.get(row.attacker_entity_id, ""),
+            from_world_id=row.from_world_id,
+            target_world_id=row.target_world_id,
+            stage=row.stage,
+            forces=row.forces,
+        )
+        for row in rows
+    ]
 
 
 @router.get("/worlds/{world_id}/laws", response_model=list[WorldLaw])
@@ -176,6 +198,8 @@ async def read_cosmos(services: ServicesDep) -> CosmosView:
             for world in worlds
         ]
         canon = select(EntityRow).where(EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+        open_campaigns = select(InterworldCampaignRow).where(InterworldCampaignRow.ended_epoch.is_(None)).order_by(InterworldCampaignRow.id)
+        open_migrations = select(InterworldMigrationRow).where(InterworldMigrationRow.ended_epoch.is_(None)).order_by(InterworldMigrationRow.id)
         star_rows = list(await session.scalars(select(StarRow).order_by(StarRow.id)))
         star_covers = await covers_of(session, [row.id for row in star_rows])
         return CosmosView(
@@ -188,6 +212,9 @@ async def read_cosmos(services: ServicesDep) -> CosmosView:
             world_types=[WorldTypeLook(world_type=kind, label=spec.label, palette=palette_for(kind)) for kind, spec in WORLD_TYPES.items()],
             places=[EntitySummary.model_validate(row) for row in await session.scalars(canon.where(EntityRow.entity_type.in_(PLACE_TYPES)))],
             communities=[EntitySummary.model_validate(row) for row in await session.scalars(canon.where(EntityRow.entity_type.in_(COMMUNITY_TYPES)))],
+            campaigns=await campaign_marks(session, list(await session.scalars(open_campaigns))),
+            migrations=[MigrationMark.model_validate(row) for row in await session.scalars(open_migrations)],
+            orbits=[OrbitMark.model_validate(row) for row in await session.scalars(select(OrbitalControlRow).order_by(OrbitalControlRow.id))],
         )
 
 

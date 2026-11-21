@@ -19,6 +19,7 @@ from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.domain.enums.urban import HousingLevel
+from aerona.engine.city_rules.effects import above_cap, housing_cap
 from aerona.engine.context import TickContext
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -75,7 +76,9 @@ async def evolve_district(ctx: TickContext, town: Town, district: DistrictRow, g
     table = ctx.rules.housing_evolution
     needs = await needs_met(ctx, district)
     rng = ctx.rng(f"homes.{district.id}")
-    if needs >= table.rise_coverage and goods >= table.goods_needed and rng.chance(table.step_pct) and step_home(district, up=True, open_homes=open_homes):
+    capped = above_cap(district.housing, await housing_cap(ctx.session, district))
+    rising = needs >= table.rise_coverage and goods >= table.goods_needed and not capped
+    if rising and rng.chance(table.step_pct) and step_home(district, up=True, open_homes=open_homes):
         tally.risen += 1
     elif needs < table.fall_coverage and rng.chance(table.step_pct) and step_home(district, up=False, open_homes=open_homes):
         tally.fallen += 1

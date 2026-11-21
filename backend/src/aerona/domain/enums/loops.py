@@ -37,3 +37,6 @@ class BalanceLoop(StrEnum):
     HOUSEWORK_BURDEN = "housework_burden"
     CURE_RESISTANCE = "cure_resistance"
     WEATHER_GRIEVANCE = "weather_grievance"
+    COLLECTIVISATION_REVERSAL = "collectivisation_reversal"
+    CARTEL_CHEATING = "cartel_cheating"
+    MUTUAL_DETERRENCE = "mutual_deterrence"

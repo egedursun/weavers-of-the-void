@@ -4,6 +4,7 @@ from dataclasses import dataclass, field, fields
 from aerona.rules.model import Spanned
 from aerona.rules.registry.achievements import AchievementRules
 from aerona.rules.registry.affairs import AffairsRules
+from aerona.rules.registry.agentless_conditions import AgentlessConditionsRules
 from aerona.rules.registry.agents import AgentsRules
 from aerona.rules.registry.ages import AgeRules, ArcRules, EcoTransformationRules, FormationRules, LongSeasonRules
 from aerona.rules.registry.agrarian import (
@@ -79,6 +80,7 @@ from aerona.rules.registry.childhood import ChildhoodRules
 from aerona.rules.registry.chronicle_audit import ChronicleAuditRules
 from aerona.rules.registry.chronicle_repeat import ChronicleRepeatRules
 from aerona.rules.registry.city_plan import CityPlanRules
+from aerona.rules.registry.city_rules import CityRulesRules
 from aerona.rules.registry.civilization import CivilizationRules
 from aerona.rules.registry.climate_effects import ClimateEffectsRules
 from aerona.rules.registry.climate_world_type import ClimateWorldTypeRules
@@ -108,6 +110,7 @@ from aerona.rules.registry.collective import (
 )
 from aerona.rules.registry.commerce import CommerceRules
 from aerona.rules.registry.communication import CommunicationRules
+from aerona.rules.registry.competition import CompetitionRules
 from aerona.rules.registry.content import ContentRules
 from aerona.rules.registry.context import ContextRules
 from aerona.rules.registry.core_rules import CoreRulesRules
@@ -162,6 +165,7 @@ from aerona.rules.registry.crafts import (
 )
 from aerona.rules.registry.creation_base_cost import CreationBaseCostRules
 from aerona.rules.registry.creator import CreatorRules
+from aerona.rules.registry.creature_groups import CreatureGroupsRules
 from aerona.rules.registry.creature_traits import CreatureTraitsRules
 from aerona.rules.registry.creatures import CreaturesRules
 from aerona.rules.registry.culture import CultureRules
@@ -208,6 +212,7 @@ from aerona.rules.registry.death_work import DeathWorkRules
 from aerona.rules.registry.deep_life import DeepLifeRules
 from aerona.rules.registry.deep_world import DeepWorldRules
 from aerona.rules.registry.demography import CohortsRules, DemographyRules, LabourRules, MobilityRules, PeopleRules
+from aerona.rules.registry.departures import DeparturesRules
 from aerona.rules.registry.diplomacy import DiplomacyRules
 from aerona.rules.registry.disasters import DisastersRules
 from aerona.rules.registry.discovery import DiscoveryRules
@@ -225,6 +230,7 @@ from aerona.rules.registry.divine import (
     PantheonLifeRules,
     SonGoalRules,
 )
+from aerona.rules.registry.divine_conceptions import DivineConceptionsRules
 from aerona.rules.registry.doctrine import (
     AfterlifeRules,
     DoctrineRules,
@@ -292,6 +298,8 @@ from aerona.rules.registry.facets import FacetRules
 from aerona.rules.registry.factions import BanditryRules, FactionsRules, IntrigueRules, MercenariesRules
 from aerona.rules.registry.faith import FaithRules
 from aerona.rules.registry.fate import FateRules
+from aerona.rules.registry.feeling_spread import FeelingSpreadRules
+from aerona.rules.registry.fertility_means import FertilityMeansRules
 from aerona.rules.registry.finance import AccessRules, ArbitrageRules, CreditRules, ElasticityRules, SpeculationRules, TradePolicyRules
 from aerona.rules.registry.flora import FloraRules
 from aerona.rules.registry.folk import BiologyRules, CustomsRules
@@ -312,6 +320,8 @@ from aerona.rules.registry.god_actions import GodActionsRules
 from aerona.rules.registry.god_hand import GodHandRules
 from aerona.rules.registry.god_power import GodPowerRules
 from aerona.rules.registry.goods_kinds import GoodsRules
+from aerona.rules.registry.governance import GovernanceRules
+from aerona.rules.registry.grave_goods import GraveGoodsRules
 from aerona.rules.registry.guide import GuideRules
 from aerona.rules.registry.harshness import HarshnessRules
 from aerona.rules.registry.heroes import HeroesRules
@@ -334,10 +344,12 @@ from aerona.rules.registry.industry import (
 )
 from aerona.rules.registry.intervention_costs import InterventionCostsRules
 from aerona.rules.registry.intervention_effects import InterventionEffectsRules
+from aerona.rules.registry.interworld import InterworldRules
 from aerona.rules.registry.intrigue import BeliefStateRules
 from aerona.rules.registry.items import EnchantmentsRules, ItemPowersRules
 from aerona.rules.registry.justice import EnactmentRules, TrialRules
 from aerona.rules.registry.kin import KinRules
+from aerona.rules.registry.kin_dynamics import KinDynamicsRules
 from aerona.rules.registry.kind_crafts import ColourRules, DressRules, HouseholdGoodsRules, MusicRules, ScentRules, SubstanceRules
 from aerona.rules.registry.kinds import KindsRules
 from aerona.rules.registry.knowledge import KnowledgeRules
@@ -358,6 +370,8 @@ from aerona.rules.registry.law_depth import (
     RegistryRules,
     SpyDepthRules,
 )
+from aerona.rules.registry.leader_cults import LeaderCultsRules
+from aerona.rules.registry.leagues import LeaguesRules
 from aerona.rules.registry.ledger import LedgerRules
 from aerona.rules.registry.life_cycles import LifeCyclesRules
 from aerona.rules.registry.lifecycle_ends import LifecycleEndRules
@@ -422,6 +436,7 @@ from aerona.rules.registry.made_world import (
 )
 from aerona.rules.registry.market import MarketRules
 from aerona.rules.registry.markets import BankingRules, MarketsRules, MoneyRules, TollsRules, TradeRoutesRules
+from aerona.rules.registry.mass_weapons import MassWeaponsRules
 from aerona.rules.registry.materials import MaterialsRules
 from aerona.rules.registry.means import (
     BuildingMaterialRules,
@@ -473,6 +488,7 @@ from aerona.rules.registry.mind import (
 from aerona.rules.registry.minds import ContinuityRules, InterfaceRules, MindAwakeningRules, MindMakingRules, MindRules, MindWillRules
 from aerona.rules.registry.model import ModelRules
 from aerona.rules.registry.modifiers import IncidentRules, ModifiersRules
+from aerona.rules.registry.monetary import MonetaryRules
 from aerona.rules.registry.monsters import CreatureAnatomyRules, MonstersRules
 from aerona.rules.registry.mortal_acts import ActsRules, EthnicRules, LoyaltyRules
 from aerona.rules.registry.mortal_agents import MortalAgentsRules
@@ -516,6 +532,7 @@ from aerona.rules.registry.operations import (
 from aerona.rules.registry.opportunities import OpportunitiesRules
 from aerona.rules.registry.orders import EconomicOrderRules, ExchangeRules, PuttingOutRules, SavingRules, TourismRules
 from aerona.rules.registry.pantheon import PantheonRules
+from aerona.rules.registry.person_honours import HonoursRules
 from aerona.rules.registry.physics import (
     CosmicFeatureRules,
     ImpactRules,
@@ -547,12 +564,15 @@ from aerona.rules.registry.power_unlock_levels import PowerUnlockLevelsRules
 from aerona.rules.registry.powers import ConcealmentRules, MagicSystemRules, PoweredSocietyRules, PowerRules, PowerSourceRules
 from aerona.rules.registry.prehistory import PrehistoryRules
 from aerona.rules.registry.production import ExtractionRules, MiningHazardsRules, RefiningRules
+from aerona.rules.registry.protected_nature import ProtectedNatureRules
 from aerona.rules.registry.public_works import PublicWorksRules, StateEnterpriseRules
 from aerona.rules.registry.rarities import RaritiesRules
 from aerona.rules.registry.rarity_gates import RarityGatesRules
+from aerona.rules.registry.reckoning import ReckoningRules
 from aerona.rules.registry.record_keepers import RecordKeeperRules
 from aerona.rules.registry.record_schema import RecordSchemaRules
 from aerona.rules.registry.records import RecordsRules
+from aerona.rules.registry.referendums import ReferendumsRules
 from aerona.rules.registry.regime import (
     AcademicFreedomRules,
     BreedingPlanRules,
@@ -577,6 +597,7 @@ from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.renown import ClaimRules, CurrencyRules, LocalRenownRules, LoreTradeRules
 from aerona.rules.registry.reputation import ReputationRules
 from aerona.rules.registry.research_depth import ResearchDepthRules
+from aerona.rules.registry.restoration import RestorationRules
 from aerona.rules.registry.routes import ChokepointsRules, RouteDangersRules, RouteSeasonsRules, SentientPactsRules, SonRoutesRules
 from aerona.rules.registry.rumours import RumoursRules
 from aerona.rules.registry.sacred import (
@@ -594,7 +615,9 @@ from aerona.rules.registry.sacred import (
     TheodicyRules,
 )
 from aerona.rules.registry.scale import ScaleRules
+from aerona.rules.registry.sea_waves import SeaWavesRules
 from aerona.rules.registry.seasonal import SeasonalRules
+from aerona.rules.registry.securities import SecuritiesRules
 from aerona.rules.registry.server import ServerRules
 from aerona.rules.registry.settlement import CrimeRules, DistrictRules, FireRules, SanitationRules, TaxationRules, UrbanRules
 from aerona.rules.registry.setup_wizard import SetupWizardRules
@@ -1279,6 +1302,29 @@ class Rules:
     public_works: PublicWorksRules = field(default_factory=PublicWorksRules)
     state_enterprise: StateEnterpriseRules = field(default_factory=StateEnterpriseRules)
     media: MediaRules = field(default_factory=MediaRules)
+    governance: GovernanceRules = field(default_factory=GovernanceRules)
+    competition: CompetitionRules = field(default_factory=CompetitionRules)
+    monetary: MonetaryRules = field(default_factory=MonetaryRules)
+    securities: SecuritiesRules = field(default_factory=SecuritiesRules)
+    leagues: LeaguesRules = field(default_factory=LeaguesRules)
+    departures: DeparturesRules = field(default_factory=DeparturesRules)
+    referendums: ReferendumsRules = field(default_factory=ReferendumsRules)
+    reckoning: ReckoningRules = field(default_factory=ReckoningRules)
+    leader_cults: LeaderCultsRules = field(default_factory=LeaderCultsRules)
+    restoration: RestorationRules = field(default_factory=RestorationRules)
+    mass_weapons: MassWeaponsRules = field(default_factory=MassWeaponsRules)
+    interworld: InterworldRules = field(default_factory=InterworldRules)
+    city_rules: CityRulesRules = field(default_factory=CityRulesRules)
+    protected_nature: ProtectedNatureRules = field(default_factory=ProtectedNatureRules)
+    kin_dynamics: KinDynamicsRules = field(default_factory=KinDynamicsRules)
+    feeling_spread: FeelingSpreadRules = field(default_factory=FeelingSpreadRules)
+    grave_goods: GraveGoodsRules = field(default_factory=GraveGoodsRules)
+    agentless_conditions: AgentlessConditionsRules = field(default_factory=AgentlessConditionsRules)
+    fertility_means: FertilityMeansRules = field(default_factory=FertilityMeansRules)
+    honours: HonoursRules = field(default_factory=HonoursRules)
+    sea_waves: SeaWavesRules = field(default_factory=SeaWavesRules)
+    creature_groups: CreatureGroupsRules = field(default_factory=CreatureGroupsRules)
+    divine_conceptions: DivineConceptionsRules = field(default_factory=DivineConceptionsRules)
     speech: SpeechRules = field(default_factory=SpeechRules)
     folk_knowledge: FolkKnowledgeRules = field(default_factory=FolkKnowledgeRules)
     endowments: EndowmentRules = field(default_factory=EndowmentRules)

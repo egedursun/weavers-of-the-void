@@ -111,6 +111,7 @@ async def household_survey(ctx: TickContext) -> None:
     "table.marriages",
     "table.mortal_profiles",
     "table.polity_profiles",
+    "table.professions_of_value",
     "table.thoughts",
 )
 async def households(ctx: TickContext) -> None:

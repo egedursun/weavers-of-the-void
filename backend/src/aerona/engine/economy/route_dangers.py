@@ -22,6 +22,7 @@ from aerona.domain.enums.military import Stance
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus
 from aerona.engine.context import TickContext
+from aerona.engine.creature_groups.groups import group_danger
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.environment.weather import Weather
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -90,6 +91,7 @@ class Dangers:
 class Lairs:
     beasts: dict[int, list[tuple[EntityRow, BeastProfileRow]]] = field(default_factory=dict)
     patrolled: frozenset[int] = frozenset()
+    groups: dict[int, float] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, ctx: TickContext, book: EconomyBook) -> "Lairs":
@@ -104,7 +106,7 @@ class Lairs:
             for region in regions - {None}:
                 if region is not None:
                     found[region].append((beast, profile))
-        return cls(dict(found), await patrolled_regions(ctx))
+        return cls(dict(found), await patrolled_regions(ctx), await group_danger(ctx.session, ctx.rules))
 
 
 async def patrolled_regions(ctx: TickContext) -> frozenset[int]:
@@ -177,6 +179,7 @@ def beast_danger(rules: Rules, path: list[int], lairs: Lairs) -> tuple[int, int 
             summed += threat
             if threat > 0 and (worst is None or threat > worst[0]):
                 worst = (threat, beast.id)
+    summed += sum(lairs.groups.get(region, 0.0) for region in set(path))
     return clamp_int(round_half_up(summed), 0, PERCENT), worst[1] if worst is not None else None
 
 

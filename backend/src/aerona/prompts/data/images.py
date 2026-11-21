@@ -44,6 +44,7 @@ IMAGE_DIRECTION: dict[EntityType, str] = {
     EntityType.DISH: "the dish as its makers serve it, with the foods it is made of and the vessels it is served in",
     EntityType.BUILDING_TYPE: "a building of this type as its makers raise it, whole, with its form, storeys and material clear",
     EntityType.NETWORK: "the stations and links of the network across the land it joins, with what passes along them",
+    EntityType.LEAGUE: "the realms bound in the league and the seat where they meet",
 }
 
 VESSEL_DIRECTIONS = total(

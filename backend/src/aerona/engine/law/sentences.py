@@ -22,10 +22,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.law.prisons import imprison
 from aerona.engine.mind.book import values_for
-from aerona.engine.mortal.standing import add_infamy, add_stress, add_wealth
+from aerona.engine.mortal.standing import add_infamy, add_stress, add_wealth, shift_standing
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import add_flag
-from aerona.engine.primitives.stats import shift_stat
 
 Bear = Callable[[TickContext, EntityRow, int | None], Awaitable[None]]
 RANKED = frozenset({SocialClass.NOBLE, SocialClass.OFFICIAL, SocialClass.PRIEST, SocialClass.SCRIBE, SocialClass.PROFESSIONAL})
@@ -73,12 +72,12 @@ async def cast_out(ctx: TickContext, culprit: EntityRow, _case: int | None) -> N
         )
     ):
         bond.state, bond.closed_epoch, bond.closed_reason = BondState.PAST, ctx.epoch, "cast out by the law"
-    shift_stat(culprit, "piety", -ctx.rules.sentences.excommunication_piety, 0)
+    await shift_standing(ctx.session, culprit, "piety", -ctx.rules.sentences.excommunication_piety, ctx.epoch, default=0)
 
 
 async def atone(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     await add_stress(ctx.session, culprit.id, ctx.rules.sentences.work_stress, ctx.epoch)
-    shift_stat(culprit, "piety", ctx.rules.sentences.penance_piety, 0)
+    await shift_standing(ctx.session, culprit, "piety", ctx.rules.sentences.penance_piety, ctx.epoch, default=0)
 
 
 async def elsewhere(ctx: TickContext, culprit: EntityRow, *, far: bool) -> EntityRow | None:
@@ -112,7 +111,7 @@ async def transport(ctx: TickContext, culprit: EntityRow, _case: int | None) -> 
 
 async def confine(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     await add_stress(ctx.session, culprit.id, ctx.rules.sentences.work_stress, ctx.epoch)
-    shift_stat(culprit, "renown", -ctx.rules.sentences.arrest_renown, 0)
+    await shift_standing(ctx.session, culprit, "renown", -ctx.rules.sentences.arrest_renown, ctx.epoch, default=0)
 
 
 async def watch(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:

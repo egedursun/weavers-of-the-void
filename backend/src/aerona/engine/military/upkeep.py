@@ -17,6 +17,7 @@ from aerona.engine.military.campaign import bring_home_loot, drill
 from aerona.engine.military.finance import mercenary_pay
 from aerona.engine.military.support import tax_burden
 from aerona.engine.military.units import profile_of, resize, stacks_of
+from aerona.engine.occupation_regime.effects import levy_share
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.levies import levies_from, levy
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -157,7 +158,8 @@ async def occupation_levies(ctx: TickContext, atlas: RegionAtlas) -> int:
             community = await living_entity(ctx.session, community_id)
             if community is None or not levies_from(community) or community.id == occupation.occupier_entity_id:
                 continue
-            wanted = round_half_up((stat(community, "population") or 0) * table.occupation_levy_pct / PERCENT * occupation.control / PERCENT)
+            share = await levy_share(ctx.session, occupation.region_entity_id) / PERCENT
+            wanted = round_half_up((stat(community, "population") or 0) * table.occupation_levy_pct / PERCENT * occupation.control / PERCENT * share)
             if wanted <= 0:
                 continue
             taken = levy(ctx.rules, community, wanted)

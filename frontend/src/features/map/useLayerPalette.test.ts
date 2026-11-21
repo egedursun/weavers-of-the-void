@@ -97,4 +97,36 @@ describe('layer palette', () => {
     expect(money.tints.get(1)?.key).toBe('money:ledger')
     expect(money.categories[0].label).not.toBe('ledger')
   })
+
+  it('tints protected lands by the right that protects them', () => {
+    const kept = {
+      ...VIEW,
+      protected: { '1': { basis: 'faith', strength: 70 } },
+    } as unknown as MapView
+    const protectedLands = buildLayerPalette(kept, 'protected', NAMES, TOKENS)
+    expect(protectedLands.tints.get(1)?.key).toBe('protected:faith')
+    expect(protectedLands.categories[0].label).toBe('Protected by faith')
+  })
+
+  it('tints regions by the densest remnant of war and names its kind', () => {
+    const scarred = {
+      ...VIEW,
+      remnants: { '1': { kind: 'fallout', density: 80 } },
+    } as unknown as MapView
+    const remnants = buildLayerPalette(scarred, 'remnants', NAMES, TOKENS)
+    expect(remnants.tints.get(1)?.key).toBe('remnants:fallout')
+    const struck = {
+      ...scarred,
+      waves: { '1': { origin: 'quake' as const, height: 60 } },
+    }
+    const waves = buildLayerPalette(struck, 'waves', NAMES, TOKENS)
+    expect(waves.tints.get(1)?.key).toBe('waves:quake')
+    const roamed = {
+      ...scarred,
+      groups: { '1': { form: 'pack' as const, size: 2000 } },
+    }
+    const groups = buildLayerPalette(roamed, 'groups', NAMES, TOKENS)
+    expect(groups.tints.get(1)?.key).toBe('groups:pack')
+    expect(remnants.categories[0].label).toBe('Fallout')
+  })
 })

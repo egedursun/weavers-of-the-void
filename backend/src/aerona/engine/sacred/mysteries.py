@@ -31,6 +31,7 @@ from aerona.engine.collective.crowds import begin_movement
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import psi_of
 from aerona.engine.divine.standing import standing_row
+from aerona.engine.divine_conceptions.conception import theodicy_factor
 from aerona.engine.faith.zealotry import record_heresy
 from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.research import has_technique
@@ -474,10 +475,11 @@ async def test_doctrines(ctx: TickContext, tally: MysteryTally) -> None:
             continue
         suffering, cause = await suffering_of(ctx, town, signs)
         suffering = await lagged(ctx, BalanceLoop.THEODICY, town.id, suffering)
-        if cause is None or suffering < table.suffering_at:
-            continue
-        cult = await church_of(ctx.session, town)
+        cult = await church_of(ctx.session, town) if cause is not None else None
         if cult is None or held(cult.id):
+            continue
+        suffering = round(suffering * await theodicy_factor(ctx.session, cult.id))
+        if cause is None or suffering < table.suffering_at:
             continue
         await open_crisis(ctx, town, cult, cause, suffering)
         tally.crises += 1

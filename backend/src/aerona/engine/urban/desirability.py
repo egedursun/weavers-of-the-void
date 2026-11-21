@@ -11,6 +11,7 @@ from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.settlement import DistrictKind
+from aerona.engine.city_rules.effects import amenity_of, zoning_relief
 from aerona.engine.context import TickContext
 from aerona.engine.folkways.purity import caste_standing
 from aerona.engine.primitives.distance import RegionAtlas
@@ -75,17 +76,18 @@ async def assess_town(ctx: TickContext, settlement: EntityRow, tally: Desirabili
         - await fouled(ctx, settlement) * table.pollution_pct / PERCENT
         + await artworks(ctx, settlement.id) * table.artwork
     )
+    relief = 1 - await zoning_relief(ctx.session, settlement.id)
     for district in districts:
-        score = NEUTRAL + common
+        score = NEUTRAL + common + await amenity_of(ctx.session, ctx.rules, district)
         for _, structure in structures:
             weight = falloff(reach, layout.apart(structure.district_id, district.id)) if structure.district_id is not None else reach
             if structure.kind in AMENITIES:
                 score += table.amenity * weight
             elif structure.kind in NUISANCES:
-                score -= table.nuisance * weight
+                score -= table.nuisance * weight * relief
         for other in districts:
             if other.kind in NUISANCE_DISTRICTS:
-                score -= table.nuisance * falloff(reach, layout.apart(other.id, district.id))
+                score -= table.nuisance * falloff(reach, layout.apart(other.id, district.id)) * relief
             if other.kind is DistrictKind.GARDENS:
                 score += ctx.rules.city_plan.garden_amenity * other.level * falloff(reach, layout.apart(other.id, district.id))
         standing = await caste_standing(ctx.session, district)

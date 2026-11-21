@@ -1,5 +1,6 @@
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { mediaUrl } from '@/features/images/media'
+import { Crossings2D } from './Crossings2D'
 import {
   type CosmosIndex,
   isMisty,
@@ -194,6 +195,7 @@ export function Cosmos2D({
           </path>
         )
       })}
+      <Crossings2D data={index.data} layout={layout} />
       {index.data.stars.map((star) => {
         const point = layout.stars.get(star.id)
         if (!point) return null

@@ -29,6 +29,7 @@ from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.collective import CollectiveTrigger, DesignComponentKind, DesignKind, StoryletId
 from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.cosmography import DimensionElement
+from aerona.domain.enums.creature_groups import DriveMeans, GroupAim
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import ArtMode, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
 from aerona.domain.enums.cycles import (
@@ -45,6 +46,7 @@ from aerona.domain.enums.death_work import RemainsTreatment
 from aerona.domain.enums.demography import FuneralCustom, MartialStyle, Sex
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.disease_agents import CureClass
+from aerona.domain.enums.divine_conceptions import ConceptionAxis, CreatorPlace, DivineCount, DivineNearness, DivinePersonhood
 from aerona.domain.enums.ecology import (
     AttackDelivery,
     AttackEffect,
@@ -71,6 +73,7 @@ from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath
 from aerona.domain.enums.folkways import ImpuritySource, MishapKind
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
+from aerona.domain.enums.honours import HonourPrivilege
 from aerona.domain.enums.intrigue import PlotKind
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.material import MaterialKind
@@ -280,7 +283,15 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "mortal_media": sorted(medium.value for medium in MORTAL_MEDIA),
         "season_domains": SEASON_DOMAIN_WORDS,
         "cure_classes": [cure.value for cure in CureClass],
+        "honour_privileges": [privilege.value for privilege in HonourPrivilege],
         "observation_methods": [method.value for method in ObservationMethod],
+        "group_aims": [aim.value for aim in GroupAim],
+        "drive_means": [means.value for means in DriveMeans],
+        "conception_axes": [axis.value for axis in ConceptionAxis],
+        "divine_counts": [count.value for count in DivineCount],
+        "divine_nearness": [nearness.value for nearness in DivineNearness],
+        "divine_personhood": [personhood.value for personhood in DivinePersonhood],
+        "creator_places": [place.value for place in CreatorPlace],
         "weather_aims": [aim.value for aim in WeatherAim],
         "weather_work_methods": [method.value for method in WeatherWorkMethod],
         "land_domains": LAND_DOMAIN_WORDS,

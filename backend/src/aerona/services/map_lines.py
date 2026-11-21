@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.cartography.model import Coordinates, WorldMap
 from aerona.cartography.routing import CellRouter
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.city_rules import ConurbationRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -14,6 +15,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.war import WarStatus
 from aerona.services.wiki import Road, RoadKind
 
+CONURBATION = "conurbation"
 RELATION_KINDS: dict[BondKind, str] = {
     BondKind.TRADES_WITH: "trade",
     BondKind.ENEMY: "hostility",
@@ -95,6 +97,17 @@ async def relation_lines(session: AsyncSession, world_map: WorldMap, positions: 
         else:
             path = straight(start, end)
         lines.append(RelationLine(bond.source_node_id, bond.target_node_id, RELATION_KINDS[bond.kind], bond.description, path))
+    return lines
+
+
+async def conurbation_lines(session: AsyncSession, positions: Mapping[int, Coordinates]) -> list[RelationLine]:
+    lines: list[RelationLine] = []
+    for city in await session.scalars(select(ConurbationRow).where(ConurbationRow.split_epoch.is_(None)).order_by(ConurbationRow.id)):
+        start = positions.get(city.core_entity_id)
+        for member in city.members or []:
+            end = positions.get(member)
+            if start is not None and end is not None:
+                lines.append(RelationLine(city.core_entity_id, member, CONURBATION, "grown together into one city", straight(start, end)))
     return lines
 
 

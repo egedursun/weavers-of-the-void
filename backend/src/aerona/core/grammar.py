@@ -173,6 +173,8 @@ AGE_NEUTRAL: dict[tuple[str, str], str] = {
     ("EngineKind", "coronation"): "accession",
     ("ItemDeed", "coronation"): "accession",
     ("GuestRole", "crowned"): "new ruler",
+    ("EntryBarrier", "guild_right"): "chartered right",
+    ("RuleMaker", "guild"): "trade association",
 }
 
 

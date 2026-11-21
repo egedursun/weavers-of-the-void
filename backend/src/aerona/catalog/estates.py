@@ -87,4 +87,5 @@ CAUSE_LABELS: dict[MovementCause, str] = {
     MovementCause.LAND_REFORM: "Land reform",
     MovementCause.FRANCHISE: "A wider franchise",
     MovementCause.PEACE: "Peace",
+    MovementCause.CONSERVATION: "Protection of the wild",
 }

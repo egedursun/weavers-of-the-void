@@ -226,6 +226,7 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
     "table.community_society",
     "table.entities",
     "table.entity_flags",
+    "table.held_identities",
     "table.language_grammar",
     "table.language_intelligibility",
     "table.language_profiles",

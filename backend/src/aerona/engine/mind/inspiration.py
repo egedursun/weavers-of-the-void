@@ -27,6 +27,7 @@ from aerona.engine.lore.items import profile_of
 from aerona.engine.lore.research_depth import add_progress, research_choices
 from aerona.engine.mind.preferences import favourite
 from aerona.engine.mind.thoughts import think
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat
@@ -104,7 +105,7 @@ async def breakthrough(ctx: TickContext, mortal: EntityRow, row: InspirationRow)
 
 
 async def vision(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> None:
-    shift_stat(mortal, "renown", ctx.rules.aspirations.vision_renown, 0)
+    await shift_standing(ctx.session, mortal, "renown", ctx.rules.aspirations.vision_renown, ctx.epoch, default=0)
     community = await community_of(ctx.session, mortal)
     if community is not None and not held(community.id):
         shift_stat(community, "prestige", ctx.rules.aspirations.vision_renown // 2, 0)
@@ -113,7 +114,7 @@ async def vision(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> No
 
 
 async def revelation(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> None:
-    shift_stat(mortal, "piety", ctx.rules.aspirations.vision_renown, 0)
+    await shift_standing(ctx.session, mortal, "piety", ctx.rules.aspirations.vision_renown, ctx.epoch, default=0)
     community = await community_of(ctx.session, mortal)
     if community is not None and not held(community.id):
         shift_stat(community, "piety", ctx.rules.aspirations.vision_renown // 2, 0)

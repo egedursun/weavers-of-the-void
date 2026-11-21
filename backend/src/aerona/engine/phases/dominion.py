@@ -68,6 +68,7 @@ async def thrones(ctx: TickContext) -> None:
     "table.node_births",
     "table.nodes",
     "table.place_profiles",
+    "table.routes",
     "table.skills",
     "table.sons",
     "table.stars",

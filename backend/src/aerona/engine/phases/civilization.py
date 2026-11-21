@@ -749,6 +749,7 @@ async def spontaneous_treaty(ctx: TickContext) -> int:
     "table.holder_levels",
     "table.incident_participants",
     "table.incidents",
+    "table.interpretations",
     "table.item_profiles",
     "table.language_grammar",
     "table.language_intelligibility",

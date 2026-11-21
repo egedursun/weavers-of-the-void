@@ -11,12 +11,13 @@ from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.loops.delay import lagged
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import FaithIndex
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity
-from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war
@@ -140,7 +141,7 @@ async def wonders(ctx: TickContext) -> None:
         if owner is None or owner.status is not EntityStatus.CANON:
             continue
         add_prosperity(ctx.rules, owner, settings.prosperity)
-        shift_stat(owner, "piety", settings.faith)
+        await shift_standing(ctx.session, owner, "piety", settings.faith, ctx.epoch)
         patron = faith.living_patron_son(owner.id)
         if patron is not None:
             patron.fame += settings.renown

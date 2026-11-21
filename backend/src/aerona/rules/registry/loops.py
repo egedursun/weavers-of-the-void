@@ -44,3 +44,6 @@ class LoopRules:
     delay_housework_burden: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a household weighed down by its housework takes on help")
     delay_cure_resistance: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a cure no longer overused lets the resistance against it fade")
     delay_weather_grievance: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before the grievance of a land harmed by a weather work makes it stop the worker")
+    delay_collectivisation_reversal: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before the resistance to an uncompensated change of order makes it fail")
+    delay_cartel_cheating: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before the waning discipline of a cartel lets its members cheat it apart")
+    delay_mutual_deterrence: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before the dreadful weapons of a rival hold back a realm from war")

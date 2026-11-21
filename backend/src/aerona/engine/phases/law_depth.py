@@ -141,8 +141,29 @@ async def prisons(ctx: TickContext) -> None:
     count(ctx, "prison", tally)
 
 
-@reads("table.defections", "table.spy_agents", "table.spy_cells", "table.spy_networks")
-@writes("table.spy_agents", "table.spy_cells")
+@reads(
+    "table.defections",
+    "table.mortal_profiles",
+    "table.node_births",
+    "table.offices",
+    "table.secrets",
+    "table.spy_agents",
+    "table.spy_cells",
+    "table.spy_networks",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.defections",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.mortal_profiles",
+    "table.spy_agents",
+    "table.spy_cells",
+    "table.spy_networks",
+    "table.thoughts",
+)
 async def spy_cells(ctx: TickContext) -> None:
     tally = CellTally()
     await tend_cells(ctx, tally)

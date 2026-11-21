@@ -22,6 +22,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "table.dimensions",
     "table.divine_wounds",
     "table.entities",
+    "table.feeling_spread",
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",

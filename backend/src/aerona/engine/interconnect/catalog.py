@@ -81,6 +81,7 @@ from aerona.engine.interconnect.catalog_mortal import MORTAL_MECHANICS
 from aerona.engine.interconnect.catalog_nature import NATURE_MECHANICS
 from aerona.engine.interconnect.catalog_nature50 import NATURE50_MECHANICS
 from aerona.engine.interconnect.catalog_operations import OPERATIONS_MECHANICS
+from aerona.engine.interconnect.catalog_orders51 import ORDERS51_MECHANICS
 from aerona.engine.interconnect.catalog_peoples import PEOPLE_MECHANICS
 from aerona.engine.interconnect.catalog_places import PLACE_BEHAVIOURS, PLACE_MECHANICS
 from aerona.engine.interconnect.catalog_powers import POWER_MECHANICS
@@ -1074,6 +1075,7 @@ BUILT_IN = (
     *REFERENCE8_MECHANICS,
     *CUSTOMS_MECHANICS,
     *LIFE_MECHANICS,
+    *ORDERS51_MECHANICS,
     *NATURE50_MECHANICS,
     *MADE_KIND_MECHANICS,
     *PLACE_BEHAVIOURS,

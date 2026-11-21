@@ -27,10 +27,10 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore import items
-from aerona.engine.mortal.standing import add_renown
+from aerona.engine.mortal.standing import add_renown, shift_standing
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
-from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import realm_of_community
@@ -195,7 +195,7 @@ async def contents_of(ctx: TickContext, room_id: int) -> list[RoomContentRow]:
 async def claim_relic(ctx: TickContext, delver: EntityRow, relic: EntityRow, room: SiteRoomRow) -> None:
     await items.profile_of(ctx, relic)
     await items.give(ctx, relic, delver.id, ItemDeed.CAPTURED, f"a relic carried out of {spoken(room.kind)} by {delver.name}")
-    shift_stat(delver, "piety", ctx.rules.sites.relic_piety, 0)
+    await shift_standing(ctx.session, delver, "piety", ctx.rules.sites.relic_piety, ctx.epoch, default=0)
 
 
 async def wake_mind(ctx: TickContext, delver: EntityRow, mind: EntityRow, room: SiteRoomRow) -> None:

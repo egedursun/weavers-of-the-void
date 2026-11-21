@@ -32,6 +32,7 @@ from aerona.domain.models.entity_stats import EntityStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.provenance import ensure_materials
 from aerona.engine.interconnect.guards import CONSERVED_KEYS, record_flow
+from aerona.engine.kin_dynamics.heirs import disowned_by, favoured_by, leaves_a_choice
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 
 SOURCE_STATE_KINDS = frozenset(
@@ -277,11 +278,21 @@ async def kin_heir(session: AsyncSession, dead: EntityRow) -> EntityRow | None:
     return None
 
 
-async def heir_of(session: AsyncSession, dead: EntityRow) -> EntityRow | None:
-    for bond in reversed(await active_bonds(session, [BondKind.PARENT_OF], sources=[dead.id])):
-        candidate = await living_entity(session, bond.target_node_id)
-        if candidate is not None and candidate.entity_type in HEIR_TYPES:
+async def child_heir(session: AsyncSession, dead: EntityRow, favour_reach: int) -> EntityRow | None:
+    cast_out = await disowned_by(session, dead.id)
+    chosen = await favoured_by(session, dead.id, favour_reach) if favour_reach and await leaves_a_choice(session, dead) else []
+    children = [bond.target_node_id for bond in reversed(await active_bonds(session, [BondKind.PARENT_OF], sources=[dead.id]))]
+    for child_id in [*chosen, *children]:
+        candidate = await living_entity(session, child_id)
+        if candidate is not None and candidate.entity_type in HEIR_TYPES and candidate.id not in cast_out:
             return candidate
+    return None
+
+
+async def heir_of(session: AsyncSession, dead: EntityRow, *, favour_reach: int = 0) -> EntityRow | None:
+    child = await child_heir(session, dead, favour_reach)
+    if child is not None:
+        return child
     for bond in reversed(await active_bonds(session, [BondKind.DESCENDS_FROM], targets=[dead.id])):
         candidate = await living_entity(session, bond.source_node_id)
         if candidate is not None and candidate.entity_type in HEIR_TYPES:

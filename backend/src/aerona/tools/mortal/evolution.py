@@ -2,9 +2,13 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.tables.agentless_conditions import AgentlessConditionRow
+from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import CarrierRow, CureResearchRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.disease_agents import CureClass
@@ -12,11 +16,15 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.engine.agentless_conditions.arise import ConditionTally
+from aerona.engine.agentless_conditions.course import eased, named_of
+from aerona.engine.body.state import refresh
 from aerona.engine.disease.agents import apply_cure, works_on
 from aerona.engine.disease.research import institutions
 from aerona.engine.disease.responses import take_up
 from aerona.engine.eras.effects import home_community
 from aerona.engine.mind.book import skill_level
+from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import folk_among, homes_for
 from aerona.engine.primitives.queries import living_entity
@@ -36,7 +44,8 @@ class AnswerSicknessInput(ToolInput):
 
 
 class SeekCureInput(ToolInput):
-    disease_id: int
+    disease_id: int | None = None
+    condition_id: int | None = None
     cure_class: CureClass | None = None
 
 
@@ -87,8 +96,7 @@ async def answer_sickness(call: MortalCall, args: AnswerSicknessInput) -> str:
     return result(MortalResult.ANSWERED, name=community.name, response=spoken(args.response)) + told
 
 
-async def seek_cure(call: MortalCall, args: SeekCureInput) -> str:
-    disease = await sickness(call, args.disease_id, MortalResult.CURE_REFUSED)
+async def place_of_healing(call: MortalCall) -> tuple[EntityRow, set[int], int]:
     home = await home_of(call)
     places = await homes_for(call.session, [home.id]) if home is not None else set()
     seat = next((row for row in await institutions(call.session) if row.location_id in places), None)
@@ -97,6 +105,35 @@ async def seek_cure(call: MortalCall, args: SeekCureInput) -> str:
     skill = await healing_skill(call, places)
     if skill <= 0:
         fail(MortalResult.CURE_REFUSED, why="you know nothing of medicine")
+    return seat, places, skill
+
+
+async def seek_relief(call: MortalCall, condition_id: int) -> str:
+    row = await call.session.get(ConditionRow, condition_id)
+    bearer = await call.session.get(EntityRow, row.bearer_node_id) if row is not None else None
+    if row is None or bearer is None or row.ended_epoch is not None:
+        fail(MortalResult.CURE_REFUSED, why="there is no such condition still borne")
+    if bearer.id != call.me.id and bearer.id not in await close_kin_of(call.session, call.me.id):
+        fail(MortalResult.CURE_REFUSED, why="you seek relief only for yourself and your close kin")
+    if held(bearer.id):
+        fail(MortalResult.CURE_REFUSED, why="a god holds that body as it is")
+    seat, _places, skill = await place_of_healing(call)
+    kind = await call.session.get(AgentlessConditionRow, row.kind_id) if row.kind_id is not None else None
+    call.target(bearer.id)
+    if not call.tick.rng(f"relief.{row.id}.{call.tick.epoch}").chance(min(PERCENT, skill)):
+        return result(MortalResult.RELIEF_FAILED, condition=named_of(row, kind), place=seat.name)
+    await eased(call.tick, row, bearer, kind, ConditionTally(), by=call.me.id)
+    await refresh(call.session, call.rules, bearer, call.tick.epoch)
+    return result(MortalResult.RELIEF_FOUND, condition=named_of(row, kind), place=seat.name, severity=row.severity)
+
+
+async def seek_cure(call: MortalCall, args: SeekCureInput) -> str:
+    if args.condition_id is not None:
+        return await seek_relief(call, args.condition_id)
+    if args.disease_id is None:
+        fail(MortalResult.CURE_REFUSED, why="name a sickness or a condition to seek a cure for")
+    disease = await sickness(call, args.disease_id, MortalResult.CURE_REFUSED)
+    seat, _places, skill = await place_of_healing(call)
     row = await call.session.get(CureResearchRow, (seat.id, disease.id))
     if row is None:
         row = CureResearchRow(institution_entity_id=seat.id, disease_entity_id=disease.id, points=0, specimens=0, started_epoch=call.tick.epoch, locked=[])

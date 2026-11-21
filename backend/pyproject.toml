@@ -48,8 +48,9 @@ dev = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+tmp_path_retention_policy = "failed"
 markers = ["tool_failure_expected: the test makes a tool crash on purpose", "bond_downgrade_expected: the test asks for a bond its ends cannot hold on purpose"]
-filterwarnings = ["error::sqlalchemy.exc.SADeprecationWarning", "error:fully NULL primary key identity:sqlalchemy.exc.SAWarning", "error::DeprecationWarning:aerona", "error::DeprecationWarning:tests", "error:coroutine .* was never awaited:RuntimeWarning", "error::pytest.PytestUnraisableExceptionWarning", "error::aerona.db.record_context.TermFlood", "error:DELETE statement on table:sqlalchemy.exc.SAWarning"]
+filterwarnings = ["error::sqlalchemy.exc.SADeprecationWarning", "error:fully NULL primary key identity:sqlalchemy.exc.SAWarning", "error::DeprecationWarning:aerona", "error::DeprecationWarning:tests", "error:coroutine .* was never awaited:RuntimeWarning", "error::pytest.PytestUnraisableExceptionWarning", "error::aerona.db.record_context.TermFlood", "error:DELETE statement on table:sqlalchemy.exc.SAWarning", "error:Identity map already had an identity:sqlalchemy.exc.SAWarning", "error::aerona.engine.primitives.stats.MisroutedStanding", "error::aerona.db.key_moves.PrimaryKeyMoved"]
 
 [tool.ruff]
 line-length = 160

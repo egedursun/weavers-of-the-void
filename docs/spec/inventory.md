@@ -6,13 +6,13 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 
 | Axis | Count |
 |---|---|
-| table | 921 |
-| enum | 1353 |
-| step | 473 |
+| table | 984 |
+| enum | 1442 |
+| step | 499 |
 | incident | 5 |
-| tool | 593 |
-| lever | 2257 |
-| screen | 1369 |
+| tool | 681 |
+| lever | 2264 |
+| screen | 1396 |
 | text | 195 |
 
 | Axis | Item | Proven by | Open layers and the rows that close them |
@@ -32,6 +32,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | age_set_members | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | age_sets | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | agent_turns | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | agentless_conditions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | ages | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | aim_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | allele_pools | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -99,6 +100,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | captives | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | care_customs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | carrion_pulses | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | cartels | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | cascades | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | case_witnesses | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | castings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -125,6 +127,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | coalition_members | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | coasts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | cohort_mishap_rates | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | collaborations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | collection_incidents | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | collection_members | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | collection_places | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -151,11 +154,13 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | component_wear | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | conditions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | confederations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | conservation_movements | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | constitutions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | constructions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | constructs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | container_stocks | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | contests | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | conurbations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | convoys | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | cooperatives | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | corvee_levies | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -184,6 +189,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | creator_taboos | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | creature_anatomy | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | creature_attacks | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | creature_groups | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | creature_lessons | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | credentials | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | credit_profiles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -220,6 +226,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | defections | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | deferred_steps | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | demographic_transitions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | departures | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | depots | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | design_components | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | design_mounts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -227,6 +234,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | design_techniques | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | designated_heirs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | designs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | deterrence_postures | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | diasporas | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | diets | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | dimension_aspects | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -245,6 +253,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | districts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | divination_systems | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | divinations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_conceptions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | divine_council_seats | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | divine_creatures | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | divine_debts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -270,6 +279,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | economic_order_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | economic_orders | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | ecosystem_services | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | elder_sway | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | elections | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | emblem_systems | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | emotion_harvests | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -319,7 +329,10 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | favours | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | fear_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | fears | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | feeling_spread | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | ferment_cultures | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | fertility_means | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | fertility_uses | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | feuds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | field_agreements | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | folk_beliefs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -360,9 +373,11 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | god_designs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | god_feedings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | god_images | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | god_readings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | god_scales | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | good_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | goods_flows | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | grave_goods | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | great_people | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | great_person_points | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | griefs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -382,6 +397,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | holder_levels | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | holder_techniques | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | holy_order_profiles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | honour_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | honours_held | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | hooks | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | horizon_intuitions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | horror_events | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -416,6 +433,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | infant_care | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | information_trust | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | injuries | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | insolvency_cases | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | inspirations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | institutions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | instruction_orders | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -424,10 +442,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | insurance_policies | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | insurers | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | intensification | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | interpretations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | interworld_campaigns | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | interworld_migrations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | intimacy_norms | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | intoxicant_customs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | intrusions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | irregular_seasons | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | issued_securities | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | item_enchantments | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | item_history | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | item_profiles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -436,15 +458,23 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | journeys | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | jurisdictions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | keystone_resources | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | kin_blends | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | kin_disownings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | kin_dynamics | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | kin_favours | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | kin_group_members | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | kin_groups | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | kin_rivalries | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | kin_role_duties | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | kind_holdings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | kind_variants | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | kinship_systems | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | lab_texts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | labour_contracts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | labour_disputes | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | labour_reasons | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | land_rings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | land_use_rules | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | language_grammar | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | language_intelligibility | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | language_policies | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -457,6 +487,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | law_proposals | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | law_theories | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | law_upkeep | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | leader_cults | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | league_decisions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | league_members | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | leagues | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | learned_tactics | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | learning_biases | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -507,8 +540,10 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | market_price_holds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | market_prices | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | market_scarcity | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | market_structures | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | marriage_alliances | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | marriages | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | mass_weapons | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | matches | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | material_affinities | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | meaning_shifts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -539,6 +574,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | mobs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | modifiers | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | mole_hunts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | monetary_authorities | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | monetary_rates | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | monsoon_seasons | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | monster_contracts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | mortal_castes | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -549,6 +586,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | movement_profiles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | movement_support | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | movements | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | municipal_services | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | museum_collections | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | museum_pieces | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | music_traditions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -581,12 +619,20 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | nutrition_scores | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | oaths | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | observation_methods | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | occupation_measures | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | occupation_regimes | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | occupations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | office_history | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | offices | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | orbital_control | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | order_laws | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | order_transitions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | order_tribunals | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | org_cliques | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | org_governance | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | org_mergers | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | org_research | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | org_seats | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | organisation_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | outbreaks | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | outer_bargains | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -628,6 +674,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | plant_profiles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | policy_approval | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | polity_eras | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | polity_leagues | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | polity_loyalty | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | polity_map_knowledge | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | polity_members | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -658,6 +705,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | prehistory_events | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | preparedness | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | pressures | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | price_wars | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | prisoners | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | prisons | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | production_method_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -668,6 +716,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | prophecy_conditions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | proposal_stances | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | prostheses | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | protected_areas | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | public_clocks | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | public_knowledge | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | public_opinion | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -683,9 +732,13 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | rank_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | reading_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | realm_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | reckoning_cases | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | reckoning_measures | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | reckonings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | reconstructions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | record_keepers | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | record_media | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | referendums | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | regimes | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | region_crops | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | region_cryosphere | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -719,6 +772,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | resource_mechanics | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | resource_profiles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | resource_workers | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | restorations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | restraint_customs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | resurrection_orders | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | reverences | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -750,8 +804,12 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | school_members | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | scores | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | scripts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | sea_wave_coasts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | sea_waves | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | secrets | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | securities | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | security_holdings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | security_prices | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | sediment_flows | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | sense_profiles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | sensitivities | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -801,6 +859,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | species_hosts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | species_products | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | species_profiles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | species_protections | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | species_ranges | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | species_relations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | species_traits | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -823,6 +882,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | state_changes | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | state_checkpoints | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | state_enterprises | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | stock_exchanges | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | storylet_runs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | storytellers | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | stress_readings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -907,14 +967,17 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | wants | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | war_aims | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | war_production | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | war_remnants | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | war_sides | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | warping | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | wars | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | water_lifts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | wave_warnings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | weather_works | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | welfare_houses | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | winter_forecasts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | witch_hunts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | worker_bodies | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | workshop_designs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | workshops | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | world_attention | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -978,6 +1041,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.agent.ToolBlock | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.agent.TurnCounter | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.agent.Verdict | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.agentless_conditions.ConditionCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.agentless_conditions.ConditionCourse | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.ages.AgeCycle | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.ages.ArcOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.ages.ArcRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1067,6 +1132,10 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.chronicle.ThreadLinkRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.chronicle.ThreadStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.chronicle.WritingSystem | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.city_rules.ConurbationGovernance | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.city_rules.LandUseRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.city_rules.MunicipalService | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.city_rules.RuleMaker | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.civilization.DebtTiming | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.civilization.IndependenceAnswer | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.civilization.TierCapability | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1118,6 +1187,11 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.communication.OpinionSubject | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.communication.SignalKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.communication.SignalState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.competition.CartelAim | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.competition.CompetitionClause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.competition.EntryBarrier | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.competition.MarketForm | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.competition.PriceWarOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.concealment.BreachCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.concealment.ConcealScope | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.concealment.HiddenTruthKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1198,6 +1272,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.creator.CreatorPromise | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.creator.CreatorSignKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.creator.CreatorStance | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.creature_groups.DriveMeans | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.creature_groups.GroupAim | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.creature_groups.GroupForm | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.cuisine.CookingMethod | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.cuisine.DishCourse | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.culture.ArtMode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1288,6 +1365,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.demography.MotifSource | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.demography.NaturalTrait | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.demography.Sex | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.departures.DepartureCondition | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.departures.DepartureKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.discovery.AgeKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.discovery.AnomalyKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.discovery.BlueprintKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1326,6 +1405,12 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.divine.SonPunishment | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.divine.VotingRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.divine.WoundCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_conceptions.ConceptionAxis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_conceptions.CreatorPlace | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_conceptions.DivineCount | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_conceptions.DivineNearness | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_conceptions.DivinePersonhood | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_conceptions.GodReading | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.domain.Domain | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.dominion.BeliefStance | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.dominion.CreatureDeed | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1445,6 +1530,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.faith.StratumPermanence | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.faith.StratumValence | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.faith.TenetKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.fertility_means.FertilityMeans | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.fertility_means.MeansSource | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.finance.CreditState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.finance.SpeculationStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.finance.TradePolicyKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1496,9 +1583,21 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.genetics.HouseholdRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.genetics.Locus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.genetics.LocusGroup | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.governance.CliqueAim | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.governance.GoverningBody | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.governance.HeadSelection | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.governance.InsolvencyPath | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.governance.InsolvencyStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.governance.MergerKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.governance.MergerStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.governance.OrgStrategy | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.governance.VoteBasis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.governance.VoteChoice | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.grave_goods.GraveGuard | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.happening.EventPhase | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.happening.LandAct | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.happening.RiverShiftCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.honours.HonourPrivilege | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.honours.UnitHonourKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.honours.VeteranGrant | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.horror.HorrorEffect | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1516,9 +1615,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.integrity.HarmForce | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.integrity.SectionHazard | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.integrity.SectionState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.interpretation.InterpretationFault | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.interpretation.InterpretedEvent | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.intervention.Disaster | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.intervention.InterventionKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.intervention.Miracle | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.interworld.CampaignStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.interworld.MigrationCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.interworld.MigrationReception | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.intimacy.BirthAttendant | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.intimacy.BirthComplication | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.intimacy.BirthPlace | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1560,6 +1664,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.kin.KinMembership | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.kin.KinNeed | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.kin.KinRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.kin_dynamics.DisownReason | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.kin_dynamics.KinStir | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.kin_dynamics.RivalryCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.kind_crafts.ColourFocus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.kind_crafts.ColourMeaning | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.kind_crafts.EmblemSystem | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1585,6 +1692,13 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.kinds.KindSpread | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.kinds.KindStance | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.kinds.MealSlot | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.labour.ContractStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.labour.DisputeAct | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.labour.DisputeOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.labour.LabourDemand | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.labour.LegalStanding | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.labour.WorkerAct | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.labour.WorkerBodyForm | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.law_depth.CourtLevel | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.law_depth.JurisdictionClaim | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.law_depth.KillMethod | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1596,6 +1710,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.law_grammar.LawExceptionKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.law_grammar.LawOperator | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.law_grammar.LawTarget | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.leader_cults.CultFate | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.leader_cults.CultInstrument | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.leagues.LeagueAim | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.leagues.LeagueDecisionKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.leagues.LeagueDecisionOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.leagues.LeagueOrgan | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.leagues.LeagueStanding | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.leagues.LeagueVoteBasis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.lifecycle_affairs.AffairKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.lifecycle_end.DisbandReason | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.lifecycle_end.ForgettingCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1637,6 +1759,11 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.made.ReplicatorScale | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.made.ReplicatorStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.made.SurveillanceFocus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.mass_weapons.MassHarm | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.mass_weapons.MassReach | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.mass_weapons.Posture | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.mass_weapons.ProgrammeStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.mass_weapons.RemnantKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.material.MaterialKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.means.ContainerKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.means.LockKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1757,6 +1884,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.modifier.IncidentRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.modifier.ModifierOp | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.modifier.ModifierSource | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.monetary.MonetaryAim | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mortal.CareerPath | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mortal.CrimeKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mortal.DeathCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1798,6 +1926,11 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.networks.OutageCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.node.ActorKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.node.NodeKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.occupation_regimes.CollaborationFate | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.occupation_regimes.CollaborationKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.occupation_regimes.OccupationEnding | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.occupation_regimes.OccupationMeasure | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.occupation_regimes.OccupationRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.operations.CarrierKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.operations.CrewStation | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.operations.EchelonLevel | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1900,12 +2033,18 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.prehistory.PrehistoryKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.prehistory.PrehistorySource | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.prehistory.PrehistoryState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.protected_nature.ProtectedUse | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.protected_nature.ProtectionBasis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.protected_nature.ProtectionMeasure | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.quests.QuestAim | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.quests.QuestObstacle | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.quests.QuestReward | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.quests.QuestScale | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.quests.QuestTargetKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.rarity.Rarity | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.reckoning.CaseOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.reckoning.MeasureStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.reckoning.ReckoningMeasure | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.record_keepers.RecordKeeperKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.records.FactUnit | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.records.FactValue | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1920,6 +2059,12 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.records.StepOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.records.StepState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.records.WitnessMode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.referendums.CampaignMeans | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.referendums.Franchise | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.referendums.ReferendumCaller | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.referendums.ReferendumResult | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.referendums.ReferendumSubject | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.referendums.VoteSide | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.regime.ClientRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.regime.CoupProofing | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.regime.CredentialKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1953,6 +2098,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.renown.LoreKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.renown.LorePrice | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.renown.ReputationAxis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.restoration.RestorationBasis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.restoration.RestorationFailure | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.restoration.RestorationStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.sacred.AfterlifeModel | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.sacred.BureauRank | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.sacred.DivinationKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1973,6 +2121,10 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.sacred.TheodicyCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.sacred.TheodicyResolution | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.sacred.VisionKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.sea_waves.WaveOrigin | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.securities.MoodDirection | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.securities.SecurityKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.securities.TradeSide | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.settlement.BuildMaterial | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.settlement.DistrictHarm | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.settlement.DistrictKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2296,6 +2448,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | advance_epoch | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | affairs | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | affairs_of_the_ended | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | agentless_conditions | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | ages | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | agrarian_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | appeals | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2334,6 +2487,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | celestial_omens | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | challenge_response | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | childhood | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | city_rules | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | civics | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | civilization | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | climate_transition | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2345,6 +2499,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | commemorations | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | commerce_practice | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | company_power | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | competition | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | concealment | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | constructs | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | containers | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2363,6 +2518,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | creator_essence | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | creator_mood | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | creator_taboos | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | creature_groups | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | creature_migration | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | creature_rebellion | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | creatures | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2390,6 +2546,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | decipherment | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | deep_seals | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | demography_depth | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | departures | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | deposit_finding | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | designs | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | desirability | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2399,6 +2556,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | disaster_casualties | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | disease_agents | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | district_coverage | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | divine_conceptions | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | divine_creatures | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | divine_grudges | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | divine_spies | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2417,7 +2575,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | economy_survey | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | endowments | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | engine_works | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
-| step | works_in_age | test_god_control.py; test_eager_epochs.py; test_age_coherence_lived.py | each write recorded with its happening: F58.5 |
 | step | environment_derive | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | environment_modifiers | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | environment_survey | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2439,7 +2596,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | faith_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | famine_aid | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | famine_migration | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | feeling_spread | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | feral_reversion | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | fertility_means | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | field_diplomacy | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | flora_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | folk_knowledge | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2467,7 +2626,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | god_relations | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | godlessness | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | gods_fate | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | governance | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | grammar | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | grave_goods | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | harvest | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | hauntings | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | heraldry | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2489,6 +2650,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | industry_methods | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | information_trust | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | institution_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | interpretation | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | interworld | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | intrigue | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | intrigue_survey | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | intrusions | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2496,6 +2659,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | jurisdictions | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | keystones | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | kin_duties | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | kin_dynamics | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | kin_politics | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | kinship_systems | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | kitchens | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2503,6 +2667,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | knowledge_levels | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | labour_allocation | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | labour_regimes | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | labour_relations | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | land_use | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | language_and_faith | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | language_contact | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2510,6 +2675,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | language_death | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | language_policy | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | law_fertility | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | leader_cults | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | leagues | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | learning_aids | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | learning_institutions | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | legacy_traits | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2541,6 +2708,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | market | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | market_manipulation | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | markets | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | mass_weapons | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | material_decay | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | mechanics_assignment | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | media | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2566,6 +2734,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | modifier_upkeep | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | mole_hunts | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | money_changing | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | money_policy | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | monster_contracts | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | monster_raids | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | mortal_aging | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2585,6 +2754,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | nomadism | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | novelty | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | nutrition | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | occupation_regimes | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | office_creation | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | order_of_battle | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | outer_hunger | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2596,6 +2766,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | patronage | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | people_customs | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | people_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | person_honours | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | pet_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | phenomena | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | pidgins | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2617,14 +2788,17 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | prisons | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | prophecy_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | prosperity_reversion | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | protected_nature | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | public_opinion | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | public_works | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | purity | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | putting_out | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | rebel_theft | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | reciprocity | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | reckoning | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | record_checkpoints | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | record_keepers | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | referendums | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | refining | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | refugees | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | regimes | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2650,6 +2824,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | resource_economy | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | resource_mechanics | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | resource_regeneration | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | restoration | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | restrain_casters | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | rift_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | rite_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2666,6 +2841,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | schisms | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | script_evolution | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | seafaring | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | securities | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | semantic_drift | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | servitors | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | settlement_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2752,6 +2928,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | witchcraft | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | wizards | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | wonders | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | works_in_age | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | works_remember_gods | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | world_balance | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | world_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2780,17 +2957,21 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:appeal_conviction | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:appoint_commander | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:appoint_officer | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:argue_doctrine | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:assign_caste | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:assign_task | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:audit_endowment | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:back_crisis | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:bank_sample | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:bargain_contract | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:bargain_with_estate | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:barter | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:begin_mass_weapon | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:begin_realm_plan | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:begin_transition | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:begin_works | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:bestow_gift | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:bid_for_org | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:bind_mind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:bind_spirit | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:break_treaty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2807,8 +2988,12 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:buy_shares | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:buy_work | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:buy_workshop | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:call_dispute | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:call_on_kin | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:call_referendum | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:call_tribunal | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:campaign_for_vote | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:cast_org_vote | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:cast_rite | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:censor_outlet | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:challenge_god | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2822,14 +3007,18 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:claim_courts | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:claim_resource | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:claim_turf | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:clear_remnants | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:clone | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:coin_words | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:collaborate | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:command_construct | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:commission_account | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:commission_artwork | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:confer_honour | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:confine_in_realm | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:consult_diviner | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:contain_replicator | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:contest_orbit | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:convene_kin_group | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:copy_mind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:corner_market | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2840,6 +3029,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:cut_network | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:decipher_script | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:declare_closure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:declare_posture | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:declare_war | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:defend_system | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:delve_site | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2854,12 +3044,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:dig_site | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:diplomacy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:discover_resource | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:disown | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:draft_unit_type | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:draw_blueprint | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:draw_design | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:draw_structure_type | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:dredge | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:drill_trait | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:drive_off_group | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:ease_pressure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:enact_law | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:enclose_commons | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2868,9 +3060,12 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:escape | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:establish_trade | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:explore_land | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:expose_collaborator | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:expose_hypocrisy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:fabricate | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:face_fear | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:favour_child | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:file_insolvency | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:find_carrier | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:find_route | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:forbid_kind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2880,20 +3075,26 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:forge_model | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:forge_record | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:forge_work | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:form_cartel | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_circle | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_club | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_company | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_enchantment | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_enterprise | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_faction | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:found_honour | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_language | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:found_league | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_living_works | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:found_monetary_authority | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_outlet | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_school | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_school_method | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_settlement | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:found_worker_body | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:free_bound | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:free_mind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:fund_research | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:fund_works | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:give_speech | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:go_on_adventure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2902,13 +3103,16 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:grow_organ | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:grow_structure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:grow_vessel | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:guard_grave | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:guard_throne | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:hire_servant | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:hold_gathering | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:host_symbiont | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:hunt_moles | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:impose_measure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:inspect_entity | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:install_augment | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:interpret | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:intrude | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:invent_art_form | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:invent_game | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2917,26 +3121,33 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:issue_demand | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:issue_mandate | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:join_cooperative | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:join_league | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:join_network | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:join_programme | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:join_road_folk | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:join_school | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:join_settlements | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:keep_legacy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:keep_pet | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:keep_secret_of | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:launch_campaign | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:launch_expedition | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:lay_corvee | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:lay_trade_policy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:lead_expedition | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:lead_migration | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:lead_youth | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:leak_records | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:learn_knowledge | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:lease_out | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:leave_office | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:lend | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:license_line | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:license_pattern | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:link_minds | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:link_to | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:list_security | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:lock_out | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:look_at_world | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:make_camp | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:make_charm | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2948,6 +3159,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:mock_the_ruler | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:offer_terms | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:offer_to_spirit | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:open_reckoning | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:open_shop | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:open_trading_post | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:order_formation | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2955,6 +3167,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:pay_ransom | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:persuade | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:petition_spirit | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:place_grave_goods | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:plan_rebuilding | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:plant_line | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:plant_perennial | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2971,10 +3184,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:proclaim_tongue | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:produce_item | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:promote | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:promote_cult | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:prophesy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:propose_law | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:propose_theory | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:propose_treaty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:protect_area | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:protect_species | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:provide_service | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:publish | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:publish_item | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:purge_circle | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -2983,25 +3200,33 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:raise_child | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:raise_line | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:raise_movement | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:raise_restoration | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:raise_sapience | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:read_the_sky | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reckon_years | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:reconcile_kin | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:recount | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:refit_section | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reform_script | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reform_youth | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:refuse_gift | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:register_deed | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:reintroduce | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:release_line | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:remove_augment | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:remove_symbiont | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:repay_debt | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:replan_land | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:report_cartel | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:rescue_captive | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reserve_game | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:resist_drift | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:restore_mind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:restore_polity | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:resurrection_rite | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:return_to_office | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:revoke_honour | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:rob_grave | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:rouse_crowd | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:rule_commons | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:run_racket | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3016,6 +3241,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:search_ruins | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:seek_citizenship | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:seek_cure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:seek_headship | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:seek_patron | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:seek_recognition | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:seek_sanctuary | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3028,7 +3254,10 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:set_clone_law | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_economic_order | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_house_duties | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:set_land_use_rule | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_levy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:set_monetary_policy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:set_occupation_rule | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_population_policy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_power_law | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_provision | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3041,13 +3270,17 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:socialise | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:speak_for_norm | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:speculate | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:split_org | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:start_price_war | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:steer_marriages | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:stir_feeling | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:strike_memory | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:study_fossils | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:study_relic | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:swear_fealty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:swear_oath | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:swear_vengeance | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:table_league_motion | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:take_arms | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:take_care | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:take_contract | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3059,18 +3292,24 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:teach_honour | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:teach_lore | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:teach_tongue | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:tear_down_cult | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:tend_culture | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:tend_home | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:tend_maimed | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:test_for_gifts | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:test_lore | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:trade_lore | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:trade_security | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:train_herd | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:train_power | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:transfer_mind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:trim_sails | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:try_servant | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:undertake_heroquest | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:use_fertility_means | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:use_mass_weapon | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:use_power | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:warn_coast | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:withdraw_people | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:work_weather | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:worship | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3090,6 +3329,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:bind_cosmic_being | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bind_genius_locus | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bind_law_across_dimension | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:bind_league | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bind_mortals | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bind_species | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bind_spirit | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3097,11 +3337,13 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:birth_world | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bless_bloodline | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bless_charm | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:bless_city | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bless_fortune | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bless_host | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bless_line | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bless_network | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:bless_works | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:break_market | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:break_moon | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:build_construct | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:build_structure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3109,6 +3351,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:call_heroquest | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:call_impact | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:call_sibling | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:call_to_step_aside | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:call_up_soul | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:canonise_work | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:carry_species | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3117,12 +3360,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:choose_anchor | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:claim_galaxy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:claim_star | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:close_the_way | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:close_trade_route | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:coin_words | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:command_servitor | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:commission_artwork | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:commission_structure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:commission_vessel | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:confuse_tongues | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:contain_phenomenon | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:convene_gathering | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:create_artwork | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3155,6 +3400,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:designate_keystone | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:destroy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:disband_host | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:ease_body | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:ease_theodicy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:echo_life | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:end_enchantment | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3180,6 +3426,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:grant_mind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:grant_power | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:grant_soul | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:hallow_wild | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:halt_replicator | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:hang_celestial | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:hang_star | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3187,6 +3434,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:hide_secret | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:hide_truth | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:hinder_return | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:honour_servant | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:incite_war | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:inspect_entity | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:inspect_sibling | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3195,6 +3443,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:inspire_relief | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:inspire_school | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:judge_petition | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:keep_the_dead | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:lay_affinity | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:lay_bare_fossils | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:lay_enchantment | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3202,6 +3451,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:lay_magic_site | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:lay_out_garden | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:lay_siege | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:lead_creatures | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:lengthen_winter | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:lift_geas | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:limit_fleets | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3215,6 +3465,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:mend_wound | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:miracle | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:move_economic_order | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:move_fertility | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:move_hearts | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:move_ice | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:move_plague_response | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:move_population_policy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3243,6 +3495,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:raise_host | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:raise_nexus | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:raise_phenomenon | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:raise_sea | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:raise_throne | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:read_dreams | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:rebel | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3256,6 +3509,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:resign_office | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:resurrect_sibling | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:retell_event | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:reveal_nature | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:reveal_secret | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:reveal_tenet | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:reveal_tongue | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3293,6 +3547,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:set_storylet | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:sever_ley | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:sever_network | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:shake_coin | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:shape_biology | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:shape_blood | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:shape_dish | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3320,19 +3575,28 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:start_event | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:steer_theatre | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:still_mind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:still_weapon | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:stir_crowd | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:stir_dimension | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:stir_galaxy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:stir_hearts | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:stir_identity | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:stir_kin | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:stir_labour | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:stir_market_mood | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:stir_memory | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:stir_monsoon | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:stir_revival | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:stir_witch_hunt | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:stock_depot | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:strike_being | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:summon_spirit | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:sway_cult | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:sway_diviner | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:sway_occupation | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:sway_org | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:sway_outlet | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:sway_vote | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:swear_covenant | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:take_life | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:take_mortal_form | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3359,6 +3623,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:wake_spirit | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:war_on_foreign_god | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:ward_against_outer | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:weigh_reckoning | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:wield_power | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:withhold_soul | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:world_summary | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3751,6 +4016,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | contest:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | contest:hold | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | contest:remove | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | conurbation:split | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | convert | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | convoy:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | convoy:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -4429,6 +4695,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | lab_text:write | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | labour:corvee | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | labour:set | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | labour_dispute:end | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | land:release | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | land:reshape | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | land:river | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -4470,7 +4737,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | law_upkeep:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | league:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | league:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | league:dissolve | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | league:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | league:found | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | learning_aids:run | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | learning_bias:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | learning_bias:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -4752,6 +5021,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | order_transition:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | order_transition:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | orders:run | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | org_merger:advance | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | outbreak:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | outbreak:end | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | outer:destroy | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -4956,6 +5226,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | record_row:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | record_row:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | records:living_stats | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | referendum:decide | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | regard:remove | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | regard:set | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | regime:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -5034,6 +5305,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | resource:reveal | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | resource:set | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | resource:workers | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | restoration:advance | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | restraint:set | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | resurrect:mortal | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | resurrect:son | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -5722,6 +5994,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/arcana/ArcanaSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/arcana/CosmicOfficesPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/arcana/MythicSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/arsenal/ArsenalSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/atlas/AtlasDetail | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/atlas/AtlasFilters | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/atlas/AtlasGroup | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -5817,6 +6090,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/city/TypePage | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/city/WorkPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/city/ZoneDot | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/cityRules/CityRulesSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/climes/ClimesSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/climes/CrossingsPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/climes/SeasonsPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -5842,6 +6116,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/command-palette/ActionDialog | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/command-palette/CommandPalette | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/commerce/CommerceSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/conditionKinds/ConditionKindsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/cosmography/ApocalypseVariantPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/cosmography/BeingCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/cosmography/BeingsPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -5925,6 +6200,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/cosmos/CosmosViewSettings | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/cosmos/CreateWorldForm | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/cosmos/CreatorHandPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/cosmos/Crossings2D | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/cosmos/DialectDetails | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/cosmos/EconomyControls | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/cosmos/EncountersSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6018,6 +6294,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/creator/ReputationPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/creator/RevelationDialog | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/creatorBonds/CreatorBondsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/creatureGroups/CreatureGroupsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/customs/BodyPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/customs/CivicsPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/customs/CustomsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6044,6 +6321,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/cycles/StressPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/cycles/TextField | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/daily/DailyLifeSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/departures/DeparturesSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/design/BrandSpecimens | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/design/ControlSpecimens | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/design/DesignScreen | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6069,6 +6347,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/divine/StandingRow | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/divine/VetoButton | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/divine/WorldDivinityPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divineConceptions/DivineConceptionsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/divinePowers/DivinePowersSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/dominion/ClaimCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/dominion/CreatureCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6463,6 +6742,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/errors/GeneralError | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/errors/NotFoundError | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/evolution/EvolutionSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/family/FamilySection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/fate/FateControlsPage | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/fate/FateJobRow | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/fate/FateStatusCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6482,6 +6762,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/feed/NodeLink | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/feed/ReadingGroupView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/feed/StreamLineView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/fertility/FertilitySection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/folkKnowledge/FolkKnowledgeSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/folkways/BiasPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/folkways/DietPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6537,6 +6818,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/goals/RunningGoals | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/goals/ScorePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/goals/ScoreSparkline | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/governance/GovernanceSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/graph/Graph3DControls | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/graph/GraphCanvas2D | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/graph/GraphHoverOverlay | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6549,6 +6831,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/graph/NodeOptions | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/graph/NodePicker | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/graph/PathFinder | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/graveGoods/GraveGoodsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/help/HelpDrawer | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/honours/HonoursSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/images/BulkImageGenPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6568,6 +6851,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/images/PromptBox | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/interconnect/InterconnectionExplorer | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/interconnect/SubsystemMatrix | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/interpretation/InterpretationSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/interworld/InterworldSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/kin/KinSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/kinds/ConceptSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/kinds/DressSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6580,6 +6865,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/kinds/SubstancesSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/kinds/WaysOfLifeSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/kinds/WorkSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/labour/LabourSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/AddWordsForm | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/Dictionary | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/FamilyChart | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6600,6 +6886,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/lawDepth/LawDepthSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/lawDepth/NetworkGraph | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/lawGrammar/LawGrammarSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/leaderCults/LeaderCultsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/leagues/LeaguesSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/ledger/ActionLedger | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/ledger/Bookmarks | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/ledger/LedgerScreen | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6656,6 +6944,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/map/PastEpochBanner | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/map/SnapshotButton | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/map/SpeciesRangePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/marketStructure/MarketStructureSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/means/BuildingPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/means/ContainersPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/means/MeansSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6669,6 +6958,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/minds/MadeWorldSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/minds/MindSeatSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/minds/NetworkSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/moneyPolicy/MoneyPolicySection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/mood/MoodSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/nature/BodyPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/nature/BondsPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/nature/NatureSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6679,6 +6970,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/notifications/NotificationsScreen | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/notifications/SelfNoteForm | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/numbers/NumbersSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/occupation/OccupationSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/onboarding/CosmosFields | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/onboarding/CosmosStep | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/onboarding/Counter | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6748,6 +7040,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/pantheon/ThreadCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/pantheon/WorldChoice | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/pantheonLife/PantheonSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/personHonours/PersonHonoursSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/physics/CosmicFeaturesPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/physics/HeavensPhysicsPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/physics/ImpactsPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6782,6 +7075,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/prompts/SonPromptLink | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/prompts/SonPromptView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/prompts/TiredMotifsView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/protectedNature/ProtectedNatureSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/publicWorks/PublicWorksSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/pursuits/ArtMarketPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/pursuits/BirthSignPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6796,6 +7090,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/pursuits/OrdersPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/pursuits/PursuitsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/pursuits/RemadePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/reckoning/ReckoningSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/records/AccountDigest | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/records/AtlasAtMoment | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/records/ChangeControls | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6819,6 +7114,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/records/TimelineScrubber | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/records/WitnessEditor | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/records/WitnessForge | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/referendums/ReferendumsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/regime/ConstitutionSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/regime/CosmosRegimeSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/regime/LearningPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6828,6 +7124,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/regime/RulePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/relations/CommunityRelations | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/relations/RelationParts | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/restoration/RestorationsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/sacred/AfterlifePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/sacred/Bars | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/sacred/CrisesPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6842,6 +7139,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/sacred/RitesPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/sacred/SacredSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/sacred/SpiritsPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/seaWaves/SeaWavesSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/securities/SecuritiesSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/settings/AppearancePage | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/settings/AppearanceSettings | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/settings/DataSettings | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |

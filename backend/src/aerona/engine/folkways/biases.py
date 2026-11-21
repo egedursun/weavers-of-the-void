@@ -24,6 +24,7 @@ from aerona.domain.enums.mind import Facet, SkillKind, ValueAxis
 from aerona.engine.body.variants import ORDINARY, bias_target, folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import living_gods
+from aerona.engine.feeling_spread.lean import mood_lean
 from aerona.engine.mind.book import load_holder, values_for
 from aerona.engine.mind.drives import rulers_of
 from aerona.engine.mind.split import culture_mean, facets_of, has_facets
@@ -297,6 +298,10 @@ async def council_members(session: AsyncSession, community_id: int, ruler_id: in
 
 
 async def lean_community(ctx: TickContext, community_id: int, decision: BiasedDecision) -> float:
+    return await rulers_lean(ctx, community_id, decision) * await mood_lean(ctx.session, community_id, decision)
+
+
+async def rulers_lean(ctx: TickContext, community_id: int, decision: BiasedDecision) -> float:
     rulers = await rulers_of(ctx.session, community_id)
     if not rulers:
         return 1.0

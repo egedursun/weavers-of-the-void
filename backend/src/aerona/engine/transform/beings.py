@@ -15,7 +15,7 @@ from aerona.db.types import PydanticJSON
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.transform import TransformKind, TransformState
 from aerona.domain.models.entity_stats import BeastStats, MortalStats
 from aerona.engine.body.afflictions import spec_of
@@ -130,7 +130,7 @@ async def curse_into_beast(ctx: TickContext, mortal_id: int, ledger: Ledger) -> 
         cunning=stat(mortal, "intellect"),
         danger=PERCENT // 2,
     )
-    ledger.set(mortal, "entity_type", EntityType.BEAST)
+    ledger.retype(mortal, EntityType.BEAST)
     ledger.set(mortal, "stats", stats)
     if await ctx.session.get(BeastProfileRow, mortal.id) is None:
         profile = await profile_beast(ctx, mortal, None)
@@ -177,8 +177,19 @@ def former_stats(row: TransformationRow | None) -> Any:
     return MortalStats()
 
 
+def former_role(row: TransformationRow | None) -> MortalRole | None:
+    for step in row.undo if row is not None else []:
+        if step.get("column") == "mortal_role" and step.get("before") is not None:
+            return MortalRole(step["before"])
+    return None
+
+
 async def lift_curse(ctx: TickContext, beast_id: int, ledger: Ledger) -> int:
     beast = await ctx.session.get_one(EntityRow, beast_id)
-    ledger.set(beast, "entity_type", EntityType.MORTAL)
-    ledger.set(beast, "stats", former_stats(await once_mortal(ctx, beast.id)))
+    once = await once_mortal(ctx, beast.id)
+    ledger.retype(beast, EntityType.MORTAL)
+    ledger.set(beast, "stats", former_stats(once))
+    role = former_role(once)
+    if role is not None:
+        ledger.set(beast, "mortal_role", role)
     return beast.id

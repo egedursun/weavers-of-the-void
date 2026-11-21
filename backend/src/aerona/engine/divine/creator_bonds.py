@@ -34,6 +34,7 @@ from aerona.engine.gods.worship import creator_worshippers
 from aerona.engine.lore.motifs import people_motifs
 from aerona.engine.mind.book import pressures_of, values_for
 from aerona.engine.mind.memories import remember
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import active_bonds
@@ -112,7 +113,7 @@ async def revelation(ctx: TickContext, creator: CreatorRow, target: EntityRow | 
 
 async def visitation(ctx: TickContext, creator: CreatorRow, target: EntityRow | None) -> EntityRow | None:
     if target is not None and not held(target.id):
-        shift_stat(target, "piety", ctx.rules.creator_bonds.sign_piety, 0)
+        await shift_standing(ctx.session, target, "piety", ctx.rules.creator_bonds.sign_piety, ctx.epoch, default=0)
     return await read_sign(ctx, creator, target, {"love": 8, "awe": 8, "ignorance": -8}, MemoryKind.GOODWILL)
 
 
@@ -135,7 +136,7 @@ async def withdrawal(ctx: TickContext, creator: CreatorRow, target: EntityRow | 
 async def test(ctx: TickContext, creator: CreatorRow, target: EntityRow | None) -> EntityRow | None:
     if target is not None and not held(target.id):
         shift_stat(target, "prosperity", -ctx.rules.creator_bonds.sign_piety, 0)
-        shift_stat(target, "piety", ctx.rules.creator_bonds.sign_piety, 0)
+        await shift_standing(ctx.session, target, "piety", ctx.rules.creator_bonds.sign_piety, ctx.epoch, default=0)
     return await read_sign(ctx, creator, target, {"dread": 5, "awe": 5}, MemoryKind.DREADS)
 
 

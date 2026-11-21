@@ -54,6 +54,7 @@ from aerona.engine.agrarian.book import centrality_of, counted_people, shield_of
 from aerona.engine.agrarian.ruin import mark_ruin
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.body.variants import folk_biology
+from aerona.engine.city_rules.effects import cost_factor, fire_cut, level_cap, required_material, use_barred
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.demography.cohorts import cohorts_of
@@ -201,7 +202,7 @@ async def collect_taxes(ctx: TickContext, town: Town) -> int:
     rate = town.profile.tax_rate / PERCENT * (ctx.rules.urban.free_city_tax_pct / PERCENT if town.profile.free_city else 1.0)
     income = round_half_up(taxable * rate * town.profile.public_order / PERCENT * admin)
     occupation = await occupation_over(ctx, town.entity.id)
-    taken = occupation_tax(ctx, income, occupation)
+    taken = await occupation_tax(ctx, income, occupation)
     if taken and occupation is not None:
         await pay_occupier(ctx, occupation.occupier_entity_id, taken)
     return ledger(ctx, town, TreasuryEntry.TAX, income - taken, "taxes")
@@ -250,7 +251,8 @@ async def permitted(ctx: TickContext, town: Town, wants: list[str]) -> list[str]
         for want, technique in (("aqueduct", Technique.AQUEDUCT), ("sewers", Technique.ARCH), ("district:temple_quarter", Technique.DOME))
         if await lacks(ctx.session, entity, technique)
     }
-    return [want for want in wants if want not in barred and not (want == "walls" and town.infrastructure.walls_level >= walls_cap)]
+    zoned = {want for want in wants if want.startswith("district:") and await use_barred(ctx.session, entity, DistrictKind(want.partition(":")[2]))}
+    return [want for want in wants if want not in barred | zoned and not (want == "walls" and town.infrastructure.walls_level >= walls_cap)]
 
 
 @dataclass(frozen=True)
@@ -392,8 +394,9 @@ async def add_district(
     builder_id: int | None = None,
     design_id: int | None = None,
 ) -> DistrictRow:
+    cap = min(5, await level_cap(ctx.session, town.entity.id) or 5)
     same = next(
-        (item for item in town.districts if item.kind is kind and item.design_id == design_id and item.level < 5 and "level" not in item.locked),
+        (item for item in town.districts if item.kind is kind and item.design_id == design_id and item.level < cap and "level" not in item.locked),
         None,
     )
     if same is not None and (kind is not DistrictKind.SLUMS or same.level < 5):
@@ -458,7 +461,10 @@ async def waterside_of(ctx: TickContext, town: Town, knowledge: KnowledgeMap, gr
 async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war: bool, foreign: int, ground: RegionEnvironmentRow | None = None) -> int:
     table = ctx.rules.urban
     architecture = knowledge.level(town.entity.id, KnowledgeBranch.ARCHITECTURE)
-    material = BuildMaterial.STONE if architecture >= ctx.rules.fire.stone_level else BuildMaterial.TIMBER
+    material = await required_material(ctx.session, town.entity.id) or (
+        BuildMaterial.STONE if architecture >= ctx.rules.fire.stone_level else BuildMaterial.TIMBER
+    )
+    priced = await cost_factor(ctx.session, ctx.rules, town.entity.id)
     built = 0
     waterside = await waterside_of(ctx, town, knowledge, ground)
     works = wanted_works(ctx, town, knowledge, at_war=at_war, foreign=foreign, waterside=waterside) + await quarter_wants(ctx, town)
@@ -475,7 +481,7 @@ async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war
             district_kind = DistrictKind(detail)
             if used >= slots_of(ctx.rules, town) and not any(item.kind is district_kind and item.level < 5 for item in town.districts):
                 continue
-            if spend(ctx, town, table.district_cost, table.district_labour, f"{spoken(district_kind)} district"):
+            if spend(ctx, town, round_half_up(table.district_cost * priced), table.district_labour, f"{spoken(district_kind)} district"):
                 await add_district(ctx, town, district_kind, material=material, builder_id=town.entity.id)
                 built += 1
             continue
@@ -776,7 +782,8 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
     crowd = min(1.0, people / max(1, housing_of(ctx.rules, town)))
     brigade = 1 - town.urban.covered(UrbanService.FIRE) * ctx.rules.prevention.brigade_pct / PERCENT
     burns = await burn_factors(ctx.session, ctx.rules, list(town.districts))
-    town.profile.fire_risk = clamp_int((flammable_share(town, burns) * table.timber_risk + crowd * table.crowding_risk) * brigade, 0, PERCENT)
+    spaced = 1 - await fire_cut(ctx.session, ctx.rules, town.entity.id)
+    town.profile.fire_risk = clamp_int((flammable_share(town, burns) * table.timber_risk + crowd * table.crowding_risk) * brigade * spaced, 0, PERCENT)
     igniting = self_igniting(ctx.rules, town, ground)
     dry = 1.0 if igniting or ground is None or ground.rainfall < table.dry_rainfall else DRY_OFF_PCT / PERCENT
     dry *= 1 + table.ambient_ignition_pct / PERCENT if igniting else 1.0

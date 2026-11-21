@@ -638,6 +638,20 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             (StatField("reach", "Members reached", lambda rules: 0, lambda rules: 100000),),
         ),
         EntityTypeSpec(
+            EntityType.LEAGUE,
+            "League",
+            "Leagues",
+            "league",
+            None,
+            frozenset(),
+            False,
+            (
+                StatField("strength", "Strength"),
+                StatField("cohesion", "Cohesion"),
+                StatField("members", "Member realms", lambda rules: 0, lambda rules: 100000),
+            ),
+        ),
+        EntityTypeSpec(
             EntityType.NATURAL_LAW,
             "Natural law",
             "Natural laws",
@@ -695,6 +709,7 @@ CREATION_BASE_COST_RULES: dict[EntityType, RuleBound] = {
     EntityType.DISH: lambda rules: rules.creation_base_cost.dish,
     EntityType.BUILDING_TYPE: lambda rules: rules.creation_base_cost.building_type,
     EntityType.NETWORK: lambda rules: rules.creation_base_cost.network,
+    EntityType.LEAGUE: lambda rules: rules.creation_base_cost.league,
 }
 
 

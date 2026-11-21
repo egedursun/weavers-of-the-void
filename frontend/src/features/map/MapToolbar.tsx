@@ -48,6 +48,9 @@ import {
   Wheat,
   Wifi,
   Zap,
+  Radiation,
+  TreePine,
+  Waves,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -124,6 +127,10 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   dress: Shirt,
   organisations: Building2,
   money: Banknote,
+  remnants: Radiation,
+  waves: Waves,
+  groups: PawPrint,
+  protected: TreePine,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {

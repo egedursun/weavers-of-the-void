@@ -5,6 +5,7 @@ from aerona.catalog.crimes import CRIME_PENALTY_DEFAULTS, CRIMES, PENALTY_WORDS,
 from aerona.core.grammar import fill
 from aerona.core.total import total
 from aerona.domain.enums.justice import TrialKind
+from aerona.domain.enums.labour import LegalStanding
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import DebtRemedy, DecisionRule, GenderRule, GovernmentKind, LawKind, SuccessionRule
 from aerona.domain.enums.unions import PluralSide, UnionForm
@@ -88,7 +89,12 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
             "estates_rights": Param(True),
         },
         LawKind.CUSTOM: {},
-        LawKind.LABOUR_LAW: {"max_hours": Param(60, 20, 100), "child_labour": Param(False), "unions": Param(True)},
+        LawKind.LABOUR_LAW: {
+            "max_hours": Param(60, 20, 100),
+            "child_labour": Param(False),
+            "unions": Param(True),
+            "bodies": pick(*(item.value for item in LegalStanding), default=LegalStanding.TOLERATED.value),
+        },
         LawKind.ENVIRONMENT_LAW: {"strictness": Param(40)},
         LawKind.DATA_PRIVACY: {"strictness": Param(50)},
         LawKind.CLOSED_SEASON: {},
@@ -127,6 +133,15 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
         LawKind.CLONE_STATUS: {"status": pick("property", "ward", "servant", "citizen", "sovereign", default="citizen")},
         LawKind.GERMLINE_LAW: {"level": pick("banned", "licensed", "free", default="licensed")},
         LawKind.DESIGNED_STATUS: {"status": pick("property", "ward", "servant", "citizen", "sovereign", default="citizen")},
+        LawKind.COMPETITION_LAW: {
+            "merger_review": Param(50, 0, 100),
+            "cartel_ban": Param(50, 0, 100),
+            "monopoly_break": Param(0, 0, 100),
+            "price_cap": Param(0, 0, 100),
+            "licence_limit": Param(0, 0, 100),
+            "insider_ban": Param(0, 0, 100),
+            "enforcer": pick("high_judge", "treasurer", "chancellor", "minister", "speaker", default="high_judge"),
+        },
     },
 )
 
@@ -192,6 +207,7 @@ LAW_TITLES = MappingProxyType(
         LawKind.CLONE_STATUS: "the Standing of Clones",
         LawKind.GERMLINE_LAW: "the Law of the Line",
         LawKind.DESIGNED_STATUS: "the Standing of Designed Peoples",
+        LawKind.COMPETITION_LAW: "the Law of Fair Dealing",
     }
 )
 
@@ -242,7 +258,7 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.FRANCHISE: "The vote belongs to the {voters}.",
         LawKind.CONSTITUTION: "The realm is {government:an} that decides by {decision_rule}; the vote belongs to the {voters}, and {estates}.",
         LawKind.CUSTOM: "An old custom without a written rule.",
-        LawKind.LABOUR_LAW: "Work is capped at {max_hours} hours a week; child labour: {child_labour}; unions: {unions}.",
+        LawKind.LABOUR_LAW: "Work is capped at {max_hours} hours a week; child labour: {child_labour}; unions: {unions}; worker bodies stand {bodies}.",
         LawKind.ENVIRONMENT_LAW: "Works must hold back their pollution with strictness {strictness}.",
         LawKind.DATA_PRIVACY: "Records of the people are shielded from prying with strictness {strictness}.",
         LawKind.CLOSED_SEASON: "Fishing and hunting stop for a season so the stock can return.",
@@ -270,6 +286,10 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.CLONE_STATUS: "Clones stand as {status}.",
         LawKind.GERMLINE_LAW: "Changing what passes to descendants is {level}.",
         LawKind.DESIGNED_STATUS: "Designed peoples stand as {status}.",
+        LawKind.COMPETITION_LAW: (
+            "The {enforcer} reviews mergers ({merger_review}), pursues cartels ({cartel_ban}), breaks single sellers ({monopoly_break}), "
+            "caps prices ({price_cap}), limits licences ({licence_limit}) and pursues trading on secrets ({insider_ban})."
+        ),
     }
 )
 

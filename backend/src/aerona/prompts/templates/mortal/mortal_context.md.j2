@@ -101,6 +101,27 @@ YOUR WORK: {{ stores.job }}{% endif %}{% endif %}
 {% endif %}{% if home and home.commerce %}SHOPS, TRADE TIERS, PROMOTIONS AND LEASES: {{ home.commerce | join('; ') }}
 {% endif %}{% if home and home.public_works %}PUBLIC WORKS AND STATE ENTERPRISES: {{ home.public_works | join('; ') }}
 {% endif %}{% if home and home.media %}OUTLETS AND WHAT THEY TELL: {{ home.media | join('; ') }}
+{% endif %}{% if home and home.market_structure %}WHO SELLS IN YOUR MARKET, WHAT KEEPS NEWCOMERS OUT, COMPACTS AND PRICE WARS: {{ home.market_structure | join('; ') }}
+{% endif %}{% if home and home.labour %}WORKER BODIES, LABOUR CONTRACTS AND DISPUTES HERE: {{ home.labour | join('; ') }}
+{% endif %}{% if home and home.money_policy %}WHO ISSUES THE MONEY HERE AND HOW: {{ home.money_policy | join('; ') }}
+{% endif %}{% if home and home.securities %}EXCHANGES HERE AND THE CLAIMS YOU HOLD: {{ home.securities | join('; ') }}
+{% endif %}{% if home and home.leagues %}THE LEAGUES YOUR REALM STANDS IN: {{ home.leagues | join('; ') }}
+{% endif %}{% if home and home.offices %}THE OFFICES YOU HOLD AND THOSE YOU LEFT: {{ home.offices | join('; ') }}
+{% endif %}{% if home and home.votes %}VOTES OF THE PEOPLE HERE: {{ home.votes | join('; ') }}
+{% endif %}{% if home and home.reckoning %}RECKONINGS WITH A FALLEN REGIME: {{ home.reckoning | join('; ') }}
+{% endif %}{% if home and home.leader_cult %}CULTS OF LIVING LEADERS: {{ home.leader_cult | join('; ') }}
+{% endif %}{% if home and home.restoration %}MOVEMENTS TO RAISE A FALLEN REALM AGAIN: {{ home.restoration | join('; ') }}
+{% endif %}{% if home and home.occupation %}OCCUPATIONS: {{ home.occupation | join('; ') }}
+{% endif %}{% if home and home.mass_weapons %}WEAPONS OF MASS HARM AND WHAT WAR LEFT: {{ home.mass_weapons | join('; ') }}
+{% endif %}{% if home and home.interworld %}BETWEEN WORLDS: {{ home.interworld | join('; ') }}
+{% endif %}{% if home and home.city_rules %}RULES AND SERVICES OF YOUR TOWN: {{ home.city_rules | join('; ') }}
+{% endif %}{% if home and home.protected_nature %}PROTECTED LAND AND LIFE: {{ home.protected_nature | join('; ') }}
+{% endif %}{% if home and home.mood %}MOOD: {{ home.mood | join('; ') }}
+{% endif %}{% if home and home.interpretation %}WORDS CARRIED BETWEEN TONGUES: {{ home.interpretation | join('; ') }}
+{% endif %}{% if home and home.disasters %}DISASTERS: {{ home.disasters | join('; ') }}
+{% endif %}{% if home and home.wilds %}CREATURES OF THE LAND: {{ home.wilds | join('; ') }}
+{% endif %}{% if home and home.faith %}HOW YOUR FAITH HOLDS THE DIVINE: {{ home.faith | join('; ') }}
+{% endif %}{% if home and home.governance %}THE ORGANISATIONS YOU BELONG TO OR OWN AND HOW THEY ARE RULED: {{ home.governance | join('; ') }}
 {% endif %}{% if home and home.oratory %}HUMOUR AND SPEECH: {{ home.oratory | join('; ') }}
 {% endif %}{% if home and home.folk_knowledge %}WHAT YOUR PEOPLE KNOW: {{ home.folk_knowledge | join('; ') }}
 {% endif %}{% if home and home.endowments %}ENDOWMENTS: {{ home.endowments | join('; ') }}

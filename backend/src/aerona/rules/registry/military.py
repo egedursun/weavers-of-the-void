@@ -232,6 +232,25 @@ class OccupationRules:
     tax_pct: int = rule(50, 0, 100, W, "Share of an occupied land's taxes taken by the occupier at full control (%)")
     revolt_resistance: int = rule(70, 0, 100, W, "Resistance at which an occupied land may rise in revolt")
     revolt_chance: int = rule(15, 0, 100, W, "An occupied land at revolt resistance rises in an epoch (%)")
+    collaborator_cost_cut_pct: int = rule(20, 0, 100, W, "Share of the cost of rule each collaborator saves the occupier (%)")
+    measure_partisan_cut_pct: int = rule(30, 0, 100, W, "Share of partisan raids a measure at full strength prevents in its epoch (%)")
+    measure_grievance: int = rule(20, 0, 100, W, "Resistance a harsh measure at full strength adds")
+    exposure_kill_pct: int = rule(15, 0, 100, W, "Chance in an epoch that a fully exposed collaborator is killed by partisans (%)")
+    extraction_cap_pct: int = rule(50, 0, 100, W, "Highest share of an occupied land's taxes, levies or labour an occupier may take (%)")
+    rule_upkeep: int = rule(20, 0, 1000, W, "Treasury an occupier spends in an epoch on ruling one occupied land under military rule")
+    collaborator_intel_pct: int = rule(10, 0, 100, W, "Share of partisan raids each informing or policing collaborator prevents (%)")
+    exposure_gain: int = rule(10, 0, 100, W, "Exposure a collaborator gains in an epoch at full resistance")
+    measure_decay: int = rule(25, 0, 100, W, "Strength a measure loses in an epoch")
+    settle_per_epoch: int = rule(
+        200, 0, 100000, W, "Settlers of the occupier's people who move into an annexed or civilly ruled land in an epoch at full control"
+    )
+    annex_control: int = rule(80, 0, 100, W, "Control at which a land under annexation rule is annexed")
+    deport_pct: int = rule(5, 0, 100, W, "Share of an occupied town a deportation at full strength carries off (%)")
+    requisition_pct: int = rule(20, 0, 100, W, "Share of an occupied town's treasury a requisition at full strength takes (%)")
+    recruit_chance_pct: int = rule(30, 0, 100, W, "Chance in an epoch that an occupier at full control wins a local collaborator (%)")
+    measure_chance_pct: int = rule(30, 0, 100, W, "Chance in an epoch that an occupier facing full resistance imposes a measure (%)")
+    labour_prosperity: int = rule(10, 0, 100, W, "Prosperity an occupied town loses in an epoch to forced labour at full rate")
+    rule_shift_chance_pct: int = rule(20, 0, 100, W, "Chance in an epoch that an occupier with enough control moves from military to civil rule (%)")
 
 
 @dataclass(frozen=True)

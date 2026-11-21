@@ -13,6 +13,7 @@ export const LINE_KINDS = [
   'hostility',
   'rule',
   'hunt',
+  'conurbation',
   'route',
   'route_busy',
   'route_blocked',
@@ -97,6 +98,10 @@ export const LINE_STYLE: Record<LineKind, LineStyle> = {
   hunt: {
     main: { color: red, width: 1.1, alpha: 0.9, dash: [1, 3] },
     arrow: true,
+  },
+  conurbation: {
+    casing: { color: halo, width: 5, alpha: 0.35 },
+    main: { color: gold, width: 2.4, alpha: 0.9 },
   },
   route: {
     casing: { color: halo, width: 4, alpha: 0.4 },

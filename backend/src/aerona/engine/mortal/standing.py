@@ -1,12 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ThoughtKind, TraitEffect
 from aerona.engine.mind.book import effect_of
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.stats import MORTAL_STANDING, has_stat, shift_stat, stat
 from aerona.rules.registry import Rules
 
 
@@ -45,3 +48,24 @@ async def add_stress(session: AsyncSession, mortal_id: int, amount: float, epoch
     if amount > 0:
         amount *= max(0.0, 1 - await effect_of(session, mortal_id, TraitEffect.RESILIENCE) / PERCENT)
     return await shift(session, mortal_id, "stress", amount, epoch)
+
+
+def in_profile(holder: EntityRow, key: str) -> str | None:
+    column = MORTAL_STANDING.get(key)
+    return column if holder.entity_type is EntityType.MORTAL and column is not None and not has_stat(holder, key) else None
+
+
+async def shift_standing(session: AsyncSession, holder: EntityRow, key: str, delta: float, epoch: int, *, default: int | None = None) -> None:
+    column = in_profile(holder, key)
+    if column is None:
+        shift_stat(holder, key, delta, default)
+    else:
+        await shift(session, holder.id, column, delta, epoch)
+
+
+async def standing_of(session: AsyncSession, holder: EntityRow, key: str) -> int | None:
+    column = in_profile(holder, key)
+    if column is None:
+        return stat(holder, key)
+    profile = await session.get(MortalProfileRow, holder.id)
+    return int(getattr(profile, column)) if profile is not None else 0

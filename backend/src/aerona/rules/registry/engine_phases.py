@@ -557,6 +557,181 @@ class EnginePhasesRules:
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: public works advance, finish, decay and fail; state enterprises earn, skim and are sold"
     )
     media: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: outlets reach, earn, report, sway opinion, are exposed, censored and found again")
+    governance: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: organisations choose heads, vote, form cliques, split, merge, research and go through insolvency",
+    )
+    competition: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: each market's sellers and barriers are measured, cartels hold or break, price wars run and the law reviews and breaks",
+    )
+    divine_conceptions: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: faiths conceive the divine, drift with their theologians, are tested by the acts of gods they doubt and split",
+    )
+    creature_groups: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: packs, herds, colonies, hives, troops and flocks hold ground, raid, contest their leaders, fight rivals and move",
+    )
+    person_honours: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: realms, faiths and orders honour great deeds, sell honours to favourites, pay pensions and pass hereditary honours on",
+    )
+    fertility_means: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: peoples find and pass on means to prevent, seek or end conception, follow their stance and policy, and hidden use comes to light",
+    )
+    agentless_conditions: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: bodies wear by age, diet, fouling, heredity, strain and old wounds, and their conditions worsen or ease",
+    )
+    grave_goods: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: robbers try the graves of the dead, their guards and curses answer, and kin grieve what is taken",
+    )
+    interpretation: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: errors in what interpreters carried between tongues come to light, mend misread clauses and leave grievance",
+    )
+    feeling_spread: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: strong feelings pass along bonds and through places and households, feed crowds and fade",
+    )
+    kin_dynamics: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: heads of houses favour children, kin turn rivals, are cast out and mended, step kin join and elders hold sway",
+    )
+    protected_nature: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: protected lands recover and are poached, protected species are bred, guarded and brought back, and conservation movements gather",
+    )
+    city_rules: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: towns set and evade land use rules, run and lose services, rebuild to plan, and grow together into conurbations or split apart",
+    )
+    interworld: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: campaigns cross between worlds, fight for orbits, land and are supplied; orbit holders bombard, blockade and cut signals; peoples move between worlds",
+    )
+    mass_weapons: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: weapons of mass harm are sought, built and tested, bluffs are exposed, arsenals are bound by treaty and the remnants of war harm, fade and are cleared",
+    )
+    occupation_regimes: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: occupiers govern under a rule, win collaborators, impose measures, annex, and lose their regimes to liberation",
+    )
+    restoration: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: memories of fallen realms turn into movements that rise and raise the old realm again or fail",
+    )
+    leader_cults: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: cults of living leaders are raised, cost, lend legitimacy, punish critics and pass on, fade or become faiths",
+    )
+    reckoning: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: new regimes reckon with the servants of the old by tribunals, inquiries, bars, amnesties and repair",
+    )
+    referendums: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: votes of the people are called by petitions and assemblies, campaigned, held, found out and carried or ignored",
+    )
+    departures: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: holders weigh leaving office, abdicate, retire, resign or withdraw, draw pensions, rally others and return",
+    )
+    leagues: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: leagues of realms collect dues, vote, admit, sanction, expel, rule, call to arms, unite their money and federate",
+    )
+    securities: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: exchanges open, claims are listed, prices move by results, rates, mood and herding, bubbles form and crash, bonds pay or default",
+    )
+    money_policy: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: monetary authorities set their rates, issue for the state, hold or lose their pegs and keep their reserves",
+    )
+    labour_relations: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: worker bodies gather members and funds, bargain contracts, strike or are locked out, spread and own works",
+    )
     speech: int = rule(
         1,
         0,

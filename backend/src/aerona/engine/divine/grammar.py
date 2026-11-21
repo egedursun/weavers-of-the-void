@@ -29,6 +29,7 @@ from aerona.engine.divine.gods import domains_of, faithful_communities, living_g
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.mind.book import pressures_of, stored_values, write_pressures, write_values
 from aerona.engine.mind.memories import remember
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.stats import shift_stat
@@ -140,7 +141,7 @@ async def on_memory(ctx: TickContext, target: EntityRow, _key: str | None, amoun
 
 
 async def on_incident(ctx: TickContext, target: EntityRow, _key: str | None, amount: int, holder: int) -> None:
-    shift_stat(target, "piety", abs(amount) // 2, 0)
+    await shift_standing(ctx.session, target, "piety", abs(amount) // 2, ctx.epoch, default=0)
     await record(ctx, "divine.power_incident", roles={IncidentRole.SUBJECT: [target.id, holder]})
 
 

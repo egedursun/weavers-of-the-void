@@ -427,6 +427,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.galaxy_clusters",
     "table.geasa",
     "table.goods_flows",
+    "table.grave_goods",
     "table.griefs",
     "table.holder_levels",
     "table.house_members",

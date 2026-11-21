@@ -72,6 +72,7 @@ import {
   VolumeX,
   Vote,
   WandSparkles,
+  Radiation,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -239,6 +240,7 @@ export const LAW_KINDS: Record<string, string> = {
   mind_status: 'Standing of made minds',
   copy_law: 'Copying of minds',
   copy_succession: 'Succession among copies',
+  competition_law: 'Fair dealing',
   erasure_law: 'Ending a made mind',
   augment_law: 'Augmentation',
   network_law: 'Networks',
@@ -370,7 +372,7 @@ export const LAW_PARAMS: Record<string, string> = {
   erasure: 'Ending a mind',
   machine_seizure: 'Seizing a made thing',
   impersonation: 'Passing as another by a copy',
-  mind_compulsion: 'Bending a mind by a power',
+  mind_compulsion: 'Compelling a mind by a power',
   strictness: 'Strictness',
   strength: 'Strength',
   voters: 'Who votes',
@@ -380,6 +382,14 @@ export const LAW_PARAMS: Record<string, string> = {
   max_hours: 'Most hours of work a week',
   child_labour: 'Child labour',
   unions: 'Unions',
+  bodies: 'Worker bodies stand',
+  enforcer: 'Enforced by',
+  merger_review: 'Review of mergers',
+  cartel_ban: 'Pursuit of cartels',
+  monopoly_break: 'Breaking single sellers',
+  price_cap: 'Price caps',
+  licence_limit: 'Limits on licences',
+  insider_ban: 'Pursuit of trading on secrets',
   term: 'Protection (epochs)',
   claims: 'Claims beyond the world',
 }
@@ -474,6 +484,12 @@ export const TREATY_KINDS: Record<string, Named & { plural: string }> = {
     label: 'Naval treaty',
     plural: 'Naval treaties',
     icon: Anchor,
+    tone: 'info',
+  },
+  arms_limit: {
+    label: 'Arms treaty',
+    plural: 'Arms treaties',
+    icon: Radiation,
     tone: 'info',
   },
 }
@@ -578,6 +594,11 @@ export const CLAUSES: Record<string, Named> = {
   no_designed_disease: {
     label: 'No diseases made by design',
     icon: Biohazard,
+    tone: 'info',
+  },
+  mass_weapon_limit: {
+    label: 'Limit on weapons of mass harm',
+    icon: Radiation,
     tone: 'info',
   },
 }

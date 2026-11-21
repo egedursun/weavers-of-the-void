@@ -40,6 +40,7 @@ HARM_CAUSES: Mapping[HarmCause, HarmCauseSpec] = total(
         H.ESCAPE: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.BLUNT, "escape_blunt"), (D.CUT, "escape_cut"))),
         H.SACRIFICE: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "sacrifice_cut"), (D.MAGIC, "sacrifice_magic"))),
         H.AGE: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.BLUNT, "age_blunt"),)),
+        H.BODY: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.BLUNT, "age_blunt"),)),
         H.PLAYER: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "player_cut"), (D.BLUNT, "player_blunt"), (D.PIERCE, "player_pierce"))),
         H.EXPOSURE: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.COLD, "exposure_cold"), (D.FIRE, "exposure_heat"))),
         H.RITUAL: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "ritual_cut"), (D.FIRE, "ritual_fire"))),

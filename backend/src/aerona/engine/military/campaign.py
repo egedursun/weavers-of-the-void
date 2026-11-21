@@ -36,6 +36,7 @@ from aerona.engine.military.support import reluctance, support_of
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.split import facet_weight, facets_for
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -423,7 +424,7 @@ async def bring_home_loot(ctx: TickContext, owner: EntityRow | None, profile: Ar
     if owner is None or profile.loot <= 0:
         return 0
     brought = profile.loot
-    shift_stat(owner, "wealth", brought)
+    await shift_standing(ctx.session, owner, "wealth", brought, ctx.epoch)
     profile.loot = 0
     return brought
 

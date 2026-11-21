@@ -39,6 +39,7 @@ from aerona.engine.demography.cohorts import cohorts_of, seed
 from aerona.engine.demography.prices import cheapest, dearest, local_prices
 from aerona.engine.disease.harm import community_targets, sick_levy, sick_work
 from aerona.engine.economy.extraction import KIND_JOBS, extraction_kind
+from aerona.engine.labour.stoppage import stoppage
 from aerona.engine.polity.law_effects import feudal_levy
 from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -344,12 +345,13 @@ async def allocate(
     hold(plan, found)
     await corvee_unrest(ctx, community, share)
     sick = illness_factor(rules, region.disease_load if region is not None else 0, wet_cold)
+    stopped = await stoppage(ctx.session, rules.labour.strike_output_loss_pct, community.id)
     for job in Job:
         labour = found.get(job)
         workers = labour.workers if labour is not None and labour.held else max(0, plan.workers.get(job, 0))
         planned = output.get(job, 0.0)
         base = customary.get(job, 0)
-        pct = clamp_int(PERCENT * sick * (planned / base if base and planned else 1.0), 0, 1000)
+        pct = clamp_int(PERCENT * sick * stopped.get(job, 1.0) * (planned / base if base and planned else 1.0), 0, 1000)
         if labour is None:
             if workers <= 0:
                 continue

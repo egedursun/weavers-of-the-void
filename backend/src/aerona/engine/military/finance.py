@@ -15,9 +15,10 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin, wealth_points
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import headcount, shift_stat, stat, stat_or
+from aerona.engine.primitives.stats import headcount, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
@@ -79,7 +80,7 @@ async def war_credit(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow
                     war_id=war.id if war is not None else None,
                 )
             )
-            shift_stat(lender, "wealth", -wealth_points(ctx.rules, principal // 2))
+            await shift_standing(ctx.session, lender, "wealth", -wealth_points(ctx.rules, principal // 2), ctx.epoch)
             realm.war_chest += principal
             await record(
                 ctx,

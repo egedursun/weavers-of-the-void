@@ -2,7 +2,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
+from aerona.core.total import partial, total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
@@ -15,6 +15,7 @@ from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.quests import QuestAim, QuestReward, QuestScale, QuestTargetKind
 from aerona.engine.context import TickContext
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import retire
@@ -135,6 +136,20 @@ CLAIMS: Mapping[QuestAim, Callable[[TickContext, Claim], Awaitable[ClaimFacts]]]
 )
 
 
+REWARD_KEYS = partial(
+    QuestReward,
+    {
+        QuestReward.RENOWN: "renown",
+        QuestReward.STANDING: "honour",
+        QuestReward.KNOWLEDGE: "intellect",
+        QuestReward.ITEM: "wealth",
+        QuestReward.CURE: "hp",
+        QuestReward.PEACE: "loyalty",
+    },
+    without=(QuestReward.POWER, QuestReward.OFFICE),
+)
+
+
 SCALE_PCT: Mapping[QuestScale, Callable[[TickContext], int]] = total(
     QuestScale,
     {
@@ -144,24 +159,16 @@ SCALE_PCT: Mapping[QuestScale, Callable[[TickContext], int]] = total(
 )
 
 
-def gained(hero: EntityRow, key: str, amount: int) -> None:
+async def gained(ctx: TickContext, hero: EntityRow, key: str, amount: int) -> None:
     if not held(hero.id):
-        shift_stat(hero, key, amount, 0)
+        await shift_standing(ctx.session, hero, key, amount, ctx.epoch, default=0)
 
 
 async def reward_hero(ctx: TickContext, hero: EntityRow, reward: QuestReward, scale: QuestScale) -> None:
     step = ctx.rules.heroes.quest_charisma_gain * SCALE_PCT[scale](ctx) // PERCENT
-    if reward is QuestReward.RENOWN or reward is QuestReward.STANDING:
-        gained(hero, "charisma", step)
-    elif reward is QuestReward.POWER:
+    if reward is QuestReward.POWER:
         hero.power_level = clamp_int(hero.power_level + 1, 0, 12)
-    elif reward is QuestReward.KNOWLEDGE:
-        gained(hero, "intellect", step)
-    elif reward is QuestReward.ITEM:
-        gained(hero, "wealth", step)
     elif reward is QuestReward.OFFICE:
         hero.importance = (hero.importance or 0) + 1
-    elif reward is QuestReward.CURE:
-        gained(hero, "hp", step)
     else:
-        gained(hero, "loyalty", step)
+        await gained(ctx, hero, REWARD_KEYS[reward], step)

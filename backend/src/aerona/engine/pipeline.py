@@ -19,6 +19,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases import (
     affairs,
     afterlife,
+    agentless_conditions,
     ages,
     agrarian,
     arcana,
@@ -31,6 +32,7 @@ from aerona.engine.phases import (
     body_systems,
     casualties,
     childhood,
+    city_rules,
     civilization,
     climate,
     climes,
@@ -38,12 +40,14 @@ from aerona.engine.phases import (
     commerce,
     commerce_practice,
     communication,
+    competition,
     cosmic_economy,
     cosmography,
     cosmos_upkeep,
     couplings,
     crafts,
     creator_mood,
+    creature_groups,
     creatures,
     culture_exchange,
     culture_kinds,
@@ -54,11 +58,13 @@ from aerona.engine.phases import (
     dark_ages,
     death_work,
     demography,
+    departures,
     dialects,
     diplomacy,
     disasters,
     disease_agents,
     divine,
+    divine_conceptions,
     dominion,
     doom,
     ecology,
@@ -73,6 +79,8 @@ from aerona.engine.phases import (
     facets,
     factions,
     faith,
+    feeling_spread,
+    fertility_means,
     finance,
     folk_knowledge,
     folkways,
@@ -86,6 +94,8 @@ from aerona.engine.phases import (
     goals,
     god_death,
     god_power,
+    governance,
+    grave_goods,
     grudges,
     happenings,
     heroes,
@@ -97,15 +107,21 @@ from aerona.engine.phases import (
     industry,
     institutions,
     interconnect,
+    interpretation,
+    interworld,
     intimacy,
     intrigue,
     justice,
     kin_duties,
+    kin_dynamics,
     kinds,
     knowledge_levels,
+    labour_relations,
     language_contact,
     language_death,
     law_depth,
+    leader_cults,
+    leagues,
     life_cycles,
     life_seed,
     lifecycle_ends,
@@ -115,12 +131,14 @@ from aerona.engine.phases import (
     made_kinds,
     magic,
     market,
+    mass_weapons,
     means,
     mechanics_assignment,
     media,
     migration,
     mind,
     minds,
+    money_policy,
     monsters,
     mortal_life,
     mortals,
@@ -128,9 +146,11 @@ from aerona.engine.phases import (
     mythic,
     native_faith,
     nature,
+    occupation_regimes,
     operations,
     orders,
     pantheon,
+    person_honours,
     places,
     plant_bodies,
     population,
@@ -140,10 +160,13 @@ from aerona.engine.phases import (
     prisoners,
     production,
     prosperity,
+    protected_nature,
     public_works,
     realms,
+    reckoning,
     record_keepers,
     recording,
+    referendums,
     refugees,
     regimes,
     regions,
@@ -153,10 +176,12 @@ from aerona.engine.phases import (
     renown,
     reputation,
     resources,
+    restoration,
     ruins,
     rumours,
     sacred,
     seafaring,
+    securities,
     settlement_life,
     settlements,
     sky,
@@ -229,6 +254,31 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + statecraft.PHASES
     + affairs.PHASES
     + estates.PHASES
+    + governance.PHASES
+    + labour_relations.PHASES
+    + money_policy.PHASES
+    + securities.PHASES
+    + leagues.PHASES
+    + departures.PHASES
+    + referendums.PHASES
+    + reckoning.PHASES
+    + leader_cults.PHASES
+    + restoration.PHASES
+    + occupation_regimes.PHASES
+    + mass_weapons.PHASES
+    + interworld.PHASES
+    + city_rules.PHASES
+    + protected_nature.PHASES
+    + kin_dynamics.PHASES
+    + feeling_spread.PHASES
+    + interpretation.PHASES
+    + grave_goods.PHASES
+    + agentless_conditions.PHASES
+    + fertility_means.PHASES
+    + person_honours.PHASES
+    + creature_groups.PHASES
+    + divine_conceptions.PHASES
+    + competition.PHASES
     + finance.PHASES
     + casualties.PHASES
     + ecology.PHASES
@@ -415,6 +465,26 @@ SUB_ENGINE_STAGE = stage(
     "nutrition",
     "foresight",
     "diplomacy",
+    "leagues",
+    "departures",
+    "referendums",
+    "reckoning",
+    "leader_cults",
+    "restoration",
+    "occupation_regimes",
+    "mass_weapons",
+    "interworld",
+    "city_rules",
+    "protected_nature",
+    "kin_dynamics",
+    "feeling_spread",
+    "interpretation",
+    "grave_goods",
+    "agentless_conditions",
+    "fertility_means",
+    "person_honours",
+    "creature_groups",
+    "divine_conceptions",
     "correspondence",
     "war_upkeep",
     "tribute",
@@ -614,6 +684,9 @@ SOCIETY_ENGINE_STAGE = stage(
     "putting_out",
     "refining",
     "market_manipulation",
+    "money_policy",
+    "securities",
+    "competition",
     "markets",
     "abundance",
     "trade_policy",
@@ -667,6 +740,8 @@ SOCIETY_ENGINE_STAGE = stage(
     "spontaneous_births",
     "factions",
     "estates",
+    "governance",
+    "labour_relations",
     "ideology_cycles",
     "engine_works",
     "splendor_growth",

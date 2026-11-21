@@ -210,6 +210,9 @@ function cosmos(overrides: Partial<CosmosData> = {}): CosmosData {
     world_types: [],
     places: [],
     communities: [],
+    campaigns: [],
+    migrations: [],
+    orbits: [],
     ...overrides,
   }
 }

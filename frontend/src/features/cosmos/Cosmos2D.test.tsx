@@ -117,6 +117,9 @@ const DATA: CosmosData = {
   world_types: [],
   places: [],
   communities: [],
+  campaigns: [],
+  migrations: [],
+  orbits: [],
 }
 
 describe('Cosmos2D', () => {
@@ -152,6 +155,58 @@ describe('Cosmos2D', () => {
       .toHaveAttribute('aria-pressed', 'true')
     expect(document.querySelector('path title')?.textContent).toContain(
       'a hidden route the mortals do not know'
+    )
+  })
+
+  it('draws campaigns and migrations between worlds and rings a held orbit', async () => {
+    await render(
+      <Cosmos2D
+        index={indexCosmos({
+          ...DATA,
+          campaigns: [
+            {
+              id: 3,
+              attacker_entity_id: 9,
+              attacker_name: 'The Far Crown',
+              from_world_id: 1,
+              target_world_id: 2,
+              stage: 'transit',
+              forces: 1200,
+            },
+          ],
+          migrations: [
+            {
+              id: 4,
+              community_entity_id: 8,
+              from_world_id: 2,
+              to_world_id: 1,
+              cause: 'land_hunger',
+              reception: 'quota',
+              moved: 300,
+            },
+          ],
+          orbits: [{ world_id: 2, holder_entity_id: 9, strength: 70 }],
+        })}
+        selectedWorldId={undefined}
+        selectedStarId={undefined}
+        onSelectWorld={vi.fn()}
+        onSelectStar={vi.fn()}
+        onDescend={vi.fn()}
+      />
+    )
+    const titles = [...document.querySelectorAll('title')].map(
+      (node) => node.textContent ?? ''
+    )
+    expect(
+      titles.some((text) =>
+        text.includes('A campaign of The Far Crown between worlds · Crossing')
+      )
+    ).toBe(true)
+    expect(
+      titles.some((text) => text.includes('Hunger for land · let in by quota'))
+    ).toBe(true)
+    expect(titles.some((text) => text.includes('held at strength 70'))).toBe(
+      true
     )
   })
 

@@ -25,6 +25,8 @@ POPULATION_INSTRUMENT = total(
         PopulationInstrument.FAITH_TEACHING: Defined(
             "Faith teaching", checked_by=("engine.numbers.book.birth_shift", "engine.numbers.policies.keep_policy"), used_by=()
         ),
-        PopulationInstrument.MADE_BIRTH: Defined("Made birth", checked_by=("engine.numbers.policies.apply_instrument",), used_by=()),
+        PopulationInstrument.MADE_BIRTH: Defined(
+            "Made birth", checked_by=("engine.fertility_means.tend.made_birth_policies", "engine.numbers.policies.apply_instrument"), used_by=()
+        ),
     },
 )

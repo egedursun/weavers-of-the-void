@@ -18,6 +18,7 @@ from aerona.domain.enums.networks import OutageCause
 from aerona.domain.enums.society import Commodity
 from aerona.engine.context import TickContext
 from aerona.engine.lore.civics import holders_know
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import shift_stat
@@ -71,7 +72,7 @@ async def steal_supplies(ctx: TickContext, spymaster: EntityRow, target: EntityR
     taken = round_half_up(await food_of(ctx, target) * ctx.rules.espionage.theft_pct / PERCENT)
     await shift_stock(ctx.session, ctx.rules, target.id, Commodity.FOOD, -taken, epoch=ctx.epoch, flow=GoodsFlow.LOSS)
     if not held(spymaster.id):
-        shift_stat(spymaster, "wealth", ctx.rules.espionage.spy_sabotage_damage, 0)
+        await shift_standing(ctx.session, spymaster, "wealth", ctx.rules.espionage.spy_sabotage_damage, ctx.epoch, default=0)
 
 
 async def incite_mutiny(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
@@ -84,7 +85,7 @@ async def incite_mutiny(ctx: TickContext, _spymaster: EntityRow, target: EntityR
 
 
 async def disrupt_rites(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
-    shift_stat(target, "piety", -ctx.rules.espionage.rite_piety, 0)
+    await shift_standing(ctx.session, target, "piety", -ctx.rules.espionage.rite_piety, ctx.epoch, default=0)
 
 
 async def poison_sources(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
@@ -96,7 +97,7 @@ async def poison_sources(ctx: TickContext, _spymaster: EntityRow, target: Entity
 async def seize_machines(ctx: TickContext, spymaster: EntityRow, target: EntityRow) -> None:
     shift_stat(target, "prosperity", -ctx.rules.espionage.spy_sabotage_damage, 0)
     if not held(spymaster.id):
-        shift_stat(spymaster, "wealth", ctx.rules.espionage.spy_sabotage_damage // 2, 0)
+        await shift_standing(ctx.session, spymaster, "wealth", ctx.rules.espionage.spy_sabotage_damage // 2, ctx.epoch, default=0)
 
 
 async def has_networks(ctx: TickContext, target: EntityRow) -> bool:

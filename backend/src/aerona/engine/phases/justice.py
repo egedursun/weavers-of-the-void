@@ -6,6 +6,7 @@ from aerona.engine.polity.trials import TrialTally, tend_cases
 
 
 @reads(
+    "faction.sway",
     "law.rigidity",
     "table.council_seats",
     "table.creator",
@@ -42,6 +43,7 @@ from aerona.engine.polity.trials import TrialTally, tend_cases
     "table.worlds",
 )
 @writes(
+    "faction.sway",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
@@ -81,6 +83,7 @@ async def legislature(ctx: TickContext) -> None:
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.honours_held",
     "table.incident_participants",
     "table.incidents",
     "table.jurisdictions",
@@ -95,6 +98,7 @@ async def legislature(ctx: TickContext) -> None:
     "table.sanctuaries",
     "table.skills",
     "table.sons",
+    "table.speaker_cohorts",
     "table.stars",
     "table.traits",
     "table.worlds",

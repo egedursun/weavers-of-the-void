@@ -17,6 +17,9 @@ KIND_LOOPS = {
     "L116": BalanceLoop.HOUSEWORK_BURDEN,
     "L118": BalanceLoop.CURE_RESISTANCE,
     "L120": BalanceLoop.WEATHER_GRIEVANCE,
+    "L121": BalanceLoop.COLLECTIVISATION_REVERSAL,
+    "L123": BalanceLoop.CARTEL_CHEATING,
+    "L125": BalanceLoop.MUTUAL_DETERRENCE,
 }
 
 

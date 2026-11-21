@@ -135,6 +135,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
+    "table.power_bases",
     "table.public_opinion",
     "table.regimes",
     "table.region_pollution",

@@ -147,7 +147,7 @@ async def pidgins(ctx: TickContext) -> None:
     "table.stars",
     "table.worlds",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents", "table.language_policies")
+@writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents", "table.language_policies", "table.speaker_cohorts")
 async def language_policy(ctx: TickContext) -> None:
     tally = PolicyTally()
     await keep_policies(ctx, tally)

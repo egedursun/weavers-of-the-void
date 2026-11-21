@@ -21,6 +21,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import CosmicFeatureKind, ImpactBody, ImpactOutcome
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
+from aerona.domain.enums.sea_waves import WaveOrigin
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import LegendStats, PlaceStats
 from aerona.engine.context import TickContext
@@ -237,7 +238,7 @@ async def strike(ctx: TickContext, impact: ImpactEventRow) -> bool:
     severity = impact.size * table.devastation_pct / PERCENT / PERCENT * (1 - spared)
     place = None
     if region is not None and not held(region.id):
-        await apply_disaster(ctx, region, Disaster.EARTHQUAKE, min(1.0, severity))
+        await apply_disaster(ctx, region, Disaster.EARTHQUAKE, min(1.0, severity), origin=WaveOrigin.IMPACT)
         place = await crater(ctx, impact, region)
         impact.crater_place_id = place.id
     impact.winter_epochs = impact.size // max(1, table.winter_per_size)

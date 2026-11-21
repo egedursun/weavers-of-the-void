@@ -2,6 +2,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.orders.economy import OrderTally, keep_economy
 from aerona.engine.orders.exchange import ExchangeTally, keep_exchange
+from aerona.engine.orders.pressures import press_orders
 from aerona.engine.orders.putting_out import PuttingOutTally, keep_putting_out
 from aerona.engine.orders.savings import SavingTally, keep_savings
 from aerona.engine.orders.tourism import TourismTally, keep_tourism
@@ -50,8 +51,10 @@ async def money_changing(ctx: TickContext) -> None:
     "table.economic_orders",
     "table.entities",
     "table.holder_levels",
+    "table.ideology_adherents",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.movement_profiles",
     "table.nodes",
     "table.offices",
     "table.order_transitions",
@@ -63,6 +66,7 @@ async def money_changing(ctx: TickContext) -> None:
 async def economic_orders(ctx: TickContext) -> None:
     tally = OrderTally()
     await keep_economy(ctx, tally)
+    ctx.count("economic_orders_pressed", await press_orders(ctx, tally))
     count(ctx, "economic_orders", tally)
 
 

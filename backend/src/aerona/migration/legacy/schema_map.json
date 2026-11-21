@@ -711,7 +711,8 @@
       "techizat_modeli": "equipment_model",
       "yemek": "dish",
       "bina_tipi": "building_type",
-      "ag": "network"
+      "ag": "network",
+      "lig": "league"
     },
     "entity_status": {
       "kanon": "canon",
@@ -2205,6 +2206,11 @@
     },
     "network": {
       "erisim": "reach"
+    },
+    "league": {
+      "guc": "strength",
+      "uyum": "cohesion",
+      "uyeler": "members"
     }
   },
   "entity_extra_stats": {

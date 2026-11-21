@@ -13,6 +13,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.factions import FactionGoalRow, FactionProfileRow
 from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow
+from aerona.db.tables.labour import WorkerBodyRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.ownership import SiteProfitRow
@@ -23,6 +24,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faction import FactionGoalKind, FactionKind
 from aerona.domain.enums.industry import OwnerClass
+from aerona.domain.enums.labour import WorkerBodyForm
 from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
@@ -80,6 +82,15 @@ async def company_owner(session: AsyncSession, community: EntityRow) -> int | No
 
 
 async def cooperative_owner(session: AsyncSession, community: EntityRow) -> int | None:
+    cooperative = await session.scalar(
+        select(WorkerBodyRow.faction_node_id)
+        .join(FactionProfileRow, FactionProfileRow.faction_entity_id == WorkerBodyRow.faction_node_id)
+        .where(FactionProfileRow.home_entity_id == community.id, WorkerBodyRow.form == WorkerBodyForm.WORKER_COOPERATIVE)
+        .order_by(WorkerBodyRow.faction_node_id)
+        .limit(1)
+    )
+    if cooperative is not None:
+        return cooperative
     query = select(FactionProfileRow.faction_entity_id).where(
         FactionProfileRow.home_entity_id == community.id, FactionProfileRow.kind == FactionKind.WORKERS_UNION
     )

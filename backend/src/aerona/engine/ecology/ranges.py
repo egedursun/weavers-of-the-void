@@ -30,6 +30,7 @@ from aerona.engine.agrarian.book import reserve_factor, reserve_marks
 from aerona.engine.body.variants import ORDINARY, BiologyView, biology_views
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
+from aerona.engine.creature_groups.groups import hunt_factor
 from aerona.engine.ecology.biochemistry import bearable, tolerated
 from aerona.engine.ecology.evolution import alert, cold_reach, drought_reach, escape, evolved_traits, fecund, heat_reach, wary
 from aerona.engine.ecology.profiles import profile_of
@@ -48,6 +49,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.physics import flight_capacity_pct
 from aerona.engine.primitives.queries import active_bonds, canon
 from aerona.engine.primitives.stats import stat
+from aerona.engine.protected_nature.book import hunting_marks, spared_species
 from aerona.rules.registry import Rules
 
 T = CreatureTrait
@@ -76,6 +78,7 @@ class Wilds:
     symbiosis: SymbiosisBook = field(default_factory=SymbiosisBook)
     bands: dict[int, TemperatureBand] = field(default_factory=dict)
     spared: frozenset[tuple[int, int]] = frozenset()
+    protected_kinds: dict[int, float] = field(default_factory=dict)
     tracking: dict[int, float] = field(default_factory=dict)
     epoch: int = 0
     presence: dict[int, dict[int, int]] = field(default_factory=dict)
@@ -100,6 +103,9 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
     lands = {row.entity_id: row for row in await ctx.session.scalars(select(RegionEnvironmentRow))}
     wilds = Wilds(atlas, lands, {region.id: region for region in await canon(ctx.session, [EntityType.REGION])})
     wilds.reserves = await reserve_marks(ctx.session)
+    for key, mark in (await hunting_marks(ctx.session, ctx.rules)).items():
+        wilds.reserves[key] = max(wilds.reserves.get(key, mark), mark)
+    wilds.protected_kinds = await spared_species(ctx.session, ctx.rules)
     for community in await canon(ctx.session, SOCIETY_TYPES):
         region = atlas.top_region(community.id)
         if region is not None:
@@ -305,6 +311,7 @@ def human_hunting(rules: Rules, wilds: Wilds, species: EntityRow, region: int, *
         return 0.0
     pressure: float = min(ecology.hunting_cap, math.log2(1 + people / max(1, ecology.hunting_population))) * wilds.tracking.get(region, 1.0)
     pressure *= reserve_factor(rules, wilds.reserves, species.id, region)
+    pressure *= 1 - wilds.protected_kinds.get(species.id, 0.0)
     if T.REGENERATING in traits:
         pressure *= 1 - rules.habitat.regeneration_pct / PERCENT
     profile = wilds.profiles.get(species.id)
@@ -566,7 +573,7 @@ async def harvest_hunt(ctx: TickContext, wilds: Wilds, species_id: int, region: 
     products = list(await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == species_id)))
     ledger = GoodsLedger(ctx.session, ctx.epoch)
     taken = 0
-    share = hunted / len(wilds.hunters[region])
+    share = hunted / len(wilds.hunters[region]) * await hunt_factor(ctx.session, ctx.rules, species_id, region)
     for community in wilds.hunters[region]:
         luck = await ctx.hook_factor(community.id, DomainHook.HUNT_YIELD)
         luck *= await folk_factor(ctx.session, ctx.rules, community, FolkDomain.ANIMALS)

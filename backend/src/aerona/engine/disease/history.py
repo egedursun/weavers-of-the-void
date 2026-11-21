@@ -10,6 +10,7 @@ from aerona.db.tables.disease import EndemicDiseaseRow, ImmunityRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
@@ -152,7 +153,7 @@ async def backfill_plagues(ctx: TickContext) -> dict[str, int]:
         result["outbreaks"] += 1
         for community_id in struck:
             community = await ctx.session.get(EntityRow, community_id)
-            if community is not None and community.status is EntityStatus.CANON and community.entity_type in COMMUNITY_TYPES:
+            if community is not None and community.status is EntityStatus.CANON and community.entity_type in COMMUNITY_TYPES and not held(community.id):
                 result["immunities"] += await remember_immunity(ctx, book, community, disease.id, outbreak.started_epoch)
         seen[(region.id, disease.id)] += 1
         last[(region.id, disease.id)] = outbreak.started_epoch

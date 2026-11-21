@@ -247,6 +247,7 @@ async def attraction(ctx: TickContext) -> None:
 
 
 @reads(
+    "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
@@ -267,6 +268,7 @@ async def attraction(ctx: TickContext) -> None:
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.entity_tags",
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",

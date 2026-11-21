@@ -22,13 +22,14 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.collective.accounts import RECORDED
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import shift_points
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.intrigue.names import teach_name
 from aerona.engine.lore.art_forms import practise
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import connect, top_region
-from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record as record_incident
 
 HOSTILE_TEMPERS = frozenset({BeastTemper.ENRAGED})
@@ -226,7 +227,7 @@ async def lesson(
             continue
         sold = price > 0
         if sold:
-            set_stats(learner, wealth=clamp_percent(stat_or(learner, "wealth", 0) - price))
+            await shift_points(ctx.session, learner, -price)
         row = TeachingRow(
             teacher_node_id=teacher.id,
             learner_entity_id=learner.id,

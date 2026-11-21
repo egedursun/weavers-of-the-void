@@ -5,7 +5,11 @@ import {
   type ThemeColorName,
   type ThemeColors,
 } from '@/components/domain/useThemeColors'
+import { REMNANT_KIND } from '@/features/arsenal/labels'
+import { GROUP_FORM } from '@/features/creatureGroups/labels'
 import { MONEY_FORM } from '@/features/entity/economy/labels'
+import { PROTECTION_BASIS } from '@/features/protectedNature/labels'
+import { WAVE_ORIGIN } from '@/features/seaWaves/labels'
 import { type MapView } from './api'
 import { type CellKey } from './mapEdges'
 import { type LayerMode } from './mapModel'
@@ -109,6 +113,10 @@ const ALPHA: Record<LayerMode, number> = {
   dress: 0.42,
   organisations: 0.42,
   money: 0.42,
+  remnants: 0.5,
+  waves: 0.5,
+  groups: 0.45,
+  protected: 0.45,
 }
 
 const KIND_LAYERS: Partial<Record<LayerMode, KindConcept>> = {
@@ -482,6 +490,45 @@ function regionKey(
         view.money?.[String(regionId)] ?? view.money?.[String(topId)]
       return money ? { key: `money:${money.form}`, alpha } : null
     }
+    case 'protected': {
+      const area =
+        view.protected?.[String(regionId)] ?? view.protected?.[String(topId)]
+      return area
+        ? {
+            key: `protected:${area.basis}`,
+            alpha: (alpha * Math.max(area.strength, 20)) / 100,
+          }
+        : null
+    }
+    case 'groups': {
+      const group =
+        view.groups?.[String(regionId)] ?? view.groups?.[String(topId)]
+      return group
+        ? {
+            key: `groups:${group.form}`,
+            alpha: (alpha * Math.min(100, Math.max(group.size / 50, 20))) / 100,
+          }
+        : null
+    }
+    case 'waves': {
+      const wave = view.waves?.[String(regionId)] ?? view.waves?.[String(topId)]
+      return wave
+        ? {
+            key: `waves:${wave.origin}`,
+            alpha: (alpha * Math.max(wave.height, 20)) / 100,
+          }
+        : null
+    }
+    case 'remnants': {
+      const remnant =
+        view.remnants?.[String(regionId)] ?? view.remnants?.[String(topId)]
+      return remnant
+        ? {
+            key: `remnants:${remnant.kind}`,
+            alpha: (alpha * Math.max(remnant.density, 20)) / 100,
+          }
+        : null
+    }
     case 'realms': {
       const held =
         view.realms?.[String(regionId)] ?? view.realms?.[String(topId)]
@@ -567,6 +614,16 @@ function labelFor(
   if (kind === 'range') return rangeLabel(raw)
   if (kind === 'money')
     return MONEY_FORM[raw as Schemas['MoneyForm']]?.label ?? words(raw)
+  if (kind === 'protected')
+    return (
+      PROTECTION_BASIS[raw as Schemas['ProtectionBasis']]?.label ?? words(raw)
+    )
+  if (kind === 'remnants')
+    return REMNANT_KIND[raw as Schemas['RemnantKind']]?.label ?? words(raw)
+  if (kind === 'groups')
+    return GROUP_FORM[raw as Schemas['GroupForm']]?.label ?? words(raw)
+  if (kind === 'waves')
+    return WAVE_ORIGIN[raw as Schemas['WaveOrigin']]?.label ?? words(raw)
   const concept = KIND_LAYERS[kind as LayerMode]
   if (concept) {
     const named = Object.values(view.kinds ?? {})

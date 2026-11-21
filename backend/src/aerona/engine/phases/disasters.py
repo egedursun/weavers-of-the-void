@@ -35,6 +35,7 @@ from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
+from aerona.domain.enums.sea_waves import WaveOrigin
 from aerona.domain.enums.settlement import DistrictHarm
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.storyteller import SpontaneousKind
@@ -76,6 +77,7 @@ from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
 from aerona.engine.recording.scope import recording
 from aerona.engine.records import death_path
+from aerona.engine.sea_waves.waves import wave_after
 from aerona.engine.settlement.districts import damage_districts
 from aerona.engine.storyteller.pace import paced
 from aerona.engine.structures.damage import harm, quake_loss
@@ -278,9 +280,10 @@ def disaster_phrase(disaster: Disaster) -> str:
     return an(DISASTERS[disaster].label.lower())
 
 
-async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: float) -> DisasterImpact:
+async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: float, *, origin: WaveOrigin | None = None) -> DisasterImpact:
     with flowing(FlowCategory.DISASTER):
         impact = await strike_disaster(ctx, target, disaster, severity)
+        await wave_after(ctx, target, disaster, severity, strike_disaster, origin=origin)
     await world_harmed(ctx, target.world_id, severity)
     return impact
 
@@ -808,6 +811,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
 
 @reads(
     "cult.followers",
+    "cult.zeal",
     "disease.dead",
     "disease.infected",
     "event.severity",
@@ -831,6 +835,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "settlement.defense",
     "settlement.population",
     "settlement.prosperity",
+    "spirit.unrest",
     "table.assistive_aids",
     "table.augment_effects",
     "table.augments",
@@ -846,6 +851,8 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.cosmos",
     "table.creator",
     "table.creature_anatomy",
+    "table.crime_cases",
+    "table.cult_offices",
     "table.cult_tenets",
     "table.culture_values",
     "table.designated_heirs",
@@ -856,6 +863,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.districts",
     "table.divine_standing",
     "table.divine_wounds",
+    "table.doctrine_sacraments",
     "table.dominions",
     "table.drink_kinds",
     "table.dwelling_furnishings",
@@ -876,6 +884,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.genomes",
     "table.god_designs",
     "table.god_scales",
+    "table.grave_goods",
     "table.griefs",
     "table.herds",
     "table.holder_levels",
@@ -928,6 +937,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.river_shifts",
     "table.role_norms",
     "table.routes",
+    "table.sacraments",
     "table.settlement_profiles",
     "table.sieges",
     "table.sky_events",
@@ -949,6 +959,8 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.tradition_profiles",
     "table.traits",
     "table.transform_prospects",
+    "table.war_sides",
+    "table.wars",
     "table.world_domain_hooks",
     "table.world_maps",
     "table.world_physics",
@@ -984,6 +996,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.event_casualties",
     "table.event_footprints",
     "table.event_profiles",
+    "table.grave_goods",
     "table.griefs",
     "table.incident_facts",
     "table.incident_participants",
@@ -997,6 +1010,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.mind_facets",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.notable_years",
     "table.outbreaks",
     "table.personality_values",
@@ -1005,10 +1019,12 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.region_environment",
     "table.region_geomorphology",
     "table.river_shifts",
+    "table.sacraments",
     "table.soil_nutrients",
     "table.sons",
     "table.spirit_profiles",
     "table.thoughts",
+    "table.transformations",
 )
 async def natural_disasters(ctx: TickContext) -> None:
     views = await world_views(ctx.session, ctx.rules)

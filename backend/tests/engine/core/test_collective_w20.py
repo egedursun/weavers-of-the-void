@@ -431,7 +431,9 @@ async def test_a_generation_is_shaped_by_its_youth_and_passes(session: AsyncSess
     await keep_generations(ctx, GenerationTally())
     row = await session.get(GenerationRow, (town.id, ctx.epoch))
     assert row is not None and "great_war" in row.formative and "defeat" in row.formative
-    row.generation_epoch = ctx.epoch - 3
+    older = GenerationRow(**{column.key: getattr(row, column.key) for column in GenerationRow.__mapper__.column_attrs} | {"generation_epoch": ctx.epoch - 3})
+    await session.delete(row)
+    session.add(older)
     await session.flush()
     tally = GenerationTally()
     await keep_generations(ctx, tally)

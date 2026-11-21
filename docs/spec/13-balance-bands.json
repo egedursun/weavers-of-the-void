@@ -163,6 +163,168 @@
       "low": 0,
       "high": 60,
       "meaning": "some who profess a value are shown to act against it, not most"
+    },
+    {
+      "metric": "economic_orders_per_polity",
+      "low": 0,
+      "high": 3,
+      "meaning": "each realm keeps an order of its economy, and a few name orders for their sectors; none drowns in orders"
+    },
+    {
+      "metric": "governed_share_of_factions_pct",
+      "low": 0,
+      "high": 100,
+      "meaning": "organisations gain governing bodies as they grow; the share can never pass every living organisation"
+    },
+    {
+      "metric": "cartels_per_market",
+      "low": 0,
+      "high": 1,
+      "meaning": "compacts form where few sellers meet, never more than one to a market"
+    },
+    {
+      "metric": "labour_disputes_per_epoch",
+      "low": 0,
+      "high": 12,
+      "meaning": "worker bodies strike and are locked out at times, not in every town every epoch"
+    },
+    {
+      "metric": "monetary_authorities_per_polity",
+      "low": 0,
+      "high": 2,
+      "meaning": "a realm that issues money keeps at most a couple of authorities over its currencies"
+    },
+    {
+      "metric": "holdings_per_security",
+      "low": 0,
+      "high": 40,
+      "meaning": "listed claims are held by a handful to a crowd of holders, never by the whole world"
+    },
+    {
+      "metric": "leagues_per_polity",
+      "low": 0,
+      "high": 1,
+      "meaning": "realms gather into leagues, but leagues stay fewer than the realms that fill them"
+    },
+    {
+      "metric": "conurbations_per_town",
+      "low": 0,
+      "high": 0.5,
+      "meaning": "settlements of one land grow together into cities now and then; most towns stay their own"
+    },
+    {
+      "metric": "protected_regions_share_pct",
+      "low": 0,
+      "high": 40,
+      "meaning": "some lands are set under protection, never most of the world"
+    },
+    {
+      "metric": "departures_per_epoch",
+      "low": 0,
+      "high": 80,
+      "meaning": "holders leave their offices by their own choice now and then; offices do not empty every season"
+    },
+    {
+      "metric": "referendums_per_epoch",
+      "low": 0,
+      "high": 10,
+      "meaning": "the people are asked where their law allows it, rarely in pre-modern worlds"
+    },
+    {
+      "metric": "reckonings_per_epoch",
+      "low": 0,
+      "high": 5,
+      "meaning": "a fallen regime is reckoned with only after it falls"
+    },
+    {
+      "metric": "leader_cults_per_polity",
+      "low": 0,
+      "high": 1,
+      "meaning": "cults of living leaders arise in some realms, never several to a realm"
+    },
+    {
+      "metric": "restorations_per_epoch",
+      "low": 0,
+      "high": 5,
+      "meaning": "movements to raise a fallen realm again are rare"
+    },
+    {
+      "metric": "occupation_regimes_per_epoch",
+      "low": 0,
+      "high": 5,
+      "meaning": "occupied lands are ruled by a regime while they are held"
+    },
+    {
+      "metric": "mass_weapons_per_polity",
+      "low": 0,
+      "high": 2,
+      "meaning": "weapons of mass harm stay few and need modern means"
+    },
+    {
+      "metric": "interworld_campaigns_per_epoch",
+      "low": 0,
+      "high": 4,
+      "meaning": "hosts cross between worlds only where ways and means allow"
+    },
+    {
+      "metric": "kin_dynamics_per_house",
+      "low": 0,
+      "high": 3,
+      "meaning": "families keep favour, rivalry and casting out within bounds"
+    },
+    {
+      "metric": "moods_per_town",
+      "low": 0,
+      "high": 3,
+      "meaning": "places and households carry a shared mood, not an endless pile of them"
+    },
+    {
+      "metric": "faulty_interpretations_share_pct",
+      "low": 0,
+      "high": 60,
+      "meaning": "interpreters err or slant some exchanges, never most of them"
+    },
+    {
+      "metric": "robbed_graves_share_pct",
+      "low": 0,
+      "high": 50,
+      "meaning": "some furnished graves are robbed; most are left in peace or guarded"
+    },
+    {
+      "metric": "agentless_conditions_per_hundred_mortals",
+      "low": 0,
+      "high": 80,
+      "meaning": "bodies wear by age, diet and strain; most mortals carry a condition or two at most"
+    },
+    {
+      "metric": "fertility_means_per_people",
+      "low": 0,
+      "high": 8,
+      "meaning": "peoples know a few means to prevent, seek or end conception"
+    },
+    {
+      "metric": "honours_held_per_hundred_mortals",
+      "low": 0,
+      "high": 30,
+      "meaning": "honours are conferred on a minority of the living"
+    },
+    {
+      "metric": "sea_waves_per_epoch",
+      "low": 0,
+      "high": 4,
+      "meaning": "great waves strike seldom, after quakes, slides and storms"
+    },
+    {
+      "metric": "creature_groups_per_region",
+      "low": 0,
+      "high": 4,
+      "meaning": "wild kinds gather into a few groups to a land, not a swarm in every valley"
+    },
+    {
+      "metric": "conceptions_per_faith",
+      "low": 0,
+      "high": 1,
+      "meaning": "each faith holds one conception of the divine"
     }
   ],
   "record_bands": {

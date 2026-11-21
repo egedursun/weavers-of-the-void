@@ -4,6 +4,7 @@ from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.fertility_means import FertilityMeansRow, FertilityUseRow
 from aerona.db.tables.intimacy import IntimacyNormRow, LegitimacyRuleRow, ReproductiveCourseRow, RestraintCustomRow
 from aerona.db.tables.polity import OathRow
 from aerona.domain.enums.intimacy import ChildLegitimacy, LegitimacyPath, NormStance
@@ -38,11 +39,25 @@ async def norm_lines(scope: Scope, folk_id: int) -> list[str]:
     return found
 
 
+async def means_lines(scope: Scope, people_id: int, me: EntityRow) -> list[str]:
+    found: list[str] = []
+    for row in await scope.session.scalars(select(FertilityMeansRow).where(FertilityMeansRow.people_entity_id == people_id).order_by(FertilityMeansRow.means)):
+        found.append(
+            f"your people know {spoken(row.means)} by {spoken(row.source)}: reliability {row.reliability}, risk {row.risk}, held {spoken(row.stance)}, "
+            f"used by {row.use_pct} percent"
+        )
+    for use in await scope.session.scalars(select(FertilityUseRow).where(FertilityUseRow.user_entity_id == me.id).order_by(FertilityUseRow.id)):
+        manner = ", and it has come to light" if use.exposed else " in secret" if use.hidden else " openly"
+        found.append(f"you use {spoken(use.means)}{manner}")
+    return found
+
+
 async def mortal_intimacy_lines(scope: Scope, me: EntityRow) -> list[str]:
     found: list[str] = []
     folk = await people_of(scope.session, me)
     if folk is not None:
         found.extend(await norm_lines(scope, folk.id))
+        found.extend(await means_lines(scope, folk.id, me))
     vows = [
         spoken(kind)
         for kind in await scope.session.scalars(

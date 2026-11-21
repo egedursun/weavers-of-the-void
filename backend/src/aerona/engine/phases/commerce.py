@@ -68,6 +68,7 @@ from aerona.engine.water.ice import ice_open_pct
     "table.market_plays",
     "table.market_price_holds",
     "table.market_prices",
+    "table.market_structures",
     "table.node_births",
     "table.nodes",
     "table.people_biology",
@@ -158,6 +159,7 @@ async def markets(ctx: TickContext) -> None:
     "table.container_stocks",
     "table.convoys",
     "table.creator",
+    "table.creature_groups",
     "table.cult_tenets",
     "table.dimensions",
     "table.districts",
@@ -183,6 +185,7 @@ async def markets(ctx: TickContext) -> None:
     "table.market_plays",
     "table.market_price_holds",
     "table.market_prices",
+    "table.market_structures",
     "table.measure_standards",
     "table.name_registry",
     "table.navigation_kits",
@@ -195,6 +198,7 @@ async def markets(ctx: TickContext) -> None:
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_leagues",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
@@ -417,6 +421,8 @@ async def banking(ctx: TickContext) -> None:
     ctx.count("repaid", tally.repaid)
     ctx.count("defaults", tally.defaulted)
     ctx.count("collapses", tally.collapsed)
+    ctx.count("rescues", tally.rescued)
+    ctx.count("bank_runs", tally.runs)
 
 
 PHASES = (Phase("markets", markets), Phase("trade_flow", trade_flow), Phase("banking", banking))

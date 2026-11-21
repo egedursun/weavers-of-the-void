@@ -11,11 +11,13 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.governance import InsolvencyPath
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause, WarSide
 from aerona.domain.models.entity_stats import CultStats, EventStats, FactionStats
-from aerona.engine.factions.companies import CompanyTally, collapse, found_dominion, hire_guards, pay_dividends
+from aerona.engine.factions.companies import CompanyTally, found_dominion, hire_guards, pay_dividends
 from aerona.engine.factions.orders import OrderTally, serve_holy_wars, take_vows
+from aerona.engine.governance.insolvency import InsolvencyTally, file_case, liquidate
 from aerona.engine.primitives.faith import patron_node
 from aerona.engine.primitives.stats import stat
 from tests.engine.society.factories import Realm, bonded, context, link, make, mortal, settlement, son, trade_route, tuned
@@ -75,9 +77,12 @@ async def test_a_collapsing_company_defaults_on_its_loans(realm: Realm) -> None:
     )
     realm.session.add(loan)
     await realm.session.flush()
-    tally = CompanyTally()
-    await collapse(ctx, company, row, tally)
-    assert loan.status is LoanStatus.DEFAULTED and stat(bank, "wealth") == 43 and tally.defaulted == 1
+    tally = InsolvencyTally()
+    case = await file_case(ctx, company, InsolvencyPath.LIQUIDATION, tally)
+    assert case is not None and case.recovered_pct == 0
+    await liquidate(ctx, case, company, tally)
+    assert loan.status is LoanStatus.DEFAULTED and stat(bank, "wealth") == 43 and tally.defaulted == 1 and tally.liquidated == 1
+    assert company.status is not EntityStatus.CANON and row.faction_entity_id == company.id
 
 
 async def test_a_company_that_holds_the_far_land_rules_it_as_a_realm(realm: Realm) -> None:

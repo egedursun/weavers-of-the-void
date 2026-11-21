@@ -19,6 +19,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.powers import PowerState
 from aerona.engine.context import TickContext
+from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.powers.sources import polity_of
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.stats import shift_stat
@@ -126,7 +127,7 @@ async def trained(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfil
 
 async def worshipped(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfileRow], keeper: EntityRow | None) -> None:
     if keeper is not None and not held(keeper.id) and minds:
-        shift_stat(keeper, "piety", ctx.rules.made_realms.worship_gain, 0)
+        await shift_standing(ctx.session, keeper, "piety", ctx.rules.made_realms.worship_gain, ctx.epoch, default=0)
 
 
 async def freed(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfileRow], _keeper: EntityRow | None) -> None:

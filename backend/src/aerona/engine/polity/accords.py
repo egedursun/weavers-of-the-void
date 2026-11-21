@@ -11,23 +11,26 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.interpretation import InterpretationRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.interpretation import InterpretationFault, InterpretedEvent
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, OathKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.models.entity_stats import TreatyStats
 from aerona.engine.communication.post import offer_treaty
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import shift_points
+from aerona.engine.interpretation.work import PARAM_FACTOR, interpret
 from aerona.engine.lore.language import register_barrier, register_tongues
 from aerona.engine.mind.memories import remember
 from aerona.engine.polity.oaths import oath_god, swear
 from aerona.engine.polity.regard import on_kept, on_marriage
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.tongues.grammar import misread_factor
 
 TREATY_WORDS = MappingProxyType(
@@ -47,6 +50,7 @@ TREATY_WORDS = MappingProxyType(
         TreatyKind.COALITION: "the Coalition",
         TreatyKind.DIVINE_PACT: "the Divine Pact",
         TreatyKind.NAVAL_LIMIT: "the Naval Treaty",
+        TreatyKind.ARMS_LIMIT: "the Arms Treaty",
     }
 )
 DEFAULT_CLAUSES = MappingProxyType(
@@ -66,6 +70,7 @@ DEFAULT_CLAUSES = MappingProxyType(
         TreatyKind.COALITION: (ClauseKind.CALL_TO_ARMS,),
         TreatyKind.DIVINE_PACT: (ClauseKind.NON_AGGRESSION,),
         TreatyKind.NAVAL_LIMIT: (ClauseKind.FLEET_LIMIT,),
+        TreatyKind.ARMS_LIMIT: (ClauseKind.MASS_WEAPON_LIMIT,),
     }
 )
 DERIVED = MappingProxyType(
@@ -94,7 +99,7 @@ class Clause:
     params: dict[str, int | str | bool] = field(default_factory=dict)
 
 
-MUTUAL = frozenset({TreatyKind.NAVAL_LIMIT})
+MUTUAL = frozenset({TreatyKind.NAVAL_LIMIT, TreatyKind.ARMS_LIMIT})
 
 
 def default_clauses(kind: TreatyKind, parties: Sequence[tuple[int, PartyRole]]) -> list[Clause]:
@@ -114,6 +119,9 @@ async def misread(ctx: TickContext, clause: Clause) -> Clause:
     court = LanguageRegister.COURT
     if await register_barrier(ctx.session, ctx.rules, clause.obligor, clause.beneficiary, ctx.epoch, ours=court, theirs=court) >= 1:
         return clause
+    reading = await interpret(ctx, InterpretedEvent.TREATY, clause.obligor, clause.beneficiary)
+    if reading is not None:
+        return read_through(ctx, clause, reading)
     tongues = (await register_tongues(ctx.session, clause.obligor, court), await register_tongues(ctx.session, clause.beneficiary, court))
     chance = ctx.rules.interpreters.misread_chance * await misread_factor(ctx.session, ctx.rules, *tongues)
     if not ctx.rng(f"misread.{clause.kind.value}.{clause.obligor}.{clause.beneficiary}.{ctx.epoch}").chance(chance):
@@ -122,6 +130,22 @@ async def misread(ctx: TickContext, clause: Clause) -> Clause:
     params["misread"] = True
     ctx.count("treaty_clause_misread")
     return replace(clause, params=params)
+
+
+def read_through(ctx: TickContext, clause: Clause, reading: InterpretationRow) -> Clause:
+    if reading.fault is InterpretationFault.NONE:
+        return clause
+    factor = PARAM_FACTOR[reading.fault]
+    if reading.fault is InterpretationFault.SLANTED and reading.favoured_party_id == clause.beneficiary:
+        factor = 1 / factor
+    params: dict[str, int | str | bool] = {key: scaled(value, factor) for key, value in clause.params.items()}
+    params["misread"], params["interpretation"] = True, reading.id
+    ctx.count("treaty_clause_misread")
+    return replace(clause, params=params)
+
+
+def scaled(value: int | str | bool, factor: float) -> int | str | bool:
+    return round(value * factor) if isinstance(value, int) and not isinstance(value, bool) else value
 
 
 async def sworn_by(ctx: TickContext, party: EntityRow) -> EntityRow | None:
@@ -240,10 +264,8 @@ async def execute_on_signing(ctx: TickContext, treaty: EntityRow, clauses: Seque
             continue
         if clause.kind is ClauseKind.WERGILD:
             value = int(clause.params.get("amount", table.wergild_value))
-            if stat(obligor, "wealth") is not None:
-                set_stats(obligor, wealth=max(0, (stat(obligor, "wealth") or 0) - value // 10))
-            if stat(beneficiary, "wealth") is not None:
-                set_stats(beneficiary, wealth=min(PERCENT, (stat(beneficiary, "wealth") or 0) + value // 10))
+            await shift_points(ctx.session, obligor, -(value // 10))
+            await shift_points(ctx.session, beneficiary, value // 10)
         elif clause.kind is ClauseKind.CESSION and "region_id" in clause.params:
             region = int(clause.params["region_id"])
             for settlement in await ctx.session.scalars(

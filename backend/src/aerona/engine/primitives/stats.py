@@ -1,3 +1,4 @@
+import warnings
 from typing import get_args
 
 from aerona.catalog.entity_types import ENTITY_TYPES
@@ -77,7 +78,33 @@ def stat_or(entity: EntityRow, key: str, default: int) -> int:
     return default if value is None else value
 
 
+MORTAL_STANDING = {
+    "renown": "renown",
+    "wealth": "wealth",
+    "fertility": "fertility",
+    "honour": "honour",
+    "infamy": "infamy",
+    "health": "health",
+    "stress": "stress",
+    "piety": "loyalty_god",
+    "loyalty": "loyalty_community",
+}
+
+
+class MisroutedStanding(UserWarning):
+    pass
+
+
+def misrouted(entity: EntityRow, keys: list[str]) -> None:
+    if entity.entity_type is not EntityType.MORTAL:
+        return
+    stray = sorted(key for key in keys if key in MORTAL_STANDING and not has_stat(entity, key))
+    if stray:
+        warnings.warn(MisroutedStanding(f"The {', '.join(stray)} of a mortal lives in its profile; move it through shift_standing."), stacklevel=3)
+
+
 def set_stats(entity: EntityRow, **values: int | None) -> bool:
+    misrouted(entity, list(values))
     based = {key: to_base(entity, key, value) for key, value in values.items() if has_stat(entity, key)}
     update = {key: value for key, value in based.items() if getattr(entity.stats, key) != value and not blocked(entity.id, key)}
     if not update:
@@ -121,6 +148,7 @@ def headcount_bounds(rules: Rules, entity: EntityRow) -> tuple[int, int]:
 
 
 def shift_stat(entity: EntityRow, key: str, delta: float, default: int | None = None, *, low: int = 0, high: int | None = None) -> int | None:
+    misrouted(entity, [key])
     current = stat(entity, key)
     if current is None:
         if default is None or not has_stat(entity, key):

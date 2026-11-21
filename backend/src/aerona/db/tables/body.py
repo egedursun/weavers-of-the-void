@@ -5,6 +5,7 @@ from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.constants.units import PERCENT
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
+from aerona.domain.enums.agentless_conditions import ConditionCause
 from aerona.domain.enums.body import (
     BodyBuild,
     BodyPart,
@@ -154,6 +155,8 @@ class ConditionRow(CreatedAtMixin, Base):
     visible: Mapped[bool] = mapped_column(default=False)
     variant_id: Mapped[int | None] = mapped_column(ForeignKey("kind_variants.id", ondelete="SET NULL"))
     incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
+    cause: Mapped[ConditionCause | None] = mapped_column(enum_type(ConditionCause, "cause"))
+    kind_id: Mapped[int | None] = mapped_column(ForeignKey("agentless_conditions.id", ondelete="SET NULL"), index=True)
 
 
 class ProsthesisRow(CreatedAtMixin, Base):

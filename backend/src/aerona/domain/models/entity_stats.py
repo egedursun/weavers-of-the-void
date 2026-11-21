@@ -322,6 +322,13 @@ class NetworkStats(ValueObject):
     reach: Count | None = None
 
 
+class LeagueStats(ValueObject):
+    kind: Literal["league"] = "league"
+    strength: Percent | None = None
+    cohesion: Percent | None = None
+    members: Count | None = None
+
+
 EntityStats = Annotated[
     RegionStats
     | PlaceStats
@@ -366,6 +373,7 @@ EntityStats = Annotated[
     | DishStats
     | BuildingTypeStats
     | NetworkStats
+    | LeagueStats
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]

@@ -105,6 +105,7 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   theory: Atom,
   art_form: Music,
   network: Network,
+  league: Handshake,
 }
 
 export const STAT_ICON: Record<Schemas['Stat'], LucideIcon> = {

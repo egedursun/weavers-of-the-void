@@ -49,6 +49,7 @@ from aerona.engine.economy.materials import set_node_material
 from aerona.engine.economy.provenance import ensure_materials
 from aerona.engine.economy.stocks import goods_of, sync_aggregates
 from aerona.engine.economy.workshop_designs import assign_design
+from aerona.engine.monetary.authorities import establish
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 
@@ -506,6 +507,7 @@ async def create_currency(ctx: TickContext, coin: NewCoin) -> CurrencyRow:
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await establish(ctx, row)
     if coin.metal is not None:
         await set_node_material(ctx.session, item.id, MaterialSlot.BODY, coin.metal, force=True)
     society = await ctx.session.get(CommunitySocietyRow, entity.id)

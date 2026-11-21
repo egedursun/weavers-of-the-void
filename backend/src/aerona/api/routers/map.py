@@ -31,11 +31,15 @@ from aerona.api.schemas.maps import (
     RegionDeJure,
     RegionDivineRule,
     RegionGround,
+    RegionGroup,
     RegionKind,
     RegionMoney,
+    RegionProtection,
     RegionRealm,
+    RegionRemnant,
     RegionStocks,
     RegionTongue,
+    RegionWave,
     RelationLineKind,
 )
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
@@ -88,7 +92,8 @@ from aerona.engine.primitives.stats import stat
 from aerona.services.container import Services
 from aerona.services.images.records import covers_of
 from aerona.services.kind_map import region_kinds, region_money
-from aerona.services.map_lines import region_creators, relation_lines, routed_roads, war_sites
+from aerona.services.map_lines import conurbation_lines, region_creators, relation_lines, routed_roads, war_sites
+from aerona.services.remnant_map import region_groups, region_protection, region_remnants, region_waves
 from aerona.services.wiki import (
     event_markers,
     ground_snapshot,
@@ -114,6 +119,8 @@ ALIASES = (
 )
 RING_ORDER = tuple(LandUseRing)
 RANK_ORDER = tuple(CentralityRank)
+
+WAVE_EPOCHS = 2
 
 
 def stored_map(row: WorldMapRow | None) -> WorldMap | None:
@@ -181,7 +188,7 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
         positions = {row.id: (row.map_x, row.map_y) for row in entities if row.map_x is not None and row.map_y is not None}
         roads = await road_network(session, world_id)
         routed = await asyncio.to_thread(routed_roads, shape, roads, positions)
-        lines = await relation_lines(session, shape, positions, roads)
+        lines = [*await relation_lines(session, shape, positions, roads), *await conurbation_lines(session, positions)]
         covers = await covers_of(session, [row.id for row in entities])
         return MapView(
             world=WorldRecord.model_validate(world),
@@ -218,6 +225,15 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
                 for region, items in (await region_kinds(session, world_id)).items()
             },
             money={region: RegionMoney(form=form) for region, form in (await region_money(session, world_id)).items()},
+            remnants={region: RegionRemnant(kind=row.kind, density=row.density) for region, row in (await region_remnants(session, world_id)).items()},
+            protected={
+                region: RegionProtection(basis=row.basis, strength=row.strength) for region, row in (await region_protection(session, world_id)).items()
+            },
+            groups={region: RegionGroup(form=row.form, size=row.size) for region, row in (await region_groups(session, world_id)).items()},
+            waves={
+                region: RegionWave(origin=wave.origin, height=coast.height)
+                for region, (coast, wave) in (await region_waves(session, world_id, max(0, shown - WAVE_EPOCHS))).items()
+            },
             lairs=await lair_marks(session, world_id, positions, rules.beasts.raid_reach),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),

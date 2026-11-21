@@ -46,6 +46,7 @@ class EntityType(StrEnum):
     DISH = "dish"
     BUILDING_TYPE = "building_type"
     NETWORK = "network"
+    LEAGUE = "league"
 
 
 class EntityStatus(StrEnum):

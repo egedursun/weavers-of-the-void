@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Toggle } from '@/components/ui/toggle'
 import { EmptyState, KpiTile, PagedList } from '@/components/domain'
 import { Text } from '@/components/typography'
+import { CONURBATION_GOVERNANCE } from '@/features/cityRules/labels'
 import { RecordRow } from '@/features/cosmography/parts'
 import { hasWebGL2 } from '@/features/cosmos/useCosmosViewSettings'
 import { why } from '@/features/dominion/model'
@@ -325,7 +326,7 @@ function CityBody({
             />
           </div>
           <Text variant='caption' tone='muted'>
-            {`A ${scene.tier.replaceAll('_', ' ')}, ${MORPHOLOGIES[scene.morphology].label.toLowerCase()}; walls of level ${scene.walls_level}${scene.walls_radius ? ` ${plural(scene.walls_radius, 'hex', 'hexes')} out` : ''}; roads of level ${scene.roads}; water from ${scene.water.replaceAll('_', ' ')}. Each house drawn stands for ${plural(scene.scale, 'home', 'homes')}, each tent for ${scene.scale} homeless households.`}
+            {`A ${scene.tier.replaceAll('_', ' ')}, ${MORPHOLOGIES[scene.morphology].label.toLowerCase()}; walls of level ${scene.walls_level}${scene.walls_radius ? ` ${plural(scene.walls_radius, 'hex', 'hexes')} out` : ''}; roads of level ${scene.roads}; water from ${scene.water.replaceAll('_', ' ')}. Each house drawn stands for ${plural(scene.scale, 'home', 'homes')}, each tent for ${scene.scale} homeless households.${scene.conurbation ? ` Part of one city around ${scene.conurbation.core.name} with ${scene.conurbation.members.map((member) => member.name).join(', ') || 'no other quarter'}, under ${CONURBATION_GOVERNANCE[scene.conurbation.governance]}.` : ''}`}
           </Text>
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList aria-label='City panel' className='w-full'>

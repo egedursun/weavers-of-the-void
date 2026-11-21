@@ -40,5 +40,8 @@ BALANCE_LOOP = total(
         BalanceLoop.HOUSEWORK_BURDEN: Defined("Housework burden", checked_by=(), used_by=("engine.daily.life.take_help",)),
         BalanceLoop.CURE_RESISTANCE: Defined("Cure resistance", checked_by=(), used_by=("engine.disease.agents.keep_agents",)),
         BalanceLoop.WEATHER_GRIEVANCE: Defined("Weather grievance", checked_by=(), used_by=("engine.forecasting.works.work",)),
+        BalanceLoop.COLLECTIVISATION_REVERSAL: Defined("Collectivisation reversal", checked_by=(), used_by=("engine.orders.economy.advance",)),
+        BalanceLoop.CARTEL_CHEATING: Defined("Cartel cheating", checked_by=(), used_by=("engine.competition.cartels.tend_cartel",)),
+        BalanceLoop.MUTUAL_DETERRENCE: Defined("Mutual deterrence", checked_by=(), used_by=("engine.mass_weapons.deterrence.deterrence",)),
     },
 )

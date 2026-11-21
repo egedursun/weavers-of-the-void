@@ -48,6 +48,7 @@ HARM_DEATHS: MappingProxyType[HarmCause, DeathCause] = total(
         HarmCause.DECOMPRESSION: DeathCause.DECOMPRESSION,
         HarmCause.EXPERIMENT: DeathCause.EXPERIMENT,
         HarmCause.POWER: DeathCause.MAGIC,
+        HarmCause.BODY: DeathCause.DISEASE,
     },
 )
 GLORIOUS_DEATHS = frozenset({DeathCause.BATTLE, DeathCause.DUEL, DeathCause.MONSTER, DeathCause.SACRIFICE})

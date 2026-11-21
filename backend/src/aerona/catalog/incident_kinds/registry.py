@@ -23,6 +23,7 @@ from aerona.catalog.incident_kinds.nature50 import KINDS as NATURE50
 from aerona.catalog.incident_kinds.phases import KINDS as PHASES
 from aerona.catalog.incident_kinds.spec import IncidentKindSpec
 from aerona.catalog.incident_kinds.tellings import KINDS as TELLINGS
+from aerona.catalog.incident_kinds.w51_orders import KINDS as W51_ORDERS
 
 GROUP_KINDS: tuple[tuple[IncidentKindSpec, ...], ...] = (
     SINGLE_COMBAT,
@@ -46,6 +47,7 @@ GROUP_KINDS: tuple[tuple[IncidentKindSpec, ...], ...] = (
     PHASES,
     AUTHORED,
     TELLINGS,
+    W51_ORDERS,
 )
 
 

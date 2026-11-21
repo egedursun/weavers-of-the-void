@@ -13,6 +13,7 @@ from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome, StepS
 from aerona.domain.enums.war import CaptiveStatus, WarCause
 from aerona.engine.body.book import effective, factor
 from aerona.engine.body.hits import Harm
+from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.faith import patron_son
@@ -110,15 +111,18 @@ async def pay_ransom(call: MortalCall, args: RansomInput) -> str:
         fail(MortalResult.NOT_YOUR_CAPTIVE)
     if row.captor_entity_id == call.me.id:
         fail(MortalResult.OWN_CAPTIVE_RANSOM, name=captive.name)
-    wealth, prosperity = stat(call.me, "wealth"), stat(call.me, "prosperity")
+    wealth, prosperity = await points_of(call.session, call.me), stat(call.me, "prosperity")
     rich = (wealth or 0) >= tools.ransom_min_wealth or (prosperity or 0) >= tools.ransom_min_wealth + tools.ransom_prosperity_extra
     if not rich:
         fail(MortalResult.NO_RANSOM_WEALTH)
     captor = await _captor(call, row)
     key = "wealth" if (wealth or 0) >= tools.ransom_min_wealth else "prosperity"
-    set_stats(call.me, **{key: max(0, (stat(call.me, key) or 0) - tools.ransom_amount)})
-    if add_prosperity(call.rules, captor, tools.ransom_amount) is None and stat(captor, "wealth") is not None:
-        set_stats(captor, wealth=min(PERCENT, stat_or(captor, "wealth", 0) + tools.ransom_amount))
+    if key == "wealth":
+        await shift_points(call.session, call.me, -tools.ransom_amount)
+    else:
+        set_stats(call.me, prosperity=max(0, (prosperity or 0) - tools.ransom_amount))
+    if add_prosperity(call.rules, captor, tools.ransom_amount) is None:
+        await shift_points(call.session, captor, tools.ransom_amount)
     await release_captive(call.tick, row, CaptiveStatus.RANSOMED, tools.ransom_amount)
     await change_relation(call.tick, call.me.id, captor.id, tools.ransom_relation, MemoryKind.FREED_US, note=RANSOM_EVENT)
     await judged(call.tick, captor.id, call.me.id, ActKind.RANSOM, note=RANSOM_EVENT)

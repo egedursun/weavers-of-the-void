@@ -7,68 +7,139 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.invariants import TYPED, GenericCheck, InvariantSpec, Remedy
 from aerona.db.record_context import RecordScope, scoped
+from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.session import Database
+from aerona.db.tables.agentless_conditions import AgentlessConditionRow
+from aerona.db.tables.body import ConditionRow
+from aerona.db.tables.body_systems import BodySystemRow
 from aerona.db.tables.changes import StateChangeRow, StateCheckpointRow
 from aerona.db.tables.childhood import ChildStandingRow, SocializationRow
+from aerona.db.tables.city_rules import ConurbationRow, LandUseRuleRow
 from aerona.db.tables.commerce import LeaseRow
+from aerona.db.tables.competition import CartelRow, MarketStructureRow, PriceWarRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
 from aerona.db.tables.council_order import DivineSeatRow
 from aerona.db.tables.crafts import NumberSystemRow
 from aerona.db.tables.creator_bonds import CovenantRow
+from aerona.db.tables.creature_groups import CreatureGroupRow
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.customs import TimeBudgetRow
 from aerona.db.tables.cycles import PeopleReproductionRow
-from aerona.db.tables.demography import PeopleCultureRow
-from aerona.db.tables.ecology import SpeciesRangeRow
+from aerona.db.tables.demography import LabourRow, PeopleCultureRow
+from aerona.db.tables.departures import DepartureRow
+from aerona.db.tables.divine_conceptions import GodReadingRow
+from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow
 from aerona.db.tables.economy import CurrencyRow, WorldMaterialRow
 from aerona.db.tables.endowments import EndowmentRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.estates import MovementProfileRow
 from aerona.db.tables.facets import FacetPracticeRow
+from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
+from aerona.db.tables.feeling_spread import FeelingSpreadRow
+from aerona.db.tables.fertility_means import FertilityMeansRow, FertilityUseRow
 from aerona.db.tables.folk_knowledge import FolkClassRow
 from aerona.db.tables.genetics import GenomeRow
+from aerona.db.tables.governance import InsolvencyCaseRow, OrgGovernanceRow, OrgMergerRow, OrgSeatRow
+from aerona.db.tables.grave_goods import GraveGoodsRow
+from aerona.db.tables.honours import HonourHeldRow, HonourKindRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.interpretation import InterpretationRow
+from aerona.db.tables.interworld import InterworldCampaignRow, InterworldMigrationRow
 from aerona.db.tables.intimacy import IntimacyNormRow
 from aerona.db.tables.kin import KinGroupMemberRow, KinGroupRow
+from aerona.db.tables.kin_dynamics import ElderSwayRow, KinDynamicRow, KinFavourRow, KinRivalryRow
 from aerona.db.tables.kinds import GoodKindRow, KindHoldingRow
+from aerona.db.tables.labour import LabourContractRow, LabourDisputeRow, WorkerBodyRow
+from aerona.db.tables.leader_cults import LeaderCultRow
+from aerona.db.tables.leagues import LeagueDecisionRow, LeagueMemberRow, PolityLeagueRow
+from aerona.db.tables.mass_weapons import DeterrencePostureRow, MassWeaponRow, WarRemnantRow
 from aerona.db.tables.media import MediaItemRow, MediaOutletRow
+from aerona.db.tables.military import OccupationRow
+from aerona.db.tables.monetary import MonetaryAuthorityRow
+from aerona.db.tables.occupation_regimes import CollaborationRow, OccupationMeasureRow, OccupationRegimeRow
+from aerona.db.tables.orders import EconomicOrderRow, OrderTransitionRow
 from aerona.db.tables.pantheon import PantheonTieRow, SyncretismRow
+from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.population import PopulationInstrumentRow, PopulationPolicyRow
+from aerona.db.tables.protected_nature import ConservationMovementRow, ProtectedAreaRow, SpeciesProtectionRow
+from aerona.db.tables.reckoning import ReckoningCaseRow, ReckoningMeasureRow, ReckoningRow
 from aerona.db.tables.record_keepers import RecordKeeperRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
+from aerona.db.tables.referendums import ReferendumRow
+from aerona.db.tables.restoration import RestorationRow
+from aerona.db.tables.routes import RouteRow
+from aerona.db.tables.sea_waves import SeaWaveCoastRow, SeaWaveRow
+from aerona.db.tables.securities import IssuedSecurityRow, SecurityHoldingRow, SecurityPriceRow
+from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.speech import SpeechRow
 from aerona.db.tables.technology import TechnologyProfileRow
-from aerona.db.tables.warfare import CaptiveRow
+from aerona.db.tables.warfare import CaptiveRow, WarRow
 from aerona.db.tables.works import PublicWorksRow, PublicWorkStageRow
 from aerona.db.tables.youth import YouthGroupMemberRow, YouthGroupRow, YouthStandingRow
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.agentless_conditions import ConditionCause
+from aerona.domain.enums.body import ConditionKind, HarmCause
+from aerona.domain.enums.body_systems import BodySystem
+from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.creator import CovenantDuty, CreatorPromise
+from aerona.domain.enums.creature_groups import GroupForm
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.death_work import RemainsTreatment
-from aerona.domain.enums.demography import FuneralCustom, InheritanceCustom, MartialStyle
-from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin, MoneyForm
+from aerona.domain.enums.demography import FuneralCustom, InheritanceCustom, Job, MartialStyle
+from aerona.domain.enums.departures import DepartureKind
+from aerona.domain.enums.divine_conceptions import GodReading
+from aerona.domain.enums.economy import CommodityKind, MaterialFamily, MaterialOrigin, MoneyForm
 from aerona.domain.enums.endowments import EndowmentState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.facets import FacetKind
+from aerona.domain.enums.faction import FactionKind, MovementCause
+from aerona.domain.enums.fertility_means import FertilityMeans
 from aerona.domain.enums.folk_knowledge import FolkDomain
+from aerona.domain.enums.governance import GoverningBody
+from aerona.domain.enums.interworld import CampaignStage
 from aerona.domain.enums.intimacy import RelationContext
 from aerona.domain.enums.kinds import GoodCategory, KindConcept
+from aerona.domain.enums.leagues import LeagueDecisionKind, LeagueOrgan
+from aerona.domain.enums.mass_weapons import MassHarm, MassReach
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.occupation_regimes import CollaborationFate
+from aerona.domain.enums.orders import TransitionKind
+from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.population import PopulationInstrument
+from aerona.domain.enums.reckoning import ReckoningMeasure
 from aerona.domain.enums.record_keepers import RecordKeeperKind
 from aerona.domain.enums.records import FactUnit, StepAction, WitnessMode
+from aerona.domain.enums.referendums import Franchise, ReferendumResult, ReferendumSubject
+from aerona.domain.enums.restoration import RestorationStage
+from aerona.domain.enums.sea_waves import WaveOrigin
+from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.speech import SpeechVenue
-from aerona.domain.enums.war import CaptiveStatus
-from aerona.domain.models.entity_stats import PeopleStats, PolityStats, SpeciesStats
+from aerona.domain.enums.travel import TravelMethod
+from aerona.domain.enums.war import CaptiveStatus, WarCause
+from aerona.domain.models.entity_stats import (
+    ArmyStats,
+    BeastStats,
+    CultStats,
+    EventStats,
+    FactionStats,
+    HouseStats,
+    LeagueStats,
+    PeopleStats,
+    PolityStats,
+    SpeciesStats,
+)
 from aerona.engine.recording.checkpoints import take_checkpoint
 from aerona.services.integrity.invariants import CHECKS, findings, resolve, sweep
 from aerona.services.integrity.record_links import absent_witnesses
 from tests.conftest import OpenDatabase
-from tests.engine.core.factories import CoreWorld, bond, entity, mortal, seed_core_world, settlement
+from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, seed_core_world, settlement
 from tests.engine.core.test_arcana_w15 import foreign_caster
 
 Breaker = Callable[[AsyncSession, CoreWorld], Awaitable[None]]
@@ -322,6 +393,507 @@ async def item_beyond_its_outlet(session: AsyncSession, world: CoreWorld) -> Non
     session.add(MediaItemRow(outlet_id=outlet.id, owner_node_id=owner.id, reach=90, locked=[]))
 
 
+async def governed_guild(session: AsyncSession, world: CoreWorld, name: str) -> tuple[EntityRow, EntityRow]:
+    town = await settlement(session, f"{name} Town", world, world.regions[0])
+    head = await mortal(session, f"{name} Head", world, town.id)
+    guild = await entity(session, name, EntityType.FACTION, FactionStats(), world_id=world.world.id, location_id=town.id)
+    session.add(FactionProfileRow(faction_entity_id=guild.id, kind=FactionKind.CRAFT_GUILD, influence_over={}, cohort_share={}, locked=[]))
+    session.add(FactionMembershipRow(faction_entity_id=guild.id, mortal_entity_id=head.id, locked=[]))
+    session.add(OrgGovernanceRow(org_node_id=guild.id, decision_body=GoverningBody.ASSEMBLY_OF_MEMBERS, head_node_id=head.id, locked=[]))
+    await session.flush()
+    return guild, head
+
+
+async def seat_held_by_a_stranger(session: AsyncSession, world: CoreWorld) -> None:
+    guild, head = await governed_guild(session, world, "The Stranger Hall")
+    stranger = await mortal(session, "Stranger", world, world.regions[0].id)
+    session.add(OrgSeatRow(org_node_id=guild.id, member_node_id=head.id, vote_weight=60, locked=[]))
+    session.add(OrgSeatRow(org_node_id=guild.id, member_node_id=stranger.id, vote_weight=40, locked=[]))
+
+
+async def votes_that_miss_a_hundred(session: AsyncSession, world: CoreWorld) -> None:
+    guild, head = await governed_guild(session, world, "The Short Hall")
+    session.add(OrgSeatRow(org_node_id=guild.id, member_node_id=head.id, vote_weight=70, locked=[]))
+
+
+async def bid_for_a_vanished_house(session: AsyncSession, world: CoreWorld) -> None:
+    buyer, _head = await governed_guild(session, world, "The Buyer Hall")
+    gone, _other = await governed_guild(session, world, "The Gone Hall")
+    gone.status, gone.end_epoch = EntityStatus.DEAD, world.cosmos.epoch
+    session.add(OrgMergerRow(acquirer_node_id=buyer.id, target_node_id=gone.id, price=10, locked=[]))
+
+
+async def creditor_who_never_lent(session: AsyncSession, world: CoreWorld) -> None:
+    debtor, head = await governed_guild(session, world, "The Debt Hall")
+    session.add(InsolvencyCaseRow(debtor_node_id=debtor.id, creditors=[head.id], owed=50, locked=[]))
+
+
+async def reading_of_no_god(session: AsyncSession, world: CoreWorld) -> None:
+    cult = await entity(session, "Odd Faith", EntityType.CULT, CultStats(followers=10), world_id=world.world.id)
+    session.add(GodReadingRow(cult_entity_id=cult.id, god_node_id=world.people.id, reading=GodReading.TRUE, locked=[]))
+
+
+async def pack_led_by_another_kind(session: AsyncSession, world: CoreWorld) -> None:
+    other = await entity(session, "Other Kind", EntityType.SPECIES, SpeciesStats(), world_id=world.world.id)
+    beast = await entity(session, "Strange Leader", EntityType.BEAST, BeastStats(danger=30), world_id=world.world.id, location_id=world.regions[0].id)
+    session.add(BeastProfileRow(beast_entity_id=beast.id, species_entity_id=other.id, locked=[]))
+    region = world.regions[0].id
+    session.add(
+        CreatureGroupRow(species_entity_id=world.species.id, region_entity_id=region, form=GroupForm.PACK, size=100, leader_node_id=beast.id, locked=[])
+    )
+
+
+async def wave_on_a_dry_coast(session: AsyncSession, world: CoreWorld) -> None:
+    wave = SeaWaveRow(world_id=world.world.id, origin=WaveOrigin.QUAKE, sea_region_id=world.regions[2].id, strength=50, locked=[])
+    session.add(wave)
+    await session.flush()
+    session.add(SeaWaveCoastRow(wave_id=wave.id, region_entity_id=world.regions[0].id, height=40, locked=[]))
+
+
+async def honour_past_its_limit(session: AsyncSession, world: CoreWorld) -> None:
+    kind = HonourKindRow(conferrer_node_id=world.people.id, name="Order of One", rank=1, holder_limit=1, locked=[])
+    session.add(kind)
+    await session.flush()
+    town = await settlement(session, "Honourby", world, world.regions[0])
+    for name in ("First Holder", "Second Holder"):
+        holder = await mortal(session, name, world, town.id)
+        session.add(HonourHeldRow(holder_node_id=holder.id, kind_id=kind.id, epoch=0, locked=[]))
+
+
+async def honour_with_an_odd_privilege(session: AsyncSession, world: CoreWorld) -> None:
+    session.add(HonourKindRow(conferrer_node_id=world.people.id, name="Order of Odds", rank=1, privileges=["title", "not a privilege"], locked=[]))
+
+
+async def means_of_a_people_without_conception(session: AsyncSession, world: CoreWorld) -> None:
+    session.add(BodySystemRow(holder_entity_id=world.people.id, system=BodySystem.REPRODUCTION, present=False, locked=[]))
+    session.add(FertilityMeansRow(people_entity_id=world.people.id, means=FertilityMeans.PREVENTION, locked=[]))
+
+
+async def use_of_an_unknown_means(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Unknowing", world, world.regions[0])
+    being = await mortal(session, "Odd User", world, town.id)
+    session.add(FertilityUseRow(user_entity_id=being.id, people_entity_id=world.people.id, means=FertilityMeans.SURROGACY, locked=[]))
+
+
+async def condition_of_an_absent_system(session: AsyncSession, world: CoreWorld) -> None:
+    kind = AgentlessConditionRow(world_id=world.world.id, name="A wearing of the breath", cause=ConditionCause.AGE, system=BodySystem.BREATH, locked=[])
+    session.add(kind)
+    session.add(BodySystemRow(holder_entity_id=world.people.id, system=BodySystem.BREATH, present=False, locked=[]))
+    town = await settlement(session, "Breathless", world, world.regions[0])
+    await BondRepository(session).connect(BondDraft(world.people.id, town.id, BondKind.LIVES_IN, 0, role=BondRole.HOMELAND))
+    being = await mortal(session, "No Breath", world, town.id)
+    await session.flush()
+    session.add(ConditionRow(bearer_node_id=being.id, kind=ConditionKind.CHRONIC_ILLNESS, severity=1, source=HarmCause.AGE, since_epoch=0, kind_id=kind.id))
+
+
+async def grave_with_a_stray_thing(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Barrow Town", world, world.regions[0])
+    dead = await mortal(session, "Old Bones", world, town.id)
+    session.add(GraveGoodsRow(dead_entity_id=dead.id, grave_entity_id=town.id, items=[town.id], locked=[]))
+
+
+async def exchange_with_itself(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Lone Tongue", world, world.regions[0])
+    session.add(InterpretationRow(first_party_id=town.id, second_party_id=town.id, fidelity=50, epoch=0, locked=[]))
+
+
+async def mood_with_a_stray_feeling(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Moody Town", world, world.regions[0])
+    session.add(FeelingSpreadRow(settlement_entity_id=town.id, feelings={"joy": 150, "not a feeling": 20}, locked=[]))
+
+
+async def dynamic_of_nothing(session: AsyncSession, world: CoreWorld) -> None:
+    del world
+    session.add(KinDynamicRow(locked=[]))
+
+
+async def kin_dynamic(session: AsyncSession, world: CoreWorld) -> KinDynamicRow:
+    house = await entity(session, "Breaker House", EntityType.HOUSE, HouseStats(), world_id=world.world.id)
+    row = KinDynamicRow(house_entity_id=house.id, locked=[])
+    session.add(row)
+    await session.flush()
+    return row
+
+
+async def favour_for_oneself(session: AsyncSession, world: CoreWorld) -> None:
+    dynamic = await kin_dynamic(session, world)
+    vain = await mortal(session, "Vain One", world, None)
+    session.add(KinFavourRow(dynamic_id=dynamic.id, parent_node_id=vain.id, child_node_id=vain.id, locked=[]))
+
+
+async def rivalry_backwards(session: AsyncSession, world: CoreWorld) -> None:
+    dynamic = await kin_dynamic(session, world)
+    first, second = await mortal(session, "Elder Rival", world, None), await mortal(session, "Younger Rival", world, None)
+    session.add(KinRivalryRow(dynamic_id=dynamic.id, first_node_id=max(first.id, second.id), second_node_id=min(first.id, second.id), locked=[]))
+
+
+async def sway_of_the_dead(session: AsyncSession, world: CoreWorld) -> None:
+    dynamic = await kin_dynamic(session, world)
+    gone = await mortal(session, "Gone Elder", world, None)
+    gone.status, gone.end_epoch = EntityStatus.DEAD, 0
+    session.add(ElderSwayRow(dynamic_id=dynamic.id, elder_node_id=gone.id, locked=[]))
+
+
+async def protected_town(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Guarded Town", world, world.regions[0])
+    session.add(ProtectedAreaRow(region_entity_id=town.id, banned_uses=[], locked=[]))
+
+
+async def protected_region_as_kind(session: AsyncSession, world: CoreWorld) -> None:
+    session.add(SpeciesProtectionRow(species_entity_id=world.regions[0].id, measures=[], locked=[]))
+
+
+async def aims_of_another_movement(session: AsyncSession, world: CoreWorld) -> None:
+    movement = await entity(session, "Peace Movement", EntityType.FACTION, FactionStats(), world_id=world.world.id)
+    session.add(MovementProfileRow(faction_entity_id=movement.id, cause=MovementCause.PEACE, locked=[]))
+    session.add(ConservationMovementRow(movement_entity_id=movement.id, aims=[], cohort_support={}, locked=[]))
+
+
+async def rule_on_anothers_district(session: AsyncSession, world: CoreWorld) -> None:
+    first = await settlement(session, "Rulehome", world, world.regions[0])
+    other = await settlement(session, "Otherhome", world, world.regions[0])
+    district = DistrictRow(settlement_entity_id=other.id, kind=DistrictKind.MARKET, level=1, built_epoch=0, locked=[])
+    session.add(district)
+    await session.flush()
+    session.add(LandUseRuleRow(settlement_entity_id=first.id, district_id=district.id, values={}, locked=[]))
+
+
+async def city_with_itself_as_quarter(session: AsyncSession, world: CoreWorld) -> None:
+    core = await settlement(session, "Selfcity", world, world.regions[0])
+    session.add(ConurbationRow(core_entity_id=core.id, members=[core.id], imposed_laws=[], locked=[]))
+
+
+async def campaign_on_a_stray_way(session: AsyncSession, world: CoreWorld) -> None:
+    attacker = await entity(session, "Lost Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    other, _regions = await add_empty_world(session, "Strayworld")
+    third, _more = await add_empty_world(session, "Thirdworld")
+    route = RouteRow(world_a_id=world.world.id, world_b_id=third.id, method=TravelMethod.DIVINE_BRIDGE, duration_epochs=1, danger=0, created_epoch=0)
+    session.add(route)
+    await session.flush()
+    session.add(InterworldCampaignRow(attacker_entity_id=attacker.id, from_world_id=world.world.id, target_world_id=other.id, route_id=route.id, locked=[]))
+
+
+async def landed_host_elsewhere(session: AsyncSession, world: CoreWorld) -> None:
+    attacker = await entity(session, "Strayed Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    other, _regions = await add_empty_world(session, "Farland")
+    host = await entity(session, "Strayed Host", EntityType.ARMY, ArmyStats(size=100), world_id=world.world.id)
+    holding = CampaignStage.HOLDING
+    session.add(
+        InterworldCampaignRow(
+            attacker_entity_id=attacker.id, from_world_id=world.world.id, target_world_id=other.id, army_entity_id=host.id, stage=holding, locked=[]
+        )
+    )
+
+
+async def movement_to_its_own_world(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Restless Town", world, world.regions[0])
+    session.add(InterworldMigrationRow(community_entity_id=town.id, from_world_id=world.world.id, to_world_id=world.world.id, journey_ids=[], locked=[]))
+
+
+async def weapon_beyond_its_means(session: AsyncSession, world: CoreWorld) -> None:
+    holder = await entity(session, "Unlearned Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add(HolderTechniqueRow(holder_entity_id=holder.id, technique=Technique.BRONZE))
+    session.add(MassWeaponRow(holder_entity_id=holder.id, harm=MassHarm.RADIATION, reach=MassReach.WORLD, count=3, seen_by=[], locked=[]))
+
+
+async def remnant_of_a_war_still_fought(session: AsyncSession, world: CoreWorld) -> None:
+    event = await entity(session, "Unending War", EntityType.EVENT, EventStats(), world_id=world.world.id)
+    war = WarRow(event_entity_id=event.id, world_id=world.world.id, cause=WarCause.HOSTILITY, started_epoch=0)
+    session.add(war)
+    await session.flush()
+    session.add(WarRemnantRow(region_entity_id=world.regions[0].id, war_id=war.id, locked=[]))
+
+
+async def remnant_in_land_and_orbit(session: AsyncSession, world: CoreWorld) -> None:
+    session.add(WarRemnantRow(region_entity_id=world.regions[0].id, orbit_world_id=world.world.id, locked=[]))
+
+
+async def posture_toward_itself(session: AsyncSession, world: CoreWorld) -> None:
+    holder = await entity(session, "Inward Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add(DeterrencePostureRow(holder_entity_id=holder.id, toward_entity_id=holder.id, locked=[]))
+
+
+async def occupier_of(session: AsyncSession, world: CoreWorld, name: str) -> EntityRow:
+    return await entity(session, name, EntityType.POLITY, PolityStats(), world_id=world.world.id)
+
+
+async def regime_without_an_occupation(session: AsyncSession, world: CoreWorld) -> None:
+    occupier = await occupier_of(session, world, "Gone Occupier")
+    session.add(OccupationRegimeRow(region_entity_id=world.regions[0].id, occupier_entity_id=occupier.id, administrators=[], imposed_laws=[], locked=[]))
+
+
+async def held_regime(session: AsyncSession, world: CoreWorld, name: str) -> OccupationRegimeRow:
+    occupier = await occupier_of(session, world, name)
+    session.add(OccupationRow(region_entity_id=world.regions[0].id, occupier_entity_id=occupier.id, since_epoch=0, locked=[]))
+    regime = OccupationRegimeRow(region_entity_id=world.regions[0].id, occupier_entity_id=occupier.id, administrators=[], imposed_laws=[], locked=[])
+    session.add(regime)
+    await session.flush()
+    return regime
+
+
+async def collaborator_from_afar(session: AsyncSession, world: CoreWorld) -> None:
+    regime = await held_regime(session, world, "Far Occupier")
+    stranger = await mortal(session, "Far Servant", world, None)
+    session.add(CollaborationRow(regime_id=regime.id, collaborator_node_id=stranger.id, locked=[]))
+
+
+async def killed_collaborator_without_an_end(session: AsyncSession, world: CoreWorld) -> None:
+    regime = await held_regime(session, world, "Grim Occupier")
+    town = await settlement(session, "Grim Town", world, world.regions[0])
+    servant = await mortal(session, "Grim Servant", world, town.id)
+    session.add(CollaborationRow(regime_id=regime.id, collaborator_node_id=servant.id, fate=CollaborationFate.KILLED, locked=[]))
+
+
+async def measure_of_an_ended_regime(session: AsyncSession, world: CoreWorld) -> None:
+    occupier = await occupier_of(session, world, "Ended Occupier")
+    regime = OccupationRegimeRow(
+        region_entity_id=world.regions[0].id, occupier_entity_id=occupier.id, ended_epoch=1, administrators=[], imposed_laws=[], locked=[]
+    )
+    session.add(regime)
+    await session.flush()
+    session.add(OccupationMeasureRow(regime_id=regime.id, region_entity_id=world.regions[0].id, locked=[]))
+
+
+async def measure_in_another_land(session: AsyncSession, world: CoreWorld) -> None:
+    regime = await held_regime(session, world, "Wandering Occupier")
+    session.add(OccupationMeasureRow(regime_id=regime.id, region_entity_id=world.regions[1].id, locked=[]))
+
+
+async def restoration_of_a_standing_realm(session: AsyncSession, world: CoreWorld) -> None:
+    standing = await entity(session, "Standing Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add(RestorationRow(fallen_polity_id=standing.id, territories=[], bases=[], locked=[]))
+
+
+async def fallen_crown(session: AsyncSession, world: CoreWorld, name: str) -> EntityRow:
+    fallen = await entity(session, name, EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    fallen.status, fallen.end_epoch = EntityStatus.DEAD, 0
+    return fallen
+
+
+async def restored_without_a_link(session: AsyncSession, world: CoreWorld) -> None:
+    fallen = await fallen_crown(session, world, "Unlinked Fallen Crown")
+    heir = await entity(session, "Unlinked Heir Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    restored = RestorationStage.RESTORED
+    session.add(RestorationRow(fallen_polity_id=fallen.id, restored_polity_id=heir.id, stage=restored, ended_epoch=1, territories=[], bases=[], locked=[]))
+
+
+async def open_restoration_with_an_end(session: AsyncSession, world: CoreWorld) -> None:
+    fallen = await fallen_crown(session, world, "Ended Fallen Crown")
+    session.add(RestorationRow(fallen_polity_id=fallen.id, ended_epoch=2, territories=[], bases=[], locked=[]))
+
+
+async def cult_of_a_settlement(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Worshipped Town", world, world.regions[0])
+    session.add(LeaderCultRow(leader_node_id=town.id, promoters=[], instruments=[], locked=[]))
+
+
+async def cult_with_a_lost_promoter(session: AsyncSession, world: CoreWorld) -> None:
+    leader = await mortal(session, "Cult Leader", world, None)
+    session.add(LeaderCultRow(leader_node_id=leader.id, promoters=[987654321], instruments=[], locked=[]))
+
+
+async def living_cult_with_an_end(session: AsyncSession, world: CoreWorld) -> None:
+    leader = await mortal(session, "Ended Leader", world, None)
+    session.add(LeaderCultRow(leader_node_id=leader.id, promoters=[], instruments=[], ended_epoch=3, locked=[]))
+
+
+async def reckoning_in(session: AsyncSession, world: CoreWorld, name: str) -> ReckoningRow:
+    realm = await entity(session, name, EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    row = ReckoningRow(polity_entity_id=realm.id, fallen_epoch=1, opened_epoch=2, locked=[])
+    session.add(row)
+    await session.flush()
+    return row
+
+
+async def case_naming_an_unrecorded_deed(session: AsyncSession, world: CoreWorld) -> None:
+    row = await reckoning_in(session, world, "The Unrecorded Realm")
+    accused = await mortal(session, "Nameless Servant", world, None)
+    session.add(ReckoningCaseRow(reckoning_id=row.id, accused_node_id=accused.id, incident_ids=[987654321], locked=[]))
+
+
+async def reckoning_before_its_fall(session: AsyncSession, world: CoreWorld) -> None:
+    row = await reckoning_in(session, world, "The Early Realm")
+    row.fallen_epoch = 9
+
+
+async def measure_of_another_realm(session: AsyncSession, world: CoreWorld) -> None:
+    row = await reckoning_in(session, world, "The Measured Realm")
+    other = await entity(session, "The Other Realm", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add(ReckoningMeasureRow(reckoning_id=row.id, polity_entity_id=other.id, measure=ReckoningMeasure.MEMORIAL, locked=[]))
+
+
+async def vote_of(session: AsyncSession, world: CoreWorld, name: str) -> ReferendumRow:
+    realm = await entity(session, name, EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    row = ReferendumRow(holder_node_id=realm.id, subject=ReferendumSubject.WAR, target_node_id=realm.id, called_epoch=2, locked=[])
+    session.add(row)
+    await session.flush()
+    return row
+
+
+async def vote_open_to_the_wrong_people(session: AsyncSession, world: CoreWorld) -> None:
+    row = await vote_of(session, world, "The Misfranchised Realm")
+    row.franchise = Franchise.ALL
+
+
+async def vote_on_nothing(session: AsyncSession, world: CoreWorld) -> None:
+    row = await vote_of(session, world, "The Aimless Realm")
+    row.target_node_id = None
+
+
+async def vote_held_before_it_was_called(session: AsyncSession, world: CoreWorld) -> None:
+    row = await vote_of(session, world, "The Hasty Realm")
+    row.result, row.held_epoch = ReferendumResult.PASSED, 0
+
+
+async def leaving_of(session: AsyncSession, world: CoreWorld, name: str) -> tuple[EntityRow, DepartureRow]:
+    town = await settlement(session, f"{name} Town", world, world.regions[0])
+    holder = await mortal(session, name, world, town.id)
+    row = DepartureRow(holder_node_id=holder.id, kind=DepartureKind.ABDICATION, epoch=2, conditions=[], locked=[])
+    session.add(row)
+    await session.flush()
+    return holder, row
+
+
+async def office_handed_to_oneself(session: AsyncSession, world: CoreWorld) -> None:
+    holder, row = await leaving_of(session, world, "Self Hander")
+    row.in_favour_of_node_id = holder.id
+
+
+async def leaving_of_a_stray_office(session: AsyncSession, world: CoreWorld) -> None:
+    _holder, row = await leaving_of(session, world, "Stray Leaver")
+    realm = await entity(session, "The Office Realm", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    office = OfficeRow(polity_entity_id=realm.id, kind=OfficeKind.MARSHAL, since_epoch=0, powers=[])
+    session.add(office)
+    await session.flush()
+    row.office_id, row.office_kind = office.id, OfficeKind.RULER
+
+
+async def return_before_leaving(session: AsyncSession, world: CoreWorld) -> None:
+    _holder, row = await leaving_of(session, world, "Early Returner")
+    row.returned_epoch = 0
+
+
+async def realm_with_two_orders(session: AsyncSession, world: CoreWorld) -> None:
+    realm = await entity(session, "The Doubled Realm", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add_all([EconomicOrderRow(polity_entity_id=realm.id, locked=[]), EconomicOrderRow(polity_entity_id=realm.id, locked=[])])
+
+
+async def change_of_unknown_axes(session: AsyncSession, world: CoreWorld) -> None:
+    realm = await entity(session, "The Muddled Realm", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add(OrderTransitionRow(polity_entity_id=realm.id, kind=TransitionKind.LAND_REFORM, from_axes={"weather": "fair"}, to_axes={}, locked=[]))
+
+
+async def change_of_a_fallen_realm(session: AsyncSession, world: CoreWorld) -> None:
+    realm = await entity(session, "The Fallen Realm", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add(OrderTransitionRow(polity_entity_id=realm.id, kind=TransitionKind.EMANCIPATION, from_axes={}, to_axes={}, locked=[]))
+    realm.status, realm.end_epoch = EntityStatus.DEAD, world.cosmos.epoch
+
+
+async def league_of(session: AsyncSession, world: CoreWorld, name: str, aims: list[str], organs: list[str]) -> EntityRow:
+    league = await entity(session, name, EntityType.LEAGUE, LeagueStats(), world_id=world.world.id)
+    session.add(PolityLeagueRow(league_entity_id=league.id, aims=aims, organs=organs, locked=[]))
+    await session.flush()
+    return league
+
+
+async def guild_in_a_league(session: AsyncSession, world: CoreWorld) -> None:
+    league = await league_of(session, world, "The Odd League", ["trade"], ["assembly"])
+    guild, _head = await governed_guild(session, world, "The Leagued Guild")
+    session.add(LeagueMemberRow(league_entity_id=league.id, polity_entity_id=guild.id, locked=[]))
+
+
+async def currency_union_with_no_money(session: AsyncSession, world: CoreWorld) -> None:
+    await league_of(session, world, "The Moneyless League", ["currency_union"], ["assembly"])
+
+
+async def ruling_with_no_court(session: AsyncSession, world: CoreWorld) -> None:
+    league = await league_of(session, world, "The Courtless League", ["trade"], ["assembly"])
+    session.add(LeagueDecisionRow(league_entity_id=league.id, organ=LeagueOrgan.COURT, kind=LeagueDecisionKind.RULING, locked=[]))
+
+
+async def security_of(session: AsyncSession, world: CoreWorld, name: str) -> tuple[EntityRow, IssuedSecurityRow]:
+    guild, _head = await governed_guild(session, world, name)
+    security = IssuedSecurityRow(name=f"the shares of {name}", issuer_node_id=guild.id, amount=10, locked=[])
+    session.add(security)
+    await session.flush()
+    return guild, security
+
+
+async def holdings_beyond_the_amount(session: AsyncSession, world: CoreWorld) -> None:
+    guild, security = await security_of(session, world, "The Overheld")
+    session.add(SecurityHoldingRow(holder_node_id=guild.id, security_id=security.id, amount=25, locked=[]))
+
+
+async def listed_claim_of_a_gone_issuer(session: AsyncSession, world: CoreWorld) -> None:
+    guild, _security = await security_of(session, world, "The Gone Issuer")
+    guild.status, guild.end_epoch = EntityStatus.DEAD, world.cosmos.epoch
+
+
+async def price_naming_a_stranger(session: AsyncSession, world: CoreWorld) -> None:
+    _guild, security = await security_of(session, world, "The Priced")
+    stranger, _head = await governed_guild(session, world, "The Stranger House")
+    session.add(SecurityPriceRow(security_id=security.id, issuer_node_id=stranger.id, epoch=0, price=5, locked=[]))
+
+
+async def currency_with_authority(session: AsyncSession, world: CoreWorld, name: str) -> tuple[CurrencyRow, MonetaryAuthorityRow]:
+    town = await settlement(session, f"{name} Town", world, world.regions[0])
+    currency = CurrencyRow(issuer_entity_id=town.id, name=name, purity=100, supply=100, trust=60, minted_epoch=0)
+    session.add(currency)
+    await session.flush()
+    authority = MonetaryAuthorityRow(currency_id=currency.id, holder_node_id=town.id, issuer_node_id=town.id, locked=[])
+    session.add(authority)
+    await session.flush()
+    return currency, authority
+
+
+async def peg_on_its_own_coin(session: AsyncSession, world: CoreWorld) -> None:
+    currency, authority = await currency_with_authority(session, world, "Selfmark")
+    authority.peg_currency_id = currency.id
+
+
+async def authority_naming_a_stranger_issuer(session: AsyncSession, world: CoreWorld) -> None:
+    _currency, authority = await currency_with_authority(session, world, "Straymark")
+    stranger = await settlement(session, "Strayholm", world, world.regions[0])
+    authority.issuer_node_id = stranger.id
+
+
+async def contract_of_a_body_that_is_gone(session: AsyncSession, world: CoreWorld) -> None:
+    guild, _head = await governed_guild(session, world, "The Bodiless Hirer")
+    session.add(LabourContractRow(hirer_node_id=guild.id, body_node_id=guild.id, trade=Job.CRAFTING, locked=[]))
+
+
+async def dispute_with_too_many_out(session: AsyncSession, world: CoreWorld) -> None:
+    guild, _head = await governed_guild(session, world, "The Crowded Hirer")
+    town = await settlement(session, "Crowdford", world, world.regions[0])
+    session.add(LabourRow(community_entity_id=town.id, job=Job.CRAFTING, workers=10, output_pct=100, epoch=0, held=False))
+    session.add(LabourDisputeRow(hirer_node_id=guild.id, settlement_entity_id=town.id, trade=Job.CRAFTING, workers_out=500, locked=[]))
+
+
+async def body_of_unknown_trades(session: AsyncSession, world: CoreWorld) -> None:
+    guild, _head = await governed_guild(session, world, "The Unknown Trades")
+    session.add(WorkerBodyRow(faction_node_id=guild.id, trades=["crafting", "nothing_known"], locked=[]))
+
+
+async def shares_that_miss_a_hundred(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Shortmarket", world, world.regions[0])
+    guild, _head = await governed_guild(session, world, "The Short Seller")
+    session.add(MarketStructureRow(market_entity_id=town.id, commodity=CommodityKind.GRAIN, sellers={str(guild.id): 70}, small_sellers_pct=0, locked=[]))
+
+
+async def compact_with_an_outsider(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Compactford", world, world.regions[0])
+    guild, head = await governed_guild(session, world, "The Compact Seller")
+    session.add(MarketStructureRow(market_entity_id=town.id, commodity=CommodityKind.GRAIN, sellers={str(guild.id): 100}, locked=[]))
+    session.add(CartelRow(name="the outsiders' compact", members=[guild.id, head.id], markets=[town.id], commodity=CommodityKind.GRAIN, locked=[]))
+
+
+async def price_war_in_a_lost_market(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Lostmarket", world, world.regions[0])
+    guild, _head = await governed_guild(session, world, "The Lost Seller")
+    session.add(PriceWarRow(aggressor_node_id=guild.id, market_entity_id=town.id, commodity=CommodityKind.GRAIN, locked=[]))
+    town.status, town.end_epoch = EntityStatus.DEAD, world.cosmos.epoch
+
+
 async def sermon_in_a_town_without_a_temple(session: AsyncSession, world: CoreWorld) -> None:
     town = await settlement(session, "Templeless", world, world.regions[0])
     speaker = await mortal(session, "Preacher", world, town.id)
@@ -454,6 +1026,74 @@ BREAKERS: dict[str, Breaker] = {
     "lease_owner": lease_of_a_thing_not_owned,
     "works_place": works_on_foreign_ground,
     "media_reach": item_beyond_its_outlet,
+    "god_reading_real": reading_of_no_god,
+    "creature_group_one_kind": pack_led_by_another_kind,
+    "wave_coast_on_sea": wave_on_a_dry_coast,
+    "honour_holder_limit": honour_past_its_limit,
+    "honour_privileges": honour_with_an_odd_privilege,
+    "fertility_means_conceive": means_of_a_people_without_conception,
+    "fertility_use_known": use_of_an_unknown_means,
+    "condition_body_system": condition_of_an_absent_system,
+    "grave_goods_held": grave_with_a_stray_thing,
+    "interpretation_reader": exchange_with_itself,
+    "feeling_spread_values": mood_with_a_stray_feeling,
+    "kin_dynamic_scope": dynamic_of_nothing,
+    "kin_favour_other": favour_for_oneself,
+    "kin_rivalry_pair": rivalry_backwards,
+    "elder_sway_living": sway_of_the_dead,
+    "protected_area_region": protected_town,
+    "species_protection_kind": protected_region_as_kind,
+    "conservation_movement_cause": aims_of_another_movement,
+    "land_use_rule_district": rule_on_anothers_district,
+    "conurbation_members": city_with_itself_as_quarter,
+    "interworld_campaign_route": campaign_on_a_stray_way,
+    "interworld_campaign_landed": landed_host_elsewhere,
+    "interworld_migration_route": movement_to_its_own_world,
+    "mass_weapon_technique": weapon_beyond_its_means,
+    "war_remnant_war": remnant_of_a_war_still_fought,
+    "war_remnant_place": remnant_in_land_and_orbit,
+    "deterrence_posture_self": posture_toward_itself,
+    "occupation_regime_open": regime_without_an_occupation,
+    "collaboration_place": collaborator_from_afar,
+    "collaboration_end": killed_collaborator_without_an_end,
+    "occupation_measure_regime": measure_of_an_ended_regime,
+    "occupation_measure_region": measure_in_another_land,
+    "restoration_fallen": restoration_of_a_standing_realm,
+    "restoration_predecessor": restored_without_a_link,
+    "restoration_end": open_restoration_with_an_end,
+    "leader_cult_leader": cult_of_a_settlement,
+    "leader_cult_promoters": cult_with_a_lost_promoter,
+    "leader_cult_end": living_cult_with_an_end,
+    "reckoning_case_acts": case_naming_an_unrecorded_deed,
+    "reckoning_after_fall": reckoning_before_its_fall,
+    "reckoning_measure_realm": measure_of_another_realm,
+    "referendum_franchise": vote_open_to_the_wrong_people,
+    "referendum_subject": vote_on_nothing,
+    "referendum_held": vote_held_before_it_was_called,
+    "departure_successor": office_handed_to_oneself,
+    "departure_office": leaving_of_a_stray_office,
+    "departure_return": return_before_leaving,
+    "economic_order_single": realm_with_two_orders,
+    "order_transition_axes": change_of_unknown_axes,
+    "order_transition_realm": change_of_a_fallen_realm,
+    "league_members_polities": guild_in_a_league,
+    "league_currency_union": currency_union_with_no_money,
+    "league_decision_organ": ruling_with_no_court,
+    "security_holdings_within": holdings_beyond_the_amount,
+    "security_issuer_living": listed_claim_of_a_gone_issuer,
+    "security_price_issuer": price_naming_a_stranger,
+    "monetary_peg_target": peg_on_its_own_coin,
+    "monetary_issuer": authority_naming_a_stranger_issuer,
+    "labour_contract_body": contract_of_a_body_that_is_gone,
+    "labour_dispute_workers": dispute_with_too_many_out,
+    "worker_body_trades": body_of_unknown_trades,
+    "market_shares_whole": shares_that_miss_a_hundred,
+    "cartel_sellers": compact_with_an_outsider,
+    "price_war_market": price_war_in_a_lost_market,
+    "org_seats_members": seat_held_by_a_stranger,
+    "org_votes_whole": votes_that_miss_a_hundred,
+    "org_merger_parties": bid_for_a_vanished_house,
+    "insolvency_claims": creditor_who_never_lent,
     "speech_venue": sermon_in_a_town_without_a_temple,
     "folk_class_kind": class_of_animals_pointing_at_a_region,
     "stage_builder": stage_set_down_by_another_realm,

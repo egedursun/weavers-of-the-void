@@ -192,6 +192,7 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.galaxies",
     "table.galaxy_clusters",
     "table.genomes",
+    "table.grave_goods",
     "table.holder_levels",
     "table.incident_participants",
     "table.incidents",

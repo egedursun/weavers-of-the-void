@@ -17,8 +17,10 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.industry.owners import purse_value
+from aerona.engine.monetary.authorities import rate_shift
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
+from aerona.engine.securities.holdings import default_premium
 from aerona.engine.services.war import declare_war
 
 RESERVE_METALS = (MaterialKind.GOLD, MaterialKind.SILVER)
@@ -122,7 +124,8 @@ async def rate(ctx: TickContext, subject_id: int, tally: CreditTally) -> CreditP
         else:
             row.state = CreditState.NORMAL
     if "interest_pct" not in locked:
-        row.interest_pct = rated_interest(ctx, row.rating, await scarcity_of(ctx, subject_id))
+        premium = await default_premium(ctx.session, subject_id, ctx.rules.securities.default_rate_rise)
+        row.interest_pct = max(0, rated_interest(ctx, row.rating, await scarcity_of(ctx, subject_id)) + await rate_shift(ctx, subject_id) + premium)
     if realm is not None and "reserves" not in locked:
         row.reserves = await reserves_of(ctx, subject_id)
     row.epoch = ctx.epoch
@@ -150,7 +153,7 @@ async def back_currencies(ctx: TickContext, tally: CreditTally) -> None:
 
 async def interest_for(ctx: TickContext, borrower_id: int, fallback: int) -> int:
     row = await ctx.session.get(CreditProfileRow, borrower_id)
-    return row.interest_pct if row is not None else fallback
+    return row.interest_pct if row is not None else max(0, fallback + await rate_shift(ctx, borrower_id))
 
 
 async def refuses(ctx: TickContext, borrower_id: int) -> bool:

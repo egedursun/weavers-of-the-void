@@ -5,14 +5,18 @@ from pydantic import Field
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
 from aerona.cartography.model import WorldMap
+from aerona.domain.enums.creature_groups import GroupForm
 from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import MoneyForm, TradeMode, TradeRouteStatus
 from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.kinds import KindConcept
+from aerona.domain.enums.mass_weapons import RemnantKind
 from aerona.domain.enums.military import Stance
 from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.protected_nature import ProtectionBasis
+from aerona.domain.enums.sea_waves import WaveOrigin
 from aerona.domain.enums.urban import ConvoyStatus
 from aerona.domain.models.records import RegionControl
 from aerona.services.wiki import EventMarker, RegionDominance, RoadKind, SettlementInfo
@@ -23,6 +27,7 @@ class RelationLineKind(StrEnum):
     HOSTILITY = "hostility"
     RULE = "rule"
     HUNT = "hunt"
+    CONURBATION = "conurbation"
 
 
 class GeographyPreview(ApiModel):
@@ -232,6 +237,26 @@ class RegionMoney(ApiModel):
     form: MoneyForm
 
 
+class RegionRemnant(ApiModel):
+    kind: RemnantKind
+    density: int
+
+
+class RegionGroup(ApiModel):
+    form: GroupForm
+    size: int
+
+
+class RegionWave(ApiModel):
+    origin: WaveOrigin
+    height: int
+
+
+class RegionProtection(ApiModel):
+    basis: ProtectionBasis
+    strength: int
+
+
 class MapView(ApiModel):
     world: WorldRecord
     geometry: WorldMap
@@ -261,6 +286,10 @@ class MapView(ApiModel):
     tongues: dict[int, RegionTongue] = Field(default_factory=dict)
     kinds: dict[int, list[RegionKind]] = Field(default_factory=dict)
     money: dict[int, RegionMoney] = Field(default_factory=dict)
+    remnants: dict[int, RegionRemnant] = Field(default_factory=dict)
+    protected: dict[int, RegionProtection] = Field(default_factory=dict)
+    waves: dict[int, RegionWave] = Field(default_factory=dict)
+    groups: dict[int, RegionGroup] = Field(default_factory=dict)
     lairs: list[MapLair] = Field(default_factory=list)
     notes: list[MapNoteRecord]
     time: MapTime

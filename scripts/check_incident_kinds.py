@@ -171,6 +171,28 @@ def shape_problems(spec: IncidentKindSpec, node: ast.Call) -> list[str]:
     return problems
 
 
+LIST_CALLS = frozenset({"list", "sorted", "tuple", "set"})
+
+
+def gives_many(value: ast.expr) -> bool:
+    if isinstance(value, (ast.List, ast.ListComp, ast.Set, ast.SetComp, ast.Tuple)):
+        return True
+    return isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id in LIST_CALLS
+
+
+def many_problems(spec: IncidentKindSpec, node: ast.Call) -> list[str]:
+    found = next((keyword.value for keyword in node.keywords if keyword.arg == "roles"), None)
+    if not isinstance(found, ast.Dict):
+        return []
+    single = {role.role.value for role in spec.roles if not role.many}
+    problems = []
+    for key, value in zip(found.keys, found.values, strict=True):
+        name = key.attr.lower() if isinstance(key, ast.Attribute) else key.value if isinstance(key, ast.Constant) else None
+        if name in single and gives_many(value):
+            problems.append(f"gives several nodes to the single role {name} of {spec.key}; declare it many")
+    return problems
+
+
 def given_problems(spec: IncidentKindSpec, node: ast.Call) -> list[str]:
     found: list[str] = []
     place = next(
@@ -215,6 +237,7 @@ def given_problems(spec: IncidentKindSpec, node: ast.Call) -> list[str]:
                 f"leaves out required facts of {spec.key}: {', '.join(missing)}"
             )
     found.extend(shape_problems(spec, node))
+    found.extend(many_problems(spec, node))
     return found
 
 

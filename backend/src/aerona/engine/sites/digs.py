@@ -39,6 +39,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.features import add_stock
 from aerona.engine.cosmos.routes import reveal_hidden_route
 from aerona.engine.environment.book import add_scar
+from aerona.engine.grave_goods.robbery import unearth_graves
 from aerona.engine.history.collections import open_collection
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore import items
@@ -285,9 +286,15 @@ async def suffer(ctx: TickContext, dig: ExcavationRow, risk: ExcavationRisk, sit
 
 
 async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRow, site: EntityRow, leader: EntityRow) -> dict[str, FactInput]:
-    hoard = await unearth_hoards(ctx, [place for place in (site.id, site.location_id) if place is not None], leader)
+    places = [place for place in (site.id, site.location_id) if place is not None]
+    hoard = await unearth_hoards(ctx, places, leader)
+    graves = await unearth_graves(ctx, places, leader)
     marked = await read_marks(ctx, site)
-    found: dict[str, FactInput] = {**({"hoard": hoard} if hoard else {}), **({"marks": int(marked)} if marked else {})}
+    found: dict[str, FactInput] = {
+        **({"hoard": hoard} if hoard else {}),
+        **({"marks": int(marked)} if marked else {}),
+        **({"graves": graves} if graves else {}),
+    }
     if stage.find is ExcavationFind.NOTHING:
         return found
     if stage.find is ExcavationFind.WAKING:

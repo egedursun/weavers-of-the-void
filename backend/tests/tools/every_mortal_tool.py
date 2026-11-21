@@ -130,6 +130,50 @@ from tests.tools.every_setup_minds import (
     two_made_minds,
 )
 from tests.tools.every_setup_nature import town_dweller
+from tests.tools.every_setup_orders import (
+    a_coast,
+    a_creature_group,
+    a_faith_conceived,
+    a_grave,
+    a_known_means,
+    an_exchange,
+    an_honour,
+    cartel_in_market,
+    cast_out_child,
+    clique_leader,
+    crafting_town,
+    cult_in_realm,
+    exposed_service,
+    fallen_here,
+    foreign_occupation,
+    hirer_head,
+    host_abroad,
+    indebted_head,
+    issuer_head,
+    league_member_ruler,
+    league_to_join,
+    led_restoration,
+    led_worker_body,
+    left_office,
+    listed_claim,
+    market_seller_head,
+    money_holder,
+    movers_home,
+    my_arsenal,
+    my_house,
+    my_occupation,
+    office_holder,
+    open_reckoning_here,
+    open_vote,
+    org_head_and_target,
+    realms_to_bind,
+    research_head,
+    ruled_towns,
+    scarred_home,
+    seated_member,
+    unissued_currency,
+    wild_home,
+)
 from tests.tools.every_setup_powers import heard_truth, kept_truth, linked_pair, powered, seer, tested_realm
 from tests.tools.every_setup_ways import (
     aboard,
@@ -189,6 +233,12 @@ from tests.tools.ways_values import (
 
 REASON = "for the good of the valley roads"
 TECHNIQUE = next(iter(Technique)).value
+
+TECHNIQUES = list(Technique)
+
+
+def pick_id(key: str) -> Any:
+    return lambda _realm, ids: ids[key]
 
 
 def by_mortal(realm: Realm, _ids: Ids) -> int:
@@ -319,6 +369,113 @@ MORTAL_CASES: dict[str, Case] = {
     "begin_works": named(plain(kind="road", route_or_region_id=lambda realm, _ids: realm.settlement_id, labour="corvee", budget=0), ruler),
     "fund_works": named(plain(works_id=lambda _realm, ids: ids["works"], amount=5), works_underway),
     "found_enterprise": named(plain(form="mint", sector=None), ruler),
+    "stir_feeling": named(plain(place_or_household_id=lambda realm, _ids: realm.settlement_id, feeling="hope")),
+    "argue_doctrine": named(plain(faith_id=pick_id("faith"), conception_axis="count", stance="many"), a_faith_conceived),
+    "drive_off_group": named(plain(group_id=pick_id("group"), means="offering"), a_creature_group),
+    "warn_coast": named(plain(region_id=pick_id("region"), method="sight"), a_coast),
+    "confer_honour": named(
+        plain(honour_kind_id=pick_id("kind"), holder_id=pick_id("holder"), deed_incident_id=pick_id("deed")),
+        an_honour,
+    ),
+    "revoke_honour": named(plain(honour_id=lambda _realm, ids: ids["held"]), an_honour),
+    "found_honour": named(plain(conferrer_id=pick_id("polity"), name_reason="Order of the Ford", privileges=["pension", "title"], limit=5), an_honour),
+    "use_fertility_means": named(plain(means="prevention"), a_known_means),
+    "place_grave_goods": named(plain(grave_id=lambda _realm, ids: ids["grave"], item_ids=lambda _realm, ids: [ids["item"]]), a_grave),
+    "rob_grave": named(plain(grave_id=lambda _realm, ids: ids["grave"]), a_grave),
+    "guard_grave": named(plain(grave_id=lambda _realm, ids: ids["grave"], guard="sealed"), a_grave),
+    "interpret": named(plain(event_id=lambda _realm, ids: ids["exchange"], slant=True), an_exchange),
+    "favour_child": named(plain(child_id=lambda _realm, ids: ids["child"]), my_house),
+    "disown": named(plain(member_id=lambda _realm, ids: ids["child"], reason="disobedience"), my_house),
+    "reconcile_kin": named(plain(member_id=lambda _realm, ids: ids["child"]), cast_out_child),
+    "protect_area": named(plain(region_or_site_id=lambda _realm, ids: ids["region"], basis="custom", banned_uses=["hunting", "logging"]), wild_home),
+    "protect_species": named(plain(species_id=lambda realm, _ids: realm.species_id, measures=["habitat_guard", "trade_ban"])),
+    "reintroduce": named(plain(species_id=lambda realm, _ids: realm.species_id, region_id=lambda _realm, ids: ids["region"]), wild_home),
+    "set_land_use_rule": named(plain(settlement_id=lambda realm, _ids: realm.settlement_id, rule="height_limit", values={"level": 3}), ruled_towns),
+    "provide_service": named(plain(settlement_id=lambda realm, _ids: realm.settlement_id, service="lighting", budget=50), ruled_towns),
+    "join_settlements": named(plain(settlement_ids=lambda realm, ids: [realm.settlement_id, ids["neighbour"]], governance="one_council"), ruled_towns),
+    "launch_campaign": named(
+        plain(
+            attacker_id=lambda _realm, ids: ids["polity"],
+            target_world_id=lambda _realm, ids: ids["other"],
+            route_id=lambda _realm, ids: ids["route"],
+            army_id=lambda _realm, ids: ids["army"],
+        ),
+        host_abroad,
+    ),
+    "contest_orbit": named(plain(world_id=lambda _realm, ids: ids["world"], fleet_id=lambda _realm, ids: ids["army"]), host_abroad),
+    "lead_migration": named(
+        plain(community_id=lambda realm, _ids: realm.settlement_id, to_world_id=lambda _realm, ids: ids["other"], cause="land_hunger"), movers_home
+    ),
+    "begin_mass_weapon": named(plain(holder_id=lambda _realm, ids: ids["polity"], harm="rite", reach="settlement"), my_arsenal),
+    "declare_posture": named(plain(holder_id=lambda _realm, ids: ids["polity"], toward_id=lambda _realm, ids: ids["rival"], posture="declared"), my_arsenal),
+    "use_mass_weapon": named(plain(weapon_id=lambda _realm, ids: ids["weapon"], target_id=lambda _realm, ids: ids["target"]), my_arsenal),
+    "clear_remnants": named(plain(region_id=lambda _realm, ids: ids["region"], budget=100), scarred_home),
+    "set_occupation_rule": named(plain(occupation_id=lambda _realm, ids: ids["regime"], rule="protectorate"), my_occupation),
+    "impose_measure": named(plain(occupation_id=lambda _realm, ids: ids["regime"], measure="curfew", strength=40), my_occupation),
+    "collaborate": named(plain(occupation_id=lambda _realm, ids: ids["regime"], kind="trade"), foreign_occupation),
+    "expose_collaborator": named(plain(collaboration_id=lambda _realm, ids: ids["service"]), exposed_service),
+    "raise_restoration": named(plain(fallen_polity_id=lambda _realm, ids: ids["fallen"], bases=["memory", "law"]), fallen_here),
+    "restore_polity": named(plain(restoration_id=lambda _realm, ids: ids["restoration"]), led_restoration),
+    "promote_cult": named(plain(leader_id=lambda realm, _ids: realm.mortal_id, instruments=["holidays", "official_biography"])),
+    "tear_down_cult": named(plain(cult_id=lambda _realm, ids: ids["cult"]), cult_in_realm),
+    "open_reckoning": named(plain(polity_id=lambda _realm, ids: ids["polity"], measures=["truth_inquiry", "memorial"]), ruled_realm),
+    "try_servant": named(
+        plain(reckoning_id=lambda _realm, ids: ids["reckoning"], accused_id=lambda _realm, ids: ids["accused"], incident_ids=[]), open_reckoning_here
+    ),
+    "call_referendum": named(
+        plain(polity_id=lambda _realm, ids: ids["polity"], subject="faith", question_target_id=lambda realm, _ids: realm.cult_id), ruled_realm
+    ),
+    "campaign_for_vote": named(plain(referendum_id=lambda _realm, ids: ids["referendum"], side="no", means="money"), open_vote),
+    "leave_office": named(plain(office_id=lambda _realm, ids: ids["office"], kind="retirement", conditions=["pension"]), office_holder),
+    "return_to_office": named(plain(departure_id=lambda _realm, ids: ids["departure"]), left_office),
+    "found_league": named(
+        plain(polity_ids=lambda _realm, ids: [ids["mine"], ids["second"], ids["third"]], aims=["defence", "trade"], vote_basis="one_member_one_vote"),
+        realms_to_bind,
+    ),
+    "join_league": named(plain(league_id=lambda _realm, ids: ids["league"], polity_id=lambda _realm, ids: ids["mine"]), league_to_join),
+    "table_league_motion": named(
+        plain(league_id=lambda _realm, ids: ids["league"], organ="assembly", kind="sanction", subject_id=lambda _realm, ids: ids["subject"]),
+        league_member_ruler,
+    ),
+    "list_security": named(
+        plain(issuer_id=lambda _realm, ids: ids["issuer"], kind="bond", amount=50, exchange_id=lambda _realm, ids: ids["exchange"]), issuer_head
+    ),
+    "trade_security": named(plain(security_id=lambda _realm, ids: ids["security"], amount=2, side="buy"), listed_claim),
+    "set_monetary_policy": named(
+        plain(authority_id=lambda _realm, ids: ids["authority"], rate=8, aim="peg", peg_currency_id=lambda _realm, ids: ids["anchor"]), money_holder
+    ),
+    "found_monetary_authority": named(
+        plain(currency_id=lambda _realm, ids: ids["currency"], holder_id=lambda _realm, ids: ids["holder"], independence=60, aim="stable_value"),
+        unissued_currency,
+    ),
+    "found_worker_body": named(plain(form="craft_union", trades=["crafting"], settlement_id=lambda _realm, ids: ids["town"]), crafting_town),
+    "bargain_contract": named(
+        plain(worker_body_id=lambda _realm, ids: ids["body"], hirer_id=lambda _realm, ids: ids["hirer"], demands=["wage", "safety"]), led_worker_body
+    ),
+    "call_dispute": named(plain(worker_body_id=lambda _realm, ids: ids["body"], act="strike", demand="hours"), led_worker_body),
+    "lock_out": named(plain(hirer_id=lambda _realm, ids: ids["hirer"], worker_body_id=lambda _realm, ids: ids["body"], demand="wage"), hirer_head),
+    "form_cartel": named(
+        plain(
+            member_ids=lambda _realm, ids: [ids["org"], ids["rival"]],
+            goods_kind="grain",
+            market_id=lambda _realm, ids: ids["market"],
+            aim="price",
+            terms=20,
+        ),
+        market_seller_head,
+    ),
+    "start_price_war": named(plain(market_id=lambda _realm, ids: ids["market"], goods_kind="grain", cut=20), market_seller_head),
+    "report_cartel": named(plain(cartel_id=lambda _realm, ids: ids["cartel"]), cartel_in_market),
+    "cast_org_vote": named(plain(org_id=lambda _realm, ids: ids["org"], motion="grow", vote="for"), seated_member),
+    "seek_headship": named(plain(org_id=lambda _realm, ids: ids["org"]), seated_member),
+    "split_org": named(plain(org_id=lambda _realm, ids: ids["org"], clique_id=lambda _realm, ids: ids["clique"], name_reason="The Parted Hall"), clique_leader),
+    "bid_for_org": named(
+        plain(acquirer_id=lambda _realm, ids: ids["org"], target_id=lambda _realm, ids: ids["target"], kind="friendly_acquisition"), org_head_and_target
+    ),
+    "fund_research": named(
+        plain(org_id=lambda _realm, ids: ids["org"], technique=lambda _realm, ids: TECHNIQUES[ids["technique"]].value, budget=200), research_head
+    ),
+    "file_insolvency": named(plain(org_id=lambda _realm, ids: ids["org"], path="restructuring"), indebted_head),
     "found_outlet": named(plain(name="The Vale Crier", lean=10, funding="sales"), shopkeeper),
     "publish_item": named(plain(outlet_id=lambda _realm, ids: ids["outlet"], kind="news", slant=20), outlet_owner),
     "censor_outlet": named(plain(outlet_id=lambda _realm, ids: ids["outlet"], measure="censor"), outlet_in_realm),

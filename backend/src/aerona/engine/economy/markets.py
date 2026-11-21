@@ -15,6 +15,7 @@ from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.industry import QualityTier
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
+from aerona.engine.competition.pricing import market_factors
 from aerona.engine.context import TickContext
 from aerona.engine.demography.basket import staples_of
 from aerona.engine.economy.book import EconomyBook
@@ -29,6 +30,7 @@ from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.industry.quality import at_least, premium
 from aerona.engine.lore.traditions import resent_taboo, taboos
 from aerona.engine.mind.preferences import Prefs, demand_factor, market_fit, material_factor
+from aerona.engine.monetary.authorities import price_factor
 from aerona.engine.polity.law_effects import luxury_factor
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount, stat
@@ -164,7 +166,8 @@ def swing_of(ctx: TickContext, market: EntityRow, commodity: CommodityKind, grow
 
 
 async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -> dict[CommodityKind, Quote]:
-    factor = inflation(ctx, await currency_of(ctx, book, market.id))
+    money = await currency_of(ctx, book, market.id)
+    factor = inflation(ctx, money) * await price_factor(ctx, money.id if money is not None else None)
     population = headcount(market)
     quotes: dict[CommodityKind, Quote] = {}
     forbidden = await forbidden_foods(ctx.session, market.id) | await taboos(ctx, market.id)
@@ -174,6 +177,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
     tastes = await market_fit(ctx.session, market.id)
     plays = await plays_at(ctx.session, ctx.rules, market.id, ctx.epoch)
     goods = await good_book(ctx.session)
+    structured = await market_factors(ctx, market.id)
     prosperity, piety = stat(market, "prosperity"), stat(market, "piety")
     for commodity in COMMODITIES:
         hold = held.get(commodity)
@@ -188,7 +192,8 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
             demand = round_half_up(demand * await noble_demand(ctx, book, market))
         demand = round_half_up(demand * demand_factor(ctx.rules, tastes, commodity.value) * income_of(ctx, market, commodity))
         demand = round_half_up(demand * goods.demand_scale(ctx.rules, commodity, prosperity=prosperity, piety=piety))
-        monopoly = await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
+        shaped = structured.get(commodity)
+        monopoly = shaped if shaped is not None else await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
         markup = await material_premium(ctx, book, market, commodity, tastes)
         swing = swing_of(ctx, market, commodity, growth)
         price = (

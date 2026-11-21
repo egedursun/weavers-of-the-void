@@ -226,6 +226,7 @@ async def social_norms(ctx: TickContext) -> None:
     "table.incident_collections",
     "table.memory_strikes",
     "table.mortal_profiles",
+    "table.node_births",
     "table.nodes",
     "table.offices",
     "table.polity_members",
@@ -382,6 +383,7 @@ async def lost_lands(ctx: TickContext) -> None:
     "table.incident_collections",
     "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.storylet_runs",
 )
@@ -565,6 +567,7 @@ async def heraldry(ctx: TickContext) -> None:
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.language_profiles",
     "table.name_registry",
     "table.node_births",
     "table.vessel_profiles",

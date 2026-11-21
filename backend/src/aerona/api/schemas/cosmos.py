@@ -2,6 +2,7 @@ from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import EntitySummary, ForeignGodRecord, JourneyRecord, NodeRef, RouteRecord, StarRecord, WorldRecord
 from aerona.cartography.palette import WorldPalette
 from aerona.domain.enums.chronicle import LegendaryQuestOutcome, ThreadStatus
+from aerona.domain.enums.interworld import CampaignStage, MigrationCause, MigrationReception
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.quests import QuestAim, QuestObstacle, QuestReward, QuestScale, QuestTargetKind
 from aerona.domain.enums.society import NaturalLaw
@@ -63,6 +64,32 @@ class SkyEventRecord(ApiModel):
     text: str | None
 
 
+class CampaignMark(ApiModel):
+    id: int
+    attacker_entity_id: int
+    attacker_name: str
+    from_world_id: int
+    target_world_id: int
+    stage: CampaignStage
+    forces: int
+
+
+class MigrationMark(ApiModel):
+    id: int
+    community_entity_id: int
+    from_world_id: int
+    to_world_id: int
+    cause: MigrationCause
+    reception: MigrationReception
+    moved: int
+
+
+class OrbitMark(ApiModel):
+    world_id: int
+    holder_entity_id: int
+    strength: int
+
+
 class CosmosView(ApiModel):
     stars: list[StarRecord]
     worlds: list[CosmosWorld]
@@ -73,6 +100,9 @@ class CosmosView(ApiModel):
     world_types: list[WorldTypeLook]
     places: list[EntitySummary]
     communities: list[EntitySummary]
+    campaigns: list[CampaignMark]
+    migrations: list[MigrationMark]
+    orbits: list[OrbitMark]
 
 
 class SensedWorld(ApiModel):
