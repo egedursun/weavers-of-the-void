@@ -24,7 +24,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.deposits import Deposit, open_deposit
 from aerona.engine.economy.extraction import extraction_kind
-from aerona.engine.economy.materials import set_node_material
+from aerona.engine.economy.materials import material_kind, set_node_material
 from aerona.engine.economy.provenance import sweep_materials
 from aerona.engine.economy.resources import default_material, ensure_profile
 from aerona.engine.economy.routes import found_route, load_routes
@@ -291,7 +291,7 @@ async def hide_seams(ctx: TickContext, book: EconomyBook) -> int:
             if depth >= HIDDEN_SEAM_FLOOR and rng.chance(ctx.rules.extraction.hidden_share_pct) and await hide_world_seam(ctx, place, world_id, depth):
                 hidden += 1
             continue
-        if depth < HIDDEN_SEAM_FLOOR or MaterialKind(name) not in MINERALS or not rng.chance(ctx.rules.extraction.hidden_share_pct):
+        if depth < HIDDEN_SEAM_FLOOR or material_kind(name) not in MINERALS or not rng.chance(ctx.rules.extraction.hidden_share_pct):
             continue
         await open_deposit(
             ctx,

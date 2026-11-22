@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.foe_natures import FOE_BANES
 from aerona.catalog.materials import ALLOYS, MATERIALS, MaterialSpec
+from aerona.constants.materials import RENAMED_MATERIALS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -315,6 +316,10 @@ def slot_key(material: MaterialKind | None, world_material_id: int | None) -> st
     return material.value if material is not None else None
 
 
+def material_kind(name: str) -> MaterialKind:
+    return MaterialKind(RENAMED_MATERIALS.get(name, name))
+
+
 def key_parts(key: str | None) -> tuple[MaterialKind | None, int | None]:
     if not key:
         return None, None
@@ -324,7 +329,7 @@ def key_parts(key: str | None) -> tuple[MaterialKind | None, int | None]:
             raise ValidationFailedError(f"{key} is not a substance of this world.")
         return None, int(number)
     try:
-        return MaterialKind(key), None
+        return MaterialKind(RENAMED_MATERIALS.get(key, key)), None
     except ValueError as error:
         raise ValidationFailedError(f"{key} is not a known material.") from error
 

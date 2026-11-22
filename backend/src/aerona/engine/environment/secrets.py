@@ -25,6 +25,7 @@ from aerona.domain.enums.place import DiscoveryMode, SecretKind, SecretOrigin
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats, KnowledgeStats, ResourceStats, SpiritStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.materials import material_kind
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.environment.book import add_scar
 from aerona.engine.environment.places import KIND_LOCK, write_kind
@@ -51,7 +52,7 @@ class SecretDraft:
 
 
 def mineable_materials(region: RegionEnvironmentRow | None) -> list[MaterialKind]:
-    seams = [MaterialKind(key) for key in sorted(region.mineral_layers)] if region is not None else []
+    seams = [material_kind(key) for key in sorted(region.mineral_layers)] if region is not None else []
     return seams or sorted((kind for kind, spec in MATERIALS.items() if spec.family in MINEABLE), key=lambda kind: kind.value)
 
 
