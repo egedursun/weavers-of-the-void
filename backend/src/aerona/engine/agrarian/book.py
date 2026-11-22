@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.agrarian import BOOK_SHIELDS as SHIELDS
+from aerona.catalog.life_traits import PREPAREDNESS_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import (
     CentralPlaceRow,
@@ -21,6 +23,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import LandUseRing, NutrientKind, PreparednessKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.life_traits import PreparednessKindTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -30,19 +33,8 @@ from aerona.engine.primitives.queries import top_region
 from aerona.engine.recording.record import FactInput, record
 from aerona.rules.registry import Rules
 
-P = PreparednessKind
 BODY = (NutrientKind.FIXED, NutrientKind.MINERAL, NutrientKind.ORGANIC)
-SHIELDS: dict[Disaster, frozenset[PreparednessKind]] = {
-    Disaster.FLOOD: frozenset({P.LEVEE, P.SEAWALL, P.EVACUATION_ROUTES, P.WARNING_NETWORK}),
-    Disaster.STORM: frozenset({P.SEAWALL, P.SHELTERS, P.WARNING_NETWORK}),
-    Disaster.EARTHQUAKE: frozenset({P.DRILL, P.SHELTERS, P.EVACUATION_ROUTES}),
-    Disaster.VOLCANIC_QUAKE: frozenset({P.DRILL, P.SHELTERS, P.EVACUATION_ROUTES}),
-    Disaster.ERUPTION: frozenset({P.DRILL, P.EVACUATION_ROUTES, P.WARNING_NETWORK}),
-    Disaster.DROUGHT: frozenset({P.STOCKPILE, P.RESERVES_OF_ENERGY}),
-    Disaster.PLAGUE: frozenset({P.QUARANTINE_PLAN}),
-}
-FIRE_SHIELDS = frozenset({P.FIREBREAK, P.EVACUATION_ROUTES, P.WARD})
-SHIELDS = {disaster: kinds | {P.WARD} for disaster, kinds in SHIELDS.items()}
+FIRE_SHIELDS = having(PREPAREDNESS_KIND_TRAITS, PreparednessKindTrait.FIRE_SHIELDS)
 
 
 def ring_shares(rules: Rules, ring: LandUseRing) -> tuple[int, int]:

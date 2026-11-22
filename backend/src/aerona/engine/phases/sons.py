@@ -1,5 +1,6 @@
 from itertools import combinations
 
+from aerona.catalog.life.domain import STANDING_STATES
 from aerona.catalog.rarities import build_rarity_table
 from aerona.catalog.stats import EXISTENCE_BAND_LABELS, existence_band, max_essence, max_hp
 from aerona.constants.schema import SINGLETON_ID
@@ -19,7 +20,6 @@ from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import ExistenceBand, PowerEffect, SonStatus
-from aerona.domain.enums.structure import STANDING_STATES
 from aerona.engine.context import TickContext
 from aerona.engine.divine.decrees import council_chained
 from aerona.engine.divine.standing import mean_neglect

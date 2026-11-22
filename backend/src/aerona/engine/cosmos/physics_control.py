@@ -3,6 +3,9 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.life.cosmos import STAR_BOUND
+from aerona.catalog.life.domain import PERIODIC_BODIES
+from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -17,8 +20,9 @@ from aerona.db.tables.physics import (
     WorldPhysicsRow,
     WorldSurveyRow,
 )
+from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.physics import PERIODIC_BODIES, CosmicFeatureKind, LifeEnvironment, SurveyLevel, SystemRole, TerraformAim
+from aerona.domain.enums.physics import CosmicFeatureKind, LifeEnvironment, SurveyLevel, SystemRole, TerraformAim
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
@@ -36,8 +40,7 @@ from aerona.engine.recording.scope import recording
 
 Values = Mapping[str, Any]
 SYSTEM_KEYS = frozenset({"system_id", "role"})
-BROKEN_WORLDS = frozenset({WorldType.SHATTERED, WorldType.ASTEROID_BELT})
-STAR_BOUND = frozenset({CosmicFeatureKind.ASTEROID_FIELD, CosmicFeatureKind.GRAVITY_WELL, *PERIODIC_BODIES})
+BROKEN_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.BROKEN_WORLDS)
 
 
 async def found[Row](ctx: TickContext, kind: type[Row], key: object, label: str) -> Row:

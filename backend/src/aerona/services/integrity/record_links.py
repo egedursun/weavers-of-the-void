@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import FactSpec
+from aerona.catalog.life.services import PRESENT_MODES
 from aerona.constants.engine import LOCATION_CHAIN_MAX_HOPS
 from aerona.db.base import Base
 from aerona.db.ledger_capture import jsonable, key_text
@@ -146,7 +147,6 @@ async def follow_step(session: AsyncSession, step_id: int) -> None:
         step.year, step.season, step.day, step.hour = previous.year, previous.season, previous.day, previous.hour
 
 
-PRESENT_MODES = (WitnessMode.SAW, WitnessMode.TOOK_PART)
 FAR = 2**62
 KNOWING_ROLES = frozenset({IncidentRole.WITNESS, IncidentRole.TELLER})
 GENESIS_PREFIX = "genesis."

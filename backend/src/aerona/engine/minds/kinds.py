@@ -3,6 +3,7 @@ from collections.abc import Mapping
 from sqlalchemy import select
 
 from aerona.catalog.kinds.minds import MIND_PURPOSES
+from aerona.catalog.life.minds import BINDING_HOLD
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.constructs import InstructionSetRow
@@ -18,19 +19,6 @@ from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 MEDIUM_DECAY: Mapping[StateMedium, int] = total(
     StateMedium,
     {StateMedium.RECORD: 0, StateMedium.RITE_VESSEL: 1, StateMedium.GROWN: 2, StateMedium.MEMORY_OF_OTHERS: 3, StateMedium.DIVINE: 0},
-)
-BINDING_HOLD: Mapping[InstructionBinding, int] = total(
-    InstructionBinding,
-    {
-        InstructionBinding.NONE: 0,
-        InstructionBinding.ORDER: 20,
-        InstructionBinding.OATH: 40,
-        InstructionBinding.GEAS: 70,
-        InstructionBinding.SEAL: 90,
-        InstructionBinding.OWNERSHIP: 30,
-        InstructionBinding.LEASE: 20,
-        InstructionBinding.SYMBIOSIS: 60,
-    },
 )
 ARCHIVE_UPKEEP: Mapping[ArchiveAccess, int] = total(
     ArchiveAccess,

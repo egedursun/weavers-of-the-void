@@ -2,6 +2,7 @@ from pydantic import Field
 from sqlalchemy import delete
 
 from aerona.catalog.estates import CAUSE_LABELS, ESTATE_NAMES, PRIVILEGE_LABELS
+from aerona.catalog.life.services import SECRET_FACTION_KINDS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an, spoken
 from aerona.db.tables.culture import HolderTechniqueRow
@@ -365,7 +366,7 @@ async def remove_order(scope: PlayerScope, command: OrderTarget) -> Effect:
 @player_action("guild:secret", ActionKind.EDIT_RECORD)
 async def secret(scope: PlayerScope, command: SetSecret) -> Effect:
     guild = await row_of(scope, FactionProfileRow, command.guild_id, "guild")
-    if guild.kind not in {FactionKind.CRAFT_GUILD, FactionKind.MERCHANT_GUILD} or guild.home_entity_id is None:
+    if guild.kind not in SECRET_FACTION_KINDS or guild.home_entity_id is None:
         raise ValidationFailedError("Only a craft or trade association with a home town keeps craft secrets.")
     known = await scope.session.get(HolderTechniqueRow, (guild.home_entity_id, command.technique))
     row = await scope.session.get(GuildSecretRow, (command.guild_id, command.technique))

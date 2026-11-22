@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.constructs import FORMS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.collective import MovementRow
 from aerona.db.tables.constructs import RemadeRow
@@ -25,7 +26,6 @@ from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import realm_of_town, town_of
 
 SHIFT = 20
-FORMS = ((None, BodyFunction.GRASP), (BodyFunction.SPEECH, None), (BodyFunction.LOCOMOTION, BodyFunction.GRASP))
 
 
 @dataclass

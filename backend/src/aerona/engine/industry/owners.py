@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_tables import WORKSHOP_GOODS
 from aerona.catalog.ownership import GUILD_KINDS, OWNER_CLASS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -31,7 +32,6 @@ from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.orders import OwnershipRegime
 from aerona.domain.enums.polity import LawKind
-from aerona.engine.commerce.seed import WORKSHOP_GOODS
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.faith.book import patron_node

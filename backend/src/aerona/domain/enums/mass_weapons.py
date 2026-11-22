@@ -43,6 +43,3 @@ class RemnantKind(StrEnum):
     UNQUIET_DEAD = "unquiet_dead"
     CURSED_GROUND = "cursed_ground"
     ABANDONED_MACHINES = "abandoned_machines"
-
-
-ARMED_STAGES = frozenset({ProgrammeStage.READY, ProgrammeStage.TESTED})

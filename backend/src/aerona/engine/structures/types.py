@@ -3,19 +3,24 @@ from types import MappingProxyType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_tables import UPKEEP_MATERIALS
+from aerona.catalog.life.domain import STANDING_STATES, UNFINISHED_STATES
+from aerona.catalog.life.structures import CULTURAL_FORM_BUILDING_FORMS
+from aerona.catalog.life_traits import BUILDING_FORM_TRAITS, having
 from aerona.catalog.structure_sections import FORMS, TALL_FORMS
 from aerona.catalog.structures import STRUCTURES
+from aerona.catalog.terrain import terrains
 from aerona.db.tables.cycles import CampRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.environment import CoastKind, TerrainKind
+from aerona.domain.enums.environment import CoastKind, TerrainTrait
+from aerona.domain.enums.life_traits import BuildingFormTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.domain.enums.structure import STANDING_STATES, UNFINISHED_STATES, BuildingForm, BuildScale, StructureGroup, StructureKind
+from aerona.domain.enums.structure import BuildingForm, BuildScale, StructureGroup, StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.embodied import embody
 from aerona.engine.context import TickContext
@@ -25,16 +30,8 @@ from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.made_names import made_name
 from aerona.engine.primitives.queries import living_entity
 
-UPKEEP_MATERIALS: MappingProxyType[CommodityKind, MaterialKind] = MappingProxyType(
-    {
-        CommodityKind.STONE: MaterialKind.STONE,
-        CommodityKind.TIMBER: MaterialKind.WOOD,
-        CommodityKind.ORE: MaterialKind.IRON,
-        CommodityKind.CLOTH: MaterialKind.CLOTH,
-    }
-)
-FIXED_FORMS = frozenset({BuildingForm.WALL_LINE, BuildingForm.TUNNEL_FORM, BuildingForm.BRIDGE_FORM, BuildingForm.ORBITAL, BuildingForm.RING})
-CARVED_GROUND = frozenset({TerrainKind.UNDERGROUND, TerrainKind.MOUNTAINS})
+FIXED_FORMS = having(BUILDING_FORM_TRAITS, BuildingFormTrait.FIXED_FORMS)
+CARVED_GROUND = terrains(TerrainTrait.UNDERGROUND) | terrains(every=(TerrainTrait.HIGH, TerrainTrait.COLD), without=(TerrainTrait.CONFINED,))
 WATERSIDE_GROUPS = frozenset({StructureGroup.CIVIC, StructureGroup.COMMERCE, StructureGroup.PRODUCTION})
 DWELLING_KINDS = frozenset({StructureKind.APARTMENT_BLOCK, StructureKind.HABITAT_RING, StructureKind.INN})
 GREAT_SCALES = frozenset({BuildScale.GRAND, BuildScale.WONDER})
@@ -118,9 +115,7 @@ async def cultural_form(ctx: TickContext, origin: EntityRow | None, kind: Struct
         ),
         (kind in DWELLING_KINDS and level(KnowledgeBranch.ARCHITECTURE, 0) >= table.arcology_level, BuildingForm.ARCOLOGY),
         (
-            base in {BuildingForm.TOWER, BuildingForm.HALL}
-            and STRUCTURES[kind].scale in GREAT_SCALES
-            and level(KnowledgeBranch.ARCHITECTURE, 0) >= table.high_rise_level,
+            base in CULTURAL_FORM_BUILDING_FORMS and STRUCTURES[kind].scale in GREAT_SCALES and level(KnowledgeBranch.ARCHITECTURE, 0) >= table.high_rise_level,
             BuildingForm.HIGH_RISE,
         ),
         (base is BuildingForm.DOME and level(KnowledgeBranch.ARCHITECTURE, 0) >= table.geodesic_level, BuildingForm.GEODESIC),

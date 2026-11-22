@@ -1,6 +1,8 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.mind import BODILESS_NEEDS
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.catalog.needs_sources import ACTIVITY_COLUMNS, ACTIVITY_NEEDS, NEED_SOURCES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
@@ -11,9 +13,9 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.networks import NetworkNodeRow
 from aerona.domain.enums.activities import ActivityKind, SatisfactionSource
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.domain.enums.mind import NeedKind, PressureKind, ValueAxis
 from aerona.domain.enums.minds import MindOrigin, MindSeat
-from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.customs.time_budgets import budget_of as time_budget_of
@@ -23,8 +25,7 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.rules.registry import Rules
 
 FULL = PERCENT
-OLD = frozenset({LifeStage.ELDER, LifeStage.ANCIENT})
-BODILESS_NEEDS = (NeedKind.SUSTENANCE, NeedKind.DRINK)
+OLD = having(LIFE_STAGE_TRAITS, LifeStageTrait.OLD)
 
 
 async def budget_of(session: AsyncSession, mortal: EntityRow) -> dict[ActivityKind, int]:

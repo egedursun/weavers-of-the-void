@@ -1,5 +1,6 @@
 from sqlalchemy import func, select
 
+from aerona.catalog.life.lore import BARD_SKILLS
 from aerona.catalog.lore import DISTORTED, LEGEND_MORALS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -14,7 +15,7 @@ from aerona.domain.enums.culture import CustomCatalog, LegendArchetype
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
-from aerona.domain.enums.mind import MemoryKind, SkillKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.transform import TransformKind
 from aerona.engine.context import TickContext
@@ -52,7 +53,6 @@ EVENT_ARCHETYPES = {
 CONFIRMING = {archetype: frozenset(kind for kind, found in EVENT_ARCHETYPES.items() if found is archetype) for archetype in set(EVENT_ARCHETYPES.values())}
 TELLERS = (BondKind.CELEBRATES, BondKind.TELLS_OF)
 FORETOLD = "the ruler of legend returned"
-BARD_SKILLS = (SkillKind.ORATORY, SkillKind.LORE)
 
 
 async def subject_of(ctx: TickContext, legend_id: int) -> EntityRow | None:

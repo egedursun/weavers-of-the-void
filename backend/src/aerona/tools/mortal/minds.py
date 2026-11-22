@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import Field
 from sqlalchemy import func, select
 
+from aerona.catalog.life.tools import DEFEND_SYSTEM_SKILL_KINDS, MAKERS
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.constructs import ConstructRow
@@ -50,7 +51,7 @@ from aerona.domain.enums.made import (
     SurveillanceFocus,
 )
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.minds import MindAffect, MindMaking, MindPurpose, MindSeat, MindUpkeep, StateMedium
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
@@ -85,7 +86,6 @@ from aerona.tools.framework.validation import fail
 from aerona.tools.mortal.inputs import EnactLawInput
 from aerona.tools.mortal.ruler import enact_law, throne_of
 
-MAKERS = (SkillKind.COMPUTING, SkillKind.ENGINEERING, SkillKind.SPELLCRAFT, SkillKind.RITUAL, SkillKind.MECHANICS, SkillKind.SCIENCE)
 DEFENCE = 10
 SPYING = 15
 CONTAINMENT = 15
@@ -540,7 +540,7 @@ async def defend_system(call: MortalCall, args: SystemInput) -> str:
     guarded = network or store
     if guarded is None or held(args.system_id):
         fail(MortalResult.DEFENCE_DECLINED, why="there is no such network or store you can guard")
-    skill = await best_skill(call.session, call.me.id, (SkillKind.COMPUTING, SkillKind.CRYPTOGRAPHY, SkillKind.RITUAL))
+    skill = await best_skill(call.session, call.me.id, DEFEND_SYSTEM_SKILL_KINDS)
     guarded.security = clamp_percent(guarded.security + DEFENCE + skill // 10)
     await call.record(
         "tools.mortal.defend_system", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: args.system_id}, facts={"security": guarded.security}

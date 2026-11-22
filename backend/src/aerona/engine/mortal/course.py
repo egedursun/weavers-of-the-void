@@ -1,6 +1,9 @@
 from sqlalchemy import select
 
+from aerona.catalog.conditions import AGE_CONDITIONS, OPEN_INJURY_STATES
+from aerona.catalog.kinds.harm import HARM_DEATHS
 from aerona.catalog.kinds.life_stages import LIFE_STAGES
+from aerona.catalog.life.mortal import BETROTH_CHILDREN_LIFE_STAGES, EDUCATE_LIFE_STAGES, LIVE_ONE_EPOCH_LIFE_STAGES, SEED_STANDING_MEMORY_KINDS
 from aerona.catalog.mind import CAREER_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -16,11 +19,11 @@ from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.write_guard import unheld
-from aerona.domain.enums.body import OPEN_INJURY_STATES, ConditionKind, HarmCause, InjuryState
+from aerona.domain.enums.body import ConditionKind, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.genetics import GeneticEffect
-from aerona.domain.enums.mind import Attribute, MemoryKind, OpinionComponent, SkillKind, SkillSource, ValueHolder, WantKind
+from aerona.domain.enums.mind import Attribute, OpinionComponent, SkillKind, SkillSource, ValueHolder, WantKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause, LifeStage, MarriageEnd
 from aerona.domain.enums.polity import OathKind
@@ -45,7 +48,6 @@ from aerona.engine.mind.opinion import opinion
 from aerona.engine.mind.skills import practise
 from aerona.engine.mind.space import blend
 from aerona.engine.mind.split import seed_split, stored_attribute
-from aerona.engine.mortal.death import HARM_DEATHS
 from aerona.engine.mortal.kin import betrothed_of, children_of, parents_of, partners_of, siblings_of
 from aerona.engine.mortal.kinship import betroth, end_marriage, foster, marriage_between, marriages_of, marry
 from aerona.engine.mortal.life import adult, assign_sex, refresh_life, stage_rank
@@ -99,6 +101,8 @@ SCHOOL_KINDS = frozenset({EngineKind.SCHOOL, EngineKind.LIBRARY})
 TEMPLE_KINDS = frozenset({EngineKind.TEMPLE})
 DEATH_FIXUP = "mortal.death_causes"
 FULL = PERCENT
+
+
 LIFE_KEYS = partial(
     LifeStage,
     {LifeStage.ADULT: "life.adult", LifeStage.ELDER: "life.elder"},
@@ -149,7 +153,7 @@ async def seed_standing(ctx: TickContext, mortal: EntityRow, profile: MortalProf
         profile.honour = clamp_int(profile.honour - table.honour_broken_oath, 0, FULL)
     if not is_held(profile, "infamy"):
         rows = await ctx.session.scalars(select(MemoryRow).where(MemoryRow.subject_node_id == mortal.id, MemoryRow.magnitude < 0))
-        dread = sum(-strength_of(row, ctx.epoch) for row in rows if row.kind in (MemoryKind.MAIMED_ME, MemoryKind.KILLED_KIN, MemoryKind.HARMED_ME))
+        dread = sum(-strength_of(row, ctx.epoch) for row in rows if row.kind in SEED_STANDING_MEMORY_KINDS)
         profile.infamy = clamp_int(dread * table.infamy_atrocity / PERCENT, 0, FULL)
 
 
@@ -193,7 +197,7 @@ async def live_one_epoch(ctx: TickContext, mortal: EntityRow) -> LifeStage:
     if stage is LifeStage.YOUTH and not is_held(profile, "life_stage"):
         grown = {key: clamp_int((stat_or(mortal, key, FULL // 2)) + table.youth_growth, 0, FULL) for key in ("strength", "agility", "endurance")}
         set_stats(mortal, **grown)
-    if stage in (LifeStage.ELDER, LifeStage.ANCIENT):
+    if stage in LIVE_ONE_EPOCH_LIFE_STAGES:
         set_stats(
             mortal,
             strength=clamp_int((stat_or(mortal, "strength", FULL // 2)) - table.elder_strength_decline, 0, FULL),
@@ -203,7 +207,7 @@ async def live_one_epoch(ctx: TickContext, mortal: EntityRow) -> LifeStage:
         )
         rng = ctx.rng(seed_of("age_condition", mortal.id, ctx.epoch))
         if rng.chance(table.age_condition_chance):
-            kind = rng.pick((ConditionKind.AGE_BLINDNESS, ConditionKind.AGE_DEAFNESS, ConditionKind.CHRONIC_ILLNESS))
+            kind = rng.pick(AGE_CONDITIONS)
             await gain_condition(ctx, mortal, kind, HarmCause.AGE, severity=banded(ctx, ctx.rules.harm_bands.old_age, mortal.id))
     await update_health(ctx, mortal, profile, stage)
     key = LIFE_KEYS.get(stage)
@@ -258,7 +262,7 @@ async def institution_bonus(ctx: TickContext, community_id: int | None) -> tuple
 
 
 async def educate(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> int:
-    if profile.life_stage not in (LifeStage.CHILD, LifeStage.YOUTH):
+    if profile.life_stage not in EDUCATE_LIFE_STAGES:
         return 0
     table = ctx.rules.education
     people = await people_of(ctx.session, mortal)
@@ -475,7 +479,7 @@ async def betroth_children(ctx: TickContext, mortal: EntityRow) -> bool:
                 EntityRow.social_class == SocialClass.NOBLE,
                 EntityRow.world_id == mortal.world_id,
                 EntityRow.id != child.id,
-                MortalProfileRow.life_stage.in_([LifeStage.CHILD, LifeStage.YOUTH]),
+                MortalProfileRow.life_stage.in_(BETROTH_CHILDREN_LIFE_STAGES),
             )
             .order_by(EntityRow.id)
         )

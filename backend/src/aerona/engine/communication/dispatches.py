@@ -4,6 +4,8 @@ from typing import Any
 from sqlalchemy import select
 
 from aerona.catalog.ethics import HONOUR_MODELS
+from aerona.catalog.life.communication import COURTESIES_OFFICE_KINDS, EFFECTS_DISPATCH_CONTENTS, WELCOME_SKILL_KINDS
+from aerona.catalog.life.domain import OUTLAW_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.communication import CipherRow
 from aerona.db.tables.economy import CommunityStockRow
@@ -18,10 +20,8 @@ from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.communication import DispatchContent, DispatchState, EnvoyFate, Medium
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.faction import OUTLAW_KINDS
 from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin
 from aerona.domain.enums.mind import ActKind, MemoryKind, PreferenceKind, SkillKind, ValueAxis
-from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.communication.post import CLAUSES, COMMODITY, FACTS, FORGER, LOCKED_STATE, OVERLAND, SPIED, TREATY, send
 from aerona.engine.context import TickContext
@@ -151,7 +151,7 @@ async def misread(ctx: TickContext, row: MessageRow) -> bool:
 
 async def welcome(ctx: TickContext, row: MessageRow) -> float:
     table = ctx.rules.communication
-    skill = await best_skill(ctx.session, row.envoy_node_id, [SkillKind.NEGOTIATION, SkillKind.ETIQUETTE]) if row.envoy_node_id is not None else 0
+    skill = await best_skill(ctx.session, row.envoy_node_id, WELCOME_SKILL_KINDS) if row.envoy_node_id is not None else 0
     hierarchy = max(0, (await values_for(ctx.session, row.recipient_node_id)).get(ValueAxis.HIERARCHY, 0))
     precedence = hierarchy / PERCENT * table.precedence_pct / PERCENT * (1 - skill / PERCENT)
     return max(0.0, 1 + skill / PERCENT * table.etiquette_pct / PERCENT - precedence)
@@ -224,7 +224,7 @@ async def effects(ctx: TickContext, row: MessageRow, tally: DispatchTally) -> No
     kindness = await welcome(ctx, row)
     sender, recipient = row.sender_node_id, row.recipient_node_id
     content = row.content
-    if content in {DispatchContent.REPORT, DispatchContent.INTELLIGENCE}:
+    if content in EFFECTS_DISPATCH_CONTENTS:
         source = BeliefSource.SPY if row.payload.get(SPIED) else BeliefSource.MESSAGE
         confidence = table.misread_confidence if row.misread else table.report_confidence
         await learn_facts(ctx, recipient, row.payload.get(FACTS, {}), source, confidence)
@@ -301,9 +301,7 @@ async def courtesies(ctx: TickContext, atlas: RegionAtlas, tally: DispatchTally)
         if held(realm):
             continue
         envoy = await ctx.session.scalar(
-            select(OfficeRow.holder_entity_id)
-            .where(OfficeRow.polity_entity_id == realm, OfficeRow.kind.in_([OfficeKind.AMBASSADOR, OfficeKind.CHANCELLOR]))
-            .limit(1)
+            select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == realm, OfficeRow.kind.in_(COURTESIES_OFFICE_KINDS)).limit(1)
         )
         for other in realms:
             if other == realm or atlas.world_of(other) != atlas.world_of(realm):

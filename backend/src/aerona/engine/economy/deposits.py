@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_tables import BYPRODUCTS, DIFFICULTY, ORIGIN_BASE, ORIGIN_WORDS
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import PHYSICS_COLUMNS, PROPERTY_COLUMNS, ResourceProfileRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
@@ -15,31 +15,10 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import ResourceStats
 from aerona.engine.context import TickContext
-from aerona.engine.economy.resources import BYPRODUCTS, DIFFICULTY, RENEWABLE
+from aerona.engine.economy.resources import RENEWABLE
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.recording.record import record
-
-ORIGIN_WORDS = total(
-    MaterialOrigin,
-    {
-        MaterialOrigin.CATALOG: "a known material of the world",
-        MaterialOrigin.DEAD_GOD: "a dead god",
-        MaterialOrigin.STAR: "a star that died",
-        MaterialOrigin.BEAST: "a great beast",
-        MaterialOrigin.RIFT: "a rift",
-        MaterialOrigin.RESEARCH: "a material its makers found through their work",
-        MaterialOrigin.GOD_GIFT: "a gift of a god",
-    },
-)
-ORIGIN_BASE: dict[MaterialOrigin, MaterialKind] = {
-    MaterialOrigin.DEAD_GOD: MaterialKind.GODFLESH,
-    MaterialOrigin.STAR: MaterialKind.STAR_METAL,
-    MaterialOrigin.BEAST: MaterialKind.GREAT_BONE,
-    MaterialOrigin.RIFT: MaterialKind.VOID_GLASS,
-    MaterialOrigin.RESEARCH: MaterialKind.STEEL,
-}
-
 
 FAMILY_BASE: dict[MaterialFamily, MaterialKind] = {
     MaterialFamily.ORGANIC: MaterialKind.WOOD,

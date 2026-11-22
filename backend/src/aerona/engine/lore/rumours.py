@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.tellings import PLANTED, PLANTED_ATROCITY
+from aerona.catalog.life_traits import WITNESS_MODE_TRAITS, having
 from aerona.catalog.lore import LEGEND_MORALS
 from aerona.catalog.rumours import is_alarm, is_atrocity, is_quiet, legend_archetype
 from aerona.constants.units import PERCENT
@@ -29,9 +30,9 @@ from aerona.domain.enums.culture import RumourChannel
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.folkways import BiasedDecision
+from aerona.domain.enums.life_traits import WitnessModeTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.records import WitnessMode
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.climes.shifts import current_coasts
@@ -66,7 +67,7 @@ UNKNOWN_FAR = 20
 LOAD_CHUNK = 500
 
 
-FIRST_HAND = frozenset({WitnessMode.SAW, WitnessMode.TOOK_PART})
+FIRST_HAND = having(WITNESS_MODE_TRAITS, WitnessModeTrait.FIRST_HAND)
 
 
 @dataclass

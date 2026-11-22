@@ -2,6 +2,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from aerona.catalog.anatomy import Anatomy
+from aerona.catalog.conditions import ALERT_CAPACITIES, CONDITIONS
+from aerona.catalog.life.body import FUNCTION_LEVELS
 from aerona.constants.units import PERCENT
 from aerona.domain.enums.body import BodyFunction, Capacity, ConditionKind, Consciousness, Handedness, NerveDamage
 from aerona.engine.body.digits import hand_shares
@@ -52,27 +54,7 @@ def pain_of(rules: CapacityRules, open_severity: int) -> int:
 
 
 def condition_penalty(rules: CapacityRules, kind: ConditionKind) -> dict[Capacity, int]:
-    table: dict[ConditionKind, dict[Capacity, int]] = {
-        ConditionKind.CHRONIC_ILLNESS: {C.MOBILITY: rules.illness_mobility, C.MELEE: rules.illness_melee, C.FERTILITY: rules.illness_fertility},
-        ConditionKind.PARANOIA: {C.COMMAND: rules.paranoia_command, C.PRESENCE: rules.paranoia_presence},
-        ConditionKind.VISIONS: {C.SCHOLARSHIP: rules.visions_scholarship, C.PRESENCE: -rules.visions_presence},
-        ConditionKind.RAGE: {C.MELEE: -rules.rage_melee, C.COMMAND: rules.rage_command, C.CRAFT: rules.rage_craft},
-        ConditionKind.MELANCHOLY: {C.COMMAND: rules.melancholy_command, C.CRAFT: rules.melancholy_craft, C.PRESENCE: rules.melancholy_presence},
-        ConditionKind.ADDICTION: {C.CRAFT: rules.addiction_craft, C.SCHOLARSHIP: rules.addiction_scholarship, C.PRESENCE: rules.addiction_presence},
-        ConditionKind.AGE_BLINDNESS: {C.MISSILE: rules.blindness_missile, C.SCHOLARSHIP: rules.blindness_scholarship, C.CRAFT: rules.blindness_craft},
-        ConditionKind.AGE_DEAFNESS: {C.COMMAND: rules.deafness_command},
-        ConditionKind.WITHERED_LIMB: {C.MELEE: rules.withered_melee, C.CRAFT: rules.withered_craft},
-        ConditionKind.ENDLESS_HUNGER: {C.MOBILITY: rules.hunger_mobility, C.PRESENCE: rules.hunger_presence},
-        ConditionKind.POSSESSION: {C.COMMAND: rules.possession_command, C.PRESENCE: rules.possession_presence, C.MELEE: -rules.possession_melee},
-        ConditionKind.VOID_TAINT: {C.SCHOLARSHIP: rules.void_scholarship, C.PRESENCE: rules.void_presence},
-        ConditionKind.CHOSEN_MARK: {C.PRESENCE: -rules.chosen_presence, C.MELEE: -rules.chosen_melee},
-        ConditionKind.DIVINE_BRAND: {C.PRESENCE: -rules.brand_presence},
-        ConditionKind.NIGHTMARES: {C.COMMAND: rules.nightmares_command, C.CRAFT: rules.nightmares_craft},
-        ConditionKind.COMATOSE: {capacity: rules.comatose_lost for capacity in C if capacity is not C.FERTILITY},
-        ConditionKind.COGNITIVE_DECLINE: {C.SCHOLARSHIP: rules.decline_scholarship, C.COMMAND: rules.decline_command, C.CRAFT: rules.decline_craft},
-        ConditionKind.MALNUTRITION: {C.MELEE: rules.malnutrition_melee, C.CRAFT: rules.malnutrition_craft, C.FERTILITY: rules.malnutrition_fertility},
-    }
-    return table[kind]
+    return CONDITIONS[kind].penalty(rules)
 
 
 def age_curve(rules: CapacityRules, age: int | None, lifespan: int | None) -> float:
@@ -102,55 +84,68 @@ def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capac
     tail = levels[F.TAIL] if state.anatomy.with_function(F.TAIL) else 1.0
     reading = max(levels[F.SIGHT], table.reader_restore_pct / PERCENT) if state.reader else levels[F.SIGHT]
     levels[F.HEARING] = max(levels[F.HEARING], state.hearing_aid)
-    values: dict[Capacity, float] = {
-        C.MELEE: stats.strength
+    values: dict[Capacity, float] = {}
+    values[C.MELEE] = (
+        stats.strength
         * blend(grip, table.melee_grasp)
         * blend(stride, table.melee_locomotion)
         * blend(levels[F.VITAL], table.melee_vital)
         * blend(levels[F.SIGHT], table.melee_sight)
         * blend(horn, table.melee_horn)
-        * hurt,
-        C.MISSILE: stats.agility
+        * hurt
+    )
+    values[C.MISSILE] = (
+        stats.agility
         * blend(levels[F.SIGHT], table.missile_sight)
         * blend(levels[F.FINE_MANIPULATION], table.missile_fine)
         * blend(grip, table.missile_grasp)
-        * hurt,
-        C.COMMAND: (stats.intellect + stats.charisma)
+        * hurt
+    )
+    values[C.COMMAND] = (
+        (stats.intellect + stats.charisma)
         / 2
         * blend(levels[F.SPEECH], table.command_speech)
         * blend(levels[F.SIGHT], table.command_sight)
         * blend(levels[F.HEARING], table.command_hearing)
-        * blend(levels[F.COGNITION], table.command_cognition),
-        C.CRAFT: stats.intellect
+        * blend(levels[F.COGNITION], table.command_cognition)
+    )
+    values[C.CRAFT] = (
+        stats.intellect
         * blend(grip, table.craft_grasp)
         * blend(levels[F.FINE_MANIPULATION], table.craft_fine)
         * blend(levels[F.SIGHT], table.craft_sight)
         * blend(levels[F.COGNITION], table.craft_cognition)
         * hurt
-        * (1 + state.magnifier),
-        C.SCHOLARSHIP: stats.intellect * blend(reading, table.scholarship_sight) * blend(levels[F.COGNITION], table.scholarship_cognition),
-        C.PRESENCE: stats.charisma
+        * (1 + state.magnifier)
+    )
+    values[C.SCHOLARSHIP] = stats.intellect * blend(reading, table.scholarship_sight) * blend(levels[F.COGNITION], table.scholarship_cognition)
+    values[C.PRESENCE] = (
+        stats.charisma
         * blend(levels[F.PRESENCE], table.presence_face)
         * blend(levels[F.SPEECH], table.presence_speech)
         * blend(horn, table.presence_horn)
         * state.presence_pct
-        / PERCENT,
-        C.MOBILITY: stats.endurance
+        / PERCENT
+    )
+    values[C.MOBILITY] = (
+        stats.endurance
         * blend(stride, table.mobility_locomotion)
         * blend(levels[F.BREATH], table.mobility_breath)
         * blend(levels[F.VITAL], table.mobility_vital)
         * blend(tail, table.mobility_tail)
-        * hurt,
-        C.FERTILITY: PERCENT
+        * hurt
+    )
+    values[C.FERTILITY] = (
+        PERCENT
         * blend(levels[F.REPRODUCTION], table.fertility_reproduction)
         * blend(levels[F.VITAL], table.fertility_vital)
-        * age_curve(table, stats.age, stats.lifespan),
-    }
+        * age_curve(table, stats.age, stats.lifespan)
+    )
     for kind, severity in state.conditions:
         for capacity, penalty in condition_penalty(table, kind).items():
             values[capacity] *= 1 - penalty * severity / table.condition_full_severity / PERCENT
     alert = alertness(rules, state.consciousness)
-    for capacity in (C.MELEE, C.MISSILE, C.COMMAND, C.CRAFT, C.SCHOLARSHIP):
+    for capacity in ALERT_CAPACITIES:
         values[capacity] *= alert
     if state.exertion >= rules.tissues.exhausted_at:
         values[C.MELEE] *= rules.tissues.exhausted_pct / PERCENT
@@ -166,9 +161,6 @@ def alertness(rules: Rules, state: Consciousness) -> float:
         Consciousness.DIZZY: table.dizzy_pct / PERCENT,
         Consciousness.UNCONSCIOUS: 0.0,
     }[state]
-
-
-FUNCTION_LEVELS = (F.VITAL, F.COGNITION, F.HEARING, F.SIGHT, F.VENOM, F.HORN, F.TAIL)
 
 
 def function_percents(rules: Rules, state: BodyState) -> dict[BodyFunction, int]:

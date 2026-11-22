@@ -1,13 +1,13 @@
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.economy import LIVE
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import TradeRouteProfileRow, TradeRouteTollRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import WarAimRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
-from aerona.domain.enums.economy import TradeRouteStatus
 from aerona.domain.enums.military import WarAimKind
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.domain.enums.war import WarStatus
@@ -17,7 +17,6 @@ from aerona.engine.polity.accords import Clause
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.numbers import clamp_int
 
-LIVE = (TradeRouteStatus.FORMING, TradeRouteStatus.OPEN, TradeRouteStatus.BLOCKADED)
 ROUTE_KEY = "route_id"
 
 

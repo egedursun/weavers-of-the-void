@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.mind import REMEMBERED
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.fast_session import prime_prefixes, prime_rows
@@ -21,20 +22,6 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
 
 C = RelationComponent
-REMEMBERED: Mapping[RelationComponent, tuple[MemoryKind, ...]] = total(
-    RelationComponent,
-    {
-        C.TRADE: (MemoryKind.TRADED_WITH,),
-        C.KINSHIP: (MemoryKind.MARRIED_INTO,),
-        C.FAITH: (MemoryKind.CONVERTED_ME, MemoryKind.DESECRATED_HOLY),
-        C.WAR_MEMORY: (MemoryKind.FOUGHT_US, MemoryKind.CONQUERED_US, MemoryKind.KILLED_KIN),
-        C.HELP: (MemoryKind.FAMINE_AID, MemoryKind.SAVED_ME, MemoryKind.GIFTED_ME, MemoryKind.ALLIED_WITH),
-        C.INSULT: (MemoryKind.HUMILIATED_ME, MemoryKind.CHEATED_US, MemoryKind.SPIED_ON_US, MemoryKind.DEMANDED_TRIBUTE),
-        C.RIVALRY: (MemoryKind.ENVIED,),
-        C.LANGUAGE: (),
-        C.VALUES: (),
-    },
-)
 
 
 @dataclass(frozen=True)

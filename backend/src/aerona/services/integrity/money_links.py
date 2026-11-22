@@ -1,8 +1,9 @@
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_tables import ORIGIN_SOURCE
 from aerona.catalog.money import MONEY_FORMS
-from aerona.db.kind_concepts.nature import ORIGIN_SOURCE, SOURCE_NODES
+from aerona.db.kind_concepts.nature import SOURCE_NODES
 from aerona.db.tables.economy import CurrencyRow, WorldMaterialRow
 from aerona.db.tables.node import NodeRow
 

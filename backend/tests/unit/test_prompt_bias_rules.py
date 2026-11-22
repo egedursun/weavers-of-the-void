@@ -483,3 +483,16 @@ def test_a_money_our_text_assumes_is_caught() -> None:
         assert "assumed money" in rules_hit(module, PROMPT, text), text
     for text in ("a debt of 12", "the colour silver", "Coins are struck from copper, gold and silver."):
         assert "assumed money" not in rules_hit(module, PROMPT, text), text
+
+
+def test_a_chronicle_template_in_a_catalogue_is_scanned() -> None:
+    module = checker()
+    catalogue = REPOSITORY_ROOT / "backend/src/aerona/catalog/dangers.py"
+    assert catalogue in module.backend_targets()
+    assert "borrowed imagery" in rules_hit(module, catalogue, "The threads of fate drew {count} of {victim} into the dark of {place}.")
+
+
+def test_a_dotted_code_path_is_not_text() -> None:
+    module = checker()
+    assert rules_hit(module, PROMPT, "engine.vehicles.caravans.SNOW_GROUNDS") == set()
+    assert "assumed carrier" in rules_hit(module, PROMPT, "The caravans carry the goods.")

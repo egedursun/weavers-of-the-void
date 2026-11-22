@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
+from aerona.catalog.life.phases import MIND_GRIEF_GRIEF_STAGES, VENGEFUL_MEMORIES
 from aerona.catalog.mind import MELEE_SKILLS, MEMORIES
 from aerona.catalog.mind_split import derived_axes
 from aerona.constants.units import PERCENT
@@ -21,7 +22,6 @@ from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, Mor
 from aerona.domain.enums.mind import (
     ActKind,
     CareerChange,
-    GriefStage,
     IdeaState,
     MemoryKind,
     PressureKind,
@@ -106,7 +106,6 @@ AXES_FIXUP = "mind.belief_axes"
 AID_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})
 BEGGAR_TAG = "beggar"
 HISTORY_NOTE = "the weight of older history"
-VENGEFUL_MEMORIES = (MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME)
 SEED_ORDER = (EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.CULT, EntityType.FACTION, EntityType.MORTAL)
 COMMUNITY_MINDS = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 
@@ -1043,7 +1042,7 @@ async def mind_thoughts(ctx: TickContext) -> None:
 @writes("table.griefs", "table.memories", "table.thoughts", "table.traits")
 async def mind_grief(ctx: TickContext) -> None:
     tally = GriefTally()
-    mourners = set(await ctx.session.scalars(select(GriefRow.mourner_node_id).where(GriefRow.stage.in_((GriefStage.SHOCK, GriefStage.MOURNING)))))
+    mourners = set(await ctx.session.scalars(select(GriefRow.mourner_node_id).where(GriefRow.stage.in_(MIND_GRIEF_GRIEF_STAGES))))
     for mourner in unheld(await ctx.session.scalars(select(EntityRow).where(EntityRow.id.in_(mourners)).order_by(EntityRow.id))):
         if mourner.status is EntityStatus.CANON:
             await advance(ctx, mourner, tally)

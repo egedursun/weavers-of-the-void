@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.laws import defaults_for
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import CatchGroundRow
 from aerona.db.tables.entities import EntityRow
@@ -54,12 +55,18 @@ async def wardened(session: AsyncSession, holder_id: int) -> bool:
     return found is not None
 
 
+def bans_gear(profile: LawProfileRow, ground: CatchGroundRow) -> bool:
+    if profile.kind is not LawKind.GEAR_BAN:
+        return True
+    return str(profile.params.get("gear", defaults_for(LawKind.GEAR_BAN)["gear"])) == ground.gear.value
+
+
 async def closure_factor(session: AsyncSession, rules: Rules, ground: CatchGroundRow) -> float:
     table = rules.closures
     factor = 1.0
     for profile, holder in await closures_on(session, ground):
         rule_name = CLOSURE_CUTS.get(profile.kind)
-        if rule_name is None:
+        if rule_name is None or not bans_gear(profile, ground):
             continue
         cut: int = getattr(table, rule_name)
         evasion = table.wardened_poaching_pct if await wardened(session, holder) else table.poaching_pct

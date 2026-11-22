@@ -1,5 +1,6 @@
 from collections.abc import Mapping, Sequence
 
+from aerona.catalog.life.factions import CHECKED_KEY_FACTION_GOAL_KINDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
@@ -61,7 +62,7 @@ async def edit_faction(ctx: TickContext, faction_id: int, values: Mapping[str, o
 def checked_key(kind: FactionGoalKind, key: str | None) -> str | None:
     if key is None:
         return None
-    if kind in {FactionGoalKind.ENACT_LAW, FactionGoalKind.ABOLISH_LAW}:
+    if kind in CHECKED_KEY_FACTION_GOAL_KINDS:
         LawKind(key)
     return key
 

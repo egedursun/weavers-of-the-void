@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.terrain import terrain_has, terrains
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow
@@ -11,7 +12,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.environment import ScarKind, TerrainKind, WeatherKind
+from aerona.domain.enums.environment import ScarKind, TerrainKind, TerrainTrait, WeatherKind
 from aerona.domain.enums.military import CasualtyFate, UnitKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.hits import Harm
@@ -28,7 +29,7 @@ from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.primitives.strength import equipment
 from aerona.engine.primitives.transfers import move_amount
 
-EXOTIC = frozenset({TerrainKind.FLESH, TerrainKind.VOID_SHORE, TerrainKind.CRYSTAL_FIELD})
+EXOTIC = terrains(TerrainTrait.NON_MINERAL_GROUND)
 RECOVERING = CohortCondition.SICK
 
 
@@ -180,7 +181,7 @@ async def take_baggage(ctx: TickContext, winner: Side, loser: Side) -> int:
 
 
 async def street_toll(ctx: TickContext, terrain: TerrainKind | None, place: EntityRow | None) -> int:
-    if terrain is not TerrainKind.URBAN or place is None or stat(place, "population") is None:
+    if not terrain_has(terrain, TerrainTrait.BUILT) or place is None or stat(place, "population") is None:
         return 0
     dead = round_half_up((stat(place, "population") or 0) * ctx.rules.battle_terrain.street_civilian_pct / PERCENT)
     if dead:

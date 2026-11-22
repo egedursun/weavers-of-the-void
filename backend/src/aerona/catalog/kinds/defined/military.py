@@ -1,71 +1,14 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.military import CaptiveFate, CasualtyFate, DuelContext, FeudParty, OutcomeClass, SabotageKind, SiegeWork, SpyOwnerKind, TargetClass
-
-CAPTIVE_FATE = total(
-    CaptiveFate,
-    {
-        CaptiveFate.HELD: Defined(
-            "Held",
-            checked_by=(
-                "agents.context.society.war_lines",
-                "engine.military.captivity.announce",
-                "engine.military.captivity.cohort_fates",
-                "engine.military.captivity.exchange_at_peace",
-                "engine.military.control.settle_cohort",
-                "engine.military.peace.release_all",
-            ),
-            used_by=(
-                "db.tables.military.CaptiveCohortRow",
-                "engine.military.captivity.decide",
-                "engine.military.clash.captives_taken",
-                "engine.military.siege_depth.mass_captives",
-                "engine.tongues.pidgins.BOUND",
-            ),
-        ),
-        CaptiveFate.RANSOMED: Defined("Ransomed", checked_by=("engine.military.control.settle_cohort",), used_by=("engine.military.captivity.decide",)),
-        CaptiveFate.ENSLAVED: Defined(
-            "Enslaved", checked_by=("engine.military.control.settle_cohort",), used_by=("engine.military.captivity.put_to_work", "engine.tongues.pidgins.BOUND")
-        ),
-        CaptiveFate.SACRIFICED: Defined("Sacrificed", checked_by=(), used_by=("engine.military.captivity.decide",)),
-        CaptiveFate.LABOUR: Defined(
-            "Labour", checked_by=("engine.military.control.settle_cohort",), used_by=("engine.military.captivity.put_to_work", "engine.tongues.pidgins.BOUND")
-        ),
-        CaptiveFate.EXCHANGED: Defined(
-            "Exchanged", checked_by=("engine.military.control.settle_cohort",), used_by=("engine.military.captivity.exchange_at_peace",)
-        ),
-        CaptiveFate.RELEASED: Defined(
-            "Released", checked_by=("engine.military.control.settle_cohort",), used_by=("engine.military.captivity.decide", "engine.military.peace.release_all")
-        ),
-    },
-)
+from aerona.domain.enums.military import CasualtyFate, FeudParty, OutcomeClass, SabotageKind, SiegeWork, SpyOperation, SpyOwnerKind, TargetClass
 
 CASUALTY_FATE = total(
     CasualtyFate,
     {
-        CasualtyFate.KILLED: Defined("Killed", checked_by=(), used_by=("engine.phases.warfare.DUEL_FATES", "engine.phases.warfare.duel")),
-        CasualtyFate.WOUNDED: Defined("Wounded", checked_by=(), used_by=("engine.phases.warfare.DUEL_FATES",)),
-        CasualtyFate.MAIMED: Defined("Maimed", checked_by=(), used_by=("engine.phases.warfare.DUEL_FATES",)),
+        CasualtyFate.KILLED: Defined("Killed", checked_by=(), used_by=("catalog.life.phases.DUEL_FATES", "engine.phases.warfare.duel")),
+        CasualtyFate.WOUNDED: Defined("Wounded", checked_by=(), used_by=("catalog.life.phases.DUEL_FATES",)),
+        CasualtyFate.MAIMED: Defined("Maimed", checked_by=(), used_by=("catalog.life.phases.DUEL_FATES",)),
         CasualtyFate.CAPTURED: Defined("Captured", checked_by=(), used_by=("engine.phases.warfare._heroics",)),
-    },
-)
-
-DUEL_CONTEXT = total(
-    DuelContext,
-    {
-        DuelContext.WAR: Defined("War", checked_by=(), used_by=("engine.phases.warfare.duel", "services.player.military_depth.DUEL_CONTEXTS")),
-        DuelContext.HONOUR: Defined(
-            "Honour",
-            checked_by=(),
-            used_by=("engine.phases.vendettas.honour_duels", "services.player.military_depth.DUEL_CONTEXTS", "services.player.military_depth.Ordeal"),
-        ),
-        DuelContext.TRIAL: Defined(
-            "Trial",
-            checked_by=("engine.military.duels.Duel.downed", "engine.military.duels.Duel.ended"),
-            used_by=("engine.phases.warfare.ordeals", "services.player.military_depth.DUEL_CONTEXTS"),
-        ),
-        DuelContext.CHAMPION: Defined("Champion", checked_by=(), used_by=("engine.polity.wars.champions", "services.player.military_depth.DUEL_CONTEXTS")),
-        DuelContext.GOD: Defined("God", checked_by=(), used_by=("engine.phases.warfare.ordeals", "services.player.military_depth.DUEL_CONTEXTS")),
     },
 )
 
@@ -140,15 +83,38 @@ SIEGE_WORK = total(
         SiegeWork.CIRCUMVALLATION: Defined(
             "Circumvallation",
             checked_by=(),
-            used_by=("engine.military.siege.season_steps", "engine.military.siege_depth.ACTION_WORKS", "engine.military.siege_depth.encircled"),
+            used_by=("catalog.life.military.ACTION_WORKS", "engine.military.siege.season_steps", "engine.military.siege_depth.encircled"),
         ),
-        SiegeWork.TOWERS: Defined("Towers", checked_by=(), used_by=("engine.military.siege_depth.ACTION_WORKS",)),
-        SiegeWork.RAMS: Defined("Rams", checked_by=(), used_by=("engine.military.siege_depth.ACTION_WORKS",)),
-        SiegeWork.MINES: Defined("Mines", checked_by=(), used_by=("engine.military.siege_depth.ACTION_WORKS", "engine.military.siege_depth.countermine")),
+        SiegeWork.TOWERS: Defined("Towers", checked_by=(), used_by=("catalog.life.military.ACTION_WORKS",)),
+        SiegeWork.RAMS: Defined("Rams", checked_by=(), used_by=("catalog.life.military.ACTION_WORKS",)),
+        SiegeWork.MINES: Defined("Mines", checked_by=(), used_by=("catalog.life.military.ACTION_WORKS", "engine.military.siege_depth.countermine")),
         SiegeWork.COUNTERMINES: Defined(
             "Countermines", checked_by=("engine.military.siege_depth.finished_works",), used_by=("engine.military.siege_depth.countermine",)
         ),
-        SiegeWork.LADDERS: Defined("Ladders", checked_by=(), used_by=("engine.military.siege_depth.ACTION_WORKS",)),
+        SiegeWork.LADDERS: Defined("Ladders", checked_by=(), used_by=("catalog.life.military.ACTION_WORKS",)),
+    },
+)
+
+SPY_OPERATION = total(
+    SpyOperation,
+    {
+        SpyOperation.STEAL_KNOWLEDGE: Defined(
+            "Steal knowledge",
+            checked_by=(),
+            used_by=("catalog.life.phases.PEACE_OPERATIONS", "engine.phases.espionage.choose_operation", "engine.phases.espionage.steal"),
+        ),
+        SpyOperation.SABOTAGE: Defined("Sabotage", checked_by=(), used_by=("catalog.life.phases.WAR_OPERATIONS", "engine.phases.espionage.sabotage")),
+        SpyOperation.ASSASSINATE: Defined("Assassinate", checked_by=(), used_by=("catalog.life.phases.WAR_OPERATIONS", "engine.phases.espionage.assassinate")),
+        SpyOperation.INCITE: Defined("Incite", checked_by=(), used_by=("catalog.life.phases.PEACE_OPERATIONS", "engine.phases.espionage.incite")),
+        SpyOperation.INTEL: Defined(
+            "Intel",
+            checked_by=("engine.phases.espionage.perform_operation",),
+            used_by=("catalog.life.phases.PEACE_OPERATIONS", "catalog.life.phases.WAR_OPERATIONS", "engine.phases.espionage.gather"),
+        ),
+        SpyOperation.BLACKMAIL: Defined("Blackmail", checked_by=(), used_by=("catalog.life.phases.PEACE_OPERATIONS", "engine.phases.espionage.blackmail")),
+        SpyOperation.COUNTERFEIT: Defined(
+            "Counterfeit", checked_by=(), used_by=("catalog.life.phases.PEACE_OPERATIONS", "engine.phases.espionage.counterfeit")
+        ),
     },
 )
 

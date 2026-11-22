@@ -3,6 +3,7 @@ from collections.abc import Mapping
 
 from sqlalchemy import select
 
+from aerona.catalog.life.made import OUTPUT_GOODS
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -11,7 +12,7 @@ from aerona.db.tables.made import ReplicatorLineRow, ReplicatorPresenceRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.constructs import MindWill
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import ReplicatorOutput, ReplicatorScale, ReplicatorStage
 from aerona.domain.enums.minds import MindAffect, MindOrigin, MindSeat
@@ -31,7 +32,6 @@ from aerona.engine.structures.construction import material_commodity
 DONE = frozenset({ReplicatorStage.STOPPED, ReplicatorStage.EXTINCT})
 LOOSE = frozenset({ReplicatorStage.SPREADING, ReplicatorStage.RUNAWAY})
 SWARM_POWER = 4
-OUTPUT_GOODS = {ReplicatorOutput.GOODS: CommodityKind.TOOLS, ReplicatorOutput.MEDICINE: CommodityKind.MEDICINE}
 
 
 def stage_of(rules_spread: int, rules_runaway: int, containment: int) -> ReplicatorStage:

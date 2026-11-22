@@ -6,7 +6,9 @@ from sqlalchemy.orm import aliased
 
 from aerona.catalog.divine_grammar import VERB_SIGN
 from aerona.catalog.kinds.council import VOTING_RULES
+from aerona.catalog.life_traits import COUNCIL_MOTION_TRAITS, having
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.grammar import several, spoken
 from aerona.core.total import total
 from aerona.db.repositories.sons import SonRepository
@@ -26,6 +28,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import CouncilMotion, CouncilSeat, EscalationStep, VotingRule
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.life_traits import CouncilMotionTrait
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import SourceAccess
@@ -129,11 +132,19 @@ def carried(procedure: CouncilProcedureRow, weights: Mapping[int, tuple[int, boo
     return yes > no
 
 
+Breaches = Callable[[TickContext, CouncilRulingRow], Awaitable[list[int]]]
+
+
+WATCHED: Handlers[CouncilMotion, Breaches] = Handlers(CouncilMotion)
+
+
+@WATCHED.on(CouncilMotion.COSMIC_TRUCE)
 async def truce_breakers(ctx: TickContext, ruling: CouncilRulingRow) -> list[int]:
     rows = await ctx.session.scalars(select(GodConflictRow.attacker_node_id).where(GodConflictRow.duel.is_(True), GodConflictRow.epoch >= ruling.epoch))
     return sorted(set(rows))
 
 
+@WATCHED.on(CouncilMotion.DIVIDE_WORLDS)
 async def world_trespassers(ctx: TickContext, _ruling: CouncilRulingRow) -> list[int]:
     found = []
     for son in list(await ctx.session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE).order_by(SonRow.id))):
@@ -143,15 +154,12 @@ async def world_trespassers(ctx: TickContext, _ruling: CouncilRulingRow) -> list
     return found
 
 
+@WATCHED.on(CouncilMotion.OUTLAW_POWER)
 async def outlawed_wielders(ctx: TickContext, ruling: CouncilRulingRow) -> list[int]:
     if ruling.target_node_id is None:
         return []
     used = select(DivinePowerRow.holder_node_id).where(DivinePowerRow.holder_node_id == ruling.target_node_id, DivinePowerRow.last_used_epoch > ruling.epoch)
     return sorted(set(await ctx.session.scalars(used)))
-
-
-Breaches = Callable[[TickContext, CouncilRulingRow], Awaitable[list[int]]]
-WATCHED: Mapping[CouncilMotion, Breaches] = {M.COSMIC_TRUCE: truce_breakers, M.DIVIDE_WORLDS: world_trespassers, M.OUTLAW_POWER: outlawed_wielders}
 
 
 async def censure(ctx: TickContext, god_id: int) -> None:
@@ -259,6 +267,10 @@ async def keep_council_order(ctx: TickContext) -> None:
     await regulate(ctx)
 
 
+ORDER_ENACTMENTS: Handlers[CouncilMotion, Callable[[TickContext, CouncilRulingRow, list[SonRow]], Awaitable[list[str]]]] = Handlers(CouncilMotion)
+
+
+@ORDER_ENACTMENTS.on(CouncilMotion.REASSIGN_WORLD)
 async def enact_reassign(ctx: TickContext, ruling: CouncilRulingRow, _members: list[SonRow]) -> list[str]:
     son = await ctx.session.get(SonRow, ruling.target_node_id) if ruling.target_node_id is not None else None
     world = await ctx.session.get(WorldRow, ruling.world_id) if ruling.world_id is not None else None
@@ -268,11 +280,13 @@ async def enact_reassign(ctx: TickContext, ruling: CouncilRulingRow, _members: l
     return [f"{world.name} was given to {son.name}"]
 
 
+@ORDER_ENACTMENTS.on(CouncilMotion.OUTLAW_POWER)
 async def enact_outlaw_power(ctx: TickContext, ruling: CouncilRulingRow, _members: list[SonRow]) -> list[str]:
     holder = await ctx.session.get(NodeRow, ruling.target_node_id) if ruling.target_node_id is not None else None
     return [f"the powers of {holder.name} were outlawed among the gods"] if holder is not None else []
 
 
+@ORDER_ENACTMENTS.on(CouncilMotion.OUTLAW_SOURCE)
 async def enact_outlaw_source(ctx: TickContext, ruling: CouncilRulingRow, _members: list[SonRow]) -> list[str]:
     if ruling.world_id is None:
         return []
@@ -284,6 +298,7 @@ async def enact_outlaw_source(ctx: TickContext, ruling: CouncilRulingRow, _membe
     return [f"{several(closed, 'source of power was', 'sources of power were')} closed to all but those the gods allow"] if closed else []
 
 
+@ORDER_ENACTMENTS.on(CouncilMotion.ADMIT_MEMBER)
 async def enact_admit(ctx: TickContext, ruling: CouncilRulingRow, _members: list[SonRow]) -> list[str]:
     god = await ctx.session.get(ForeignGodRow, ruling.target_node_id) if ruling.target_node_id is not None else None
     if god is None or held(god.id):
@@ -293,6 +308,7 @@ async def enact_admit(ctx: TickContext, ruling: CouncilRulingRow, _members: list
     return [f"{god.name} was given a seat on the council"]
 
 
+@ORDER_ENACTMENTS.on(CouncilMotion.EXPEL_MEMBER)
 async def enact_expel(ctx: TickContext, ruling: CouncilRulingRow, _members: list[SonRow]) -> list[str]:
     seat = await ctx.session.get(DivineSeatRow, ruling.target_node_id) if ruling.target_node_id is not None else None
     if seat is None or held(seat.god_node_id):
@@ -304,6 +320,7 @@ async def enact_expel(ctx: TickContext, ruling: CouncilRulingRow, _members: list
     return ["a member was put out of the council"]
 
 
+@ORDER_ENACTMENTS.on(CouncilMotion.RECOGNISE_GOD)
 async def enact_recognise(ctx: TickContext, ruling: CouncilRulingRow, _members: list[SonRow]) -> list[str]:
     god = await ctx.session.get(ForeignGodRow, ruling.target_node_id) if ruling.target_node_id is not None else None
     if god is None or held(god.id):
@@ -314,6 +331,7 @@ async def enact_recognise(ctx: TickContext, ruling: CouncilRulingRow, _members: 
     return [f"the gods recognised {god.name} as one of them"]
 
 
+@ORDER_ENACTMENTS.on(CouncilMotion.ESSENCE_TITHE)
 async def enact_tithe(ctx: TickContext, _ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
     table = ctx.rules.council
     paid = 0
@@ -327,6 +345,7 @@ async def enact_tithe(ctx: TickContext, _ruling: CouncilRulingRow, members: list
     return [f"{several(paid, 'god paid', 'gods paid')} the tithe for a common work"] if paid else []
 
 
+@ORDER_ENACTMENTS.on(CouncilMotion.SET_COUNCIL_RULES)
 async def enact_rules(ctx: TickContext, ruling: CouncilRulingRow, _members: list[SonRow]) -> list[str]:
     procedure = await procedure_of(ctx)
     if ruling.voting_rule is None or "voting_rule" in procedure.locked:
@@ -335,24 +354,14 @@ async def enact_rules(ctx: TickContext, ruling: CouncilRulingRow, _members: list
     return [f"the council now decides by {spoken(ruling.voting_rule)}"]
 
 
+@ORDER_ENACTMENTS.on(CouncilMotion.REGULATE_MADE_MINDS)
+@ORDER_ENACTMENTS.on(CouncilMotion.REGULATE_POWERS)
+@ORDER_ENACTMENTS.on(CouncilMotion.REGULATE_LIVING_CRAFT)
 async def enact_regulation(_ctx: TickContext, ruling: CouncilRulingRow, _members: list[SonRow]) -> list[str]:
     return [f"the council set a rule: {spoken(ruling.motion)}"]
 
 
-ORDER_ENACTMENTS: Mapping[CouncilMotion, Callable[[TickContext, CouncilRulingRow, list[SonRow]], Awaitable[list[str]]]] = {
-    M.REASSIGN_WORLD: enact_reassign,
-    M.OUTLAW_POWER: enact_outlaw_power,
-    M.OUTLAW_SOURCE: enact_outlaw_source,
-    M.ADMIT_MEMBER: enact_admit,
-    M.EXPEL_MEMBER: enact_expel,
-    M.RECOGNISE_GOD: enact_recognise,
-    M.ESSENCE_TITHE: enact_tithe,
-    M.SET_COUNCIL_RULES: enact_rules,
-    M.REGULATE_MADE_MINDS: enact_regulation,
-    M.REGULATE_POWERS: enact_regulation,
-    M.REGULATE_LIVING_CRAFT: enact_regulation,
-}
-ORDER_LASTING = frozenset({M.OUTLAW_POWER, M.OUTLAW_SOURCE, M.REGULATE_MADE_MINDS, M.REGULATE_POWERS, M.REGULATE_LIVING_CRAFT})
+ORDER_LASTING = having(COUNCIL_MOTION_TRAITS, CouncilMotionTrait.ORDER_LASTING)
 
 
 async def membership_motion(ctx: TickContext) -> Motion | None:

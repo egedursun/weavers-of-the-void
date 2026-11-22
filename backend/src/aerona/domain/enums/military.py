@@ -102,9 +102,6 @@ class Stance(StrEnum):
     RETREAT = "retreat"
 
 
-RESTING = frozenset({Stance.ENTRENCH, Stance.GARRISON, Stance.BESIEGE})
-
-
 class Tactic(StrEnum):
     HOLD_LINE = "hold_line"
     FRONTAL_ASSAULT = "frontal_assault"

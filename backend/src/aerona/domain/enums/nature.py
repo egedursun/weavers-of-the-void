@@ -39,6 +39,18 @@ class SenseKind(StrEnum):
     HEAT = "heat"
 
 
+class SenseCause(StrEnum):
+    BASE = "base"
+    NOCTURNAL = "nocturnal"
+    FLESH_SEEKER = "flesh_seeker"
+    PLANT_EATER = "plant_eater"
+    ECHOLOCATION = "echolocation"
+    BURROWING = "burrowing"
+    MIGRATORY = "migratory"
+    SPIRIT_SIGHT = "spirit_sight"
+    COLD_HUNTER = "cold_hunter"
+
+
 class PlantDefence(StrEnum):
     NONE = "none"
     THORNS = "thorns"

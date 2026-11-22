@@ -1,30 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.ecology import AttackRange, Aversion, Cultivation, Habitat, HerdTraining, RangeTrend, SpeciesClass, Temperament, TissueMaterial
-
-ATTACK_RANGE = total(
-    AttackRange,
-    {
-        AttackRange.TOUCH: Defined("Touch", checked_by=(), used_by=("engine.ecology.anatomy.attack_specs",)),
-        AttackRange.NEAR: Defined(
-            "Near",
-            checked_by=(),
-            used_by=(
-                "catalog.creature_anatomy.TRAIT_ATTACKS",
-                "db.tables.anatomy.CreatureAttackRow",
-                "engine.ecology.anatomy.attack_specs",
-                "services.player.typed_models.AttackMake",
-                "tools.son.creation.shape_beast",
-            ),
-        ),
-        AttackRange.FAR: Defined("A whole town", checked_by=(), used_by=("engine.ecology.anatomy.attack_specs", "engine.ecology.beast_acts.WHOLE_TOWN")),
-        AttackRange.SIGHT: Defined(
-            "By sight, a whole town",
-            checked_by=("engine.ecology.beast_acts.sight_scale",),
-            used_by=("engine.ecology.anatomy.attack_specs", "engine.ecology.beast_acts.WHOLE_TOWN"),
-        ),
-    },
-)
+from aerona.domain.enums.ecology import Aversion, Cultivation, Habitat, HerdTraining, RangeTrend, Temperament, TissueMaterial
 
 AVERSION = total(
     Aversion,
@@ -105,60 +81,6 @@ RANGE_TREND = total(
     },
 )
 
-SPECIES_CLASS = total(
-    SpeciesClass,
-    {
-        SpeciesClass.ANIMAL: Defined(
-            "Animal",
-            checked_by=("engine.ecology.flora.flora_backfill",),
-            used_by=(
-                "db.tables.ecology.SpeciesProfileRow",
-                "engine.ecology.profiles.Nature",
-                "engine.ecology.profiles.class_of",
-                "engine.folk_knowledge.truth.ROAMING",
-                "engine.museums.gardens.PLANTED",
-            ),
-        ),
-        SpeciesClass.PLANT: Defined(
-            "Plant",
-            checked_by=("catalog.flora.DEFAULT_YIELDS", "engine.ecology.profiles.PLANT_DIETS", "engine.ecology.profiles.PLANT_PLANS"),
-            used_by=(
-                "engine.ecology.flora.reclass_plant",
-                "engine.ecology.profiles.class_of",
-                "engine.museums.gardens.planting",
-                "engine.plants.bodies.PLANT_CLASSES",
-            ),
-        ),
-        SpeciesClass.FUNGUS: Defined(
-            "Fungus",
-            checked_by=(
-                "catalog.flora.DEFAULT_YIELDS",
-                "engine.ecology.profiles.PLANT_DIETS",
-                "engine.ecology.profiles.PLANT_PLANS",
-                "engine.plants.bodies.CLASS_FORMS",
-            ),
-            used_by=("engine.museums.gardens.planting", "engine.plants.bodies.PLANT_CLASSES"),
-        ),
-        SpeciesClass.VERMIN: Defined(
-            "Vermin",
-            checked_by=(
-                "agents.context.wilds.plant_lines",
-                "engine.ecology.flora.pest_ids",
-                "engine.ecology.pests.pest_traits",
-                "engine.industry.stores.vermin_in",
-            ),
-            used_by=("engine.ecology.flora.flora_backfill", "engine.ecology.profiles.class_of", "engine.folk_knowledge.truth.ROAMING"),
-        ),
-        SpeciesClass.MICROBE: Defined("Microbe", checked_by=(), used_by=()),
-        SpeciesClass.MINERAL: Defined("Mineral", checked_by=(), used_by=()),
-        SpeciesClass.GASEOUS: Defined("Gaseous", checked_by=(), used_by=()),
-        SpeciesClass.ENERGY: Defined("Energy", checked_by=(), used_by=()),
-        SpeciesClass.MADE: Defined("Made", checked_by=(), used_by=()),
-        SpeciesClass.COLONIAL: Defined("Colonial", checked_by=("engine.plants.bodies.CLASS_FORMS",), used_by=("engine.plants.bodies.PLANT_CLASSES",)),
-        SpeciesClass.HYBRID: Defined("Hybrid", checked_by=(), used_by=()),
-    },
-)
-
 TEMPERAMENT = total(
     Temperament,
     {
@@ -208,11 +130,11 @@ TISSUE_MATERIAL = total(
                 "catalog.creature_anatomy.PLAN_SKIN",
                 "catalog.creature_anatomy.TISSUES",
                 "catalog.creature_anatomy.TRAIT_SKIN",
-                "engine.ecology.anatomy.BONE_OF",
+                "catalog.life.ecology.BONE_OF",
             ),
         ),
         TissueMaterial.METALLIC: Defined(
-            "Metallic", checked_by=(), used_by=("catalog.creature_anatomy.EXOTIC_TISSUES", "catalog.creature_anatomy.TISSUES", "engine.ecology.anatomy.BONE_OF")
+            "Metallic", checked_by=(), used_by=("catalog.creature_anatomy.EXOTIC_TISSUES", "catalog.creature_anatomy.TISSUES", "catalog.life.ecology.BONE_OF")
         ),
         TissueMaterial.CRYSTALLINE: Defined(
             "Crystalline",
@@ -222,7 +144,7 @@ TISSUE_MATERIAL = total(
                 "catalog.creature_anatomy.EXOTIC_TISSUES",
                 "catalog.creature_anatomy.LIFE_SKIN",
                 "catalog.creature_anatomy.TISSUES",
-                "engine.ecology.anatomy.BONE_OF",
+                "catalog.life.ecology.BONE_OF",
             ),
         ),
         TissueMaterial.GEL: Defined("Gel", checked_by=(), used_by=("catalog.creature_anatomy.EXOTIC_TISSUES", "catalog.creature_anatomy.TISSUES")),

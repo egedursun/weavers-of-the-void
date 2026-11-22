@@ -21,7 +21,7 @@ from aerona.engine.recording.record import record
 CRAFTS = {
     "venom": KnowledgeBranch.MEDICINE,
     "magic reagents": KnowledgeBranch.MAGIC,
-    "great_bone": KnowledgeBranch.METALLURGY,
+    "great_beast_tissue": KnowledgeBranch.METALLURGY,
     "chitin": KnowledgeBranch.METALLURGY,
     "ivory": KnowledgeBranch.TRADE,
     "silk": KnowledgeBranch.TRADE,

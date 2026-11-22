@@ -2,13 +2,14 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.kin import AVENGING, LINE_ROLES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cycles import KinshipSystemRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.kin import KinGroupMemberRow, KinGroupRow, KinRoleDutyRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.cycles import DescentGroup, KinshipDescent, KinTermSystem, ResidenceRule
+from aerona.domain.enums.cycles import DescentGroup, KinTermSystem, ResidenceRule
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.kin import KinDuty, KinGroupForm, KinMembership, KinRole
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
@@ -47,10 +48,8 @@ BASE: tuple[tuple[KinRole, KinDuty, int], ...] = (
     (R.SWORN_KIN, D.PROTECT, 120),
     (R.SWORN_KIN, D.SUPPORT, 100),
 )
-LINE_ROLES = {KinshipDescent.THROUGH_FIRST_LINE: R.PARENT_SIBLING_FIRST_LINE, KinshipDescent.THROUGH_SECOND_LINE: R.PARENT_SIBLING_SECOND_LINE}
 GROUP_FORMS = {DescentGroup.LINEAGE: KinGroupForm.LINEAGE, DescentGroup.CLAN: KinGroupForm.CLAN, DescentGroup.MOIETY: KinGroupForm.MOIETY}
 EXOGAMOUS = frozenset({KinGroupForm.CLAN, KinGroupForm.MOIETY})
-AVENGING = (R.PARENT, R.CHILD, R.SIBLING, R.SWORN_KIN)
 
 
 @dataclass

@@ -2,7 +2,9 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import select
 
+from aerona.catalog.life.made import ENTRY_SKILL
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import MadeRealmRow
@@ -15,7 +17,6 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import RealmAwareness, RealmEntry, RealmPurpose, SurveillanceFocus
-from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.powers import PowerState
 from aerona.engine.context import TickContext
@@ -29,26 +30,34 @@ Inside = Callable[[TickContext, MadeRealmRow, list[MindProfileRow], EntityRow | 
 SKILL_TOP = 100
 
 
+WATCHES: Handlers[SurveillanceFocus, Watch] = Handlers(SurveillanceFocus)
+
+
+@WATCHES.on(SurveillanceFocus.CRIME)
 async def cut_crime(ctx: TickContext, _town: EntityRow, profile: SettlementProfileRow, reach: int) -> None:
     if "crime" not in profile.locked:
         profile.crime = clamp_percent(profile.crime - ctx.rules.surveillance.crime_cut * reach // PERCENT)
 
 
+@WATCHES.on(SurveillanceFocus.DISSENT)
 async def cut_dissent(ctx: TickContext, _town: EntityRow, profile: SettlementProfileRow, reach: int) -> None:
     if "unrest" not in profile.locked:
         profile.unrest = clamp_percent(profile.unrest - ctx.rules.surveillance.crime_cut * reach // PERCENT)
 
 
+@WATCHES.on(SurveillanceFocus.FOREIGNERS)
 async def find_spies(ctx: TickContext, town: EntityRow, _profile: SettlementProfileRow, reach: int) -> None:
     for spies in list(await ctx.session.scalars(select(SpyNetworkRow).where(SpyNetworkRow.target_entity_id == town.id))):
         if ctx.rng(f"watch.spies.{spies.id}.{ctx.epoch}").chance(reach * ctx.rules.surveillance.spy_find_pct // PERCENT):
             spies.agents = max(0, spies.agents - 1)
 
 
+@WATCHES.on(SurveillanceFocus.FAITH)
 async def watch_faith(ctx: TickContext, town: EntityRow, _profile: SettlementProfileRow, reach: int) -> None:
     shift_stat(town, "piety", -ctx.rules.surveillance.chill * reach // PERCENT, 0)
 
 
+@WATCHES.on(SurveillanceFocus.MINDS)
 async def watch_minds(ctx: TickContext, town: EntityRow, _profile: SettlementProfileRow, _reach: int) -> None:
     here = select(EntityRow.id).where(EntityRow.location_id == town.id)
     for mind in list(await ctx.session.scalars(select(MindProfileRow).where(MindProfileRow.node_id.in_(here), MindProfileRow.seat != MindSeat.BODY))):
@@ -56,6 +65,7 @@ async def watch_minds(ctx: TickContext, town: EntityRow, _profile: SettlementPro
             mind.stability = clamp_percent(mind.stability + 1)
 
 
+@WATCHES.on(SurveillanceFocus.GIFTED)
 async def register_gifted(ctx: TickContext, town: EntityRow, _profile: SettlementProfileRow, _reach: int) -> None:
     polity = await polity_of(ctx.session, town.id)
     if polity is None:
@@ -74,35 +84,33 @@ async def register_gifted(ctx: TickContext, town: EntityRow, _profile: Settlemen
             )
 
 
+@WATCHES.on(SurveillanceFocus.EVERYTHING)
 async def watch_all(ctx: TickContext, town: EntityRow, profile: SettlementProfileRow, reach: int) -> None:
     for kind in (cut_crime, cut_dissent, find_spies, watch_faith, watch_minds, register_gifted):
         await kind(ctx, town, profile, reach // 2)
 
 
-WATCHES: Mapping[SurveillanceFocus, Watch] = total(
-    SurveillanceFocus,
-    {
-        SurveillanceFocus.CRIME: cut_crime,
-        SurveillanceFocus.DISSENT: cut_dissent,
-        SurveillanceFocus.FOREIGNERS: find_spies,
-        SurveillanceFocus.FAITH: watch_faith,
-        SurveillanceFocus.MINDS: watch_minds,
-        SurveillanceFocus.GIFTED: register_gifted,
-        SurveillanceFocus.EVERYTHING: watch_all,
-    },
-)
+WATCHES.seal()
 
 
+PURPOSES: Handlers[RealmPurpose, Inside] = Handlers(RealmPurpose)
+
+
+@PURPOSES.on(RealmPurpose.DWELLING)
+@PURPOSES.on(RealmPurpose.CONFINEMENT)
 async def dwelling(_ctx: TickContext, _realm: MadeRealmRow, _minds: list[MindProfileRow], _keeper: EntityRow | None) -> None:
     return None
 
 
+@PURPOSES.on(RealmPurpose.AFTERLIFE)
+@PURPOSES.on(RealmPurpose.REFUGE)
 async def steadied(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfileRow], _keeper: EntityRow | None) -> None:
     for mind in minds:
         if not held(mind.node_id) and "stability" not in mind.locked:
             mind.stability = clamp_percent(mind.stability + ctx.rules.made_realms.stability_step)
 
 
+@PURPOSES.on(RealmPurpose.EXPERIMENT)
 async def strained(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfileRow], keeper: EntityRow | None) -> None:
     for mind in minds:
         if not held(mind.node_id) and "stability" not in mind.locked:
@@ -111,6 +119,7 @@ async def strained(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfi
         shift_stat(keeper, "intellect", 1, 0)
 
 
+@PURPOSES.on(RealmPurpose.LEISURE)
 async def rested(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfileRow], _keeper: EntityRow | None) -> None:
     for mind in minds:
         profile = await ctx.session.get(MortalProfileRow, mind.node_id)
@@ -118,6 +127,7 @@ async def rested(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfile
             profile.stress = clamp_percent(profile.stress - ctx.rules.made_realms.rest_relief)
 
 
+@PURPOSES.on(RealmPurpose.TRAINING)
 async def trained(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfileRow], _keeper: EntityRow | None) -> None:
     for mind in minds:
         best = await ctx.session.scalar(select(SkillRow).where(SkillRow.holder_node_id == mind.node_id).order_by(SkillRow.level.desc()).limit(1))
@@ -125,47 +135,26 @@ async def trained(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfil
             best.level = clamp_int(best.level + 1, 0, SKILL_TOP)
 
 
+@PURPOSES.on(RealmPurpose.WORSHIP)
 async def worshipped(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfileRow], keeper: EntityRow | None) -> None:
     if keeper is not None and not held(keeper.id) and minds:
         await shift_standing(ctx.session, keeper, "piety", ctx.rules.made_realms.worship_gain, ctx.epoch, default=0)
 
 
+@PURPOSES.on(RealmPurpose.FREE)
 async def freed(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfileRow], _keeper: EntityRow | None) -> None:
     for mind in minds:
         if not held(mind.node_id) and "maker_bond" not in mind.locked:
             mind.maker_bond = clamp_int(mind.maker_bond - 1, -PERCENT, PERCENT)
 
 
+@PURPOSES.on(RealmPurpose.LABOUR)
 async def labour(_ctx: TickContext, _realm: MadeRealmRow, _minds: list[MindProfileRow], _keeper: EntityRow | None) -> None:
     return None
 
 
-PURPOSES: Mapping[RealmPurpose, Inside] = total(
-    RealmPurpose,
-    {
-        RealmPurpose.DWELLING: dwelling,
-        RealmPurpose.AFTERLIFE: steadied,
-        RealmPurpose.CONFINEMENT: dwelling,
-        RealmPurpose.TRAINING: trained,
-        RealmPurpose.LEISURE: rested,
-        RealmPurpose.LABOUR: labour,
-        RealmPurpose.WORSHIP: worshipped,
-        RealmPurpose.REFUGE: steadied,
-        RealmPurpose.EXPERIMENT: strained,
-        RealmPurpose.FREE: freed,
-    },
-)
+PURPOSES.seal()
 AWARE_ESCAPE: Mapping[RealmAwareness, int] = total(RealmAwareness, {RealmAwareness.KNOWS: 100, RealmAwareness.RUMOURED: 50, RealmAwareness.UNAWARE: 0})
-ENTRY_SKILL: Mapping[RealmEntry, SkillKind | None] = total(
-    RealmEntry,
-    {
-        RealmEntry.INTERFACE: None,
-        RealmEntry.TRANSFER: None,
-        RealmEntry.RITE: SkillKind.SPELLCRAFT,
-        RealmEntry.DEATH: None,
-        RealmEntry.BIRTH: None,
-    },
-)
 
 
 async def entry_refused(ctx: TickContext, realm: MadeRealmRow, mind_id: int) -> str | None:

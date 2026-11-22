@@ -6,6 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.node import NodeBirthRow
 from aerona.db.tables.sacred import FORTUNE_MAX, FORTUNE_MIN, BirthSignRow, DivinationSystemRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -93,6 +94,15 @@ async def read_by_folk(ctx: TickContext, mortal: EntityRow, row: BirthSignRow) -
         profile.renown = clamp_int(profile.renown + row.fortune, 0, PERCENT)
 
 
+async def birth_season(ctx: TickContext, mortal: EntityRow) -> int:
+    born = await ctx.session.get(NodeBirthRow, mortal.id)
+    if born is not None and born.season is not None:
+        return born.season
+    world = await ctx.session.get(WorldRow, mortal.world_id)
+    count = world.season_count if world is not None and world.season_count else 1
+    return ctx.rng(f"sign.season.{mortal.id}").below(count)
+
+
 async def sign_birth(ctx: TickContext, mortal: EntityRow, tally: SignTally) -> BirthSignRow:
     table = ctx.rules.astrology
     bodies = await celestials_of(ctx, mortal.world_id)
@@ -104,7 +114,7 @@ async def sign_birth(ctx: TickContext, mortal: EntityRow, tally: SignTally) -> B
     fortune = fortune_of(ctx, body, dreaded) if influence is SignInfluence.REAL else 0
     row = BirthSignRow(
         mortal_entity_id=mortal.id,
-        season=ctx.epoch % max(1, len(bodies)),
+        season=await birth_season(ctx, mortal),
         ruling_celestial_entity_id=body.id if body is not None else None,
         dreaded=dreaded,
         influence=influence,

@@ -32,9 +32,6 @@ class CosmicFeatureKind(StrEnum):
     WANDERING_STAR = "wandering_star"
 
 
-PERIODIC_BODIES = frozenset({CosmicFeatureKind.PERIODIC_COMET, CosmicFeatureKind.WANDERING_STAR})
-
-
 class SurveyLevel(StrEnum):
     UNKNOWN = "unknown"
     RUMOURED = "rumoured"

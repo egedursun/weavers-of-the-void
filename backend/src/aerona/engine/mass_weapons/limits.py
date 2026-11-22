@@ -1,10 +1,10 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import ARMED_STAGES
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mass_weapons import MassWeaponRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.mass_weapons import ARMED_STAGES
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.engine.context import TickContext
 from aerona.engine.mass_weapons.book import ArsenalTally, weapons_of

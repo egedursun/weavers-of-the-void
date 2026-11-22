@@ -2,16 +2,17 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.core.grammar import spoken
 from aerona.db.tables.childhood import TECHNIQUE_WEIGHTS, ChildStandingRow, InfantCareRow, PedagogyRow, SocializationRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.mortal import LifeStage
+from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.engine.body.customs import people_of
 from aerona.engine.mortal.kin import children_of
 
-GROWING = frozenset({LifeStage.INFANT, LifeStage.CHILD, LifeStage.YOUTH})
+GROWING = having(LIFE_STAGE_TRAITS, LifeStageTrait.GROWING)
 CHIEF_WAYS = 3
 
 

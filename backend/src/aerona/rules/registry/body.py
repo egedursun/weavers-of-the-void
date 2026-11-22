@@ -408,7 +408,7 @@ class ProstheticsRules:
     world_sanctity_pct: int = rule(20, 0, 200, G, "How much the sanctity of a world-born material lifts a prosthesis made of it (%)")
     relic_power_div: int = rule(10, 1, 100, G, "Quality per point of power of a relic prosthesis")
     wood: int = rule(55, 0, 100, G, "Function a wooden prosthesis restores at full quality (%)")
-    bone: int = rule(45, 0, 100, G, "Function a bone prosthesis restores at full quality (%)")
+    calcified_tissue: int = rule(45, 0, 100, G, "Function a prosthesis of calcified tissue restores at full quality (%)")
     ivory: int = rule(50, 0, 100, G, "Function an ivory prosthesis restores at full quality (%)")
     copper: int = rule(55, 0, 100, G, "Function a copper prosthesis restores at full quality (%)")
     bronze: int = rule(62, 0, 100, G, "Function a bronze prosthesis restores at full quality (%)")
@@ -420,7 +420,7 @@ class ProstheticsRules:
     crystal: int = rule(45, 0, 100, G, "Function a crystal prosthesis restores at full quality (%)")
     star_metal: int = rule(90, 0, 100, G, "Function a star-metal prosthesis restores at full quality (%)")
     living_wood: int = rule(85, 0, 100, G, "Function a living-wood prosthesis restores at full quality (%)")
-    great_bone: int = rule(80, 0, 100, G, "Function a prosthesis of great bone restores at full quality (%)")
+    great_beast_tissue: int = rule(80, 0, 100, G, "Function a prosthesis of great beast tissue restores at full quality (%)")
     skysteel: int = rule(88, 0, 100, G, "Function a skysteel prosthesis restores at full quality (%)")
     other: int = rule(40, 0, 100, G, "Function a prosthesis of any other material restores at full quality (%)")
 

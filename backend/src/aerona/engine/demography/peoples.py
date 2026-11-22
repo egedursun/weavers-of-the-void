@@ -5,7 +5,9 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.body_plans import BUILD_RANK, HEIGHT_RANK
+from aerona.catalog.goods_traits import commodities_with
 from aerona.catalog.peoples import CREATURE_DIETS, CREATURE_NATURES, CREATURE_PLANS, PLAN_DIETS, PLAN_NATURES, STYLE_AXES, STYLE_NEUTRAL, VALUE_STYLE
+from aerona.catalog.terrain import terrains
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
@@ -26,9 +28,9 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import FuneralCustom, InheritanceCustom, MartialStyle, NaturalTrait
 from aerona.domain.enums.ecology import Diet, SizeClass
-from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainKind
+from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainTrait
+from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
@@ -51,11 +53,15 @@ from aerona.rules.registry import Rules
 HUMAN_LIFESPAN = 70
 FERTILITY_FLOOR, FERTILITY_CEILING = 10, 300
 LEAN = 25
-STEPPE = frozenset({TerrainKind.STEPPE, TerrainKind.DESERT})
-HIGHLAND = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HILLS})
-COVERED = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HILLS, TerrainKind.FOREST, TerrainKind.JUNGLE, TerrainKind.MARSH})
-SKY_LANDS = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.TUNDRA, TerrainKind.ICE_SHEET})
-STAPLE_FOODS = frozenset({CommodityKind.GRAIN, CommodityKind.LIVESTOCK, CommodityKind.FISH})
+STEPPE = terrains(TerrainTrait.ARID)
+HIGHLAND = terrains(TerrainTrait.HIGH, without=(TerrainTrait.CONFINED,))
+COVERED = (
+    terrains(TerrainTrait.HIGH, without=(TerrainTrait.CONFINED,))
+    | terrains(TerrainTrait.WOODED)
+    | terrains(every=(TerrainTrait.AMBUSH_COVER, TerrainTrait.WET))
+)
+SKY_LANDS = terrains(TerrainTrait.COLD)
+STAPLE_FOODS = frozenset(commodities_with(CommodityTrait.STAPLE))
 SIZE_STEPS = ((0, SizeClass.SMALL), (2, SizeClass.MEDIUM), (3, SizeClass.LARGE), (5, SizeClass.HUGE), (8, SizeClass.COLOSSAL))
 
 

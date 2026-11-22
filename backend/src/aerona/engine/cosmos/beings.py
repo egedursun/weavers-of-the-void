@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.cosmography import BEING_AGENDAS, BEING_KINDS, BEING_MODEL, BEING_SCALES, EMBODIED, SENSE_REACH
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
@@ -209,6 +210,10 @@ class Scene:
     rng: SeededRandom
 
 
+AGENDA_ACTS: Handlers[BeingAgenda, Callable[[Scene], Awaitable[None]]] = Handlers(BeingAgenda)
+
+
+@AGENDA_ACTS.on(BeingAgenda.FEED)
 async def feed(scene: Scene) -> None:
     table = scene.ctx.rules.cosmic_beings
     star = scene.placement.star
@@ -219,6 +224,7 @@ async def feed(scene: Scene) -> None:
         shift_bounded(scene.ctx.rules, region, "magic", -table.feed_magic)
 
 
+@AGENDA_ACTS.on(BeingAgenda.CONQUER)
 async def conquer(scene: Scene) -> None:
     table = scene.ctx.rules.cosmic_beings
     if not scene.regions or not scene.rng.chance(table.incursion_chance):
@@ -276,12 +282,14 @@ async def answer_incursion(scene: Scene, region: EntityRow) -> bool:
     return driven
 
 
+@AGENDA_ACTS.on(BeingAgenda.GUARD)
 async def guard(scene: Scene) -> None:
     dimension = scene.placement.dimension
     if dimension is not None and not held(dimension.id) and "veil" not in dimension.locked:
         dimension.veil = clamp_percent(dimension.veil + scene.ctx.rules.cosmic_beings.guard_veil)
 
 
+@AGENDA_ACTS.on(BeingAgenda.TRADE)
 async def trade(scene: Scene) -> None:
     ctx, world = scene.ctx, scene.world
     route = await ctx.session.scalar(
@@ -307,6 +315,7 @@ async def trade(scene: Scene) -> None:
         )
 
 
+@AGENDA_ACTS.on(BeingAgenda.SEEK_WORSHIP)
 async def seek_worship(scene: Scene) -> None:
     ctx = scene.ctx
     if not scene.rng.chance(ctx.rules.cosmic_beings.worship_chance):
@@ -360,32 +369,25 @@ async def found_cult(ctx: TickContext, being: EntityRow, community: EntityRow) -
     return cult
 
 
+@AGENDA_ACTS.on(BeingAgenda.UNMAKE)
 async def unmake(scene: Scene) -> None:
     dimension = scene.placement.dimension
     if dimension is not None and not held(dimension.id) and "stability" not in dimension.locked:
         dimension.stability = clamp_percent(dimension.stability - scene.ctx.rules.cosmic_beings.unmake_stability)
 
 
+@AGENDA_ACTS.on(BeingAgenda.MEND)
 async def restore(scene: Scene) -> None:
     await mend(scene.ctx, scene.placement.star, scene.world)
 
 
+@AGENDA_ACTS.on(BeingAgenda.EXPLORE)
+@AGENDA_ACTS.on(BeingAgenda.FLEE)
 async def wander(scene: Scene) -> None:
     return None
 
 
 TEARING_KINDS = frozenset({BeingKind.DIMENSION_TRAVELLER, BeingKind.RIFT_BORN})
-AGENDA_ACTS: dict[BeingAgenda, Callable[[Scene], Awaitable[None]]] = {
-    BeingAgenda.FEED: feed,
-    BeingAgenda.EXPLORE: wander,
-    BeingAgenda.CONQUER: conquer,
-    BeingAgenda.GUARD: guard,
-    BeingAgenda.TRADE: trade,
-    BeingAgenda.FLEE: wander,
-    BeingAgenda.SEEK_WORSHIP: seek_worship,
-    BeingAgenda.UNMAKE: unmake,
-    BeingAgenda.MEND: restore,
-}
 
 
 async def mirror(scene: Scene) -> None:

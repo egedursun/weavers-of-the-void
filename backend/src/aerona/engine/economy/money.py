@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import LENDER_KINDS
+from aerona.catalog.life.economy import REFORM_MONEY_FORMS
 from aerona.catalog.materials import COIN_MATERIALS
 from aerona.catalog.money import MONEY_FORMS, REFORMS, issuer_kind_of
 from aerona.constants.units import PER_MILLE, PERCENT
@@ -18,7 +20,6 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MoneyBacking, MoneyForm, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
-from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.governance import OrgStrategy
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
@@ -250,7 +251,7 @@ async def reform(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, iss
     if not known or not ctx.rng(f"reform.{currency.id}.{ctx.epoch}").chance(ctx.rules.money.reform_chance):
         return False
     form = known[-1]
-    if currency.form in (MoneyForm.COIN, MoneyForm.COMMODITY):
+    if currency.form in REFORM_MONEY_FORMS:
         currency.backing = MoneyBacking.METAL if currency.metal is not None else MoneyBacking.DECREE
         currency.convertible = currency.metal is not None
     currency.form = form

@@ -5,10 +5,10 @@ from aerona.domain.enums.arts import ClubKind, FandomLine, ForgeryKind
 CLUB_KIND = total(
     ClubKind,
     {
-        ClubKind.TEAM_GAME: Defined("Team game", checked_by=(), used_by=("db.tables.arts.ClubRow", "engine.arts.sport.FIELD_GAMES")),
-        ClubKind.RACING: Defined("Racing", checked_by=(), used_by=("engine.arts.sport.FIELD_GAMES",)),
-        ClubKind.COMBAT: Defined("Combat", checked_by=(), used_by=("engine.arts.sport.FIELD_GAMES",)),
-        ClubKind.ATHLETICS: Defined("Athletics", checked_by=(), used_by=("engine.arts.sport.FIELD_GAMES",)),
+        ClubKind.TEAM_GAME: Defined("Team game", checked_by=(), used_by=("catalog.life.arts.FIELD_GAMES", "db.tables.arts.ClubRow")),
+        ClubKind.RACING: Defined("Racing", checked_by=(), used_by=("catalog.life.arts.FIELD_GAMES",)),
+        ClubKind.COMBAT: Defined("Combat", checked_by=(), used_by=("catalog.life.arts.FIELD_GAMES",)),
+        ClubKind.ATHLETICS: Defined("Athletics", checked_by=(), used_by=("catalog.life.arts.FIELD_GAMES",)),
     },
 )
 

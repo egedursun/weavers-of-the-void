@@ -2,6 +2,7 @@ import math
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import PERIODIC_BODIES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import SkyEventRow, WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -14,7 +15,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.physics import PERIODIC_BODIES, CosmicFeatureKind
+from aerona.domain.enums.physics import CosmicFeatureKind
 from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.travel import RouteClosure, TravelMethod, VehicleKind
 from aerona.domain.enums.world import SkyEventKind, StarType

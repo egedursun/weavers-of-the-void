@@ -172,7 +172,7 @@ async def test_perishables_spoil_unless_preserved_and_work_wears_tools(realm: Re
     ctx = context(realm.session)
     town = await settlement(realm, "Saltmarsh")
     fish = CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.FISH, quantity=200, quality=50)
-    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.ORE, material=MaterialKind.SALT, quantity=50, quality=50))
+    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.ORE, material=MaterialKind.HALITE, quantity=50, quality=50))
     tools = CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.TOOLS, quantity=50, quality=50)
     realm.session.add_all([fish, tools])
     realm.session.add(

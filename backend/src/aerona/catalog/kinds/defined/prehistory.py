@@ -30,7 +30,9 @@ PREHISTORY_KIND = total(
             checked_by=("engine.prehistory.run.derive", "engine.prehistory.run.prepare"),
             used_by=("catalog.prehistory.SPECIAL_KINDS",),
         ),
-        PrehistoryKind.PALACE: Defined("The deeds of its god", checked_by=("engine.prehistory.run.derive",), used_by=("catalog.prehistory.SPECIAL_KINDS",)),
+        PrehistoryKind.PALACE: Defined(
+            "The deeds of its god", checked_by=(), used_by=("catalog.life.prehistory.DERIVE_PREHISTORY_KINDS", "catalog.prehistory.SPECIAL_KINDS")
+        ),
         PrehistoryKind.VOYAGE: Defined(
             "The voyage", checked_by=("engine.prehistory.run.derive", "engine.prehistory.run.prepare"), used_by=("catalog.prehistory.SPECIAL_KINDS",)
         ),
@@ -39,8 +41,8 @@ PREHISTORY_KIND = total(
         ),
         PrehistoryKind.CORPSE: Defined(
             "The god's life, death and body",
-            checked_by=("engine.prehistory.run.derive",),
-            used_by=("catalog.prehistory.SIMULATED_KINDS", "catalog.prehistory.SPECIAL_KINDS"),
+            checked_by=(),
+            used_by=("catalog.life.prehistory.DERIVE_PREHISTORY_KINDS", "catalog.prehistory.SIMULATED_KINDS", "catalog.prehistory.SPECIAL_KINDS"),
         ),
     },
 )

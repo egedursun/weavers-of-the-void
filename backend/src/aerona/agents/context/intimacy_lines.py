@@ -2,13 +2,14 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
+from aerona.catalog.life.agents import MORTAL_INTIMACY_LINES_OATH_KINDS
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.fertility_means import FertilityMeansRow, FertilityUseRow
 from aerona.db.tables.intimacy import IntimacyNormRow, LegitimacyRuleRow, ReproductiveCourseRow, RestraintCustomRow
 from aerona.db.tables.polity import OathRow
 from aerona.domain.enums.intimacy import ChildLegitimacy, LegitimacyPath, NormStance
-from aerona.domain.enums.polity import OathKind, OathStatus
+from aerona.domain.enums.polity import OathStatus
 from aerona.engine.body.customs import people_of
 from aerona.engine.intimacy.legitimacy import legitimacy_of
 from aerona.engine.mortal.kin import children_of
@@ -62,7 +63,7 @@ async def mortal_intimacy_lines(scope: Scope, me: EntityRow) -> list[str]:
         spoken(kind)
         for kind in await scope.session.scalars(
             select(OathRow.kind)
-            .where(OathRow.swearer_entity_id == me.id, OathRow.status == OathStatus.SWORN, OathRow.kind.in_([OathKind.CELIBACY, OathKind.FIDELITY]))
+            .where(OathRow.swearer_entity_id == me.id, OathRow.status == OathStatus.SWORN, OathRow.kind.in_(MORTAL_INTIMACY_LINES_OATH_KINDS))
             .order_by(OathRow.kind)
             .distinct()
         )

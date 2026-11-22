@@ -5,6 +5,7 @@ from sqlalchemy import JSON, Column, ColumnElement, CompoundSelect, Enum, Intege
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.invariants import DERIVED_REASONS, GENERIC, TYPED, GenericCheck, Remedy
+from aerona.catalog.life_traits import ORDER_KIND_TRAITS, having
 from aerona.db import tables
 from aerona.db.base import Base
 from aerona.db.columns import column_bounds
@@ -21,8 +22,8 @@ from aerona.db.tables.pantheon import PantheonTieRow, SyncretismRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import OrderKindTrait
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.services.integrity.ages_links import free_keeper_seat, keepers_not_mortal
 from aerona.services.integrity.arsenal_links import (
@@ -197,7 +198,7 @@ PAST_EPOCHS = frozenset(
         "started_epoch",
     }
 )
-TARGETED_ORDERS = frozenset({OrderKind.GUARD, OrderKind.PROTECT, OrderKind.DESTROY, OrderKind.FOLLOW})
+TARGETED_ORDERS = having(ORDER_KIND_TRAITS, OrderKindTrait.TARGETED_ORDERS)
 _ = tables
 
 

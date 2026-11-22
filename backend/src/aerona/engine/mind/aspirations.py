@@ -5,6 +5,9 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.aspirations import FEARS, FOCUSES, GOALS, PERKS, WANT_VALUES, WANTS
+from aerona.catalog.conditions import OPEN_INJURY_STATES
+from aerona.catalog.life.mind import GLORIOUS_SINCE_THOUGHT_KINDS
+from aerona.catalog.life_traits import SKILL_KIND_TRAITS, having
 from aerona.catalog.mind import SKILLS
 from aerona.catalog.thoughts import THOUGHTS
 from aerona.constants.units import PERCENT
@@ -20,11 +23,12 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import HouseProfileRow, OathRow, OfficeRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.agent import MessageIntent
-from aerona.domain.enums.body import OPEN_INJURY_STATES, ConditionKind
+from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.environment import TerrainKind
+from aerona.domain.enums.life_traits import SkillKindTrait
 from aerona.domain.enums.mind import (
     DreamState,
     Facet,
@@ -74,13 +78,13 @@ FIGHTERS = frozenset(
     {MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.HERO, MortalRole.CAPTAIN, MortalRole.HUNTER, MortalRole.OFFICER, MortalRole.PILOT}
 )
 EYES = ("left_eye", "right_eye")
-TRAVEL_SKILLS = frozenset({SkillKind.SAILING, SkillKind.NAVIGATION, SkillKind.MOUNTAINEERING, SkillKind.RIDING})
+TRAVEL_SKILLS = having(SKILL_KIND_TRAITS, SkillKindTrait.TRAVEL_SKILLS)
 CRAFT_SKILLS = frozenset(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.CRAFT)
 LORE_SKILLS = frozenset(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.KNOWLEDGE)
 HOLY_ROLES = {MortalRole.SAINT: PERCENT, MortalRole.PRIEST: 66, MortalRole.CHOSEN: 66, MortalRole.SEER: 50}
 SERVING_ROLES = frozenset({MortalRole.PRIEST, MortalRole.CHOSEN, MortalRole.SAINT, MortalRole.SEER})
 VICTORIES = (BondKind.KILLED, BondKind.BEAT)
-HUNT_SKILLS = frozenset({SkillKind.HUNTING, SkillKind.BLADE, SkillKind.SPEAR, SkillKind.BOW})
+HUNT_SKILLS = having(SKILL_KIND_TRAITS, SkillKindTrait.HUNT_SKILLS)
 
 
 def score_goal(rules: Rules, goal: LifeGoal, values: Values, facets: dict[Facet, int]) -> float:
@@ -439,9 +443,7 @@ async def travelled_since(probe: Probe) -> bool:
 async def glorious_since(probe: Probe) -> bool:
     found = await probe.session.scalar(
         select(ThoughtRow.id)
-        .where(
-            ThoughtRow.holder_node_id == probe.mortal.id, ThoughtRow.kind.in_((ThoughtKind.WON_BATTLE, ThoughtKind.WON_DUEL)), ThoughtRow.epoch >= probe.since
-        )
+        .where(ThoughtRow.holder_node_id == probe.mortal.id, ThoughtRow.kind.in_(GLORIOUS_SINCE_THOUGHT_KINDS), ThoughtRow.epoch >= probe.since)
         .limit(1)
     )
     return found is not None
@@ -681,7 +683,7 @@ FAMILY_FOCUS = {
     SkillFamily.FAITH: FocusKind.PIETY,
     SkillFamily.CRAFT: FocusKind.CRAFT,
 }
-INTRIGUE_SKILLS = frozenset({SkillKind.INTRIGUE, SkillKind.DECEPTION})
+INTRIGUE_SKILLS = having(SKILL_KIND_TRAITS, SkillKindTrait.INTRIGUE_SKILLS)
 
 
 async def focus_level(session: AsyncSession, mortal_id: int, focus: FocusKind) -> int:

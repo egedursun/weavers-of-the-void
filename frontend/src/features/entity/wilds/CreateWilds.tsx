@@ -435,9 +435,9 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
           </div>
           {!grown && (
             <ChoiceGrid
-              label='Yields beyond meat, hide and bone'
+              label='Yields beyond meat, hide and calcified tissue'
               values={yieldProductValues.filter(
-                (value) => !['meat', 'hide', 'bone'].includes(value)
+                (value) => !['meat', 'hide', 'calcified_tissue'].includes(value)
               )}
               table={PRODUCTS}
               chosen={products}

@@ -3,12 +3,13 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_traits import workshops_with
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.settlement import DistrictDesignRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.domain.enums.economy import WorkshopKind
+from aerona.domain.enums.goods_traits import WorkshopTrait
 from aerona.domain.enums.settlement import BuildMaterial
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
@@ -65,7 +66,7 @@ async def plan_readout(session: AsyncSession, rules: Rules, town: Town) -> PlanR
     stores = {
         row.kind: row
         for row in await session.scalars(
-            select(WorkshopRow).where(WorkshopRow.community_entity_id == entity.id, WorkshopRow.kind.in_([WorkshopKind.GRANARY, WorkshopKind.WAREHOUSE]))
+            select(WorkshopRow).where(WorkshopRow.community_entity_id == entity.id, WorkshopRow.kind.in_(workshops_with(WorkshopTrait.CELLAR)))
         )
     }
     designs = list(await session.scalars(select(DistrictDesignRow).where(DistrictDesignRow.world_id == entity.world_id).order_by(DistrictDesignRow.id)))

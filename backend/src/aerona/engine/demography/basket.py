@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified, instance_state
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
+from aerona.catalog.life.demography import APPLY_SHORTFALLS_SHORTFALL_EFFECTS
 from aerona.catalog.needs import SERVE_ORDER, SHORTFALL_EFFECTS, basket_weight
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
@@ -363,7 +364,7 @@ async def apply_shortfalls(ctx: TickContext, community: EntityRow, basket: Baske
             loss = round_half_up(table.insecurity_defense * short / PERCENT)
             shift_stat(community, "defense" if community.entity_type is EntityType.SETTLEMENT else "martiality", -loss)
             done[effect] = loss
-        elif effect in (E.HUNGER, E.STATUS, E.ARCANE):
+        elif effect in APPLY_SHORTFALLS_SHORTFALL_EFFECTS:
             done[effect] = short
     return done
 

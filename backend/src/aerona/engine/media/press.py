@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import RECORD_FORM_TRAITS, having
 from aerona.catalog.media_shapes import FORM_DECAY_PCT, FUNDING_REVENUE_PCT, ITEM_SWAY_PCT, UNCENSORED_FUNDING
 from aerona.constants.units import PERCENT
 from aerona.db.tables.communication import PublicOpinionRow
@@ -17,7 +18,8 @@ from aerona.db.tables.urban import MarketPlayRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.customs import EvidenceKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.media import CensorMeasure, MediaItemKind, RecordForm
+from aerona.domain.enums.life_traits import RecordFormTrait
+from aerona.domain.enums.media import CensorMeasure, MediaItemKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.urban import MarketPlay
@@ -34,7 +36,7 @@ TEN = 10
 HONEST = 50
 APPROVAL_SPAN = 100
 FOUND_TRUST = 5
-RECORDED_FORMS = frozenset({RecordForm.IMAGE, RecordForm.SOUND, RecordForm.MOVING_IMAGE, RecordForm.SIGNAL, RecordForm.NETWORK, RecordForm.LIVING})
+RECORDED_FORMS = having(RECORD_FORM_TRAITS, RecordFormTrait.RECORDED_FORMS)
 
 
 @dataclass

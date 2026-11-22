@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.civilization import unlocked
+from aerona.catalog.life.phases import ARRIVE_JOURNEY_INTENTS, ARRIVE_JOURNEY_INTENTS_2, INTENT_CAPABILITY, LOST_REASONS, SEND_SPONTANEOUSLY_JOURNEY_INTENTS
 from aerona.catalog.travel import TRAVEL_METHODS, medium_of
 from aerona.catalog.worlds import HARSH_ATMOSPHERES
 from aerona.constants.units import PERCENT
@@ -384,7 +385,7 @@ async def _send_spontaneously(ctx: TickContext, book: RouteBook, community: Enti
         ctx.rules, rng, community.civ_tier or 0, empty, holy_site=await has_holy_site(ctx.session, community, target, ctx.rules), warlike=warlike
     )
     intent = await planned(ctx, community, target, intent)
-    settling = intent in (JourneyIntent.COLONY, JourneyIntent.CONQUEST)
+    settling = intent in SEND_SPONTANEOUSLY_JOURNEY_INTENTS
     carried = round(headcount(community) * ctx.rules.travel.colony_share_pct / PERCENT) if settling else 0
     try:
         journey = await start_journey(ctx, JourneySpec(community, route, intent, carried))
@@ -606,17 +607,6 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
         cause=journey.incident_id,
     )
     return True
-
-
-LOST_REASONS: dict[RouteState, str] = {
-    RouteState.FORGOTTEN: "the world at the end of the route was forgotten",
-    RouteState.COLLAPSED: "the divine bridge collapsed",
-    RouteState.SEALED: "the route was sealed",
-    RouteState.SNAPPED: "the light sail snapped",
-    RouteState.SEVERED: "the route was severed for good",
-    RouteState.WORN: "the route wore away",
-    RouteState.SCORCHED: "a flare scorched the route shut for good",
-}
 
 
 async def _closed_route(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, route: RouteRow, scene: JourneyScene) -> None:
@@ -993,7 +983,7 @@ async def arrive(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, ro
             cause=journey.incident_id,
         )
     result: EntityRow | None = None
-    if journey.intent in (JourneyIntent.COLONY, JourneyIntent.CONQUEST) and journey.population > 0:
+    if journey.intent in ARRIVE_JOURNEY_INTENTS_2 and journey.population > 0:
         arrival.colony = await _found_colony(ctx, arrival)
         result = arrival.colony
     await first_contact(ctx, arrival)
@@ -1001,7 +991,7 @@ async def arrive(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, ro
         site, offering = await reach_holy_site(ctx, ctx.rules, traveller, target.id, region)
         arrival.contacts.append(offering)
         result = result or site
-    if journey.intent in (JourneyIntent.EXPLORATION, JourneyIntent.PILGRIMAGE):
+    if journey.intent in ARRIVE_JOURNEY_INTENTS:
         result = await _explore_arrival(ctx, arrival) or result
     if journey.intent is JourneyIntent.TRADE:
         add_prosperity(ctx.rules, traveller, ctx.rules.travel.trade_prosperity)
@@ -1191,7 +1181,7 @@ async def send_expedition(session: AsyncSession, rules: Rules, traveller_id: int
     if route is None:
         raise NotFoundError("No such route.")
     if traveller.entity_type in COMMUNITY_TYPES:
-        capability = {JourneyIntent.COLONY: TierCapability.COLONY, JourneyIntent.CONQUEST: TierCapability.CONQUEST}.get(intent, TierCapability.EXPEDITION)
+        capability = INTENT_CAPABILITY.get(intent, TierCapability.EXPEDITION)
         if not unlocked(rules, traveller.civ_tier or 0, capability):
             raise ValidationFailedError(f"{traveller.name} has not grown enough as a civilization for this kind of expedition.")
     problem = await can_use_route(session, rules, ctx.epoch, traveller, route)

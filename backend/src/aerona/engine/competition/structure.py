@@ -1,5 +1,7 @@
 from sqlalchemy import select
 
+from aerona.catalog.goods_tables import WORKSHOP_GOODS
+from aerona.catalog.life_traits import ALLOCATION_MODE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.commerce import ShopGoodRow, ShopRow, SupplyTierRow
 from aerona.db.tables.competition import MarketStructureRow
@@ -15,9 +17,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.competition import CompetitionClause, EntryBarrier, MarketForm
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.life_traits import AllocationModeTrait
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.orders import AllocationMode
-from aerona.engine.commerce.seed import WORKSHOP_GOODS
 from aerona.engine.competition.clauses import clause_strength
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of
@@ -28,7 +29,7 @@ from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import headcount
 from aerona.engine.recording.record import record
 
-STATE_BUYERS = frozenset({AllocationMode.COMMAND, AllocationMode.REDISTRIBUTION})
+STATE_BUYERS = having(ALLOCATION_MODE_TRAITS, AllocationModeTrait.STATE_BUYERS)
 SELLERS_LOCK = "sellers"
 BARRIERS_LOCK = "barriers"
 FORM_LOCK = "form"

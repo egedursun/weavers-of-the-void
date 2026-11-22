@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy import JSON, CheckConstraint, Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
+from aerona.constants.calendar import SEASONS_MAX
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base, TimestampMixin
 from aerona.db.columns import at_least, between, enum_type
@@ -15,8 +16,6 @@ from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.world import Atmosphere, ClimateEra, Discovery, Gravity, SkyEventKind, StarType, WorldType
 from aerona.domain.models.phonology import Phonology
 from aerona.domain.models.profiles import EntityDepth
-
-SEASONS_MAX = 12
 
 
 class StarRow(NodeRow):

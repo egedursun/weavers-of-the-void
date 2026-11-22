@@ -2,6 +2,7 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
 from aerona.catalog.anatomy import SIGHT_PARTS
+from aerona.catalog.harm_kinds import DAMAGE, injuries_where
 from aerona.catalog.incident_kinds.body_lines import injury_line
 from aerona.catalog.mind import MELEE_SKILLS
 from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS
@@ -69,20 +70,10 @@ class Wounding:
     hp_lost: int = 0
 
 
-NON_LETHAL_KIND = {
-    DamageType.PIERCE: InjuryKind.PUNCTURE,
-    DamageType.FIRE: InjuryKind.BURN,
-    DamageType.BALLISTIC: InjuryKind.GUNSHOT,
-    DamageType.EXPLOSIVE: InjuryKind.SHRAPNEL,
-    DamageType.ENERGY: InjuryKind.BURN,
-    DamageType.CHEMICAL: InjuryKind.CHEMICAL_BURN,
-}
-
-
 def _spare(hit: Hit) -> Hit:
     if hit.kind is not InjuryKind.DESTROYED or not hit.part.vital:
         return hit
-    return replace(hit, kind=NON_LETHAL_KIND.get(hit.damage_type, InjuryKind.CRUSH), severity=SEVERITY_MAX - 1)
+    return replace(hit, kind=DAMAGE[hit.damage_type].spared or InjuryKind.CRUSH, severity=SEVERITY_MAX - 1)
 
 
 async def wielding_of(ctx: TickContext, harm: Harm) -> Wielding | None:
@@ -201,7 +192,7 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
     return rows
 
 
-BLINDING = frozenset({InjuryKind.GOUGED, InjuryKind.DESTROYED})
+BLINDING = injuries_where(lambda spec: spec.blinding)
 
 
 def wound_states(row: InjuryRow) -> tuple[StepState, ...]:

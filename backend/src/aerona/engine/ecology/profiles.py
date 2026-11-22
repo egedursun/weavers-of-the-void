@@ -3,7 +3,14 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.body_plans import COLD_PLANS, LAYERS, PLAN_DIETS, PLAN_TRAITS
+from aerona.catalog.diets import GRAZERS, MEAT_EATERS, MEATLESS
+from aerona.catalog.domestication import SOCIALITIES
 from aerona.catalog.flora import DEFAULT_YIELDS, PLANT_PRODUCTS
+from aerona.catalog.life.domain import GROWN
+from aerona.catalog.life.ecology import LIFESPAN, LITTER, METABOLISM, PLANT_DIETS, PLANT_PLANS, USES_OF_SIZE_CLASSS
+from aerona.catalog.life_traits import SIZE_CLASS_TRAITS, having
+from aerona.catalog.terrain import terrains
 from aerona.constants.units import PERCENT
 from aerona.db.kind_concepts.nature import PRODUCT_PARTS
 from aerona.db.repositories.entities import EntityRepository
@@ -16,23 +23,11 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import (
-    GRAZERS,
-    GROWN,
-    SIZE_ORDER,
-    AnimalRole,
-    Biochemistry,
-    Diet,
-    GrowthCycle,
-    PlantYield,
-    SizeClass,
-    Sociality,
-    SpeciesClass,
-    YieldProduct,
-)
+from aerona.domain.enums.ecology import SIZE_ORDER, AnimalRole, Biochemistry, Diet, GrowthCycle, PlantYield, SizeClass, Sociality, SpeciesClass, YieldProduct
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag
-from aerona.domain.enums.environment import TerrainKind
+from aerona.domain.enums.environment import TerrainKind, TerrainTrait
+from aerona.domain.enums.life_traits import SizeClassTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
 from aerona.domain.enums.society import CreatureTrait
@@ -47,19 +42,13 @@ from aerona.engine.primitives.stats import shift_bounded, stat, stat_or
 T = CreatureTrait
 Z = SizeClass
 P = BodyPlan
-WATER = frozenset({TerrainKind.COAST, TerrainKind.MARSH, TerrainKind.ISLAND, TerrainKind.RIVER_VALLEY})
-LIFESPAN = {Z.TINY: 2, Z.SMALL: 6, Z.MEDIUM: 15, Z.LARGE: 25, Z.HUGE: 60, Z.COLOSSAL: 200}
-LITTER = {Z.TINY: 8, Z.SMALL: 5, Z.MEDIUM: 3, Z.LARGE: 1, Z.HUGE: 1, Z.COLOSSAL: 1}
-METABOLISM = {Z.TINY: 80, Z.SMALL: 65, Z.MEDIUM: 50, Z.LARGE: 40, Z.HUGE: 30, Z.COLOSSAL: 20}
+WATER = terrains(TerrainTrait.WET, TerrainTrait.COASTAL)
 TRAIT_PLANS = ((T.HIVE_MIND, P.INSECTOID), (T.SHAPESHIFTER, P.AMORPHOUS), (T.FLYING, P.AVIAN), (T.AQUATIC, P.AQUATIC))
-PLAN_DIETS = {P.ARBOREAL: Diet.PHOTOSYNTHETIC, P.AMORPHOUS: Diet.FILTER, P.CONSTRUCT: Diet.MINERAL, P.INCORPOREAL: Diet.SOUL}
-PLAN_TRAITS = {P.AVIAN: T.FLYING, P.AQUATIC: T.AQUATIC, P.SERPENTINE: T.AMBUSH_PREDATOR, P.INSECTOID: T.ARMOURED}
-SOCIAL_TRAITS = {Sociality.PACK: T.PACK_HUNTER, Sociality.HIVE: T.HIVE_MIND}
-UNEATEN = frozenset({Diet.MINERAL, Diet.VOID, Diet.PHOTOSYNTHETIC})
-SHELLED = frozenset({Z.TINY, Z.SMALL})
-GREAT = frozenset({Z.HUGE, Z.COLOSSAL})
-DRAUGHT = frozenset({Z.LARGE, Z.HUGE})
-KEPT_SIZES = frozenset({Z.SMALL, Z.MEDIUM, Z.LARGE})
+UNEATEN = MEATLESS
+SHELLED = having(SIZE_CLASS_TRAITS, SizeClassTrait.SHELLED)
+GREAT = having(SIZE_CLASS_TRAITS, SizeClassTrait.GREAT)
+DRAUGHT = having(SIZE_CLASS_TRAITS, SizeClassTrait.DRAUGHT)
+KEPT_SIZES = having(SIZE_CLASS_TRAITS, SizeClassTrait.KEPT_SIZES)
 SIZE_STEP = 25
 FLYERS = frozenset({P.AVIAN})
 
@@ -74,7 +63,7 @@ class Product:
 
 MEAT = Product("meat", CommodityKind.LIVESTOCK, None, 2)
 HIDE = Product("hide", CommodityKind.CLOTH, MaterialKind.HIDE, 1)
-BONE = Product("bone", CommodityKind.TOOLS, MaterialKind.BONE, 1)
+BONE = Product("calcified_tissue", CommodityKind.TOOLS, MaterialKind.CALCIFIED_TISSUE, 1)
 IVORY = Product("ivory", CommodityKind.LUXURIES, MaterialKind.IVORY, 1)
 CHITIN = Product("chitin", CommodityKind.ARMOUR, MaterialKind.CHITIN, 1)
 VENOM = Product("venom", CommodityKind.MEDICINE, None, 1)
@@ -84,11 +73,11 @@ MILK = Product("milk", CommodityKind.MILK, None, 1)
 EGGS = Product("eggs", CommodityKind.EGGS, None, 1)
 FEATHERS = Product("feathers", CommodityKind.LUXURIES, None, 1)
 REAGENTS = Product("magic reagents", CommodityKind.MAGICAL_REAGENTS, None, 1)
-GREAT_BONE = Product("great_bone", CommodityKind.WEAPONS, MaterialKind.GREAT_BONE, 1)
+GREAT_BONE = Product("great_beast_tissue", CommodityKind.WEAPONS, MaterialKind.GREAT_BEAST_TISSUE, 1)
 PRODUCTS = {
     YieldProduct.MEAT: MEAT,
     YieldProduct.HIDE: HIDE,
-    YieldProduct.BONE: BONE,
+    YieldProduct.CALCIFIED_TISSUE: BONE,
     YieldProduct.IVORY: IVORY,
     YieldProduct.CHITIN: CHITIN,
     YieldProduct.VENOM: VENOM,
@@ -97,17 +86,13 @@ PRODUCTS = {
     YieldProduct.MILK: MILK,
     YieldProduct.FEATHERS: FEATHERS,
     YieldProduct.MAGIC_REAGENTS: REAGENTS,
-    YieldProduct.GREAT_BONE: GREAT_BONE,
+    YieldProduct.GREAT_BEAST_TISSUE: GREAT_BONE,
     YieldProduct.EGGS: EGGS,
 }
-PLANT_PLANS = {SpeciesClass.PLANT: P.ARBOREAL, SpeciesClass.FUNGUS: P.AMORPHOUS}
-PLANT_DIETS = {SpeciesClass.PLANT: Diet.PHOTOSYNTHETIC, SpeciesClass.FUNGUS: Diet.SCAVENGER}
-PEST_HUNTERS = frozenset({Diet.CARNIVORE, Diet.OMNIVORE})
-LAYERS = frozenset({P.AVIAN, P.SERPENTINE, P.AQUATIC, P.INSECTOID})
+PEST_HUNTERS = MEAT_EATERS
 
 
-COLD_PLANS = frozenset({BodyPlan.SERPENTINE, BodyPlan.INSECTOID, BodyPlan.AQUATIC})
-SLEEPERS = frozenset({SizeClass.TINY, SizeClass.SMALL, SizeClass.MEDIUM})
+SLEEPERS = having(SIZE_CLASS_TRAITS, SizeClassTrait.SLEEPERS)
 
 
 @dataclass(frozen=True)
@@ -269,7 +254,7 @@ def uses_of(nature: Nature, tameability: int, traits: set[CreatureTrait], might:
         found.add(AnimalRole.FIBRE)
     if size in DRAUGHT and diet in GRAZERS:
         found |= {AnimalRole.MOUNT, AnimalRole.DRAFT}
-    if size in {Z.LARGE, Z.HUGE, Z.COLOSSAL} and diet not in GRAZERS:
+    if size in USES_OF_SIZE_CLASSS and diet not in GRAZERS:
         found.add(AnimalRole.WAR)
     if (T.FLYING in traits or nature.plan in FLYERS) and size in DRAUGHT:
         found.add(AnimalRole.MOUNT)
@@ -440,8 +425,9 @@ def add_plant_profile(ctx: TickContext, species_id: int, cycle: GrowthCycle) -> 
 
 def traits_from_nature(profile: SpeciesProfileRow) -> list[CreatureTrait]:
     found = [PLAN_TRAITS[profile.body_plan]] if profile.body_plan in PLAN_TRAITS else []
-    if profile.sociality in SOCIAL_TRAITS:
-        found.append(SOCIAL_TRAITS[profile.sociality])
+    social = SOCIALITIES[profile.sociality].trait
+    if social is not None:
+        found.append(social)
     if profile.nocturnal:
         found.append(T.ECHOLOCATION)
     return list(dict.fromkeys(found))

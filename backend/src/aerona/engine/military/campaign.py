@@ -2,8 +2,10 @@ from collections.abc import Sequence
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import COMMANDER_TRAIT_TRAITS, having
 from aerona.catalog.mind_split import BOLD_FACETS
 from aerona.catalog.units import UNITS
+from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.entities import EntityRow
@@ -16,8 +18,9 @@ from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.environment import MovementMode, RiverClass, ScarKind, WeatherKind
+from aerona.domain.enums.environment import MovementMode, RiverClass, ScarKind, WeatherKind, WeatherTrait
 from aerona.domain.enums.folkways import BiasedDecision
+from aerona.domain.enums.life_traits import CommanderTraitTrait
 from aerona.domain.enums.military import ArmyRole, CommanderTrait, MutinyOutcome, Stance, UnitFamily
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
@@ -45,10 +48,9 @@ from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
-SLOW_WEATHER = frozenset({WeatherKind.SNOW, WeatherKind.BLIZZARD, WeatherKind.DOWNPOUR, WeatherKind.STORM, WeatherKind.SANDSTORM})
 MOUNTED = frozenset({UnitFamily.MOUNTED, UnitFamily.BEAST})
-AGGRESSIVE = frozenset({CommanderTrait.AGGRESSIVE_ASSAULTER, CommanderTrait.RECKLESS, CommanderTrait.BRUTAL, CommanderTrait.SIEGE_EXPERT})
-CAREFUL = frozenset({CommanderTrait.CAUTIOUS, CommanderTrait.DEFENSIVE_GENIUS})
+AGGRESSIVE = having(COMMANDER_TRAIT_TRAITS, CommanderTraitTrait.AGGRESSIVE)
+CAREFUL = having(COMMANDER_TRAIT_TRAITS, CommanderTraitTrait.CAREFUL)
 RUTHLESS = frozenset({CommanderTrait.BRUTAL})
 
 
@@ -85,7 +87,7 @@ def march_budget(
     table = rules.campaign_depth
     regions = base_regions + (table.road_regions if road else 0) - baggage // max(1, table.baggage_slow)
     budget = max(0, regions) * PERCENT
-    if weather in SLOW_WEATHER:
+    if has_trait(weather, WeatherTrait.SLOWING):
         budget = budget * table.weather_slow_pct // PERCENT
     campaign = (PERCENT - season.campaign if inverted else season.campaign) if season is not None else PERCENT
     if campaign < PERCENT // 2:

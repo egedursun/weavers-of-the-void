@@ -33,6 +33,7 @@ from aerona.api.views.common import node_refs
 from aerona.catalog.domain_effects import ACTIVITY_LABELS, DOMAIN_EFFECTS, HOOKS, SYNERGY_OF
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.knowledge import NATURAL_LAWS
+from aerona.catalog.life.divine import HUNGER_LABELS, MOTION_LABELS, WOUND_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -61,9 +62,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.divine.goals import GOAL_LABELS, SON_ONLY
 from aerona.engine.divine.laws import drafted_profile
-from aerona.engine.divine.outer import HUNGER_LABELS, drafted_outer, oppose_cost
-from aerona.engine.divine.rulings import MOTION_LABELS
-from aerona.engine.divine.wounds import WOUND_LABELS
+from aerona.engine.divine.outer import drafted_outer, oppose_cost
 from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["divine"])

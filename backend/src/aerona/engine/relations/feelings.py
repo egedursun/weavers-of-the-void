@@ -1,23 +1,17 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.relations import MEMORY_PASSIONS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.relations import RelationshipRow
-from aerona.domain.enums.mind import MemoryKind, TraitKind
+from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.relations import PassionKind, PassionSource
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import traits_of
 from aerona.engine.primitives.stats import stat_or
 
 Found = dict[tuple[PassionKind, int], tuple[int, PassionSource]]
-MEMORY_PASSIONS = {
-    MemoryKind.LAMENTED: PassionKind.GRIEF,
-    MemoryKind.DREADS: PassionKind.FEAR,
-    MemoryKind.HUMILIATED_ME: PassionKind.SHAME,
-    MemoryKind.ENVIED: PassionKind.ENVY,
-    MemoryKind.TAUGHT_ME: PassionKind.ADMIRATION,
-}
 
 
 def keep(found: Found, key: tuple[PassionKind, int], strength: int, source: PassionSource) -> None:

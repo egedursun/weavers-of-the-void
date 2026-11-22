@@ -3,7 +3,7 @@ from enum import StrEnum
 
 class MaterialKind(StrEnum):
     WOOD = "wood"
-    BONE = "bone"
+    CALCIFIED_TISSUE = "calcified_tissue"
     HIDE = "hide"
     LEATHER = "leather"
     CLOTH = "cloth"
@@ -21,12 +21,12 @@ class MaterialKind(StrEnum):
     CRYSTAL = "crystal"
     IVORY = "ivory"
     CHITIN = "chitin"
-    GREAT_BONE = "great_bone"
+    GREAT_BEAST_TISSUE = "great_beast_tissue"
     STAR_METAL = "star_metal"
     VOID_GLASS = "void_glass"
-    GODFLESH = "godflesh"
+    DIVINE_TISSUE = "divine_tissue"
     LIVING_WOOD = "living_wood"
-    SALT = "salt"
+    HALITE = "halite"
     AMBER = "amber"
     LEAD = "lead"
     SKYSTEEL = "skysteel"
@@ -41,26 +41,3 @@ class MaterialKind(StrEnum):
     HYDRAULIC_CONCRETE = "hydraulic_concrete"
     THATCH = "thatch"
     TILE = "tile"
-
-
-MINERAL_KINDS = frozenset(
-    {
-        MaterialKind.STONE,
-        MaterialKind.FLINT,
-        MaterialKind.OBSIDIAN,
-        MaterialKind.COPPER,
-        MaterialKind.TIN,
-        MaterialKind.IRON,
-        MaterialKind.SILVER,
-        MaterialKind.GOLD,
-        MaterialKind.CRYSTAL,
-        MaterialKind.SALT,
-        MaterialKind.AMBER,
-        MaterialKind.LEAD,
-        MaterialKind.SULFUR,
-        MaterialKind.CLAY,
-        MaterialKind.GEMS,
-        MaterialKind.STAR_METAL,
-        MaterialKind.VOID_GLASS,
-    }
-)

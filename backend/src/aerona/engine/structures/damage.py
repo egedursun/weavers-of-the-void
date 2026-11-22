@@ -1,6 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import STANDING_STATES
+from aerona.catalog.life_traits import STRUCTURE_SECTION_TRAITS, having
 from aerona.catalog.structure_sections import FORM_GUARD, FORMS
 from aerona.catalog.structures import KNOWLEDGE_KEEPERS, MEGASTRUCTURES, function_kind
 from aerona.constants.units import PERCENT
@@ -11,9 +13,10 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityFlag
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.integrity import HarmForce
+from aerona.domain.enums.life_traits import StructureSectionTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
-from aerona.domain.enums.structure import STANDING_STATES, ConstructionState, StructureKind, StructureSection
+from aerona.domain.enums.structure import ConstructionState, StructureKind, StructureSection
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, holding
@@ -29,9 +32,9 @@ from aerona.engine.structures.profiles import material_props, refresh, standing_
 from aerona.engine.structures.workshops import unlink
 
 X = StructureSection
-BREACHES = frozenset({X.GATE, X.OUTER_WALL})
+BREACHES = having(STRUCTURE_SECTION_TRAITS, StructureSectionTrait.BREACHES)
 FALLEN = frozenset({X.KEEP})
-BREACHED_DECKS = frozenset({X.HABITAT_DECKS, X.RING_SEGMENTS})
+BREACHED_DECKS = having(STRUCTURE_SECTION_TRAITS, StructureSectionTrait.BREACHED_DECKS)
 
 
 async def open_siege(session: AsyncSession, host_id: int) -> SiegeRow | None:

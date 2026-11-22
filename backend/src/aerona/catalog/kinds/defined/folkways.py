@@ -1,18 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.folkways import CharmPower, LuckReach, Purification
-
-CHARM_POWER = total(
-    CharmPower,
-    {
-        CharmPower.PROTECTION: Defined(
-            "Protection", checked_by=(), used_by=("engine.folkways.mishaps.WARDS", "engine.folkways.mishaps.answer", "services.player.folkways.CharmDraft")
-        ),
-        CharmPower.FERTILITY: Defined("Fertility", checked_by=(), used_by=("engine.folkways.fed.fed_fertility",)),
-        CharmPower.LUCK: Defined("Luck", checked_by=(), used_by=("engine.folkways.mishaps.WARDS", "engine.folkways.mishaps.keep_charms")),
-        CharmPower.HEALING: Defined("Healing", checked_by=(), used_by=("engine.folkways.fed.healing_charm",)),
-    },
-)
+from aerona.domain.enums.folkways import LuckReach, Purification
 
 LUCK_REACH = total(
     LuckReach,

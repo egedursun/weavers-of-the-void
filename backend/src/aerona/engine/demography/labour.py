@@ -1,14 +1,15 @@
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
-from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.demography import AGE_WORK, ALLOCATE_COHORT_CONDITIONS, CLASS_JOBS, CONDITION_WORK, CORVEE_JOBS
+from aerona.catalog.life.economy import KIND_JOBS
+from aerona.catalog.life_traits import JOB_TRAITS, having
 from aerona.catalog.needs import GATED_JOBS, JOB_GOODS, MOVABLE_JOBS, WORKSHOP_JOBS
 from aerona.constants.units import PERCENT
-from aerona.core.total import partial
 from aerona.db.read_memo import memoized
 from aerona.db.tables.demography import LabourRow, PeopleCultureRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopRow
@@ -23,6 +24,7 @@ from aerona.domain.enums.disease import DiseaseTarget
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind
+from aerona.domain.enums.life_traits import JobTrait
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
@@ -38,7 +40,7 @@ from aerona.engine.demography.biology import job_factors, profiles_of
 from aerona.engine.demography.cohorts import cohorts_of, seed
 from aerona.engine.demography.prices import cheapest, dearest, local_prices
 from aerona.engine.disease.harm import community_targets, sick_levy, sick_work
-from aerona.engine.economy.extraction import KIND_JOBS, extraction_kind
+from aerona.engine.economy.extraction import extraction_kind
 from aerona.engine.labour.stoppage import stoppage
 from aerona.engine.polity.law_effects import feudal_levy
 from aerona.engine.polity.laws import LawBook, law_param
@@ -53,30 +55,7 @@ LEVY_BASE = 10
 SEASON_SICK_PCT = 50
 PEOPLE_PER_THOUSAND = 1000
 MIDDLING_RICHNESS = 50
-AGE_WORK: Mapping[AgeBand, float] = MappingProxyType({AgeBand.CHILD: 0.2, AgeBand.ADULT: 1.0, AgeBand.ELDER: 0.5})
-CONDITION_WORK: Mapping[CohortCondition, float] = MappingProxyType(
-    {CohortCondition.NONE: 1.0, CohortCondition.VETERAN: 0.9, CohortCondition.ENSLAVED: 1.0, CohortCondition.CAPTIVE: 0.8}
-)
-CLASS_JOBS = partial(
-    SocialClass,
-    {
-        C.FARMER: {J.FARMING: 1.0},
-        C.SERF_OR_SLAVE: {J.FARMING: 0.6, J.MINING: 0.3, J.BUILDING: 0.1},
-        C.ARTISAN: {J.CRAFTING: 0.7, J.BUILDING: 0.2, J.MINING: 0.1},
-        C.MERCHANT: {J.TRADE: 1.0},
-        C.PRIEST: {J.CLERGY: 1.0},
-        C.MONASTIC: {J.CLERGY: 0.5, J.SCHOLARSHIP: 0.3, J.FARMING: 0.2},
-        C.SCRIBE: {J.SCHOLARSHIP: 1.0},
-        C.NOBLE: {J.IDLE: 0.8, J.SOLDIERING: 0.2},
-        C.WORKER: {J.CRAFTING: 0.6, J.MINING: 0.2, J.BUILDING: 0.2},
-        C.PROFESSIONAL: {J.SCHOLARSHIP: 0.4, J.SERVICE: 0.4, J.CRAFTING: 0.2},
-        C.OFFICIAL: {J.SERVICE: 1.0},
-        C.CITIZEN: {J.SERVICE: 0.3, J.TRADE: 0.3, J.CRAFTING: 0.2, J.FARMING: 0.2},
-        C.UNEMPLOYED: {J.IDLE: 0.8, J.BUILDING: 0.2},
-    },
-    without={SocialClass.OUTCAST, SocialClass.WARRIOR},
-)
-BOUND_JOBS = frozenset({J.FARMING, J.HERDING, J.MINING, J.BUILDING})
+BOUND_JOBS = having(JOB_TRAITS, JobTrait.BOUND_JOBS)
 
 
 def condition_work(rules: Rules, condition: CohortCondition, job: Job, targets: frozenset[DiseaseTarget] = frozenset()) -> float:
@@ -260,7 +239,7 @@ def corvee(plan: Plan, share_pct: int) -> int:
     if share_pct <= 0:
         return 0
     moved = 0
-    for job in (J.FARMING, J.HERDING):
+    for job in CORVEE_JOBS:
         moved += plan.move(job, J.BUILDING, round_half_up(plan.workers[job] * share_pct / PERCENT), LabourReason.CORVEE)
     return moved
 
@@ -321,7 +300,7 @@ async def allocate(
     children_work = await law_param(ctx.session, community.id, LawKind.LABOUR_LAW, "child_labour") is not False
     for (band, _sex, social_class, condition), row in rows.items():
         hands = row.count * (AGE_WORK[band] if children_work or band is not AgeBand.CHILD else 0.0)
-        bound = social_class is C.SERF_OR_SLAVE or condition in {CohortCondition.ENSLAVED, CohortCondition.CAPTIVE}
+        bound = social_class is C.SERF_OR_SLAVE or condition in ALLOCATE_COHORT_CONDITIONS
         mood = satisfaction_factor(rules, society, social_class)
         for job, share in jobs_for(rules, C.SERF_OR_SLAVE if bound else social_class).items():
             spread = food if job is J.FARMING else {job: 1.0}

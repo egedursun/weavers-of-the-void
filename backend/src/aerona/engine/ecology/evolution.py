@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.evolution import NEUTRAL, lean, seeded_trait, size_from
+from aerona.catalog.evolution import NEUTRAL, PREY_TRAITS, lean, seeded_trait, size_from
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
@@ -23,7 +23,6 @@ from aerona.rules.registry import Rules
 
 E = EvolvedTrait
 Evolved = dict[EvolvedTrait, int]
-PREY_TRAITS = (E.SPEED, E.CAMOUFLAGE)
 WARMER = -1
 MAX_VARIANCE = 50
 BASE_VARIANCE = 10

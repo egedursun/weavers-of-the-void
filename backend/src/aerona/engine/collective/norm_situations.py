@@ -3,6 +3,7 @@ from collections.abc import Collection, Mapping
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.collective import DEEPER_BEHAVIOUR_INTERACTION_KINDS
 from aerona.db.tables.intrigue import IdentityRow
 from aerona.db.tables.made import MadeRealmRow
 from aerona.db.tables.minds import MindProfileRow
@@ -72,6 +73,6 @@ def deeper_behaviour(encounter: NormSituation | None, networked: bool, kind: Int
         return SHOWN_BY[encounter]
     if kind is InteractionKind.CONFIDE_SECRET and encounter is NormSituation.ENCOUNTER_WITH_MADE_MIND:
         return NormBehaviour.COPY_DISCLOSURE
-    if kind in (InteractionKind.TEACH, InteractionKind.GOSSIP) and networked:
+    if kind in DEEPER_BEHAVIOUR_INTERACTION_KINDS and networked:
         return NormBehaviour.DATA_SHARING
     return None

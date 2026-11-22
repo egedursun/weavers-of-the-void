@@ -6,6 +6,9 @@ from sqlalchemy import or_, select
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.kinds.trade_modes import TRADE_MODES
+from aerona.catalog.life.economy import DANGER_KEYS, OPEN
+from aerona.catalog.life_traits import TRADE_ROUTE_STATUS_TRAITS, having
+from aerona.catalog.senses import NAVIGATION
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -34,6 +37,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.interpretation import InterpretedEvent
+from aerona.domain.enums.life_traits import TradeRouteStatusTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -54,11 +58,11 @@ from aerona.engine.demography.tongues import trade_barrier
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.cargo import carriage_factor, spoilage
 from aerona.engine.economy.chokepoints import press_route_aims, weigh_chokepoint
-from aerona.engine.economy.convoys import OPEN, harbour_limit, route_capacity
+from aerona.engine.economy.convoys import harbour_limit, route_capacity
 from aerona.engine.economy.credit import sell_on_credit
 from aerona.engine.economy.good_kinds import GoodBook, good_book
 from aerona.engine.economy.markets import Quote
-from aerona.engine.economy.route_dangers import CARAVAN_TERRAIN, DANGER_KEYS, Dangers, Lairs, dangers_of, feed_beast, froze, season_pct_of, split, spoil
+from aerona.engine.economy.route_dangers import CARAVAN_TERRAIN, Dangers, Lairs, dangers_of, feed_beast, froze, season_pct_of, split, spoil
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.economy.toll_polities import Realms, fund_polity
 from aerona.engine.environment.profile import Works
@@ -74,7 +78,6 @@ from aerona.engine.means.containers import packed_capacity
 from aerona.engine.means.navigation import instrument_navigation
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.nature.effects import sensed
-from aerona.engine.nature.senses import NAVIGATION
 from aerona.engine.orders.exchange import billed_between, exchange_cost
 from aerona.engine.polity.accords import clause_pairs
 from aerona.engine.polity.law_effects import toll_rate
@@ -88,7 +91,7 @@ from aerona.engine.settlement.book import credit
 from aerona.rules.registry.markets import TradeRoutesRules
 
 THOUSAND = 1000
-LIVE_STATUSES = frozenset({TradeRouteStatus.FORMING, TradeRouteStatus.OPEN, TradeRouteStatus.BLOCKADED})
+LIVE_STATUSES = having(TRADE_ROUTE_STATUS_TRAITS, TradeRouteStatusTrait.LIVE_STATUSES)
 
 
 @dataclass

@@ -10,7 +10,6 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.unions import UnionCustomRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import InheritanceCustom
-from aerona.domain.enums.polity import SuccessionRule
 from aerona.domain.enums.unions import PartnerScope, PluralSide, UnionForm
 from aerona.engine.body.customs import people_of
 from aerona.engine.customs.grades import too_young_to_wed
@@ -25,15 +24,6 @@ from aerona.engine.primitives.stats import stat
 from aerona.engine.unions.axes import Spousing, spousing_of
 from aerona.engine.unions.customs import partners_allowed
 from aerona.rules.registry import Rules
-
-INHERITANCE_RULES: dict[InheritanceCustom, SuccessionRule] = {
-    InheritanceCustom.PRIMOGENITURE: SuccessionRule.PRIMOGENITURE,
-    InheritanceCustom.EQUAL_SHARES: SuccessionRule.SENIORITY,
-    InheritanceCustom.ELECTIVE: SuccessionRule.ELECTIVE,
-    InheritanceCustom.BY_MERIT: SuccessionRule.TANISTRY,
-    InheritanceCustom.ULTIMOGENITURE: SuccessionRule.ULTIMOGENITURE,
-    InheritanceCustom.THROUGH_SECOND_LINE: SuccessionRule.THROUGH_SECOND_LINE,
-}
 
 
 @dataclass(frozen=True)

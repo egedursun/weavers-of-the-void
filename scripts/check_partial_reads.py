@@ -24,11 +24,6 @@ PROVEN: dict[tuple[str, str, str], str] = {
         "base",
     ): "ACTS_AS maps each kind to a base kind, and ZONE_OF_STRUCTURE is built with total() at import, so a base outside BASE_ZONES fails at import",
     (
-        "engine/body/hits.py",
-        "FIXED_KINDS",
-        "damage_type",
-    ): "the read runs only when KIND_RULES has no chooser, and FIXED_KINDS and KIND_RULES split DamageType between them",
-    (
         "engine/collective/dating.py",
         "HOLDER_KINDS",
         "holder.entity_type",

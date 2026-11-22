@@ -1,5 +1,6 @@
 from sqlalchemy import func, select
 
+from aerona.catalog.life.referendums import PETITIONS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.total import total
@@ -10,7 +11,6 @@ from aerona.db.tables.polity import LawJurisdictionRow, LawProfileRow, PolityMem
 from aerona.db.tables.referendums import ReferendumRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import MovementCause
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DecisionRule, LawKind, TreatyStatus
 from aerona.domain.enums.referendums import ReferendumCaller, ReferendumResult, ReferendumSubject
@@ -22,18 +22,6 @@ from aerona.engine.recording.record import record
 from aerona.engine.referendums.book import SALIENCE_PCT, ReferendumTally, enfranchised_pct, franchise_at, realm_of_holder, realm_profile
 from aerona.engine.referendums.outcomes import carry_out
 
-PETITIONS = total(
-    MovementCause,
-    {
-        MovementCause.ABOLITION: None,
-        MovementCause.INDEPENDENCE: ReferendumSubject.INDEPENDENCE,
-        MovementCause.REVIVAL: ReferendumSubject.FAITH,
-        MovementCause.LAND_REFORM: None,
-        MovementCause.FRANCHISE: ReferendumSubject.CONSTITUTION,
-        MovementCause.PEACE: ReferendumSubject.WAR,
-        MovementCause.CONSERVATION: None,
-    },
-)
 ASKING = sorted(cause for cause, subject in PETITIONS.items() if subject is not None)
 APPROVAL_SPAN = 100
 RC = ReferendumCaller

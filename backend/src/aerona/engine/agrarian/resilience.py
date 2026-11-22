@@ -5,8 +5,9 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.ethics import HONOUR_MODELS
+from aerona.catalog.life_traits import REBUILD_CAUSE_TRAITS, having
 from aerona.constants.units import PER_MILLE, PERCENT
-from aerona.core.total import total
+from aerona.core.dispatch import Handlers
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import PreparednessRow, ReconstructionRow, ReliefAidRow
 from aerona.db.tables.bonds import BondRow
@@ -16,7 +17,7 @@ from aerona.db.tables.law_depth import RegistryRow
 from aerona.db.tables.polity import HouseProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.agrarian import AidKind, PreparednessKind, RebuildCause, RebuildPlan
+from aerona.domain.enums.agrarian import AidKind, PreparednessKind, RebuildPlan
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.cycles import GiftOccasion, GiftState
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
@@ -24,6 +25,7 @@ from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.law_depth import RegistryKind
+from aerona.domain.enums.life_traits import RebuildCauseTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import BuildMaterial, SizeTier, TreasuryEntry
@@ -74,7 +76,7 @@ RELIEVED = frozenset(
         EngineKind.MAGIC_STORM,
     }
 )
-SEIZING = frozenset({RebuildCause.FIRE, RebuildCause.SACK})
+SEIZING = having(REBUILD_CAUSE_TRAITS, RebuildCauseTrait.SEIZING)
 
 
 @dataclass
@@ -292,12 +294,17 @@ async def send_grain(ctx: TickContext, aid: Aid) -> None:
             await stocks.add(aid.town.id, CommodityKind.GRAIN, moved, GoodsFlow.AID)
 
 
+AID_EFFECTS: Handlers[AidKind, Callable[[TickContext, Aid], Awaitable[None]]] = Handlers(AidKind)
+
+
+@AID_EFFECTS.on(AidKind.GOODS)
 async def aid_goods(ctx: TickContext, aid: Aid) -> None:
     table = ctx.rules.relief
     shift_stat(aid.town, "prosperity", min(table.prosperity_cap, aid.amount / table.coin_per_prosperity))
     await send_grain(ctx, aid)
 
 
+@AID_EFFECTS.on(AidKind.FOOD)
 async def aid_food(ctx: TickContext, aid: Aid) -> None:
     await send_grain(ctx, aid)
     await send_grain(ctx, aid)
@@ -310,14 +317,17 @@ async def ease_land(ctx: TickContext, aid: Aid, amount: int) -> None:
         shift(land, "disease_load", -amount)
 
 
+@AID_EFFECTS.on(AidKind.HEALERS)
 async def aid_healers(ctx: TickContext, aid: Aid) -> None:
     await ease_land(ctx, aid, ctx.rules.relief.healer_disease)
 
 
+@AID_EFFECTS.on(AidKind.MEDICINE)
 async def aid_medicine(ctx: TickContext, aid: Aid) -> None:
     await ease_land(ctx, aid, ctx.rules.relief.healer_disease * 2)
 
 
+@AID_EFFECTS.on(AidKind.LABOUR)
 async def aid_labour(ctx: TickContext, aid: Aid) -> None:
     if aid.rebuild is not None:
         shift(aid.rebuild, "progress", ctx.rules.relief.labour_progress)
@@ -328,12 +338,14 @@ async def town_profile(ctx: TickContext, aid: Aid) -> SettlementProfileRow | Non
     return profile if profile is not None and not held(aid.town.id) else None
 
 
+@AID_EFFECTS.on(AidKind.MONEY)
 async def aid_money(ctx: TickContext, aid: Aid) -> None:
     profile = await town_profile(ctx, aid)
     if profile is not None and "treasury" not in profile.locked:
         profile.treasury += aid.amount
 
 
+@AID_EFFECTS.on(AidKind.CREDIT)
 async def aid_credit(ctx: TickContext, aid: Aid) -> None:
     await aid_money(ctx, aid)
     row = RegistryRow(
@@ -343,38 +355,27 @@ async def aid_credit(ctx: TickContext, aid: Aid) -> None:
     ctx.session.add(row)
 
 
+@AID_EFFECTS.on(AidKind.SHELTER)
 async def aid_shelter(ctx: TickContext, aid: Aid) -> None:
     profile = await town_profile(ctx, aid)
     if profile is not None and "unrest" not in profile.locked:
         profile.unrest = clamp_int(profile.unrest - ctx.rules.relief.shelter_relief, 0, PERCENT)
 
 
+@AID_EFFECTS.on(AidKind.SOLDIERS)
 async def aid_soldiers(ctx: TickContext, aid: Aid) -> None:
     profile = await town_profile(ctx, aid)
     if profile is not None and "militia" not in profile.locked:
         profile.militia += per_thousand(ctx.rules.relief.soldiers_sent, aid.town)
 
 
+@AID_EFFECTS.on(AidKind.KNOWLEDGE)
 async def aid_knowledge(ctx: TickContext, aid: Aid) -> None:
     if not held(aid.town.id):
         await steal_technique(ctx, aid.town.id, aid.giver.id)
 
 
-AID_EFFECTS: Mapping[AidKind, Callable[[TickContext, Aid], Awaitable[None]]] = total(
-    AidKind,
-    {
-        AidKind.GOODS: aid_goods,
-        AidKind.HEALERS: aid_healers,
-        AidKind.LABOUR: aid_labour,
-        AidKind.MONEY: aid_money,
-        AidKind.CREDIT: aid_credit,
-        AidKind.FOOD: aid_food,
-        AidKind.SHELTER: aid_shelter,
-        AidKind.MEDICINE: aid_medicine,
-        AidKind.SOLDIERS: aid_soldiers,
-        AidKind.KNOWLEDGE: aid_knowledge,
-    },
-)
+AID_EFFECTS.seal()
 
 
 async def aid_from(

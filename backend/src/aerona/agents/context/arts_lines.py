@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
+from aerona.catalog.life.agents import OPEN
 from aerona.core.grammar import several
 from aerona.db.tables.arts import ArtPriceRow, ClubRow, CollectorRow, ForgeryRow
 from aerona.db.tables.constructs import ConstructRow, InstructionSetRow, RemadeRow
@@ -18,7 +19,6 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.engine.sacred.places import town_of
 
 LIST_LINES = 3
-OPEN = (ContractStatus.POSTED, ContractStatus.TAKEN)
 
 
 async def work_lines(scope: Scope, me: EntityRow) -> list[str]:

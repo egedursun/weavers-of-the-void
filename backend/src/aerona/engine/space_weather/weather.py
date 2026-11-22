@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.space_weather import AIR_SHIELDING
 from aerona.catalog.nature_kinds50 import SPACE_WEATHER
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -14,7 +15,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.networks import OutageCause
 from aerona.domain.enums.space_weather import SpaceWeatherKind
-from aerona.domain.enums.world import Atmosphere, SkyEventKind
+from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -26,7 +27,6 @@ from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining_alone, term
 from aerona.rules.registry import Rules
 
-AIR_SHIELDING: dict[Atmosphere, int] = {Atmosphere.NONE: 0, Atmosphere.THIN: 25, Atmosphere.NORMAL: 50, Atmosphere.DENSE: 75, Atmosphere.TOXIC: 60}
 STORM_KINDS = tuple(kind for kind, spec in SPACE_WEATHER.items() if spec.from_star and kind is not SpaceWeatherKind.FLARE)
 TENTHS = 10
 PEAK = 50

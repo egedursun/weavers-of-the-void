@@ -1,5 +1,7 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import LENDER_KINDS
+from aerona.catalog.life.military import PAY_CONTRACTS_CONTRACT_STATUSS
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.faction_kinds import of_kinds
 from aerona.db.tables.economy import CurrencyRow, LoanRow
@@ -10,7 +12,6 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.military import ContractStatus
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -126,7 +127,7 @@ async def debase(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow) ->
 async def pay_contracts(ctx: TickContext) -> dict[str, int]:
     table = ctx.rules.war_finance
     found = {"paid": 0, "unpaid": 0, "turned": 0, "ended": 0}
-    rows = await ctx.session.scalars(select(MercenaryContractRow).where(MercenaryContractRow.status.in_([ContractStatus.ACTIVE, ContractStatus.UNPAID])))
+    rows = await ctx.session.scalars(select(MercenaryContractRow).where(MercenaryContractRow.status.in_(PAY_CONTRACTS_CONTRACT_STATUSS)))
     for row in list(rows):
         employer = await living_entity(ctx.session, row.employer_entity_id)
         army = await living_entity(ctx.session, row.army_entity_id)

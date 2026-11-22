@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.catalog.dangers import HAZARDS, HazardSpec
+from aerona.catalog.terrain import TERRAIN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
@@ -90,10 +91,10 @@ def army_loss_of(rules: Rules, hazard: TerrainHazard) -> int:
 
 def exposed(rules: Rules, hazard: TerrainHazard, spec: HazardSpec, ground: RegionEnvironmentRow) -> bool:
     if hazard is TerrainHazard.SPRING_FLOOD:
-        return ground.dominant_terrain in spec.terrains or ground.river_class in FLOODING_RIVERS
+        return hazard in TERRAIN[ground.dominant_terrain].hazards or ground.river_class in FLOODING_RIVERS
     if hazard is TerrainHazard.WILDFIRE:
-        return ground.dominant_terrain in spec.terrains and ground.forest_cover >= rules.hazards.wildfire_forest_min
-    return ground.dominant_terrain in spec.terrains
+        return hazard in TERRAIN[ground.dominant_terrain].hazards and ground.forest_cover >= rules.hazards.wildfire_forest_min
+    return hazard in TERRAIN[ground.dominant_terrain].hazards
 
 
 def season_for(seasons: list[WorldSeasonRow], kind: HazardSeason) -> WorldSeasonRow | None:
@@ -151,7 +152,7 @@ async def strike(
                 Harm(
                     rules.hazards.injury_damage,
                     HarmCause.DISASTER,
-                    spec.words,
+                    spec.label.lower(),
                     damage_type=spec.damage,
                     event_entity_id=region.id,
                 ),
@@ -177,9 +178,9 @@ async def strike(
     season_name = season.name if season is not None else "a hard season"
     write = await record(
         ctx,
-        f"hazard.{hazard.value}",
+        "hazard.struck",
         roles={IncidentRole.PLACE: region.id, IncidentRole.VICTIM: hurt_ids},
-        facts={"season": season_name.lower(), "deaths": dead, "injured": injured, "soldiers": soldiers},
+        facts={"hazard": hazard, "season": season_name.lower(), "deaths": dead, "injured": injured, "soldiers": soldiers},
         place=region.id,
         world_id=region.world_id,
         magnitude=min(PERCENT, dead),

@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.youth import MEMBER_AXES, PURPOSE_AXES, TOWN_EFFECTS, YOUTHS_WITHOUT_GROUP_LIFE_STAGES
+from aerona.catalog.life_traits import FACTION_KIND_TRAITS, YOUTH_PURPOSE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -13,7 +15,8 @@ from aerona.db.tables.youth import YouthGroupMemberRow, YouthGroupRow, YouthStan
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
-from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.life_traits import FactionKindTrait, YouthPurposeTrait
+from aerona.domain.enums.mind import ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.youth import YouthPlace, YouthPurpose
@@ -26,31 +29,10 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 
-GANGS = frozenset({FactionKind.CRIME_FAMILY, FactionKind.THIEVES_GUILD, FactionKind.SMUGGLING_RING, FactionKind.BANDITS})
-MOVEMENTS = frozenset({FactionKind.REBELS, FactionKind.MOVEMENT, FactionKind.PARTY})
-UNRULY = frozenset({YouthPurpose.MISCHIEF, YouthPurpose.CRIME, YouthPurpose.POLITICS})
-DELINQUENT = frozenset({YouthPurpose.MISCHIEF, YouthPurpose.CRIME})
-TOWN_EFFECTS: dict[YouthPurpose, tuple[str, int]] = {
-    YouthPurpose.DEFENCE: ("crime", -1),
-    YouthPurpose.SERVICE: ("public_order", 1),
-    YouthPurpose.POLITICS: ("unrest", 1),
-    YouthPurpose.MISCHIEF: ("crime", 1),
-    YouthPurpose.CRIME: ("crime", 1),
-}
-MEMBER_AXES: dict[YouthPurpose, ValueAxis] = {
-    YouthPurpose.SPORT: ValueAxis.COMPETITION,
-    YouthPurpose.COURTSHIP: ValueAxis.FRIENDSHIP,
-    YouthPurpose.FAITH: ValueAxis.PIETY,
-    YouthPurpose.DEFENCE: ValueAxis.MARTIAL,
-    YouthPurpose.SERVICE: ValueAxis.LOYALTY,
-}
-PURPOSE_AXES: dict[ValueAxis, YouthPurpose] = {
-    ValueAxis.MARTIAL: YouthPurpose.DEFENCE,
-    ValueAxis.PIETY: YouthPurpose.FAITH,
-    ValueAxis.COMPETITION: YouthPurpose.SPORT,
-    ValueAxis.FRIENDSHIP: YouthPurpose.COURTSHIP,
-    ValueAxis.LOYALTY: YouthPurpose.SERVICE,
-}
+GANGS = having(FACTION_KIND_TRAITS, FactionKindTrait.GANGS)
+MOVEMENTS = having(FACTION_KIND_TRAITS, FactionKindTrait.MOVEMENTS)
+UNRULY = having(YOUTH_PURPOSE_TRAITS, YouthPurposeTrait.UNRULY)
+DELINQUENT = having(YOUTH_PURPOSE_TRAITS, YouthPurposeTrait.DELINQUENT)
 USUAL = 50
 STANDING_LOSS = 5
 
@@ -117,7 +99,7 @@ async def youths_without_group(ctx: TickContext) -> dict[int, list[EntityRow]]:
             EntityRow.status == EntityStatus.CANON,
             EntityRow.location_id.is_not(None),
             EntityRow.id.not_in(grouped),
-            or_(MortalProfileRow.entity_id.is_(None), MortalProfileRow.life_stage.in_([LifeStage.CHILD, LifeStage.YOUTH, LifeStage.ADULT])),
+            or_(MortalProfileRow.entity_id.is_(None), MortalProfileRow.life_stage.in_(YOUTHS_WITHOUT_GROUP_LIFE_STAGES)),
         )
         .order_by(EntityRow.id)
     )

@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_traits import commodities_with
+from aerona.catalog.life.faith import REBIRTH_PATH_OF_JUDGEMENT_DOCTRINES
 from aerona.catalog.tenets import DOMAIN_JUDGEMENT, DOMAIN_TENETS, OPPOSED, PASSION_TENETS, VALUE_TENETS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -15,9 +17,9 @@ from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import ClergyFunction, JudgementDoctrine, RebirthPath, TenetKind
+from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.mind import SkillKind, ValueAxis
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import SocialClass
@@ -35,7 +37,7 @@ from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 
 CLERGY_ROLES = (MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER)
-FOODS = (CommodityKind.LIVESTOCK, CommodityKind.FISH, CommodityKind.GRAIN)
+FOODS = commodities_with(CommodityTrait.STAPLE)
 FILLERS = (TenetKind.PROSELYTISM, TenetKind.JUDGEMENT_BY_DEEDS, TenetKind.ANCESTOR_VENERATION)
 
 
@@ -151,7 +153,7 @@ def rebirth_path_of(rules: Rules, values: dict[ValueAxis, int], judgement: Judge
     threshold = rules.doctrine.value_tenet
     if values.get(ValueAxis.KINSHIP, 0) >= threshold:
         return RebirthPath.HOUSE
-    if judgement in {JudgementDoctrine.DEEDS, JudgementDoctrine.FAITH} and values.get(ValueAxis.HIERARCHY, 0) >= threshold:
+    if judgement in REBIRTH_PATH_OF_JUDGEMENT_DOCTRINES and values.get(ValueAxis.HIERARCHY, 0) >= threshold:
         return RebirthPath.MERIT
     return RebirthPath.PEOPLE
 

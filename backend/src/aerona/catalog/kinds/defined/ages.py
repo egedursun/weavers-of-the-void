@@ -1,88 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.ages import ArcTemplate, GiantMigration, PayoffKind, SeasonSpell
-
-ARC_TEMPLATE = total(
-    ArcTemplate,
-    {
-        ArcTemplate.RISE_AND_FALL: Defined(
-            "Rise and fall",
-            checked_by=(),
-            used_by=("engine.storyteller.arcs.ENDS_IN_DEATH", "engine.storyteller.arcs.deposed", "engine.storyteller.drama.ADVANCED_BY"),
-        ),
-        ArcTemplate.RAGS_TO_RICHES: Defined(
-            "From poverty to wealth",
-            checked_by=("engine.storyteller.arcs.GOALS",),
-            used_by=("engine.storyteller.arcs.rulers", "engine.storyteller.drama.ADVANCED_BY"),
-        ),
-        ArcTemplate.REVENGE: Defined(
-            "Revenge",
-            checked_by=("engine.storyteller.arcs.outcome_on_death", "tools.mortal.ages.swear_vengeance"),
-            used_by=(
-                "engine.storyteller.arcs.betrayals",
-                "engine.storyteller.arcs.revenge",
-                "engine.storyteller.drama.ADVANCED_BY",
-                "engine.storyteller.drama.CONFRONTING",
-                "tools.mortal.ages.swear_vengeance",
-            ),
-        ),
-        ArcTemplate.REDEMPTION: Defined(
-            "Redemption", checked_by=("engine.storyteller.arcs.GOALS",), used_by=("engine.storyteller.arcs.redemption", "engine.storyteller.drama.ADVANCED_BY")
-        ),
-        ArcTemplate.QUEST: Defined(
-            "Quest",
-            checked_by=("engine.storyteller.arcs.GOALS", "engine.storyteller.arcs.stages_of"),
-            used_by=(
-                "engine.storyteller.arcs.quests",
-                "engine.storyteller.drama.ADVANCED_BY",
-                "services.player.ages.ArcDraft",
-                "services.player.ages.EchoDraft",
-            ),
-        ),
-        ArcTemplate.TRAGEDY: Defined(
-            "Tragedy",
-            checked_by=(),
-            used_by=("engine.storyteller.arcs.ENDS_IN_DEATH", "engine.storyteller.arcs.rulers", "engine.storyteller.drama.ADVANCED_BY"),
-        ),
-        ArcTemplate.FORBIDDEN_LOVE: Defined(
-            "Forbidden love",
-            checked_by=("engine.storyteller.arcs.GOALS",),
-            used_by=("engine.storyteller.arcs.forbidden_love", "engine.storyteller.drama.ADVANCED_BY"),
-        ),
-        ArcTemplate.RIVALRY: Defined(
-            "Rivalry",
-            checked_by=("engine.storyteller.arcs.GOALS",),
-            used_by=("engine.storyteller.arcs.rivalry", "engine.storyteller.drama.ADVANCED_BY", "engine.storyteller.drama.CONFRONTING"),
-        ),
-        ArcTemplate.MENTOR_AND_HEIR: Defined(
-            "Mentor and heir",
-            checked_by=("engine.storyteller.arcs.GOALS",),
-            used_by=("engine.storyteller.arcs.apprenticeship", "engine.storyteller.drama.ADVANCED_BY"),
-        ),
-        ArcTemplate.EXILE_AND_RETURN: Defined(
-            "Exile and return", checked_by=(), used_by=("engine.storyteller.arcs.exile", "engine.storyteller.drama.ADVANCED_BY")
-        ),
-        ArcTemplate.CORRUPTION: Defined(
-            "Corruption",
-            checked_by=(),
-            used_by=("engine.storyteller.arcs.ENDS_IN_DEATH", "engine.storyteller.arcs.corruption", "engine.storyteller.drama.ADVANCED_BY"),
-        ),
-        ArcTemplate.COMING_OF_AGE: Defined(
-            "Coming of age",
-            checked_by=("engine.storyteller.arcs.GOALS",),
-            used_by=("engine.storyteller.arcs.apprenticeship", "engine.storyteller.drama.ADVANCED_BY"),
-        ),
-        ArcTemplate.FALL_OF_A_HOUSE: Defined(
-            "Fall of a house",
-            checked_by=(),
-            used_by=("engine.storyteller.arcs.ENDS_IN_DEATH", "engine.storyteller.arcs.houses", "engine.storyteller.drama.ADVANCED_BY"),
-        ),
-        ArcTemplate.FOUNDING: Defined(
-            "Founding", checked_by=("engine.storyteller.arcs.GOALS",), used_by=("engine.storyteller.arcs.houses", "engine.storyteller.drama.ADVANCED_BY")
-        ),
-        ArcTemplate.APOTHEOSIS: Defined("Apotheosis", checked_by=(), used_by=("engine.storyteller.arcs.apotheosis", "engine.storyteller.drama.ADVANCED_BY")),
-    },
-)
+from aerona.domain.enums.ages import GiantMigration, PayoffKind, SeasonSpell, SetupKind
 
 GIANT_MIGRATION = total(
     GiantMigration,
@@ -163,6 +81,22 @@ SEASON_SPELL = total(
                 "tools.son.ages.lengthen_winter",
             ),
             used_by=("engine.environment.long_seasons.turn",),
+        ),
+    },
+)
+
+SETUP_KIND = total(
+    SetupKind,
+    {
+        SetupKind.PROPHECY: Defined("Prophecy", checked_by=(), used_by=("engine.storyteller.drama.log_setups", "engine.storyteller.drama.prophecy_paid")),
+        SetupKind.OMEN: Defined("Omen", checked_by=(), used_by=("engine.storyteller.drama.log_setups", "engine.storyteller.drama.omen_paid")),
+        SetupKind.DREAM: Defined("Dream", checked_by=(), used_by=("engine.storyteller.drama.dream_paid", "engine.storyteller.drama.log_setups")),
+        SetupKind.FORESIGHT: Defined("Foresight", checked_by=(), used_by=("engine.storyteller.drama.foresight_paid", "engine.storyteller.drama.log_setups")),
+        SetupKind.INCIDENT_ARC: Defined(
+            "Open incident arc", checked_by=(), used_by=("engine.storyteller.drama.log_setups", "engine.storyteller.drama.thread_paid")
+        ),
+        SetupKind.PORTENT: Defined(
+            "Portent of a god", checked_by=(), used_by=("engine.storyteller.drama.portent_paid", "services.player.ages.SetupDraft", "tools.son.ages.foreshadow")
         ),
     },
 )

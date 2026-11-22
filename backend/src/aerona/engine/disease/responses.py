@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.disease import LEANINGS
 from aerona.catalog.peoples import FUNERALS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -49,16 +50,6 @@ RESPONSE_KEYS = total(
 
 def bodies_left(rite: FuneralCustom | None) -> bool:
     return rite is not None and FUNERALS[rite].body_left
-
-
-LEANINGS: dict[PlagueResponse, tuple[ValueAxis, ...]] = {
-    R.CLOSE_BORDERS: (ValueAxis.TRADITION, ValueAxis.LOYALTY),
-    R.QUARANTINE: (ValueAxis.LAW, ValueAxis.KNOWLEDGE),
-    R.BURN_DEAD: (ValueAxis.PURITY,),
-    R.EXPEL_SICK: (ValueAxis.PURITY, ValueAxis.HIERARCHY),
-    R.PRAYER: (ValueAxis.PIETY, ValueAxis.SUPERSTITION),
-    R.SEEK_CURE: (ValueAxis.KNOWLEDGE, ValueAxis.MERCY),
-}
 
 
 @dataclass

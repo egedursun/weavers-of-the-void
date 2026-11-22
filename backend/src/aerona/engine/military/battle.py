@@ -1,27 +1,29 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from aerona.catalog.battle_depth import BASE_DISCIPLINE, FORMATIONS, TERRAIN_WIDTH, FormationSpec, WeaponProfile, formation_for
+from aerona.catalog.battle_depth import BASE_DISCIPLINE, FORMATIONS, FormationSpec, WeaponProfile, formation_for
+from aerona.catalog.life.military import GENERIC, TRAIT_TACTICS
+from aerona.catalog.life_traits import TACTIC_TRAITS, having
 from aerona.catalog.materials import MATERIALS
+from aerona.catalog.terrain import TACTIC_TERRAIN, TERRAIN, terrain_has, terrains
 from aerona.catalog.units import (
-    AMBUSH_TERRAIN,
     ARMOUR_DEFENCE,
     BURROWERS,
-    HEAVY_WEATHER,
     SHIELD_DEFENCE,
     STYLE_TACTICS,
-    TACTIC_TERRAIN,
     UNITS,
     WEAPON_EDGE,
     UnitSpec,
     weapon_of,
 )
+from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
-from aerona.domain.enums.environment import PlaceCover, TerrainKind, WeatherKind
+from aerona.domain.enums.environment import PlaceCover, TerrainKind, TerrainTrait, WeatherKind, WeatherTrait
+from aerona.domain.enums.life_traits import TacticTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import (
     ArmourType,
@@ -52,12 +54,9 @@ CHARGE_FAMILIES = frozenset({F.MOUNTED, F.BEAST})
 SWIFT_FAMILIES = frozenset({F.MOUNTED, F.BEAST})
 FLYERS = frozenset({UnitKind.SKY_RIDERS, UnitKind.SKY_CREW})
 SCOUTS = frozenset({UnitKind.LIGHT_CAVALRY, UnitKind.LIGHT_INFANTRY, UnitKind.MOUNTED_ARCHERS, UnitKind.SKY_RIDERS})
-SHELTER = frozenset({TerrainKind.FOREST, TerrainKind.JUNGLE, TerrainKind.MOUNTAINS, TerrainKind.MARSH, TerrainKind.HIGH_PASS})
-NARROW = frozenset({TerrainKind.CANYON, TerrainKind.HIGH_PASS, TerrainKind.FOREST, TerrainKind.JUNGLE, TerrainKind.URBAN, TerrainKind.UNDERGROUND})
-HIGHLANDS = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
-RAIN = frozenset({WeatherKind.RAIN, WeatherKind.DOWNPOUR, WeatherKind.STORM})
-SNOW = frozenset({WeatherKind.SNOW, WeatherKind.BLIZZARD})
-WIND = frozenset({WeatherKind.STORM, WeatherKind.DROUGHT_WIND, WeatherKind.SANDSTORM})
+SHELTER = terrains(TerrainTrait.WOODED) | terrains(every=(TerrainTrait.HIGH, TerrainTrait.COLD)) | terrains(every=(TerrainTrait.AMBUSH_COVER, TerrainTrait.WET))
+NARROW = terrains(TerrainTrait.CONFINED)
+HIGHLANDS = terrains(every=(TerrainTrait.HIGH, TerrainTrait.COLD))
 HEAVY = frozenset({ArmourType.MAIL, ArmourType.SCALE, ArmourType.PLATE})
 SOFT_ARMOUR = {ArmourType.HIDE: MaterialKind.HIDE, ArmourType.PADDED: MaterialKind.CLOTH}
 BLUNT_WEAPONS = frozenset({"blunt", "sling", "staff"})
@@ -67,27 +66,7 @@ FIRE_CASTERS = frozenset({UnitKind.BATTLE_CASTERS})
 HELMET = 5
 NORMAL = 50
 REFUSE_RATIO = 0.6
-GENERIC = (Tactic.HOLD_LINE, Tactic.FRONTAL_ASSAULT)
-STRIKE_TACTICS = frozenset({Tactic.INFILTRATION, Tactic.DROP_ASSAULT})
-TRAIT_TACTICS: dict[CommanderTrait, tuple[Tactic, ...]] = {
-    CommanderTrait.RECKLESS: (Tactic.FRONTAL_ASSAULT, Tactic.WEDGE),
-    CommanderTrait.AGGRESSIVE_ASSAULTER: (Tactic.FRONTAL_ASSAULT, Tactic.WEDGE),
-    CommanderTrait.CAUTIOUS: (Tactic.HOLD_LINE, Tactic.SHIELD_WALL),
-    CommanderTrait.DEFENSIVE_GENIUS: (Tactic.HOLD_LINE, Tactic.RIVER_DEFENCE, Tactic.SHIELD_WALL),
-    CommanderTrait.CAVALRY_MASTER: (Tactic.FLANK_CAVALRY, Tactic.FEIGNED_RETREAT),
-    CommanderTrait.SIEGE_EXPERT: (Tactic.SIEGE_ASSAULT,),
-    CommanderTrait.SKY_COMMANDER: (Tactic.AIR_SUPERIORITY,),
-    CommanderTrait.SPACE_COMMANDER: (Tactic.ORBITAL_BOMBARDMENT, Tactic.DROP_ASSAULT),
-    CommanderTrait.ARTILLERIST: (Tactic.ARTILLERY_BARRAGE, Tactic.MISSILE_ATTRITION),
-    CommanderTrait.AMBUSHER: (Tactic.AMBUSH, Tactic.NIGHT_RAID, Tactic.GUERRILLA),
-    CommanderTrait.FOREST_FIGHTER: (Tactic.AMBUSH, Tactic.SKIRMISH_HARASS),
-    CommanderTrait.SKIRMISHER: (Tactic.SKIRMISH_HARASS, Tactic.FEINT),
-    CommanderTrait.ARMOURED_COMMANDER: (Tactic.ARMOURED_THRUST,),
-    CommanderTrait.DISCIPLINARIAN: (Tactic.HOLD_LINE, Tactic.SHIELD_WALL),
-    CommanderTrait.SIGNALS_COMMANDER: (Tactic.ELECTRONIC_WARFARE,),
-    CommanderTrait.SIEGE_DEFENDER: (Tactic.HOLD_LINE,),
-    CommanderTrait.NIGHT_FIGHTER: (Tactic.NIGHT_RAID,),
-}
+STRIKE_TACTICS = having(TACTIC_TRAITS, TacticTrait.STRIKE_TACTICS)
 Streams = Callable[[str], SeededRandom]
 
 
@@ -387,7 +366,7 @@ def hard_guard(rules: Rules, target: Stack, attackers: list[Stack] | None) -> fl
 
 
 def battle_width(rules: Rules, ground: Field, fog: bool) -> int:
-    width = TERRAIN_WIDTH[ground.terrain or TerrainKind.PLAIN] * rules.battle_depth.width_scale
+    width = TERRAIN[ground.terrain or TerrainKind.PLAIN].width * rules.battle_depth.width_scale
     return round(width * (rules.battle_depth.fog_width_pct / PERCENT if fog or ground.weather is WeatherKind.FOG else 1.0))
 
 
@@ -427,7 +406,7 @@ def terrain_factor(rules: Rules, stack: Stack, side: Side, ground: Field) -> flo
     if stack.flying:
         return rules.battle_terrain.sky_terrain_pct / PERCENT
     terrain = 1 + (terrain_cell(rules, ground.terrain, stack.spec.family) - 1) * rules.terrain_effects.strength_pct / PERCENT
-    terrain *= unit_terrain(rules, stack.row.kind, ground.terrain, stack.spec.terrain)
+    terrain *= unit_terrain(rules, stack.row.kind, ground.terrain)
     if ground.terrain is TerrainKind.MARSH and stack.row.armour in HEAVY:
         terrain *= rules.battle_terrain.marsh_heavy_armour_pct / PERCENT
     if ground.terrain is TerrainKind.UNDERGROUND and stack.row.kind in BURROWERS:
@@ -439,16 +418,16 @@ def terrain_factor(rules: Rules, stack: Stack, side: Side, ground: Field) -> flo
 
 def weather_factor(rules: Rules, stack: Stack, weather: WeatherKind | None) -> float:
     factor = 1 + (weather_cell(rules, weather, stack.spec.family) - 1) * rules.weather_battle_effects.strength_pct / PERCENT
-    if weather in RAIN and stack.row.kind in BOWS:
+    if has_trait(weather, WeatherTrait.LIQUID) and stack.row.kind in BOWS:
         factor *= rules.battle_weather.rain_bow_pct / PERCENT
-    elif weather in RAIN and stack.row.kind in CROSSBOWS:
+    elif has_trait(weather, WeatherTrait.LIQUID) and stack.row.kind in CROSSBOWS:
         factor *= rules.battle_weather.rain_crossbow_pct / PERCENT
-    if weather in WIND and stack.spec.missile > 0 and stack.spec.family is F.MISSILE:
+    if has_trait(weather, WeatherTrait.WINDY) and stack.spec.missile > 0 and stack.spec.family is F.MISSILE:
         factor *= rules.battle_weather.wind_missile_pct / PERCENT
     if stack.row.kind in FIRE_CASTERS:
-        if weather in RAIN:
+        if has_trait(weather, WeatherTrait.LIQUID):
             factor *= rules.battle_weather.rain_fire_rites_pct / PERCENT
-        if weather in WIND:
+        if has_trait(weather, WeatherTrait.WINDY):
             factor *= rules.battle_weather.wind_fire_pct / PERCENT
     return factor
 
@@ -474,7 +453,7 @@ def modifier(rules: Rules, stack: Stack, side: Side, ground: Field, enemy: Side 
     row = stack.row
     weather = weather_now(side, enemy, ground) if enemy is not None else ground.weather
     heavy = row.armour in HEAVY
-    fatigue = row.fatigue * (rules.weather_battle_effects.heavy_fatigue_pct / PERCENT if heavy and weather in HEAVY_WEATHER else 1.0)
+    fatigue = row.fatigue * (rules.weather_battle_effects.heavy_fatigue_pct / PERCENT if heavy and has_trait(weather, WeatherTrait.HEAVY) else 1.0)
     worn = armour_material(stack)
     fatigue *= 1 + (worn.density if worn is not None else 0) * rules.tissues.unit_density_fatigue_pct / PERCENT / PERCENT
     quality = row.quality / NORMAL * (1 + row.experience / PERCENT * rules.military_units.experience_pct / PERCENT) * (1 + side.veteran + side.wing_bonus)
@@ -482,7 +461,7 @@ def modifier(rules: Rules, stack: Stack, side: Side, ground: Field, enemy: Side 
     height = 1.0
     if side.defending:
         height = 1 + (defender_cell(rules, ground.terrain) - 1) * rules.terrain_effects.defender_height_pct / PERCENT
-        if weather in SNOW:
+        if has_trait(weather, WeatherTrait.SNOW_COVER):
             height *= rules.battle_weather.snow_defender_pct / PERCENT
     dug = 1 + dug_in(side, ground) / PERCENT * rules.logistics.entrench_defence_pct / PERCENT if side.defending else 1.0
     learned = 1 + min(rules.battle_magic.learned_tactic_cap, side.learned.get(side.tactic, 0) * rules.battle_magic.learned_tactic_pct) / PERCENT
@@ -575,7 +554,7 @@ def choose_tactic(rules: Rules, rng: SeededRandom, side: Side, enemy_doctrine: s
         if counters(option, expected):
             weight *= 1 + side.skill * rules.tactics.skill_weight / 10
         if option is Tactic.AMBUSH and not (
-            ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night
+            terrain_has(ground.terrain, TerrainTrait.AMBUSH_COVER) or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night
         ):
             weight *= 0.1
         if option is Tactic.NIGHT_RAID and not ground.night:
@@ -1014,7 +993,7 @@ def classify(rules: Rules, winner: Side, loser: Side, ratio: float) -> OutcomeCl
     return OutcomeClass.VICTORY
 
 
-ELEVATED = frozenset({TerrainKind.HILLS, TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
+ELEVATED = terrains(TerrainTrait.HIGH)
 HIDDEN_SHARE_MAX = 0.4
 
 
@@ -1128,7 +1107,7 @@ def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
             refused = True
         else:
             lead.defending, other.defending = True, False
-            if ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night:
+            if terrain_has(ground.terrain, TerrainTrait.AMBUSH_COVER) or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night:
                 lead.surprise = dulled(rules, rules.weather_battle_effects.fog_ambush_pct / PERCENT, other.keen)
     summary = f"{lead.entity.name} saw further" + (" and refused battle" if refused else " and chose the ground")
     phases = [traced(PhaseLog(BattlePhase.SCOUTING, 0, 0, summary, {"margin": round(margin), "ground": lead.entity.name, **seen}), attacker, defender)]

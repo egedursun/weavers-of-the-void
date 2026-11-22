@@ -3,6 +3,7 @@ from typing import Any
 
 from aerona.catalog.civilization import unlocked
 from aerona.catalog.domains import match_domain
+from aerona.catalog.life.tools import BUILD_STRUCTURE_SKILL_KINDS
 from aerona.catalog.mind import CRAFT_SKILLS
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
@@ -19,7 +20,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.industry import QualityTier
-from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
@@ -236,7 +237,7 @@ async def build_structure(call: MortalCall, args: BuildInput) -> str:
         fail(MortalResult.NOT_YOUR_LAND)
     await require_craft(call)
     craft = await craft_of(call)
-    await practised(call, (SkillKind.MASONRY, SkillKind.CARPENTRY, SkillKind.ENGINEERING), call.rules.skills.craft_xp)
+    await practised(call, BUILD_STRUCTURE_SKILL_KINDS, call.rules.skills.craft_xp)
     architecture = round(tools.build_architecture_bonus * await my_branch_effect(call, KnowledgeBranch.ARCHITECTURE))
     material = await chosen_material(call, args.material, [])
     lasting = decay_loss(call.rules, material, 0) if material is not None else 0

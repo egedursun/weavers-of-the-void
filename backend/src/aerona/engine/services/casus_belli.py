@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import WAR_CAUSE_TRAITS, having
 from aerona.constants.units import PER_MILLE
 from aerona.db.tables.dominion import MagicSiteRow
 from aerona.db.tables.economy import LoanRow
@@ -18,9 +19,10 @@ from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.finance import TradePolicyKind
+from aerona.domain.enums.life_traits import WarCauseTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.renown import Currency
-from aerona.domain.enums.war import CasusBelliKind, WarCause
+from aerona.domain.enums.war import CasusBelliKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets, patron_node
@@ -32,7 +34,7 @@ from aerona.engine.renown.currencies import bump, purse_of, ruler_of_realm
 
 PERCENT = 100
 WARRING_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.POLITY})
-REVOLT_CAUSES = frozenset({WarCause.UPRISING, WarCause.TRIBUTE_REVOLT, WarCause.INDEPENDENCE, WarCause.FOREIGN_GOD, WarCause.BEAST})
+REVOLT_CAUSES = having(WAR_CAUSE_TRAITS, WarCauseTrait.CASUS_BELLI_REVOLT_CAUSES)
 Grievance = tuple[int, int, CasusBelliKind, int | None]
 
 

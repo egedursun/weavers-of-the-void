@@ -1,8 +1,12 @@
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.storyteller import ADVANCED_BY, OPPOSED
+from aerona.catalog.life_traits import ARC_TEMPLATE_TRAITS, having
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.ages import ArcBeatRow, ArcFigureRow, ArcRow, SetupRow
 from aerona.db.tables.culture import ProphecyConditionRow
@@ -11,10 +15,11 @@ from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.db.tables.mind import DreamRow
 from aerona.db.tables.sacred import DivinationRow, ForesightRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.ages import ArcOutcome, ArcRole, ArcTemplate, PayoffKind, SetupKind
+from aerona.domain.enums.ages import ArcOutcome, PayoffKind, SetupKind
 from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.collective import StoryletId
 from aerona.domain.enums.culture import ProphecyState
+from aerona.domain.enums.life_traits import ArcTemplateTrait
 from aerona.domain.enums.mind import DreamReading
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import ForesightStatus
@@ -22,19 +27,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import record as record_incident
 
-CONFRONTING = frozenset({ArcTemplate.REVENGE, ArcTemplate.RIVALRY})
-OPPOSED = (ArcRole.FOE, ArcRole.RIVAL)
-T = ArcTemplate
-ADVANCED_BY: dict[StoryletId, frozenset[ArcTemplate]] = {
-    StoryletId.LOST_HEIR: frozenset({T.EXILE_AND_RETURN, T.RAGS_TO_RICHES, T.COMING_OF_AGE}),
-    StoryletId.HOARDED_STORE: frozenset({T.CORRUPTION, T.REDEMPTION}),
-    StoryletId.BEAST_DEMAND: frozenset({T.QUEST, T.REVENGE, T.APOTHEOSIS}),
-    StoryletId.FORBIDDEN_TEXT: frozenset({T.CORRUPTION, T.MENTOR_AND_HEIR, T.APOTHEOSIS}),
-    StoryletId.DEFILED_SITE: frozenset({T.REDEMPTION, T.TRAGEDY, T.CORRUPTION}),
-    StoryletId.WEDDING_CHALLENGE: frozenset({T.FORBIDDEN_LOVE, T.RIVALRY, T.FOUNDING}),
-    StoryletId.DYING_RULER: frozenset({T.RISE_AND_FALL, T.TRAGEDY, T.FALL_OF_A_HOUSE, T.MENTOR_AND_HEIR}),
-    StoryletId.INSULTED_ENVOY: frozenset({T.RIVALRY, T.REVENGE, T.EXILE_AND_RETURN}),
-}
+CONFRONTING = having(ARC_TEMPLATE_TRAITS, ArcTemplateTrait.CONFRONTING)
 
 
 @dataclass
@@ -142,6 +135,10 @@ async def log_setups(ctx: TickContext, tally: DramaTally) -> None:
 Resolution = tuple[PayoffKind, str] | None
 
 
+PAYERS: Handlers[SetupKind, Callable[[TickContext, SetupRow], Awaitable[Resolution]]] = Handlers(SetupKind)
+
+
+@PAYERS.on(SetupKind.FORESIGHT)
 async def foresight_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     source_id = setup.source_id
     foresight = await ctx.session.get(ForesightRow, source_id)
@@ -152,6 +149,7 @@ async def foresight_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     return PayoffKind.SUBVERTED, "what was foreseen did not come"
 
 
+@PAYERS.on(SetupKind.PROPHECY)
 async def prophecy_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     source_id = setup.source_id
     prophecy = await ctx.session.get(ProphecyConditionRow, source_id)
@@ -162,6 +160,7 @@ async def prophecy_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     return PayoffKind.SUBVERTED, "the prophecy came to nothing"
 
 
+@PAYERS.on(SetupKind.INCIDENT_ARC)
 async def thread_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     source_id = setup.source_id
     thread = await ctx.session.get(ThreadRow, source_id)
@@ -170,6 +169,7 @@ async def thread_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     return PayoffKind.FULFILLED, thread.closing_text or "the story was closed"
 
 
+@PAYERS.on(SetupKind.DREAM)
 async def dream_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     source_id = setup.source_id
     dream = await ctx.session.get(DreamRow, source_id)
@@ -180,6 +180,7 @@ async def dream_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     return PayoffKind.SUBVERTED, "the dream was read falsely"
 
 
+@PAYERS.on(SetupKind.OMEN)
 async def omen_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     source_id = setup.source_id
     reading = await ctx.session.get(DivinationRow, source_id)
@@ -190,6 +191,7 @@ async def omen_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     return PayoffKind.SUBVERTED, "the omen read false"
 
 
+@PAYERS.on(SetupKind.PORTENT)
 async def portent_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     if setup.subject_node_id is None:
         return None
@@ -207,16 +209,6 @@ async def portent_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     if beat is None:
         return None
     return PayoffKind.FULFILLED, beat
-
-
-PAYERS = {
-    SetupKind.FORESIGHT: foresight_paid,
-    SetupKind.PROPHECY: prophecy_paid,
-    SetupKind.INCIDENT_ARC: thread_paid,
-    SetupKind.DREAM: dream_paid,
-    SetupKind.OMEN: omen_paid,
-    SetupKind.PORTENT: portent_paid,
-}
 
 
 async def resolution_of(ctx: TickContext, row: SetupRow) -> Resolution:

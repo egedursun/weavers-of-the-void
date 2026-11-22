@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 from sqlalchemy import delete, select
 
+from aerona.catalog.life.tools import THRONES
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
@@ -12,7 +13,6 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.population import PopulationAim, PopulationInstrument
 from aerona.engine.numbers.book import scope_of, towns_in
 from aerona.engine.numbers.policies import numbers_of
@@ -25,7 +25,6 @@ from aerona.tools.framework.validation import fail
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 INSTRUMENTS_MAX = len(PopulationInstrument)
-THRONES = (OfficeKind.RULER, OfficeKind.REGENT)
 
 
 class InstrumentWeight(ToolInput):

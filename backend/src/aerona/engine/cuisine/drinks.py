@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.drink_roles import BONDING_ROLES, DRINK_ROLES
+from aerona.catalog.life.cuisine import CATEGORY_WORDS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
@@ -65,23 +66,6 @@ FIRST_DRINKS: tuple[tuple[CommodityKind, DrinkCategory], ...] = (
     (CommodityKind.MILK, D.MILK_BASED),
     (CommodityKind.HERBS, D.INFUSION),
     (CommodityKind.FRUIT, D.PRESSED),
-)
-CATEGORY_WORDS = total(
-    DrinkCategory,
-    {
-        D.WATER: "Water",
-        D.INFUSION: "Infusion",
-        D.FERMENTED: "Brew",
-        D.DISTILLED: "Spirit",
-        D.PRESSED: "Juice",
-        D.MILK_BASED: "Milk drink",
-        D.BROTH: "Broth",
-        D.STIMULANT_BREW: "Waking brew",
-        D.INTOXICANT: "Strong drink",
-        D.MEDICINAL: "Draught",
-        D.RITUAL: "Rite drink",
-        D.SYNTHESISED: "Made drink",
-    },
 )
 
 

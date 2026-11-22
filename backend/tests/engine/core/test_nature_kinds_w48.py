@@ -1,8 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_tables import ORIGIN_SOURCE
 from aerona.catalog.methods import METHODS
-from aerona.db.kind_concepts.nature import CREATURE_TRAITS, HOUSE_TRAITS, NATURAL_TRAITS, OFFICE_DUTY, ORIGIN_SOURCE, PRODUCT_PARTS, REALM_FUNCTION
+from aerona.db.kind_concepts.nature import CREATURE_TRAITS, HOUSE_TRAITS, NATURAL_TRAITS, OFFICE_DUTY, PRODUCT_PARTS, REALM_FUNCTION
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.tables.kinds import KindHoldingRow

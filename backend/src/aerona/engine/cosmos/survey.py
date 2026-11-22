@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import JOURNEY_INTENT_TRAITS, having
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.physics import WorldSurveyRow
@@ -10,6 +11,7 @@ from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.life_traits import JourneyIntentTrait
 from aerona.domain.enums.physics import SURVEY_ORDER, SurveyLevel
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
@@ -21,7 +23,7 @@ from aerona.engine.primitives.queries import canon
 from aerona.rules.registry import Rules
 
 OBSERVER_TYPES = (EntityType.POLITY, EntityType.PEOPLE)
-SURVEYING = frozenset({JourneyIntent.EXPLORATION, JourneyIntent.COLONY, JourneyIntent.CONQUEST, JourneyIntent.TRADE, JourneyIntent.PILGRIMAGE})
+SURVEYING = having(JOURNEY_INTENT_TRAITS, JourneyIntentTrait.SURVEYING)
 
 
 def index_of(level: SurveyLevel) -> int:

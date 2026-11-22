@@ -1,4 +1,7 @@
+from aerona.catalog.body_plans import PLAN_TEXT
 from aerona.catalog.creatures import CREATURE_TRAITS
+from aerona.catalog.diets import DIETS
+from aerona.catalog.domestication import SOCIALITIES, STAGES
 from aerona.core.grammar import an
 from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
@@ -403,32 +406,17 @@ def traits() -> tuple[Raw, ...]:
     )
 
 
-DIET_TEXT = {
-    Diet.HERBIVORE: "grazes on forest and soil",
-    Diet.CARNIVORE: "lives on the prey of its land",
-    Diet.OMNIVORE: "grazes and hunts alike",
-    Diet.SCAVENGER: "lives on what others leave",
-    Diet.FILTER: "sifts the waters for its food",
-    Diet.PHOTOSYNTHETIC: "lives on light and yields no meat",
-    Diet.MINERAL: "eats stone and ore and cannot be eaten",
-    Diet.SOUL: "feeds on souls",
-    Diet.VOID: "feeds on the void and cannot be eaten",
-    Diet.PISCIVORE: "lives on the fish of its waters",
-    Diet.SANGUIVORE: "lives on the blood of other creatures",
-}
-
-
 def diets() -> tuple[Raw, ...]:
     return tuple(
         (
             f"diet_{diet.value}",
             "S3.2",
-            f"{an(label(diet.value), capital=True)} {DIET_TEXT[diet]}",
+            f"{an(label(diet.value), capital=True)} {DIETS[diet].text}",
             ("ecology",),
             ECOLOGY,
             (SP, "region"),
             ("diet", f"diet_{diet.value}"),
-            (S.ECOLOGY, "habitat.forage_pct" if diet in {Diet.HERBIVORE, Diet.FILTER} else "habitat.prey_pct", "species.abundance"),
+            (S.ECOLOGY, "habitat.forage_pct" if DIETS[diet].forages else "habitat.prey_pct", "species.abundance"),
         )
         for diet in Diet
     )
@@ -450,9 +438,6 @@ def sizes() -> tuple[Raw, ...]:
     )
 
 
-SOCIAL_RULES = {Sociality.SOLITARY: None, Sociality.PACK: "habitat.pack_pct", Sociality.HERD: "habitat.herd_pct", Sociality.HIVE: "habitat.herd_pct"}
-
-
 def socialities() -> tuple[Raw, ...]:
     return tuple(
         (
@@ -463,19 +448,10 @@ def socialities() -> tuple[Raw, ...]:
             ECOLOGY,
             (SP,),
             ("sociality", f"social_{kind.value}"),
-            (S.ECOLOGY, SOCIAL_RULES[kind], "species.abundance"),
+            (S.ECOLOGY, SOCIALITIES[kind].rule, "species.abundance"),
         )
         for kind in Sociality
     )
-
-
-STAGE_RULES = {
-    DomesticationStage.WILD: None,
-    DomesticationStage.TAMED: "domestication.starting_head",
-    DomesticationStage.HERDED: "domestication.herd_years",
-    DomesticationStage.DOMESTICATED: "domestication.domesticate_chance",
-    DomesticationStage.BREED: "domestication.breed_chance",
-}
 
 
 def stages() -> tuple[Raw, ...]:
@@ -488,7 +464,7 @@ def stages() -> tuple[Raw, ...]:
             HERDS,
             (SP, "settlement", "people"),
             ("stage", f"stage_{stage.value}"),
-            (S.ECONOMY, STAGE_RULES[stage], "herds"),
+            (S.ECONOMY, STAGES[stage].rule, "herds"),
         )
         for stage in DomesticationStage
     )
@@ -1187,21 +1163,6 @@ EXTRA: tuple[Raw, ...] = (
         (S.MIND, "mortal_agents.creature_min_intelligence", "agents"),
     ),
 )
-
-PLAN_TEXT = {
-    BodyPlan.HUMANOID: "stands and grips like the peoples and is wounded as they are",
-    BodyPlan.QUADRUPED: "runs on four legs and yields what its body gives",
-    BodyPlan.AVIAN: "flies, sheds feathers and can carry a rider through the sky",
-    BodyPlan.SERPENTINE: "lies in ambush",
-    BodyPlan.INSECTOID: "wears chitin and armour",
-    BodyPlan.AQUATIC: "lives in the waters and thirsts for them",
-    BodyPlan.AMORPHOUS: "sifts its food from the waters",
-    BodyPlan.ARBOREAL: "lives on light like a tree",
-    BodyPlan.INCORPOREAL: "feeds on souls",
-    BodyPlan.COLOSSAL: "stands colossal",
-    BodyPlan.CONSTRUCT: "eats stone and ore",
-    BodyPlan.DIVINE_MANIFEST: "is a god's own shape",
-}
 
 
 def plans() -> tuple[Raw, ...]:

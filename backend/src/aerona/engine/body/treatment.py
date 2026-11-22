@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 
+from aerona.catalog.conditions import OPEN_INJURY_STATES
+from aerona.catalog.harm_kinds import INJURIES, STEPS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.body import OPEN_INJURY_STATES, InjuryKind, TreatmentStep
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow
+from aerona.domain.enums.body import TreatmentStep
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.mind import SkillKind
-from aerona.domain.enums.records import StepAction
 from aerona.engine.body.strike import worn_layers
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
@@ -15,40 +16,6 @@ from aerona.engine.mind.book import skills_of
 from aerona.rules.registry import Rules
 
 S = TreatmentStep
-OPEN_WOUNDS = frozenset(
-    {
-        InjuryKind.CUT,
-        InjuryKind.DEEP_CUT,
-        InjuryKind.PUNCTURE,
-        InjuryKind.BITE,
-        InjuryKind.BURN,
-        InjuryKind.GUNSHOT,
-        InjuryKind.SHRAPNEL,
-        InjuryKind.CHEMICAL_BURN,
-        InjuryKind.ELECTRICAL_BURN,
-    }
-)
-BROKEN = frozenset({InjuryKind.FRACTURE, InjuryKind.CRUSH})
-SUPPLIES: dict[TreatmentStep, CommodityKind] = {
-    S.CLEAN: CommodityKind.MEDICINE,
-    S.SUTURE: CommodityKind.CLOTH,
-    S.DRESS: CommodityKind.CLOTH,
-    S.SPLINT: CommodityKind.TIMBER,
-    S.CRUTCH: CommodityKind.TIMBER,
-}
-
-TREATMENT_ACTIONS: dict[TreatmentStep, StepAction] = {
-    S.DIAGNOSE: StepAction.EXAMINE,
-    S.CLEAN: StepAction.TREAT,
-    S.SUTURE: StepAction.SUTURE,
-    S.SET_BONE: StepAction.SET_BONE,
-    S.SPLINT: StepAction.TREAT,
-    S.DRESS: StepAction.TREAT,
-    S.AMPUTATE: StepAction.AMPUTATE,
-    S.CAUTERISE: StepAction.TREAT,
-    S.CRUTCH: StepAction.TREAT,
-    S.TRACTION: StepAction.TREAT,
-}
 
 
 @dataclass(frozen=True)
@@ -62,27 +29,18 @@ class Treatment:
 
 
 def step_level(rules: Rules, step: TreatmentStep) -> int:
-    table = rules.tissues
-    return {
-        S.SUTURE: table.suture_level,
-        S.SET_BONE: table.set_bone_level,
-        S.SPLINT: table.set_bone_level,
-        S.AMPUTATE: table.amputate_level,
-        S.CAUTERISE: table.cauterise_level,
-        S.TRACTION: table.traction_level,
-    }.get(step, 0)
+    level = STEPS[step].level
+    return level(rules.tissues) if level is not None else 0
 
 
 def wanted_steps(row: InjuryRow, *, walking: bool) -> list[TreatmentStep]:
     steps: list[TreatmentStep] = []
     if row.bleeding > 0:
         steps.append(S.SUTURE)
-    if row.kind in OPEN_WOUNDS:
-        steps.extend((S.CLEAN, S.DRESS))
-    if row.kind in BROKEN:
-        steps.extend((S.SET_BONE, S.SPLINT))
-        if walking:
-            steps.append(S.TRACTION)
+    injury = INJURIES[row.kind]
+    steps.extend(injury.care)
+    if injury.broken and walking:
+        steps.append(S.TRACTION)
     if walking:
         steps.append(S.CRUTCH)
     return [step for step in steps if step.value not in row.treatments]
@@ -94,7 +52,7 @@ def diagnosis_chance(rules: Rules, skill: int) -> float:
 
 
 async def supplied(ctx: TickContext, community_id: int | None, step: TreatmentStep) -> bool:
-    commodity = SUPPLIES.get(step)
+    commodity = STEPS[step].supply
     if commodity is None:
         return True
     if community_id is None:
@@ -104,7 +62,7 @@ async def supplied(ctx: TickContext, community_id: int | None, step: TreatmentSt
 
 def stanch(row: InjuryRow, step: TreatmentStep) -> None:
     row.treatments = [*row.treatments, step.value]
-    if step in (S.SUTURE, S.CAUTERISE):
+    if STEPS[step].stanches:
         row.bleeding = 0
 
 

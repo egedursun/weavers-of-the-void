@@ -2,6 +2,8 @@ from types import MappingProxyType
 
 from sqlalchemy import func, select
 
+from aerona.catalog.catch import grounds_in
+from aerona.catalog.life.couplings import FACTION_SPEECH
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.belonging import HeldIdentityRow
@@ -17,10 +19,9 @@ from aerona.domain.enums.belonging import IdentityLayer
 from aerona.domain.enums.body import MaimedKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.couplings import SignCause, SociolectKind
-from aerona.domain.enums.crafts import CatchGround
+from aerona.domain.enums.crafts import CatchGround, CatchMedium
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import HoldingKind, TenetKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.tongues import LanguageModality
@@ -35,19 +36,6 @@ from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import record as record_incident
 
-F = FactionKind
-FACTION_SPEECH = MappingProxyType(
-    {
-        F.MERCHANT_GUILD: SociolectKind.GUILD,
-        F.CRAFT_GUILD: SociolectKind.GUILD,
-        F.BANDITS: SociolectKind.CANT,
-        F.PIRATES: SociolectKind.CANT,
-        F.ASSASSINS: SociolectKind.CANT,
-        F.CRIME_FAMILY: SociolectKind.CANT,
-        F.THIEVES_GUILD: SociolectKind.CANT,
-        F.ROUTE_RAIDERS: SociolectKind.CANT,
-    }
-)
 SPEECH_LAYERS = MappingProxyType(
     {
         SociolectKind.CLASS: IdentityLayer.CLASS,
@@ -68,8 +56,8 @@ SPEECH_PRESTIGE = MappingProxyType(
         SociolectKind.SAILORS: -10,
     }
 )
-SEA_GROUNDS = (CatchGround.FISHERY, CatchGround.MARINE_HUNT)
-HUNT_GROUNDS = (CatchGround.TRAPPING, CatchGround.FOWLING)
+SEA_GROUNDS = grounds_in(CatchMedium.WATER)
+HUNT_GROUNDS = grounds_in(CatchMedium.LAND)
 
 
 async def cohort_share(ctx: TickContext, community: EntityRow, kind: MaimedKind) -> int:

@@ -5,7 +5,7 @@ from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.affliction import PackageKind
-from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, PlagueResponse, TrophicLevel
+from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, PlagueResponse, PlanetaryCycle, TrophicLevel
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
 TRAIT_FIELDS = ("mean", "variance")
@@ -13,7 +13,6 @@ MARK_FIELDS = ("blessing", "source_node_id")
 CARRIER_FIELDS = ("identified", "seeded")
 RESPONSE_FIELDS = ("until_epoch", "strength")
 RESEARCH_FIELDS = ("points", "specimens")
-CYCLE_FIELDS = ("carbon", "water", "nutrients")
 SERVICE_FIELDS = ("strength", "species_entity_id")
 
 
@@ -106,18 +105,13 @@ class CureResearchRow(Base):
 
 class WorldCycleRow(Base):
     __tablename__ = "world_cycles"
-    __table_args__ = (between("carbon", PERCENT_MIN, PERCENT_MAX), between("water", PERCENT_MIN, PERCENT_MAX), between("nutrients", PERCENT_MIN, PERCENT_MAX))
+    __table_args__ = (between("stock", PERCENT_MIN, PERCENT_MAX), at_least("inflow", 0), at_least("outflow", 0), at_least("updated_epoch", 0))
 
     world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"), primary_key=True)
-    carbon: Mapped[int] = mapped_column(default=50)
-    water: Mapped[int] = mapped_column(default=50)
-    nutrients: Mapped[int] = mapped_column(default=50)
-    carbon_in: Mapped[int] = mapped_column(default=0)
-    carbon_out: Mapped[int] = mapped_column(default=0)
-    water_in: Mapped[int] = mapped_column(default=0)
-    water_out: Mapped[int] = mapped_column(default=0)
-    nutrients_in: Mapped[int] = mapped_column(default=0)
-    nutrients_out: Mapped[int] = mapped_column(default=0)
+    cycle: Mapped[PlanetaryCycle] = mapped_column(enum_type(PlanetaryCycle, "cycle"), primary_key=True)
+    stock: Mapped[int] = mapped_column(default=50)
+    inflow: Mapped[int] = mapped_column(default=0)
+    outflow: Mapped[int] = mapped_column(default=0)
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

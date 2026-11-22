@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.kinds.resolves import RESOLVES
+from aerona.catalog.life_traits import EXPEDITION_GROUND_TRAITS, having
 from aerona.catalog.operations import AFFLICTIONS, QUIRK_ORIGINS, VIRTUES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -16,6 +17,7 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.life_traits import ExpeditionGroundTrait
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import ExpeditionEvent, ExpeditionGround, ExpeditionRole, ExpeditionStatus, QuirkKind, ResolveKind
@@ -37,7 +39,7 @@ E = ExpeditionEvent
 G = ExpeditionGround
 R = ExpeditionRole
 Q = QuirkKind
-DARK_GROUNDS = frozenset({G.SITE, G.UNDERWORLD, G.REALM})
+DARK_GROUNDS = having(EXPEDITION_GROUND_TRAITS, ExpeditionGroundTrait.DARK_GROUNDS)
 COLD_BANDS = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
 ROLE_SKILLS = (
     (R.SCOUT, SkillKind.TRACKING),

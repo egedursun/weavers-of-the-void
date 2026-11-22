@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.collective import FEARFUL
 from aerona.constants.units import PERCENT
 from aerona.db.tables.collective import CrowdMoodRow, LearningBiasRow, LearningEventRow
 from aerona.db.tables.entities import EntityRow
@@ -18,7 +19,6 @@ from aerona.engine.mind.values import mean_of
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int
 
-FEARFUL = (ValueAxis.SUPERSTITION, ValueAxis.DEATH, ValueAxis.PIETY)
 ANXIOUS_AT = PERCENT // 2
 VALUE_SPAN = 100
 

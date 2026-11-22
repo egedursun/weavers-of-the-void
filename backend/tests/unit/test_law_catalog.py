@@ -1,7 +1,7 @@
 from aerona.catalog.law_areas import LAW_AREAS
 from aerona.catalog.laws import LAW_EFFECTS, LAW_PARAMS, defaults_for, law_effect
+from aerona.catalog.life.polity import DEFAULT_POWERS, POWER_SKILLS
 from aerona.domain.enums.polity import LawKind, OfficeKind, OfficePower
-from aerona.engine.polity.offices import DEFAULT_POWERS, POWER_SKILLS
 
 
 def test_every_law_kind_has_an_area_terms_and_an_effect() -> None:

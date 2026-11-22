@@ -108,6 +108,7 @@ class TraditionsRules:
     scar_harm: int = rule(4, 0, 100, C, "Harm a ritual scar deals the youth who takes it")
     season_growth: int = rule(60, 0, 100, C, "Growth of a season in which sowing and harvest feasts fall")
     dead_growth: int = rule(20, 0, 100, C, "Growth at or below which a season is the dead of winter")
+    midwinter_cold: int = rule(1, 0, 100, C, "Cold below the year's mean the coldest season needs for a midwinter rite or feast to fall in it")
     season_campaign: int = rule(60, 0, 100, C, "Campaign suitability of the season in which war feasts fall")
     calendar_slot_pct: int = rule(30, 0, 300, C, "Strength an effect gains when its feast falls in its season (%)")
     calendar_misfit_pct: int = rule(50, 0, 100, C, "Strength left to a feast whose season never comes (%)")

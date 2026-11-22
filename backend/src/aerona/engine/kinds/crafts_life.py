@@ -4,6 +4,7 @@ from typing import Any
 
 from sqlalchemy import delete, select
 
+from aerona.catalog.life_traits import FURNISHING_CATEGORY_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.collective import ArmsRow
@@ -27,6 +28,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.kind_crafts import ColourMeaning, EmblemSystem, FurnishingCategory, ToolCategory
 from aerona.domain.enums.kinds import KindConcept, KindSpread, KindStance
+from aerona.domain.enums.life_traits import FurnishingCategoryTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.records import StepAction, StepOutcome
@@ -83,7 +85,7 @@ class Exposure:
 
 
 FURNISHING_SANITATION = frozenset({FurnishingCategory.SANITATION})
-FURNISHING_FIRE = frozenset({FurnishingCategory.HEATING, FurnishingCategory.LIGHTING})
+FURNISHING_FIRE = having(FURNISHING_CATEGORY_TRAITS, FurnishingCategoryTrait.FURNISHING_FIRE)
 TOOL_SANITATION = frozenset({ToolCategory.MEDICAL})
 TOOL_FIRE = frozenset({ToolCategory.FIRE_MAKING})
 

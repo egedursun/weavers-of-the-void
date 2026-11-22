@@ -6,7 +6,9 @@ from sqlalchemy import select
 from aerona.catalog.commodities import FOOD_KINDS
 from aerona.catalog.gatherings import CONTEST_KINDS, GATHERING_COLLECTIONS, GATHERING_THOUGHTS, GUEST_ROLES, HONOURED_ROLES, HOSTED_FEASTS
 from aerona.catalog.kinds.gathering_outcomes import GATHERING_RESULTS
+from aerona.catalog.life.gatherings import HOLD_GATHERING_KINDS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
@@ -403,10 +405,16 @@ async def realm_ruled_by(ctx: TickContext, ruler_id: int) -> PolityProfileRow | 
     return await ctx.session.get(PolityProfileRow, polity) if polity is not None else None
 
 
+OUTCOMES: Handlers[GatheringKind, Callable[[TickContext, Holding], Awaitable[None]]] = Handlers(GatheringKind)
+
+
+@OUTCOMES.on(GatheringKind.TOURNAMENT)
+@OUTCOMES.on(GatheringKind.GAMES)
 async def contest(ctx: TickContext, holding: Holding) -> None:
     await bouts(ctx, holding, harmful=holding.row.kind is G.TOURNAMENT)
 
 
+@OUTCOMES.on(GatheringKind.HUNT)
 async def hunt(ctx: TickContext, holding: Holding) -> None:
     table = ctx.rules.gatherings
     host = await ctx.session.get(EntityRow, holding.row.host_node_id)
@@ -445,12 +453,14 @@ async def hunt(ctx: TickContext, holding: Holding) -> None:
     holding.steps.append(StepDraft(StepAction.MEET_DANGER, actor=host.id, target=beast.id, outcome=StepOutcome.SUCCESS))
 
 
+@OUTCOMES.on(GatheringKind.CORONATION)
 async def coronation(ctx: TickContext, holding: Holding) -> None:
     profile = await realm_ruled_by(ctx, holding.row.host_node_id)
     if profile is not None and "legitimacy" not in (profile.locked or []) and not held(profile.polity_entity_id):
         profile.legitimacy = clamp_int(profile.legitimacy + ctx.rules.gatherings.coronation_legitimacy, 0, PERCENT)
 
 
+@OUTCOMES.on(GatheringKind.SUMMIT)
 async def summit(ctx: TickContext, holding: Holding) -> None:
     table = ctx.rules.gatherings
     realms = [profile for node in holding.attendees if (profile := await realm_ruled_by(ctx, node)) is not None]
@@ -474,12 +484,14 @@ async def summit(ctx: TickContext, holding: Holding) -> None:
         holding.steps.append(StepDraft(StepAction.SIGN, amount=signed, unit=FactUnit.COUNT))
 
 
+@OUTCOMES.on(GatheringKind.FESTIVAL)
 async def festival(ctx: TickContext, holding: Holding) -> None:
     community = await ctx.session.get(EntityRow, holding.row.host_node_id)
     if community is not None:
         await cohere(ctx, community, ctx.rules.gatherings.festival_cohesion)
 
 
+@OUTCOMES.on(GatheringKind.FAIR)
 async def fair(ctx: TickContext, holding: Holding) -> None:
     merchants = await ctx.session.scalars(
         select(EntityRow.id).where(
@@ -491,6 +503,7 @@ async def fair(ctx: TickContext, holding: Holding) -> None:
             await add_wealth(ctx.session, int(merchant), ctx.rules.gatherings.fair_wealth, ctx.epoch)
 
 
+@OUTCOMES.on(GatheringKind.PERFORMANCE)
 async def performance(ctx: TickContext, holding: Holding) -> None:
     for node in holding.attendees:
         guest = holding.guests.get(node)
@@ -501,18 +514,21 @@ async def performance(ctx: TickContext, holding: Holding) -> None:
             )
 
 
+@OUTCOMES.on(GatheringKind.PILGRIMAGE)
 async def pilgrimage(ctx: TickContext, holding: Holding) -> None:
     profile = await ctx.session.get(PlaceProfileRow, holding.row.place_entity_id or holding.row.host_node_id)
     if profile is not None and "sacredness" not in profile.locked and not held(profile.entity_id):
         profile.sacredness = clamp_int(profile.sacredness + ctx.rules.gatherings.pilgrim_sacredness, 0, PERCENT)
 
 
+@OUTCOMES.on(GatheringKind.PROCESSION)
 async def procession(ctx: TickContext, holding: Holding) -> None:
     cult = await ctx.session.get(EntityRow, holding.row.host_node_id)
     if cult is not None and cult.entity_type is EntityType.CULT:
         shift_stat(cult, "zeal", ctx.rules.gatherings.procession_zeal_gain, 0, high=PERCENT)
 
 
+@OUTCOMES.on(GatheringKind.COUNCIL)
 async def council(ctx: TickContext, holding: Holding) -> None:
     for node in holding.attendees:
         if node != holding.row.host_node_id:
@@ -521,6 +537,7 @@ async def council(ctx: TickContext, holding: Holding) -> None:
                 shift(ctx.rules, tie, ctx.epoch, friendship=ctx.rules.gatherings.council_loyalty)
 
 
+@OUTCOMES.on(GatheringKind.EXECUTION)
 async def execution(ctx: TickContext, holding: Holding) -> None:
     for node in holding.attendees:
         found = await ctx.session.get(EntityRow, node)
@@ -528,6 +545,7 @@ async def execution(ctx: TickContext, holding: Holding) -> None:
             await add_stress(ctx.session, node, ctx.rules.gatherings.execution_stress, ctx.epoch)
 
 
+@OUTCOMES.on(GatheringKind.ELECTION)
 async def election(ctx: TickContext, holding: Holding) -> None:
     profile = await realm_ruled_by(ctx, holding.row.host_node_id)
     if profile is not None and "legitimacy" not in (profile.locked or []) and not held(profile.polity_entity_id):
@@ -540,10 +558,12 @@ async def unrest_of(ctx: TickContext, town_id: int, amount: int) -> None:
         profile.unrest = clamp_int(profile.unrest + amount, 0, PERCENT)
 
 
+@OUTCOMES.on(GatheringKind.RALLY)
 async def rally(ctx: TickContext, holding: Holding) -> None:
     await unrest_of(ctx, holding.row.host_node_id, ctx.rules.gatherings.rally_unrest_gain)
 
 
+@OUTCOMES.on(GatheringKind.STRIKE)
 async def strike(ctx: TickContext, holding: Holding) -> None:
     table = ctx.rules.gatherings
     town = await ctx.session.get(EntityRow, holding.row.host_node_id)
@@ -555,6 +575,7 @@ async def strike(ctx: TickContext, holding: Holding) -> None:
         society.satisfaction_worker = clamp_int(society.satisfaction_worker + table.strike_satisfaction_gain, 0, PERCENT)
 
 
+@OUTCOMES.on(GatheringKind.CONVENTION)
 async def convention(ctx: TickContext, holding: Holding) -> None:
     for node in holding.attendees:
         found = await ctx.session.get(EntityRow, node)
@@ -562,18 +583,21 @@ async def convention(ctx: TickContext, holding: Holding) -> None:
             await add_renown(ctx.session, node, ctx.rules.gatherings.convention_renown, ctx.epoch, rules=ctx.rules)
 
 
+@OUTCOMES.on(GatheringKind.LAUNCH)
 async def launch(ctx: TickContext, holding: Holding) -> None:
     town = await ctx.session.get(SettlementProfileRow, holding.row.host_node_id)
     if town is not None and "prestige" not in town.locked and not held(town.settlement_entity_id):
         town.prestige = clamp_int(town.prestige + ctx.rules.gatherings.launch_prestige, 0, PERCENT)
 
 
+@OUTCOMES.on(GatheringKind.BROADCAST)
 async def broadcast(ctx: TickContext, holding: Holding) -> None:
     community = await ctx.session.get(EntityRow, holding.row.host_node_id)
     if community is not None:
         await cohere(ctx, community, ctx.rules.gatherings.broadcast_cohesion)
 
 
+@OUTCOMES.on(GatheringKind.TESTING)
 async def testing(ctx: TickContext, holding: Holding) -> None:
     found = await test_people(ctx, holding.row.host_node_id)
     holding.facts["gifts_found"] = found
@@ -599,27 +623,6 @@ GUEST_INCIDENT_ROLES: Mapping[GuestRole, IncidentRole] = total(
         GuestRole.ENVOY: IncidentRole.ENVOY,
     },
 )
-OUTCOMES: dict[GatheringKind, Callable[[TickContext, Holding], Awaitable[None]]] = {
-    G.TOURNAMENT: contest,
-    G.GAMES: contest,
-    G.HUNT: hunt,
-    G.CORONATION: coronation,
-    G.SUMMIT: summit,
-    G.FESTIVAL: festival,
-    G.FAIR: fair,
-    G.PERFORMANCE: performance,
-    G.PILGRIMAGE: pilgrimage,
-    G.PROCESSION: procession,
-    G.COUNCIL: council,
-    G.EXECUTION: execution,
-    G.ELECTION: election,
-    G.RALLY: rally,
-    G.STRIKE: strike,
-    G.CONVENTION: convention,
-    G.LAUNCH: launch,
-    G.BROADCAST: broadcast,
-    G.TESTING: testing,
-}
 
 
 async def host_the_feast(ctx: TickContext, holding: Holding) -> None:
@@ -733,7 +736,7 @@ async def hold(ctx: TickContext, row: GatheringRow, atlas: RegionAtlas, tally: G
         return False
     holding = Holding(row, host)
     await attend(ctx, holding, atlas)
-    if len(holding.attendees) < (1 if row.kind in (G.MILESTONE, G.WAKE, G.FUNERAL, G.TRIAL, G.EXECUTION) else 2):
+    if len(holding.attendees) < (1 if row.kind in HOLD_GATHERING_KINDS else 2):
         if "status" not in row.locked:
             row.status = GatheringStatus.CANCELLED
         return False

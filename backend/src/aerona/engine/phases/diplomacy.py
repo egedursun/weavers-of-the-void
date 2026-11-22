@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import and_, or_, select
 
+from aerona.catalog.life_traits import TREATY_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondRepository
@@ -11,6 +12,7 @@ from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.folkways import BiasedDecision
+from aerona.domain.enums.life_traits import TreatyKindTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, RegionalStanding, TreatyBreach, TreatyKind, TreatyStatus
@@ -59,7 +61,7 @@ from aerona.rules.registry import Rules
 
 MARRIAGE_AGE_FALLBACK_KEY = "age"
 HOSTILITY_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.MORTAL})
-ALLIANCES = frozenset({TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.ALLIANCE_OFFENSIVE, TreatyKind.MARRIAGE_PACT})
+ALLIANCES = having(TREATY_KIND_TRAITS, TreatyKindTrait.ALLIANCES)
 
 
 @dataclass

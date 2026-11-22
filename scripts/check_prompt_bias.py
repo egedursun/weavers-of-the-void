@@ -46,6 +46,7 @@ MORTAL_KINSHIP = re.compile(
 
 
 MEDIUM_RULE = "hardcoded image medium"
+CODE_PATH = re.compile(r"[a-z_]\w*(?:\.\w+)+")
 GENERIC_MEN = "men for people"
 SEX_CONTEXT = re.compile(r"women|male|\(\?:")
 
@@ -427,7 +428,7 @@ def prose(path: Path, value: str) -> str:
 
 
 def matches(path: Path, line: int, value: str, in_prompts: bool, creation: bool | None = None, *, enum_value: bool = False) -> list[Finding]:
-    if MORTAL_KINSHIP.search(value):
+    if MORTAL_KINSHIP.search(value) or CODE_PATH.fullmatch(value):
         return []
     creating = under(path, CREATION_TEXT) if creation is None else creation
     imaging = under(path, IMAGE_TEXT)

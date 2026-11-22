@@ -1,9 +1,7 @@
-from collections.abc import Mapping
-
 from sqlalchemy import func, select
 
+from aerona.catalog.life.made import CHARTER_REACH, HOLDING_WEIGHT
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.made import CompanyHoldingRow, CompanyPresenceRow, EnclaveRow
@@ -11,7 +9,6 @@ from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.made import CompanyCharter, CompanyHoldingKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import GovernmentKind
 from aerona.engine.context import TickContext
@@ -19,29 +16,6 @@ from aerona.engine.factions.companies import realm_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.recording.record import record
-
-HOLDING_WEIGHT: Mapping[CompanyHoldingKind, int] = total(
-    CompanyHoldingKind,
-    {
-        CompanyHoldingKind.STRUCTURE: 100,
-        CompanyHoldingKind.NETWORK: 150,
-        CompanyHoldingKind.DATA_STORE: 120,
-        CompanyHoldingKind.MADE_MIND: 130,
-        CompanyHoldingKind.FABRICATOR: 140,
-        CompanyHoldingKind.LIVING_LINE: 110,
-        CompanyHoldingKind.ROUTE: 160,
-        CompanyHoldingKind.ENCLAVE: 200,
-    },
-)
-CHARTER_REACH: Mapping[CompanyCharter, tuple[bool, bool]] = total(
-    CompanyCharter,
-    {
-        CompanyCharter.CHARTERED: (True, True),
-        CompanyCharter.FREE: (True, True),
-        CompanyCharter.STATE_OWNED: (False, False),
-        CompanyCharter.COOPERATIVE: (False, True),
-    },
-)
 
 
 async def holding_places(ctx: TickContext, company_id: int) -> list[tuple[int, int]]:

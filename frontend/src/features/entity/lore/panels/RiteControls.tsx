@@ -189,6 +189,14 @@ function Requirements({
           />
           <Text as='span'>Only on a ley line</Text>
         </label>
+        <label className='flex min-w-0 items-center gap-2'>
+          <Switch
+            checked={Boolean(needs.war)}
+            aria-label='Only in a time of war'
+            onCheckedChange={(next) => put('war', next)}
+          />
+          <Text as='span'>Only in a time of war</Text>
+        </label>
       </div>
       <Button
         size='sm'

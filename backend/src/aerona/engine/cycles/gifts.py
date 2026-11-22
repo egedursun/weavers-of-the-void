@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import GATHERING_KIND_TRAITS, GIFT_STATE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cycles import CircuitRow, DivineDebtRow, GiftRow, KinshipSystemRow
@@ -17,7 +18,8 @@ from aerona.domain.enums.collective import NormBehaviour, NormSituation
 from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.cycles import GiftOccasion, GiftState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.gathering import GatheringKind, GatheringStatus
+from aerona.domain.enums.gathering import GatheringStatus
+from aerona.domain.enums.life_traits import GatheringKindTrait, GiftStateTrait
 from aerona.domain.enums.mind import MemoryKind, PreferenceKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
@@ -43,8 +45,8 @@ from aerona.engine.services.community_relations import relation
 from aerona.engine.unions.customs import payer
 
 COMPETITIVE = frozenset({GiftOccasion.FEAST})
-POTLATCH_FEASTS = frozenset({GatheringKind.FEAST, GatheringKind.FESTIVAL, GatheringKind.WEDDING, GatheringKind.FUNERAL})
-OBLIGING = frozenset({GiftState.OPEN, GiftState.DESTROYED})
+POTLATCH_FEASTS = having(GATHERING_KIND_TRAITS, GatheringKindTrait.POTLATCH_FEASTS)
+OBLIGING = having(GIFT_STATE_TRAITS, GiftStateTrait.OBLIGING)
 
 
 @dataclass

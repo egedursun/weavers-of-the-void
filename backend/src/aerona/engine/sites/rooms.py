@@ -1,10 +1,12 @@
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
 from aerona.catalog.gatherings import GUARDED_ROOMS, ITEM_ROOMS, ROOM_PLACES, ROOM_SETTLEMENTS, ROOM_STRUCTURES
+from aerona.catalog.life.sites import CHALLENGES, FURNISH_SITE_ROOM_KINDS, FURNISH_SITE_ROOM_KINDS_2
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import RelicRow
@@ -35,7 +37,6 @@ from aerona.engine.recording.record import StepDraft
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import realm_of_community
 
-CHALLENGES = (SiteChallenge.TRAP, SiteChallenge.GUARDIAN, SiteChallenge.PUZZLE, SiteChallenge.HAZARD)
 LAYOUT_ENDS = 3
 
 
@@ -109,10 +110,10 @@ async def furnish(ctx: TickContext, site: EntityRow, layout: tuple[SiteRoomKind,
     await ctx.session.flush()
     last = rooms[-1]
     for beast in await dwellers(ctx, site.id, EntityType.BEAST):
-        lair = next((room for room in rooms if room.kind in (SiteRoomKind.LAIR, SiteRoomKind.HEART)), last)
+        lair = next((room for room in rooms if room.kind in FURNISH_SITE_ROOM_KINDS), last)
         ctx.session.add(RoomContentRow(room_id=lair.id, kind=RoomContentKind.BEAST, entity_id=beast))
     for spirit in await dwellers(ctx, site.id, EntityType.SPIRIT):
-        crypt = next((room for room in rooms if room.kind in (SiteRoomKind.CRYPT, SiteRoomKind.SHRINE, SiteRoomKind.HEART)), last)
+        crypt = next((room for room in rooms if room.kind in FURNISH_SITE_ROOM_KINDS_2), last)
         ctx.session.add(RoomContentRow(room_id=crypt.id, kind=RoomContentKind.SPIRIT, entity_id=spirit))
     hoards = [room for room in rooms if room.kind in ITEM_ROOMS] or [last]
     relics = set(await ctx.session.scalars(select(RelicRow.item_entity_id)))
@@ -192,12 +193,17 @@ async def contents_of(ctx: TickContext, room_id: int) -> list[RoomContentRow]:
     return list(await ctx.session.scalars(select(RoomContentRow).where(RoomContentRow.room_id == room_id).order_by(RoomContentRow.id)))
 
 
+FOUND: Handlers[RoomContentKind, Callable[[TickContext, EntityRow, EntityRow, SiteRoomRow], Awaitable[None]]] = Handlers(RoomContentKind)
+
+
+@FOUND.on(RoomContentKind.RELIC)
 async def claim_relic(ctx: TickContext, delver: EntityRow, relic: EntityRow, room: SiteRoomRow) -> None:
     await items.profile_of(ctx, relic)
     await items.give(ctx, relic, delver.id, ItemDeed.CAPTURED, f"a relic carried out of {spoken(room.kind)} by {delver.name}")
     await shift_standing(ctx.session, delver, "piety", ctx.rules.sites.relic_piety, ctx.epoch, default=0)
 
 
+@FOUND.on(RoomContentKind.MIND)
 async def wake_mind(ctx: TickContext, delver: EntityRow, mind: EntityRow, room: SiteRoomRow) -> None:
     await connect(ctx.session, delver.id, mind.id, BondKind.DISCOVERED, ctx.epoch, description="woke it in the depths")
     mind.location_id = delver.location_id
@@ -209,6 +215,7 @@ async def wake_mind(ctx: TickContext, delver: EntityRow, mind: EntityRow, room: 
     )
 
 
+@FOUND.on(RoomContentKind.REALM_GATE)
 async def find_gate(ctx: TickContext, delver: EntityRow, realm: EntityRow, room: SiteRoomRow) -> None:
     await connect(ctx.session, delver.id, realm.id, BondKind.DISCOVERED, ctx.epoch, description="found the way into it")
     await record_incident(
@@ -220,13 +227,6 @@ async def find_gate(ctx: TickContext, delver: EntityRow, realm: EntityRow, room:
             IncidentRole.PLACE: room.site_entity_id,
         },
     )
-
-
-FOUND: Mapping[RoomContentKind, Callable[[TickContext, EntityRow, EntityRow, SiteRoomRow], Awaitable[None]]] = {
-    RoomContentKind.RELIC: claim_relic,
-    RoomContentKind.MIND: wake_mind,
-    RoomContentKind.REALM_GATE: find_gate,
-}
 
 
 async def loot(ctx: TickContext, delver: EntityRow, room: SiteRoomRow, walk: Walk) -> None:

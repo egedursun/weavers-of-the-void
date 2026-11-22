@@ -19,7 +19,7 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import CastingRow, ItemEnchantmentRow, RiteEffectRow, RiteProfileRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
-from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow, WorldSeasonRow
+from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow
 from aerona.db.tables.faith import PossessionRow, SpiritProfileRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.genetics import GenomeRow
@@ -107,6 +107,7 @@ from aerona.engine.intrigue.names import name_power
 from aerona.engine.intrigue.sources import hidden_rites
 from aerona.engine.lifecycle.states import ended_ids, state_of
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.calendar_slots import slot_open
 from aerona.engine.lore.intel import gain_intel
 from aerona.engine.lore.kinds import RiteEffectParams, kind_of, params_of
 from aerona.engine.lore.research import has_technique
@@ -169,6 +170,7 @@ class RiteRequirements(BaseModel):
     skill: int | None = Field(default=None, ge=0, le=PERCENT)
     place: EntityType | None = None
     ley: bool = False
+    war: bool = False
     slot: CalendarSlot | None = None
     sky: SkyEventKind | None = None
     participants: int | None = Field(default=None, ge=0)
@@ -432,16 +434,15 @@ async def gathering(ctx: TickContext, caster: EntityRow) -> int:
     return headcount(caster) or int(stat(caster, "followers") or 0)
 
 
-async def season_of(ctx: TickContext, caster: EntityRow, slot: CalendarSlot) -> bool:
-    if slot is CalendarSlot.HOLY_DAY:
-        return await ctx.session.scalar(select(SkyEventRow.id).where(SkyEventRow.epoch == ctx.epoch).limit(1)) is not None
-    if slot is CalendarSlot.CAMPAIGN:
-        sides = [caster.id, *([caster.location_id] if caster.location_id is not None else [])]
-        return await ctx.session.scalar(select(WarSideRow.war_id).where(WarSideRow.entity_id.in_(sides), WarSideRow.left_epoch.is_(None)).limit(1)) is not None
-    cold = WorldSeasonRow.temperature_shift < 0
-    green = WorldSeasonRow.growth >= PERCENT // 2
-    seasons = select(WorldSeasonRow).where(WorldSeasonRow.world_id == caster.world_id, cold if slot is CalendarSlot.MIDWINTER else green)
-    return await ctx.session.scalar(seasons.limit(1)) is not None
+async def at_war(ctx: TickContext, caster: EntityRow) -> bool:
+    sides = [caster.id, *([caster.location_id] if caster.location_id is not None else [])]
+    return await ctx.session.scalar(select(WarSideRow.war_id).where(WarSideRow.entity_id.in_(sides), WarSideRow.left_epoch.is_(None)).limit(1)) is not None
+
+
+async def slot_closed(ctx: TickContext, caster: EntityRow, slot: CalendarSlot | None) -> str | None:
+    if slot is None:
+        return None
+    return (await slot_open(ctx, caster.world_id, slot, caster.id)).reason
 
 
 async def sky_shows(ctx: TickContext, kind: str) -> bool:
@@ -461,12 +462,14 @@ async def unmet(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> str
         (need.place is not None and (home is None or home.entity_type is not EntityType(need.place)), "it must be worked in another kind of place"),
         (need.ley and not await on_ley(ctx, caster), "it needs a ley line"),
         (need.sky is not None and not await sky_shows(ctx, str(need.sky)), "the sky does not show the sign it needs"),
-        (need.slot is not None and not await season_of(ctx, caster, CalendarSlot(need.slot)), "it is not the season for it"),
+        (need.war and not await at_war(ctx, caster), "it is worked only in a time of war"),
         (need.participants is not None and await gathering(ctx, caster) < need.participants, "too few take part"),
         (mortal and await unclean(ctx.session, caster.id), "the caster is unclean in the eyes of their people"),
         (await state_of(ctx.session, row.rite_entity_id) is LifecycleState.LOST, "no one living knows that rite and no text of it survives"),
     )
     reason = next((reason for failed, reason in checks if failed), None)
+    if reason is None:
+        reason = await slot_closed(ctx, caster, CalendarSlot(need.slot) if need.slot is not None else None)
     return reason if reason is not None else (await component_bar(ctx, caster, row.rite_entity_id)).reason
 
 

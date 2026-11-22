@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.finance import FORBIDDEN_LORE, OUTLAWS
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.culture import BookContentRow, ItemProfileRow
 from aerona.db.tables.economy import WorldMaterialRow
@@ -12,22 +13,18 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.faction import CRIME_KINDS, FactionKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.records import FactUnit, StepAction
-from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.mind.hooks import judged
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import StepDraft, record
 
-OUTLAWS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.ROUTE_RAIDERS, *sorted(CRIME_KINDS))
 BOOKS = (ItemClass.BOOK, ItemClass.SCROLL, ItemClass.PRAYER_BOOK)
-FORBIDDEN_LORE = (KnowledgeBranch.FORBIDDEN, KnowledgeBranch.MAGIC)
 VOID_KINDS = frozenset({MaterialKind.VOID_GLASS})
 PERCENT = 100
 TENTH = 10

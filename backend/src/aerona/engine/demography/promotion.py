@@ -3,12 +3,13 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.conditions import MAIMS
 from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.disease import DiseaseProfileRow, OutbreakRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.write_guard import held as frozen
-from aerona.domain.enums.body import BodyFunction, HarmCause, InjuryKind, MaimedKind
+from aerona.domain.enums.body import HarmCause, MaimedKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
@@ -36,21 +37,6 @@ from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.records import death_path
 
 MAIMED_KEY = "maimed"
-F = BodyFunction
-IK = InjuryKind
-M = MaimedKind
-MAIMED_WOUNDS: dict[MaimedKind, tuple[BodyFunction, InjuryKind]] = {
-    M.ONE_ARMED: (F.GRASP, IK.SEVERED),
-    M.ONE_LEGGED: (F.LOCOMOTION, IK.SEVERED),
-    M.ONE_EYED: (F.SIGHT, IK.GOUGED),
-    M.BLIND: (F.SIGHT, IK.GOUGED),
-    M.DEAF: (F.HEARING, IK.DESTROYED),
-    M.MUTE: (F.SPEECH, IK.DESTROYED),
-    M.LAME: (F.LOCOMOTION, IK.CRUSH),
-    M.SCARRED: (F.PRESENCE, IK.BURN),
-    M.BROKEN_MINDED: (F.COGNITION, IK.CRUSH),
-}
-BOTH_SIDES = frozenset({M.BLIND, M.DEAF})
 PROMOTION_COMMUNITIES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 
 
@@ -114,12 +100,12 @@ async def notable_moments(ctx: TickContext) -> list[Moment]:
 
 
 async def matching_wound(ctx: TickContext, mortal: EntityRow, kind: MaimedKind) -> int:
-    function, injury = MAIMED_WOUNDS[kind]
+    function, injury = MAIMS[kind].function, MAIMS[kind].injury
     body = await ensure_body(ctx.session, ctx.rules, mortal, ctx.epoch)
     parts = anatomy_for(body).with_function(function)
     if not parts:
         return 0
-    chosen = parts if kind in BOTH_SIDES else parts[:1]
+    chosen = parts if MAIMS[kind].both_sides else parts[:1]
     severity = ctx.rules.cohorts.promotion_injury_severity
     for part in chosen:
         harm = Harm(

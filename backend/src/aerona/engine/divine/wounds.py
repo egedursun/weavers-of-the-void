@@ -1,10 +1,8 @@
-from collections.abc import Mapping
-
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.divine import STRUCK_KINDS, WOUND_LABELS
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.culture import CastingRow
 from aerona.db.tables.divine import AvatarRow, DivineWoundRow
 from aerona.db.tables.entities import EntityRow
@@ -26,21 +24,6 @@ from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.recording.record import record
 
 W = DivineWoundKind
-WOUND_LABELS: Mapping[DivineWoundKind, str] = total(
-    DivineWoundKind,
-    {
-        W.SEVERED_DOMAIN: "Severed domain",
-        W.SHATTERED_MANIFESTATION: "Shattered manifestation",
-        W.STOLEN_NAME: "Stolen true name",
-        W.VOID_WOUND: "Wound of the void",
-        W.DRAINED_ESSENCE: "Drained essence",
-        W.LOST_WORSHIPPERS: "Lost worshippers",
-        W.BOUND: "Binding",
-        W.SPLIT_ASPECT: "Split aspect",
-        W.FORGOTTEN_NAME: "Forgotten name",
-    },
-)
-STRUCK_KINDS = (W.SEVERED_DOMAIN, W.SHATTERED_MANIFESTATION, W.STOLEN_NAME, W.DRAINED_ESSENCE, W.LOST_WORSHIPPERS, W.BOUND, W.SPLIT_ASPECT, W.FORGOTTEN_NAME)
 
 
 async def open_wounds(session: AsyncSession, god_id: int, kind: DivineWoundKind | None = None) -> list[DivineWoundRow]:

@@ -4,6 +4,8 @@ from math import ceil
 from sqlalchemy import select
 
 from aerona.catalog.kinds.orders import ECHELON_ORDERS
+from aerona.catalog.life.domain import RESTING
+from aerona.catalog.life.operations import STAFF_ROLES
 from aerona.catalog.operations import ECHELON_LABELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -15,7 +17,7 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass
-from aerona.domain.enums.military import RESTING, ArmyRole, Stance
+from aerona.domain.enums.military import ArmyRole, Stance
 from aerona.domain.enums.operations import EchelonLevel, EchelonOrder
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
@@ -28,7 +30,6 @@ from aerona.engine.services.war import ongoing_wars
 from aerona.rules.registry import Rules
 
 L = EchelonLevel
-STAFF_ROLES = (ArmyRole.SUB_COMMANDER, ArmyRole.QUARTERMASTER)
 
 
 @dataclass

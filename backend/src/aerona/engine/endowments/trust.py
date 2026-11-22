@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.endowments import TOWN_EFFECTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import NumberSystemRow
 from aerona.db.tables.endowments import EndowmentRow
@@ -32,12 +33,6 @@ CAPITAL_YIELD_PCT: dict[EndowmentCapital, int] = {
     EndowmentCapital.RENTS: 110,
 }
 CAPTORS = frozenset({EntityType.FACTION, EntityType.POLITY})
-TOWN_EFFECTS: dict[EndowmentPurpose, tuple[str, int]] = {
-    EndowmentPurpose.RELIEF: ("unrest", -1),
-    EndowmentPurpose.HEALTH: ("sanitation", 1),
-    EndowmentPurpose.WORSHIP: ("piety", 1),
-    EndowmentPurpose.WORKS: ("prosperity", 1),
-}
 LIVE = frozenset({EndowmentState.SERVING, EndowmentState.CAPTURED})
 
 

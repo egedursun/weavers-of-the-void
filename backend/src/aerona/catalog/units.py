@@ -1,17 +1,14 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.catalog.battle_depth import WEAPON_PROFILES, WeaponProfile
 from aerona.core.total import total
 from aerona.domain.enums.demography import MartialStyle
-from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import ArmourType, ShieldType, Tactic, UnitFamily, UnitKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 
 F = UnitFamily
 K = UnitKind
-T = TerrainKind
-W = WeatherKind
 
 
 @dataclass(frozen=True)
@@ -33,7 +30,6 @@ class UnitSpec:
     social_class: SocialClass | None = None
     counters_charge: bool = False
     terror: int = 0
-    terrain: dict[TerrainKind, float] = field(default_factory=dict)
     flying: bool = False
     profile: WeaponProfile | None = None
 
@@ -80,7 +76,7 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
                 2,
                 counters_charge=True,
             ),
-            UnitSpec(K.LIGHT_INFANTRY, F.INFANTRY, "Light infantry", 30, 30, 25, 60, 15, 2, 1, terrain={T.FOREST: 1.2, T.JUNGLE: 1.2, T.HILLS: 1.1}),
+            UnitSpec(K.LIGHT_INFANTRY, F.INFANTRY, "Light infantry", 30, 30, 25, 60, 15, 2, 1),
             UnitSpec(
                 K.SHOCK_INFANTRY,
                 F.INFANTRY,
@@ -135,7 +131,6 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
                 3,
                 ArmourType.PADDED,
                 ShieldType.SMALL,
-                terrain={T.PLAIN: 1.2, T.STEPPE: 1.2},
             ),
             UnitSpec(
                 K.HEAVY_CAVALRY,
@@ -153,13 +148,12 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
                 KnowledgeBranch.METALLURGY,
                 3,
                 SocialClass.NOBLE,
-                terrain={T.PLAIN: 1.3},
             ),
-            UnitSpec(K.MOUNTED_ARCHERS, F.MOUNTED, "Mounted archers", 30, 55, 30, 90, 30, 4, 3, ArmourType.HIDE, terrain={T.STEPPE: 1.3, T.PLAIN: 1.3}),
+            UnitSpec(K.MOUNTED_ARCHERS, F.MOUNTED, "Mounted archers", 30, 55, 30, 90, 30, 4, 3, ArmourType.HIDE),
             UnitSpec(
                 K.MOUNTED_GUNNERS, F.MOUNTED, "Mounted gunners", 35, 65, 30, 85, 30, 5, 3, ArmourType.PADDED, ShieldType.NONE, KnowledgeBranch.METALLURGY, 4
             ),
-            UnitSpec(K.BEAST_RIDERS, F.MOUNTED, "Beast riders", 60, 10, 45, 70, 80, 6, 4, ArmourType.HIDE, terrain={T.DESERT: 1.2}),
+            UnitSpec(K.BEAST_RIDERS, F.MOUNTED, "Beast riders", 60, 10, 45, 70, 80, 6, 4, ArmourType.HIDE),
             UnitSpec(K.SKY_RIDERS, F.MOUNTED, "Sky riders", 60, 30, 40, 120, 60, 9, 6, terror=20, flying=True),
             UnitSpec(
                 K.CHARIOTS,
@@ -175,7 +169,6 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
                 ArmourType.SCALE,
                 branch=KnowledgeBranch.METALLURGY,
                 level=1,
-                terrain={T.PLAIN: 1.2, T.HILLS: 0.6},
             ),
             UnitSpec(K.VEHICLE_CREW, F.VEHICLE, "Vehicle crew", 30, 30, 40, 40, 20, 4, 2, ArmourType.PADDED, branch=KnowledgeBranch.WARFARE, level=2),
             UnitSpec(K.SIEGE_CREW, F.VEHICLE, "Siege crew", 0, 70, 20, 15, 0, 8, 4, branch=KnowledgeBranch.ARCHITECTURE, level=2),
@@ -209,7 +202,6 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
                 ArmourType.BALLISTIC,
                 branch=KnowledgeBranch.METALLURGY,
                 level=8,
-                terrain={T.PLAIN: 1.2, T.STEPPE: 1.2, T.FOREST: 0.8, T.MARSH: 0.6},
             ),
             UnitSpec(
                 K.SPECIAL_FORCES,
@@ -225,7 +217,6 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
                 ArmourType.BALLISTIC,
                 branch=KnowledgeBranch.WARFARE,
                 level=4,
-                terrain={T.FOREST: 1.25, T.JUNGLE: 1.25, T.URBAN: 1.25, T.MOUNTAINS: 1.15},
             ),
             UnitSpec(
                 K.PARTISANS,
@@ -238,7 +229,6 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
                 15,
                 1,
                 1,
-                terrain={T.FOREST: 1.3, T.JUNGLE: 1.3, T.HILLS: 1.2, T.MARSH: 1.2, T.MOUNTAINS: 1.2, T.URBAN: 1.25},
             ),
             UnitSpec(K.PEACEKEEPERS, F.INFANTRY, "Peacekeepers", 35, 25, 55, 40, 25, 3, 2, ArmourType.BALLISTIC, ShieldType.RIOT, KnowledgeBranch.CIVICS, 3),
             UnitSpec(K.MEDICS, F.SPECIAL, "Medics", 5, 5, 25, 45, 10, 3, 2, branch=KnowledgeBranch.MEDICINE, level=2),
@@ -287,49 +277,6 @@ SHIELD_DEFENCE = total(
     ShieldType, {ShieldType.NONE: 0, ShieldType.SMALL: 6, ShieldType.LARGE: 12, ShieldType.TOWER: 18, ShieldType.RIOT: 14, ShieldType.ENERGY: 22}
 )
 
-TERRAIN_EFFECTS: MappingProxyType[TerrainKind, dict[UnitFamily, float]] = MappingProxyType(
-    {
-        T.PLAIN: {F.MOUNTED: 1.3},
-        T.STEPPE: {F.MOUNTED: 1.3},
-        T.FOREST: {F.MOUNTED: 0.5, F.MISSILE: 0.6, F.BEAST: 0.8, F.VEHICLE: 0.6, F.AIR: 0.7, F.SPECIAL: 1.2},
-        T.JUNGLE: {F.MOUNTED: 0.5, F.MISSILE: 0.6, F.BEAST: 0.8, F.VEHICLE: 0.5, F.AIR: 0.6, F.SPECIAL: 1.2},
-        T.HILLS: {F.MOUNTED: 0.8, F.MISSILE: 1.1},
-        T.MOUNTAINS: {F.MOUNTED: 0.3, F.ENGINEER: 0.2, F.BEAST: 0.7, F.VEHICLE: 0.3, F.ELECTRONIC: 0.7},
-        T.HIGH_PASS: {F.MOUNTED: 0.3, F.ENGINEER: 0.2, F.VEHICLE: 0.2},
-        T.MARSH: {F.MOUNTED: 0.4, F.INFANTRY: 0.8, F.BEAST: 0.6, F.VEHICLE: 0.4},
-        T.DESERT: {F.INFANTRY: 0.9},
-        T.TUNDRA: {F.INFANTRY: 0.9, F.MOUNTED: 0.8},
-        T.ICE_SHEET: {F.INFANTRY: 0.8, F.MOUNTED: 0.6},
-        T.RIVER_VALLEY: {F.MOUNTED: 0.9},
-        T.URBAN: {F.MOUNTED: 0.4, F.ENGINEER: 1.2, F.VEHICLE: 0.8, F.SPECIAL: 1.25, F.AIR: 0.8},
-        T.UNDERGROUND: {F.MISSILE: 0.3, F.MOUNTED: 0.2, F.VEHICLE: 0.3, F.AIR: 0.1, F.SPACE: 0.4, F.ELECTRONIC: 0.5},
-        T.CRYSTAL_FIELD: {F.MAGIC: 1.4},
-        T.FLESH: {F.MAGIC: 1.2, F.BEAST: 1.2},
-        T.VOID_SHORE: {F.EXOTIC: 1.4, F.MAGIC: 1.2, F.SPACE: 1.3},
-        T.CANYON: {F.MOUNTED: 0.6, F.MISSILE: 1.2},
-        T.RUIN_FIELD: {F.MOUNTED: 0.7},
-        T.VOLCANIC: {F.INFANTRY: 0.9},
-    }
-)
-DEFENDER_TERRAIN = MappingProxyType({T.HILLS: 1.2, T.MOUNTAINS: 1.5, T.HIGH_PASS: 1.5, T.URBAN: 1.3, T.RIVER_VALLEY: 1.15, T.CANYON: 1.3})
-AMBUSH_TERRAIN = frozenset({T.FOREST, T.JUNGLE, T.MARSH, T.CANYON})
-WEATHER_EFFECTS: MappingProxyType[WeatherKind, dict[UnitFamily, float]] = MappingProxyType(
-    {
-        W.RAIN: {F.MISSILE: 0.75, F.MOUNTED: 0.9},
-        W.DOWNPOUR: {F.MISSILE: 0.5, F.MOUNTED: 0.7},
-        W.STORM: {F.MISSILE: 0.5, F.MOUNTED: 0.7, F.VEHICLE: 0.6, F.AIR: 0.4, F.ELECTRONIC: 0.7},
-        W.FOG: {F.MISSILE: 0.4, F.AIR: 0.5},
-        W.SNOW: {F.MISSILE: 0.7, F.MOUNTED: 0.8},
-        W.BLIZZARD: {F.MISSILE: 0.5, F.MOUNTED: 0.6, F.INFANTRY: 0.8},
-        W.HEAT_WAVE: {F.INFANTRY: 0.85, F.MOUNTED: 0.85},
-        W.SANDSTORM: {F.MISSILE: 0.4, F.AIR: 0.5},
-        W.HAIL: {F.MISSILE: 0.7},
-        W.MAGIC_STORM: {F.MAGIC: 1.5, F.ELECTRONIC: 0.5},
-        W.ASH_FALL: {F.MISSILE: 0.7},
-        W.VOID_RAIN: {F.EXOTIC: 1.3},
-        W.ECLIPSE_DARK: {F.MISSILE: 0.6},
-    }
-)
 BURROWERS = frozenset({K.SAPPERS, K.SUMMONED_HOST})
 WEAPON_EDGE = MappingProxyType(
     {
@@ -389,7 +336,6 @@ KIND_WEAPONS = MappingProxyType(
         K.DROP_TROOPS: ("firearm", "launcher"),
     }
 )
-HEAVY_WEATHER = frozenset({W.HEAT_WAVE, W.SNOW, W.BLIZZARD})
 
 TACTIC_COUNTERS: MappingProxyType[Tactic, frozenset[Tactic]] = total(
     Tactic,
@@ -418,21 +364,6 @@ TACTIC_COUNTERS: MappingProxyType[Tactic, frozenset[Tactic]] = total(
         Tactic.DROP_ASSAULT: frozenset({Tactic.RIVER_DEFENCE, Tactic.HOLD_LINE, Tactic.ARTILLERY_BARRAGE}),
         Tactic.INFILTRATION: frozenset({Tactic.HOLD_LINE, Tactic.ARTILLERY_BARRAGE, Tactic.ELECTRONIC_WARFARE}),
     },
-)
-TACTIC_TERRAIN: MappingProxyType[Tactic, frozenset[TerrainKind]] = MappingProxyType(
-    {
-        Tactic.FLANK_CAVALRY: frozenset({T.PLAIN, T.STEPPE, T.DESERT}),
-        Tactic.FEIGNED_RETREAT: frozenset({T.PLAIN, T.STEPPE}),
-        Tactic.AMBUSH: AMBUSH_TERRAIN,
-        Tactic.RIVER_DEFENCE: frozenset({T.RIVER_VALLEY}),
-        Tactic.SHIELD_WALL: frozenset({T.PLAIN, T.HILLS, T.HIGH_PASS, T.COAST}),
-        Tactic.MISSILE_ATTRITION: frozenset({T.HILLS, T.PLAIN, T.CANYON}),
-        Tactic.DOUBLE_ENVELOPMENT: frozenset({T.PLAIN, T.STEPPE}),
-        Tactic.ARMOURED_THRUST: frozenset({T.PLAIN, T.STEPPE, T.DESERT}),
-        Tactic.GUERRILLA: AMBUSH_TERRAIN | frozenset({T.URBAN, T.MOUNTAINS, T.HILLS}),
-        Tactic.BLOCKADE: frozenset({T.COAST, T.RIVER_VALLEY}),
-        Tactic.INFILTRATION: frozenset({T.URBAN, T.FOREST, T.JUNGLE}),
-    }
 )
 SUCCESSORS: MappingProxyType[UnitKind, UnitKind] = MappingProxyType(
     {

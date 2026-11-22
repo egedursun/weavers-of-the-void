@@ -3,6 +3,7 @@ from dataclasses import replace
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.collective import CAREER_ROLES
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.intimacy import ChildRecognitionRow, IntimacyNormRow, LegitimacyRuleRow, ReproductiveCourseRow, RestraintCustomRow
@@ -30,7 +31,7 @@ from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.polity import OathKind, OathStatus
 from aerona.domain.enums.relations import RelationType
 from aerona.domain.models.entity_stats import HouseStats
-from aerona.engine.collective.roles import CAREER_ROLES, career_open
+from aerona.engine.collective.roles import career_open
 from aerona.engine.context import TickContext
 from aerona.engine.intimacy.course import birth_course
 from aerona.engine.intimacy.legitimacy import legitimacy_of, legitimate_heirs, parent_union

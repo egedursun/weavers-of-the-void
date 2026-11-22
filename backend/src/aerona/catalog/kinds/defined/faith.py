@@ -35,9 +35,9 @@ BINDING_KIND = total(
             checked_by=("engine.faith.souls.possess",),
             used_by=("engine.faith.souls.take_host", "engine.lore.rites.do_raise", "engine.lore.rites.do_summon"),
         ),
-        BindingKind.REALM: Defined("Realm", checked_by=("engine.faith.spirit_bonds.WIDER_KEEPS",), used_by=("engine.faith.spirit_bonds.wider_binding",)),
-        BindingKind.NETWORK: Defined("Network", checked_by=("engine.faith.spirit_bonds.WIDER_KEEPS",), used_by=("engine.faith.spirit_bonds.wider_binding",)),
-        BindingKind.LINE: Defined("Line", checked_by=("engine.faith.spirit_bonds.WIDER_KEEPS",), used_by=("engine.faith.spirit_bonds.wider_binding",)),
+        BindingKind.REALM: Defined("Realm", checked_by=(), used_by=("engine.faith.spirit_bonds.keep_realm", "engine.faith.spirit_bonds.wider_binding")),
+        BindingKind.NETWORK: Defined("Network", checked_by=(), used_by=("engine.faith.spirit_bonds.keep_network", "engine.faith.spirit_bonds.wider_binding")),
+        BindingKind.LINE: Defined("Line", checked_by=(), used_by=("engine.faith.spirit_bonds.keep_line", "engine.faith.spirit_bonds.wider_binding")),
     },
 )
 
@@ -68,9 +68,10 @@ JUDGEMENT_DOCTRINE = total(
     {
         JudgementDoctrine.DEEDS: Defined(
             "Deeds",
-            checked_by=("engine.faith.doctrine.rebirth_path_of", "engine.faith.judgement.score_of", "engine.faith.souls.fear_of_torment"),
+            checked_by=("engine.faith.judgement.score_of", "engine.faith.souls.fear_of_torment"),
             used_by=(
                 "api.routers.faith.doctrine",
+                "catalog.life.faith.REBIRTH_PATH_OF_JUDGEMENT_DOCTRINES",
                 "catalog.tenets.DOMAIN_JUDGEMENT",
                 "db.tables.faith.CultDoctrineRow",
                 "engine.divine.foreign.old_god_doctrine",
@@ -79,7 +80,9 @@ JUDGEMENT_DOCTRINE = total(
             ),
         ),
         JudgementDoctrine.FAITH: Defined(
-            "Faith", checked_by=("engine.faith.doctrine.rebirth_path_of", "engine.faith.judgement.score_of"), used_by=("engine.faith.doctrine.judgement_of",)
+            "Faith",
+            checked_by=("engine.faith.judgement.score_of",),
+            used_by=("catalog.life.faith.REBIRTH_PATH_OF_JUDGEMENT_DOCTRINES", "engine.faith.doctrine.judgement_of"),
         ),
         JudgementDoctrine.RITE: Defined("Rite", checked_by=("engine.faith.judgement.judge", "engine.faith.judgement.score_of"), used_by=()),
         JudgementDoctrine.FAVOUR: Defined("Favour", checked_by=("engine.faith.judgement.score_of",), used_by=("engine.faith.control.judge_soul",)),

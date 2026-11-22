@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.cosmography import BEING_MODEL, EMBODIED, PHENOMENON_MODEL, SCOPE_SPREAD, SENSE_REACH
+from aerona.catalog.life.environment import WORLD_SOIL
 from aerona.catalog.preservation import PRESERVATION
 from aerona.catalog.travel import TRAVEL_MODEL, medium_of
 from aerona.core.errors import ValidationFailedError
@@ -27,7 +28,7 @@ from aerona.engine.economy.cargo import spoilage
 from aerona.engine.economy.control_depth import MoneyShape, NewCoin, check_money, create_currency, reshape_currency
 from aerona.engine.economy.convoys import preservation_for
 from aerona.engine.economy.money import strain
-from aerona.engine.environment.profile import SOIL_FERTILITY, WORLD_SOIL
+from aerona.engine.environment.profile import SOIL_FERTILITY
 from aerona.engine.phases.travel import MEDIUM_EVENTS
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import set_stats

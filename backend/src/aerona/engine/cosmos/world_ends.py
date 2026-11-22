@@ -1,11 +1,13 @@
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.cosmos import CAUSE_END, END_WORLD_WORLD_ENDS
+from aerona.catalog.life_traits import WORLD_END_TRAITS, having
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
-from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -22,6 +24,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.life_traits import WorldEndTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, SkyEventKind, StarType, WorldType
@@ -35,8 +38,8 @@ from aerona.engine.primitives.records import retire_in
 from aerona.engine.recording.record import StepDraft, record
 
 E = WorldEnd
-LIFELESS = frozenset({E.SHATTERED, E.CONSUMED, E.FROZEN_DEAD, E.SUNK_INTO_VOID})
-GONE_FROM_SKY = frozenset({E.CONSUMED, E.SUNK_INTO_VOID, E.FORGOTTEN})
+LIFELESS = having(WORLD_END_TRAITS, WorldEndTrait.LIFELESS)
+GONE_FROM_SKY = having(WORLD_END_TRAITS, WorldEndTrait.GONE_FROM_SKY)
 LIVES = frozenset(
     {
         EntityType.PEOPLE,
@@ -147,7 +150,7 @@ async def end_world(ctx: TickContext, world: WorldRow, state: WorldEnd, cause: W
     if state is E.TRANSFIGURED and new_type is not None:
         row.new_type = new_type
         world.world_type = new_type
-    if state in {E.SHATTERED, E.TRANSFIGURED}:
+    if state in END_WORLD_WORLD_ENDS:
         await reset_view(ctx.session, ctx.rules, world, ctx.epoch)
     await record(
         ctx,
@@ -183,6 +186,13 @@ async def dark_since(ctx: TickContext, star: StarRow) -> int:
     return int(fell) if fell is not None else star.created_epoch
 
 
+Sign = Callable[[TickContext, WorldRow], Awaitable[bool]]
+
+
+CAUSE_SIGN: Handlers[WorldEndCause, Sign] = Handlers(WorldEndCause)
+
+
+@CAUSE_SIGN.on(WorldEndCause.STAR_DEATH)
 async def frozen_under(ctx: TickContext, world: WorldRow) -> bool:
     star = await star_of(ctx, world)
     if star is None or star.star_type not in EXTINGUISHED_STAR_TYPES:
@@ -194,9 +204,9 @@ async def frozen_under(ctx: TickContext, world: WorldRow) -> bool:
 
 GIANTS = frozenset({StarType.RED_GIANT, StarType.YELLOW_GIANT, StarType.RED_SUPERGIANT, StarType.BLUE_SUPERGIANT, StarType.HYPERGIANT})
 SOCIETIES = (EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL)
-Sign = Callable[[TickContext, WorldRow], Awaitable[bool]]
 
 
+@CAUSE_SIGN.on(WorldEndCause.STAR_GIANT)
 async def swallowed_by_giant(ctx: TickContext, world: WorldRow) -> bool:
     star = await star_of(ctx, world)
     if star is None or star.star_type not in GIANTS or ctx.epoch - star.created_epoch < ctx.rules.world_ends.giant_epochs:
@@ -205,6 +215,7 @@ async def swallowed_by_giant(ctx: TickContext, world: WorldRow) -> bool:
     return planet.orbit * PERCENT <= ctx.rules.world_ends.giant_reach_pct
 
 
+@CAUSE_SIGN.on(WorldEndCause.IMPACT)
 async def struck(ctx: TickContext, world: WorldRow) -> bool:
     comet = await ctx.session.scalar(
         select(SkyEventRow.id).where(SkyEventRow.world_id == world.id, SkyEventRow.kind == SkyEventKind.COMET, SkyEventRow.epoch == ctx.epoch).limit(1)
@@ -212,11 +223,13 @@ async def struck(ctx: TickContext, world: WorldRow) -> bool:
     return comet is not None and ctx.rng(f"world_end.impact.{world.id}.{ctx.epoch}").chance(ctx.rules.world_ends.impact_pct)
 
 
+@CAUSE_SIGN.on(WorldEndCause.VOID)
 async def torn_open(ctx: TickContext, world: WorldRow) -> bool:
     rifts = await ctx.session.scalar(select(func.count()).select_from(RiftRow).where(RiftRow.world_id == world.id, RiftRow.state.in_(list(OPEN_RIFT_STATES))))
     return int(rifts or 0) >= ctx.rules.world_ends.void_rifts
 
 
+@CAUSE_SIGN.on(WorldEndCause.OBLIVION)
 async def forsaken(ctx: TickContext, world: WorldRow) -> bool:
     if ctx.epoch - world.created_epoch < ctx.rules.world_ends.forgotten_epochs:
         return False
@@ -227,34 +240,13 @@ async def forsaken(ctx: TickContext, world: WorldRow) -> bool:
     return living is None and once is not None and world.id != cosmos.primary_world_id
 
 
+@CAUSE_SIGN.on(WorldEndCause.DIVINE_WRATH)
+@CAUSE_SIGN.on(WorldEndCause.BELIEF_DRIFT)
 async def never_by_itself(_ctx: TickContext, _world: WorldRow) -> bool:
     return False
 
 
-CAUSE_END: Mapping[WorldEndCause, WorldEnd] = total(
-    WorldEndCause,
-    {
-        WorldEndCause.IMPACT: E.SHATTERED,
-        WorldEndCause.DIVINE_WRATH: E.SHATTERED,
-        WorldEndCause.STAR_GIANT: E.CONSUMED,
-        WorldEndCause.STAR_DEATH: E.FROZEN_DEAD,
-        WorldEndCause.VOID: E.SUNK_INTO_VOID,
-        WorldEndCause.OBLIVION: E.FORGOTTEN,
-        WorldEndCause.BELIEF_DRIFT: E.TRANSFIGURED,
-    },
-)
-CAUSE_SIGN: Mapping[WorldEndCause, Sign] = total(
-    WorldEndCause,
-    {
-        WorldEndCause.IMPACT: struck,
-        WorldEndCause.DIVINE_WRATH: never_by_itself,
-        WorldEndCause.STAR_GIANT: swallowed_by_giant,
-        WorldEndCause.STAR_DEATH: frozen_under,
-        WorldEndCause.VOID: torn_open,
-        WorldEndCause.OBLIVION: forsaken,
-        WorldEndCause.BELIEF_DRIFT: never_by_itself,
-    },
-)
+CAUSE_SIGN.seal()
 
 
 async def keep_world_ends(ctx: TickContext, tally: EndingTally) -> None:

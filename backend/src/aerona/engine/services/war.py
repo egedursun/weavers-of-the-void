@@ -6,6 +6,8 @@ from enum import StrEnum
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import REVOLT_CAUSES
+from aerona.catalog.life_traits import CAPTIVE_STATUS_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import ARMY_NAME_TEMPLATE, LOG_FLOOR, WAR_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
@@ -21,10 +23,11 @@ from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, TributeRow,
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
+from aerona.domain.enums.life_traits import CaptiveStatusTrait
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
-from aerona.domain.enums.war import REVOLT_CAUSES, CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
+from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
 from aerona.engine.body.book import effective
 from aerona.engine.body.customs import people_of
@@ -670,8 +673,8 @@ async def held_captive(session: AsyncSession, mortal_id: int) -> CaptiveRow | No
     return found
 
 
-FREEING_STATUSES = frozenset({CaptiveStatus.RANSOMED, CaptiveStatus.ESCAPED, CaptiveStatus.RESCUED, CaptiveStatus.RELEASED})
-RESCUE_STATUSES = frozenset({CaptiveStatus.RANSOMED, CaptiveStatus.RESCUED})
+FREEING_STATUSES = having(CAPTIVE_STATUS_TRAITS, CaptiveStatusTrait.FREEING_STATUSES)
+RESCUE_STATUSES = having(CAPTIVE_STATUS_TRAITS, CaptiveStatusTrait.RESCUE_STATUSES)
 
 
 async def take_captive(ctx: TickContext, captor: EntityRow, captive: EntityRow, war: WarRow | None, *, description: str, home_id: int | None) -> CaptiveRow:

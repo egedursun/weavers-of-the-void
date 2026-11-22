@@ -1,11 +1,12 @@
 from collections import defaultdict
-from collections.abc import Mapping
 from dataclasses import dataclass
 from itertools import pairwise
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.relations import FACTION_GROUPS
+from aerona.catalog.life_traits import GROUP_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
@@ -17,7 +18,7 @@ from aerona.db.tables.relations import GroupRankRow, SocialCircleRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.life_traits import GroupKindTrait
 from aerona.domain.enums.mind import Facet, ThoughtKind
 from aerona.domain.enums.relations import GroupKind, InteractionKind
 from aerona.engine.body.book import effective
@@ -32,14 +33,7 @@ from aerona.engine.relations.book import WARLIKE, ensure_relation, shift
 from aerona.engine.relations.interactions import SocialTally, interact, load_scene
 
 FACET_SPAN = 50
-LEADING = frozenset({GroupKind.CIRCLE, GroupKind.WARBAND, GroupKind.BAND, GroupKind.CELL})
-FACTION_GROUPS: Mapping[GroupKind, frozenset[FactionKind]] = {
-    GroupKind.CELL: frozenset({FactionKind.SECRET_SOCIETY, FactionKind.ASSASSINS, FactionKind.REBELS}),
-    GroupKind.BAND: frozenset(
-        {FactionKind.BANDITS, FactionKind.ROUTE_RAIDERS, FactionKind.CRIME_FAMILY, FactionKind.THIEVES_GUILD, FactionKind.SMUGGLING_RING}
-    ),
-    GroupKind.TEAM: frozenset({FactionKind.CHARTERED_COMPANY, FactionKind.ENGINEERS_SOCIETY, FactionKind.SCHOLARS_ACADEMY, FactionKind.CLUB}),
-}
+LEADING = having(GROUP_KIND_TRAITS, GroupKindTrait.LEADING)
 
 
 @dataclass

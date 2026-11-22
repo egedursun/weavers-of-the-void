@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import PACKAGE_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.bonds import BondRow
@@ -12,10 +13,11 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.transform import TransformationRow
 from aerona.db.types import PydanticJSON
-from aerona.domain.enums.affliction import PackageKind, Transmission
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.life_traits import PackageKindTrait
 from aerona.domain.enums.transform import TransformKind, TransformState
 from aerona.domain.models.entity_stats import BeastStats, MortalStats
 from aerona.engine.body.afflictions import spec_of
@@ -27,7 +29,7 @@ from aerona.engine.primitives.stats import stat
 from aerona.engine.transform.ledger import Ledger
 from aerona.engine.transform.moves import bind, end, move_bonds
 
-BEAST_CURSES = frozenset({PackageKind.LYCANTHROPY, PackageKind.WARPING, PackageKind.HUNGER_CURSE})
+BEAST_CURSES = having(PACKAGE_KIND_TRAITS, PackageKindTrait.BEAST_CURSES)
 
 
 async def worshipping(ctx: TickContext, node_id: int) -> list[int]:

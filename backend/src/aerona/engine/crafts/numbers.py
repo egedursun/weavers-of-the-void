@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.crafts import SCHOOLING
+from aerona.catalog.life_traits import TECHNIQUE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import UNTAUGHT_NUMERACY, NumberSystemRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -10,6 +12,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.crafts import Notation, NumberMilestone
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import TechniqueTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.context import TickContext
@@ -19,8 +22,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import StepDraft, record
 
 BASES = (10, 12, 20, 60)
-SCHOOLING = (Technique.ALPHABET, Technique.BUREAUCRACY, Technique.UNIVERSITIES, Technique.DOUBLE_ENTRY)
-PLACE_VALUE_RECKONING = frozenset({Technique.DOUBLE_ENTRY, Technique.COMPUTATION})
+PLACE_VALUE_RECKONING = having(TECHNIQUE_TRAITS, TechniqueTrait.PLACE_VALUE_RECKONING)
 
 
 @dataclass

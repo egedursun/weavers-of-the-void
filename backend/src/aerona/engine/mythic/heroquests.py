@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.mythic import QUEST_SKILLS
 from aerona.catalog.mythic import ARCHETYPE_REALMS, ARCHETYPE_SKILLS, REALM_PHRASES, trial_at
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
@@ -51,7 +52,6 @@ from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import record
 from aerona.engine.transform.bodies import lift_fallen
 
-QUEST_SKILLS = (SkillKind.RITUAL, SkillKind.LORE, SkillKind.PROPHECY, SkillKind.SPELLCRAFT, SkillKind.LEADERSHIP)
 ITEM_POWER = 4
 CURSED = frozenset({Transmission.CURSE, Transmission.RITE})
 

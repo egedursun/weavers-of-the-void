@@ -1,5 +1,6 @@
 from sqlalchemy import delete, or_, select
 
+from aerona.catalog.life.military import CAUSE_AIMS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an, spoken
 from aerona.db.repositories.bonds import BondRepository
@@ -36,36 +37,6 @@ from aerona.engine.primitives.records import retire_in
 from aerona.engine.services.war import held_captive, take_captive
 
 A = WarAimKind
-CAUSE_AIMS: dict[WarCause, tuple[WarAimKind, ...]] = {
-    WarCause.HOSTILITY: (A.CONQUER_REGION, A.TRIBUTE),
-    WarCause.UPRISING: (A.LIBERATE, A.REVENGE),
-    WarCause.TRIBUTE_REVOLT: (A.LIBERATE, A.HUMILIATE),
-    WarCause.INCITED: (A.LOOT, A.HUMILIATE),
-    WarCause.DECLARED: (A.CONQUER_REGION, A.VASSALISE),
-    WarCause.BETRAYAL: (A.REVENGE, A.HUMILIATE),
-    WarCause.CONQUEST_JOURNEY: (A.CONQUER_REGION, A.SEIZE_SETTLEMENT),
-    WarCause.FOREIGN_GOD: (A.CONVERT, A.DESTROY_CULT),
-    WarCause.INDEPENDENCE: (A.LIBERATE, A.TRIBUTE),
-    WarCause.VENDETTA: (A.REVENGE, A.LOOT),
-    WarCause.GRUDGE: (A.HUMILIATE, A.REVENGE),
-    WarCause.DIVINE_GRUDGE: (A.CONVERT, A.HUMILIATE),
-    WarCause.RIVALRY: (A.HUMILIATE, A.VASSALISE),
-    WarCause.DEBT: (A.TRIBUTE, A.LOOT),
-    WarCause.ESPIONAGE: (A.HUMILIATE, A.TRIBUTE),
-    WarCause.SABOTAGE: (A.REVENGE, A.TRIBUTE),
-    WarCause.ENVY: (A.LOOT, A.SEIZE_RESOURCE),
-    WarCause.SCHISM: (A.CONVERT, A.DESTROY_CULT),
-    WarCause.BEAST: (A.LOOT, A.REVENGE),
-    WarCause.RESOURCE: (A.SEIZE_RESOURCE, A.CONQUER_REGION),
-    WarCause.IDEOLOGY: (A.CHANGE_GOVERNMENT, A.LIBERATE),
-    WarCause.TRADE_ROUTE: (A.SEIZE_ROUTE, A.TRIBUTE),
-    WarCause.CLAIM: (A.PRESS_CLAIM, A.CONQUER_REGION),
-    WarCause.HOLY_WAR: (A.CONVERT, A.DESTROY_CULT),
-    WarCause.SUCCESSION: (A.PRESS_CLAIM, A.HUMILIATE),
-    WarCause.RAID: (A.LOOT,),
-    WarCause.LIBERATION: (A.LIBERATE, A.REVENGE),
-    WarCause.PUNITIVE: (A.REVENGE, A.TRIBUTE),
-}
 DEFENDER_AIMS = (A.HUMILIATE, A.LOOT)
 REGION_AIMS = frozenset({A.CONQUER_REGION, A.SEIZE_RESOURCE, A.SEIZE_NEXUS})
 

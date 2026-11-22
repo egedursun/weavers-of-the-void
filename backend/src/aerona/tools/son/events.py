@@ -3,6 +3,8 @@ from typing import Any, NoReturn
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.catalog.life.tools import DISTORTION_ROW_RUMOUR_DISTORTIONS
+from aerona.catalog.life_traits import RUMOUR_DISTORTION_TRAITS, having
 from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import RumourRow
@@ -16,6 +18,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import RumourChannel
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.life_traits import RumourDistortionTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import RumourDistortion, StepAction, StepOutcome
 from aerona.engine.lore.account_text import account_text, difference_text
@@ -31,8 +34,8 @@ from aerona.tools.framework.validation import fail
 READ = ToolMeta(ActionKind.OTHER, no_cost, read_only=True)
 TELL = ToolMeta(ActionKind.INFLUENCE, son_standard_action)
 DISTORTIONS_MAX = 6
-SWAPS = frozenset({RumourDistortion.DOER_SWAPPED, RumourDistortion.TARGET_SWAPPED, RumourDistortion.ROLE_CHANGED})
-STEP_KINDS = frozenset({RumourDistortion.STEP_ADDED, RumourDistortion.STEP_DROPPED})
+SWAPS = having(RUMOUR_DISTORTION_TRAITS, RumourDistortionTrait.SWAPS)
+STEP_KINDS = having(RUMOUR_DISTORTION_TRAITS, RumourDistortionTrait.STEP_KINDS)
 
 
 class RecallEventInput(ToolInput):
@@ -144,7 +147,7 @@ async def distortion_row(call: SonCall, incident: IncidentRow, telling: Telling,
         return await swapped(call, telling, given, row)
     if given.kind in STEP_KINDS or given.step_id is not None:
         return await stepped(call, incident, given, row)
-    if given.kind in (RumourDistortion.AMOUNT_CHANGED, RumourDistortion.OUTCOME_CHANGED):
+    if given.kind in DISTORTION_ROW_RUMOUR_DISTORTIONS:
         return factual(telling, given, row)
     return await framed(call, given, row)
 

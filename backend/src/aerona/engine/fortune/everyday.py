@@ -1,16 +1,17 @@
-from collections.abc import Mapping
 from dataclasses import dataclass
 
+from aerona.catalog.life.fortune import CHILDHOOD, EVERYDAY, HARMED, SPORTING, WEATHER, WORKING
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, MISHAP_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an, spoken
 from aerona.core.random import SeededRandom
-from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import DamageType, HarmCause
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.folkways import MishapKind
+from aerona.domain.enums.life_traits import LifeStageTrait, MishapKindTrait
 from aerona.domain.enums.mortal import LifeStage
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.body.hits import Harm
@@ -23,76 +24,12 @@ from aerona.engine.mortal.standing import add_stress
 from aerona.engine.primitives.naming import seed_of
 
 PER_MIL = 1000
-FRAIL = frozenset({LifeStage.INFANT, LifeStage.CHILD, LifeStage.ELDER, LifeStage.ANCIENT})
+FRAIL = having(LIFE_STAGE_TRAITS, LifeStageTrait.CARED_FOR)
 DANGEROUS = frozenset(
     {MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.HUNTER, MortalRole.EXPLORER, MortalRole.CAPTAIN, MortalRole.PILOT, MortalRole.ENGINEER}
 )
-HARMED: Mapping[MishapKind, DamageType | None] = total(
-    MishapKind,
-    {
-        MishapKind.ILLNESS: None,
-        MishapKind.CROP_FAILURE: None,
-        MishapKind.CHILD_DEATH: None,
-        MishapKind.LIVESTOCK_DEATH: None,
-        MishapKind.ACCIDENT: DamageType.BLUNT,
-        MishapKind.BAD_LUCK: None,
-        MishapKind.FALL: DamageType.BLUNT,
-        MishapKind.CRUSH: DamageType.BLUNT,
-        MishapKind.CUT: DamageType.CUT,
-        MishapKind.BURN: DamageType.FIRE,
-        MishapKind.SCALD: DamageType.FIRE,
-        MishapKind.DROWNING: DamageType.COLD,
-        MishapKind.BEAST: DamageType.PIERCE,
-        MishapKind.TOOL: DamageType.CUT,
-        MishapKind.MACHINE: DamageType.CUT,
-        MishapKind.VEHICLE: DamageType.BLUNT,
-        MishapKind.COLLAPSE: DamageType.BLUNT,
-        MishapKind.HOUSE_FIRE: DamageType.FIRE,
-        MishapKind.POISONING: DamageType.CHEMICAL,
-        MishapKind.CHOKING: DamageType.BLUNT,
-        MishapKind.EXPOSURE: DamageType.COLD,
-        MishapKind.LIGHTNING: DamageType.ELECTRIC,
-        MishapKind.SPORT: DamageType.BLUNT,
-        MishapKind.BRAWL: DamageType.BLUNT,
-        MishapKind.LOST_WAY: None,
-        MishapKind.STORES_SPOILED: None,
-        MishapKind.GOODS_LOST: None,
-        MishapKind.PURSE_LOST: None,
-        MishapKind.THEFT_SUFFERED: None,
-        MishapKind.TOOL_BROKEN: None,
-        MishapKind.NEAR_MISS: None,
-    },
-)
-LOSSES = frozenset({MishapKind.STORES_SPOILED, MishapKind.GOODS_LOST, MishapKind.PURSE_LOST, MishapKind.THEFT_SUFFERED, MishapKind.TOOL_BROKEN})
-FRIGHTS = frozenset({MishapKind.NEAR_MISS, MishapKind.LOST_WAY})
-EVERYDAY = (
-    MishapKind.FALL,
-    MishapKind.CUT,
-    MishapKind.BURN,
-    MishapKind.SCALD,
-    MishapKind.CRUSH,
-    MishapKind.BEAST,
-    MishapKind.TOOL,
-    MishapKind.VEHICLE,
-    MishapKind.COLLAPSE,
-    MishapKind.HOUSE_FIRE,
-    MishapKind.POISONING,
-    MishapKind.CHOKING,
-    MishapKind.DROWNING,
-    MishapKind.SPORT,
-    MishapKind.BRAWL,
-    MishapKind.LOST_WAY,
-    MishapKind.STORES_SPOILED,
-    MishapKind.GOODS_LOST,
-    MishapKind.PURSE_LOST,
-    MishapKind.THEFT_SUFFERED,
-    MishapKind.TOOL_BROKEN,
-    MishapKind.NEAR_MISS,
-)
-WORKING = (MishapKind.TOOL, MishapKind.MACHINE, MishapKind.CRUSH, MishapKind.COLLAPSE, MishapKind.BEAST)
-CHILDHOOD = (MishapKind.FALL, MishapKind.DROWNING, MishapKind.BURN, MishapKind.SCALD, MishapKind.CHOKING, MishapKind.POISONING)
-WEATHER = (MishapKind.EXPOSURE, MishapKind.LIGHTNING)
-SPORTING = (MishapKind.SPORT, MishapKind.BRAWL)
+LOSSES = having(MISHAP_KIND_TRAITS, MishapKindTrait.LOSSES)
+FRIGHTS = having(MISHAP_KIND_TRAITS, MishapKindTrait.FRIGHTS)
 UNEXPOSED = Exposure()
 
 

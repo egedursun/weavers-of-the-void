@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.securities import FOLLOW_LOAN_LOAN_STATUSS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
@@ -82,7 +83,7 @@ async def follow_loan(ctx: TickContext, bond: IssuedSecurityRow, tally: Securiti
         return
     if loan.status is LoanStatus.DEFAULTED:
         await default_bond(ctx, bond, "the crown would not pay", tally)
-    elif loan.status in (LoanStatus.REPAID, LoanStatus.FORGIVEN):
+    elif loan.status in FOLLOW_LOAN_LOAN_STATUSS:
         await mature(ctx, bond, tally)
     else:
         rows = await holdings_of(ctx.session, bond.id)

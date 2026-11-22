@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.catalog.nature_kinds50 import PRESERVATIONS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
@@ -21,11 +22,11 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind, TemperatureBand
 from aerona.domain.enums.fossil import FossilReading, FossilSource, Preservation
+from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
-from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.mind.book import values_for
@@ -34,7 +35,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import scale_stat
 from aerona.engine.recording.record import record
 
-COLD_WORLDS = frozenset({WorldType.ICE, WorldType.ICE_SHELL})
+COLD_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.COLD_WORLDS)
 DIGGINGS = (StructureKind.MINE, StructureKind.QUARRY)
 UPHEAVALS = (EngineKind.EARTHQUAKE, EngineKind.FLOOD)
 FINDERS = (EntityType.SETTLEMENT, EntityType.PEOPLE)

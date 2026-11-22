@@ -12,6 +12,7 @@ from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.text import sanitize
 from aerona.catalog.domains import DOMAIN_LABELS
+from aerona.catalog.life.divine import MOTION_LABELS
 from aerona.catalog.rarities import RARITY_LABELS
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
@@ -40,7 +41,7 @@ from aerona.domain.enums.war import WarStatus
 from aerona.domain.models.records import CouncilBallot, CouncilMinutes, CouncilSpeech
 from aerona.engine.divine.council_order import carried, foreign_members, foreign_vote, procedure_of, read_procedure, weight_of
 from aerona.engine.divine.motions import Motion
-from aerona.engine.divine.rulings import MOTION_LABELS, enact, leaning, record
+from aerona.engine.divine.rulings import enact, leaning, record
 from aerona.engine.primitives.doom import step_doom
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.recording.record import StepDraft

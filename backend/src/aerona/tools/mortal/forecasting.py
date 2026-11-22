@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.catalog.life.forecasting import NEEDS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.environment import ForcedWeatherRow
@@ -14,7 +15,7 @@ from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, Weath
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.economy.purse import take_coin
-from aerona.engine.forecasting.works import EPOCH_STRENGTH, NEEDS
+from aerona.engine.forecasting.works import EPOCH_STRENGTH
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import knows
 from aerona.engine.primitives.naming import seed_of

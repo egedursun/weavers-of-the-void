@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import MIND_UPKEEP_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.entities import EntityRow
@@ -10,6 +11,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPart
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import MindUpkeepTrait
 from aerona.domain.enums.made import AugmentKind, AugmentMake, AugmentSlot, EffectTarget, MadeMindStance
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.minds import MindUpkeep
@@ -32,7 +34,7 @@ from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
 
 BEARER_TYPES = frozenset({EntityType.MORTAL, EntityType.BEAST, EntityType.SPIRIT, EntityType.COSMIC_BEING})
-SELF_KEPT = frozenset({MindUpkeep.NONE, MindUpkeep.FOOD})
+SELF_KEPT = having(MIND_UPKEEP_TRAITS, MindUpkeepTrait.SELF_KEPT)
 REJECTING = frozenset({MadeMindStance.ABOMINATION})
 
 

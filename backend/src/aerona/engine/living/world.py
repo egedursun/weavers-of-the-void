@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life_traits import LINE_TRAIT_TRAITS, having
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
@@ -10,6 +11,7 @@ from aerona.db.tables.living import LivingLineRow, LivingLineTraitRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.life_traits import LineTraitTrait
 from aerona.domain.enums.living import LineTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import PeopleStats
@@ -21,7 +23,7 @@ from aerona.engine.recording.record import record
 
 PEOPLE_POWER = 8
 RISEN_SHARE = 10
-SHAPING_TRAITS = frozenset({LineTrait.CLIMATE_TOLERANCE, LineTrait.HARDINESS, LineTrait.YIELD})
+SHAPING_TRAITS = having(LINE_TRAIT_TRAITS, LineTraitTrait.SHAPING_TRAITS)
 
 
 async def rise(ctx: TickContext, line: LivingLineRow, species: EntityRow) -> EntityRow:

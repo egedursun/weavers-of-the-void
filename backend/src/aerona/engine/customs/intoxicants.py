@@ -1,8 +1,10 @@
-from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.customs import KEEP_INTOXICATION_INTOXICANT_USES, KEEP_INTOXICATION_INTOXICANT_USES_2, PACKAGES
+from aerona.catalog.life.mind import OPEN_STAGES
+from aerona.catalog.life_traits import INTOXICANT_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.customs import IntoxicantCustomRow
 from aerona.db.tables.entities import EntityRow
@@ -12,11 +14,12 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sacred import MysticRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.affliction import PackageKind, Transmission
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.customs import Intoxicant, IntoxicantUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import IntoxicantTrait
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
@@ -27,7 +30,6 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import stored_values
-from aerona.engine.mind.grief import OPEN_STAGES
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import seed_of
@@ -35,17 +37,8 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft, record
 
-PACKAGES: Mapping[Intoxicant, PackageKind] = {
-    Intoxicant.BREW: PackageKind.DRINK_DEPENDENCE,
-    Intoxicant.WINE: PackageKind.DRINK_DEPENDENCE,
-    Intoxicant.SPIRITS: PackageKind.DRINK_DEPENDENCE,
-    Intoxicant.SMOKE: PackageKind.DRUG_DEPENDENCE,
-    Intoxicant.LEAF: PackageKind.DRUG_DEPENDENCE,
-    Intoxicant.FUNGUS: PackageKind.DRUG_DEPENDENCE,
-    Intoxicant.ESSENCE: PackageKind.VIS_DEPENDENCE,
-}
 HUNDRED = 100
-DRINKS = frozenset({Intoxicant.BREW, Intoxicant.WINE, Intoxicant.SPIRITS})
+DRINKS = having(INTOXICANT_TRAITS, IntoxicantTrait.DRINKS)
 
 
 @dataclass
@@ -197,7 +190,7 @@ async def keep_intoxication(ctx: TickContext, tally: IntoxicationTally) -> None:
         rows = await seed_customs(ctx, people, tally)
         uses = {row.use for row in rows}
         for row in rows:
-            if row.use in (IntoxicantUse.DAILY, IntoxicantUse.FORBIDDEN):
+            if row.use in KEEP_INTOXICATION_INTOXICANT_USES_2:
                 await habits(ctx, people, row, tally)
         if IntoxicantUse.MOURNING in uses:
             await mourn(ctx, people)
@@ -205,6 +198,6 @@ async def keep_intoxication(ctx: TickContext, tally: IntoxicationTally) -> None:
             await brawls(ctx, people, tally)
         if IntoxicantUse.RITE in uses:
             await visions(ctx, people, tally)
-        if uses & {IntoxicantUse.DAILY, IntoxicantUse.FEAST}:
+        if uses & KEEP_INTOXICATION_INTOXICANT_USES:
             await brew(ctx, people, tally)
     await ctx.session.flush()

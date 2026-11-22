@@ -5,6 +5,8 @@ from aerona.core.total import total
 from aerona.domain.enums.body import BodyBuild, BodyPlan, HeightClass
 from aerona.domain.enums.cosmography import BeingKind
 from aerona.domain.enums.divine import OuterHunger
+from aerona.domain.enums.ecology import Diet
+from aerona.domain.enums.society import CreatureTrait
 
 
 @dataclass(frozen=True)
@@ -118,3 +120,34 @@ HUNGER_PLANS: MappingProxyType[OuterHunger, BodyPlan] = total(
         OuterHunger.MEMORIES: BodyPlan.AMORPHOUS,
     },
 )
+
+PLAN_DIETS = {
+    BodyPlan.ARBOREAL: Diet.PHOTOSYNTHETIC,
+    BodyPlan.AMORPHOUS: Diet.FILTER,
+    BodyPlan.CONSTRUCT: Diet.MINERAL,
+    BodyPlan.INCORPOREAL: Diet.SOUL,
+}
+PLAN_TRAITS = {
+    BodyPlan.AVIAN: CreatureTrait.FLYING,
+    BodyPlan.AQUATIC: CreatureTrait.AQUATIC,
+    BodyPlan.SERPENTINE: CreatureTrait.AMBUSH_PREDATOR,
+    BodyPlan.INSECTOID: CreatureTrait.ARMOURED,
+}
+LAYERS = frozenset({BodyPlan.AVIAN, BodyPlan.SERPENTINE, BodyPlan.AQUATIC, BodyPlan.INSECTOID})
+COLD_PLANS = frozenset({BodyPlan.SERPENTINE, BodyPlan.INSECTOID, BodyPlan.AQUATIC})
+BUDDING_PLANS = frozenset({BodyPlan.AMORPHOUS, BodyPlan.CONSTRUCT})
+PLAN_TEXT = {
+    BodyPlan.HUMANOID: "stands and grips like the peoples and is wounded as they are",
+    BodyPlan.QUADRUPED: "runs on four legs and yields what its body gives",
+    BodyPlan.AVIAN: "flies, sheds feathers and can carry a rider through the sky",
+    BodyPlan.SERPENTINE: "lies in ambush",
+    BodyPlan.INSECTOID: "wears chitin and armour",
+    BodyPlan.AQUATIC: "lives in the waters and thirsts for them",
+    BodyPlan.AMORPHOUS: "sifts its food from the waters",
+    BodyPlan.ARBOREAL: "lives on light like a tree",
+    BodyPlan.INCORPOREAL: "feeds on souls",
+    BodyPlan.COLOSSAL: "stands colossal",
+    BodyPlan.CONSTRUCT: "eats stone and ore",
+    BodyPlan.DIVINE_MANIFEST: "is a god's own shape",
+}
+MINED_PLANS = (BodyPlan.COLOSSAL, BodyPlan.INSECTOID)

@@ -3,6 +3,7 @@ from itertools import pairwise
 
 from sqlalchemy import select
 
+from aerona.catalog.life.customs import GRADES
 from aerona.db.tables.customs import AgeSetMemberRow, AgeSetRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -25,8 +26,6 @@ from aerona.engine.primitives.naming import Namer
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import ensure_relation
 from aerona.engine.relations.book import shift as shift_relation
-
-GRADES = (AgeGrade.CHILDREN, AgeGrade.YOUTHS, AgeGrade.WARRIORS, AgeGrade.JUNIOR_ELDERS, AgeGrade.SENIOR_ELDERS)
 
 
 @dataclass

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.divine import PREVENT_MANTLING_STATES, PREVENT_MANTLING_STATES_2, SPONSOR_MANTLING_STATES, SPONSOR_MANTLING_STATES_2
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.total import total
@@ -183,18 +184,18 @@ async def mantled(ctx: TickContext, goal: GodGoalRow) -> MantlingRow | None:
 
 async def prevent(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
     row = await mantled(ctx, goal)
-    if row is None or row.state in {MantlingState.BLOCKED, MantlingState.FAILED}:
+    if row is None or row.state in PREVENT_MANTLING_STATES_2:
         return Reading(PERCENT, GoalState.DONE)
-    if row.state in {MantlingState.ASCENDED, MantlingState.REPLACED}:
+    if row.state in PREVENT_MANTLING_STATES:
         return Reading(0, GoalState.FAILED)
     return Reading(clamp_int(PERCENT - row.progress, 0, PERCENT - 1))
 
 
 async def sponsor(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
     row = await mantled(ctx, goal)
-    if row is not None and row.state in {MantlingState.ASCENDED, MantlingState.REPLACED}:
+    if row is not None and row.state in SPONSOR_MANTLING_STATES:
         return Reading(PERCENT, GoalState.DONE)
-    if row is None or row.state in {MantlingState.BLOCKED, MantlingState.FAILED}:
+    if row is None or row.state in SPONSOR_MANTLING_STATES_2:
         return Reading(0, GoalState.FAILED)
     return Reading(clamp_int(row.progress, 0, PERCENT - 1))
 

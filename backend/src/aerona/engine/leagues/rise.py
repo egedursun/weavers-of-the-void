@@ -1,13 +1,14 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.leagues import APPLY_LEGACY_TREATY_KINDS, BINDING_TREATIES, TREATY_AIMS
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.leagues import LeagueMemberRow, PolityLeagueRow
 from aerona.db.tables.polity import TreatyPartyRow, TreatyProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.leagues import LeagueAim, LeagueVoteBasis
-from aerona.domain.enums.polity import TreatyKind, TreatyStatus
+from aerona.domain.enums.leagues import LeagueVoteBasis
+from aerona.domain.enums.polity import TreatyStatus
 from aerona.engine.context import TickContext
 from aerona.engine.leagues.book import LeagueTally, living_polity
 from aerona.engine.leagues.founding import found_league
@@ -15,13 +16,6 @@ from aerona.engine.polity.signatories import realm_of_party
 
 LEGACY_FIXUP = "leagues.legacy_coalitions"
 BLOC_SIZE = 3
-BINDING_TREATIES = (TreatyKind.COALITION, TreatyKind.INTERWORLD, TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.TRADE_PACT)
-TREATY_AIMS = {
-    TreatyKind.COALITION: [LeagueAim.DEFENCE],
-    TreatyKind.INTERWORLD: [LeagueAim.TRADE, LeagueAim.PEACE],
-    TreatyKind.ALLIANCE_DEFENSIVE: [LeagueAim.DEFENCE],
-    TreatyKind.TRADE_PACT: [LeagueAim.TRADE],
-}
 
 
 async def parties_of(ctx: TickContext, treaty_id: int) -> list[EntityRow]:
@@ -54,9 +48,7 @@ async def from_treaty(ctx: TickContext, treaty: TreatyProfileRow, tally: LeagueT
 async def apply_legacy(ctx: TickContext, tally: LeagueTally) -> None:
     if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
         return
-    query = select(TreatyProfileRow).where(
-        TreatyProfileRow.kind.in_([TreatyKind.COALITION, TreatyKind.INTERWORLD]), TreatyProfileRow.status == TreatyStatus.IN_FORCE
-    )
+    query = select(TreatyProfileRow).where(TreatyProfileRow.kind.in_(APPLY_LEGACY_TREATY_KINDS), TreatyProfileRow.status == TreatyStatus.IN_FORCE)
     made = 0
     for treaty in list(await ctx.session.scalars(query.order_by(TreatyProfileRow.treaty_entity_id))):
         if await from_treaty(ctx, treaty, tally) is not None:

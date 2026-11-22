@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.securities import LOSING_ENDINGS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.concealment import HiddenTruthRow, TruthKeeperRow
 from aerona.db.tables.entities import EntityRow
@@ -12,7 +13,6 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.finance import CreditState
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.securities import DEBT_KINDS, SecurityKind
-from aerona.domain.enums.war import WarEnding
 from aerona.engine.competition.clauses import clause_strength
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, riches_of, take_coin
@@ -26,7 +26,6 @@ from aerona.engine.securities.holdings import SecuritiesTally, holdings_of
 RESULTS_MIDPOINT = 50
 DEFAULTED_WORTH_PCT = 10
 FUTURE_HERDING = 2
-LOSING_ENDINGS = (WarEnding.VICTORY, WarEnding.CONQUEST, WarEnding.TRIBUTE)
 SHOCKS: tuple[tuple[str, IncidentRole], ...] = (
     *((f"war.ended_{ending.value}", IncidentRole.OPPONENT) for ending in LOSING_ENDINGS),
     ("companies.collapsed", IncidentRole.SUBJECT),

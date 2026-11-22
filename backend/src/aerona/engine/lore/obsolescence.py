@@ -1,13 +1,13 @@
 from sqlalchemy import select
 
 from aerona.catalog.discovery import STRUCTURE_SUPERSEDED
+from aerona.catalog.life.domain import STANDING_STATES
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.structure import STANDING_STATES
 from aerona.engine.context import TickContext
 from aerona.engine.industry.methods import refit
 from aerona.engine.recording.record import record as record_incident

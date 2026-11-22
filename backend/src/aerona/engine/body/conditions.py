@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.conditions import VISIBLE_CONDITIONS
 from aerona.catalog.incident_kinds.body_lines import CONDITION_PHRASES, END_PHRASES, ILLNESSES
 from aerona.core.total import partial
 from aerona.db.repositories.entities import EntityRepository
@@ -19,18 +20,6 @@ from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.traits import condition_trait
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.recording.record import StepDraft, record
-
-VISIBLE_CONDITIONS = frozenset(
-    {
-        ConditionKind.WITHERED_LIMB,
-        ConditionKind.VOID_TAINT,
-        ConditionKind.CHOSEN_MARK,
-        ConditionKind.DIVINE_BRAND,
-        ConditionKind.POSSESSION,
-        ConditionKind.COMATOSE,
-        ConditionKind.COGNITIVE_DECLINE,
-    }
-)
 
 GAINED_KEYS = partial(
     ConditionKind,

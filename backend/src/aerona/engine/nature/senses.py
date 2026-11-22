@@ -1,11 +1,13 @@
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.diets import FLESH_SEEKERS
+from aerona.catalog.senses import PURPOSES, SENSES
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.read_memo import memoized
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.ecology import SpeciesProfileRow
@@ -13,11 +15,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.nature import SenseProfileRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.demography import NaturalTrait
 from aerona.domain.enums.ecology import Diet
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import EffectTarget
-from aerona.domain.enums.nature import SenseKind, Thermoregulation
+from aerona.domain.enums.nature import SenseCause, SenseKind, Thermoregulation
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.belonging.values import own_people
 from aerona.engine.body.customs import people_of
@@ -25,25 +26,6 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.demography.biology import natures
 from aerona.engine.primitives.augment_bonus import lifts_of
-
-S = SenseKind
-AGENTS = "agents"
-NIGHT = "night"
-AMBUSH = "ambush"
-TRACKING = "tracking"
-NAVIGATION = "navigation"
-SPIRITS = "spirits"
-PURPOSES: Mapping[str, Mapping[SenseKind, float]] = MappingProxyType(
-    {
-        AGENTS: {S.SMELL: 0.6, S.HEARING: 0.2, S.SPIRIT_SIGHT: 0.2},
-        NIGHT: {S.NIGHT_VISION: 0.6, S.ECHOLOCATION: 0.2, S.HEAT: 0.2},
-        AMBUSH: {S.HEARING: 0.5, S.SMELL: 0.3, S.VIBRATION: 0.2},
-        TRACKING: {S.SMELL: 0.5, S.SIGHT: 0.2, S.HEAT: 0.15, S.VIBRATION: 0.15},
-        NAVIGATION: {S.MAGNETIC: 0.7, S.SIGHT: 0.3},
-        SPIRITS: {S.SPIRIT_SIGHT: 1.0},
-    }
-)
-HUNTERS = frozenset({Diet.CARNIVORE, Diet.OMNIVORE, Diet.SCAVENGER})
 
 
 @dataclass
@@ -82,33 +64,32 @@ async def sense_score(session: AsyncSession, node_id: int | None, purpose: str) 
     return sum(weight * lifted[sense] for sense, weight in PURPOSES[purpose].items()) / PERCENT
 
 
+BORN: Mapping[SenseCause, Callable[[SpeciesProfileRow, set[CreatureTrait]], bool]] = total(
+    SenseCause,
+    {
+        SenseCause.BASE: lambda profile, traits: False,
+        SenseCause.NOCTURNAL: lambda profile, traits: profile.nocturnal,
+        SenseCause.FLESH_SEEKER: lambda profile, traits: profile.diet in FLESH_SEEKERS,
+        SenseCause.PLANT_EATER: lambda profile, traits: profile.diet is Diet.HERBIVORE,
+        SenseCause.ECHOLOCATION: lambda profile, traits: CreatureTrait.ECHOLOCATION in traits,
+        SenseCause.BURROWING: lambda profile, traits: CreatureTrait.BURROWING in traits,
+        SenseCause.MIGRATORY: lambda profile, traits: profile.migratory,
+        SenseCause.SPIRIT_SIGHT: lambda profile, traits: CreatureTrait.SPIRIT_SIGHT in traits,
+        SenseCause.COLD_HUNTER: lambda profile, traits: profile.thermoregulation is Thermoregulation.ECTOTHERM and profile.diet in FLESH_SEEKERS,
+    },
+)
+
+
 def born_species(base: int, gift: int, profile: SpeciesProfileRow, traits: set[CreatureTrait]) -> dict[SenseKind, int]:
-    found = {S.SIGHT: base}
-    gifts = {
-        S.NIGHT_VISION: profile.nocturnal,
-        S.SMELL: profile.diet in HUNTERS,
-        S.HEARING: profile.diet is Diet.HERBIVORE,
-        S.ECHOLOCATION: CreatureTrait.ECHOLOCATION in traits,
-        S.VIBRATION: CreatureTrait.BURROWING in traits,
-        S.MAGNETIC: profile.migratory,
-        S.SPIRIT_SIGHT: CreatureTrait.SPIRIT_SIGHT in traits,
-        S.HEAT: profile.thermoregulation is Thermoregulation.ECTOTHERM and profile.diet in HUNTERS,
-    }
-    found.update({sense: gift for sense, born in gifts.items() if born})
+    found = {sense: base for sense, spec in SENSES.items() if spec.cause is SenseCause.BASE}
+    found.update({sense: gift for sense, spec in SENSES.items() if BORN[spec.cause](profile, traits)})
     return found
 
 
 def born_people(base: int, gift: int, biology: PeopleBiologyRow | None) -> dict[SenseKind, int]:
     traits = natures(biology)
-    found = {S.SIGHT: base, S.HEARING: base}
-    gifts = {
-        S.NIGHT_VISION: NaturalTrait.DARK_SIGHT in traits,
-        S.SMELL: NaturalTrait.KEEN_SENSES in traits,
-        S.VIBRATION: NaturalTrait.BURROWING in traits,
-    }
-    found.update({sense: gift for sense, born in gifts.items() if born})
-    if NaturalTrait.KEEN_SENSES in traits:
-        found[S.HEARING] = gift
+    found = {sense: base for sense, spec in SENSES.items() if spec.people_base}
+    found.update({sense: gift for sense, spec in SENSES.items() if spec.people_trait is not None and spec.people_trait in traits})
     return found
 
 

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.sacred import COMMON_NEEDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -26,7 +27,6 @@ from aerona.engine.recording.record import record
 from aerona.engine.sacred.spirits import rank_above, rank_below
 
 OPEN = (PetitionStatus.FILED, PetitionStatus.DELAYED, PetitionStatus.APPEALED)
-COMMON_NEEDS = (PetitionKind.HEALING, PetitionKind.FERTILITY, PetitionKind.SAFE_PASSAGE, PetitionKind.PROSPERITY)
 TEN = 10
 
 

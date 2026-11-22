@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.lore import SCHOLARLY
+from aerona.catalog.life.regime import EXAMINED
 from aerona.catalog.mind import CAREER_SKILLS
 from aerona.catalog.structures import RESEARCH_HOUSES
 from aerona.constants.units import PERCENT
@@ -35,7 +37,7 @@ from aerona.engine.faith.book import faith_tenets
 from aerona.engine.gatherings.hold import GatheringTally, hold, plan
 from aerona.engine.gatherings.occasions import Guest, Occasion
 from aerona.engine.lore.civics import realm_allows
-from aerona.engine.lore.research import SCHOLARLY, techniques_of
+from aerona.engine.lore.research import techniques_of
 from aerona.engine.lore.research_depth import add_progress
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.skills import practise
@@ -52,7 +54,6 @@ from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.readers import Working, working
 
-EXAMINED = (SkillKind.LAW, SkillKind.WRITING, SkillKind.LORE)
 LICENSED_ROLES = frozenset({MortalRole.PHYSICIAN, MortalRole.ENGINEER, MortalRole.PILOT, MortalRole.OFFICER})
 
 

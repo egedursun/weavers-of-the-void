@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.constructs import ASSIGN_HUNTER_CONTRACT_STATUSS
 from aerona.core.errors import ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.constructs import (
@@ -121,7 +122,7 @@ async def post_contract(ctx: TickContext, town_id: int, beast_id: int, bounty: i
 
 async def assign_hunter(ctx: TickContext, contract_id: int, hunter_id: int) -> MonsterContractRow:
     row = await found(ctx, MonsterContractRow, contract_id, "contract")
-    if row.status not in (ContractStatus.POSTED, ContractStatus.TAKEN):
+    if row.status not in ASSIGN_HUNTER_CONTRACT_STATUSS:
         raise ValidationFailedError("That contract is closed.")
     await of_type(ctx, hunter_id, MORTALS, "a mortal hunter")
     apply(row, {"hunter_entity_id": hunter_id, "status": ContractStatus.TAKEN}, [])

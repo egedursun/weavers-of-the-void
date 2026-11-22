@@ -1,6 +1,8 @@
 from sqlalchemy import select
 
 from aerona.catalog.body_plans import PLANS
+from aerona.catalog.conditions import CONDITIONS, MADNESS_CONDITIONS
+from aerona.catalog.harm_kinds import injuries_where
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -15,7 +17,7 @@ from aerona.db.tables.society import AddictionRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission
-from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, DamageType, HarmCause, InjuryKind
+from aerona.domain.enums.body import ConditionKind, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.environment import TemperatureBand
@@ -362,12 +364,7 @@ async def body_healing(ctx: TickContext) -> None:
 
 def _madness_weights(ctx: TickContext) -> dict[ConditionKind, float]:
     table = ctx.rules.conditions
-    return {
-        ConditionKind.PARANOIA: table.paranoia_weight,
-        ConditionKind.VISIONS: table.visions_weight,
-        ConditionKind.RAGE: table.rage_weight,
-        ConditionKind.MELANCHOLY: table.melancholy_weight,
-    }
+    return {kind: madness(table) for kind in MADNESS_CONDITIONS if (madness := CONDITIONS[kind].madness) is not None}
 
 
 async def _exposure(ctx: TickContext, mortal: EntityRow, atlas: RegionAtlas, grounds: dict[int, RegionEnvironmentRow]) -> bool:
@@ -635,9 +632,7 @@ async def _recruit(ctx: TickContext) -> None:
             cults.append(cult)
     if not cults:
         return
-    maimed = set(
-        await ctx.session.scalars(select(InjuryRow.bearer_node_id).where(InjuryRow.kind.in_([InjuryKind.SEVERED, InjuryKind.GOUGED, InjuryKind.DESTROYED])))
-    )
+    maimed = set(await ctx.session.scalars(select(InjuryRow.bearer_node_id).where(InjuryRow.kind.in_(sorted(injuries_where(lambda spec: spec.total_loss))))))
     for mortal_id in sorted(maimed):
         mortal = await living_entity(ctx.session, mortal_id)
         if mortal is None or mortal.entity_type is not EntityType.MORTAL:

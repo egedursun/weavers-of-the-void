@@ -2,6 +2,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import SIGHT_PARTS
+from aerona.catalog.conditions import OPEN_INJURY_STATES
+from aerona.catalog.kinds.harm import HONOURED_CAUSES, SHAMEFUL_CAUSES
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memo_of, table_names
 from aerona.db.tables.body import BodyCustomRow, ConditionRow, InjuryRow
@@ -9,7 +11,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureValueRow
-from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyReading, ConditionKind, HarmCause, InjuryKind
+from aerona.domain.enums.body import BodyReading, ConditionKind, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
@@ -31,8 +33,6 @@ SUFFERING_DOMAINS = frozenset({Domain.BLOOD, Domain.PLAGUE, Domain.HUNGER, Domai
 MARTIAL_DOMAINS = frozenset({Domain.WAR, Domain.HUNT})
 SEER_DOMAINS = frozenset({Domain.DREAM, Domain.STAR, Domain.MOON, Domain.TIME, Domain.KNOWLEDGE, Domain.MEMORY})
 SEER_RITES = frozenset({TraditionFunction.RITE_OF_PASSAGE, TraditionFunction.BODY_MARKING, TraditionFunction.OFFERING})
-HONOURED_CAUSES = frozenset({HarmCause.BATTLE, HarmCause.DUEL, HarmCause.MONSTER, HarmCause.QUEST})
-SHAMEFUL_CAUSES = frozenset({HarmCause.PUNISHMENT, HarmCause.TORTURE})
 PEOPLE_TABLES = table_names((BondRow, EntityRow))
 CUSTOM_FIELDS = ("reading", "wholeness_required", "seer_eye", "scar_festivals", "pension")
 

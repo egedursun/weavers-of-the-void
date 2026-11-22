@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.eras import ERA_FLOORS
+from aerona.catalog.life.domain import STANDING_STATES
 from aerona.catalog.structures import ENGINE_KIND_STRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
@@ -14,7 +15,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityType
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
-from aerona.domain.enums.structure import STANDING_STATES, ConstructionState, ConstructionStatus, StructureKind
+from aerona.domain.enums.structure import ConstructionState, ConstructionStatus, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.environment.years import world_years
 from aerona.engine.eras.effects import world_start

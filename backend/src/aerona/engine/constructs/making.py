@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.goods_traits import materials_with
+from aerona.catalog.life.constructs import MAKE_CONSTRUCT_COMMAND_TOKENS, MAKING_SKILLS, TOKEN_CLASS
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
@@ -13,10 +15,11 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.constructs import CommandToken, InstructionBinding, MindWill, OrderCondition, OrderKind
-from aerona.domain.enums.culture import ItemClass, MagicSource
+from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.ecology import BeastTemper, SizeClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import AfterlifeState, BindingKind
+from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.minds import MindAffect, MindMaking, MindPurpose, MindSeat, MindUpkeep
@@ -39,10 +42,9 @@ from aerona.engine.sacred.places import town_of
 from aerona.engine.transform.record import record_transformation
 
 CONSTRUCT = "construct"
-MAKING_SKILLS = (SkillKind.ALCHEMY, SkillKind.ENGINEERING)
 SKILL_FLOOR = 3
 AGELESS = 1_000_000
-BODIES = (MaterialKind.CLAY, MaterialKind.STONE, MaterialKind.BRONZE, MaterialKind.IRON, MaterialKind.STEEL)
+BODIES = materials_with(MaterialTrait.CONSTRUCT_BODY)
 SOURCE_POWER = {
     MagicSource.LEY: 80,
     MagicSource.DIVINE: 75,
@@ -51,7 +53,6 @@ SOURCE_POWER = {
     MagicSource.REAGENT: 70,
     MagicSource.VOID: 100,
 }
-TOKEN_CLASS = {CommandToken.ITEM: ItemClass.SEAL, CommandToken.NETWORK_KEY: ItemClass.KEY}
 DEFAULT_ORDERS = ((OrderKind.OBEY_HOLDER, 1), (OrderKind.GUARD, 2))
 
 
@@ -135,7 +136,7 @@ def token_for(token: CommandToken, maker: EntityRow) -> int | None:
 async def make_construct(ctx: TickContext, maker: EntityRow, design: Design) -> ConstructRow:
     material = design.material or await body_material(ctx, maker)
     source = design.source or body_source(ctx, maker)
-    token = design.token or ctx.rng(f"construct.token.{maker.id}.{ctx.epoch}").pick([CommandToken.ITEM, CommandToken.WORD, CommandToken.BLOODLINE])
+    token = design.token or ctx.rng(f"construct.token.{maker.id}.{ctx.epoch}").pick(MAKE_CONSTRUCT_COMMAND_TOKENS)
     spec = MATERIALS[material]
     body = await create_record(
         ctx,

@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.made import AugmentMake, Authenticity, RelicUse, ReplicatorOutput
+from aerona.domain.enums.made import AugmentMake, Authenticity, RealmPurpose, RelicUse, ReplicatorOutput, SurveillanceFocus
 
 AUGMENT_MAKE = total(
     AugmentMake,
@@ -50,6 +50,32 @@ AUTHENTICITY = total(
     },
 )
 
+REALM_PURPOSE = total(
+    RealmPurpose,
+    {
+        RealmPurpose.DWELLING: Defined(
+            "Dwelling",
+            checked_by=(),
+            used_by=(
+                "db.tables.made.MadeRealmRow",
+                "engine.made.kinds.dwelling",
+                "engine.made.realms.house_minds",
+                "services.player.minds.RealmDraft",
+                "tools.mortal.minds.BuildRealmInput",
+            ),
+        ),
+        RealmPurpose.AFTERLIFE: Defined("Afterlife", checked_by=(), used_by=("engine.made.kinds.steadied",)),
+        RealmPurpose.CONFINEMENT: Defined("Confinement", checked_by=("engine.made.realms.escapes",), used_by=("engine.made.kinds.dwelling",)),
+        RealmPurpose.TRAINING: Defined("Training", checked_by=(), used_by=("engine.made.kinds.trained",)),
+        RealmPurpose.LEISURE: Defined("Leisure", checked_by=(), used_by=("engine.made.kinds.rested",)),
+        RealmPurpose.LABOUR: Defined("Labour", checked_by=("engine.made.realms.keep_realm",), used_by=("engine.made.kinds.labour",)),
+        RealmPurpose.WORSHIP: Defined("Worship", checked_by=(), used_by=("engine.made.kinds.worshipped",)),
+        RealmPurpose.REFUGE: Defined("Refuge", checked_by=(), used_by=("engine.made.kinds.steadied",)),
+        RealmPurpose.EXPERIMENT: Defined("Experiment", checked_by=(), used_by=("engine.made.kinds.strained",)),
+        RealmPurpose.FREE: Defined("Free", checked_by=(), used_by=("engine.made.kinds.freed",)),
+    },
+)
+
 RELIC_USE = total(
     RelicUse,
     {
@@ -59,9 +85,9 @@ RELIC_USE = total(
             used_by=("db.tables.made.MadeRelicRow", "engine.made.control.mark_relic", "engine.made.relics.mark_collapse"),
         ),
         RelicUse.REPURPOSED: Defined("Studied and repurposed", checked_by=("engine.made.relics.keep_relic",), used_by=("tools.mortal.minds.study_relic",)),
-        RelicUse.REVERED: Defined("Revered", checked_by=(), used_by=("engine.made.relics.STANCE_USE",)),
-        RelicUse.DISPLAYED: Defined("Displayed", checked_by=(), used_by=("engine.made.relics.STANCE_USE",)),
-        RelicUse.FEARED: Defined("Feared", checked_by=(), used_by=("engine.made.relics.STANCE_USE",)),
+        RelicUse.REVERED: Defined("Revered", checked_by=(), used_by=("catalog.life.made.STANCE_USE",)),
+        RelicUse.DISPLAYED: Defined("Displayed", checked_by=(), used_by=("catalog.life.made.STANCE_USE",)),
+        RelicUse.FEARED: Defined("Feared", checked_by=(), used_by=("catalog.life.made.STANCE_USE",)),
         RelicUse.IGNORED: Defined("Ignored", checked_by=("engine.made.relics.keep_relic",), used_by=("engine.made.relics.keep_relic",)),
     },
 )
@@ -69,15 +95,15 @@ RELIC_USE = total(
 REPLICATOR_OUTPUT = total(
     ReplicatorOutput,
     {
-        ReplicatorOutput.COPIES: Defined("Copies of itself", checked_by=(), used_by=("db.tables.made.ReplicatorLineRow", "engine.made.abundance.MAKERS")),
+        ReplicatorOutput.COPIES: Defined("Copies of itself", checked_by=(), used_by=("catalog.life.made.MAKERS", "db.tables.made.ReplicatorLineRow")),
         ReplicatorOutput.GOODS: Defined(
             "Goods",
-            checked_by=("engine.made.replicators.OUTPUT_GOODS",),
-            used_by=("engine.made.abundance.MAKERS", "services.player.minds.LineDraft", "tools.mortal.minds.BuildReplicatorInput"),
+            checked_by=("catalog.life.made.OUTPUT_GOODS",),
+            used_by=("catalog.life.made.MAKERS", "services.player.minds.LineDraft", "tools.mortal.minds.BuildReplicatorInput"),
         ),
-        ReplicatorOutput.STRUCTURES: Defined("Structures", checked_by=("engine.made.replicators.yield_to",), used_by=("engine.made.abundance.MAKERS",)),
+        ReplicatorOutput.STRUCTURES: Defined("Structures", checked_by=("engine.made.replicators.yield_to",), used_by=("catalog.life.made.MAKERS",)),
         ReplicatorOutput.REPAIR: Defined("Repair", checked_by=("engine.made.replicators.yield_to",), used_by=()),
-        ReplicatorOutput.MEDICINE: Defined("Medicine", checked_by=("engine.made.replicators.OUTPUT_GOODS",), used_by=()),
+        ReplicatorOutput.MEDICINE: Defined("Medicine", checked_by=("catalog.life.made.OUTPUT_GOODS",), used_by=()),
         ReplicatorOutput.TERRAFORMING: Defined(
             "Reshaping land",
             checked_by=("engine.made.backfill.terraformers", "engine.made.replicators.yield_to"),
@@ -86,5 +112,27 @@ REPLICATOR_OUTPUT = total(
         ReplicatorOutput.DISASSEMBLY: Defined(
             "Disassembly", checked_by=("engine.made.replicators.yield_to", "engine.minds.war_methods.replicator_weapons"), used_by=()
         ),
+    },
+)
+
+SURVEILLANCE_FOCUS = total(
+    SurveillanceFocus,
+    {
+        SurveillanceFocus.CRIME: Defined(
+            "Crime",
+            checked_by=(),
+            used_by=(
+                "db.tables.made.SurveillanceProfileRow",
+                "engine.made.kinds.cut_crime",
+                "engine.made.surveillance.profile_for",
+                "tools.mortal.minds.SurveillanceInput",
+            ),
+        ),
+        SurveillanceFocus.DISSENT: Defined("Dissent", checked_by=(), used_by=("engine.made.kinds.cut_dissent",)),
+        SurveillanceFocus.FOREIGNERS: Defined("Foreigners", checked_by=(), used_by=("engine.made.kinds.find_spies",)),
+        SurveillanceFocus.FAITH: Defined("Faith", checked_by=(), used_by=("engine.made.kinds.watch_faith",)),
+        SurveillanceFocus.MINDS: Defined("Minds", checked_by=(), used_by=("engine.made.kinds.watch_minds",)),
+        SurveillanceFocus.GIFTED: Defined("The gifted", checked_by=(), used_by=("engine.made.kinds.register_gifted",)),
+        SurveillanceFocus.EVERYTHING: Defined("Everything", checked_by=(), used_by=("engine.made.kinds.watch_all",)),
     },
 )

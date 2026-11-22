@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import OFFICE_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.law_depth import MoleHuntRow
@@ -10,6 +11,7 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.law_depth import MoleHuntOutcome
+from aerona.domain.enums.life_traits import OfficeKindTrait
 from aerona.domain.enums.military import AgentStatus
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind, TraitSource
 from aerona.domain.enums.modifier import IncidentRole
@@ -25,7 +27,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.relations.book import relation
 from aerona.engine.services.war import held_captive, take_captive
 
-KEPT_OFFICES = frozenset({OfficeKind.RULER, OfficeKind.SPYMASTER})
+KEPT_OFFICES = having(OFFICE_KIND_TRAITS, OfficeKindTrait.KEPT_OFFICES)
 DILIGENCE = "diligence"
 
 

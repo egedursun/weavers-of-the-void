@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life_traits import CONSTRUCTION_STATE_TRAITS, having
 from aerona.catalog.structures import BRANCH_LEVELS, STRUCTURES, WORKSHOP_STRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
@@ -20,9 +21,10 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
+from aerona.domain.enums.life_traits import ConstructionStateTrait
 from aerona.domain.enums.settlement import TIER_ORDER, SizeTier
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
-from aerona.domain.enums.structure import STRUCTURE_LEVEL_MAX, ConstructionState, StructureKind
+from aerona.domain.enums.structure import STRUCTURE_LEVEL_MAX, StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.industry.energy import POWER_HEAT, POWER_PLANTS, drawers_at, drawing_folk, power_for_heat
@@ -218,7 +220,7 @@ KIND_TECHNIQUES = {
     K.AI_CORE: Technique.ARTIFICIAL_MINDS,
 }
 TECHNIQUE_GATES = {K.AQUEDUCT: Technique.AQUEDUCT, K.SEWER: Technique.ARCH, K.CITADEL: Technique.FORTIFICATION, K.WONDER: Technique.DOME}
-COUNTED_STATES = frozenset({ConstructionState.PLANNED, ConstructionState.BUILDING, ConstructionState.COMPLETE, ConstructionState.DAMAGED})
+COUNTED_STATES = having(CONSTRUCTION_STATE_TRAITS, ConstructionStateTrait.COUNTED_STATES)
 
 
 async def present_at(ctx: TickContext, host_id: int) -> Counter[StructureKind]:

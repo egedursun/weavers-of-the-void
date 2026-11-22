@@ -11,10 +11,10 @@ from aerona.catalog.modifier_effects import (
     FANATICISM_EFFECTS,
     LAW_EFFECTS,
     STRUCTURE_EFFECTS,
-    TERRAIN_EFFECTS,
     TRADITION_EFFECT_STATS,
     TREATY_EFFECTS,
 )
+from aerona.catalog.terrain import TERRAIN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import TraditionParticipationRow, TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -293,7 +293,7 @@ def environment_drafts(ctx: TickContext, book: EnvironmentBook, holders: Sequenc
         if env is None:
             continue
         terrain = Origin(S.TERRAIN, f"modifier.terrain.{env.dominant_terrain.value}", ctx.epoch, env.entity_id, "terrain")
-        drafts.extend(draft for effect in TERRAIN_EFFECTS.get(env.dominant_terrain, ()) if (draft := effect_draft(ctx.rules, holder, effect, terrain)))
+        drafts.extend(draft for effect in TERRAIN[env.dominant_terrain].effects if (draft := effect_draft(ctx.rules, holder, effect, terrain)))
         harsh = NEUTRAL_MULTIPLIER - env.seasonality / PERCENT * table.season_prosperity_pct / PERCENT
         season = Origin(S.SEASON, "modifier.season", ctx.epoch, env.entity_id, "season")
         if (draft := shaped_draft(holder, "prosperity", ModifierOp.MULTIPLY, harsh, season)) is not None:

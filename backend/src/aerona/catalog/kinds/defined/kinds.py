@@ -146,12 +146,12 @@ KIND_CONCEPT = total(
 MEAL_SLOT = total(
     MealSlot,
     {
-        MealSlot.DAILY_MEAL: Defined("Daily meal", checked_by=(), used_by=("db.tables.cuisine.DishRow", "engine.cuisine.dishes.COURSE_SLOTS")),
-        MealSlot.SNACK: Defined("Snack", checked_by=(), used_by=("engine.cuisine.dishes.COURSE_SLOTS",)),
-        MealSlot.FEAST: Defined("Feast", checked_by=(), used_by=("engine.cuisine.dishes.COURSE_SLOTS",)),
-        MealSlot.RITE: Defined("Rite", checked_by=(), used_by=("engine.cuisine.dishes.COURSE_SLOTS",)),
-        MealSlot.RATION: Defined("Ration", checked_by=(), used_by=("engine.cuisine.dishes.COURSE_SLOTS",)),
-        MealSlot.REMEDY: Defined("Remedy", checked_by=(), used_by=("engine.cuisine.dishes.COURSE_SLOTS",)),
+        MealSlot.DAILY_MEAL: Defined("Daily meal", checked_by=(), used_by=("catalog.life.cuisine.COURSE_SLOTS", "db.tables.cuisine.DishRow")),
+        MealSlot.SNACK: Defined("Snack", checked_by=(), used_by=("catalog.life.cuisine.COURSE_SLOTS",)),
+        MealSlot.FEAST: Defined("Feast", checked_by=(), used_by=("catalog.life.cuisine.COURSE_SLOTS",)),
+        MealSlot.RITE: Defined("Rite", checked_by=(), used_by=("catalog.life.cuisine.COURSE_SLOTS",)),
+        MealSlot.RATION: Defined("Ration", checked_by=(), used_by=("catalog.life.cuisine.COURSE_SLOTS",)),
+        MealSlot.REMEDY: Defined("Remedy", checked_by=(), used_by=("catalog.life.cuisine.COURSE_SLOTS",)),
         MealSlot.TRAVEL_FOOD: Defined("Travel food", checked_by=(), used_by=()),
         MealSlot.FAMINE_FOOD: Defined("Famine food", checked_by=(), used_by=()),
     },

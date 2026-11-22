@@ -1,10 +1,10 @@
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.total import total
+from aerona.core.dispatch import Handlers
 from aerona.db.read_memo import memoized
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.customs import MembershipRow
@@ -40,6 +40,10 @@ async def where(ctx: TickContext, node_id: int | None) -> int | None:
     return entity.location_id if entity is not None else None
 
 
+SOURCES: Handlers[RegistryKind, Find] = Handlers(RegistryKind)
+
+
+@SOURCES.on(RegistryKind.BIRTH)
 async def births(ctx: TickContext) -> list[Entry]:
     rows = await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.birth_epoch == ctx.epoch).order_by(EntityRow.id)
@@ -47,6 +51,7 @@ async def births(ctx: TickContext) -> list[Entry]:
     return [Entry(row.location_id, row.id, row.id) for row in rows]
 
 
+@SOURCES.on(RegistryKind.DEATH)
 async def deaths(ctx: TickContext) -> list[Entry]:
     rows = await ctx.session.scalars(
         select(MortalProfileRow)
@@ -56,11 +61,13 @@ async def deaths(ctx: TickContext) -> list[Entry]:
     return [Entry(row.death_place_id, row.entity_id, row.entity_id) for row in rows]
 
 
+@SOURCES.on(RegistryKind.CITIZENSHIP)
 async def citizens(ctx: TickContext) -> list[Entry]:
     rows = await ctx.session.scalars(select(MembershipRow).where(MembershipRow.since_epoch == ctx.epoch).order_by(MembershipRow.mortal_entity_id))
     return [Entry(await where(ctx, row.mortal_entity_id), row.mortal_entity_id, row.polity_entity_id) for row in rows]
 
 
+@SOURCES.on(RegistryKind.COMPANY)
 async def companies(ctx: TickContext) -> list[Entry]:
     rows = await ctx.session.scalars(
         select(CompanyProfileRow).where(CompanyProfileRow.chartered_epoch == ctx.epoch).order_by(CompanyProfileRow.faction_entity_id)
@@ -68,48 +75,40 @@ async def companies(ctx: TickContext) -> list[Entry]:
     return [Entry(row.headquarters_entity_id, row.faction_entity_id, row.faction_entity_id) for row in rows]
 
 
+@SOURCES.on(RegistryKind.PATENT)
 async def patents(ctx: TickContext) -> list[Entry]:
     rows = await ctx.session.scalars(select(BlueprintRow).where(BlueprintRow.since_epoch == ctx.epoch).order_by(BlueprintRow.id))
     return [Entry(await where(ctx, row.holder_node_id), row.holder_node_id, row.book_entity_id, row.id) for row in rows]
 
 
+@SOURCES.on(RegistryKind.PATTERN)
 async def patterns(ctx: TickContext) -> list[Entry]:
     rows = await ctx.session.scalars(select(DesignRow).where(DesignRow.entity_id.is_not(None)).order_by(DesignRow.id))
     return [Entry(await where(ctx, row.owner_entity_id), row.owner_entity_id, row.entity_id, row.id) for row in rows]
 
 
+@SOURCES.on(RegistryKind.MIND_STATE)
 async def minds(ctx: TickContext) -> list[Entry]:
     rows = await ctx.session.scalars(select(MindProfileRow).where(MindProfileRow.origin == MindOrigin.COPIED).order_by(MindProfileRow.node_id))
     return [Entry(await where(ctx, row.node_id), row.node_id, row.node_id) for row in rows]
 
 
+@SOURCES.on(RegistryKind.LINE)
 async def lines(ctx: TickContext) -> list[Entry]:
     rows = await ctx.session.scalars(select(LivingLineRow).where(LivingLineRow.owner_node_id.is_not(None)).order_by(LivingLineRow.id))
     return [Entry(await where(ctx, row.owner_node_id), row.owner_node_id, None, row.id) for row in rows]
 
 
+@SOURCES.on(RegistryKind.LAND_TITLE)
+@SOURCES.on(RegistryKind.DEBT)
+@SOURCES.on(RegistryKind.SALE)
+@SOURCES.on(RegistryKind.UNION_PORTION)
+@SOURCES.on(RegistryKind.INDENTURE)
 async def none_kept(_ctx: TickContext) -> list[Entry]:
     return []
 
 
-SOURCES: Mapping[RegistryKind, Find] = total(
-    RegistryKind,
-    {
-        RegistryKind.LAND_TITLE: none_kept,
-        RegistryKind.DEBT: none_kept,
-        RegistryKind.SALE: none_kept,
-        RegistryKind.UNION_PORTION: none_kept,
-        RegistryKind.INDENTURE: none_kept,
-        RegistryKind.PATENT: patents,
-        RegistryKind.PATTERN: patterns,
-        RegistryKind.MIND_STATE: minds,
-        RegistryKind.LINE: lines,
-        RegistryKind.COMPANY: companies,
-        RegistryKind.BIRTH: births,
-        RegistryKind.DEATH: deaths,
-        RegistryKind.CITIZENSHIP: citizens,
-    },
-)
+SOURCES.seal()
 
 
 async def entity_or_none(ctx: TickContext, node_id: int | None) -> int | None:

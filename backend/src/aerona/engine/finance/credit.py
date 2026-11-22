@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.goods_traits import materials_with
+from aerona.catalog.life.finance import REFUSES_CREDIT_STATES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import CommunityStockRow, CurrencyRow, LoanRow
 from aerona.db.tables.entities import EntityRow
@@ -13,7 +15,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, LoanStatus
 from aerona.domain.enums.finance import CreditState
-from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.industry.owners import purse_value
@@ -23,7 +25,7 @@ from aerona.engine.primitives.stats import headcount
 from aerona.engine.securities.holdings import default_premium
 from aerona.engine.services.war import declare_war
 
-RESERVE_METALS = (MaterialKind.GOLD, MaterialKind.SILVER)
+RESERVE_METALS = materials_with(MaterialTrait.RESERVE)
 BASE_RATING = 50
 THOUSAND = 1000
 
@@ -158,7 +160,7 @@ async def interest_for(ctx: TickContext, borrower_id: int, fallback: int) -> int
 
 async def refuses(ctx: TickContext, borrower_id: int) -> bool:
     row = await ctx.session.get(CreditProfileRow, borrower_id)
-    return row is not None and row.state in (CreditState.DEFAULT, CreditState.RESTRUCTURING)
+    return row is not None and row.state in REFUSES_CREDIT_STATES
 
 
 async def realm_of(ctx: TickContext, node_id: int | None) -> int | None:

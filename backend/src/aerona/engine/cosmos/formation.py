@@ -3,6 +3,7 @@ from math import sqrt
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ages import FormationHistoryRow
 from aerona.db.tables.celestial import WorldRow
@@ -10,16 +11,16 @@ from aerona.db.tables.physics import ImpactEventRow, StarPhysicsRow, WorldPhysic
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import FormationZone, GiantMigration
 from aerona.domain.enums.cosmography import WorldAge
+from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
-from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.orbits import GAS_WORLDS, planet_of
 from aerona.engine.lore.history import scope_incident
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import record
 
-DIVINE_WORLDS = frozenset({WorldType.GODS_PALACE, WorldType.DREAM, WorldType.VOID_POCKET, WorldType.GENERATION_SHIP})
+DIVINE_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.DIVINE_WORLDS)
 TENTHS = 10
 ANCIENT = 1
 ZONE_WATER = {FormationZone.INNER: 15, FormationZone.SNOW_LINE: 50, FormationZone.OUTER: 80}

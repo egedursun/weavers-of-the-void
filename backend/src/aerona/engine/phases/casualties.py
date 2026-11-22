@@ -5,6 +5,7 @@ from math import ceil
 from sqlalchemy import select
 
 from aerona.catalog.interventions import DISASTERS
+from aerona.catalog.life_traits import COMMANDER_TRAIT_TRAITS, having
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -15,7 +16,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.military import CommanderTrait
+from aerona.domain.enums.life_traits import CommanderTraitTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import KnowledgeBranch
@@ -45,7 +46,7 @@ from aerona.rules.registry import Rules
 
 FIGHTER_ROLES = HERO_ROLES | {MortalRole.CAPTAIN, MortalRole.BANDIT, MortalRole.OFFICER, MortalRole.PILOT}
 COMMANDER_SUBTYPES = ("commander", "standard bearer", "raider captain", "guard captain")
-DECAPITATORS = frozenset({CommanderTrait.BRUTAL, CommanderTrait.AGGRESSIVE_ASSAULTER})
+DECAPITATORS = having(COMMANDER_TRAIT_TRAITS, CommanderTraitTrait.DECAPITATORS)
 HOLY_COMMANDER_SUBTYPE = "guard captain"
 KIND_OF_DISASTER = {kind: disaster for disaster, kind in DISASTER_KINDS.items()}
 STAT_KEYS = ("strength", "agility", "intellect", "charisma")

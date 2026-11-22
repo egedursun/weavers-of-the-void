@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import CRIME_KINDS
 from aerona.catalog.urban import MERCHANT_HOUSES
 from aerona.core.grammar import spoken
 from aerona.db.tables.economy import TradeRouteProfileRow
@@ -12,7 +13,7 @@ from aerona.db.tables.urban import OrderLawRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.faction import CRIME_KINDS, FactionKind
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.urban import MarketPlay, OrderLaw
 from aerona.engine.primitives.queries import living_entity

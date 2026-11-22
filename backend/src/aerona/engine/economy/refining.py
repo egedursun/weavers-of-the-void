@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from aerona.catalog.eras import TECHNIQUE_ERAS
-from aerona.catalog.materials import ARMOUR_MATERIALS, LUXURY_MATERIALS, TOOL_MATERIALS, WEAPON_MATERIALS
+from aerona.catalog.goods_tables import MATERIAL_TECHNIQUES, PREFERENCE, UPGRADES
 from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT
 from aerona.catalog.production import CHAIN_STEPS, RECIPES, SHIP_HULLS, ChainStep
 from aerona.constants.units import PERCENT
@@ -32,15 +32,8 @@ from aerona.engine.structures.readers import workshop_output
 from aerona.rules.registry import Rules
 
 M = MaterialKind
-UPGRADES: dict[MaterialKind, MaterialKind] = {M.COPPER: M.BRONZE, M.IRON: M.STEEL}
 EXOTIC_FROM_IRON = M.SKYSTEEL
 KITCHEN_STEPS = frozenset({"butcher", "cheese"})
-PREFERENCE: dict[CommodityKind, tuple[MaterialKind, ...]] = {
-    CommodityKind.WEAPONS: WEAPON_MATERIALS,
-    CommodityKind.ARMOUR: ARMOUR_MATERIALS,
-    CommodityKind.TOOLS: TOOL_MATERIALS,
-    CommodityKind.LUXURIES: LUXURY_MATERIALS,
-}
 
 
 @dataclass
@@ -177,14 +170,6 @@ async def best_input(ctx: TickContext, book: EconomyBook, community: EntityRow, 
         return None, None
     _, material, world_material = min(candidates, key=lambda item: (item[0], str(item[1])))
     return material, world_material
-
-
-MATERIAL_TECHNIQUES = {
-    M.BRONZE: (Technique.BRONZE,),
-    M.IRON: (Technique.IRON,),
-    M.STEEL: (Technique.STEEL,),
-    M.SKYSTEEL: (Technique.SKYSTEEL,),
-}
 
 
 def forged_material(

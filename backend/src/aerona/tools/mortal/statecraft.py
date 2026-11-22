@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.catalog.life.tools import ISSUE_DEMAND_CRISIS_DEMANDS
 from aerona.catalog.statecraft import DEMAND_TEXT
 from aerona.core.grammar import spoken
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow
@@ -44,7 +45,7 @@ async def issue_demand(call: MortalCall, args: DemandInput) -> str:
             fail(MortalResult.DEMAND_REFUSED, why="that realm holds no such vassal")
     elif args.demand is CrisisDemand.CONVERT:
         subject = realm.profile.state_religion_id
-    if args.demand in {CrisisDemand.CEDE_REGION, CrisisDemand.CONVERT} and subject is None:
+    if args.demand in ISSUE_DEMAND_CRISIS_DEMANDS and subject is None:
         fail(MortalResult.DEMAND_REFUSED, why="there is nothing of that kind to demand")
     amount = target.profile.treasury * call.rules.statecraft.pay_share_pct // 100 if args.demand is CrisisDemand.PAY else 0
     row = await open_crisis(call.tick, realm, target, args.demand, subject_id=subject, amount=amount)

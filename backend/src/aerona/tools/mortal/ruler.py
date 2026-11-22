@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import select
 
 from aerona.catalog.civics import OFFICE_GATES
+from aerona.catalog.life.tools import RULER_THRONES as THRONES
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
@@ -11,7 +12,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
+from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis
 from aerona.engine.lore.civics import realm_allows, unlearned
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook, enact
@@ -24,7 +25,6 @@ from aerona.tools.framework.validation import fail
 from aerona.tools.mortal.inputs import AppointOfficerInput, EnactLawInput, SetTaxInput
 from aerona.tools.mortal.justice import bring_law, law_known
 
-THRONES = (OfficeKind.RULER, OfficeKind.REGENT)
 TAX_CAP = 50
 
 

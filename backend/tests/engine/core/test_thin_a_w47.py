@@ -1,6 +1,8 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.military import LEVELS
+from aerona.catalog.life.polity import MODEL_PENALTIES
 from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyProfileRow, IdeologyTenetRow, ProphecyConditionRow
 from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.folkways import BiasWeightRow, DietRow
@@ -29,9 +31,9 @@ from aerona.engine.happenings.progression import PHASE_STEPS
 from aerona.engine.interconnect.registry import MECHANICS
 from aerona.engine.lore.creed_change import merge_creeds
 from aerona.engine.lore.prophecy_tales import retell
-from aerona.engine.military.feud_acts import LEVELS, raise_level
+from aerona.engine.military.feud_acts import raise_level
 from aerona.engine.mind.relation_parts import keep_relation_components
-from aerona.engine.polity.oath_terms import MODEL_PENALTIES, scaled_loss
+from aerona.engine.polity.oath_terms import scaled_loss
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.services.community_relations import pair_key
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal

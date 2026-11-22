@@ -6,6 +6,7 @@ from types import MappingProxyType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.collective import MOUNT_FALLBACKS
 from aerona.catalog.vehicles import FAMILY_TECHNIQUES, FRAMES, FUELS, MOUNTS, SIZE_SCALE, FrameSpec, frame_layout
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -57,7 +58,6 @@ MOUNT_SECTIONS: MappingProxyType[MountKind, VehicleSection] = total(
         M.WARD_NODE: X.WARD,
     },
 )
-MOUNT_FALLBACKS = (X.DECK, X.PLATFORM, X.TURRET, X.HULL, X.CHASSIS, X.FRAME, X.GONDOLA, X.MOUNT_BODY, X.CORE)
 MOUNT_ARCS: MappingProxyType[MountKind, MountArc] = total(
     MountKind,
     {

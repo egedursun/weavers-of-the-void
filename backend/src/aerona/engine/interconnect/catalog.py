@@ -725,7 +725,7 @@ CORE_MECHANICS = (
         tables=(WorldMaterialRow.__tablename__, ResourceProfileRow.__tablename__),
         targets=("resource", "place", "species"),
         couplings=(
-            Coupling(Subsystem.GODS, "a dead god's remains become godflesh and a substance of their own"),
+            Coupling(Subsystem.GODS, "a dead god's remains become divine tissue and a substance of their own"),
             Coupling(Subsystem.COSMOS, "dead stars and comets drop star metal; rifts glaze the land into void glass"),
             Coupling(Subsystem.KNOWLEDGE, "smiths at the height of metallurgy discover alloys", EdgeKind.TRIGGER, "materials.world_material_research_level"),
         ),
@@ -1481,9 +1481,9 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         "an extinct beast stops feeding its hunters",
     ),
     (
-        "godflesh",
+        "divine_tissue",
         "F3.1",
-        "Godflesh cut from a dead god",
+        "Divine tissue cut from a dead god",
         ("world_materials",),
         RESOURCE_SECTION,
         (R, "place"),

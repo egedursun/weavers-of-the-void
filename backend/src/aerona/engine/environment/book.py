@@ -4,12 +4,13 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.movement import by_water
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherEffect
+from aerona.domain.enums.environment import ScarKind, WeatherEffect
 from aerona.domain.enums.nature import PlantDefence
 from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.environment.weather import Weather, WeatherInputs, weather_at, weather_of
@@ -144,7 +145,7 @@ class EnvironmentBook:
     def footed(self, world_seed: int, epoch: int, region: RegionEnvironmentRow, mode: str, *, season: WorldSeasonRow | None, slot: str) -> int:
         base = region.passability.get(mode, PERCENT) * passage(self.rules, self.thorns.get(region.entity_id, 0.0))
         weather = self.weather(world_seed, epoch, region, season, slot)
-        footing = sail_factor(self.rules, weather.effect(WeatherEffect.WIND)) if mode == MovementMode.BOAT.value else weather.factor(WeatherEffect.FOOTING)
+        footing = sail_factor(self.rules, weather.effect(WeatherEffect.WIND)) if by_water(mode) else weather.factor(WeatherEffect.FOOTING)
         travel = season.travel / PERCENT if season is not None else 1.0
         return clamp_int(base * max(0.0, footing) * travel, 0, PERCENT)
 

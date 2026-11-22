@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import FACTION_KIND_TRAITS, having
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.customs import AgeSetMemberRow, AgeSetRow
 from aerona.db.tables.entities import EntityRow
@@ -10,13 +11,13 @@ from aerona.db.tables.regime import CoalitionMemberRow
 from aerona.domain.enums.belonging import IdentityLayer
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.life_traits import FactionKindTrait
 from aerona.engine.body.customs import people_of
 from aerona.engine.cycles.book import realm_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import active_bonds, living_entity
 
-GUILDS = frozenset({FactionKind.MERCHANT_GUILD, FactionKind.CRAFT_GUILD, FactionKind.SCHOLARS_ACADEMY, FactionKind.PRIESTHOOD, FactionKind.WARRIOR_ORDER})
+GUILDS = having(FACTION_KIND_TRAITS, FactionKindTrait.GUILDS)
 Value = tuple[int | None, str | None]
 
 

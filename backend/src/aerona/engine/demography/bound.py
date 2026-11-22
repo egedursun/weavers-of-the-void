@@ -1,3 +1,4 @@
+from aerona.catalog.life.demography import MOVE_PEOPLE_COHORT_CONDITIONS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
@@ -43,7 +44,7 @@ async def move_people(
         count = round_half_up(rows[key].count * share)
         if count <= 0:
             continue
-        landed = CohortCondition.NONE if condition in {CohortCondition.ENSLAVED, CohortCondition.CAPTIVE} else condition
+        landed = CohortCondition.NONE if condition in MOVE_PEOPLE_COHORT_CONDITIONS else condition
         if move_amount(rows[key], row_for(ctx.session, rows, community.id, (band, sex, target, landed), ctx.epoch), "count", count):
             moved += count
     return moved

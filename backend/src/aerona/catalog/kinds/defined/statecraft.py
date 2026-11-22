@@ -1,6 +1,24 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.statecraft import NobleWant, SubjectKind
+from aerona.domain.enums.statecraft import CouncilTask, NobleWant, SubjectKind
+
+COUNCIL_TASK = total(
+    CouncilTask,
+    {
+        CouncilTask.IMPROVE_RELATIONS: Defined(
+            "Improve relations", checked_by=("engine.polity.council.choose",), used_by=("catalog.life.polity.TASKS", "engine.polity.council.improve_relations")
+        ),
+        CouncilTask.TRAIN_TROOPS: Defined("Train troops", checked_by=(), used_by=("catalog.life.polity.TASKS", "engine.polity.council.train_troops")),
+        CouncilTask.COLLECT_TAXES: Defined("Collect taxes", checked_by=(), used_by=("catalog.life.polity.TASKS", "engine.polity.council.collect_taxes")),
+        CouncilTask.DISRUPT_SCHEMES: Defined("Disrupt schemes", checked_by=(), used_by=("catalog.life.polity.TASKS", "engine.polity.council.disrupt_schemes")),
+        CouncilTask.CONVERT_PROVINCE: Defined(
+            "Convert province", checked_by=("engine.polity.council.choose",), used_by=("catalog.life.polity.TASKS", "engine.polity.council.convert_province")
+        ),
+        CouncilTask.PURGE_CORRUPTION: Defined(
+            "Purge corruption", checked_by=(), used_by=("catalog.life.polity.TASKS", "engine.polity.council.purge_corruption")
+        ),
+    },
+)
 
 NOBLE_WANT = total(
     NobleWant,

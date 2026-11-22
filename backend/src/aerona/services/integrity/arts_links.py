@@ -1,14 +1,13 @@
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.services import OPEN
 from aerona.db.tables.arts import ClubRow, LeagueRow
 from aerona.db.tables.constructs import InstructionOrderRow, InstructionSetRow
 from aerona.db.tables.contracts import MonsterContractRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.constructs import ContractStatus
 from aerona.domain.enums.entity import EntityStatus
-
-OPEN = (ContractStatus.POSTED, ContractStatus.TAKEN)
 
 
 async def mend_arts_links(session: AsyncSession, epoch: int) -> int:

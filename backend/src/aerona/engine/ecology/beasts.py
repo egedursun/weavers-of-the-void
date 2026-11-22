@@ -2,6 +2,9 @@ from collections import Counter
 
 from sqlalchemy import func, select
 
+from aerona.catalog.goods_tables import TROPHY_CLASSES
+from aerona.catalog.goods_traits import commodities_with
+from aerona.catalog.life_traits import SIZE_CLASS_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.bonds import BondRow
@@ -19,6 +22,8 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.ecology import SIZE_ORDER, BeastTemper, SizeClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.goods_traits import CommodityTrait
+from aerona.domain.enums.life_traits import SizeClassTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -59,16 +64,9 @@ from aerona.rules.registry import Rules
 ACTIVE = frozenset({BeastTemper.HUNGRY, BeastTemper.TERRITORIAL, BeastTemper.ENRAGED})
 COMMODITY_KEYS = frozenset(item.value for item in CommodityKind)
 HELD = frozenset({BeastTemper.BOUND, BeastTemper.TAMED, BeastTemper.COMPANION})
-HOARD_GOODS = (CommodityKind.LUXURIES, CommodityKind.LIVESTOCK, CommodityKind.GRAIN)
+HOARD_GOODS = commodities_with(CommodityTrait.HOARD)
 GREAT = SIZE_ORDER.index(SizeClass.HUGE)
-RIDEABLE = frozenset({SizeClass.LARGE, SizeClass.HUGE, SizeClass.COLOSSAL})
-TROPHY_CLASSES = {
-    MaterialKind.GREAT_BONE: ItemClass.BLADE,
-    MaterialKind.IVORY: ItemClass.JEWEL,
-    MaterialKind.CHITIN: ItemClass.ARMOUR,
-    MaterialKind.HIDE: ItemClass.ARMOUR,
-    MaterialKind.BONE: ItemClass.TOOL,
-}
+RIDEABLE = having(SIZE_CLASS_TRAITS, SizeClassTrait.RIDEABLE)
 TRIBUTE_PARAMS = {"hoard": True}
 
 

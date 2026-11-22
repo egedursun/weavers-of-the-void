@@ -3,6 +3,7 @@ from types import MappingProxyType
 
 from aerona.domain.enums.cosmography import GalaxyType
 from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.environment import TerrainKind
 from aerona.rules.registry.goals import RENAMED_RULES as GOAL_RENAMES
 from aerona.rules.registry.war_depth import RENAMED_RULES as WAR_RENAMES
 
@@ -251,11 +252,23 @@ RENAMED_RULES: Mapping[RuleKey, RuleKey] = MappingProxyType(
         **{("creatures", f"chimera_{name}"): ("creatures", f"merged_{name}") for name in MERGED_RULES},
         ("creatures", "chimera_merge_chance"): ("creatures", "species_merge_chance"),
         ("creatures", "chimera_merge_distance"): ("creatures", "species_merge_distance"),
-        ("prosthetics", "dragonbone"): ("prosthetics", "great_bone"),
+        ("prosthetics", "dragonbone"): ("prosthetics", "great_beast_tissue"),
+        ("prosthetics", "great_bone"): ("prosthetics", "great_beast_tissue"),
+        ("prosthetics", "bone"): ("prosthetics", "calcified_tissue"),
+        ("environment", "desert_salt"): ("environment", "desert_halite"),
         **{
             ("factions", f"brotherhood_{name}"): ("factions", f"order_{name}")
             for name in ("min_warrior_pct", "at_war_min_warrior_pct", "strength", "wealth", "sway")
         },
+    }
+)
+
+
+RETIRED_GROUND_MODES = ("on_foot", "mounted", "wheeled", "burrowing")
+SPLIT_RULES: Mapping[RuleKey, tuple[RuleKey, ...]] = MappingProxyType(
+    {
+        ("passability", f"{terrain.value}_base"): tuple(("passability", f"{terrain.value}_{mode}_pct") for mode in RETIRED_GROUND_MODES)
+        for terrain in TerrainKind
     }
 )
 
@@ -266,4 +279,6 @@ def canonical_key(namespace: str, key: str) -> RuleKey:
 
 def canonical_overrides(overrides: Mapping[RuleKey, float]) -> dict[RuleKey, float]:
     renamed = {canonical_key(*item): value for item, value in overrides.items() if item in RENAMED_RULES}
-    return {**renamed, **{item: value for item, value in overrides.items() if item not in RENAMED_RULES}}
+    split = {target: value for item, value in overrides.items() for target in SPLIT_RULES.get(item, ())}
+    kept = {item: value for item, value in overrides.items() if item not in RENAMED_RULES and item not in SPLIT_RULES}
+    return {**renamed, **split, **kept}

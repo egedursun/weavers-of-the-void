@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.conditions import MAIMS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import BodyCustomRow, MaimedCohortRow
 from aerona.db.tables.entities import EntityRow
@@ -20,7 +21,6 @@ from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import MaimedRules
 
-EYE_KINDS = frozenset({MaimedKind.ONE_EYED, MaimedKind.BLIND})
 FESTIVAL_SUBTYPE = "scar festival"
 FESTIVAL_FIELD = "scar_festivals"
 
@@ -29,19 +29,9 @@ COHORT_KEY = "maimed"
 
 
 def kind_weights(rules: MaimedRules, helmet_cover: int) -> dict[MaimedKind, float]:
-    weights = {
-        MaimedKind.ONE_ARMED: rules.one_armed,
-        MaimedKind.ONE_LEGGED: rules.one_legged,
-        MaimedKind.ONE_EYED: rules.one_eyed,
-        MaimedKind.BLIND: rules.blind,
-        MaimedKind.DEAF: rules.deaf,
-        MaimedKind.MUTE: rules.mute,
-        MaimedKind.LAME: rules.lame,
-        MaimedKind.SCARRED: rules.scarred,
-        MaimedKind.BROKEN_MINDED: rules.broken_minded,
-    }
+    weights = {kind: spec.weight(rules) for kind, spec in MAIMS.items()}
     shield = max(0, PERCENT - helmet_cover * rules.helmet_eye_cut_pct / PERCENT) / PERCENT
-    return {kind: weight * (shield if kind in EYE_KINDS else 1) for kind, weight in weights.items()}
+    return {kind: weight * (shield if MAIMS[kind].eyes else 1) for kind, weight in weights.items()}
 
 
 async def cohort(ctx: TickContext, community_id: int, kind: MaimedKind) -> MaimedCohortRow:

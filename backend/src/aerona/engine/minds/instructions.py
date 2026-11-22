@@ -2,24 +2,11 @@ from itertools import combinations
 
 from sqlalchemy import select
 
+from aerona.catalog.life.minds import CONTRARY
 from aerona.constants.units import PERCENT
 from aerona.db.tables.constructs import InstructionOrderRow, InstructionSetRow
-from aerona.domain.enums.constructs import OrderKind
 from aerona.engine.context import TickContext
 
-K = OrderKind
-CONTRARY = frozenset(
-    {
-        frozenset({K.PROTECT, K.DESTROY}),
-        frozenset({K.GUARD, K.DESTROY}),
-        frozenset({K.HOLD_STILL, K.FOLLOW}),
-        frozenset({K.HOLD_STILL, K.BUILD}),
-        frozenset({K.HOLD_STILL, K.GATHER}),
-        frozenset({K.HOLD_STILL, K.REPLICATE}),
-        frozenset({K.FORBID, K.SERVE}),
-        frozenset({K.MAINTAIN, K.DESTROY}),
-    }
-)
 CONFLICT_STEP = 25
 
 

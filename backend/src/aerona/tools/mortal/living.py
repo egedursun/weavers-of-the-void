@@ -4,6 +4,7 @@ from typing import Any, Literal
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.catalog.life.tools import RAISE_SAPIENCE_TOOL_SKILL_KINDS, SAMPLE_SKILLS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import spoken
 from aerona.db.tables.ecology import SpeciesProductRow
@@ -17,7 +18,6 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.industry import MethodKind
 from aerona.domain.enums.living import CultivationMethod, Fertility, HostPlacement, HostRelation, LineTrait
 from aerona.domain.enums.made import AugmentKind, AugmentSlot
-from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.agrarian.control import plant
@@ -42,7 +42,6 @@ from aerona.tools.mortal.ruler import enact_law
 
 PERCENT = 100
 Name = Field(min_length=1, max_length=120)
-SAMPLE_SKILLS = (SkillKind.SCIENCE, SkillKind.MEDICINE, SkillKind.FORAGING, SkillKind.BEAST_HANDLING)
 LivingMethod = Literal["cultured_crops", "grown_timber", "fibre_from_life", "vat_culture", "bioreactor"]
 
 
@@ -334,7 +333,7 @@ async def release_line(call: MortalCall, args: LineInput) -> str:
 async def raise_sapience_tool(call: MortalCall, args: LineInput) -> str:
     unheld(call, MortalResult.SAPIENCE_DECLINED)
     line = await my_line(call, args.line_id, MortalResult.SAPIENCE_DECLINED)
-    skill = await best_skill(call.session, call.me.id, (SkillKind.SCIENCE, SkillKind.SPELLCRAFT, SkillKind.MEDICINE))
+    skill = await best_skill(call.session, call.me.id, RAISE_SAPIENCE_TOOL_SKILL_KINDS)
     trait = await attempt(MortalResult.SAPIENCE_DECLINED, raise_sapience(call.tick, line, skill))
     await call.record("tools.mortal.sapience_shaped", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name})
     return result(MortalResult.SAPIENCE_SHAPED, name=line.name, strength=trait.strength)

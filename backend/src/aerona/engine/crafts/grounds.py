@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.catch import GROUNDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import CatchGroundRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
@@ -10,7 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPlan, HarmCause
-from aerona.domain.enums.crafts import CatchGround, CatchRight, Gear
+from aerona.domain.enums.crafts import CatchGround, CatchRight
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
@@ -26,9 +27,6 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war
-
-FISH_GEAR = (Gear.LINES, Gear.NETS, Gear.WEIRS)
-LAND_GEAR = (Gear.TRAPS, Gear.SNARES)
 
 
 @dataclass
@@ -60,7 +58,7 @@ async def seed_fisheries(ctx: TickContext, atlas: RegionAtlas, tally: GroundTall
         if resource is None or resource.status is not EntityStatus.CANON or region is None or resource.id in known or held(resource.id):
             continue
         rng = ctx.rng(seed_of("ground", resource.id))
-        marine = rng.chance(table.marine_hunt_chance)
+        ground = CatchGround.MARINE_HUNT if rng.chance(table.marine_hunt_chance) else CatchGround.FISHERY
         worker = await ctx.session.scalar(
             select(ResourceWorkerRow.community_entity_id)
             .where(ResourceWorkerRow.resource_entity_id == resource.id)
@@ -72,8 +70,8 @@ async def seed_fisheries(ctx: TickContext, atlas: RegionAtlas, tally: GroundTall
             CatchGroundRow(
                 source_entity_id=resource.id,
                 region_entity_id=region,
-                ground=CatchGround.MARINE_HUNT if marine else CatchGround.FISHERY,
-                gear=Gear.HARPOONS if marine else rng.pick(list(FISH_GEAR)),
+                ground=ground,
+                gear=rng.pick(list(GROUNDS[ground].gear)),
                 right=CatchRight.OWNED if owned else CatchRight.COMMONS,
                 owner_node_id=await owner_of(ctx, worker) if owned and worker is not None else None,
                 first_stock=max(1, profile.initial_reserve),
@@ -97,12 +95,13 @@ async def seed_land(ctx: TickContext, tally: GroundTally) -> None:
         profile = await ctx.session.get(SpeciesProfileRow, row.species_entity_id)
         rng = ctx.rng(seed_of("ground", *key))
         fowling = profile.body_plan is BodyPlan.AVIAN if profile is not None else rng.chance(table.fowling_chance)
+        ground = CatchGround.FOWLING if fowling else CatchGround.TRAPPING
         ctx.session.add(
             CatchGroundRow(
                 source_entity_id=row.species_entity_id,
                 region_entity_id=row.region_entity_id,
-                ground=CatchGround.FOWLING if fowling else CatchGround.TRAPPING,
-                gear=Gear.SNARES if fowling else rng.pick(list(LAND_GEAR)),
+                ground=ground,
+                gear=rng.pick(list(GROUNDS[ground].gear)),
                 first_stock=max(1, row.abundance),
                 locked=[],
             )

@@ -21,6 +21,7 @@ from aerona.api.schemas.body import (
     ProsthesisView,
 )
 from aerona.catalog.body_plans import PLANS
+from aerona.catalog.conditions import OPEN_INJURY_STATES, STATES
 from aerona.catalog.stats import max_hp
 from aerona.catalog.tissues import DIGIT_LIMBS, TISSUES, covering_of, digit_keys, digit_label, digit_weight
 from aerona.constants.units import PERCENT
@@ -31,7 +32,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyFunction, BodyReading, Capacity, InjuryState, TreatmentStep
+from aerona.domain.enums.body import BodyFunction, BodyReading, Capacity, InjuryState, TreatmentStep
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
@@ -51,13 +52,6 @@ router = APIRouter(tags=["body"])
 
 DEAD = "dead"
 TREATMENT_VALUES = frozenset(step.value for step in TreatmentStep)
-
-STATE_RANK = {
-    state: index
-    for index, state in enumerate(
-        (InjuryState.HEALED_SCAR, InjuryState.HEALING, InjuryState.FRESH, InjuryState.PERMANENT, InjuryState.INFECTED, InjuryState.LETHAL)
-    )
-}
 
 
 LINK_KINDS = {
@@ -179,7 +173,7 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
         for part in anatomy.parts:
             on_part = [row for row in injuries if row.part == part.key]
             lasting = [row for row in on_part if row.state is not InjuryState.LETHAL]
-            worst = max(on_part, key=lambda row: STATE_RANK[row.state], default=None)
+            worst = max(on_part, key=lambda row: STATES[row.state].rank, default=None)
             loss = max((row.function_loss for row in lasting), default=0)
             if part.counted:
                 loss = max(loss, round((part.counted - min(part.counted, counts_of(body).get(part.key, part.counted))) * PERCENT / part.counted))

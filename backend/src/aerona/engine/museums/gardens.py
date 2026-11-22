@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.museums import PLANTING_SPECIES_CLASSS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import GameReserveRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
@@ -67,7 +68,7 @@ async def planting(ctx: TickContext, atlas: RegionAtlas, town_id: int, kind: Gar
     region = atlas.top_region(town_id)
     if region is None:
         return []
-    classes = PLANTED.get(kind, (SpeciesClass.PLANT, SpeciesClass.FUNGUS))
+    classes = PLANTED.get(kind, PLANTING_SPECIES_CLASSS)
     found = await ctx.session.scalars(
         select(SpeciesRangeRow.species_entity_id)
         .join(SpeciesProfileRow, SpeciesProfileRow.species_entity_id == SpeciesRangeRow.species_entity_id)

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import delete, select
 
 from aerona.catalog.law_areas import LAW_AREAS
+from aerona.catalog.life.polity import DEFAULT_POWERS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.economy import LoanRow
@@ -60,7 +61,7 @@ from aerona.engine.polity.houses import HouseBook, extinguish, found_house, join
 from aerona.engine.polity.laws import edit_law, enact, ensure_profile, jurisdiction_of, repeal, validate
 from aerona.engine.polity.oath_terms import OathTerms
 from aerona.engine.polity.oaths import break_oath, keep, swear
-from aerona.engine.polity.offices import DEFAULT_POWERS, appoint
+from aerona.engine.polity.offices import appoint
 from aerona.engine.polity.repute import repute_of
 from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.queries import active_bonds, add_flag, close, connect, living_entity, remove_flag

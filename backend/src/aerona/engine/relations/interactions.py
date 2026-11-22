@@ -5,9 +5,12 @@ from dataclasses import dataclass, field
 from sqlalchemy import or_, select
 
 from aerona.catalog.ethics import STANCE_READINGS
+from aerona.catalog.life.relations import CONFORMING, GAIN_THOUGHTS, LOSS_THOUGHTS, WEIGHT_INTERACTION_KINDS, WEIGHT_INTERACTION_KINDS_2
+from aerona.catalog.life_traits import INTERACTION_KIND_TRAITS, having
 from aerona.catalog.norms import GATHERING_SITUATIONS, INTERACTION_BEHAVIOUR
 from aerona.catalog.relations import INTERACTIONS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow
@@ -20,6 +23,7 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.collective import NormSituation
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import InteractionKindTrait
 from aerona.domain.enums.mind import (
     ActKind,
     EthicalStance,
@@ -67,8 +71,8 @@ from aerona.engine.renown.lore import confide
 K = InteractionKind
 FACET_SPAN = 50
 VALUE_SPAN = 100
-TALK_FREE = frozenset({K.BRAWL, K.GIFT})
-FRIENDLY_TALK = frozenset({K.CONVERSE, K.BEFRIEND, K.JOKE, K.CONFIDE_SECRET})
+TALK_FREE = having(INTERACTION_KIND_TRAITS, InteractionKindTrait.TALK_FREE)
+FRIENDLY_TALK = having(INTERACTION_KIND_TRAITS, InteractionKindTrait.FRIENDLY_TALK)
 LIGHT_WEIGHT = 0.05
 MIN_TEACH_GAP = 20
 HUNGRY_BELOW = 30
@@ -76,7 +80,6 @@ BRAWL_BELOW = -20
 CONFIDE_AT = 40
 FAVOUR_AT = 20
 SUPERIOR_GAP = 30
-CONFORMING = (Facet.COOPERATION, Facet.POLITENESS, Facet.SENSE_OF_DUTY)
 
 
 @dataclass
@@ -270,9 +273,9 @@ def weight(scene: Scene, actor: int, target: int, kind: InteractionKind, row: Re
     if spec.wants & scene.wants.get(actor, set()):
         result *= 1 + table.want_weight_pct / PERCENT
     events = table.event_weight_pct / PERCENT
-    if scene.war and kind in {K.COMFORT, K.ARGUE}:
+    if scene.war and kind in WEIGHT_INTERACTION_KINDS:
         result *= 1 + events
-    if actor in scene.hungry and kind in {K.QUARREL, K.BRAWL}:
+    if actor in scene.hungry and kind in WEIGHT_INTERACTION_KINDS_2:
         result *= 1 + events
     return result
 
@@ -347,6 +350,10 @@ async def shamed(scene: Scene, actor: int, target: int, kind: InteractionKind, t
     await think(scene.ctx.session, scene.ctx.rules, actor, ThoughtKind.WAS_SHAMED, scene.ctx.epoch, subject_id=target)
 
 
+EFFECTS: Handlers[InteractionKind, Callable[[Scene, int, int], Awaitable[None]]] = Handlers(InteractionKind)
+
+
+@EFFECTS.on(InteractionKind.GOSSIP)
 async def gossip(scene: Scene, actor: int, target: int) -> None:
     session, rules = scene.ctx.session, scene.ctx.rules
     worst = await session.scalar(
@@ -363,10 +370,12 @@ async def gossip(scene: Scene, actor: int, target: int) -> None:
     await gossip_secret(scene.ctx, actor, target)
 
 
+@EFFECTS.on(InteractionKind.COMFORT)
 async def comfort(scene: Scene, actor: int, target: int) -> None:
     await add_stress(scene.ctx.session, target, -scene.ctx.rules.social.comfort_stress, scene.ctx.epoch)
 
 
+@EFFECTS.on(InteractionKind.THREATEN)
 async def threaten(scene: Scene, actor: int, target: int) -> None:
     await add_stress(scene.ctx.session, target, scene.ctx.rules.social.threat_stress, scene.ctx.epoch)
 
@@ -380,6 +389,7 @@ async def pass_wealth(scene: Scene, giver: int, taker: int, amount: int) -> bool
     return True
 
 
+@EFFECTS.on(InteractionKind.GIFT)
 async def gift(scene: Scene, actor: int, target: int) -> None:
     if await pass_wealth(scene, actor, target, scene.ctx.rules.social.gift_wealth):
         ctx = scene.ctx
@@ -387,12 +397,14 @@ async def gift(scene: Scene, actor: int, target: int) -> None:
         await gift_earns(ctx, actor, target)
 
 
+@EFFECTS.on(InteractionKind.ASK_FAVOUR)
 async def favour(scene: Scene, actor: int, target: int) -> None:
     if await ask_back(scene.ctx, actor, target) is False:
         return
     await pass_wealth(scene, target, actor, scene.ctx.rules.social.favour_wealth)
 
 
+@EFFECTS.on(InteractionKind.TEACH)
 async def teach(scene: Scene, actor: int, target: int) -> None:
     mine, theirs = scene.skills.get(actor, {}), scene.skills.get(target, {})
     gaps = sorted(((level - theirs.get(skill, 0), skill) for skill, level in mine.items()), reverse=True)
@@ -400,6 +412,7 @@ async def teach(scene: Scene, actor: int, target: int) -> None:
         await practise(scene.ctx.session, scene.ctx.rules, target, SkillKind(gaps[0][1]), scene.ctx.rules.skills.teach_xp, epoch=scene.ctx.epoch)
 
 
+@EFFECTS.on(InteractionKind.PROPOSE)
 async def propose(scene: Scene, actor: int, target: int) -> None:
     ctx = scene.ctx
     back = await relation(ctx.session, target, actor)
@@ -410,6 +423,7 @@ async def propose(scene: Scene, actor: int, target: int) -> None:
         await think(ctx.session, ctx.rules, actor, ThoughtKind.HEARTBROKEN, ctx.epoch, subject_id=target)
 
 
+@EFFECTS.on(InteractionKind.SEDUCE)
 async def seduce(scene: Scene, actor: int, target: int) -> None:
     ctx = scene.ctx
     spouses = (scene.spouses.get(actor, set()) | scene.spouses.get(target, set())) - {actor, target}
@@ -423,11 +437,13 @@ async def seduce(scene: Scene, actor: int, target: int) -> None:
     await conscience(ctx, actor, ActKind.ADULTERY, min(spouses))
 
 
+@EFFECTS.on(InteractionKind.INSULT)
 async def insult(scene: Scene, actor: int, target: int) -> None:
     ctx = scene.ctx
     await remember(ctx.session, ctx.rules, holder_id=target, subject_id=actor, kind=MemoryKind.HUMILIATED_ME, magnitude=-10, epoch=ctx.epoch)
 
 
+@EFFECTS.on(InteractionKind.BRAWL)
 async def brawl(scene: Scene, actor: int, target: int) -> None:
     ctx = scene.ctx
     first, second = scene.mortals[actor], scene.mortals[target]
@@ -441,6 +457,7 @@ async def brawl(scene: Scene, actor: int, target: int) -> None:
         await remember(ctx.session, ctx.rules, holder_id=loser.id, subject_id=winner.id, kind=MemoryKind.HARMED_ME, magnitude=-8, epoch=ctx.epoch)
 
 
+@EFFECTS.on(InteractionKind.ARGUE)
 async def argue(scene: Scene, actor: int, target: int) -> None:
     ctx = scene.ctx
     if not ctx.rng(seed_of("argue", actor, target, ctx.epoch)).chance(ctx.rules.persuasion.argue_pct):
@@ -451,27 +468,12 @@ async def argue(scene: Scene, actor: int, target: int) -> None:
         await persuade(ctx, actor, target, AppealKind.BELIEF, PersuasionAim.BELIEF, axis=axes[0], toward=mine[axes[0]])
 
 
+@EFFECTS.on(InteractionKind.CONFIDE_SECRET)
 async def confide_lore(scene: Scene, actor: int, target: int) -> None:
     if await confide(scene.ctx, scene.mortals[actor], scene.mortals[target]):
         scene.ctx.count("lore_confided")
     if await confide_own(scene.ctx, actor, target):
         scene.ctx.count("secrets_confided")
-
-
-EFFECTS: dict[InteractionKind, Callable[[Scene, int, int], Awaitable[None]]] = {
-    K.GOSSIP: gossip,
-    K.COMFORT: comfort,
-    K.THREATEN: threaten,
-    K.GIFT: gift,
-    K.ASK_FAVOUR: favour,
-    K.TEACH: teach,
-    K.PROPOSE: propose,
-    K.SEDUCE: seduce,
-    K.INSULT: insult,
-    K.BRAWL: brawl,
-    K.ARGUE: argue,
-    K.CONFIDE_SECRET: confide_lore,
-}
 
 
 async def lands(scene: Scene, actor: int, target: int, kind: InteractionKind, rng: SeededRandom) -> bool:
@@ -563,10 +565,6 @@ async def living_mortals_by_place(ctx: TickContext, mortals: list[EntityRow]) ->
         if mortal.location_id is not None and mortal.status is EntityStatus.CANON and mortal.entity_type is EntityType.MORTAL:
             places[mortal.location_id].append(mortal)
     return places
-
-
-GAIN_THOUGHTS = {RelationType.FRIEND: ThoughtKind.MADE_A_FRIEND, RelationType.LOVER: ThoughtKind.FELL_IN_LOVE, RelationType.CRUSH: ThoughtKind.FELL_IN_LOVE}
-LOSS_THOUGHTS = {RelationType.FRIEND: ThoughtKind.LOST_A_FRIEND, RelationType.LOVER: ThoughtKind.HEARTBROKEN}
 
 
 async def feel_changes(ctx: TickContext, row: RelationshipRow, before: set[RelationType], after: set[RelationType]) -> None:

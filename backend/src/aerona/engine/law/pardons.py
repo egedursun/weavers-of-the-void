@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import REVOLT_CAUSES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.justice import CrimeCaseRow
@@ -14,7 +15,6 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
-from aerona.domain.enums.war import REVOLT_CAUSES
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.ethics import ethic_reading

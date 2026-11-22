@@ -1,12 +1,14 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import AGE_GRADE_TRAITS, having
 from aerona.db.tables.customs import AgeSetMemberRow, AgeSetRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.customs import AgeGrade
+from aerona.domain.enums.life_traits import AgeGradeTrait
 from aerona.engine.childhood.standing import below_marriage_age
 
-UNWED_GRADES = frozenset({AgeGrade.CHILDREN, AgeGrade.YOUTHS})
+UNWED_GRADES = having(AGE_GRADE_TRAITS, AgeGradeTrait.UNWED_GRADES)
 
 
 async def grade_of(session: AsyncSession, mortal_id: int) -> AgeGrade | None:

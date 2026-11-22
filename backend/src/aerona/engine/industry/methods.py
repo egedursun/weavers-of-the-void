@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.eras import TECHNIQUE_ERAS
+from aerona.catalog.goods_traits import workshops_with
 from aerona.catalog.methods import (
     ALWAYS_PRACTISED,
     EXTRACTION_PROCESS,
@@ -32,9 +33,10 @@ from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import IdeologyTenet, Technique
 from aerona.domain.enums.demography import Job
-from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow
 from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand
 from aerona.domain.enums.faction import FactionGoalKind, FactionKind
+from aerona.domain.enums.goods_traits import WorkshopTrait
 from aerona.domain.enums.industry import EnergyKind, MethodKind, ProcessKind
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ValueAxis
@@ -60,7 +62,7 @@ from aerona.rules.registry import Rules
 TENTH = 10
 CELLAR_LEVEL = 2
 CELLAR_METHODS = frozenset({MethodKind.ICING, MethodKind.CAVE_AGEING})
-CELLARS = (WorkshopKind.WAREHOUSE, WorkshopKind.GRANARY)
+CELLARS = workshops_with(WorkshopTrait.CELLAR)
 INTENSIVE = frozenset({MethodKind.IRRIGATED_TERRACES, MethodKind.CROP_ROTATION})
 
 

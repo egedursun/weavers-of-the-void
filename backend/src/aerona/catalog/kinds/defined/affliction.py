@@ -28,11 +28,11 @@ CURE_KIND = total(
             checked_by=("engine.body.afflictions.try_cures",),
             used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.try_cures", "engine.mythic.heroquests.settle_souls"),
         ),
-        CureKind.DIVINE: Defined("Divine", checked_by=("engine.body.afflictions.WIDER_CURES",), used_by=("catalog.effect_packages.PACKAGES",)),
-        CureKind.POWER: Defined("Power", checked_by=("engine.body.afflictions.WIDER_CURES",), used_by=("catalog.effect_packages.PACKAGES",)),
-        CureKind.SYMBIONT: Defined("Symbiont", checked_by=("engine.body.afflictions.WIDER_CURES",), used_by=("catalog.effect_packages.PACKAGES",)),
-        CureKind.TRANSFER: Defined("Transfer", checked_by=("engine.body.afflictions.WIDER_CURES",), used_by=("catalog.effect_packages.PACKAGES",)),
-        CureKind.AUGMENT: Defined("Augment", checked_by=("engine.body.afflictions.WIDER_CURES",), used_by=("catalog.effect_packages.PACKAGES",)),
+        CureKind.DIVINE: Defined("Divine", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.divine_cure")),
+        CureKind.POWER: Defined("Power", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.power_cure")),
+        CureKind.SYMBIONT: Defined("Symbiont", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.symbiont_cure")),
+        CureKind.TRANSFER: Defined("Transfer", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.transfer_cure")),
+        CureKind.AUGMENT: Defined("Augment", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.augment_cure")),
     },
 )
 
@@ -44,8 +44,8 @@ TRANSMISSION = total(
             checked_by=("engine.body.afflictions.stage_effects",),
             used_by=(
                 "catalog.effect_packages.PACKAGES",
+                "catalog.life.ecology.CARRIED_BY",
                 "engine.body.afflictions.stage_effects",
-                "engine.ecology.beast_acts.CARRIED_BY",
                 "engine.phases.body._marks",
             ),
         ),
@@ -54,8 +54,8 @@ TRANSMISSION = total(
             checked_by=("engine.body.afflictions.spread_by_bite",),
             used_by=(
                 "catalog.effect_packages.PACKAGES",
+                "catalog.life.ecology.CARRIED_BY",
                 "engine.body.afflictions.spread_by_bite",
-                "engine.ecology.beast_acts.CARRIED_BY",
                 "engine.ecology.beast_acts.bite_someone",
             ),
         ),
@@ -70,9 +70,9 @@ TRANSMISSION = total(
                 "engine.phases.body._addiction",
             ),
         ),
-        Transmission.INHALATION: Defined("Inhalation", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.ecology.beast_acts.CARRIED_BY")),
+        Transmission.INHALATION: Defined("Inhalation", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "catalog.life.ecology.CARRIED_BY")),
         Transmission.BLOOD: Defined(
-            "Blood", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.feed", "engine.ecology.beast_acts.CARRIED_BY")
+            "Blood", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "catalog.life.ecology.CARRIED_BY", "engine.body.afflictions.feed")
         ),
         Transmission.CURSE: Defined(
             "Curse",
@@ -120,15 +120,15 @@ TRANSMISSION = total(
                 "engine.phases.body._marks",
             ),
         ),
-        Transmission.GAZE: Defined("Gaze", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.ecology.beast_acts.CARRIED_BY")),
+        Transmission.GAZE: Defined("Gaze", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "catalog.life.ecology.CARRIED_BY")),
         Transmission.EXPERIENCE: Defined(
             "Experience",
             checked_by=(),
             used_by=(
                 "catalog.effect_packages.PACKAGES",
+                "catalog.life.ecology.CARRIED_BY",
                 "engine.arcana.warping.settle_stage",
                 "engine.body.afflictions.traumatise",
-                "engine.ecology.beast_acts.CARRIED_BY",
                 "engine.mythic.heroquests.fail",
                 "engine.mythic.heroquests.settle_souls",
             ),

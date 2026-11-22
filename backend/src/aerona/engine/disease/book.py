@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import STANDING_STATES, UNFINISHED_STATES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.demography import CohortRow
@@ -30,7 +31,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.structure import STANDING_STATES, UNFINISHED_STATES, StructureKind
+from aerona.domain.enums.structure import StructureKind
 from aerona.engine.cuisine.drinks import drink_safety
 from aerona.engine.eras.effects import channel_by_holder
 from aerona.engine.folkways.shunning import shunned_sick

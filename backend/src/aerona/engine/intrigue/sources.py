@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.intrigue import BELIEF_ATTRIBUTES
+from aerona.catalog.life.intrigue import FALSE_CAMPFIRES_SKILL_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.culture import RiteProfileRow
@@ -24,7 +25,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.intrigue import BeliefSource, IdentityReason, IntrigueSecret
 from aerona.domain.enums.military import AgentStatus, UnitKind
-from aerona.domain.enums.mind import Facet, SkillKind
+from aerona.domain.enums.mind import Facet
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.communication.post import FACTS, SPIED, send
 from aerona.engine.context import TickContext
@@ -141,7 +142,7 @@ async def false_campfires(ctx: TickContext, army_id: int) -> int:
     commander = await ctx.session.scalar(select(ArmyRow.commander_entity_id).where(ArmyRow.entity_id == army_id))
     if commander is None:
         return 0
-    cunning = await best_skill(ctx.session, commander, [SkillKind.DECEPTION, SkillKind.TACTICS])
+    cunning = await best_skill(ctx.session, commander, FALSE_CAMPFIRES_SKILL_KINDS)
     if not ctx.rng(seed_of("intrigue.campfires", army_id, ctx.epoch)).chance(cunning * ctx.rules.belief_state.feint_pct / PERCENT):
         return 0
     return ctx.rules.belief_state.campfire_pct

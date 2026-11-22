@@ -4,6 +4,7 @@ from types import MappingProxyType
 from aerona.catalog.crimes import CRIME_PENALTY_DEFAULTS, CRIMES, PENALTY_WORDS, PUNISHMENTS
 from aerona.core.grammar import fill
 from aerona.core.total import total
+from aerona.domain.enums.crafts import Gear
 from aerona.domain.enums.justice import TrialKind
 from aerona.domain.enums.labour import LegalStanding
 from aerona.domain.enums.mortal import CrimeKind
@@ -100,7 +101,7 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
         LawKind.CLOSED_SEASON: {},
         LawKind.PROTECTED_WATERS: {},
         LawKind.CATCH_QUOTA: {},
-        LawKind.GEAR_BAN: {},
+        LawKind.GEAR_BAN: {"gear": pick(*(gear.value for gear in Gear), default=Gear.NETS.value)},
         LawKind.WEAPONS_LAW: {"level": pick("open", "licensed", "banned", default="licensed")},
         LawKind.INTELLECTUAL_PROPERTY: {"term": Param(20, 1, 100)},
         LawKind.MACHINE_LAW: {
@@ -264,7 +265,7 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.CLOSED_SEASON: "Fishing and hunting stop for a season so the stock can return.",
         LawKind.PROTECTED_WATERS: "Breeding waters and grounds may not be worked.",
         LawKind.CATCH_QUOTA: "Each ground may give only so much catch.",
-        LawKind.GEAR_BAN: "The gear that takes the young is forbidden.",
+        LawKind.GEAR_BAN: "Catching with {gear} is forbidden.",
         LawKind.WEAPONS_LAW: "Weapons are {level}; where banned, crime falls.",
         LawKind.INTELLECTUAL_PROPERTY: "Inventions are protected for {term} epochs; techniques spread more slowly.",
         LawKind.MACHINE_LAW: "Making minds is {level}; forbidden way of making: {banned_method}; banned, made minds may never rule.",

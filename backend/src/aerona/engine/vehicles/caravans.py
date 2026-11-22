@@ -4,6 +4,8 @@ from zlib import crc32
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.vehicles import CARRIERS
+from aerona.catalog.terrain import terrains
 from aerona.catalog.vehicles import FRAMES, FrameSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.collective import DesignRow
@@ -12,8 +14,8 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.vehicles import VehicleGroupRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import TradeMode
-from aerona.domain.enums.environment import TerrainKind
-from aerona.domain.enums.vehicles import VehicleDomain, VehicleFamily, VehicleFrame
+from aerona.domain.enums.environment import TerrainKind, TerrainTrait
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.designs import draw_design
 from aerona.engine.context import TickContext
@@ -23,21 +25,7 @@ from aerona.engine.vehicles.groups import GroupReading, groups_of, read
 from aerona.engine.vehicles.sections import StrikeResult, strike_group
 from aerona.rules.registry import Rules
 
-D = VehicleDomain
-Y = VehicleFamily
-CARRIERS: MappingProxyType[TradeMode, tuple[frozenset[VehicleDomain], frozenset[VehicleFamily]]] = MappingProxyType(
-    {
-        TradeMode.ROAD: (frozenset({D.LAND}), frozenset({Y.CART, Y.WAGON, Y.MOTOR, Y.RAIL, Y.CONSTRUCT})),
-        TradeMode.CARAVAN: (frozenset({D.LAND}), frozenset({Y.MOUNT, Y.CART, Y.WAGON})),
-        TradeMode.RIVER: (frozenset({D.WATER}), frozenset({Y.BOAT, Y.GALLEY, Y.STEAM_SHIP})),
-        TradeMode.SEA: (frozenset({D.WATER}), frozenset({Y.SAILING_SHIP, Y.STEAM_SHIP, Y.GALLEY, Y.BOAT, Y.LIVING})),
-        TradeMode.SKY: (frozenset({D.AIR}), frozenset({Y.AIRSHIP, Y.BALLOON, Y.AIRCRAFT})),
-    }
-)
-
-
-T = TerrainKind
-SNOW_GROUNDS = frozenset({T.TUNDRA, T.ICE_SHEET, T.MOUNTAINS, T.HIGH_PASS})
+SNOW_GROUNDS = terrains(TerrainTrait.COLD)
 FRAME_GROUNDS: MappingProxyType[VehicleFrame, frozenset[TerrainKind]] = MappingProxyType({VehicleFrame.SLEDGE: SNOW_GROUNDS})
 NEAR_PCT = 80
 

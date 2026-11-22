@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
+from aerona.catalog.life.agents import WAR_OFFICES
 from aerona.catalog.operations import GROUND_LABELS, QUIRKS, RESOLVE_EFFECTS
 from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -21,11 +22,9 @@ from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.operations import EchelonLevel, EchelonOrder, ExpeditionStatus
-from aerona.domain.enums.polity import OfficeKind
 
 LIST_LINES = 3
 UNDER_WAY = (ExpeditionStatus.UNDERWAY, ExpeditionStatus.CAMPED)
-WAR_OFFICES = (OfficeKind.RULER, OfficeKind.MARSHAL, OfficeKind.ADMIRAL)
 
 
 async def quirk_lines(scope: Scope, me: EntityRow) -> list[str]:

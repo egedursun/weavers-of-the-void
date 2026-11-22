@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from functools import cache
 
 from aerona.domain.enums.body import BodyFunction, BodyPart, BodyPlan, BodyRegion
+from aerona.domain.enums.mortal import PunishmentKind
 
 F = BodyFunction
 P = BodyPart
@@ -236,3 +237,11 @@ def anatomy_of(plan: BodyPlan, traits: frozenset[BodyFunction] = frozenset()) ->
     if not extra:
         return base
     return Anatomy(base.plan, base.label, (*base.parts, *extra), base.breathes, base.bleeds, base.heals, base.infects, base.material)
+
+
+HEAD_PARTS = frozenset({BodyPart.HEAD, BodyPart.FACE})
+MUTILATIONS: dict[PunishmentKind, tuple[BodyPart, ...]] = {
+    PunishmentKind.HAND: (BodyPart.RIGHT_HAND,),
+    PunishmentKind.TONGUE: (BodyPart.TONGUE,),
+    PunishmentKind.EYES: (BodyPart.LEFT_EYE, BodyPart.RIGHT_EYE),
+}

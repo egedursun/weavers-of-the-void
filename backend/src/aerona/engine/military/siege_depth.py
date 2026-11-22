@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.kinds.siege import STARVATION
+from aerona.catalog.life.military import ACTION_WORKS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
@@ -36,13 +37,6 @@ from aerona.engine.services.community_relations import change_relation
 
 SOFT_GROUND = frozenset({SoilKind.LOAM, SoilKind.CLAY, SoilKind.SAND, SoilKind.PEAT, SoilKind.TEPHRA, SoilKind.CALCAREOUS})
 WATER_DAYS = {WaterSupply.NONE: 60, WaterSupply.WELL: 100, WaterSupply.CISTERN: 160, WaterSupply.AQUEDUCT: 220}
-ACTION_WORKS = {
-    SiegeAction.BLOCKADE: (SiegeWork.CIRCUMVALLATION,),
-    SiegeAction.BOMBARD: (SiegeWork.TOWERS, SiegeWork.RAMS),
-    SiegeAction.MINE: (SiegeWork.MINES,),
-    SiegeAction.ASSAULT: (SiegeWork.LADDERS, SiegeWork.RAMS),
-    SiegeAction.NEGOTIATE: (),
-}
 MERCIFUL_TENETS = frozenset({TenetKind.PACIFISM})
 
 

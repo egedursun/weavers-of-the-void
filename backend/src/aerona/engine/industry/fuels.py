@@ -1,14 +1,19 @@
 from sqlalchemy import select
 
+from aerona.catalog.terrain import terrains
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.environment import TerrainKind
+from aerona.domain.enums.environment import TerrainTrait
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.deposits import Deposit, open_deposit
 
-COAL_TERRAINS_BLOCKED = frozenset({TerrainKind.ICE_SHEET, TerrainKind.VOLCANIC, TerrainKind.VOID_SHORE, TerrainKind.FLESH, TerrainKind.CRYSTAL_FIELD})
+COAL_TERRAINS_BLOCKED = (
+    terrains(TerrainTrait.NON_MINERAL_GROUND)
+    | terrains(TerrainTrait.COLD, without=(TerrainTrait.OPEN, TerrainTrait.HIGH))
+    | terrains(TerrainTrait.HOT, without=(TerrainTrait.OPEN, TerrainTrait.WOODED))
+)
 
 
 async def lay_coal_seams(ctx: TickContext, book: EconomyBook) -> int:

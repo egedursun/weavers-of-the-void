@@ -2,12 +2,14 @@ from dataclasses import dataclass
 
 from sqlalchemy import or_, select
 
+from aerona.catalog.life.polity import CRISIS_CAUSES
+from aerona.catalog.life_traits import REGIONAL_STANDING_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, PolityRegardRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.intrigue import HookDemand
+from aerona.domain.enums.life_traits import RegionalStandingTrait
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.polity import RegionalStanding
 from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
 from aerona.domain.enums.war import WarCause
@@ -19,12 +21,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.recording.record import StepDraft, record
 
-CRISIS_CAUSES: dict[WarCause, CrisisDemand] = {
-    WarCause.CLAIM: CrisisDemand.CEDE_REGION,
-    WarCause.HOLY_WAR: CrisisDemand.CONVERT,
-    WarCause.DEBT: CrisisDemand.PAY,
-}
-GREAT = frozenset({RegionalStanding.GREAT_POWER, RegionalStanding.HEGEMON})
+GREAT = having(REGIONAL_STANDING_TRAITS, RegionalStandingTrait.GREAT)
 ESCALATION = "escalation"
 STATE = "state"
 

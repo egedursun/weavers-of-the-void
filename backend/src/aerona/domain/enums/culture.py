@@ -411,6 +411,13 @@ class CalendarSlot(StrEnum):
     HOLY_DAY = "holy_day"
 
 
+class SlotOpening(StrEnum):
+    GROWING = "growing"
+    DEAD_OF_WINTER = "dead_of_winter"
+    WAR_SEASON = "war_season"
+    HOLY = "holy"
+
+
 class TraditionEffectKind(StrEnum):
     COHESION = "cohesion"
     SATISFACTION = "satisfaction"

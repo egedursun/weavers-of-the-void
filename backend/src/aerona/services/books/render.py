@@ -9,6 +9,7 @@ from urllib.parse import quote
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 from markupsafe import Markup, escape
 
+from aerona.catalog.life.divine import MOTION_LABELS
 from aerona.catalog.tongues import PART_OF_SPEECH_LABELS
 from aerona.constants.books import (
     ARTICLE_WIDTH,
@@ -27,7 +28,6 @@ from aerona.constants.books import (
 )
 from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.divine import CouncilMotion
-from aerona.engine.divine.rulings import MOTION_LABELS
 from aerona.rules.registry import Rules
 from aerona.services.books.mapsvg import MapPicture
 from aerona.services.books.model import BookModel, EntityArticle, SonArticle

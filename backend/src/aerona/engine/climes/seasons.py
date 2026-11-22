@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.climes import PHASE_AT_OSCILLATION_PHASES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.climes import ClimateOscillationRow, MonsoonSeasonRow, RegionWindRow
@@ -36,7 +37,7 @@ class SeasonTally:
 
 def phase_at(row: ClimateOscillationRow) -> OscillationPhase:
     part = row.step * THIRDS // max(1, row.period)
-    return (OscillationPhase.WARM, OscillationPhase.NEUTRAL, OscillationPhase.COLD)[min(part, THIRDS - 1)]
+    return PHASE_AT_OSCILLATION_PHASES[min(part, THIRDS - 1)]
 
 
 async def keep_monsoons(ctx: TickContext, world: WorldRow, tally: SeasonTally) -> None:

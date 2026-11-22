@@ -4,14 +4,17 @@ from collections.abc import Mapping
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
+from aerona.catalog.terrain import terrains
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.db.tables.happenings import EventFootprintRow, RegionGeomorphRow, RiverShiftRow
 from aerona.domain.enums.entity import EngineKind, EntityType
-from aerona.domain.enums.environment import RiverClass, ScarKind, SoilKind, TerrainKind, WaterSource
+from aerona.domain.enums.environment import RiverClass, ScarKind, SoilKind, TerrainKind, TerrainTrait, WaterSource
 from aerona.domain.enums.happening import RiverShiftCause
+from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
@@ -21,10 +24,10 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import FactInput, RoleValue, record
 from aerona.rules.registry import Rules
 
-VOLCANIC_WORLDS = frozenset({WorldType.LAVA, WorldType.CHTHONIAN, WorldType.GREENHOUSE})
+VOLCANIC_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.VOLCANIC_WORLDS)
 SALT_WORLDS = frozenset({WorldType.HYCEAN})
 RANKED = sorted(RIVER_RANK, key=lambda river: RIVER_RANK[river])
-DRY_LANDS = frozenset({TerrainKind.ICE_SHEET, TerrainKind.FLESH, TerrainKind.VOID_SHORE, TerrainKind.CRYSTAL_FIELD, TerrainKind.UNDERGROUND})
+DRY_LANDS = terrains(TerrainTrait.NON_MINERAL_GROUND, TerrainTrait.UNDERGROUND) | terrains(TerrainTrait.COLD, without=(TerrainTrait.OPEN, TerrainTrait.HIGH))
 SHAPE_FIELDS = frozenset({"desertification", "desertified", "volcanic", "volcanic_pressure"})
 
 

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.sacred import TRUE_OMEN_DIVINATION_QUESTIONS
 from aerona.catalog.sacred import DIVINATION_LAWS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -167,7 +168,7 @@ async def foe_of(ctx: TickContext, realm_id: int) -> int | None:
 
 
 async def true_omen(ctx: TickContext, question: DivinationQuestion, realm_id: int, ruler: EntityRow) -> OmenVerdict:
-    if question in {DivinationQuestion.BATTLE, DivinationQuestion.WAR}:
+    if question in TRUE_OMEN_DIVINATION_QUESTIONS:
         foe = await foe_of(ctx, realm_id)
         if foe is None:
             return OmenVerdict.UNCLEAR

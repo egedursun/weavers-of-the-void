@@ -305,7 +305,7 @@ async def bones_of(ctx: TickContext, church: Church, saint: EntityRow) -> Entity
             locked=[],
         )
     )
-    await set_node_material(ctx.session, bones.id, MaterialSlot.BODY, MaterialKind.BONE, None, force=True)
+    await set_node_material(ctx.session, bones.id, MaterialSlot.BODY, MaterialKind.CALCIFIED_TISSUE, None, force=True)
     await connect(ctx.session, church.cult.id, bones.id, BondKind.OWNS, ctx.epoch, description="the remains of its saint")
     return bones
 

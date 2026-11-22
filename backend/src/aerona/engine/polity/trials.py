@@ -3,8 +3,10 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.anatomy import MUTILATIONS
 from aerona.catalog.crimes import CRIMES
 from aerona.catalog.crimes import TRIALS as TRIAL_SPECS
+from aerona.catalog.life.polity import AREA_SECRETS, NAMED_CRIME_SECRETS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an, spoken
 from aerona.core.total import total
@@ -25,7 +27,7 @@ from aerona.domain.enums.justice import CaseStage, Deposition, TrialKind, Verdic
 from aerona.domain.enums.mind import ActKind, HonourModel, MemoryKind, SkillKind, TraitKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
-from aerona.domain.enums.polity import LawArea, LawKind, OfficeKind
+from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.engine.body.bands import banded
@@ -50,7 +52,7 @@ from aerona.engine.mind.book import skill_level, traits_of, values_for
 from aerona.engine.mind.ethics import culture_of, ethic_reading, honour_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
-from aerona.engine.mortal.justice import CRIME_TEXT, MUTILATIONS, code_punishment, community_ruler, cruelty_of, sentence
+from aerona.engine.mortal.justice import CRIME_TEXT, code_punishment, community_ruler, cruelty_of, sentence
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.mortal.standing import add_renown, add_stress
 from aerona.engine.polity.justice import offenders
@@ -67,35 +69,6 @@ from aerona.engine.relations.persuasion import office_holder
 from aerona.engine.settlement.book import Town, credit
 
 CRUEL = 60
-AREA_SECRETS: Mapping[LawArea, frozenset[IntrigueSecret]] = total(
-    LawArea,
-    {
-        LawArea.SUCCESSION: frozenset({IntrigueSecret.TRUE_PARENTAGE, IntrigueSecret.CRIME}),
-        LawArea.PROPERTY: frozenset({IntrigueSecret.CRIME, IntrigueSecret.DEBT}),
-        LawArea.FISCAL: frozenset({IntrigueSecret.CRIME, IntrigueSecret.DEBT}),
-        LawArea.PENAL: frozenset({IntrigueSecret.CRIME}),
-        LawArea.MILITARY: frozenset({IntrigueSecret.COWARDICE_IN_BATTLE, IntrigueSecret.BROKEN_OATH}),
-        LawArea.SOCIAL: frozenset({IntrigueSecret.CRIME, IntrigueSecret.AFFAIR}),
-        LawArea.PUBLIC_HEALTH: frozenset({IntrigueSecret.HIDDEN_CONDITION, IntrigueSecret.CRIME}),
-        LawArea.MAGIC: frozenset({IntrigueSecret.DEAL_WITH_OUTER_BEING, IntrigueSecret.SECRET_CULT_MEMBERSHIP}),
-        LawArea.CONSTITUTIONAL: frozenset({IntrigueSecret.CRIME, IntrigueSecret.BROKEN_OATH}),
-    },
-)
-NAMED_CRIME_SECRETS: dict[CrimeKind, frozenset[IntrigueSecret]] = {
-    CrimeKind.THEFT: frozenset({IntrigueSecret.CRIME}),
-    CrimeKind.MURDER: frozenset({IntrigueSecret.MURDER, IntrigueSecret.CRIME}),
-    CrimeKind.BLASPHEMY: frozenset({IntrigueSecret.HERESY, IntrigueSecret.SECRET_CULT_MEMBERSHIP}),
-    CrimeKind.TREASON: frozenset({IntrigueSecret.CRIME, IntrigueSecret.BROKEN_OATH}),
-    CrimeKind.DESERTION: frozenset({IntrigueSecret.COWARDICE_IN_BATTLE}),
-    CrimeKind.WITCHCRAFT: frozenset({IntrigueSecret.DEAL_WITH_OUTER_BEING, IntrigueSecret.SECRET_CULT_MEMBERSHIP}),
-    CrimeKind.MIND_THEFT: frozenset({IntrigueSecret.CRIME}),
-    CrimeKind.UNLICENSED_COPYING: frozenset({IntrigueSecret.CRIME}),
-    CrimeKind.FORCED_EDIT: frozenset({IntrigueSecret.CRIME}),
-    CrimeKind.ERASURE: frozenset({IntrigueSecret.MURDER, IntrigueSecret.CRIME}),
-    CrimeKind.MACHINE_SEIZURE: frozenset({IntrigueSecret.CRIME}),
-    CrimeKind.IMPERSONATION: frozenset({IntrigueSecret.CRIME}),
-    CrimeKind.MIND_COMPULSION: frozenset({IntrigueSecret.CRIME}),
-}
 CRIME_SECRETS: Mapping[CrimeKind, frozenset[IntrigueSecret]] = total(
     CrimeKind, {crime: NAMED_CRIME_SECRETS.get(crime, AREA_SECRETS[CRIMES[crime].area]) for crime in CrimeKind}
 )

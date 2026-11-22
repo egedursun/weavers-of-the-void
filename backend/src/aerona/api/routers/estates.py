@@ -19,6 +19,7 @@ from aerona.api.schemas.mind import LabelView
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.catalog.estates import CAUSE_LABELS, ESTATE_NAMES, PRIVILEGE_LABELS
+from aerona.catalog.life.api import GUILDS
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
@@ -35,12 +36,11 @@ from aerona.db.tables.estates import (
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.faction import FactionKind, FactionRank
+from aerona.domain.enums.faction import FactionRank
 
 router = APIRouter(tags=["estates"])
 NO_NODE = "Nothing lives there."
 GUILD_RANKS = {FactionRank.NOVICE: "Apprentice", FactionRank.MEMBER: "Fellow", FactionRank.OFFICER: "Master", FactionRank.LEADER: "Grandmaster"}
-GUILDS = (FactionKind.CRAFT_GUILD, FactionKind.MERCHANT_GUILD)
 REASON = (
     "Estates and movements belong to realms and their communities; companies, holy orders and guilds are factions. This kind holds none, but may hold shares."
 )

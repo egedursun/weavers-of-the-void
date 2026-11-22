@@ -3,15 +3,14 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.body import AIR, GRAVITY
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body_systems import BodySystemRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.body_systems import BodySystem
-from aerona.domain.enums.world import Atmosphere, Gravity
+from aerona.domain.enums.world import Atmosphere
 
-AIR: dict[Atmosphere, int] = {Atmosphere.NONE: 0, Atmosphere.THIN: 25, Atmosphere.NORMAL: 50, Atmosphere.DENSE: 75, Atmosphere.TOXIC: 50}
-GRAVITY: dict[Gravity, int] = {Gravity.LOW: 25, Gravity.NORMAL: 50, Gravity.HIGH: 80}
 TOXIC = 80
 CLEAN = 10
 

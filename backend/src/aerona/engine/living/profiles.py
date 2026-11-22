@@ -1,5 +1,7 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.living import BREED_FERTILITYS
+from aerona.catalog.life_traits import METABOLISM_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -10,6 +12,7 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import MetabolismTrait
 from aerona.domain.enums.living import Fertility, GrowthStage, LineTrait, Metabolism
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
@@ -22,7 +25,7 @@ from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import StepDraft, record
 
-SELF_FED = frozenset({Metabolism.LIGHT, Metabolism.PARTNER, Metabolism.SOURCE})
+SELF_FED = having(METABOLISM_TRAITS, MetabolismTrait.SELF_FED)
 STILL = frozenset({GrowthStage.DEAD})
 UNGROWN = frozenset({GrowthStage.SEED, GrowthStage.YOUNG})
 BEINGS = frozenset({EntityType.BEAST, EntityType.MORTAL})
@@ -95,7 +98,7 @@ async def end(ctx: TickContext, row: LivingProfileRow, thing: EntityRow) -> None
 
 
 async def breed(ctx: TickContext, row: LivingProfileRow) -> None:
-    if row.line_id is None or row.growth_stage is not GrowthStage.PRIME or row.fertility in {Fertility.STERILE, Fertility.NEEDS_MAKER}:
+    if row.line_id is None or row.growth_stage is not GrowthStage.PRIME or row.fertility in BREED_FERTILITYS:
         return
     line = await ctx.session.get(LivingLineRow, row.line_id)
     if (

@@ -1,13 +1,12 @@
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 
 from aerona.catalog.crimes import CRIMES
+from aerona.catalog.life.law import CLASSES
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.mortal import CrimeKind
-from aerona.domain.enums.polity import LawArea, LawKind
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.naming import seed_of
@@ -48,20 +47,6 @@ NAMED_BY_LAW = frozenset(
     }
 )
 WIDE_OFFENCES = tuple(crime for crime in CrimeKind if crime not in OWN_DETECTION)
-CLASSES: Mapping[LawArea, frozenset[SocialClass] | None] = total(
-    LawArea,
-    {
-        LawArea.SUCCESSION: frozenset({SocialClass.NOBLE}),
-        LawArea.PROPERTY: None,
-        LawArea.FISCAL: frozenset({SocialClass.MERCHANT, SocialClass.ARTISAN, SocialClass.PROFESSIONAL, SocialClass.NOBLE}),
-        LawArea.PENAL: None,
-        LawArea.MILITARY: frozenset({SocialClass.WARRIOR}),
-        LawArea.SOCIAL: None,
-        LawArea.PUBLIC_HEALTH: frozenset({SocialClass.MERCHANT, SocialClass.ARTISAN, SocialClass.FARMER, SocialClass.WORKER}),
-        LawArea.MAGIC: frozenset({SocialClass.PRIEST, SocialClass.MONASTIC, SocialClass.SCRIBE, SocialClass.OUTCAST}),
-        LawArea.CONSTITUTIONAL: frozenset({SocialClass.OFFICIAL, SocialClass.NOBLE, SocialClass.SCRIBE, SocialClass.PROFESSIONAL}),
-    },
-)
 
 
 def open_to(mortal: EntityRow, crime: CrimeKind) -> bool:

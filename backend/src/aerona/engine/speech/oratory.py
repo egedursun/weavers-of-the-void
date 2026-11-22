@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import SPEECH_VENUE_TRAITS, having
 from aerona.catalog.speech_shapes import HUMOUR_BITE_PCT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -14,6 +15,7 @@ from aerona.db.tables.speech import HumourStyleRow, SpeechRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.folk_knowledge import FolkDomain
+from aerona.domain.enums.life_traits import SpeechVenueTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.speech import HumourForm, SpeechAim, SpeechVenue
@@ -30,7 +32,7 @@ from aerona.engine.recording.terms import explaining, term
 from aerona.engine.sacred.places import ruler_of
 
 TEN = 10
-CROWD_VENUES = frozenset({SpeechVenue.SQUARE, SpeechVenue.CAMP, SpeechVenue.OUTLET})
+CROWD_VENUES = having(SPEECH_VENUE_TRAITS, SpeechVenueTrait.CROWD_VENUES)
 RAISING = frozenset({SpeechAim.RALLY, SpeechAim.DEFEND, SpeechAim.PERSUADE, SpeechAim.TEACH, SpeechAim.MOURN})
 GOD_KINDS = frozenset({EntityType.CULT})
 

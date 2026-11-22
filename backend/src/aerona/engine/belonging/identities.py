@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.kinds.war_causes import WAR_CAUSES
+from aerona.catalog.life.belonging import CROSSING_PUSHES_IDENTITY_LAYERS, GUILD_PUSHES_IDENTITY_LAYERS
 from aerona.db.fast_session import rows_by_prefix
 from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.bonds import BondRow
@@ -126,7 +127,7 @@ async def crossing_pushes(ctx: TickContext, atlas: RegionAtlas, pushes: Pushes, 
         if first is None or second is None or first.location_id is None or first.location_id != second.location_id:
             continue
         mine, theirs = await values_of(ctx.session, atlas, first), await values_of(ctx.session, atlas, second)
-        for layer in (IdentityLayer.PEOPLE, IdentityLayer.FAITH):
+        for layer in CROSSING_PUSHES_IDENTITY_LAYERS:
             if mine[layer][0] is not None and theirs[layer][0] is not None and mine[layer][0] != theirs[layer][0]:
                 push(pushes, first.location_id, layer, -table.crossing, SalienceDriver.CROSSING)
                 tally.crossed += 1
@@ -148,7 +149,7 @@ async def guild_pushes(ctx: TickContext, atlas: RegionAtlas, pushes: Pushes, tal
             .order_by(EntityRow.id)
         )
         values = [await values_of(ctx.session, atlas, member) for member in members]
-        for layer in (IdentityLayer.PEOPLE, IdentityLayer.FAITH):
+        for layer in GUILD_PUSHES_IDENTITY_LAYERS:
             if guild.location_id is not None and len({row[layer][0] for row in values if row[layer][0] is not None}) > 1:
                 push(pushes, guild.location_id, layer, -table.crossing, SalienceDriver.CROSSING)
                 tally.crossed += 1

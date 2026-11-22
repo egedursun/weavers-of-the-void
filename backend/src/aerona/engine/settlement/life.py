@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_traits import workshops_with
 from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
 from aerona.catalog.urban import QUARTER_WORKS
 from aerona.catalog.zones import CIVIC_QUARTERED, CIVIC_SERVICE_OF
@@ -39,10 +40,10 @@ from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.dominion import DivineScale
-from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, WeatherEffect
 from aerona.domain.enums.faith import BindingKind, SpiritAlignment
+from aerona.domain.enums.goods_traits import WorkshopTrait
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
@@ -541,7 +542,7 @@ async def store_up(ctx: TickContext, town: Town) -> None:
     stores = {
         row.kind: row
         for row in await ctx.session.scalars(
-            select(WorkshopRow).where(WorkshopRow.community_entity_id == town.entity.id, WorkshopRow.kind.in_([WorkshopKind.GRANARY, WorkshopKind.WAREHOUSE]))
+            select(WorkshopRow).where(WorkshopRow.community_entity_id == town.entity.id, WorkshopRow.kind.in_(workshops_with(WorkshopTrait.CELLAR)))
         )
     }
     if "granary_capacity" not in infrastructure.locked:

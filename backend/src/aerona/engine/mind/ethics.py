@@ -4,6 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.ethics import HONOUR_MODELS, STANCE_ORDER, STANCE_READINGS
+from aerona.catalog.life.mind import KILLING_ACT_DEATH_CAUSES
+from aerona.catalog.life_traits import ACT_KIND_TRAITS, THOUGHT_KIND_TRAITS, having
 from aerona.catalog.mind import ACT_READINGS
 from aerona.constants.units import PERCENT
 from aerona.db.fast_session import rows_by_prefix
@@ -15,6 +17,7 @@ from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.life_traits import ActKindTrait, ThoughtKindTrait
 from aerona.domain.enums.mind import ActKind, EthicalStance, HonourModel, MemoryKind, PressureKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
@@ -40,9 +43,9 @@ ETHICS_KEY = "ethics"
 STANCE_FIELD = "stance"
 MODEL_FIELD = "model"
 ACTIVE_WAR_STATUSES = (WarStatus.MOBILIZING, WarStatus.ONGOING)
-WAR_ACTS = frozenset({ActKind.KILLING_IN_WAR, ActKind.KILLING_OUTSIDER, ActKind.TAKING_CAPTIVES, ActKind.RAIDING, ActKind.CONQUEST})
-FAMINE_ACTS = frozenset({ActKind.THEFT, ActKind.HOARDING_IN_FAMINE})
-SHAME_KINDS = frozenset({ThoughtKind.WAS_SHAMED, ThoughtKind.WAS_INSULTED, ThoughtKind.DEFEATED, ThoughtKind.WAS_PUNISHED, ThoughtKind.LOST_DUEL})
+WAR_ACTS = having(ACT_KIND_TRAITS, ActKindTrait.WAR_ACTS)
+FAMINE_ACTS = having(ACT_KIND_TRAITS, ActKindTrait.FAMINE_ACTS)
+SHAME_KINDS = having(THOUGHT_KIND_TRAITS, ThoughtKindTrait.SHAME_KINDS)
 GOOD = frozenset({EthicalStance.REQUIRED, EthicalStance.ADMIRABLE})
 BAD = frozenset({EthicalStance.SHAMEFUL, EthicalStance.UNTHINKABLE})
 CULTURE_TYPES = frozenset({EntityType.PEOPLE, EntityType.CULT})
@@ -369,7 +372,7 @@ SCHISM_FACTION = FactionKind.SECRET_SOCIETY
 async def killing_act(session: AsyncSession, victim: EntityRow, killer_id: int | None, manner: DeathCause | None) -> ActKind | None:
     if killer_id is None:
         return ActKind.SUICIDE if manner is DeathCause.DESPAIR else None
-    if killer_id == victim.id or manner in {DeathCause.EXECUTION, DeathCause.SACRIFICE}:
+    if killer_id == victim.id or manner in KILLING_ACT_DEATH_CAUSES:
         return None
     grudge = await session.scalar(
         select(MemoryRow.id)

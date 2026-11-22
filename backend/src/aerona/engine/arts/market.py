@@ -1,10 +1,9 @@
-from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.arts import ROLE_WEIGHT
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.affairs import CourtRow
 from aerona.db.tables.arts import ArtPriceRow, ArtSaleRow, CanonWorkRow, CollectorRow
 from aerona.db.tables.bonds import BondRow
@@ -36,11 +35,6 @@ COLLECTOR_ROLES = {
     EntityType.CULT: ArtMarketRole.COLLECTOR,
     EntityType.FACTION: ArtMarketRole.DEALER,
 }
-
-ROLE_WEIGHT: Mapping[ArtMarketRole, int] = total(
-    ArtMarketRole,
-    {ArtMarketRole.COLLECTOR: 1, ArtMarketRole.DEALER: 2, ArtMarketRole.PATRON: 2, ArtMarketRole.CONNOISSEUR: 3},
-)
 
 
 @dataclass

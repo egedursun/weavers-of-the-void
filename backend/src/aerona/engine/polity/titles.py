@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.polity import RANK_ORDER
 from aerona.catalog.titles import CHARGES, RANK_WORDS, SEAT_RANKS, TIER_RANKS, TINCTURES
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -40,7 +41,6 @@ LIEGE = "de_jure_liege_entity_id"
 DRIFT = "drift"
 RANK = "rank"
 EQUAL_SPLIT = "equal"
-RANK_ORDER = (TitleTier.LOCAL, TitleTier.DISTRICT, TitleTier.REGIONAL, TitleTier.REALM, TitleTier.IMPERIAL)
 POWER = 3
 
 

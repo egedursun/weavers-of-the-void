@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 
+from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.domain.enums.divine import DomainHook
-from aerona.domain.enums.environment import WeatherKind
+from aerona.domain.enums.environment import WeatherKind, WeatherTrait
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
@@ -15,8 +16,6 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.vehicles.fleet import AIRBORNE, NAVAL, afloat, batter_groups, readings
 
-STORMS = frozenset({WeatherKind.STORM, WeatherKind.MAGIC_STORM, WeatherKind.BLIZZARD, WeatherKind.SANDSTORM})
-WINDY = frozenset({WeatherKind.STORM, WeatherKind.DROUGHT_WIND, WeatherKind.SANDSTORM})
 SEAMANSHIP_LEVELS = 3
 
 
@@ -42,7 +41,9 @@ async def fleet_power(ctx: TickContext, army_id: int, weather: WeatherKind | Non
     for reading in await readings(ctx.session, army_id):
         if reading.design.domain not in NAVAL:
             continue
-        fire = reading.firepower * (table.fire_wind_pct / PERCENT if weather in WINDY and reading.design.frame is VehicleFrame.FIRE_SHIP else 1.0)
+        fire = reading.firepower * (
+            table.fire_wind_pct / PERCENT if has_trait(weather, WeatherTrait.WINDY) and reading.design.frame is VehicleFrame.FIRE_SHIP else 1.0
+        )
         boarding = reading.troops * table.boarding_pct / PERCENT
         ramming = reading.design.structure * reading.group.count * table.ram_pct / PERCENT / 10
         power += fire + boarding + ramming
@@ -75,7 +76,7 @@ async def sea_battle(ctx: TickContext, marches: list[March], weather: WeatherKin
 
 
 async def weather_the_storm(ctx: TickContext, march: March, weather: WeatherKind | None, knowledge: KnowledgeMap) -> int:
-    if weather not in STORMS:
+    if not has_trait(weather, WeatherTrait.STORM):
         return 0
     table = ctx.rules.naval
     skill = min(SEAMANSHIP_LEVELS, knowledge.level(march.owner.id, KnowledgeBranch.SEAFARING))

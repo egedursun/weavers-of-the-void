@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.numbers import BIRTH_SHIFT_POPULATION_INSTRUMENTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
@@ -45,7 +46,7 @@ def birth_shift(rules: Rules, policy: PopulationPolicyRow, instrument: Populatio
         return -table.birth_tax_pct * weight
     if instrument.instrument is PopulationInstrument.CHILD_SUPPORT:
         return table.birth_reward_pct * weight / 2
-    if instrument.instrument in {PopulationInstrument.UNION_LAW, PopulationInstrument.INHERITANCE_RULE}:
+    if instrument.instrument in BIRTH_SHIFT_POPULATION_INSTRUMENTS:
         return table.birth_reward_pct * weight / QUARTER
     if instrument.instrument is PopulationInstrument.FAITH_TEACHING:
         return table.birth_reward_pct * weight / 2 * (-1 if AIM_DIRECTION[policy.aim] < 0 else 1)

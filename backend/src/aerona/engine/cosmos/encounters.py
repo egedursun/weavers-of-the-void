@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import or_, select
 
+from aerona.catalog.life.cosmos import ARRIVALS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
@@ -11,7 +12,7 @@ from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.thin_sections import JourneyEncounterRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.travel import ArrivalOutcome, EncounterEffect, JourneyEventKind, JourneyIntent, RouteEnvironment, TravelMethod
+from aerona.domain.enums.travel import ArrivalOutcome, EncounterEffect, JourneyEventKind, RouteEnvironment, TravelMethod
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import add_event
 from aerona.engine.primitives.numbers import clamp_percent
@@ -51,16 +52,6 @@ DEFAULT_LOSS: Mapping[EncounterEffect, int] = total(
         EncounterEffect.TOLL: 0,
         EncounterEffect.SICKNESS: 8,
         EncounterEffect.DESERTION: 5,
-    },
-)
-ARRIVALS: Mapping[JourneyIntent, ArrivalOutcome] = total(
-    JourneyIntent,
-    {
-        JourneyIntent.COLONY: ArrivalOutcome.SETTLERS,
-        JourneyIntent.TRADE: ArrivalOutcome.SETTLERS,
-        JourneyIntent.EXPLORATION: ArrivalOutcome.SETTLERS,
-        JourneyIntent.CONQUEST: ArrivalOutcome.INVADERS,
-        JourneyIntent.PILGRIMAGE: ArrivalOutcome.SETTLERS,
     },
 )
 

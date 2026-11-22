@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.means import ATTEMPT_THEFT_SKILL_KINDS
 from aerona.catalog.means import LOCKS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -136,7 +137,7 @@ async def attempt_theft(ctx: TickContext, thief: EntityRow, owner: EntityRow, it
     rng = ctx.rng(seed_of("theft", thief.id, item.id, ctx.epoch))
     craft = await ctx.session.scalar(
         select(SkillRow.level)
-        .where(SkillRow.holder_node_id == thief.id, SkillRow.skill.in_([SkillKind.INTRIGUE, SkillKind.DECEPTION]))
+        .where(SkillRow.holder_node_id == thief.id, SkillRow.skill.in_(ATTEMPT_THEFT_SKILL_KINDS))
         .order_by(SkillRow.level.desc())
         .limit(1)
     )

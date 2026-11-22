@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.carriers import CARRIERS
+from aerona.catalog.goods_tables import FOODS
+from aerona.catalog.life.domain import RESTING
 from aerona.catalog.operations import TRANSPORTS
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -11,9 +13,9 @@ from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.operations import ArmyOperationRow, DepotRow, SupplyFlowRow, TheatreRow, TransportAssetRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode
+from aerona.domain.enums.economy import GoodsFlow, TradeMode
 from aerona.domain.enums.environment import RiverClass, TerrainKind
-from aerona.domain.enums.military import RESTING, CommandArea, Stance
+from aerona.domain.enums.military import CommandArea, Stance
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import CarrierKind, EchelonOrder
 from aerona.engine.agrarian.rings import eased_regions
@@ -33,7 +35,6 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_wars
 
-FOODS = (CommodityKind.GRAIN, CommodityKind.BREAD, CommodityKind.FISH, CommodityKind.LIVESTOCK)
 FORESIGHT_STEP = 25
 FAR = 1_000_000
 

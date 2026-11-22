@@ -2,8 +2,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from aerona.catalog.life.domain import MEDICINE_ORDER
 from aerona.core.total import total
-from aerona.domain.enums.body import MEDICINE_ORDER, MedicineTier
+from aerona.domain.enums.body import MedicineTier
 from aerona.domain.enums.culture import Technique
 from aerona.rules.registry.body import HealingRules
 

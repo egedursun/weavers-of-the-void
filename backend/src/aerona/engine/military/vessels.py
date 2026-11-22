@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.engagement import ENGINE_ARMS, LIFTED, MISSILE_ARMS, RAM_ARMS, RITE_ARMS, WATERBORNE, WEATHERED, WIND_ARMS
 from aerona.catalog.vehicles import FRAMES, SEA_LADDER, FrameSpec
+from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -19,7 +20,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
-from aerona.domain.enums.environment import WeatherKind
+from aerona.domain.enums.environment import WeatherKind, WeatherTrait
 from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -49,8 +50,6 @@ from aerona.engine.vehicles.sections import mend_vessel_sections
 from aerona.engine.vehicles.wrecks import battered, wreck_crew
 from aerona.rules.registry import Rules
 
-STORMS = frozenset({WeatherKind.STORM, WeatherKind.MAGIC_STORM, WeatherKind.BLIZZARD, WeatherKind.SANDSTORM, WeatherKind.HAIL})
-WINDY = frozenset({WeatherKind.STORM, WeatherKind.DROUGHT_WIND, WeatherKind.SANDSTORM})
 EXOTIC_METHODS = frozenset({TravelMethod.DREAM_JOURNEY, TravelMethod.DEATH_CURRENT})
 AFLOAT = frozenset({VesselStatus.AFLOAT, VesselStatus.DAMAGED})
 BACKFILL_FIXUP = "military.vessel_profiles"
@@ -220,7 +219,7 @@ async def wreck(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, weat
 
 async def weather_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, weather: WeatherKind | None, tally: SeaTally) -> None:
     table = ctx.rules.seafaring
-    if weather is None or weather not in STORMS or domain_of(row) not in WEATHERED:
+    if weather is None or not has_trait(weather, WeatherTrait.STORM) or domain_of(row) not in WEATHERED:
         return
     tally.storms += 1
     with explaining() as found:
@@ -323,7 +322,7 @@ def arms_weight(rules: Rules, weapons: Sequence[Weapon], weather: WeatherKind | 
     for weapon in weapons:
         family = weapon.family
         weight = float(next((pct for arms, pct in weights if family in arms), table.boarding_pct) if family is not None else table.boarding_pct)
-        if weather in WINDY and family in WIND_ARMS:
+        if has_trait(weather, WeatherTrait.WINDY) and family in WIND_ARMS:
             weight = weight * table.fire_wind_pct / PERCENT
         total += weight * weapon.count
     return total / PERCENT
@@ -470,7 +469,7 @@ async def seas(ctx: TickContext) -> SeaTally:
         if row.status in AFLOAT and domain_of(row) in SAILED:
             await set_sail(ctx, vessel, row, row.region_entity_id, tally.sail)
         if row.status in AFLOAT:
-            for hazard in await wear_leg(ctx, vessel, row, stormy=weather in STORMS, tally=designs):
+            for hazard in await wear_leg(ctx, vessel, row, stormy=has_trait(weather, WeatherTrait.STORM), tally=designs):
                 await wreck_crew(ctx, vessel, row, hazard)
         if row.status in AFLOAT:
             row.renown += ctx.rules.seafaring.renown_per_voyage if "renown" not in row.locked else 0

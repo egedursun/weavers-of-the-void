@@ -261,10 +261,6 @@ class ConstructionState(StrEnum):
     RUINED = "ruined"
 
 
-STANDING_STATES = frozenset({ConstructionState.COMPLETE, ConstructionState.DAMAGED})
-UNFINISHED_STATES = frozenset({ConstructionState.PLANNED, ConstructionState.BUILDING})
-
-
 class BuilderKind(StrEnum):
     COMMUNITY = "community"
     POLITY = "polity"

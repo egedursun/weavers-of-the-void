@@ -2,6 +2,7 @@ from collections import Counter
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import BIOLOGY_VARIANT_TRAITS, having
 from aerona.catalog.lore import DOMAIN_SCHOOLS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
@@ -11,10 +12,10 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.powers import PowerSourceRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.biology import BiologyVariant
 from aerona.domain.enums.cosmography import OmenReading
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.life_traits import BiologyVariantTrait
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import SourceLocus
@@ -31,7 +32,7 @@ from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 BRIGHT = PERCENT // 2
-SKYLESS = frozenset({BiologyVariant.SUBTERRANEAN, BiologyVariant.AQUATIC})
+SKYLESS = having(BIOLOGY_VARIANT_TRAITS, BiologyVariantTrait.SKYLESS)
 
 
 def influence_share(body: EntityRow) -> float:

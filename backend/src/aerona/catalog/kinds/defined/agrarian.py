@@ -1,6 +1,28 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.agrarian import KeystoneUse, NutrientKind, PreparednessKind, RebuildCause, RebuildPlan
+from aerona.domain.enums.agrarian import AidKind, KeystoneUse, NutrientKind, RebuildPlan
+
+AID_KIND = total(
+    AidKind,
+    {
+        AidKind.GOODS: Defined(
+            "Goods", checked_by=(), used_by=("engine.agrarian.resilience.aid_goods", "engine.agrarian.resilience.aid_kind", "services.player.agrarian.AidDraft")
+        ),
+        AidKind.HEALERS: Defined(
+            "Healers",
+            checked_by=("engine.agrarian.resilience.aid_kind",),
+            used_by=("engine.agrarian.resilience.EVENT_AID", "engine.agrarian.resilience.aid_healers"),
+        ),
+        AidKind.LABOUR: Defined("Labour", checked_by=(), used_by=("engine.agrarian.resilience.aid_kind", "engine.agrarian.resilience.aid_labour")),
+        AidKind.MONEY: Defined("Money", checked_by=(), used_by=("engine.agrarian.resilience.aid_kind", "engine.agrarian.resilience.aid_money")),
+        AidKind.CREDIT: Defined("Credit", checked_by=(), used_by=("engine.agrarian.resilience.aid_credit", "engine.agrarian.resilience.aid_kind")),
+        AidKind.FOOD: Defined("Food", checked_by=(), used_by=("engine.agrarian.resilience.EVENT_AID", "engine.agrarian.resilience.aid_food")),
+        AidKind.SHELTER: Defined("Shelter", checked_by=(), used_by=("engine.agrarian.resilience.EVENT_AID", "engine.agrarian.resilience.aid_shelter")),
+        AidKind.MEDICINE: Defined("Medicine", checked_by=(), used_by=("engine.agrarian.resilience.aid_kind", "engine.agrarian.resilience.aid_medicine")),
+        AidKind.SOLDIERS: Defined("Soldiers", checked_by=(), used_by=("engine.agrarian.resilience.EVENT_AID", "engine.agrarian.resilience.aid_soldiers")),
+        AidKind.KNOWLEDGE: Defined("Knowledge", checked_by=(), used_by=("engine.agrarian.resilience.aid_kind", "engine.agrarian.resilience.aid_knowledge")),
+    },
+)
 
 KEYSTONE_USE = total(
     KeystoneUse,
@@ -38,57 +60,6 @@ NUTRIENT_KIND = total(
             ),
             used_by=("engine.agrarian.book.readout",),
         ),
-    },
-)
-
-PREPAREDNESS_KIND = total(
-    PreparednessKind,
-    {
-        PreparednessKind.LEVEE: Defined(
-            "Levees", checked_by=(), used_by=("engine.agrarian.book.SHIELDS", "engine.agrarian.resilience.wishes", "services.player.agrarian.WorkDraft")
-        ),
-        PreparednessKind.FIREBREAK: Defined("Firebreaks", checked_by=(), used_by=("engine.agrarian.book.FIRE_SHIELDS", "engine.agrarian.resilience.wishes")),
-        PreparednessKind.STOCKPILE: Defined(
-            "Stockpiles", checked_by=("engine.agrarian.book.famine_cushions",), used_by=("engine.agrarian.book.SHIELDS", "engine.agrarian.resilience.wishes")
-        ),
-        PreparednessKind.DRILL: Defined("Drills", checked_by=(), used_by=("engine.agrarian.book.SHIELDS", "engine.agrarian.resilience.wishes")),
-        PreparednessKind.WATCHTOWER: Defined(
-            "Watchtowers",
-            checked_by=("engine.agrarian.book.shield_cut", "engine.agrarian.book.shield_of"),
-            used_by=("engine.agrarian.resilience.prepare", "engine.agrarian.resilience.wishes"),
-        ),
-        PreparednessKind.SEAWALL: Defined("Seawalls", checked_by=(), used_by=("engine.agrarian.book.SHIELDS", "engine.agrarian.resilience.wishes")),
-        PreparednessKind.QUARANTINE_PLAN: Defined(
-            "Quarantine plan", checked_by=(), used_by=("engine.agrarian.book.SHIELDS", "engine.agrarian.resilience.wishes")
-        ),
-        PreparednessKind.SHELTERS: Defined("Shelters", checked_by=(), used_by=("engine.agrarian.book.SHIELDS", "engine.agrarian.resilience.wishes")),
-        PreparednessKind.WARNING_NETWORK: Defined(
-            "Warning network", checked_by=(), used_by=("engine.agrarian.book.SHIELDS", "engine.agrarian.resilience.wishes")
-        ),
-        PreparednessKind.EVACUATION_ROUTES: Defined(
-            "Evacuation routes",
-            checked_by=(),
-            used_by=("engine.agrarian.book.FIRE_SHIELDS", "engine.agrarian.book.SHIELDS", "engine.agrarian.resilience.wishes"),
-        ),
-        PreparednessKind.WARD: Defined(
-            "Ward", checked_by=(), used_by=("engine.agrarian.book.FIRE_SHIELDS", "engine.agrarian.book.SHIELDS", "engine.agrarian.resilience.wishes")
-        ),
-        PreparednessKind.RESERVES_OF_ENERGY: Defined(
-            "Reserves of energy", checked_by=(), used_by=("engine.agrarian.book.SHIELDS", "engine.agrarian.resilience.wishes")
-        ),
-    },
-)
-
-REBUILD_CAUSE = total(
-    RebuildCause,
-    {
-        RebuildCause.FIRE: Defined(
-            "Fire", checked_by=(), used_by=("engine.agrarian.resilience.SEIZING", "engine.settlement.life.fires", "services.player.agrarian.RebuildDraft")
-        ),
-        RebuildCause.FLOOD: Defined("Flood", checked_by=(), used_by=("engine.agrarian.ruin.CAUSES",)),
-        RebuildCause.QUAKE: Defined("Quake", checked_by=(), used_by=("engine.agrarian.ruin.CAUSES",)),
-        RebuildCause.STORM: Defined("Storm", checked_by=(), used_by=("engine.agrarian.ruin.CAUSES",)),
-        RebuildCause.SACK: Defined("Sack", checked_by=(), used_by=("engine.agrarian.resilience.SEIZING", "engine.agrarian.ruin.CAUSES")),
     },
 )
 

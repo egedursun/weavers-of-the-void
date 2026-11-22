@@ -2,6 +2,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.creature_anatomy import EXOTIC_TISSUES, HOARDED, LIFE_SKIN, PLAN_LIMBS, PLAN_SKIN, TISSUES, TRAIT_ATTACKS, TRAIT_SKIN, AttackSpec
+from aerona.catalog.life.domain import GROWN
+from aerona.catalog.life.ecology import ATTACK_SPECS_ATTACK_RANGES, BONE_OF, CLOSE_DELIVERIES, GENERATE_PACKAGE_KINDS, TOWN_DELIVERIES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.core.random import RandomKey, SeededRandom
@@ -16,7 +18,6 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import (
-    GROWN,
     AttackDelivery,
     AttackEffect,
     AttackRange,
@@ -42,12 +43,9 @@ from aerona.rules.registry import Rules
 
 T = CreatureTrait
 BEAST_BODIES_FIXUP = "creature_anatomy.beast_bodies"
-TOWN_DELIVERIES = (AttackDelivery.BREATH, AttackDelivery.SPIT, AttackDelivery.SPRAY, AttackDelivery.EMANATION, AttackDelivery.VOICE, AttackDelivery.SPORES)
-CLOSE_DELIVERIES = (AttackDelivery.TOUCH, AttackDelivery.BITE, AttackDelivery.STING)
 MIND_EFFECTS = (AttackEffect.FEAR, AttackEffect.STILLNESS, AttackEffect.SLEEP, AttackEffect.CONFUSION, AttackEffect.CHARM)
 FLYERS = frozenset({BodyPlan.AVIAN})
 HOLY_KINDS = frozenset({StructureKind.TEMPLE, StructureKind.SHRINE, StructureKind.MONASTERY})
-BONE_OF = {material: material for material in (TissueMaterial.MINERAL, TissueMaterial.CRYSTALLINE, TissueMaterial.METALLIC)}
 TEMPERAMENTS = (Temperament.PLACID, Temperament.SKITTISH, Temperament.CURIOUS, Temperament.FIERCE, Temperament.CUNNING)
 
 
@@ -99,7 +97,7 @@ def generate(
         skin = rng.pick(list(EXOTIC_TISSUES))
     bite = PackageKind.SNAKE_VENOM if T.VENOMOUS in traits else None
     if bite is None and rng.chance(table.monster_bite_pct if monster else table.bite_pct):
-        bite = rng.pick([PackageKind.SNAKE_VENOM, PackageKind.LYCANTHROPY, PackageKind.VAMPIRISM, PackageKind.VOID_TAINT])
+        bite = rng.pick(GENERATE_PACKAGE_KINDS)
     temperament = temperament_of(rng, aggression, fear)
     if monster and rng.chance(table.abductor_pct):
         temperament = Temperament.SEIZES_PREY
@@ -141,7 +139,7 @@ def attack_specs(rules: Rules, node_id: int, traits: set[CreatureTrait], *, mons
     specs = [TRAIT_ATTACKS[trait] for trait in TRAIT_ATTACKS if trait in traits]
     if not specs and rng.chance(table.monster_attack_pct if monster else table.attack_pct):
         effect = rng.pick([effect for effect in AttackEffect if effect not in MIND_EFFECTS])
-        specs.append(AttackSpec(rng.pick(list(TOWN_DELIVERIES)), effect, rng.pick([AttackRange.NEAR, AttackRange.FAR])))
+        specs.append(AttackSpec(rng.pick(list(TOWN_DELIVERIES)), effect, rng.pick(ATTACK_SPECS_ATTACK_RANGES)))
     if monster and rng.chance(table.sight_attack_pct):
         effect = rng.pick(list(MIND_EFFECTS))
         specs.append(AttackSpec(AttackDelivery.GAZE, effect, AttackRange.SIGHT, permanent=effect is AttackEffect.STILLNESS))

@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.catalog.domain_powers import LAND_DOMAINS
 from aerona.catalog.gates import Gate
+from aerona.catalog.life.tools import ACT_WORDS
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
@@ -25,20 +26,6 @@ from aerona.tools.framework.validation import fail
 from aerona.tools.son.support import require_essence
 
 FIERY = frozenset({Domain.FIRE, Domain.ASH, Domain.EARTH, Domain.STONE})
-ACT_WORDS = {
-    LandAct.SHIFT_RIVER: "moved its river",
-    LandAct.PARCH: "parched it into desert",
-    LandAct.GREEN: "brought the grass back",
-    LandAct.MAKE_SALINE: "made its soil saline",
-    LandAct.ENRICH_SOIL: "made its soil rich",
-    LandAct.RAISE_LAND: "raised the land",
-    LandAct.LOWER_LAND: "lowered the land",
-    LandAct.CARVE_VALLEY: "carved a valley",
-    LandAct.FILL_VALLEY: "filled its valleys",
-    LandAct.OPEN_SPRING: "opened a spring",
-    LandAct.CALL_LAVA: "called up lava",
-    LandAct.SINK_COAST: "sank its coast",
-}
 
 
 class ReshapeLandInput(ToolInput):

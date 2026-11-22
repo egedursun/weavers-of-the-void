@@ -3,7 +3,9 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.polity import POWER_SKILLS, TASKS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.db.tables.customs import MeasureStandardRow
 from aerona.db.tables.intrigue import SchemeRow, SecretRow
 from aerona.db.tables.military import ArmyProfileRow
@@ -21,26 +23,13 @@ from aerona.engine.crafts.reckoning import reckoned
 from aerona.engine.intrigue.schemes import OPEN
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
-from aerona.engine.polity.offices import POWER_SKILLS, power_skill, powers_of
+from aerona.engine.polity.offices import power_skill, powers_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import record
 from aerona.engine.relations.book import relation
 from aerona.engine.services.community_relations import change_relation
 
-TASKS: dict[OfficeKind, CouncilTask] = {
-    OfficeKind.CHANCELLOR: CouncilTask.IMPROVE_RELATIONS,
-    OfficeKind.MARSHAL: CouncilTask.TRAIN_TROOPS,
-    OfficeKind.TREASURER: CouncilTask.COLLECT_TAXES,
-    OfficeKind.SPYMASTER: CouncilTask.DISRUPT_SCHEMES,
-    OfficeKind.CHAPLAIN: CouncilTask.CONVERT_PROVINCE,
-    OfficeKind.HIGH_JUDGE: CouncilTask.PURGE_CORRUPTION,
-    OfficeKind.HEAD_OF_GOVERNMENT: CouncilTask.IMPROVE_RELATIONS,
-    OfficeKind.MINISTER: CouncilTask.COLLECT_TAXES,
-    OfficeKind.GENERAL: CouncilTask.TRAIN_TROOPS,
-    OfficeKind.ADMIRAL: CouncilTask.TRAIN_TROOPS,
-    OfficeKind.SPEAKER: CouncilTask.PURGE_CORRUPTION,
-}
 TASK = "task"
 DILIGENCE = "diligence"
 CORRUPTION = "corruption"
@@ -94,6 +83,10 @@ async def choose(ctx: TickContext, book: RealmBook, realm: Realm, office: Office
         office.task_target_node_id = None
 
 
+EFFECTS: Handlers[CouncilTask, Callable[[TickContext, RealmBook, Work], Awaitable[None]]] = Handlers(CouncilTask)
+
+
+@EFFECTS.on(CouncilTask.IMPROVE_RELATIONS)
 async def improve_relations(ctx: TickContext, book: RealmBook, work: Work) -> None:
     other = book.realms.get(work.office.task_target_node_id or -1)
     mine, theirs = work.realm.profile.core_entity_id, other.profile.core_entity_id if other is not None else None
@@ -102,6 +95,7 @@ async def improve_relations(ctx: TickContext, book: RealmBook, work: Work) -> No
     await change_relation(ctx, mine, theirs, ctx.rules.affairs.relations_gain * work.strength, MemoryKind.GOODWILL, note="courted by a chancellor")
 
 
+@EFFECTS.on(CouncilTask.TRAIN_TROOPS)
 async def train_troops(ctx: TickContext, book: RealmBook, work: Work) -> None:
     members = list(work.realm.members)
     if not members:
@@ -117,6 +111,7 @@ async def train_troops(ctx: TickContext, book: RealmBook, work: Work) -> None:
             army.cohesion = clamp_int(army.cohesion + gain, 0, PERCENT)
 
 
+@EFFECTS.on(CouncilTask.COLLECT_TAXES)
 async def collect_taxes(ctx: TickContext, book: RealmBook, work: Work) -> None:
     gathered = round_half_up(ctx.rules.affairs.collect_gain * len(work.realm.members) * work.strength)
     standard = await ctx.session.get(MeasureStandardRow, work.realm.entity.id)
@@ -127,6 +122,7 @@ async def collect_taxes(ctx: TickContext, book: RealmBook, work: Work) -> None:
         spend(ctx, work.realm, gathered, TreasuryEntry.TAX, "gathered by the treasurer")
 
 
+@EFFECTS.on(CouncilTask.DISRUPT_SCHEMES)
 async def disrupt_schemes(ctx: TickContext, book: RealmBook, work: Work) -> None:
     guarded = {work.realm.entity.id, *work.realm.members, *([work.realm.ruler_id] if work.realm.ruler_id is not None else [])}
     loss = round_half_up(ctx.rules.affairs.disrupt_gain * work.strength)
@@ -135,25 +131,17 @@ async def disrupt_schemes(ctx: TickContext, book: RealmBook, work: Work) -> None
             scheme.progress = clamp_int(scheme.progress - loss, 0, PERCENT)
 
 
+@EFFECTS.on(CouncilTask.CONVERT_PROVINCE)
 async def convert_province(ctx: TickContext, book: RealmBook, work: Work) -> None:
     target = book.entities.get(work.office.task_target_node_id or -1)
     if target is not None and not held(target.id) and stat(target, "piety") is not None:
         shift_stat(target, "piety", ctx.rules.affairs.convert_gain * work.strength)
 
 
+@EFFECTS.on(CouncilTask.PURGE_CORRUPTION)
 async def purge_corruption(ctx: TickContext, book: RealmBook, work: Work) -> None:
     if CORRUPTION not in work.realm.profile.locked:
         work.realm.profile.corruption = clamp_int(work.realm.profile.corruption - ctx.rules.affairs.purge_gain * work.strength, 0, PERCENT)
-
-
-EFFECTS: dict[CouncilTask, Callable[[TickContext, RealmBook, Work], Awaitable[None]]] = {
-    CouncilTask.IMPROVE_RELATIONS: improve_relations,
-    CouncilTask.TRAIN_TROOPS: train_troops,
-    CouncilTask.COLLECT_TAXES: collect_taxes,
-    CouncilTask.DISRUPT_SCHEMES: disrupt_schemes,
-    CouncilTask.CONVERT_PROVINCE: convert_province,
-    CouncilTask.PURGE_CORRUPTION: purge_corruption,
-}
 
 
 async def leak(ctx: TickContext, book: RealmBook, realm: Realm, office: OfficeRow, tally: CouncilTally) -> None:

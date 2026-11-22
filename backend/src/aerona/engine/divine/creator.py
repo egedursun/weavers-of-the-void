@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 
 from aerona.catalog.backfill_words import ACT_WORDS
+from aerona.catalog.life.divine import TARGET_FOR_CREATOR_PASSIONS, TARGET_FOR_CREATOR_PASSIONS_2
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.celestial import WorldRow
@@ -140,13 +141,13 @@ async def target_for(ctx: TickContext, passion: CreatorPassion) -> EntityRow | N
     if passion is P.BEAUTY:
         work = await ctx.session.scalar(born.where(EntityRow.entity_type.in_([EntityType.ARTWORK, EntityType.STRUCTURE])).order_by(EntityRow.id).limit(1))
         return await place_of(ctx, work.id) if work is not None else None
-    if passion in {P.WAR, P.CHAOS}:
+    if passion in TARGET_FOR_CREATOR_PASSIONS:
         battle = await ctx.session.scalar(born.where(EntityRow.engine_kind.in_([EngineKind.BATTLE, EngineKind.SIEGE])).order_by(EntityRow.id).limit(1))
         return await place_of(ctx, battle.id) if battle is not None else None
     if passion is P.MERCY:
         plague = await ctx.session.scalar(born.where(EntityRow.engine_kind == EngineKind.PLAGUE).order_by(EntityRow.id).limit(1))
         return await place_of(ctx, plague.id) if plague is not None else None
-    if passion in {P.CREATION, P.ORDER}:
+    if passion in TARGET_FOR_CREATOR_PASSIONS_2:
         return await ctx.session.scalar(born.where(EntityRow.entity_type.in_(list(COMMUNITY_TYPES))).order_by(EntityRow.id).limit(1))
     return None
 

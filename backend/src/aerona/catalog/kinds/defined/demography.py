@@ -8,14 +8,15 @@ COHORT_CONDITION = total(
         CohortCondition.NONE: Defined(
             "None",
             checked_by=(
+                "catalog.life.demography.CONDITION_WORK",
                 "engine.demography.basket.sicken",
                 "engine.demography.cohorts.place_classes",
                 "engine.demography.cohorts.reconcile",
-                "engine.demography.labour.CONDITION_WORK",
                 "engine.demography.mobility.bitter_emigration",
                 "engine.military.aftermath.send_home_wounded",
             ),
             used_by=(
+                "catalog.life.structures.LIVING_ADULTS",
                 "engine.demography.bound.move_people",
                 "engine.demography.cohorts.place_classes",
                 "engine.demography.cohorts.place_flow",
@@ -27,19 +28,18 @@ COHORT_CONDITION = total(
                 "engine.demography.vital.give_births",
                 "engine.disease.sickness.shift",
                 "engine.happenings.profile.even_split",
-                "engine.structures.profiles.LIVING_ADULTS",
                 "services.player.peoples.SetCohort",
             ),
         ),
         CohortCondition.VETERAN: Defined(
             "Veteran",
             checked_by=(
-                "engine.demography.labour.CONDITION_WORK",
+                "catalog.life.demography.CONDITION_WORK",
                 "engine.demography.promotion.sync_veterans",
                 "engine.honours.veterans.band_veterans",
                 "engine.honours.veterans.veterans_in",
             ),
-            used_by=("engine.demography.promotion.sync_veterans", "engine.military.aftermath.recover_wounded", "engine.structures.profiles.LIVING_ADULTS"),
+            used_by=("catalog.life.structures.LIVING_ADULTS", "engine.demography.promotion.sync_veterans", "engine.military.aftermath.recover_wounded"),
         ),
         CohortCondition.SICK: Defined(
             "Sick",
@@ -56,24 +56,24 @@ COHORT_CONDITION = total(
         ),
         CohortCondition.ENSLAVED: Defined(
             "Enslaved",
-            checked_by=(
-                "engine.demography.bound.move_people",
+            checked_by=("catalog.life.demography.CONDITION_WORK", "engine.demography.control.move_cohort", "engine.demography.control.shift_class"),
+            used_by=(
+                "catalog.life.demography.ALLOCATE_COHORT_CONDITIONS",
+                "catalog.life.demography.MOVE_PEOPLE_COHORT_CONDITIONS",
+                "catalog.life.structures.LIVING_ADULTS",
                 "engine.demography.control.move_cohort",
-                "engine.demography.control.shift_class",
-                "engine.demography.labour.CONDITION_WORK",
-                "engine.demography.labour.allocate",
+                "engine.demography.mobility.settle_captives",
             ),
-            used_by=("engine.demography.control.move_cohort", "engine.demography.mobility.settle_captives", "engine.structures.profiles.LIVING_ADULTS"),
         ),
         CohortCondition.CAPTIVE: Defined(
             "Captive",
-            checked_by=(
-                "engine.demography.bound.move_people",
-                "engine.demography.labour.CONDITION_WORK",
-                "engine.demography.labour.allocate",
-                "engine.demography.mobility.settle_captives",
+            checked_by=("catalog.life.demography.CONDITION_WORK", "engine.demography.mobility.settle_captives"),
+            used_by=(
+                "catalog.life.demography.ALLOCATE_COHORT_CONDITIONS",
+                "catalog.life.demography.MOVE_PEOPLE_COHORT_CONDITIONS",
+                "db.tables.military.CaptiveCohortRow",
+                "engine.demography.cohorts.FLOW_CONDITION",
             ),
-            used_by=("db.tables.military.CaptiveCohortRow", "engine.demography.cohorts.FLOW_CONDITION"),
         ),
         CohortCondition.MAIMED: Defined(
             "Maimed",

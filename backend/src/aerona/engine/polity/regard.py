@@ -4,6 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.war_causes import WAR_CAUSES
+from aerona.catalog.life.polity import ENVOYS
+from aerona.catalog.life_traits import TREATY_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
@@ -12,6 +14,7 @@ from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.statecraft import DiplomacyProfileRow, PolityRegardRow, SphereRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import TreatyKindTrait
 from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.polity import OfficeKind, TreatyKind, TreatyStatus
 from aerona.domain.enums.settlement import DistrictKind
@@ -25,19 +28,7 @@ from aerona.engine.services.community_relations import change_relation
 THREAT = "threat"
 TRUST = "trust"
 MIDDLE = PERCENT // 2
-ENVOYS = (OfficeKind.CHANCELLOR, OfficeKind.AMBASSADOR)
-KEPT_KINDS = frozenset(
-    {
-        TreatyKind.ALLIANCE_DEFENSIVE,
-        TreatyKind.ALLIANCE_OFFENSIVE,
-        TreatyKind.GUARANTEE,
-        TreatyKind.VASSALAGE,
-        TreatyKind.INTERWORLD,
-        TreatyKind.TRADE_PACT,
-        TreatyKind.MARRIAGE_PACT,
-        TreatyKind.COALITION,
-    }
-)
+KEPT_KINDS = having(TREATY_KIND_TRAITS, TreatyKindTrait.KEPT_KINDS)
 
 
 @dataclass

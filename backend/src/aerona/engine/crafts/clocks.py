@@ -2,13 +2,13 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.crafts import LADDER, PRECISION
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import PublicClockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.crafts import ClockKind
-from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
@@ -16,23 +16,6 @@ from aerona.engine.crafts.chemistry import knows
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
-
-PRECISION = {
-    ClockKind.SUNDIAL: 20,
-    ClockKind.CANDLE_CLOCK: 25,
-    ClockKind.SAND_GLASS: 30,
-    ClockKind.WATER_CLOCK: 35,
-    ClockKind.MECHANICAL: 70,
-    ClockKind.ASTRONOMICAL: 85,
-}
-LADDER = (
-    (ClockKind.MECHANICAL, (Technique.STEEL, Technique.ASTRONOMY_INSTRUMENTS)),
-    (ClockKind.ASTRONOMICAL, (Technique.ASTRONOMY_INSTRUMENTS,)),
-    (ClockKind.WATER_CLOCK, (Technique.CALENDAR, Technique.AQUEDUCT)),
-    (ClockKind.SAND_GLASS, (Technique.CALENDAR, Technique.NAVIGATION_STARS)),
-    (ClockKind.CANDLE_CLOCK, (Technique.CALENDAR, Technique.ORGANISED_CLERGY)),
-    (ClockKind.SUNDIAL, (Technique.CALENDAR,)),
-)
 
 
 @dataclass

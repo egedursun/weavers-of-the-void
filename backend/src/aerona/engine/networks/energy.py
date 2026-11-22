@@ -1,29 +1,15 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.networks import CARRIER_ENERGY
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkProfileRow
 from aerona.domain.enums.industry import EnergyKind
-from aerona.domain.enums.networks import NetworkCarrier
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.industry.energy import draw, unmet_pct
 from aerona.engine.networks.book import running
-
-CARRIER_ENERGY = total(
-    NetworkCarrier,
-    {
-        NetworkCarrier.RELAY: EnergyKind.MUSCLE,
-        NetworkCarrier.WIRED: EnergyKind.ELECTRIC,
-        NetworkCarrier.BROADCAST: EnergyKind.ELECTRIC,
-        NetworkCarrier.MESH: EnergyKind.ELECTRIC,
-        NetworkCarrier.MIND_LINK: EnergyKind.MAGIC,
-        NetworkCarrier.RITE_LINK: EnergyKind.MAGIC,
-        NetworkCarrier.GROWN_LINK: EnergyKind.FEED,
-    },
-)
 
 
 async def draw_networks(ctx: TickContext, book: EconomyBook) -> int:

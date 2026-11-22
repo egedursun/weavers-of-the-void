@@ -57,6 +57,6 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | creator | 1664 / 35 met | 1382 / 40 met | 420 / 35 met |
 | foreign_god | 1765 / 200 met | 1512 / 140 met | 420 / 100 met |
 | war | 1387 / 95 met | 950 / 110 met | 420 / 75 met |
-| world | 2081 / 195 met | 1698 / 135 met | 420 / 115 met |
+| world | 2080 / 195 met | 1698 / 135 met | 420 / 115 met |
 | star | 1816 / 35 met | 1560 / 30 met | 420 / 25 met |
 | route | 847 / 45 met | 511 / 30 met | 420 / 25 met |

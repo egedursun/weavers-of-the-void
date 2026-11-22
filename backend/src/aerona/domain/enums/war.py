@@ -69,9 +69,6 @@ class WarCause(StrEnum):
     PUNITIVE = "punitive"
 
 
-REVOLT_CAUSES = frozenset({WarCause.INDEPENDENCE, WarCause.TRIBUTE_REVOLT, WarCause.UPRISING, WarCause.LIBERATION})
-
-
 class SiegeStatus(StrEnum):
     ONGOING = "ongoing"
     BREACHED = "breached"

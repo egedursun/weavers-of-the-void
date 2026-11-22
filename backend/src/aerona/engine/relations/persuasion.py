@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.relations import WARM
 from aerona.catalog.relations import APPEALS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -14,7 +15,7 @@ from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import Facet, SkillKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.polity import OfficeKind
-from aerona.domain.enums.relations import AppealKind, PassionKind, PersuasionAim
+from aerona.domain.enums.relations import AppealKind, PersuasionAim
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.beliefs import evidence_trust
 from aerona.engine.mind.aspirations import rules_over
@@ -27,7 +28,6 @@ from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 FACET_SPAN = 50
 VALUE_SPAN = 100
 HALF = PERCENT // 2
-WARM = (PassionKind.LOVE, PassionKind.LOYALTY)
 COUNCIL_VOICES = 3
 COURT_FLOOR = 10**6
 EVIDENCE_TRUST_DIVISOR = 4

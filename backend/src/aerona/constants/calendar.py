@@ -1,0 +1,1 @@
+SEASONS_MAX = 12

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.core.total import total
+from aerona.catalog.life.communication import CUT_WHEN_TAKEN
 from aerona.db.tables.communication import SignalLinkRow
 from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.polity import PolityProfileRow
@@ -25,19 +25,6 @@ KIND_TECHNIQUES: tuple[tuple[SignalKind, Technique], ...] = (
     (SignalKind.OPTICAL_RELAY, Technique.CRYPTOGRAPHY),
     (SignalKind.COURIER_POST, Technique.PAPER),
     (SignalKind.BEACON_CHAIN, Technique.ALPHABET),
-)
-CUT_WHEN_TAKEN = total(
-    SignalKind,
-    {
-        SignalKind.BEACON_CHAIN: False,
-        SignalKind.OPTICAL_RELAY: False,
-        SignalKind.COURIER_POST: True,
-        SignalKind.BOUND_PAIR: False,
-        SignalKind.WIRE_STATION: True,
-        SignalKind.RADIO_STATION: False,
-        SignalKind.MIND_LINK_STATION: False,
-        SignalKind.GROWN_NODE: True,
-    },
 )
 
 

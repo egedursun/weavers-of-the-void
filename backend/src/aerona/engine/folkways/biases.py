@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.folkways import COUNTERS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.read_memo import memo_of, memoized, table_names
@@ -20,7 +21,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.folkways import BiasedDecision, DecisionBias
-from aerona.domain.enums.mind import Facet, SkillKind, ValueAxis
+from aerona.domain.enums.mind import Facet, ValueAxis
 from aerona.engine.body.variants import ORDINARY, bias_target, folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import living_gods
@@ -180,7 +181,6 @@ PUSHES: Mapping[BiasedDecision, Mapping[DecisionBias, int]] = total(
     },
 )
 
-COUNTERS = (SkillKind.STRATEGY, SkillKind.TACTICS)
 DECIDING = frozenset({BondKind.RULES, BondKind.COMMANDS})
 
 

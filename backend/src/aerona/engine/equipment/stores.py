@@ -1,17 +1,16 @@
 from dataclasses import dataclass
-from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_tables import FORGED
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.equipment import EquipmentModelRow, EquipmentStoreRow, UnitDesignEquipmentRow
 from aerona.db.tables.military import UnitDesignRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.equipment import ArmamentSlot
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.equipment.models import model_for
@@ -19,15 +18,6 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.renown.currencies import realm_of_community
-
-S = ArmamentSlot
-FORGED: MappingProxyType[CommodityKind, tuple[ArmamentSlot, ...]] = MappingProxyType(
-    {
-        CommodityKind.WEAPONS: (S.HAND_WEAPON, S.MISSILE_WEAPON),
-        CommodityKind.ARMOUR: (S.ARMOUR, S.SHIELD, S.HELMET, S.BARDING),
-        CommodityKind.SIEGE_MATERIEL: (S.VEHICLE_WEAPON,),
-    }
-)
 
 
 @dataclass

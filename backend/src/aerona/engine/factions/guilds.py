@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.factions import GUILDS
+from aerona.catalog.life_traits import KNOWLEDGE_BRANCH_TRAITS, having
 from aerona.catalog.mind import CRAFT_SKILLS
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.db.read_memo import memoized
@@ -13,13 +15,12 @@ from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faction import FactionKind, FactionRank
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.life_traits import KnowledgeBranchTrait
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import best_skill
 from aerona.engine.primitives.naming import seed_of
 
-GUILDS = (FactionKind.CRAFT_GUILD, FactionKind.MERCHANT_GUILD)
-CRAFT_BRANCHES = frozenset({KnowledgeBranch.METALLURGY, KnowledgeBranch.ARCHITECTURE, KnowledgeBranch.TRADE, KnowledgeBranch.AGRICULTURE})
+CRAFT_BRANCHES = having(KNOWLEDGE_BRANCH_TRAITS, KnowledgeBranchTrait.CRAFT_BRANCHES)
 RANK = "rank"
 
 

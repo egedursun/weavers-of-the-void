@@ -8,6 +8,11 @@ class CatchGround(StrEnum):
     MARINE_HUNT = "marine_hunt"
 
 
+class CatchMedium(StrEnum):
+    WATER = "water"
+    LAND = "land"
+
+
 class Gear(StrEnum):
     LINES = "lines"
     NETS = "nets"

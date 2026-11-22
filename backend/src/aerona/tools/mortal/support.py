@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.catalog.life.tools import RULES_A_REALM_OFFICE_KINDS
 from aerona.catalog.mind import CRAFT_SKILLS, LEARNED_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
@@ -19,7 +20,6 @@ from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityOrigin, EntityType, LegendCategory
 from aerona.domain.enums.mind import SkillKind
-from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.body.book import factor
@@ -259,7 +259,5 @@ async def fail_with_candidates(
 async def rules_a_realm(session: AsyncSession, actor: EntityRow) -> bool:
     if actor.entity_type is not EntityType.MORTAL:
         return False
-    held = await session.scalar(
-        select(OfficeRow.id).where(OfficeRow.holder_entity_id == actor.id, OfficeRow.kind.in_([OfficeKind.RULER, OfficeKind.REGENT])).limit(1)
-    )
+    held = await session.scalar(select(OfficeRow.id).where(OfficeRow.holder_entity_id == actor.id, OfficeRow.kind.in_(RULES_A_REALM_OFFICE_KINDS)).limit(1))
     return held is not None

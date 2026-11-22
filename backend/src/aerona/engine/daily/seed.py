@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.customs import SEEDED_STAGES
+from aerona.catalog.life_traits import HOUSE_DUTY_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.customs import TimeBudgetRow
@@ -14,12 +16,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.daily_life import DistanceNorm, HouseDuty, LeisureKind, PostureForm, TouchNorm, WashFrequency, WashPlace, WasteHandling
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.genetics import HouseholdRole
+from aerona.domain.enums.life_traits import HouseDutyTrait
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
-from aerona.engine.customs.time_budgets import SEEDED_STAGES, shares_for, sleeps_of
+from aerona.engine.customs.time_budgets import shares_for, sleeps_of
 from aerona.engine.mind.book import stored_values
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int
@@ -38,8 +41,8 @@ LEISURE_AXES: tuple[tuple[ValueAxis, LeisureKind], ...] = (
     (ValueAxis.PERSEVERANCE, LeisureKind.REST),
 )
 LEISURE_SHARES = (50, 30, 20)
-CARE_DUTIES = frozenset({HouseDuty.CHILDCARE, HouseDuty.ELDERCARE})
-SERVED_DUTIES = frozenset({HouseDuty.CLEANING, HouseDuty.WATER, HouseDuty.FUEL})
+CARE_DUTIES = having(HOUSE_DUTY_TRAITS, HouseDutyTrait.CARE_DUTIES)
+SERVED_DUTIES = having(HOUSE_DUTY_TRAITS, HouseDutyTrait.SERVED_DUTIES)
 KEEPERS = frozenset({HouseholdRole.HEAD, HouseholdRole.SPOUSE, HouseholdRole.HEIR, HouseholdRole.CARER, HouseholdRole.DEPENDENT})
 
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.domain.enums.travel import TravelMethod
-from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, SkyEventKind, WorldType
+from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, SkyEventKind, SurfaceLiquid, WorldType
 
 W = WorldType
 
@@ -16,6 +16,7 @@ class WorldTypeSpec:
     mirror: bool = False
     hidden_route_methods: frozenset[TravelMethod] = frozenset()
     artificial: bool = False
+    liquid: SurfaceLiquid = SurfaceLiquid.WATER
 
 
 WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
@@ -45,6 +46,7 @@ WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
             W.LAVA,
             "Lava world",
             "A hot world with molten rock at or near its surface.",
+            liquid=SurfaceLiquid.MOLTEN_ROCK,
         ),
         WorldTypeSpec(
             W.CRYSTAL,
@@ -62,6 +64,7 @@ WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
             "Realm of the dead",
             "A world where souls go after death.",
             realm_of_dead=True,
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.DREAM,
@@ -80,6 +83,7 @@ WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
             "Gas giant",
             "A giant world of gas with no solid surface.",
             hidden_route_methods=frozenset({TravelMethod.CARRIED_WITHIN}),
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.RINGED,
@@ -90,6 +94,7 @@ WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
             W.ASTEROID_BELT,
             "Asteroid belt",
             "Many separate rocks sharing one orbit, with thin air between them.",
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.TIDALLY_LOCKED,
@@ -100,6 +105,7 @@ WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
             W.VOID_POCKET,
             "Void pocket",
             "A small piece of land with nothing around it, close to what lies outside the cosmos.",
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.GODS_PALACE,
@@ -122,6 +128,7 @@ WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
             W.FORGE,
             "Forge-world",
             "A world given over to furnaces and foundries, its mountains mined hollow.",
+            liquid=SurfaceLiquid.MOLTEN_ROCK,
         ),
         WorldTypeSpec(
             W.SUPER_EARTH,
@@ -133,37 +140,44 @@ WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
             "Ice giant",
             "A cold giant of water, ammonia and methane ice with strong storms.",
             hidden_route_methods=frozenset({TravelMethod.CARRIED_WITHIN}),
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.HOT_GIANT,
             "Hot giant",
             "A gas giant close to its star, very hot on its day side, with winds faster than sound.",
             hidden_route_methods=frozenset({TravelMethod.CARRIED_WITHIN}),
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.IRON,
             "Iron world",
             "A metal core without its rock: iron ground, rust and strong magnetic storms.",
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.CARBON,
             "Diamond world",
             "A carbon-rich world of graphite, tar and diamond.",
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.GREENHOUSE,
             "Greenhouse world",
             "A world whose thick air traps heat: acid clouds, great heat and a surface hidden from the sky.",
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.DWARF_PLANET,
             "Dwarf world",
             "A small, cold body with frost plains, nitrogen ice and almost no air.",
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.CHTHONIAN,
             "Chthonian world",
             "The bare core of a giant whose air its star boiled away: hot, molten and close to its star.",
+            liquid=SurfaceLiquid.NONE,
         ),
         WorldTypeSpec(
             W.HYCEAN,
@@ -200,6 +214,7 @@ WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
             W.METHANE,
             "Methane world",
             "A cold world under an orange haze, with lakes and rain of liquid methane.",
+            liquid=SurfaceLiquid.METHANE,
         ),
     )
 }

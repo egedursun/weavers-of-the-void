@@ -4,6 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
+from aerona.catalog.goods_tables import COMMONS_MATERIAL, EATING_ORDER
+from aerona.catalog.goods_traits import commodities_with
 from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -17,8 +19,8 @@ from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import CoastKind, TemperatureBand
 from aerona.domain.enums.folk_knowledge import FolkDomain
+from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.industry import ProcessKind
-from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.body.variants import folk_biology
 from aerona.engine.context import TickContext
@@ -40,22 +42,10 @@ from aerona.rules.registry import Rules
 
 THOUSAND = 1000
 HARVEST_STEP = "harvest"
-EATING_ORDER = (
-    CommodityKind.BREAD,
-    CommodityKind.MEAT,
-    CommodityKind.CHEESE,
-    CommodityKind.LIVESTOCK,
-    CommodityKind.FISH,
-    CommodityKind.TUBERS,
-    CommodityKind.GRAIN,
-    CommodityKind.FRUIT,
-    CommodityKind.EGGS,
-    CommodityKind.MILK,
-)
 TENTH = 10
-COMMONS_MATERIAL = {CommodityKind.TIMBER: MaterialKind.WOOD, CommodityKind.STONE: MaterialKind.STONE}
 COLD_LAND = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
 ORCHARD_LAND = frozenset({TemperatureBand.TEMPERATE, TemperatureBand.WARM, TemperatureBand.HOT})
+WOODY = frozenset(commodities_with(CommodityTrait.WOODY))
 
 
 @dataclass(frozen=True)
@@ -114,14 +104,12 @@ async def harvest_goods(
     herds = round_half_up(land * mix.pasture * await folk_factor(ctx.session, ctx.rules, community, FolkDomain.ANIMALS)) - fodder
     milk = round_half_up(herds * chain.milk_pct / PERCENT)
     fields = land * mix.grain
-    split = {
-        **field_goods(ctx, book, community, fields),
-        CommodityKind.LIVESTOCK: herds - milk,
-        CommodityKind.MILK: milk,
-        CommodityKind.DUNG: round_half_up(herds * chain.dung_per_10 / TENTH),
-        CommodityKind.FODDER: fodder,
-        CommodityKind.FISH: round_half_up(sea * mix.fish),
-    }
+    split: dict[CommodityKind, int] = dict(field_goods(ctx, book, community, fields))
+    split[CommodityKind.LIVESTOCK] = herds - milk
+    split[CommodityKind.MILK] = milk
+    split[CommodityKind.DUNG] = round_half_up(herds * chain.dung_per_10 / TENTH)
+    split[CommodityKind.FODDER] = fodder
+    split[CommodityKind.FISH] = round_half_up(sea * mix.fish)
     for kind, amount in split.items():
         bonus = fishing.quality_bonus if kind is CommodityKind.FISH else farming.quality_bonus
         await goods_of(ctx.session, ctx.epoch).add(community.id, kind, max(0, amount), GoodsFlow.HARVEST, quality=DEFAULT_QUALITY + bonus)
@@ -147,11 +135,11 @@ def field_goods(ctx: TickContext, book: EconomyBook, community: EntityRow, field
     if crops:
         return {kind: round_half_up(amount) for kind, amount in split_fields(ctx.rules, fields, crops).items()}
     tuber_share, fruit_share = field_shares(ctx, book, community)
-    return {
-        CommodityKind.GRAIN: round_half_up(fields * (1 - tuber_share - fruit_share)),
-        CommodityKind.TUBERS: round_half_up(fields * tuber_share),
-        CommodityKind.FRUIT: round_half_up(fields * fruit_share),
-    }
+    shares: dict[CommodityKind, int] = {}
+    shares[CommodityKind.GRAIN] = round_half_up(fields * (1 - tuber_share - fruit_share))
+    shares[CommodityKind.TUBERS] = round_half_up(fields * tuber_share)
+    shares[CommodityKind.FRUIT] = round_half_up(fields * fruit_share)
+    return shares
 
 
 def field_shares(ctx: TickContext, book: EconomyBook, community: EntityRow) -> tuple[float, float]:
@@ -237,14 +225,13 @@ async def gather_commons(ctx: TickContext, book: EconomyBook, community: EntityR
     if region is None:
         return {}
     farmers = headcount(community) * farmer_share / PERCENT * await folk_factor(ctx.session, ctx.rules, community, FolkDomain.PLANTS)
-    gathered = {
-        CommodityKind.TIMBER: round_half_up(farmers * table.commons_timber_per_1000_farmers / THOUSAND * region.forest_cover / PERCENT),
-        CommodityKind.STONE: round_half_up(farmers * table.commons_stone_per_1000_farmers / THOUSAND * region.roughness / PERCENT),
-        CommodityKind.PEAT: round_half_up(farmers * ctx.rules.food_chain.peat_per_1000 / THOUSAND * region.wetland / PERCENT),
-        CommodityKind.HERBS: round_half_up(
-            farmers * table.commons_herbs_per_1000_farmers / THOUSAND * max(region.forest_cover, region.wetland, region.soil_fertility) / PERCENT
-        ),
-    }
+    gathered: dict[CommodityKind, int] = {}
+    gathered[CommodityKind.TIMBER] = round_half_up(farmers * table.commons_timber_per_1000_farmers / THOUSAND * region.forest_cover / PERCENT)
+    gathered[CommodityKind.STONE] = round_half_up(farmers * table.commons_stone_per_1000_farmers / THOUSAND * region.roughness / PERCENT)
+    gathered[CommodityKind.PEAT] = round_half_up(farmers * ctx.rules.food_chain.peat_per_1000 / THOUSAND * region.wetland / PERCENT)
+    gathered[CommodityKind.HERBS] = round_half_up(
+        farmers * table.commons_herbs_per_1000_farmers / THOUSAND * max(region.forest_cover, region.wetland, region.soil_fertility) / PERCENT
+    )
     ledger = goods_of(ctx.session, ctx.epoch)
     for kind, amount in gathered.items():
         material = COMMONS_MATERIAL.get(kind)
@@ -306,7 +293,7 @@ async def burn_substitutes(ctx: TickContext, community: EntityRow, short: int) -
 
     covered = 0
     heat = short * fuel_heat
-    for kind in sorted((kind for kind in FUEL_FAMILY if kind not in (CommodityKind.FUEL, CommodityKind.TIMBER)), key=lambda item: (cost(item), item.value)):
+    for kind in sorted((kind for kind in FUEL_FAMILY if kind not in WOODY), key=lambda item: (cost(item), item.value)):
         per = int(getattr(table, FUEL_HEAT[kind]))
         if heat <= 0 or per <= 0:
             continue

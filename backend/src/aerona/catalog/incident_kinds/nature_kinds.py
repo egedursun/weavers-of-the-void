@@ -1,4 +1,3 @@
-from aerona.catalog.dangers import DANGERS, HAZARDS
 from aerona.catalog.incident_kinds.record_builders import amount, chosen, happening, maybe, named, node, one, some
 from aerona.catalog.incident_kinds.spec import IncidentKindSpec
 from aerona.catalog.interventions import DISASTERS
@@ -462,14 +461,6 @@ SECRET_FINDS: dict[SecretKind, str] = {
 SECRET_KNOWLEDGE = frozenset({SecretKind.LOST_KNOWLEDGE, SecretKind.LOST_RITE})
 
 
-def hazard_line(hazard: TerrainHazard) -> str:
-    return HAZARDS[hazard].line.replace("{region}", "{place}") + "."
-
-
-def danger_line(source: DangerSource) -> str:
-    return DANGERS[source].settlers_line.replace("{community}", "{victim}").replace("{region}", "{place}") + "."
-
-
 LAND: tuple[IncidentKindSpec, ...] = (
     happening(
         "climate.region_turned",
@@ -622,30 +613,25 @@ LAND: tuple[IncidentKindSpec, ...] = (
         steps=(A.BEGIN, A.BURN_LAND, A.END),
         terms=True,
     ),
-    *(
-        happening(
-            f"hazard.{hazard.value}",
-            N,
-            hazard_line(hazard),
-            roles=(one(R.PLACE), some(R.VICTIM, required=False)),
-            facts=(named("season"), amount("deaths", U.PEOPLE), amount("injured", U.PEOPLE), amount("soldiers", U.PEOPLE)),
-            place=P.REQUIRED,
-            kind=K.DISASTER,
-            terms=True,
-        )
-        for hazard in TerrainHazard
+    happening(
+        "hazard.struck",
+        N,
+        "{hazard:An} struck {place} in {season}; {deaths:no one died|one died|# died}, {injured:no one was hurt|one was hurt|# were hurt}, "
+        "and armies there lost {soldiers:soldier|soldiers}.",
+        roles=(one(R.PLACE), some(R.VICTIM, required=False)),
+        facts=(chosen("hazard", TerrainHazard), named("season"), amount("deaths", U.PEOPLE), amount("injured", U.PEOPLE), amount("soldiers", U.PEOPLE)),
+        place=P.REQUIRED,
+        kind=K.DISASTER,
+        terms=True,
     ),
-    *(
-        happening(
-            f"danger.{source.value}",
-            N,
-            danger_line(source),
-            roles=(one(R.VICTIM), one(R.PLACE), maybe(R.ACTOR)),
-            facts=(amount("count", U.PEOPLE), amount("maimed", U.PEOPLE)),
-            place=P.REQUIRED,
-            terms=True,
-        )
-        for source in DangerSource
+    happening(
+        "danger.harm",
+        N,
+        "In {place}, {source} killed {count:no one|one|#} of {victim}, and {maimed:no one was|one was|# were} maimed.",
+        roles=(one(R.VICTIM), one(R.PLACE), maybe(R.ACTOR)),
+        facts=(chosen("source", DangerSource), amount("count", U.PEOPLE), amount("maimed", U.PEOPLE)),
+        place=P.REQUIRED,
+        terms=True,
     ),
     happening(
         "seasons.irregular",

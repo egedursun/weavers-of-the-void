@@ -53,8 +53,11 @@ from aerona.services.integrity.operations_links import mend_operations_links, ow
 from aerona.services.integrity.orders_links import mend_orders_links
 from aerona.services.integrity.prehistory import mend_prehistories
 from aerona.services.integrity.regime_links import mend_regime_links
+from aerona.services.integrity.rite_needs import keep_war_needs
 from aerona.services.integrity.sacred_links import mend_sacred_links
+from aerona.services.integrity.season_positions import mend_season_positions
 from aerona.services.integrity.single_ruler import homeland_to_lives_in, restore_homelands, single_rule
+from aerona.services.integrity.told_dangers import retell_dangers
 from aerona.services.integrity.tongue_links import mend_tongue_links
 from aerona.services.integrity.transformations import backfill_transformations
 from aerona.services.integrity.urban_links import mend_urban_links
@@ -158,6 +161,9 @@ class DataRepairs:
             ("context_budgets", raise_context_budgets),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
+            ("season_positions", lambda session, rules, epoch: mend_season_positions(session)),
+            ("rite_war_needs", lambda session, rules, epoch: keep_war_needs(session)),
+            ("told_dangers", lambda session, rules, epoch: retell_dangers(session)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),
             ("pending_dialect_names", refit_pending_names),
             ("engine_drafts", lambda session, rules, epoch: requeue_engine_drafts(session)),

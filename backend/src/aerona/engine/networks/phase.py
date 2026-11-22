@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.networks import CARRIER_ENERGY, CARRIER_FAILURE, CAUSE_EPOCHS, ROLE_SHOCK
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
@@ -23,8 +24,8 @@ from aerona.engine.minds.values import liberty_of
 from aerona.engine.monetary.authorities import establish
 from aerona.engine.networks.backfill import keep_relays, relay_backfill
 from aerona.engine.networks.book import carrier_days, running, shake_ledger
-from aerona.engine.networks.energy import CARRIER_ENERGY, starved
-from aerona.engine.networks.kinds import ACCESS_REACH, CARRIER_FAILURE, CAUSE_EPOCHS, ROLE_SHOCK
+from aerona.engine.networks.energy import starved
+from aerona.engine.networks.kinds import ACCESS_REACH
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.stats import set_stats, shift_stat
 from aerona.engine.recording.record import StepDraft

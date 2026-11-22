@@ -1,5 +1,7 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.concealment import POPULATION_FOR_CONCEAL_SCOPES, REVEALED_ATTITUDES
+from aerona.catalog.life_traits import BREACH_CAUSE_TRAITS, HIDDEN_TRUTH_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.record_context import Term
 from aerona.db.tables.concealment import BreachRow, HiddenTruthRow, PublicKnowledgeRow, TruthKeeperRow, TruthSeekerRow
@@ -13,6 +15,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger
 from aerona.domain.enums.concealment import BreachCause, ConcealScope, HiddenTruthKind, KeeperResponse, KeeperRole, SeekerAim, TruthAttitude
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import BreachCauseTrait, HiddenTruthKindTrait
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import TreatyBreach, TreatyStatus
@@ -30,19 +33,13 @@ from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.recording.record import record as record_incident
 
 LEAN = 25
-ACCORD_BREAKING = frozenset({BreachCause.OVERT_USE, BreachCause.WAR, BreachCause.DEFECTOR})
-GIFTED_TRUTHS = frozenset({HiddenTruthKind.PRESENCE, HiddenTruthKind.POWER, HiddenTruthKind.NATURE})
-REVEALED_ATTITUDES = {
-    TruthAttitude.FEARED: GiftedAttitude.FEARED,
-    TruthAttitude.REVERED: GiftedAttitude.HONOURED,
-    TruthAttitude.ACCEPTED: GiftedAttitude.ORDINARY,
-    TruthAttitude.EXPLOITED: GiftedAttitude.REGULATED,
-}
+ACCORD_BREAKING = having(BREACH_CAUSE_TRAITS, BreachCauseTrait.ACCORD_BREAKING)
+GIFTED_TRUTHS = having(HIDDEN_TRUTH_KIND_TRAITS, HiddenTruthKindTrait.GIFTED_TRUTHS)
 ATTITUDE_BY_FEAR = {True: TruthAttitude.FEARED, False: TruthAttitude.ACCEPTED}
 
 
 async def population_for(ctx: TickContext, truth: HiddenTruthRow, place_id: int | None) -> int | None:
-    if truth.hidden_from in {ConcealScope.A_PEOPLE, ConcealScope.A_POLITY, ConcealScope.A_WORLD} and truth.scope_node_id is not None:
+    if truth.hidden_from in POPULATION_FOR_CONCEAL_SCOPES and truth.scope_node_id is not None:
         return truth.scope_node_id
     place = await ctx.session.get(EntityRow, place_id) if place_id is not None else None
     if place is not None and place.entity_type is EntityType.SETTLEMENT:

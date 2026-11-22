@@ -1,12 +1,13 @@
 from sqlalchemy import func, select
 
+from aerona.catalog.life.made import MAKERS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import FabricationRow, MarketScarcityRow, PatternRightRow, ReplicatorLineRow, ReplicatorPresenceRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.made import ReplicatorOutput, ReplicatorStage
+from aerona.domain.enums.made import ReplicatorStage
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import Commodity
 from aerona.engine.context import TickContext
@@ -17,7 +18,6 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.primitives.stats import shift_stat
 
-MAKERS = (ReplicatorOutput.GOODS, ReplicatorOutput.STRUCTURES, ReplicatorOutput.COPIES)
 LIVE = (ReplicatorStage.WORKING, ReplicatorStage.SPREADING, ReplicatorStage.RUNAWAY)
 
 

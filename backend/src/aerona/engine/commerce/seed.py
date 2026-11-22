@@ -2,29 +2,16 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.goods_tables import WORKSHOP_GOODS
 from aerona.db.tables.agrarian import BrandRow
 from aerona.db.tables.commerce import ShopGoodRow, ShopRow, SupplyTierRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import TradeRouteProfileRow, WorkshopRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.commerce import ShopForm, SupplyTier
-from aerona.domain.enums.economy import CommodityKind, WorkshopKind
+from aerona.domain.enums.economy import WorkshopKind
 from aerona.engine.commerce.trade import living
 from aerona.engine.context import TickContext
-
-WORKSHOP_GOODS: dict[WorkshopKind, CommodityKind] = {
-    WorkshopKind.FORGE: CommodityKind.TOOLS,
-    WorkshopKind.TANNERY: CommodityKind.CLOTH,
-    WorkshopKind.MILL: CommodityKind.BREAD,
-    WorkshopKind.BREWERY: CommodityKind.BREW_BASE,
-    WorkshopKind.WEAVERY: CommodityKind.CLOTH,
-    WorkshopKind.STABLE: CommodityKind.MOUNTS,
-    WorkshopKind.MASON_YARD: CommodityKind.STONE,
-    WorkshopKind.CHARCOAL_KILN: CommodityKind.FUEL,
-    WorkshopKind.ALCHEMIST: CommodityKind.MEDICINE,
-    WorkshopKind.SHRINE_WORKSHOP: CommodityKind.SACRED_GOODS,
-    WorkshopKind.SIEGE_YARD: CommodityKind.SIEGE_MATERIEL,
-}
 
 COMMON_TIERS_FIXUP = "commerce.common_tiers"
 

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import STANDING_STATES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.disease import DiseaseCureRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
@@ -15,7 +16,7 @@ from aerona.domain.enums.disease import CureSource, OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.structure import STANDING_STATES, StructureKind
+from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.lore.research_depth import trade_partners

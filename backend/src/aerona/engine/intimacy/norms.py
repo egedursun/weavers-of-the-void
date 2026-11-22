@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.intimacy_shapes import ENFORCER_FORCE_PCT
+from aerona.catalog.life.intimacy import CLOSE_KIN, EXTENDED_KIN, STRICT_AXES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intimacy import IntimacyNormRow
@@ -15,8 +16,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intimacy import KinScope, NormEnforcer, NormSanction, NormStance, RelationContext
 from aerona.domain.enums.intrigue import IntrigueSecret
-from aerona.domain.enums.kin import KinRole
-from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.mind import ValueHolder
 from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.relations import RelationType
@@ -38,17 +38,6 @@ from aerona.engine.relations.book import ensure_relation, shift
 
 STANCES = tuple(NormStance)
 SANCTIONED = frozenset({NormStance.FORBIDDEN, NormStance.DISCOURAGED})
-CLOSE_KIN = (KinRole.PARENT, KinRole.CHILD, KinRole.SIBLING)
-EXTENDED_KIN = (
-    *CLOSE_KIN,
-    KinRole.GRANDPARENT,
-    KinRole.GRANDCHILD,
-    KinRole.PARENT_SIBLING_FIRST_LINE,
-    KinRole.PARENT_SIBLING_SECOND_LINE,
-    KinRole.SIBLING_CHILD,
-    KinRole.COUSIN_PARALLEL,
-    KinRole.COUSIN_CROSS,
-)
 SCOPE_ROLES = {KinScope.CLOSE: CLOSE_KIN, KinScope.EXTENDED: EXTENDED_KIN, KinScope.GROUP: EXTENDED_KIN}
 OUTSIDE_WEIGHTS = {
     NormStance.FORBIDDEN: 2.0,
@@ -57,7 +46,6 @@ OUTSIDE_WEIGHTS = {
     NormStance.ACCEPTED: 0.5,
     NormStance.HONOURED: 0.0,
 }
-STRICT_AXES = (ValueAxis.TRADITION, ValueAxis.PIETY, ValueAxis.HONOUR)
 STRICT_AT = 50
 
 

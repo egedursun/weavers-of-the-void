@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.domestication import HOUSED_STAGES
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.cuisine import DishRow
@@ -11,7 +12,7 @@ from aerona.db.tables.regime import BreedingPlanRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cuisine import CookingMethod
-from aerona.domain.enums.ecology import DomesticationStage, Temperament
+from aerona.domain.enums.ecology import Temperament
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.industry import MethodKind, ProcessKind
@@ -22,7 +23,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.living.society import doctrine_stances
 
 LEGACY_FIXUP = "living.legacy_backfill"
-BRED = frozenset({DomesticationStage.DOMESTICATED, DomesticationStage.BREED})
+BRED = HOUSED_STAGES
 BRED_STABILITY = 70
 VESSEL_LIFESPAN = 80
 GROWN_LIFESPAN = 200

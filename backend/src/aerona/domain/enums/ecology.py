@@ -27,10 +27,6 @@ class Diet(StrEnum):
     SANGUIVORE = "sanguivore"
 
 
-HUNTERS = frozenset({Diet.CARNIVORE, Diet.OMNIVORE, Diet.SOUL})
-GRAZERS = frozenset({Diet.HERBIVORE, Diet.OMNIVORE, Diet.FILTER})
-
-
 class Sociality(StrEnum):
     SOLITARY = "solitary"
     PACK = "pack"
@@ -47,7 +43,6 @@ class DomesticationStage(StrEnum):
 
 
 STAGE_ORDER = tuple(DomesticationStage)
-KEPT_STAGES = frozenset({DomesticationStage.HERDED, DomesticationStage.DOMESTICATED, DomesticationStage.BREED})
 
 
 class AnimalRole(StrEnum):
@@ -87,7 +82,7 @@ class BeastTemper(StrEnum):
 class YieldProduct(StrEnum):
     MEAT = "meat"
     HIDE = "hide"
-    BONE = "bone"
+    CALCIFIED_TISSUE = "calcified_tissue"
     IVORY = "ivory"
     CHITIN = "chitin"
     VENOM = "venom"
@@ -96,7 +91,7 @@ class YieldProduct(StrEnum):
     MILK = "milk"
     FEATHERS = "feathers"
     MAGIC_REAGENTS = "magic_reagents"
-    GREAT_BONE = "great_bone"
+    GREAT_BEAST_TISSUE = "great_beast_tissue"
     EGGS = "eggs"
 
 
@@ -120,9 +115,6 @@ class SpeciesClass(StrEnum):
     HYBRID = "hybrid"
 
 
-GROWN = frozenset({SpeciesClass.PLANT, SpeciesClass.FUNGUS})
-
-
 class Biochemistry(StrEnum):
     CARBON_WATER = "carbon_water"
     CARBON_AMMONIA = "carbon_ammonia"
@@ -130,9 +122,6 @@ class Biochemistry(StrEnum):
     CRYSTAL = "crystal"
     VOID = "void"
     SPIRIT = "spirit"
-
-
-UNBOUND_BIOCHEMISTRY = frozenset({Biochemistry.VOID, Biochemistry.SPIRIT})
 
 
 class GrowthCycle(StrEnum):

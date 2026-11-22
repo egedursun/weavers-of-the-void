@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import REVOLT_CAUSES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.polity import VassalageRow
 from aerona.db.tables.statecraft import SphereRow
@@ -10,7 +11,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.statecraft import SubjectKind
-from aerona.domain.enums.war import REVOLT_CAUSES, WarCause
+from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.crises import power_of

@@ -77,6 +77,12 @@ run fixed_harm "$PYTHON" scripts/check_fixed_harm.py
 run acts_as "$PYTHON" scripts/check_acts_as.py
 run war_foes "$PYTHON" scripts/check_war_foes.py
 run treaty_parties "$PYTHON" scripts/check_treaty_parties.py
+run literal_enum_sets "$PYTHON" scripts/check_literal_enum_sets.py
+run movement_modes "$PYTHON" scripts/check_movement_modes.py
+run season_positions "$PYTHON" scripts/check_season_positions.py
+run calendar_slots "$PYTHON" scripts/check_calendar_slots.py
+run cycle_fields "$PYTHON" scripts/check_cycle_fields.py
+run spec_duplicates "$PYTHON" scripts/check_spec_duplicates.py
 run head_returns "$PYTHON" scripts/check_head_returns.py
 run point_shares "$PYTHON" scripts/check_point_shares.py
 run held_ids "$PYTHON" scripts/check_held_ids.py

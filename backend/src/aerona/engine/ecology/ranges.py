@@ -5,6 +5,9 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.diets import GRAZERS, HUNTERS
+from aerona.catalog.domestication import HOUSED_STAGES, SOCIALITIES
+from aerona.catalog.senses import TRACKING
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
@@ -17,7 +20,7 @@ from aerona.db.tables.gardens import GardenRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.divine import DomainHook
-from aerona.domain.enums.ecology import GRAZERS, HUNTERS, SIZE_ORDER, Biochemistry, DomesticationStage, HerdTraining, RangeTrend, Sociality
+from aerona.domain.enums.ecology import SIZE_ORDER, Biochemistry, HerdTraining, RangeTrend, Sociality
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.environment import TemperatureBand
@@ -41,7 +44,7 @@ from aerona.engine.loops.delay import delay_of, lagged
 from aerona.engine.museums.reading import refuges
 from aerona.engine.nature.islands import spared_kinds
 from aerona.engine.nature.seasons import activity, asleep, chilled, season_bands
-from aerona.engine.nature.senses import TRACKING, sense_score
+from aerona.engine.nature.senses import sense_score
 from aerona.engine.nature.sleepers import awake_now
 from aerona.engine.nature.symbiosis import SymbiosisBook
 from aerona.engine.primitives.distance import RegionAtlas
@@ -54,7 +57,7 @@ from aerona.rules.registry import Rules
 
 T = CreatureTrait
 UNHUNTED = frozenset({T.POISONOUS_FLESH, T.SACRED_ANIMAL})
-HOUSED = frozenset({DomesticationStage.DOMESTICATED, DomesticationStage.BREED})
+HOUSED = HOUSED_STAGES
 
 
 @dataclass
@@ -281,7 +284,7 @@ class Pressure:
 
 
 def numbers_kept(rules: Rules, profile: SpeciesProfileRow | None) -> float:
-    if profile is not None and profile.sociality in {Sociality.HERD, Sociality.HIVE}:
+    if profile is not None and SOCIALITIES[profile.sociality].keeps_numbers:
         return 1 - rules.habitat.herd_pct / PERCENT
     return 1.0
 

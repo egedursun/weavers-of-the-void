@@ -6,6 +6,7 @@ from markupsafe import Markup, escape
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.services import BUILDING_STATES, STATE_OPACITY, ZONE_INK
 from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.urban import SERVICE_OF
 from aerona.catalog.zones import CIVIC_SERVICE_OF, ZONE_OF_DISTRICT, ZONE_OF_STRUCTURE
@@ -17,7 +18,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.structure import ConstructionState, StructureKind
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.urban import HousingLevel, LandCover, LandGround, Morphology, ZoneKind
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.urban.cityscape import Tile, homes_of, land_tiles, perimeter_of, pick_tile, provisional, resource_prefer, slots_of
@@ -33,18 +34,6 @@ PAPER = "#f6f1e4"
 INK = "#3a3326"
 WATER = "#7fb4d8"
 WALL = "#6b5b45"
-ZONE_INK: dict[ZoneKind, str] = {
-    ZoneKind.GOVERNANCE: "#c9a240",
-    ZoneKind.RESIDENTIAL: "#c9744f",
-    ZoneKind.COMMERCIAL: "#5d8fc4",
-    ZoneKind.INDUSTRIAL: "#8a74a8",
-    ZoneKind.AGRICULTURAL: "#b5b85a",
-    ZoneKind.CIVIC: "#4f9fa6",
-    ZoneKind.GREEN: "#4f9a5a",
-    ZoneKind.TRANSPORT: "#7a8a96",
-    ZoneKind.MILITARY: "#a0524a",
-    ZoneKind.RESEARCH: "#6a7fc0",
-}
 GROUND_INK: dict[LandGround, str] = {
     LandGround.WATER: WATER,
     LandGround.SHORE: "#e6d6a5",
@@ -64,20 +53,6 @@ COVER_INK: dict[LandCover, str | None] = {
     LandCover.BUILT: "#a08c78",
     LandCover.MINED: "#7a5a4a",
 }
-STATE_OPACITY: dict[ConstructionState, float] = {
-    ConstructionState.PLANNED: 0.35,
-    ConstructionState.BUILDING: 0.6,
-    ConstructionState.COMPLETE: 1.0,
-    ConstructionState.DAMAGED: 0.7,
-    ConstructionState.RUINED: 0.3,
-}
-
-BUILDING_STATES = (
-    frozenset({ConstructionState.COMPLETE}),
-    frozenset({ConstructionState.PLANNED, ConstructionState.BUILDING}),
-    frozenset({ConstructionState.DAMAGED}),
-    frozenset({ConstructionState.RUINED}),
-)
 
 
 @dataclass

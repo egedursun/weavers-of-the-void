@@ -5,10 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.line_outcomes import LINE_OUTCOMES
+from aerona.catalog.life.living import CRAFTS
+from aerona.catalog.life_traits import CULTIVATION_METHOD_TRAITS, LINE_TRAIT_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import spoken
-from aerona.core.total import total
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
@@ -16,9 +17,9 @@ from aerona.db.tables.living import LivingLineRow, LivingLineSourceRow, LivingLi
 from aerona.db.tables.powers import SourceDensityRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.ecology import RangeTrend
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import CultivationMethodTrait, LineTraitTrait
 from aerona.domain.enums.living import CultivationMethod, Fertility, LineOutcome, LineTrait
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -38,24 +39,10 @@ from aerona.rules.registry import Rules
 
 M = CultivationMethod
 WORKS = frozenset({StructureKind.CLONING_FACILITY, StructureKind.LABORATORY})
-CRAFTS = total(
-    CultivationMethod,
-    {
-        M.SELECTIVE_BREEDING: ((SkillKind.BEAST_HANDLING, SkillKind.FORAGING), None),
-        M.CULTIVATION: ((SkillKind.FORAGING, SkillKind.BEAST_HANDLING), None),
-        M.SHAPING: ((SkillKind.MEDICINE, SkillKind.SPELLCRAFT, SkillKind.SURGERY), None),
-        M.ENGINEERING: ((SkillKind.SCIENCE, SkillKind.MEDICINE), Technique.GENETIC_ENGINEERING),
-        M.SYNTHESIS: ((SkillKind.SCIENCE,), Technique.GENETIC_ENGINEERING),
-        M.BINDING: ((SkillKind.SPELLCRAFT, SkillKind.MEDICINE), None),
-        M.CLONING: ((SkillKind.SCIENCE, SkillKind.MEDICINE, SkillKind.SPELLCRAFT), Technique.GENETIC_ENGINEERING),
-        M.MERGING: ((SkillKind.SCIENCE, SkillKind.SPELLCRAFT, SkillKind.MEDICINE), Technique.GENETIC_ENGINEERING),
-        M.INDUCTION: ((SkillKind.SPELLCRAFT, SkillKind.SCIENCE, SkillKind.FORAGING), None),
-    },
-)
 CRAFT_STEP = 20
 PERSONS = frozenset({EntityType.MORTAL, EntityType.PEOPLE})
-SPREADING = frozenset({LineTrait.FLIGHT, LineTrait.AQUATIC, LineTrait.VOID_HARDY})
-RITE_PATHS = frozenset({M.SHAPING, M.BINDING, M.CLONING, M.MERGING})
+SPREADING = having(LINE_TRAIT_TRAITS, LineTraitTrait.SPREADING)
+RITE_PATHS = having(CULTIVATION_METHOD_TRAITS, CultivationMethodTrait.RITE_PATHS)
 
 
 @dataclass(frozen=True)

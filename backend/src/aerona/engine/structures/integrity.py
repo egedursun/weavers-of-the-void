@@ -5,6 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.sections import SECTION_STATES
+from aerona.catalog.life.structures import STRIKE_ROWS_STRUCTURE_SECTIONS
+from aerona.catalog.life_traits import STRUCTURE_SECTION_TRAITS, having
 from aerona.catalog.structure_sections import LAYOUTS, PartSpec
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -14,6 +16,7 @@ from aerona.db.tables.integrity import StructureDesignSectionRow, StructureSecti
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.domain.enums.economy import MaterialFamily
 from aerona.domain.enums.integrity import Criticality, HarmForce, SectionHazard, SectionState
+from aerona.domain.enums.life_traits import StructureSectionTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.structure import SectionRole, StructureSection
 from aerona.engine.context import TickContext
@@ -21,14 +24,13 @@ from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
-X = StructureSection
 U = SectionRole
 F = HarmForce
 FLAMMABILITY: MappingProxyType[MaterialFamily, int] = total(
     MaterialFamily,
     {MaterialFamily.ORGANIC: 70, MaterialFamily.STONE: 10, MaterialFamily.METAL: 5, MaterialFamily.PRECIOUS: 5, MaterialFamily.EXOTIC: 30},
 )
-TALL = frozenset({X.TOWERS, X.SPIRE, X.DOME, X.UPPER_FLOORS, X.ROOF, X.KEEP, X.BEACON, X.SPINE})
+TALL = having(STRUCTURE_SECTION_TRAITS, StructureSectionTrait.TALL)
 FORCE_ROLES: MappingProxyType[HarmForce, MappingProxyType[SectionRole, int]] = total(
     HarmForce,
     {
@@ -232,7 +234,7 @@ def strike_rows(ctx: TickContext, rows: list[StructureSectionRow], loss: float, 
             elif row.hazard in {SectionHazard.COLLAPSE, SectionHazard.EXPLOSION} and row.state is SectionState.DESTROYED:
                 queue.append((neighbour, float(table.collapse_hit)))
                 chained += 1
-    foundation = next((row for row in rows if row.section in {X.FOUNDATION, X.SPINE, X.PIERS} and row.state is SectionState.DESTROYED), None)
+    foundation = next((row for row in rows if row.section in STRIKE_ROWS_STRUCTURE_SECTIONS and row.state is SectionState.DESTROYED), None)
     if foundation is not None and foundation.criticality is Criticality.CRITICAL:
         for row in rows:
             if row.state is not SectionState.DESTROYED and not set(row.locked or []) & {"condition", "state"}:

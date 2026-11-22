@@ -7,16 +7,16 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.db.tables.evolution import WorldCycleRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind
+from aerona.domain.enums.evolution import CycleEffect
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.cycles import carbon_flux, cycles_by_world
+from aerona.engine.cosmos.cycles import WorldCycles, cycles_by_world, flux_of
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.loops.delay import lagged
 from aerona.engine.phases.disasters import apply_disaster
@@ -52,13 +52,13 @@ def move_ice(rules: Rules, physics: WorldPhysicsRow, target: int) -> int:
     return step
 
 
-def move_carbon(ctx: TickContext, physics: WorldPhysicsRow, cleared: float, cycle: WorldCycleRow | None = None) -> int:
+def move_carbon(ctx: TickContext, physics: WorldPhysicsRow, cleared: float, cycles: WorldCycles | None = None) -> int:
     if "carbon_dioxide" in physics.locked or physics.pressure <= 0:
         return 0
     table = ctx.rules.planetary_climate
     rng = ctx.rng(f"carbon.{physics.world_id}")
     change = 0
-    flux = carbon_flux(cycle)
+    flux = flux_of(cycles, CycleEffect.GREENHOUSE)
     if flux is not None:
         change = flux if flux > 0 or physics.carbon_dioxide > table.weathering_floor else 0
     else:

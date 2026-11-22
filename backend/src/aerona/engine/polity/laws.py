@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.backfill_words import LAW_WORDS
 from aerona.catalog.law_areas import LAW_AREAS
 from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for, law_terms, penal_cruelty, term_text
+from aerona.catalog.life.polity import KIND_VALUES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import spoken
@@ -32,42 +33,6 @@ KIND_FIXUP = "law_kinds_from_text"
 KEPT_LAWS = "kept_laws"
 LAW_TABLES = table_names((LawProfileRow, LawJurisdictionRow))
 CULT_FIRST = frozenset({LawKind.BURIAL_LAW, LawKind.MARRIAGE_LAW, LawKind.RITE_RESTRICTIONS, LawKind.WORSHIP_BAN, LawKind.MAGIC_BAN, LawKind.TITHE})
-KIND_VALUES: Mapping[LawKind, Mapping[ValueAxis, int]] = {
-    LawKind.SLAVERY: {ValueAxis.MERCY: -1, ValueAxis.HIERARCHY: 1},
-    LawKind.PENAL_CODE: {ValueAxis.MERCY: -1, ValueAxis.TRADITION: 1},
-    LawKind.CONSCRIPTION: {ValueAxis.MARTIAL: 1},
-    LawKind.CENSORSHIP: {ValueAxis.HIERARCHY: 1, ValueAxis.TRUTH: -1, ValueAxis.KNOWLEDGE: -1},
-    LawKind.RELIGIOUS_TOLERANCE: {ValueAxis.XENOPHILIA: 1, ValueAxis.PIETY: -1},
-    LawKind.FOREIGNER_RIGHTS: {ValueAxis.XENOPHILIA: 1},
-    LawKind.SUMPTUARY: {ValueAxis.HIERARCHY: 1, ValueAxis.WEALTH: -1},
-    LawKind.MAGIC_BAN: {ValueAxis.SUPERSTITION: 1, ValueAxis.KNOWLEDGE: -1},
-    LawKind.TAX_RATE: {ValueAxis.WEALTH: -1},
-    LawKind.BLOOD_FEUD: {ValueAxis.HONOUR: 1, ValueAxis.KINSHIP: 1},
-    LawKind.FRANCHISE: {ValueAxis.HIERARCHY: -1},
-    LawKind.LABOUR_LAW: {ValueAxis.MERCY: 1, ValueAxis.WEALTH: -1},
-    LawKind.ENVIRONMENT_LAW: {ValueAxis.NATURE: 1, ValueAxis.WEALTH: -1},
-    LawKind.DATA_PRIVACY: {ValueAxis.HIERARCHY: -1},
-    LawKind.WEAPONS_LAW: {ValueAxis.MARTIAL: -1, ValueAxis.LAW: 1},
-    LawKind.INTELLECTUAL_PROPERTY: {ValueAxis.WEALTH: 1, ValueAxis.KNOWLEDGE: -1},
-    LawKind.MACHINE_LAW: {ValueAxis.TRADITION: 1, ValueAxis.KNOWLEDGE: -1},
-    LawKind.SPACE_LAW: {ValueAxis.XENOPHILIA: 1},
-    LawKind.MIND_STATUS: {ValueAxis.MERCY: 1, ValueAxis.TRADITION: -1},
-    LawKind.COPY_LAW: {ValueAxis.TRADITION: 1, ValueAxis.FAMILY: 1},
-    LawKind.COPY_SUCCESSION: {ValueAxis.LAW: 1},
-    LawKind.ERASURE_LAW: {ValueAxis.MERCY: 1},
-    LawKind.AUGMENT_LAW: {ValueAxis.TRADITION: 1, ValueAxis.PURITY: 1},
-    LawKind.NETWORK_LAW: {ValueAxis.HIERARCHY: 1},
-    LawKind.SURVEILLANCE_LAW: {ValueAxis.LAW: 1, ValueAxis.HIERARCHY: 1},
-    LawKind.COMPETITION_LAW: {ValueAxis.LAW: 1, ValueAxis.WEALTH: -1},
-    LawKind.PROVISION_LAW: {ValueAxis.MERCY: 1, ValueAxis.WEALTH: -1},
-    LawKind.POWER_LAW: {ValueAxis.LAW: 1, ValueAxis.HIERARCHY: 1},
-    LawKind.SOURCE_LAW: {ValueAxis.TRADITION: 1, ValueAxis.PIETY: 1},
-    LawKind.LIVING_CRAFT_LAW: {ValueAxis.PURITY: 1, ValueAxis.TRADITION: 1},
-    LawKind.CLONE_LAW: {ValueAxis.TRADITION: 1, ValueAxis.FAMILY: 1},
-    LawKind.CLONE_STATUS: {ValueAxis.MERCY: 1, ValueAxis.TRADITION: -1},
-    LawKind.GERMLINE_LAW: {ValueAxis.PURITY: 1, ValueAxis.FAMILY: 1},
-    LawKind.DESIGNED_STATUS: {ValueAxis.MERCY: 1, ValueAxis.HIERARCHY: -1},
-}
 
 
 def guess_kind(law: EntityRow) -> LawKind:

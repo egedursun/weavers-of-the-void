@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.polity import BASE_OF_TAX_KINDS
+from aerona.catalog.life_traits import TAX_KIND_TRAITS, having
 from aerona.catalog.taxes import TAXES
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -15,6 +17,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import IdeologyTenet, Technique
+from aerona.domain.enums.life_traits import TaxKindTrait
 from aerona.domain.enums.mind import TraitKind, ValueAxis
 from aerona.domain.enums.settlement import DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import SocialClass
@@ -136,13 +139,13 @@ async def company_points(ctx: TickContext, realm: Realm) -> int:
     return (await companies_by_polity(ctx.session)).get(realm.entity.id, 0)
 
 
-SHARE_TAXES = frozenset({TaxKind.INCOME, TaxKind.PROPERTY, TaxKind.WEALTH, TaxKind.IN_KIND, TaxKind.POLLUTION, TaxKind.EXCISE})
-HEAD_TAXES = frozenset({TaxKind.POLL, TaxKind.LABOUR_LEVY, TaxKind.INHERITANCE})
+SHARE_TAXES = having(TAX_KIND_TRAITS, TaxKindTrait.SHARE_TAXES)
+HEAD_TAXES = having(TAX_KIND_TRAITS, TaxKindTrait.HEAD_TAXES)
 
 
 async def base_of(ctx: TickContext, book: RealmBook, realm: Realm, kind: TaxKind) -> float:
     table = ctx.rules.affairs
-    if kind in {TaxKind.TRADE, TaxKind.SEIGNIORAGE}:
+    if kind in BASE_OF_TAX_KINDS:
         return float(await trade_points(ctx, realm) * table.trade_take)
     if kind is TaxKind.COMPANY:
         return float(await company_points(ctx, realm) * table.trade_take)

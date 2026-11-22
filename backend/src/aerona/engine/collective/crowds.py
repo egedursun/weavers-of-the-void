@@ -4,7 +4,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import or_, select
 
-from aerona.catalog.collective import ACT_COLLECTION, ANGER, ANGRY_ACTS, FAITH_ACTS, TRIGGERS
+from aerona.catalog.collective import ACT_COLLECTION, ANGRY_ACTS, FAITH_ACTS, TRIGGERS
+from aerona.catalog.life.collective import CONFORMING, TRIGGER_MOOD
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
@@ -24,7 +25,6 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionRole
-from aerona.domain.enums.mind import Facet
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.society import Commodity
@@ -66,8 +66,6 @@ INCIDENT_TRIGGERS: tuple[tuple[str, CollectiveTrigger], ...] = (
     ("disasters.city_plague", T.PLAGUE),
     ("enactment.riot", T.EXECUTION),
 )
-CONFORMING = (Facet.COOPERATION, Facet.POLITENESS, Facet.SENSE_OF_DUTY)
-TRIGGER_MOOD: dict[CollectiveActKind, str] = {spec.act: spec.mood for spec in TRIGGERS.values()} | {A.LYNCHING: ANGER, A.REVOLT: ANGER}
 
 
 @dataclass

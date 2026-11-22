@@ -3,15 +3,15 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.calendar_slots import SLOTS
 from aerona.catalog.lore import TRADITIONS, tradition_spec
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.culture import TraditionEffectRow, TraditionParticipationRow, TraditionProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
@@ -20,7 +20,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import CalendarSlot, CustomCatalog, Technique, TraditionEffectKind, TraditionFunction
+from aerona.domain.enums.culture import CustomCatalog, Technique, TraditionEffectKind, TraditionFunction
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
@@ -34,6 +34,7 @@ from aerona.engine.economy.stocks import holding, holdings
 from aerona.engine.environment.dangers import ease_danger
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.calendar_slots import slot_open
 from aerona.engine.lore.kinds import TraditionKindParams, kind_of, params_of
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values, values_for, write_values
@@ -83,13 +84,6 @@ SPEC_EFFECTS = {
     "hospitality": E.SAFETY,
     "rest": E.REST,
     "vigil": E.VIGIL,
-}
-SLOT_EFFECTS = {
-    CalendarSlot.SOWING: frozenset({E.FERTILITY, E.HARVEST}),
-    CalendarSlot.HARVEST: frozenset({E.HARVEST, E.SATISFACTION, E.COHESION}),
-    CalendarSlot.MIDWINTER: frozenset({E.COHESION, E.PLACATION, E.FOOD_SAVED}),
-    CalendarSlot.CAMPAIGN: frozenset({E.MARTIAL, E.COHESION}),
-    CalendarSlot.HOLY_DAY: frozenset(E),
 }
 
 
@@ -352,21 +346,6 @@ async def keep_vigil(ctx: TickContext, community: EntityRow, share: float) -> No
     await placate(ctx, community, round_half_up(ctx.rules.traditions.ancestral_rite_placation * share))
 
 
-async def slot_fits(ctx: TickContext, world_id: int | None, slot: CalendarSlot) -> bool:
-    table = ctx.rules.traditions
-    if slot is CalendarSlot.HOLY_DAY:
-        sky = await ctx.session.scalar(
-            select(SkyEventRow.id).where((SkyEventRow.world_id == world_id) | SkyEventRow.world_id.is_(None), SkyEventRow.epoch == ctx.epoch).limit(1)
-        )
-        return sky is not None
-    seasons = list(await ctx.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world_id)))
-    if slot in {CalendarSlot.SOWING, CalendarSlot.HARVEST}:
-        return any(season.growth >= table.season_growth for season in seasons)
-    if slot is CalendarSlot.MIDWINTER:
-        return any(season.growth <= table.dead_growth for season in seasons)
-    return any(season.campaign >= table.season_campaign for season in seasons)
-
-
 async def synchronised(ctx: TickContext, row: TraditionProfileRow) -> int:
     if row.calendar_slot is None:
         return 0
@@ -382,9 +361,9 @@ async def slot_weight(ctx: TickContext, row: TraditionProfileRow, community: Ent
     if row.calendar_slot is None:
         return 1.0
     table = ctx.rules.traditions
-    if not await slot_fits(ctx, community.world_id, row.calendar_slot):
+    if not (await slot_open(ctx, community.world_id, row.calendar_slot, community.id)).open:
         return table.calendar_misfit_pct / PERCENT
-    return 1 + table.calendar_slot_pct / PERCENT if effect in SLOT_EFFECTS[row.calendar_slot] else 1.0
+    return 1 + table.calendar_slot_pct / PERCENT if effect in SLOTS[row.calendar_slot].effects else 1.0
 
 
 async def apply_effect(ctx: TickContext, community: EntityRow, effect: TraditionEffectRow, share: float, atlas: RegionAtlas) -> bool:
@@ -434,7 +413,7 @@ async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow
         if await apply_effect(ctx, community, effect, share * await slot_weight(ctx, row, community, effect.effect), atlas):
             ctx.count(f"tradition_effect_{effect.effect.value}")
     together = await synchronised(ctx, row)
-    if together and row.calendar_slot is not None and await slot_fits(ctx, community.world_id, row.calendar_slot):
+    if together and row.calendar_slot is not None and (await slot_open(ctx, community.world_id, row.calendar_slot, community.id)).open:
         await cohere(ctx, community, round_half_up(together * ctx.rules.traditions.sync_cohesion * share))
         ctx.count("festivals_synchronised")
     if row.kind in SCARRING:

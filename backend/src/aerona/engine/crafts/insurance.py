@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life_traits import COOP_PURPOSE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.crafts import InsurancePolicyRow, InsurerRow
@@ -11,8 +12,8 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.customs import CoopPurpose
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import CoopPurposeTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
@@ -24,7 +25,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
-POOLING = frozenset({CoopPurpose.INSURANCE, CoopPurpose.BURIAL})
+POOLING = having(COOP_PURPOSE_TRAITS, CoopPurposeTrait.POOLING)
 
 
 @dataclass

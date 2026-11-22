@@ -24,13 +24,13 @@ LEGITIMACY_TYPE = total(
     {
         LegitimacyType.TRADITIONAL: Defined(
             "Custom and descent",
-            checked_by=("engine.regime.book.TYPE_LABELS", "engine.regime.book.kinds_of", "engine.regime.rule.legitimacy_targets"),
+            checked_by=("catalog.life.regime.TYPE_LABELS", "engine.regime.book.kinds_of", "engine.regime.rule.legitimacy_targets"),
             used_by=(),
         ),
         LegitimacyType.CHARISMATIC: Defined(
             "Charisma",
             checked_by=(
-                "engine.regime.book.TYPE_LABELS",
+                "catalog.life.regime.TYPE_LABELS",
                 "engine.regime.book.kinds_of",
                 "engine.regime.rule.legitimacy_targets",
                 "engine.regime.rule.routinise",
@@ -38,7 +38,7 @@ LEGITIMACY_TYPE = total(
             used_by=(),
         ),
         LegitimacyType.RATIONAL: Defined(
-            "Law and office", checked_by=("engine.regime.book.TYPE_LABELS", "engine.regime.book.kinds_of", "engine.regime.rule.legitimacy_targets"), used_by=()
+            "Law and office", checked_by=("catalog.life.regime.TYPE_LABELS", "engine.regime.book.kinds_of", "engine.regime.rule.legitimacy_targets"), used_by=()
         ),
         LegitimacyType.DIVINE_MANDATE: Defined("Divine mandate", checked_by=(), used_by=()),
         LegitimacyType.POPULAR: Defined("Popular", checked_by=(), used_by=()),

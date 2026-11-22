@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 
 from aerona.catalog.intrigue import PLOT_STEPS, SCHEMES
+from aerona.catalog.life.intrigue import SECRETS_KEPT_ELSEWHERE, SKILL_SKILL_KINDS
+from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.affairs import CourtPositionRow
@@ -24,10 +27,10 @@ from aerona.domain.enums.communication import DispatchContent, Medium
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import ScarKind, WeatherKind
+from aerona.domain.enums.environment import ScarKind, WeatherTrait
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand, HookSource, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
-from aerona.domain.enums.mind import Attribute, MemoryKind, SkillKind, TraitKind
+from aerona.domain.enums.mind import Attribute, MemoryKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, DeathCause
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
@@ -82,9 +85,7 @@ SWAY = 20
 POISON_PCT = 5
 PHASE = "phase"
 SCHEME_SLOT = "scheme"
-COVERING_WEATHER = frozenset({WeatherKind.FOG, WeatherKind.BLIZZARD, WeatherKind.SANDSTORM})
 SABOTAGES = ((ScarKind.BLIGHTED, "blighted with pests"), (ScarKind.BURNED, "burned"), (ScarKind.MADE_BARREN, "salted"))
-PURSUIT_CUTTING_WEATHER = frozenset({WeatherKind.STORM, WeatherKind.MAGIC_STORM})
 
 
 @dataclass
@@ -118,7 +119,7 @@ async def begin_scheme(ctx: TickContext, owner: EntityRow, kind: PlotKind, targe
 
 
 async def skill(ctx: TickContext, node_id: int) -> int:
-    return await best_skill(ctx.session, node_id, [SkillKind.INTRIGUE, SkillKind.DECEPTION])
+    return await best_skill(ctx.session, node_id, SKILL_SKILL_KINDS)
 
 
 async def candidates(ctx: TickContext, scheme: SchemeRow) -> list[tuple[int, bool]]:
@@ -240,10 +241,10 @@ async def conditions(ctx: TickContext, target: EntityRow | None, atlas: RegionAt
         return boost, witnesses
     weather = await weather_here(ctx, target.id, SCHEME_SLOT, atlas)
     kind = weather.kind if weather is not None else None
-    if kind in COVERING_WEATHER:
+    if has_trait(kind, WeatherTrait.COVERING):
         boost += table.night_fog_pct / PERCENT
         witnesses -= table.night_fog_pct / PERCENT
-    elif kind in PURSUIT_CUTTING_WEATHER:
+    elif has_trait(kind, WeatherTrait.STORM):
         boost += table.storm_pct / PERCENT
     town_id = target.id if target.entity_type is EntityType.SETTLEMENT else target.location_id
     if town_id is not None and await ctx.session.scalar(
@@ -336,16 +337,22 @@ async def realm_of(ctx: TickContext, node_id: int) -> int | None:
     return found
 
 
+STRIKES: Handlers[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow], Awaitable[str]]] = Handlers(PlotKind)
+
+
+@STRIKES.on(PlotKind.MURDER)
 async def murder(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     await death_path(ctx, target, "was murdered in secret", killer_id=owner.id, manner=DeathCause.MURDER)
     return f"{target.name} was found dead"
 
 
+@STRIKES.on(PlotKind.ABDUCT)
 async def abduct(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     await take_captive(ctx, owner, target, None, description="taken captive in secret", home_id=target.location_id)
     return f"{target.name} was taken captive"
 
 
+@STRIKES.on(PlotKind.SEDUCE)
 async def seduce(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     view = await ensure_relation(ctx.session, target.id, owner.id, ctx.epoch)
     if view is not None:
@@ -354,6 +361,7 @@ async def seduce(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: 
     return f"{target.name} began a secret love affair"
 
 
+@STRIKES.on(PlotKind.SWAY)
 async def sway(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     view = await ensure_relation(ctx.session, target.id, owner.id, ctx.epoch)
     if view is not None:
@@ -361,6 +369,7 @@ async def sway(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: En
     return f"{target.name} came to like {owner.name}"
 
 
+@STRIKES.on(PlotKind.FABRICATE_CLAIM)
 async def fabricate_claim(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     realm = await realm_of(ctx, target.id)
     if realm is None:
@@ -371,12 +380,14 @@ async def fabricate_claim(ctx: TickContext, scheme: SchemeRow, owner: EntityRow,
     return f"{owner.name} gained a forged claim to rule over {target.name}"
 
 
+@STRIKES.on(PlotKind.FABRICATE_HOOK)
 async def fabricate_hook(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     secret = await keep_secret(ctx, target.id, IntrigueSecret.CRIME, known_by=(owner.id,), source="scheme.fabricate_hook")
     await grant_hook(ctx, owner.id, target.id, HookSource.SECRET, strong=False, secret_id=secret.id if secret is not None else None)
     return f"{owner.name} gained a hold over {target.name}"
 
 
+@STRIKES.on(PlotKind.STEAL_RELIC)
 async def steal_relic(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     relic = await owned_relic(ctx, target.id)
     if relic is None:
@@ -391,6 +402,7 @@ async def steal_relic(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, tar
     return f"{relic.name} was stolen from {target.name}"
 
 
+@STRIKES.on(PlotKind.COUP)
 async def coup(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     realm = await realm_of(ctx, target.id)
     office = (
@@ -402,6 +414,7 @@ async def coup(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: En
     return f"{owner.name} seized rule from {target.name}"
 
 
+@STRIKES.on(PlotKind.POISON_WELL)
 async def poison_well(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     if target.entity_type not in {EntityType.SETTLEMENT, EntityType.PEOPLE}:
         return "there was no well to poison"
@@ -412,6 +425,7 @@ async def poison_well(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, tar
     return f"the wells of {target.name} were poisoned" + (" with poison brought from stores" if brought else "")
 
 
+@STRIKES.on(PlotKind.FRAME)
 async def frame(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     secret = await keep_secret(ctx, target.id, IntrigueSecret.CRIME, known_by=(owner.id,), source="scheme.frame")
     if secret is not None:
@@ -420,11 +434,13 @@ async def frame(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: E
     return f"{target.name} was blamed for a crime" + (" and brought to trial" if case is not None else "")
 
 
+@STRIKES.on(PlotKind.ELOPE)
 async def elope(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     await marry(ctx.session, owner, target, ctx.epoch, purpose=UnionPurpose.KINSHIP, description="eloped in secret")
     return f"{owner.name} and {target.name} eloped"
 
 
+@STRIKES.on(PlotKind.CONVERT_SECRETLY)
 async def convert_secretly(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     gods = [bond.target_node_id for bond in await BondRepository(ctx.session).outgoing(owner.id, BondKind.WORSHIPS)]
     if not gods:
@@ -434,6 +450,7 @@ async def convert_secretly(ctx: TickContext, scheme: SchemeRow, owner: EntityRow
     return f"{target.name} took up a hidden faith"
 
 
+@STRIKES.on(PlotKind.SABOTAGE_WEDDING)
 async def sabotage_wedding(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     bonds = BondRepository(ctx.session)
     broken = 0
@@ -443,6 +460,7 @@ async def sabotage_wedding(ctx: TickContext, scheme: SchemeRow, owner: EntityRow
     return f"the betrothal of {target.name} fell apart" if broken else "there was no wedding to spoil"
 
 
+@STRIKES.on(PlotKind.FREE_PRISONER)
 async def free_prisoner(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     row = await ctx.session.scalar(select(CaptiveRow).where(CaptiveRow.captive_entity_id == target.id, CaptiveRow.status == CaptiveStatus.HELD).limit(1))
     if row is None:
@@ -452,6 +470,7 @@ async def free_prisoner(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, t
     return f"{target.name} was freed"
 
 
+@STRIKES.on(PlotKind.ECOSABOTAGE)
 async def ecosabotage(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     land = await living_entity(ctx.session, target.id if target.entity_type is EntityType.REGION else target.location_id)
     ground = await ctx.session.get(RegionEnvironmentRow, land.id) if land is not None and land.entity_type is EntityType.REGION else None
@@ -475,6 +494,7 @@ async def ecosabotage(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, tar
     return f"the land of {target.name} was {deed}"
 
 
+@STRIKES.on(PlotKind.LEARN_TRUE_NAME)
 async def learn_true_name(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     name = await ctx.session.get(TrueNameRow, target.id)
     if name is None:
@@ -484,6 +504,7 @@ async def learn_true_name(ctx: TickContext, scheme: SchemeRow, owner: EntityRow,
     return f"{owner.name} learned the true name of {target.name}"
 
 
+@STRIKES.on(PlotKind.FORGE_LETTER)
 async def forge_letter(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     realm = await realm_of(ctx, target.id) or target.id
     rivals = (
@@ -503,11 +524,13 @@ async def forge_letter(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, ta
     return f"a forged declaration went out in the name of {target.name}"
 
 
+@STRIKES.on(PlotKind.GEAS_TRAP)
 async def geas_trap(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     row = await spring_trap(ctx, target, f"scheme.geas.{scheme.id}")
     return f"{target.name} was forced to break a geas" if row is not None else f"{target.name} avoided the trap"
 
 
+@STRIKES.on(PlotKind.HIDE_FLEET)
 async def hide_fleet(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     row = await ctx.session.scalar(
         select(AdmiraltyRow).where(or_(AdmiraltyRow.polity_entity_id == owner.id, AdmiraltyRow.admiral_entity_id == owner.id)).limit(1)
@@ -518,36 +541,13 @@ async def hide_fleet(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, targ
     return f"ships past the tonnage sworn to {target.name} were built and kept out of sight"
 
 
+@STRIKES.on(PlotKind.FORGE_WORK)
 async def forge_work(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     original = target if target.entity_type in FORGEABLE else await work_of(ctx, target)
     if original is None or held(original.id):
         return f"{owner.name} found nothing of {target.name} worth forging"
     row = await forge(ctx, original, owner)
     return f"{owner.name} made a forgery of {original.name} ({spoken(row.kind)})"
-
-
-STRIKES: dict[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow], Awaitable[str]]] = {
-    PlotKind.MURDER: murder,
-    PlotKind.ABDUCT: abduct,
-    PlotKind.SEDUCE: seduce,
-    PlotKind.SWAY: sway,
-    PlotKind.FABRICATE_CLAIM: fabricate_claim,
-    PlotKind.FABRICATE_HOOK: fabricate_hook,
-    PlotKind.STEAL_RELIC: steal_relic,
-    PlotKind.COUP: coup,
-    PlotKind.POISON_WELL: poison_well,
-    PlotKind.FRAME: frame,
-    PlotKind.ELOPE: elope,
-    PlotKind.CONVERT_SECRETLY: convert_secretly,
-    PlotKind.SABOTAGE_WEDDING: sabotage_wedding,
-    PlotKind.FREE_PRISONER: free_prisoner,
-    PlotKind.ECOSABOTAGE: ecosabotage,
-    PlotKind.LEARN_TRUE_NAME: learn_true_name,
-    PlotKind.FORGE_LETTER: forge_letter,
-    PlotKind.GEAS_TRAP: geas_trap,
-    PlotKind.HIDE_FLEET: hide_fleet,
-    PlotKind.FORGE_WORK: forge_work,
-}
 
 
 async def strike(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow | None) -> str:
@@ -567,13 +567,7 @@ async def execute(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target:
     told = await strike(ctx, scheme, owner, target)
     scheme.phase, scheme.outcome = SchemePhase.SUCCEEDED, told
     spec = SCHEMES[scheme.kind]
-    if spec.secret is not None and scheme.kind not in (
-        PlotKind.SEDUCE,
-        PlotKind.FABRICATE_HOOK,
-        PlotKind.FRAME,
-        PlotKind.CONVERT_SECRETLY,
-        PlotKind.ECOSABOTAGE,
-    ):
+    if spec.secret is not None and scheme.kind not in SECRETS_KEPT_ELSEWHERE:
         await keep_secret(
             ctx, owner.id, spec.secret, about_id=target.id if target is not None else None, known_by=tuple(scheme.agents), source=f"scheme.{scheme.kind.value}"
         )

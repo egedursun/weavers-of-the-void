@@ -1,10 +1,10 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import ARMED_KINDS, ROBBER_KINDS, SECRET_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
@@ -14,38 +14,13 @@ from aerona.db.tables.factions import FactionActionRow, FactionGoalRow, FactionM
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import ARMED_KINDS, KIND_OF_ENGINE, ROBBER_KINDS, SECRET_KINDS, FactionActionKind, FactionKind, FactionRank, FactionScale
+from aerona.domain.enums.faction import KIND_OF_ENGINE, FactionActionKind, FactionKind, FactionRank, FactionScale
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat
 
 PROFILE_FIXUP = "faction_profiles_from_kinds"
-CLASS_OF_KIND = MappingProxyType(
-    {
-        FactionKind.MERCHANT_GUILD: SocialClass.MERCHANT,
-        FactionKind.CRAFT_GUILD: SocialClass.ARTISAN,
-        FactionKind.PRIESTHOOD: SocialClass.PRIEST,
-        FactionKind.WARRIOR_ORDER: SocialClass.WARRIOR,
-        FactionKind.NOBLE_COUNCIL: SocialClass.NOBLE,
-        FactionKind.PEASANT_LEAGUE: SocialClass.FARMER,
-        FactionKind.SCHOLARS_ACADEMY: SocialClass.SCRIBE,
-        FactionKind.BANDITS: SocialClass.OUTCAST,
-        FactionKind.PIRATES: SocialClass.OUTCAST,
-        FactionKind.ASSASSINS: SocialClass.OUTCAST,
-        FactionKind.MERCENARY_COMPANY: SocialClass.WARRIOR,
-        FactionKind.REBELS: SocialClass.FARMER,
-        FactionKind.CRIME_FAMILY: SocialClass.OUTCAST,
-        FactionKind.THIEVES_GUILD: SocialClass.OUTCAST,
-        FactionKind.SMUGGLING_RING: SocialClass.OUTCAST,
-        FactionKind.PIRATE_CONFEDERACY: SocialClass.OUTCAST,
-        FactionKind.WORKERS_UNION: SocialClass.ARTISAN,
-        FactionKind.WORKER_BODY: SocialClass.WORKER,
-        FactionKind.ENGINEERS_SOCIETY: SocialClass.PROFESSIONAL,
-        FactionKind.FINANCIERS: SocialClass.MERCHANT,
-        FactionKind.VETERANS: SocialClass.WARRIOR,
-    }
-)
 
 
 @dataclass

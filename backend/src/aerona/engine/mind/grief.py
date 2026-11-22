@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.mind import OPEN_STAGES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionProfileRow
@@ -27,7 +28,6 @@ from aerona.rules.registry import Rules
 GRIEF_LOCK = "griefs"
 GRIEFS_KEY = "griefs"
 MOURNING_TRADITIONS = (TraditionFunction.MOURNING,)
-OPEN_STAGES = (GriefStage.SHOCK, GriefStage.MOURNING)
 MIDPOINT = 50
 FACET_SPAN = 50
 

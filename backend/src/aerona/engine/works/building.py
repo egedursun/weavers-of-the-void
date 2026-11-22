@@ -1,10 +1,14 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.works import APPLY_WORKS_WORKS_KINDS, APPLY_WORKS_WORKS_KINDS_2
+from aerona.catalog.life_traits import WORKS_KIND_TRAITS, having
 from aerona.catalog.works_shapes import WORKS_PROSPERITY_PCT
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
@@ -12,6 +16,7 @@ from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementP
 from aerona.db.tables.works import PublicWorksRow, PublicWorkStageRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import WorksKindTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import WATER_ORDER
 from aerona.domain.enums.works import LabourRegime, WorksKind, WorksStatus
@@ -23,18 +28,30 @@ from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 
 LEVEL_MAX = 5
-WORKS_LEVELS: dict[WorksKind, tuple[str, int, int | None]] = {
-    WorksKind.ROAD: ("roads", 1, LEVEL_MAX),
-    WorksKind.RAIL_LINE: ("roads", 1, LEVEL_MAX),
-    WorksKind.BRIDGE: ("bridges", 1, None),
-    WorksKind.DAM: ("irrigation", 1, LEVEL_MAX),
-    WorksKind.DRAINAGE: ("irrigation", 1, LEVEL_MAX),
-    WorksKind.WALLS: ("walls_level", 1, LEVEL_MAX),
-    WorksKind.CANAL: ("harbour_capacity", 10, None),
-    WorksKind.HARBOUR_WORKS: ("harbour_capacity", 20, None),
-    WorksKind.GRANARY_SYSTEM: ("granary_capacity", 50, None),
-}
-ROUTE_WORKS = frozenset({WorksKind.ROAD, WorksKind.RAIL_LINE, WorksKind.BRIDGE, WorksKind.CANAL})
+WORKS_LEVELS: Mapping[WorksKind, tuple[str, int, int | None]] = partial(
+    WorksKind,
+    {
+        WorksKind.ROAD: ("roads", 1, LEVEL_MAX),
+        WorksKind.RAIL_LINE: ("roads", 1, LEVEL_MAX),
+        WorksKind.BRIDGE: ("bridges", 1, None),
+        WorksKind.DAM: ("irrigation", 1, LEVEL_MAX),
+        WorksKind.DRAINAGE: ("irrigation", 1, LEVEL_MAX),
+        WorksKind.WALLS: ("walls_level", 1, LEVEL_MAX),
+        WorksKind.CANAL: ("harbour_capacity", 10, None),
+        WorksKind.HARBOUR_WORKS: ("harbour_capacity", 20, None),
+        WorksKind.GRANARY_SYSTEM: ("granary_capacity", 50, None),
+    },
+    without=(
+        WorksKind.AQUEDUCT,
+        WorksKind.SEWER,
+        WorksKind.POWER_LINE,
+        WorksKind.NETWORK_LINE,
+        WorksKind.TERRAFORMING_STAGE,
+        WorksKind.MEGASTRUCTURE_STAGE,
+        WorksKind.GROWN_WORKS,
+    ),
+)
+ROUTE_WORKS = having(WORKS_KIND_TRAITS, WorksKindTrait.ROUTE_WORKS)
 ROUTE_SHORTENING_PCT = 10
 SANITATION_GAIN = 10
 UNPAID_LABOUR = frozenset({LabourRegime.CORVEE, LabourRegime.BOUND})
@@ -103,9 +120,9 @@ async def apply_works(ctx: TickContext, works: PublicWorksRow, sign: int) -> Non
         change = max(1, round_half_up(route.length * ROUTE_SHORTENING_PCT / PERCENT))
         route.length = max(1, route.length - sign * change)
     for town_id in await towns_of_place(ctx.session, works.place_node_id):
-        if works.kind in WORKS_LEVELS or works.kind in {WorksKind.SEWER, WorksKind.AQUEDUCT}:
+        if works.kind in WORKS_LEVELS or works.kind in APPLY_WORKS_WORKS_KINDS:
             await shift_infrastructure(ctx.session, town_id, works.kind, sign)
-            if works.kind in {WorksKind.SEWER, WorksKind.AQUEDUCT}:
+            if works.kind in APPLY_WORKS_WORKS_KINDS_2:
                 profile = await ctx.session.get(SettlementProfileRow, town_id)
                 if profile is not None and not held(town_id) and "sanitation" not in (profile.locked or []):
                     profile.sanitation = clamp_int(profile.sanitation + sign * SANITATION_GAIN, 0, PERCENT)

@@ -139,6 +139,8 @@ def ordinal_word(number: int) -> str:
 
 AGE_NEUTRAL: dict[tuple[str, str], str] = {
     ("MortalRole", "scribe"): "clerk",
+    ("DangerSource", "volcanic"): "volcanic ground",
+    ("DangerSource", "avalanche"): "avalanches",
     ("SocialClass", "scribe"): "clerk",
     ("SocialClass", "serf_or_slave"): "bonded",
     ("OrderLabour", "serf"): "tied to the land",

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.cycles import EMPLOYER_IN_FACTION_KINDS
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.record_context import Term
 from aerona.db.tables.collective import DiasporaRow
@@ -200,7 +201,7 @@ async def employer_in(ctx: TickContext, town: EntityRow) -> int:
         .where(
             EntityRow.status == EntityStatus.CANON,
             FactionProfileRow.home_entity_id == town.id,
-            FactionProfileRow.kind.in_([FactionKind.MERCHANT_GUILD, FactionKind.CRAFT_GUILD]),
+            FactionProfileRow.kind.in_(EMPLOYER_IN_FACTION_KINDS),
         )
         .order_by(EntityRow.id)
         .limit(1)

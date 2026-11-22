@@ -8,7 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.anatomy import Anatomy, anatomy_of
 from aerona.catalog.body_plans import BEING_PLANS, BUILD_RANK, HEIGHT_RANK, HUNGER_PLANS, PLANS, WHOLE_PLANS
 from aerona.catalog.body_words import BODY_WORDS
+from aerona.catalog.conditions import BEDRIDDEN_LOSSES, OPEN_INJURY_STATES
 from aerona.catalog.creature_anatomy import MONSTER_PLANS
+from aerona.catalog.life.body import FUNCTION_LEVELS
 from aerona.catalog.mind import SKILLS, TRAITS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -22,7 +24,6 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import SkillRow, TraitRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import (
-    OPEN_INJURY_STATES,
     BodyBuild,
     BodyFunction,
     BodyPlan,
@@ -40,7 +41,7 @@ from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
-from aerona.engine.body.capacities import FUNCTION_LEVELS, BearerStats, BodyState, capacities, function_percents, perception_factor
+from aerona.engine.body.capacities import BearerStats, BodyState, capacities, function_percents, perception_factor
 from aerona.engine.body.digits import effective_counts, fill_counts, handedness_for
 from aerona.engine.body.functions import Wound
 from aerona.engine.body.hits import Armour
@@ -420,9 +421,6 @@ def factors_of(
     if bedridden(rules, bearer):
         factors.update(dict.fromkeys(BEDRIDDEN_LOSSES, 0))
     return factors
-
-
-BEDRIDDEN_LOSSES = (Capacity.MELEE, Capacity.MISSILE, Capacity.COMMAND, Capacity.MOBILITY, Capacity.CRAFT)
 
 
 async def function_level(session: AsyncSession, rules: Rules, node_id: int | None, function: BodyFunction) -> int:

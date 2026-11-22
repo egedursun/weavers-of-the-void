@@ -2,6 +2,9 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.diets import MEAT_EATERS
+from aerona.catalog.goods_traits import commodities_with
+from aerona.catalog.life.industry import HUNTER_SIZES
 from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT, METHODS, PERISHABLE, default_method
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
@@ -10,8 +13,9 @@ from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.divine import DomainHook
-from aerona.domain.enums.ecology import AnimalRole, Diet, SizeClass, SpeciesClass
+from aerona.domain.enums.ecology import AnimalRole, SpeciesClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
+from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.industry import EnergyKind, ProcessKind, QualityTier
 from aerona.domain.enums.society import CreatureTrait, SocialClass
 from aerona.engine.context import TickContext
@@ -28,10 +32,9 @@ from aerona.engine.primitives.stats import headcount
 
 TENTH = 10
 THOUSAND = 1000
-HUNTER_DIETS = (Diet.CARNIVORE, Diet.OMNIVORE)
-HUNTER_SIZES = (SizeClass.TINY, SizeClass.SMALL)
+HUNTER_DIETS = tuple(sorted(MEAT_EATERS))
 DRINK_STEPS = ("brew", "press_fruit", "brew_base")
-STORED_GRAINS = frozenset({CommodityKind.GRAIN, CommodityKind.TUBERS})
+STORED_GRAINS = frozenset(commodities_with(CommodityTrait.STORED_GRAIN))
 LIGHT_STEP = "lighting"
 
 

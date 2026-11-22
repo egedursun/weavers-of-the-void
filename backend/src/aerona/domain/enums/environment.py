@@ -92,6 +92,30 @@ class MovementMode(StrEnum):
     BURROWING = "burrowing"
 
 
+class WorldLink(StrEnum):
+    WORLD = "world"
+    ENTITY = "entity"
+    INCIDENT = "incident"
+
+
+class SeasonDating(StrEnum):
+    POSITION = "position"
+    DAY = "day"
+
+
+class MovementMedium(StrEnum):
+    GROUND = "ground"
+    WATER_SURFACE = "water_surface"
+    AIR = "air"
+    THROUGH_MATTER = "through_matter"
+
+
+class MovementWork(StrEnum):
+    ROADS = "roads"
+    BRIDGES = "bridges"
+    HARBOURS = "harbours"
+
+
 class LandUse(StrEnum):
     CLEARED = "cleared"
     FARMED = "farmed"
@@ -118,6 +142,56 @@ class WeatherKind(StrEnum):
     VOID_RAIN = "void_rain"
     ECLIPSE_DARK = "eclipse_dark"
     AURORA = "aurora"
+
+
+class TerrainTrait(StrEnum):
+    WOODED = "wooded"
+    OPEN = "open"
+    ROUGH = "rough"
+    HIGH = "high"
+    WET = "wet"
+    ARID = "arid"
+    COLD = "cold"
+    HOT = "hot"
+    COASTAL = "coastal"
+    WATERY = "watery"
+    UNDERGROUND = "underground"
+    BUILT = "built"
+    AMBUSH_COVER = "ambush_cover"
+    CONFINED = "confined"
+    SLIPPERY = "slippery"
+    NON_MINERAL_GROUND = "non_mineral_ground"
+
+
+class WeatherDraw(StrEnum):
+    COLD = "cold"
+    HOT = "hot"
+    DRY = "dry"
+    DRY_HOT = "dry_hot"
+    WET = "wet"
+    WET_LIQUID = "wet_liquid"
+    CLEAR = "clear"
+    EVEN = "even"
+    AURORA = "aurora"
+    MAGIC = "magic"
+    ASH = "ash"
+    VOID = "void"
+    ECLIPSE = "eclipse"
+
+
+class WeatherTrait(StrEnum):
+    COLD = "cold"
+    SNOW_COVER = "snow_cover"
+    WET = "wet"
+    LIQUID = "liquid"
+    HOT = "hot"
+    DRY = "dry"
+    WINDY = "windy"
+    STORM = "storm"
+    COVERING = "covering"
+    SLOWING = "slowing"
+    HEAVY = "heavy"
+    EXTREME = "extreme"
 
 
 class WeatherEffect(StrEnum):

@@ -2,8 +2,11 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.plants import CLASS_FORMS
+from aerona.catalog.life_traits import SPECIES_CLASS_TRAITS, having
 from aerona.catalog.nature_kinds50 import REPRODUCTIONS
 from aerona.catalog.plants import FORMS, PARTS
+from aerona.catalog.weather import with_trait
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import SpeciesProductRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
@@ -11,9 +14,10 @@ from aerona.db.tables.environment import ForcedWeatherRow, RegionEnvironmentRow
 from aerona.db.tables.flora import PlantProfileRow, RegionCropRow
 from aerona.db.tables.plants import PlantAnatomyRow, PlantPartRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.ecology import GrowthCycle, RangeTrend, SpeciesClass
+from aerona.domain.enums.ecology import GrowthCycle, RangeTrend
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.environment import WeatherKind
+from aerona.domain.enums.environment import WeatherTrait
+from aerona.domain.enums.life_traits import SpeciesClassTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.plants import PlantForm
 from aerona.engine.context import TickContext
@@ -24,10 +28,8 @@ from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining_alone, term
 from aerona.rules.registry import Rules
 
-PLANT_CLASSES = frozenset({SpeciesClass.PLANT, SpeciesClass.FUNGUS, SpeciesClass.COLONIAL})
-STORMS = frozenset({WeatherKind.STORM, WeatherKind.MAGIC_STORM, WeatherKind.HAIL, WeatherKind.BLIZZARD})
+PLANT_CLASSES = having(SPECIES_CLASS_TRAITS, SpeciesClassTrait.PLANT_CLASSES)
 CYCLE_FORMS = {GrowthCycle.TREE: PlantForm.TREE, GrowthCycle.PERENNIAL: PlantForm.SHRUB, GrowthCycle.ANNUAL: PlantForm.HERB}
-CLASS_FORMS = {SpeciesClass.FUNGUS: PlantForm.FUNGUS_LIKE, SpeciesClass.COLONIAL: PlantForm.COLONIAL}
 MONTHS = 12
 
 
@@ -90,7 +92,9 @@ async def weather_crops(ctx: TickContext, forms: dict[int, PlantForm], tally: Pl
     stormy = set(
         await ctx.session.scalars(
             select(ForcedWeatherRow.region_entity_id).where(
-                ForcedWeatherRow.kind.in_(STORMS), ForcedWeatherRow.from_epoch <= ctx.epoch, ForcedWeatherRow.until_epoch >= ctx.epoch
+                ForcedWeatherRow.kind.in_(sorted(with_trait(WeatherTrait.STORM))),
+                ForcedWeatherRow.from_epoch <= ctx.epoch,
+                ForcedWeatherRow.until_epoch >= ctx.epoch,
             )
         )
     )

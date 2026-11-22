@@ -2,6 +2,7 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.phases import GRIEF, INSULTS
 from aerona.core.random import SeededRandom
 from aerona.core.total import partial, total
 from aerona.db.tables.entities import EntityRow
@@ -42,8 +43,21 @@ from aerona.engine.services.war import declare_war
 from aerona.engine.sites.rooms import delve, layout_of, rooms_of
 from aerona.engine.storyteller.pace import paced
 
-GRIEF = (MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME)
-INSULTS = (MemoryKind.HUMILIATED_ME, MemoryKind.HARMED_ME, MemoryKind.BETRAYED_ME, MemoryKind.MAIMED_ME, MemoryKind.KILLED_KIN)
+FEUD_KEYS: Mapping[FeudAction, str] = partial(
+    FeudAction,
+    {
+        FeudAction.DEMAND_WERGILD: "vendetta.demand_wergild",
+        FeudAction.ESCALATE: "vendetta.escalate",
+        FeudAction.ASSASSINATE: "vendetta.assassinate",
+        FeudAction.RAID: "vendetta.raid",
+        FeudAction.AMBUSH: "vendetta.ambush",
+        FeudAction.ABDUCT: "vendetta.abduct",
+        FeudAction.DESTROY_PROPERTY: "vendetta.destroy_property",
+        FeudAction.SEEK_MEDIATION: "vendetta.seek_mediation",
+        FeudAction.CALL_ALLIES: "vendetta.call_allies",
+    },
+    without=(FeudAction.REST,),
+)
 
 
 async def grief(ctx: TickContext, holder_id: int, subject_id: int) -> int:
@@ -199,23 +213,6 @@ ACTIONS: Mapping[FeudAction, Callable[[TickContext, EntityRow, EntityRow], Await
         FeudAction.SEEK_MEDIATION: seek_mediation,
         FeudAction.CALL_ALLIES: call_allies,
     },
-)
-
-
-FEUD_KEYS: Mapping[FeudAction, str] = partial(
-    FeudAction,
-    {
-        FeudAction.DEMAND_WERGILD: "vendetta.demand_wergild",
-        FeudAction.ESCALATE: "vendetta.escalate",
-        FeudAction.ASSASSINATE: "vendetta.assassinate",
-        FeudAction.RAID: "vendetta.raid",
-        FeudAction.AMBUSH: "vendetta.ambush",
-        FeudAction.ABDUCT: "vendetta.abduct",
-        FeudAction.DESTROY_PROPERTY: "vendetta.destroy_property",
-        FeudAction.SEEK_MEDIATION: "vendetta.seek_mediation",
-        FeudAction.CALL_ALLIES: "vendetta.call_allies",
-    },
-    without=(FeudAction.REST,),
 )
 
 

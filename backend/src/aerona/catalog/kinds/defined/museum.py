@@ -20,15 +20,15 @@ PIECE_KIND = total(
     PieceKind,
     {
         PieceKind.ARTIFACT: Defined(
-            "Artifact", checked_by=(), used_by=("engine.museums.hoards.prized_in", "engine.museums.hoards.prized_of", "engine.museums.reading.MADE_PIECES")
+            "Artifact", checked_by=(), used_by=("catalog.life.museums.MADE_PIECES", "engine.museums.hoards.prized_in", "engine.museums.hoards.prized_of")
         ),
         PieceKind.RELIC: Defined(
-            "Relic", checked_by=(), used_by=("engine.museums.hoards.prized_in", "engine.museums.hoards.prized_of", "engine.museums.reading.MADE_PIECES")
+            "Relic", checked_by=(), used_by=("catalog.life.museums.MADE_PIECES", "engine.museums.hoards.prized_in", "engine.museums.hoards.prized_of")
         ),
-        PieceKind.FOSSIL: Defined("Fossil", checked_by=(), used_by=("engine.museums.hoards.offered", "engine.museums.reading.NATURAL_PIECES")),
-        PieceKind.ART: Defined("Work of art", checked_by=(), used_by=("engine.museums.hoards.offered", "engine.museums.reading.MADE_PIECES")),
+        PieceKind.FOSSIL: Defined("Fossil", checked_by=(), used_by=("catalog.life.museums.NATURAL_PIECES", "engine.museums.hoards.offered")),
+        PieceKind.ART: Defined("Work of art", checked_by=(), used_by=("catalog.life.museums.MADE_PIECES", "engine.museums.hoards.offered")),
         PieceKind.SPECIMEN: Defined(
-            "Specimen", checked_by=("engine.museums.hoards.gather",), used_by=("engine.museums.hoards.offered", "engine.museums.reading.NATURAL_PIECES")
+            "Specimen", checked_by=("engine.museums.hoards.gather",), used_by=("catalog.life.museums.NATURAL_PIECES", "engine.museums.hoards.offered")
         ),
     },
 )

@@ -3,13 +3,14 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.anatomy import HEAD_PARTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import BodyPart, ConditionKind, HarmCause, NerveDamage
+from aerona.domain.enums.body import ConditionKind, HarmCause, NerveDamage
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.conditions import condition_of, gain_condition
@@ -21,7 +22,6 @@ from aerona.engine.structures.readers import working
 
 DECLINE = ConditionKind.COGNITIVE_DECLINE
 SEVERITY_MAX = 5
-HEAD_PARTS = frozenset({BodyPart.HEAD, BodyPart.FACE})
 CARERS = (StructureKind.HOSPITAL, StructureKind.APOTHECARY, StructureKind.ASYLUM)
 
 

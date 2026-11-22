@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.conditions import OPEN_INJURY_STATES
 from aerona.constants.engine import MIN_AGING_MULTIPLIER
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
@@ -10,7 +11,7 @@ from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.write_guard import unheld
-from aerona.domain.enums.body import OPEN_INJURY_STATES, HarmCause, InjuryState
+from aerona.domain.enums.body import HarmCause, InjuryState
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole

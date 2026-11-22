@@ -1,11 +1,12 @@
 from collections import Counter
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 
 from sqlalchemy import func, select
 
 from aerona.catalog.kinds.minds import MIND_PURPOSES
+from aerona.catalog.life_traits import MEMORY_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
+from aerona.core.dispatch import Handlers
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -18,6 +19,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.life_traits import MemoryKindTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.minds import MindPurpose, MindSeat, MindUpkeep, WillCause
 from aerona.domain.enums.modifier import IncidentRole
@@ -41,17 +43,26 @@ from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
 
 REMOTE_FEEDBACK = 30
-HARMS = frozenset({MemoryKind.HARMED_ME, MemoryKind.MAIMED_ME, MemoryKind.HUMILIATED_ME, MemoryKind.BETRAYED_ME})
-CARES = frozenset({MemoryKind.SAVED_ME, MemoryKind.GIFTED_ME, MemoryKind.TAUGHT_ME, MemoryKind.FREED_US})
+HARMS = having(MEMORY_KIND_TRAITS, MemoryKindTrait.HARMS)
+CARES = having(MEMORY_KIND_TRAITS, MemoryKindTrait.CARES)
 
 
 Keep = Callable[[TickContext, MindProfileRow, EntityRow], Awaitable[bool]]
 
 
+UPKEEP: Handlers[MindUpkeep, Keep] = Handlers(MindUpkeep)
+
+
+@UPKEEP.on(MindUpkeep.NONE)
+@UPKEEP.on(MindUpkeep.FOOD)
+@UPKEEP.on(MindUpkeep.PLACE)
+@UPKEEP.on(MindUpkeep.BELIEF)
+@UPKEEP.on(MindUpkeep.HOST)
 async def by_itself(_ctx: TickContext, _row: MindProfileRow, _seat: EntityRow) -> bool:
     return True
 
 
+@UPKEEP.on(MindUpkeep.MAINTENANCE)
 async def by_care(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> bool:
     maker = await ctx.session.get(EntityRow, row.made_by_node_id) if row.made_by_node_id is not None else None
     if maker is not None and maker.status is EntityStatus.CANON:
@@ -60,12 +71,14 @@ async def by_care(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> boo
     return town is not None and stat_or(town, "prosperity", 0) >= ctx.rules.minds.upkeep_prosperity
 
 
+@UPKEEP.on(MindUpkeep.ENERGY)
 async def by_energy(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> bool:
     if row.upkeep_energy is not None and await starved(ctx.session, seat.location_id, row.upkeep_energy, ctx.rules.networks.shortage_pct):
         return False
     return await by_care(ctx, row, seat)
 
 
+@UPKEEP.on(MindUpkeep.VIS)
 async def by_vis(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> bool:
     town = await ctx.session.get(EntityRow, seat.location_id) if seat.location_id is not None else None
     region = town.location_id if town is not None else None
@@ -75,6 +88,7 @@ async def by_vis(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> bool
     return dense is not None or await by_care(ctx, row, seat)
 
 
+@UPKEEP.on(MindUpkeep.ESSENCE)
 async def by_essence(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> bool:
     giver = row.made_by_node_id
     divine = giver is not None and (await ctx.session.get(SonRow, giver) is not None or await ctx.session.get(CreatorRow, giver) is not None)
@@ -84,20 +98,7 @@ async def by_essence(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> 
     return powered is not None
 
 
-UPKEEP: Mapping[MindUpkeep, Keep] = total(
-    MindUpkeep,
-    {
-        MindUpkeep.NONE: by_itself,
-        MindUpkeep.FOOD: by_itself,
-        MindUpkeep.PLACE: by_itself,
-        MindUpkeep.BELIEF: by_itself,
-        MindUpkeep.HOST: by_itself,
-        MindUpkeep.ENERGY: by_energy,
-        MindUpkeep.MAINTENANCE: by_care,
-        MindUpkeep.VIS: by_vis,
-        MindUpkeep.ESSENCE: by_essence,
-    },
-)
+UPKEEP.seal()
 
 
 async def kept(ctx: TickContext, row: MindProfileRow) -> bool:

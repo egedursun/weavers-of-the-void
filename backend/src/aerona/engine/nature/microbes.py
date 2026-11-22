@@ -1,10 +1,9 @@
-from collections.abc import Mapping
 from dataclasses import dataclass
-from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.nature import CULTURED, FOUNDED
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.agrarian import SoilNutrientRow
@@ -30,17 +29,6 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
 F = FermentKind
-M = CookingMethod
-CULTURED: Mapping[FermentKind, frozenset[CookingMethod]] = MappingProxyType(
-    {
-        F.YEAST: frozenset({M.BAKED}),
-        F.STARTER: frozenset({M.BAKED}),
-        F.MOULD: frozenset({M.CURED, M.FERMENTED}),
-        F.LACTIC: frozenset({M.FERMENTED, M.PICKLED}),
-        F.VINEGAR: frozenset({M.PICKLED}),
-    }
-)
-FOUNDED: Mapping[CookingMethod, FermentKind] = MappingProxyType({M.BAKED: F.STARTER, M.FERMENTED: F.LACTIC, M.CURED: F.MOULD, M.PICKLED: F.VINEGAR})
 HOLDERS = (EntityType.SETTLEMENT, EntityType.FACTION, EntityType.STRUCTURE, EntityType.HOUSE)
 
 

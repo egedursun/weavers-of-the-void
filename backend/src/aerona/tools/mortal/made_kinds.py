@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.catalog.cuisine import DISH_FOODS
 from aerona.catalog.equipment import FAMILIES
+from aerona.catalog.life.tools import COMMAND_SKILLS, FORGE_SKILLS
 from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.units import UNITS
 from aerona.constants.tool_inputs import NAME_MAX, NAME_MIN, SHORT_DESCRIPTION_MAX
@@ -39,8 +40,6 @@ from aerona.tools.mortal.support import craft_of
 Name = Annotated[str, Field(min_length=NAME_MIN, max_length=NAME_MAX)]
 Description = Annotated[str, Field(max_length=SHORT_DESCRIPTION_MAX)]
 INGREDIENTS_MAX = 4
-COMMAND_SKILLS = (SkillKind.TACTICS, SkillKind.STRATEGY)
-FORGE_SKILLS = (SkillKind.SMITHING, SkillKind.ENGINEERING)
 BUILD_SKILLS = (SkillKind.ENGINEERING,)
 
 

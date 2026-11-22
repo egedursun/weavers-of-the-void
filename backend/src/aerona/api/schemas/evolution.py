@@ -2,7 +2,7 @@ from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.ecology import DomesticationStage
-from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, PlagueResponse, SuccessionStage, TrophicLevel
+from aerona.domain.enums.evolution import CycleSource, EvolvedTrait, KeystoneRole, PlagueResponse, PlanetaryCycle, SuccessionStage, TrophicLevel
 
 
 class StockTraitView(ApiModel):
@@ -100,18 +100,22 @@ class CureResearchView(ApiModel):
     locked: list[str]
 
 
+class CycleFlowView(ApiModel):
+    source: CycleSource
+    source_label: str
+    rate: int
+
+
 class WorldCycleView(ApiModel):
-    carbon: int
-    water: int
-    nutrients: int
-    carbon_in: int
-    carbon_out: int
-    water_in: int
-    water_out: int
-    nutrients_in: int
-    nutrients_out: int
+    cycle: PlanetaryCycle
+    label: str
+    stock: int
+    inflow: int
+    outflow: int
+    sources: list[CycleFlowView]
+    sinks: list[CycleFlowView]
     updated_epoch: int
-    locked: list[str]
+    held: bool
 
 
 class TraitPointView(ApiModel):
@@ -134,4 +138,4 @@ class NodeEvolutionView(ApiModel):
     carriers: list[CarrierView]
     responses: list[PlagueResponseView]
     research: list[CureResearchView]
-    cycle: WorldCycleView | None
+    cycles: list[WorldCycleView]

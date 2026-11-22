@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.catalog.art_modes import ART_MODES, IMAGE_MODES, PERFORMED_MODES, VERBAL_MODES
 from aerona.catalog.kinds.motifs import MOTIF_SOURCES
+from aerona.catalog.life.lore import PERFORMERS, TRANSLATE_SKILL_KINDS
 from aerona.catalog.lore import ART_MESSAGES
 from aerona.catalog.peoples import Style
 from aerona.constants.units import PERCENT
@@ -44,7 +45,6 @@ from aerona.engine.transform.lore import remember_artwork
 
 WEAK_CLAIM = 50
 HALF = 2
-PERFORMERS = (SkillKind.ORATORY, SkillKind.LORE)
 IMAGES = IMAGE_MODES
 
 DECADE_YEARS = 10
@@ -248,7 +248,7 @@ async def knows(ctx: TickContext, community_id: int, language_id: int) -> bool:
 async def translate(ctx: TickContext, artwork: EntityRow, row: ArtworkProfileRow) -> int | None:
     if row.medium not in VERBAL_MODES or row.language_entity_id is None or artwork.location_id is None:
         return None
-    scribe = await skilled(ctx, artwork.location_id, (SkillKind.LANGUAGES, SkillKind.WRITING), ctx.rules.interpreters.interpreter_skill)
+    scribe = await skilled(ctx, artwork.location_id, TRANSLATE_SKILL_KINDS, ctx.rules.interpreters.interpreter_skill)
     if scribe is None or not ctx.rng(f"translate.{artwork.id}.{ctx.epoch}").chance(ctx.rules.art.translation_chance):
         return None
     neighbours = select(BondRow.target_node_id).where(

@@ -28,10 +28,14 @@ DIVINATION_QUESTION = total(
     DivinationQuestion,
     {
         DivinationQuestion.BATTLE: Defined(
-            "Battle", checked_by=("engine.sacred.foresight.true_omen",), used_by=("engine.sacred.foresight.question_for", "engine.sacred.omens.battle_omen")
+            "Battle",
+            checked_by=(),
+            used_by=("catalog.life.sacred.TRUE_OMEN_DIVINATION_QUESTIONS", "engine.sacred.foresight.question_for", "engine.sacred.omens.battle_omen"),
         ),
         DivinationQuestion.WAR: Defined(
-            "War", checked_by=("engine.sacred.foresight.true_omen",), used_by=("engine.sacred.foresight.question_for", "engine.sacred.omens.war_forbidden")
+            "War",
+            checked_by=(),
+            used_by=("catalog.life.sacred.TRUE_OMEN_DIVINATION_QUESTIONS", "engine.sacred.foresight.question_for", "engine.sacred.omens.war_forbidden"),
         ),
         DivinationQuestion.WEDDING: Defined(
             "Wedding", checked_by=("engine.sacred.foresight.heed", "engine.sacred.foresight.true_omen"), used_by=("engine.sacred.foresight.question_for",)
@@ -49,12 +53,12 @@ PETITION_KIND = total(
     PetitionKind,
     {
         PetitionKind.HEALING: Defined(
-            "Healing", checked_by=("engine.sacred.bureau.answer",), used_by=("engine.sacred.bureau.COMMON_NEEDS", "services.player.sacred.PetitionDraft")
+            "Healing", checked_by=("engine.sacred.bureau.answer",), used_by=("catalog.life.sacred.COMMON_NEEDS", "services.player.sacred.PetitionDraft")
         ),
         PetitionKind.HARVEST: Defined("A good harvest", checked_by=("engine.sacred.bureau.answer",), used_by=("engine.sacred.bureau.need_of",)),
-        PetitionKind.FERTILITY: Defined("Children", checked_by=("engine.sacred.bureau.answer",), used_by=("engine.sacred.bureau.COMMON_NEEDS",)),
-        PetitionKind.SAFE_PASSAGE: Defined("Safe passage", checked_by=("engine.sacred.bureau.answer",), used_by=("engine.sacred.bureau.COMMON_NEEDS",)),
-        PetitionKind.PROSPERITY: Defined("Prosperity", checked_by=("engine.sacred.bureau.answer",), used_by=("engine.sacred.bureau.COMMON_NEEDS",)),
+        PetitionKind.FERTILITY: Defined("Children", checked_by=("engine.sacred.bureau.answer",), used_by=("catalog.life.sacred.COMMON_NEEDS",)),
+        PetitionKind.SAFE_PASSAGE: Defined("Safe passage", checked_by=("engine.sacred.bureau.answer",), used_by=("catalog.life.sacred.COMMON_NEEDS",)),
+        PetitionKind.PROSPERITY: Defined("Prosperity", checked_by=("engine.sacred.bureau.answer",), used_by=("catalog.life.sacred.COMMON_NEEDS",)),
         PetitionKind.SUIT: Defined(
             "A suit against a spirit",
             checked_by=(

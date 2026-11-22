@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.living import STANCE_SIGN
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.faith import CultDoctrineRow
@@ -23,7 +24,6 @@ from aerona.engine.services.community_relations import change_relation
 LEAN = 25
 STATUS_STEPS = ("property", "ward", "servant", "citizen", "sovereign")
 STANCE_COLUMNS = ("living_craft_stance", "germline_stance", "clone_stance")
-STANCE_SIGN = {LivingCraftStance.ABOMINATION: -1, LivingCraftStance.PERMITTED: 0, LivingCraftStance.SACRED_DUTY: 1, LivingCraftStance.SILENT: 0}
 
 
 def living_stance(values: dict[ValueAxis, int]) -> LivingCraftStance:

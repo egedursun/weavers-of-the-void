@@ -3,6 +3,8 @@ from typing import Any
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.catalog.life.tools import RAISE_CHILD_SOCIALIZATION_TECHNIQUES, TECHNIQUE_AXES
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.childhood import PedagogyRow
@@ -15,9 +17,9 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.childhood import PedagogyTheory, SocializationTechnique
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.life_traits import LifeStageTrait
+from aerona.domain.enums.mind import ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.mortal import LifeStage
 from aerona.engine.childhood.life import SCHOOLS
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.mortal.kin import parents_of
@@ -29,21 +31,7 @@ from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
 
-GROWING = frozenset({LifeStage.INFANT, LifeStage.CHILD, LifeStage.YOUTH})
-TECHNIQUE_AXES: dict[SocializationTechnique, ValueAxis] = {
-    SocializationTechnique.EXAMPLE: ValueAxis.FAMILY,
-    SocializationTechnique.INSTRUCTION: ValueAxis.TRADITION,
-    SocializationTechnique.PRAISE: ValueAxis.MERCY,
-    SocializationTechnique.SHAME: ValueAxis.HONOUR,
-    SocializationTechnique.PUNISHMENT: ValueAxis.HIERARCHY,
-    SocializationTechnique.RITUAL_ORDEAL: ValueAxis.MARTIAL,
-    SocializationTechnique.STORYTELLING: ValueAxis.ARTWORK,
-    SocializationTechnique.PLAY: ValueAxis.LEISURE,
-    SocializationTechnique.APPRENTICESHIP: ValueAxis.CRAFTSMANSHIP,
-    SocializationTechnique.SCHOOLING: ValueAxis.KNOWLEDGE,
-    SocializationTechnique.PEER_GROUP: ValueAxis.FRIENDSHIP,
-    SocializationTechnique.AGE_SET: ValueAxis.LOYALTY,
-}
+GROWING = having(LIFE_STAGE_TRAITS, LifeStageTrait.GROWING)
 WEIGHTS_MAX = len(SocializationTechnique)
 
 
@@ -88,9 +76,7 @@ async def raise_child(call: MortalCall, args: RaiseChildInput) -> str:
         axis = TECHNIQUE_AXES[technique]
         values[axis] = values.get(axis, 0) + round_half_up(step * weight / total * WEIGHTS_MAX / 2)
     await write_values(call.session, ValueHolder.PERSONAL, child.id, values)
-    harsh = sum(
-        weights.get(technique, 0) for technique in (SocializationTechnique.SHAME, SocializationTechnique.PUNISHMENT, SocializationTechnique.RITUAL_ORDEAL)
-    )
+    harsh = sum(weights.get(technique, 0) for technique in RAISE_CHILD_SOCIALIZATION_TECHNIQUES)
     if "stress" not in (profile.locked or []):
         profile.stress = clamp_int(profile.stress + round_half_up(harsh / total * call.rules.childhood.harsh_stress_pct / 2), 0, PERCENT)
     chief = max(sorted(weights), key=lambda technique: weights[technique])

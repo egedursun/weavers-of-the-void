@@ -1,9 +1,10 @@
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 
 from sqlalchemy import select
 
 from aerona.catalog.crimes import PUNISHMENTS, TRIALS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -31,32 +32,42 @@ RANKED = frozenset({SocialClass.NOBLE, SocialClass.OFFICIAL, SocialClass.PRIEST,
 LEGITIMACY_SPAN = 10
 
 
+SENTENCES: Handlers[PunishmentKind, Bear] = Handlers(PunishmentKind)
+
+
+@SENTENCES.on(PunishmentKind.RESTITUTION)
 async def restore(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     await add_wealth(ctx.session, culprit.id, -ctx.rules.sentences.restitution_wealth, ctx.epoch)
 
 
+@SENTENCES.on(PunishmentKind.COMPENSATION)
 async def compensate(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     await add_wealth(ctx.session, culprit.id, -ctx.rules.sentences.compensation_wealth, ctx.epoch)
 
 
+@SENTENCES.on(PunishmentKind.PENAL_LABOUR)
 async def labour(ctx: TickContext, culprit: EntityRow, case: int | None) -> None:
     if await imprison(ctx, culprit, case_id=case, term=ctx.rules.sentences.labour_term) is None:
         await add_stress(ctx.session, culprit.id, ctx.rules.sentences.work_stress * 2, ctx.epoch)
 
 
+@SENTENCES.on(PunishmentKind.SERVITUDE)
 async def bind(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     culprit.social_class = SocialClass.SERF_OR_SLAVE
 
 
+@SENTENCES.on(PunishmentKind.OUTLAWRY)
 async def outlaw(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     culprit.social_class = SocialClass.OUTCAST
     await add_infamy(ctx.session, culprit.id, ctx.rules.sentences.outlawry_infamy, ctx.epoch, rules=ctx.rules)
 
 
+@SENTENCES.on(PunishmentKind.CONFISCATION)
 async def confiscate(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     await add_wealth(ctx.session, culprit.id, -PERCENT, ctx.epoch)
 
 
+@SENTENCES.on(PunishmentKind.LOSS_OF_RANK)
 async def unrank(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     if culprit.social_class in RANKED:
         culprit.social_class = SocialClass.CITIZEN
@@ -65,6 +76,7 @@ async def unrank(ctx: TickContext, culprit: EntityRow, _case: int | None) -> Non
             office.holder_entity_id = None
 
 
+@SENTENCES.on(PunishmentKind.EXCOMMUNICATION)
 async def cast_out(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     for bond in list(
         await ctx.session.scalars(
@@ -75,6 +87,7 @@ async def cast_out(ctx: TickContext, culprit: EntityRow, _case: int | None) -> N
     await shift_standing(ctx.session, culprit, "piety", -ctx.rules.sentences.excommunication_piety, ctx.epoch, default=0)
 
 
+@SENTENCES.on(PunishmentKind.PENANCE)
 async def atone(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     await add_stress(ctx.session, culprit.id, ctx.rules.sentences.work_stress, ctx.epoch)
     await shift_standing(ctx.session, culprit, "piety", ctx.rules.sentences.penance_piety, ctx.epoch, default=0)
@@ -93,6 +106,7 @@ async def elsewhere(ctx: TickContext, culprit: EntityRow, *, far: bool) -> Entit
     return ctx.rng(f"exile.{culprit.id}.{far}").pick(places) if places else None
 
 
+@SENTENCES.on(PunishmentKind.BANISHMENT_FROM_PLACE)
 async def banish(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     place = await elsewhere(ctx, culprit, far=False)
     culprit.location_id = place.id if place is not None else None
@@ -100,6 +114,7 @@ async def banish(ctx: TickContext, culprit: EntityRow, _case: int | None) -> Non
         await add_flag(ctx.session, culprit.id, EntityFlag.EXILE, ctx.epoch)
 
 
+@SENTENCES.on(PunishmentKind.TRANSPORTATION)
 async def transport(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     place = await elsewhere(ctx, culprit, far=True) or await elsewhere(ctx, culprit, far=False)
     if place is None:
@@ -109,15 +124,18 @@ async def transport(ctx: TickContext, culprit: EntityRow, _case: int | None) -> 
     culprit.location_id, culprit.world_id = place.id, place.world_id
 
 
+@SENTENCES.on(PunishmentKind.HOUSE_ARREST)
 async def confine(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     await add_stress(ctx.session, culprit.id, ctx.rules.sentences.work_stress, ctx.epoch)
     await shift_standing(ctx.session, culprit, "renown", -ctx.rules.sentences.arrest_renown, ctx.epoch, default=0)
 
 
+@SENTENCES.on(PunishmentKind.PROBATION)
 async def watch(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     await add_infamy(ctx.session, culprit.id, ctx.rules.sentences.probation_infamy, ctx.epoch, rules=ctx.rules)
 
 
+@SENTENCES.on(PunishmentKind.REEDUCATION)
 async def reeducate(ctx: TickContext, culprit: EntityRow, case: int | None) -> None:
     await imprison(ctx, culprit, case_id=case, term=ctx.rules.sentences.reeducation_term)
     profile = await ctx.session.get(MortalProfileRow, culprit.id)
@@ -125,6 +143,7 @@ async def reeducate(ctx: TickContext, culprit: EntityRow, case: int | None) -> N
         profile.loyalty_liege = clamp_percent(profile.loyalty_liege + ctx.rules.sentences.reeducation_loyalty)
 
 
+@SENTENCES.on(PunishmentKind.COMMUNITY_WORK)
 async def serve(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     await add_stress(ctx.session, culprit.id, ctx.rules.sentences.work_stress, ctx.epoch)
     town = await ctx.session.get(SettlementProfileRow, culprit.location_id) if culprit.location_id is not None else None
@@ -132,30 +151,11 @@ async def serve(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None
         town.sanitation = clamp_percent(town.sanitation + ctx.rules.sentences.work_gain)
 
 
+@SENTENCES.on(PunishmentKind.DAMPENING)
 async def dampen(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     for power in list(await ctx.session.scalars(select(PowerRow).where(PowerRow.holder_node_id == culprit.id, PowerRow.state == PowerState.ACTIVE))):
         if "state" not in power.locked:
             power.state = PowerState.SUPPRESSED
-
-
-SENTENCES: Mapping[PunishmentKind, Bear] = {
-    PunishmentKind.RESTITUTION: restore,
-    PunishmentKind.COMPENSATION: compensate,
-    PunishmentKind.PENAL_LABOUR: labour,
-    PunishmentKind.SERVITUDE: bind,
-    PunishmentKind.OUTLAWRY: outlaw,
-    PunishmentKind.CONFISCATION: confiscate,
-    PunishmentKind.LOSS_OF_RANK: unrank,
-    PunishmentKind.EXCOMMUNICATION: cast_out,
-    PunishmentKind.PENANCE: atone,
-    PunishmentKind.BANISHMENT_FROM_PLACE: banish,
-    PunishmentKind.HOUSE_ARREST: confine,
-    PunishmentKind.PROBATION: watch,
-    PunishmentKind.REEDUCATION: reeducate,
-    PunishmentKind.TRANSPORTATION: transport,
-    PunishmentKind.COMMUNITY_WORK: serve,
-    PunishmentKind.DAMPENING: dampen,
-}
 
 
 async def answer(ctx: TickContext, polity_id: int | None, town_id: int | None, *, cost: int, leans: tuple[int, int, int], fairness: int) -> None:

@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.law_depth import MEDICINE_TECHNIQUES, METHOD_STEALTH
+from aerona.catalog.life.military import HEALING
 from aerona.constants.units import PERCENT
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -9,14 +10,11 @@ from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.law_depth import KillMethod
-from aerona.domain.enums.mind import SkillKind
 from aerona.engine.context import TickContext
 from aerona.engine.lore.civics import holders_know
 from aerona.engine.mind.book import best_skill
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-
-HEALING = (SkillKind.MEDICINE, SkillKind.SURGERY)
 
 
 async def methods_for(ctx: TickContext, owner: EntityRow, network: SpyNetworkRow) -> list[KillMethod]:

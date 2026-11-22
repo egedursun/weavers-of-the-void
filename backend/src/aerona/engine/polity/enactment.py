@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.civics import LAW_GATES
 from aerona.catalog.kinds.governance import DECISION_RULES
 from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for
+from aerona.catalog.life_traits import OFFICE_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
@@ -21,8 +22,9 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import EstatePrivilege, FactionGoalKind
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand
 from aerona.domain.enums.justice import ProposalEvent, ProposalStance, ProposalState
+from aerona.domain.enums.life_traits import OfficeKindTrait
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
+from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
@@ -37,21 +39,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import StepDraft, record
 
-COUNCIL = frozenset(
-    {
-        OfficeKind.CHANCELLOR,
-        OfficeKind.MARSHAL,
-        OfficeKind.TREASURER,
-        OfficeKind.HIGH_JUDGE,
-        OfficeKind.SPYMASTER,
-        OfficeKind.REGENT,
-        OfficeKind.CHAPLAIN,
-        OfficeKind.HEAD_OF_GOVERNMENT,
-        OfficeKind.MINISTER,
-        OfficeKind.GENERAL,
-        OfficeKind.SPEAKER,
-    }
-)
+COUNCIL = having(OFFICE_KIND_TRAITS, OfficeKindTrait.COUNCIL)
 FOR = frozenset({ProposalStance.SUPPORT})
 AGAINST = frozenset({ProposalStance.OPPOSE, ProposalStance.OBSTRUCT})
 OBSTRUCTING = frozenset({ProposalStance.OBSTRUCT})

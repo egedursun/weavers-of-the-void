@@ -1,10 +1,12 @@
 from collections import Counter, defaultdict
+from collections.abc import Awaitable, Callable
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.discovery import FIELDS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderTechniqueRow, LanguageStandingRow, ResearchFocusRow, ResearchProgressRow
@@ -188,6 +190,10 @@ async def promote_great(ctx: TickContext) -> int:
     return raised
 
 
+DEEDS: Handlers[GreatField, Callable[[TickContext, EntityRow], Awaitable[bool]]] = Handlers(GreatField)
+
+
+@DEEDS.on(GreatField.SCHOLAR)
 async def breakthrough(ctx: TickContext, community: EntityRow) -> bool:
     focus = await ctx.session.get(ResearchFocusRow, community.id)
     known = {row for row in await ctx.session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == community.id))}
@@ -203,6 +209,7 @@ async def breakthrough(ctx: TickContext, community: EntityRow) -> bool:
     return True
 
 
+@DEEDS.on(GreatField.ARTIST)
 async def great_work(ctx: TickContext, community: EntityRow) -> bool:
     people = await people_of(ctx.session, community)
     tongue = await spoken_language(ctx.session, (people or community).id)
@@ -213,6 +220,7 @@ async def great_work(ctx: TickContext, community: EntityRow) -> bool:
     return True
 
 
+@DEEDS.on(GreatField.GENERAL)
 async def campaign(ctx: TickContext, community: EntityRow) -> bool:
     armies = list(
         await ctx.session.scalars(
@@ -228,6 +236,7 @@ async def campaign(ctx: TickContext, community: EntityRow) -> bool:
     return lifted > 0
 
 
+@DEEDS.on(GreatField.PROPHET)
 async def doctrine(ctx: TickContext, community: EntityRow) -> bool:
     people = await people_of(ctx.session, community)
     kindled = 0
@@ -239,6 +248,7 @@ async def doctrine(ctx: TickContext, community: EntityRow) -> bool:
     return kindled > 0
 
 
+@DEEDS.on(GreatField.ENGINEER)
 async def building_rush(ctx: TickContext, community: EntityRow) -> bool:
     works = list(
         await ctx.session.scalars(
@@ -253,6 +263,7 @@ async def building_rush(ctx: TickContext, community: EntityRow) -> bool:
     return bool(works)
 
 
+@DEEDS.on(GreatField.MERCHANT)
 async def monopoly(ctx: TickContext, community: EntityRow) -> bool:
     realm = await realm_of(ctx.session, community.id)
     profile = await ctx.session.get(PolityProfileRow, realm) if realm is not None else None
@@ -263,6 +274,7 @@ async def monopoly(ctx: TickContext, community: EntityRow) -> bool:
     return True
 
 
+@DEEDS.on(GreatField.EXPLORER)
 async def discovery(ctx: TickContext, community: EntityRow) -> bool:
     realm = await realm_of(ctx.session, community.id)
     atlas = await RegionAtlas.load(ctx.session)
@@ -278,17 +290,6 @@ async def discovery(ctx: TickContext, community: EntityRow) -> bool:
             row.level = max(row.level, ctx.rules.discovery.great_charting)
             row.updated_epoch = ctx.epoch
     return True
-
-
-DEEDS = {
-    GreatField.SCHOLAR: breakthrough,
-    GreatField.ARTIST: great_work,
-    GreatField.GENERAL: campaign,
-    GreatField.PROPHET: doctrine,
-    GreatField.ENGINEER: building_rush,
-    GreatField.MERCHANT: monopoly,
-    GreatField.EXPLORER: discovery,
-}
 
 
 async def perform_deed(ctx: TickContext, great: GreatPersonRow) -> bool:

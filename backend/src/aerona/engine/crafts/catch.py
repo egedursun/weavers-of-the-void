@@ -1,26 +1,19 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.catch import GEAR, grounds_in
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import CatchGroundRow
-from aerona.domain.enums.crafts import CatchGround, Gear
+from aerona.domain.enums.crafts import CatchMedium, Gear
 from aerona.engine.climes.shifts import upwelling
 from aerona.engine.couplings.closures import closure_factor
 from aerona.rules.registry import Rules
 
-LAND_GROUNDS = frozenset({CatchGround.TRAPPING, CatchGround.FOWLING})
+LAND_GROUNDS = grounds_in(CatchMedium.LAND)
 
 
 def gear_pct(rules: Rules, gear: Gear) -> int:
-    table = rules.grounds
-    return {
-        Gear.LINES: table.lines_pct,
-        Gear.NETS: table.nets_pct,
-        Gear.WEIRS: table.weirs_pct,
-        Gear.TRAPS: table.traps_pct,
-        Gear.SNARES: table.snares_pct,
-        Gear.HARPOONS: table.harpoons_pct,
-    }[gear]
+    return GEAR[gear].rate(rules)
 
 
 def worked(rules: Rules, row: CatchGroundRow) -> float:

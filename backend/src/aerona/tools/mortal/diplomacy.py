@@ -1,6 +1,7 @@
 import math
 from typing import Any
 
+from aerona.catalog.life.tools import DIPLOMACY_SKILL_KINDS
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -9,7 +10,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, DiplomacyOutcome, TreatyKind
 from aerona.domain.enums.war import WarCause, WarEnding
@@ -100,7 +101,7 @@ async def _tribute(call: MortalCall, target: EntityRow, args: DiplomacyInput) ->
 
 
 async def diplomacy(call: MortalCall, args: DiplomacyInput) -> str:
-    await practised(call, (SkillKind.NEGOTIATION, SkillKind.ETIQUETTE), call.rules.skills.preach_xp)
+    await practised(call, DIPLOMACY_SKILL_KINDS, call.rules.skills.preach_xp)
     tools = call.rules.mortal_tools
     target = await require_target(call, args.target_id)
     if target.id == call.me.id or not (is_community(target) or target.entity_type is EntityType.MORTAL):

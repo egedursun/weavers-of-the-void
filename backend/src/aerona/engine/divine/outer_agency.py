@@ -2,6 +2,7 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import select
 
+from aerona.catalog.life.divine import HUNGER_TECHNIQUE
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
@@ -13,7 +14,7 @@ from aerona.db.tables.outer_agency import OuterHeraldRow, OuterIncursionRow, Out
 from aerona.db.tables.powers import PowerRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.arcana import SpellForm, SpellTechnique
+from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, RiftState
@@ -41,16 +42,6 @@ GOAL_TEXT: Mapping[OuterGoal, str] = total(
         OuterGoal.UNMAKE_LAW: "to unmake a law",
         OuterGoal.GAIN_NAME: "to gain a name",
         OuterGoal.OPEN_RIFT: "to open a rift",
-    },
-)
-HUNGER_TECHNIQUE: Mapping[OuterHunger, SpellTechnique] = total(
-    OuterHunger,
-    {
-        OuterHunger.SOULS: SpellTechnique.CONTROL,
-        OuterHunger.KNOWLEDGE: SpellTechnique.PERCEIVE,
-        OuterHunger.LIGHT: SpellTechnique.DESTROY,
-        OuterHunger.NAMES: SpellTechnique.BIND,
-        OuterHunger.MEMORIES: SpellTechnique.TRANSFORM,
     },
 )
 STAGE_ORDER = (IncursionStage.PROBING, IncursionStage.BREACH, IncursionStage.MANIFESTATION)

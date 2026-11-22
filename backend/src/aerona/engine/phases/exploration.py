@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.cartography.frontier import frontier_position
 from aerona.catalog.civilization import unlocked
+from aerona.catalog.life_traits import KNOWLEDGE_BRANCH_TRAITS, having
 from aerona.constants.cosmos import SUMMARY_CHRONICLE_LINES, SUMMARY_INTUITION_LINES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -31,6 +32,7 @@ from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.epoch import DeferredStepKind, DeferredStepStatus
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.life_traits import KnowledgeBranchTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
@@ -59,7 +61,7 @@ from aerona.engine.recording.record import StepDraft, record
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
-KNOWLEDGE_FOR_EXPLORING = frozenset({KnowledgeBranch.SEAFARING, KnowledgeBranch.PATHFINDING, KnowledgeBranch.ASTRONOMY, KnowledgeBranch.SKY_NAVIGATION})
+KNOWLEDGE_FOR_EXPLORING = having(KNOWLEDGE_BRANCH_TRAITS, KnowledgeBranchTrait.KNOWLEDGE_FOR_EXPLORING)
 LAND_COMMUNITIES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 SEEKER_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.MORTAL})
 INTELLECT_KEY = "intellect"

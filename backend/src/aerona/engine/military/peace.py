@@ -3,13 +3,14 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.catalog.kinds.war_causes import WAR_CAUSES
+from aerona.catalog.life.military import EXTRA_TERMS_WAR_ENDINGS, NO_TREATY, TREATY_ENDINGS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow, PeaceTermRow, WarAimRow
 from aerona.db.tables.polity import HouseProfileRow, PolityMemberRow
 from aerona.db.tables.warfare import CaptiveRow, WarRow
 from aerona.domain.enums.military import CaptiveFate, PeaceTermKind, WarAimKind
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
+from aerona.domain.enums.polity import ClauseKind, PartyRole
 from aerona.domain.enums.war import CaptiveStatus, WarEnding
 from aerona.engine.context import TickContext
 from aerona.engine.military.captivity import settle_into
@@ -38,20 +39,6 @@ AIM_TERMS: dict[WarAimKind, PeaceTermKind] = {
     A.SEIZE_ROUTE: K.TRADE_CONCESSION,
 }
 TRADE_CAUSES = frozenset(cause for cause, spec in WAR_CAUSES.items() if spec.over_trade)
-TREATY_ENDINGS = {
-    WarEnding.VICTORY: TreatyKind.PEACE,
-    WarEnding.CONQUEST: TreatyKind.PEACE,
-    WarEnding.TRIBUTE: TreatyKind.TRIBUTE,
-    WarEnding.EXHAUSTION: TreatyKind.PEACE,
-    WarEnding.PEACE: TreatyKind.PEACE,
-    WarEnding.WHITE_PEACE: TreatyKind.PEACE,
-    WarEnding.MIRACLE: TreatyKind.PEACE,
-}
-NO_TREATY = {
-    WarEnding.BETRAYAL: "the war ended in betrayal; no one sat down to sign",
-    WarEnding.SAME_FRONT: "the war was folded into another front of the same war",
-    WarEnding.NO_SIDE_LEFT: "no side was left standing to sign a peace",
-}
 
 
 @dataclass
@@ -80,7 +67,7 @@ async def houses_of(ctx: TickContext, *entity_ids: int) -> list[HouseProfileRow]
 async def extra_terms(ctx: TickContext, war: WarRow, victor: EntityRow, loser: EntityRow, *, ending: WarEnding) -> list[PeaceTerm]:
     terms: list[PeaceTerm] = []
     values = await values_for(ctx.session, victor.id)
-    if ending in {WarEnding.WHITE_PEACE, WarEnding.EXHAUSTION, WarEnding.PEACE, WarEnding.MIRACLE} or values.get(ValueAxis.MERCY, 0) > 0:
+    if ending in EXTRA_TERMS_WAR_ENDINGS or values.get(ValueAxis.MERCY, 0) > 0:
         terms.append(PeaceTerm(K.CAPTIVE_RELEASE))
     if war.cause in TRADE_CAUSES:
         terms.append(PeaceTerm(K.TRADE_CONCESSION))

@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.folkways import PENALTY_OUTCOMES
+from aerona.catalog.life_traits import MEMORY_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import agree, several
 from aerona.db.tables.culture import CastingRow, RumourRow
@@ -24,9 +26,10 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import FanaticismKind
 from aerona.domain.enums.folkways import AccusationOutcome, MishapResponse
 from aerona.domain.enums.justice import CaseStage, Verdict
-from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitKind
+from aerona.domain.enums.life_traits import MemoryKindTrait
+from aerona.domain.enums.mind import PressureKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
+from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.sacred import DivinationValidity
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.body.customs import people_of
@@ -46,8 +49,7 @@ from aerona.engine.recording.record import RoleValue, record
 from aerona.engine.sacred.places import realm_of_town, region_of
 from aerona.engine.services.war import ongoing_war_count
 
-GRIEVANCES = frozenset({MemoryKind.BETRAYED_ME, MemoryKind.ILL_WILL, MemoryKind.KILLED_KIN})
-PENALTY_OUTCOMES = {PunishmentKind.DEATH: AccusationOutcome.KILLED, PunishmentKind.EXILE: AccusationOutcome.EXILED}
+GRIEVANCES = having(MEMORY_KIND_TRAITS, MemoryKindTrait.GRIEVANCES)
 
 ECCENTRIC = frozenset({TraitKind.RECLUSIVE, TraitKind.SCATTERBRAINED, TraitKind.LITERAL_MINDED, TraitKind.AWKWARD, TraitKind.BLUNT})
 HOSTILE = "hostile"

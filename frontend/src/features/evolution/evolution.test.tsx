@@ -32,7 +32,7 @@ const EMPTY = {
   carriers: [],
   responses: [],
   research: [],
-  cycle: null,
+  cycles: [],
 }
 
 function serveBase() {

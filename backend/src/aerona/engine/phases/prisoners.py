@@ -2,6 +2,7 @@ from collections.abc import Mapping, Sequence
 
 from sqlalchemy import select
 
+from aerona.catalog.life.phases import PRISONERS_CAPTIVE_STATUSS
 from aerona.core.errors import ConflictError, NotFoundError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
@@ -314,7 +315,7 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     "table.vessel_profiles",
 )
 async def prisoners(ctx: TickContext) -> None:
-    held = (CaptiveStatus.HELD, CaptiveStatus.WARD)
+    held = PRISONERS_CAPTIVE_STATUSS
     rows = list(await ctx.session.scalars(select(CaptiveRow).where(CaptiveRow.status.in_(held)).order_by(CaptiveRow.id)))
     for row in rows:
         captive, captor = await living_entity(ctx.session, row.captive_entity_id), await living_entity(ctx.session, row.captor_entity_id)

@@ -113,9 +113,6 @@ class InjuryState(StrEnum):
     LETHAL = "lethal"
 
 
-OPEN_INJURY_STATES = frozenset({InjuryState.FRESH, InjuryState.INFECTED, InjuryState.HEALING})
-
-
 class HarmCause(StrEnum):
     BATTLE = "battle"
     DUEL = "duel"
@@ -166,9 +163,6 @@ class ConditionKind(StrEnum):
     MALNUTRITION = "malnutrition"
 
 
-MADNESS_CONDITIONS = (ConditionKind.PARANOIA, ConditionKind.VISIONS, ConditionKind.RAGE, ConditionKind.MELANCHOLY)
-
-
 class MedicineTier(StrEnum):
     NONE = "none"
     HERBS = "herbs"
@@ -184,24 +178,6 @@ class MedicineTier(StrEnum):
     GENOME_REPAIR = "genome_repair"
     CELLULAR_MACHINES = "cellular_machines"
     MIND_MEDICINE = "mind_medicine"
-
-
-MEDICINE_ORDER = (
-    MedicineTier.NONE,
-    MedicineTier.HERBS,
-    MedicineTier.SURGERY,
-    MedicineTier.ANTISEPSIS,
-    MedicineTier.ANAESTHESIA,
-    MedicineTier.PROSTHETICS,
-    MedicineTier.IMMUNISATION,
-    MedicineTier.ANTIMICROBIALS,
-    MedicineTier.REATTACHMENT,
-    MedicineTier.TRANSPLANTATION,
-    MedicineTier.MIND_MEDICINE,
-    MedicineTier.REGENERATION,
-    MedicineTier.GENOME_REPAIR,
-    MedicineTier.CELLULAR_MACHINES,
-)
 
 
 class Capacity(StrEnum):

@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.life.tools import SEARCH_RUINS_SKILL_KINDS
 from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -177,7 +178,7 @@ async def search_ruins(call: MortalCall, args: RuinsInput) -> str:
         fail(MortalResult.TOO_FAR)
     shares = await class_shares(call.session, call.rules, call.me.id)
     reason = (await wits_of(call)) + shares.get(SocialClass.SCRIBE, 0.0) * tools.relic_scribe_mult + call.die(tools.relic_die, "ruins")
-    await practised(call, (SkillKind.LORE, SkillKind.TRACKING), call.rules.skills.travel_xp)
+    await practised(call, SEARCH_RUINS_SKILL_KINDS, call.rules.skills.travel_xp)
     call.target(ruin.id)
     lost = await _lost_knowledge(call, ruin.world_id)
     items = await _ownerless_items(call, ruin)

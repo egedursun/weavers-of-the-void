@@ -19,6 +19,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.lore.rites import (
     EFFECTS,
     Working,
+    at_war,
     gathering,
     pay_blood,
     pay_divine,
@@ -26,8 +27,8 @@ from aerona.engine.lore.rites import (
     pay_souls,
     phenomenon,
     possessed_near,
-    season_of,
     sky_shows,
+    slot_closed,
     victim_in,
     wandering_near,
 )
@@ -101,8 +102,8 @@ async def test_a_gathering_counts_the_folk_and_a_quiet_sky_shows_nothing(session
     assert await gathering(ctx, caster) == 1
     assert await gathering(ctx, town) == stat(town, "population")
     assert not await sky_shows(ctx, "eclipse")
-    assert not await season_of(ctx, caster, CalendarSlot.HOLY_DAY)
-    assert not await season_of(ctx, caster, CalendarSlot.CAMPAIGN)
+    assert await slot_closed(ctx, caster, CalendarSlot.HOLY_DAY) is not None
+    assert not await at_war(ctx, caster)
 
 
 async def test_binding_and_raising_take_the_wandering_dead_of_the_place(session: AsyncSession, world: CoreWorld) -> None:

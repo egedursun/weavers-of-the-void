@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.agrarian import RING_ORDER
+from aerona.catalog.market_ranks import RANKS, by_order, higher_markets, widest_reach
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import CentralPlaceRow, LandRingRow
 from aerona.db.tables.entities import EntityRow
@@ -24,8 +26,6 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 
 MARKET_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY})
-MARKET_RANKS = frozenset({CentralityRank.WEEKLY, CentralityRank.RARE})
-RING_ORDER = (LandUseRing.GARDENS, LandUseRing.FORESTRY, LandUseRing.GRAIN, LandUseRing.RANCHING, LandUseRing.WILDS)
 UNREACHED = 99_999
 
 
@@ -94,36 +94,29 @@ def catchment(reach: Reach, people_in: dict[int, int], region: int, hops: int) -
 
 
 def rank_for(ctx: TickContext, reach: Reach, people_in: dict[int, int], place: Place, chosen: dict[int, CentralityRank]) -> CentralityRank:
-    table = ctx.rules.central_places
-    rare = reach.within(place.region, table.rare_range)
-    weekly = reach.within(place.region, table.weekly_range)
-    taken = {region for region, rank in chosen.items() if rank is CentralityRank.RARE}
-    markets = {region for region, rank in chosen.items() if rank in MARKET_RANKS}
-    if catchment(reach, people_in, place.region, table.rare_range) >= table.rare_threshold and not taken & set(rare):
-        return CentralityRank.RARE
-    if catchment(reach, people_in, place.region, table.weekly_range) >= table.weekly_threshold and not markets & set(weekly):
-        return CentralityRank.WEEKLY
-    return CentralityRank.DAILY
+    ranks = by_order(descending=True)
+    for rank in ranks[:-1]:
+        spec = RANKS[rank]
+        hops = spec.reach(ctx.rules)
+        rivals = {region for region, other in chosen.items() if RANKS[other].order >= spec.order}
+        if catchment(reach, people_in, place.region, hops) >= spec.threshold(ctx.rules) and not rivals & set(reach.within(place.region, hops)):
+            return rank
+    return ranks[-1]
 
 
 def centrality(ctx: TickContext, rank: CentralityRank, buyers: int) -> int:
-    table = ctx.rules.central_places
-    base, goal = {
-        CentralityRank.DAILY: (0, table.weekly_threshold),
-        CentralityRank.WEEKLY: (table.weekly_centrality, table.rare_threshold),
-        CentralityRank.RARE: (table.rare_centrality, table.rare_threshold * 2),
-    }[rank]
-    return clamp_int(base + table.catchment_centrality * min(1.0, buyers / max(1, goal)), 0, PERCENT)
+    spec = RANKS[rank]
+    goal = spec.goal(ctx.rules)
+    return clamp_int(spec.centrality(ctx.rules) + ctx.rules.central_places.catchment_centrality * min(1.0, buyers / max(1, goal)), 0, PERCENT)
 
 
 def range_of(ctx: TickContext, rank: CentralityRank) -> int:
-    table = ctx.rules.central_places
-    return {CentralityRank.DAILY: 0, CentralityRank.WEEKLY: table.weekly_range, CentralityRank.RARE: table.rare_range}[rank]
+    return RANKS[rank].reach(ctx.rules)
 
 
 def server_of(ctx: TickContext, reach: Reach, place: Place, rank: CentralityRank, ranked: list[tuple[Place, CentralityRank]]) -> int | None:
-    higher = {CentralityRank.DAILY: MARKET_RANKS, CentralityRank.WEEKLY: frozenset({CentralityRank.RARE}), CentralityRank.RARE: frozenset()}[rank]
-    near = reach.within(place.region, ctx.rules.central_places.rare_range)
+    higher = higher_markets(rank)
+    near = reach.within(place.region, widest_reach(ctx.rules))
     options = [(near[other.region], other.town.id) for other, other_rank in ranked if other_rank in higher and other.region in near and other is not place]
     return min(options)[1] if options else None
 
@@ -141,7 +134,7 @@ async def rank_world(ctx: TickContext, reach: Reach, places: list[Place], tally:
     for place in sorted(places, key=lambda item: (-item.people, item.town.id)):
         row = rows.get(place.town.id)
         rank = row.rank if row is not None and ("rank" in row.locked or held(place.town.id)) else rank_for(ctx, reach, people_in, place, chosen)
-        if rank is not CentralityRank.DAILY:
+        if RANKS[rank].market:
             chosen.setdefault(place.region, rank)
         ranked.append((place, rank))
     for place, rank in ranked:
@@ -158,7 +151,7 @@ async def rank_world(ctx: TickContext, reach: Reach, places: list[Place], tally:
         put(row, "centrality", centrality(ctx, row.rank, buyers))
         row.updated_epoch = ctx.epoch
         tally.ranked += 1
-    markets = {place.region for place, rank in ranked if rank in MARKET_RANKS}
+    markets = {place.region for place, rank in ranked if RANKS[rank].market}
     if not markets:
         markets = {place.region for place in places if place.tier in MARKET_TIERS}
     tally.markets += len(markets)

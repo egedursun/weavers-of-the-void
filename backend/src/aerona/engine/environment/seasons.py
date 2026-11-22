@@ -1,9 +1,11 @@
 import math
 from dataclasses import dataclass
 
+from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.catalog.world_views import WORLD_VIEWS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.world import WorldType
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
@@ -22,7 +24,7 @@ SEASON_SHAPES: dict[int, tuple[tuple[str, int], ...]] = {
 ICE_SHAPE = (("Long Winter", NEUTRAL), ("Short Thaw", WET))
 WARMEST: dict[int, int] = {1: 0, 2: 0, 3: 1, 4: 1, 5: 1, 6: 1}
 NO_SEASON_WORLDS = frozenset(world_type for world_type, view in WORLD_VIEWS.items() if not view.seasons)
-TWO_SEASON_WORLDS = frozenset({WorldType.ICE, WorldType.DWARF_PLANET})
+TWO_SEASON_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.TWO_SEASON_WORLDS)
 
 
 @dataclass(frozen=True)

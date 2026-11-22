@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.customs import SEEDED_STAGES, STAGE_SHIFTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.customs import TimeBudgetRow
@@ -26,13 +27,6 @@ from aerona.rules.registry import Rules
 
 TEN = 10
 SPARED = frozenset({SocialClass.NOBLE, SocialClass.PRIEST})
-SEEDED_STAGES = (LifeStage.CHILD, LifeStage.YOUTH, LifeStage.ADULT, LifeStage.ELDER)
-STAGE_SHIFTS: dict[LifeStage, dict[str, int]] = {
-    LifeStage.CHILD: {"learning": 20, "leisure": 15, "care": -3, "service": -2},
-    LifeStage.YOUTH: {"learning": 10, "leisure": 5},
-    LifeStage.ADULT: {},
-    LifeStage.ELDER: {"rest": 15, "care": 5, "travel": -2},
-}
 
 
 @dataclass

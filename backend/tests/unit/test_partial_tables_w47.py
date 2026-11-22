@@ -4,10 +4,14 @@ from typing import Any, cast
 import pytest
 
 from aerona.catalog.estates import ESTATE_CLASSES, ESTATE_LAWS, ESTATE_NAMES, PRIVILEGE_WISHES
+from aerona.catalog.goods_tables import HULLS
+from aerona.catalog.harm_kinds import DAMAGE
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.laws import LAW_PARAMS
+from aerona.catalog.life.economy import KIND_JOBS
 from aerona.catalog.materials import SPECIES_GOODS, SPECIES_GROUNDS
 from aerona.db.tables.cosmic_state import VesselProfileRow
+from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.collective import PartitionLine
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.economy import ExtractionKind, MaterialOrigin
@@ -16,11 +20,10 @@ from aerona.domain.enums.eras import ProgrammeStage
 from aerona.domain.enums.mortal import EquipmentSlot
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.travel import VehicleKind
-from aerona.engine.body import hits
 from aerona.engine.collective.armory import along
 from aerona.engine.economy import deposits, household
-from aerona.engine.economy.extraction import KIND_JOBS, labour_pool
-from aerona.engine.economy.provenance import HULLS, wanted_slots
+from aerona.engine.economy.extraction import labour_pool
+from aerona.engine.economy.provenance import wanted_slots
 from aerona.engine.mortal.equipment import fits_slot
 from aerona.engine.phases import travel
 from aerona.engine.polity import offices
@@ -94,8 +97,7 @@ def test_a_mount_slot_fits_no_item() -> None:
 
 
 def test_the_reads_proven_safe_still_hold() -> None:
-    assert set(hits.FIXED_KINDS) | set(hits.KIND_RULES) == set(type(next(iter(hits.FIXED_KINDS))))
-    assert not set(hits.FIXED_KINDS) & set(hits.KIND_RULES)
+    assert set(DAMAGE) == set(DamageType)
     assert set(household.FUEL_FAMILY) - {household.CommodityKind.FUEL, household.CommodityKind.TIMBER} <= set(household.FUEL_HEAT)
     assert {*travel.MEDIUM_EVENTS.values(), *travel.COMMON_EVENTS, travel.JourneyEventKind.PIRATES} <= set(travel.LOSS_TEXT) & set(travel.ROAD_EVENT_TEXT)
     assert set(offices.POWER_SKILLS.values()) <= set(offices.OFFICE_SKILLS)

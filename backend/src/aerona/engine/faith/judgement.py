@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.afterlife import STRATUM_VALENCES
+from aerona.catalog.kinds.harm import BATTLE_CAUSES, EXECUTIONS
 from aerona.catalog.peoples import FUNERALS
 from aerona.catalog.strata import ADMISSION_PRIORITY, STRATUM_AXES, StratumAxes
 from aerona.catalog.tenets import STRATUM_NAMES
@@ -17,7 +18,6 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, SoulJudgementRow, SpiritProfileRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import RiteStage, TraditionFunction
 from aerona.domain.enums.demography import FuneralCustom
@@ -54,7 +54,6 @@ VALUE_SPAN = 200
 DEEDS_PARTS = 3
 VIOLENCE_SHARE = 4
 WARLIKE = frozenset({TenetKind.MARTYRDOM_GLORY, TenetKind.HOLY_WAR})
-EXECUTIONS = (HarmCause.PUNISHMENT, HarmCause.SACRIFICE)
 
 
 def as_percent(value: int) -> int:
@@ -113,7 +112,7 @@ async def rite_for(ctx: TickContext, mortal: EntityRow) -> FuneralCustom:
     causes = set(await ctx.session.scalars(select(InjuryRow.cause_kind).where(InjuryRow.bearer_node_id == mortal.id)))
     if causes & set(EXECUTIONS) and ctx.rng(f"nameless.{mortal.id}").chance(table.nameless_execution_pct):
         return FuneralCustom.NAMELESS
-    base = table.battle_no_rite_chance if causes & {HarmCause.BATTLE, HarmCause.DUEL} else table.no_rite_chance
+    base = table.battle_no_rite_chance if causes & BATTLE_CAUSES else table.no_rite_chance
     chance = await rite_chance(ctx, mortal, base * (1 - await rite_keeping(ctx.session, ctx.rules, mortal.location_id)))
     if ctx.rng(f"rite.{mortal.id}").chance(chance):
         return FuneralCustom.NONE

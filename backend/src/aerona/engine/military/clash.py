@@ -2,8 +2,13 @@ from math import sqrt
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.military import WANTED_TRAITS_TACTICS
+from aerona.catalog.life_traits import COMMANDER_TRAIT_TRAITS, TACTIC_TRAITS, having
 from aerona.catalog.mind import COMBAT_SKILLS
+from aerona.catalog.senses import AMBUSH, NIGHT
+from aerona.catalog.terrain import terrains
 from aerona.catalog.units import UNITS, UnitSpec
+from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
@@ -25,9 +30,10 @@ from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.environment import TerrainKind, WeatherKind
+from aerona.domain.enums.environment import TerrainKind, TerrainTrait, WeatherTrait
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.life_traits import CommanderTraitTrait, TacticTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmyRole, CaptiveFate, CommanderTrait, OutcomeClass, Tactic, UnitFamily, UnitKind
 from aerona.domain.enums.mind import Attribute, SkillKind, TraitEffect, ValueAxis
@@ -63,7 +69,7 @@ from aerona.engine.military.units import design_spec, muster, profile_of, sync
 from aerona.engine.mind.book import effect_of, scaled_by, values_for
 from aerona.engine.mind.split import MIDPOINT, attribute
 from aerona.engine.nature.effects import cold_war, sensed
-from aerona.engine.nature.senses import AMBUSH, NIGHT, sense_score
+from aerona.engine.nature.senses import sense_score
 from aerona.engine.networks.book import command_factor
 from aerona.engine.operations.command import command_edge
 from aerona.engine.polity.book import RealmBook
@@ -81,17 +87,16 @@ from aerona.engine.vehicles.fleet import after_battle, crew_specs
 EDGE_FLOOR, EDGE_CEILING = 0.5, 2.0
 INSPIRING_CHARISMA = 70
 CAVALRY_SHARE = 0.4
-HILLS = frozenset({TerrainKind.HILLS, TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
-WINTER = frozenset({WeatherKind.SNOW, WeatherKind.BLIZZARD})
-WOODS = frozenset({TerrainKind.FOREST, TerrainKind.JUNGLE})
-DRYLANDS = frozenset({TerrainKind.DESERT, TerrainKind.STEPPE, TerrainKind.CANYON})
-WETLANDS = frozenset({TerrainKind.MARSH, TerrainKind.RIVER_VALLEY})
-HIDDEN_TACTICS = frozenset({Tactic.AMBUSH, Tactic.NIGHT_RAID, Tactic.GUERRILLA, Tactic.INFILTRATION})
-GUNS_TACTICS = frozenset({Tactic.ARTILLERY_BARRAGE, Tactic.MISSILE_ATTRITION})
+HILLS = terrains(TerrainTrait.HIGH)
+WOODS = terrains(TerrainTrait.WOODED)
+DRYLANDS = terrains(TerrainTrait.ARID) | terrains(TerrainTrait.ROUGH, without=(TerrainTrait.HIGH,))
+WETLANDS = terrains(TerrainTrait.WET)
+HIDDEN_TACTICS = having(TACTIC_TRAITS, TacticTrait.HIDDEN_TACTICS)
+GUNS_TACTICS = having(TACTIC_TRAITS, TacticTrait.GUNS_TACTICS)
 LARGE_HOST = 5000
-SHORES = frozenset({TerrainKind.COAST, TerrainKind.ISLAND})
-SKIRMISH_TACTICS = frozenset({Tactic.SKIRMISH_HARASS, Tactic.FEINT})
-LINE_TACTICS = frozenset({Tactic.HOLD_LINE, Tactic.SHIELD_WALL})
+SHORES = terrains(TerrainTrait.COASTAL)
+SKIRMISH_TACTICS = having(TACTIC_TRAITS, TacticTrait.SKIRMISH_TACTICS)
+LINE_TACTICS = having(TACTIC_TRAITS, TacticTrait.LINE_TACTICS)
 Armies = list[tuple[EntityRow, ArmyRow]]
 
 
@@ -192,7 +197,7 @@ async def surgeon_skill(ctx: TickContext, army_ids: list[int]) -> int:
     return max([await skill_level(ctx, row.mortal_entity_id, SkillKind.MEDICINE) for row in rows] or [0])
 
 
-AGGRESSIVE = frozenset({CommanderTrait.RECKLESS, CommanderTrait.AGGRESSIVE_ASSAULTER})
+AGGRESSIVE = having(COMMANDER_TRAIT_TRAITS, CommanderTraitTrait.CLASH_AGGRESSIVE)
 
 
 async def standard_borne(ctx: TickContext, army_ids: list[int]) -> bool:
@@ -487,12 +492,12 @@ def wanted_traits(side: Side, *, won: bool, result: BattleResult, ground: Field,
     voidborne = sum(stack.start for stack in side.stacks if stack.spec.family is UnitFamily.SPACE) / max(1, side.start)
     armoured = sum(stack.start for stack in side.stacks if stack.spec.family is UnitFamily.VEHICLE) / max(1, side.start)
     signals = sum(stack.start for stack in side.stacks if stack.spec.family is UnitFamily.ELECTRONIC) / max(1, side.start)
-    assaulting = side.tactic in {Tactic.FRONTAL_ASSAULT, Tactic.WEDGE}
+    assaulting = side.tactic in WANTED_TRAITS_TACTICS
     checks = (
         (won and side.defending and result.outcome in {OutcomeClass.DECISIVE, OutcomeClass.VICTORY}, CommanderTrait.DEFENSIVE_GENIUS),
         (won and assaulting and not side.defending, CommanderTrait.AGGRESSIVE_ASSAULTER),
         (won and mounted >= CAVALRY_SHARE, CommanderTrait.CAVALRY_MASTER),
-        (won and ground.weather in WINTER, CommanderTrait.WINTER_CAMPAIGNER),
+        (won and has_trait(ground.weather, WeatherTrait.SNOW_COVER), CommanderTrait.WINTER_CAMPAIGNER),
         (won and ground.terrain in HILLS, CommanderTrait.HILL_FIGHTER),
         (not won and assaulting, CommanderTrait.RECKLESS),
         (won and result.outcome is OutcomeClass.MASSACRE, CommanderTrait.BRUTAL),

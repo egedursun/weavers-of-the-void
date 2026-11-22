@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.nature_lines import mortal_nature_lines
 from aerona.agents.context.scope import load_scope
+from aerona.catalog.senses import AGENTS, TRACKING
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.cuisine import CommunityDishRow, DishRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
@@ -29,7 +30,7 @@ from aerona.engine.nature.cover import defence_cover, grazing, passage, smothere
 from aerona.engine.nature.islands import IslandTally, drifted_size, keep_islands, spared_kinds
 from aerona.engine.nature.microbes import MicrobeTally, culture_lift, keep_microbes, microbe_factor
 from aerona.engine.nature.seasons import activity, asleep, chilled
-from aerona.engine.nature.senses import AGENTS, TRACKING, SenseTally, seed_senses, sense_score
+from aerona.engine.nature.senses import SenseTally, seed_senses, sense_score
 from aerona.engine.nature.sleepers import SleeperTally, keep_sleepers, lair_factor, raid_factor
 from aerona.engine.nature.symbiosis import SymbiosisBook, SymbiosisTally, form_relations, keep_symbiosis
 from aerona.engine.phases.environment import environment_survey

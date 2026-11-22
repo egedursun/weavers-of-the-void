@@ -1,9 +1,9 @@
+from aerona.catalog.life.cosmos import CAUSE_END
 from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
 from aerona.engine.cosmos import world_end_control as control
-from aerona.engine.cosmos.world_ends import CAUSE_END
 from aerona.services.player import guards
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action

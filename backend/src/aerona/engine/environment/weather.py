@@ -1,19 +1,16 @@
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from aerona.catalog.weather import WEATHER
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.core.total import total
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.environment import TerrainKind, WeatherEffect, WeatherKind
+from aerona.domain.enums.environment import TerrainKind, WeatherDraw, WeatherEffect, WeatherKind
 from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
-COLD_KINDS = frozenset({WeatherKind.SNOW, WeatherKind.BLIZZARD})
-HOT_KINDS = frozenset({WeatherKind.HEAT_WAVE})
-DRY_KINDS = frozenset({WeatherKind.DROUGHT_WIND, WeatherKind.SANDSTORM})
-WET_KINDS = frozenset({WeatherKind.RAIN, WeatherKind.DOWNPOUR, WeatherKind.STORM, WeatherKind.FOG, WeatherKind.HAIL})
-LIQUID_KINDS = frozenset({WeatherKind.RAIN, WeatherKind.DOWNPOUR})
 SKY_DARKNESS = frozenset({SkyEventKind.ECLIPSE, SkyEventKind.BLACK_SUN})
 
 
@@ -52,43 +49,73 @@ def _ramp(value: float, span: int) -> float:
     return min(1.0, max(0.0, value / max(1, span)))
 
 
+@dataclass(frozen=True)
+class Climate:
+    rules: Rules
+    inputs: WeatherInputs
+    cold: float
+    hot: float
+    dry: float
+    wet: float
+
+
+def aurora_draw(climate: Climate) -> float:
+    settings = climate.rules.weather
+    flare = settings.flare_aurora_pct / PERCENT if SkyEventKind.FLARE in climate.inputs.sky else 0.0
+    return climate.cold * climate.inputs.latitude / PERCENT + flare
+
+
+def magic_draw(climate: Climate) -> float:
+    settings = climate.rules.weather
+    return _ramp(climate.inputs.magic_density - settings.magic_storm_threshold, PERCENT - settings.magic_storm_threshold)
+
+
+def ash_draw(climate: Climate) -> float:
+    settings = climate.rules.weather
+    volcanic = settings.volcanic_ash_pct if climate.inputs.terrain is TerrainKind.VOLCANIC else 0
+    supernova = settings.supernova_ash_pct if SkyEventKind.SUPERNOVA in climate.inputs.sky else 0
+    return (volcanic + supernova) / PERCENT
+
+
+def void_draw(climate: Climate) -> float:
+    settings = climate.rules.weather
+    storm = settings.void_storm_rain_pct / PERCENT if SkyEventKind.VOID_STORM in climate.inputs.sky else 0.0
+    return _ramp(climate.inputs.leakage - settings.void_rain_threshold, PERCENT - settings.void_rain_threshold) + storm
+
+
+DRAWS: Mapping[WeatherDraw, Callable[[Climate], float]] = total(
+    WeatherDraw,
+    {
+        WeatherDraw.COLD: lambda climate: climate.cold,
+        WeatherDraw.HOT: lambda climate: climate.hot,
+        WeatherDraw.DRY: lambda climate: climate.dry,
+        WeatherDraw.DRY_HOT: lambda climate: climate.dry * climate.hot,
+        WeatherDraw.WET: lambda climate: climate.wet,
+        WeatherDraw.WET_LIQUID: lambda climate: climate.wet * (1 - climate.cold),
+        WeatherDraw.CLEAR: lambda climate: 1 + climate.dry,
+        WeatherDraw.EVEN: lambda climate: 1.0,
+        WeatherDraw.AURORA: aurora_draw,
+        WeatherDraw.MAGIC: magic_draw,
+        WeatherDraw.ASH: ash_draw,
+        WeatherDraw.VOID: void_draw,
+        WeatherDraw.ECLIPSE: lambda climate: 1.0 if climate.inputs.sky & SKY_DARKNESS else 0.0,
+    },
+)
+
+
 def weather_weights(rules: Rules, inputs: WeatherInputs) -> dict[WeatherKind, float]:
     settings = rules.weather
     temperature = inputs.temperature + inputs.season_temperature
     rain = clamp_int(inputs.rainfall + inputs.season_rain, 0, PERCENT)
-    cold = _ramp(settings.cold_threshold - temperature, settings.cold_span)
-    hot = _ramp(temperature - settings.hot_threshold, settings.hot_span)
-    dry = _ramp(settings.dry_threshold - rain, settings.dry_span)
-    wet = rain / settings.wet_pivot
-    weights: dict[WeatherKind, float] = {}
-    for kind, spec in WEATHER.items():
-        weight = float(spec.weight(rules))
-        if kind in COLD_KINDS:
-            weight *= cold
-        elif kind in HOT_KINDS:
-            weight *= hot
-        elif kind in DRY_KINDS:
-            weight *= dry * (hot if kind is WeatherKind.SANDSTORM else 1.0)
-        elif kind in WET_KINDS:
-            weight *= wet * ((1 - cold) if kind in LIQUID_KINDS else 1.0)
-        elif kind is WeatherKind.CLEAR:
-            weight *= 1 + dry
-        elif kind is WeatherKind.AURORA:
-            flare = settings.flare_aurora_pct / PERCENT if SkyEventKind.FLARE in inputs.sky else 0.0
-            weight *= cold * inputs.latitude / PERCENT + flare
-        elif kind is WeatherKind.MAGIC_STORM:
-            weight *= _ramp(inputs.magic_density - settings.magic_storm_threshold, PERCENT - settings.magic_storm_threshold)
-        elif kind is WeatherKind.ASH_FALL:
-            volcanic = settings.volcanic_ash_pct if inputs.terrain is TerrainKind.VOLCANIC else 0
-            supernova = settings.supernova_ash_pct if SkyEventKind.SUPERNOVA in inputs.sky else 0
-            weight *= (volcanic + supernova) / PERCENT
-        elif kind is WeatherKind.VOID_RAIN:
-            storm = settings.void_storm_rain_pct / PERCENT if SkyEventKind.VOID_STORM in inputs.sky else 0.0
-            weight *= _ramp(inputs.leakage - settings.void_rain_threshold, PERCENT - settings.void_rain_threshold) + storm
-        elif kind is WeatherKind.ECLIPSE_DARK:
-            weight *= 1.0 if inputs.sky & SKY_DARKNESS else 0.0
-        weights[kind] = max(0.0, weight)
-    return weights
+    climate = Climate(
+        rules,
+        inputs,
+        cold=_ramp(settings.cold_threshold - temperature, settings.cold_span),
+        hot=_ramp(temperature - settings.hot_threshold, settings.hot_span),
+        dry=_ramp(settings.dry_threshold - rain, settings.dry_span),
+        wet=rain / settings.wet_pivot,
+    )
+    return {kind: max(0.0, float(spec.weight(rules)) * DRAWS[spec.draw](climate)) for kind, spec in WEATHER.items()}
 
 
 def weather_of(rules: Rules, kind: WeatherKind) -> Weather:

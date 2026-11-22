@@ -58,3 +58,18 @@ def test_a_table_of_phrase_variants_is_caught_and_a_pair_of_labels_is_not() -> N
         "}\n"
     )
     assert [(item.line, item.name) for item in checker().pools({Path("lines.py"): source})] == [(1, "PHRASES")]
+
+
+def test_a_per_kind_sentence_table_in_a_catalogue_is_caught() -> None:
+    module = checker()
+    source = (
+        "DANGERS = MappingProxyType(\n"
+        "    {\n"
+        '        DangerSource.BEASTS: DangerSpec("Beasts", "Wild beasts took {count} of {community} in {region}", None),\n'
+        '        DangerSource.BANDITS: DangerSpec("Bandits", "Bandits preyed on {community} along the roads of {region}", None),\n'
+        "    }\n"
+        ")\n"
+        'LABELS = MappingProxyType({DangerSource.BEASTS: DangerSpec("Beasts", None), DangerSource.BANDITS: DangerSpec("Bandits", None)})\n'
+    )
+    assert [(item.line, item.name) for item in module.pools({module.CATALOGUE / "dangers.py": source})] == [(1, "DANGERS")]
+    assert module.pools({module.CATALOGUE / "incident_kinds" / "nature.py": source}) == []

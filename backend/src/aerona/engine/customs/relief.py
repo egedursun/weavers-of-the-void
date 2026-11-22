@@ -1,18 +1,19 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import COOP_PURPOSE_TRAITS, having
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.customs import CommuteRow, CooperativeRow, PoorReliefRow, TavernRow, WelfareRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.domain.enums.customs import CoopPurpose
+from aerona.domain.enums.life_traits import CoopPurposeTrait
 from aerona.engine.primitives.stats import stat_or
 from aerona.rules.registry import Rules
 
 TEN = 10
-RELIEVING = frozenset({CoopPurpose.INSURANCE, CoopPurpose.BURIAL, CoopPurpose.CREDIT})
+RELIEVING = having(COOP_PURPOSE_TRAITS, CoopPurposeTrait.RELIEVING)
 
 
 async def houses_in(session: AsyncSession, town_id: int) -> int:

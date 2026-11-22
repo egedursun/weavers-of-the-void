@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.place_terrain import DEFAULT_KIND, TERRAIN_KINDS, height_of, kind_spec
+from aerona.catalog.place_terrain import DEFAULT_KIND, height_of, kind_spec
+from aerona.catalog.terrain import TERRAIN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -98,7 +99,7 @@ def typed_kind(place: EntityRow, ground: PlaceEnvironmentRow | None, region: Reg
     found = next((kind for sign, kind in signs if sign), None)
     if found is not None:
         return found
-    return TERRAIN_KINDS.get(region.dominant_terrain, DEFAULT_KIND) if region is not None else DEFAULT_KIND
+    return TERRAIN[region.dominant_terrain].place_kind if region is not None else DEFAULT_KIND
 
 
 async def temples_at(session: AsyncSession, place_ids: list[int]) -> dict[int, int]:

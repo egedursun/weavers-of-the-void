@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import anatomy_of
+from aerona.catalog.conditions import MADNESS_CONDITIONS
 from aerona.catalog.creature_anatomy import MONSTER_PLANS, MONSTER_SIZES
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
@@ -18,7 +19,7 @@ from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, CaptiveRow, SiegeRow
 from aerona.domain.enums.affliction import PackageKind
-from aerona.domain.enums.body import MADNESS_CONDITIONS, BodyPlan, ConditionKind, DamageType, TissueKind
+from aerona.domain.enums.body import BodyPlan, ConditionKind, DamageType, TissueKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import MagicSchool, MagicSource
 from aerona.domain.enums.ecology import (

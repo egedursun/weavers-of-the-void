@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.collective import HERALDIC_NAMES
+from aerona.catalog.life.polity import INHERIT_CLAIMS_CLAIM_BASISS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
@@ -280,7 +281,7 @@ async def inherit_claims(ctx: TickContext, child: EntityRow, parent_id: int) -> 
                 polity_entity_id=claim.polity_entity_id,
                 office=claim.office,
                 strength=strength,
-                basis=claim.basis if claim.basis in {ClaimBasis.CONQUEST, ClaimBasis.DIVINE} else ClaimBasis.INHERITANCE,
+                basis=claim.basis if claim.basis in INHERIT_CLAIMS_CLAIM_BASISS else ClaimBasis.INHERITANCE,
                 pressed=False,
                 since_epoch=ctx.epoch,
                 locked=[],

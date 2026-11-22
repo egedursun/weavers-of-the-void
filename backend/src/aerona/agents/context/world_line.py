@@ -18,6 +18,7 @@ from aerona.catalog.cosmography import (
     WORLD_AGE_LABELS,
 )
 from aerona.catalog.kinds.terraform import TERRAFORM_AIMS
+from aerona.catalog.life.domain import PERIODIC_BODIES
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.core.grammar import an, several, spoken
@@ -27,7 +28,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.physics import CosmicFeatureRow, ImpactEventRow, TerraformingRow, WorldLifeRow, WorldPhysicsRow
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.physics import PERIODIC_BODIES, ImpactOutcome
+from aerona.domain.enums.physics import ImpactOutcome
 from aerona.engine.cosmos.orbits import eclipse_period, next_epoch
 from aerona.engine.cosmos.placement import Cosmography, cosmography_of
 from aerona.engine.phases.world_age import golden_age_status

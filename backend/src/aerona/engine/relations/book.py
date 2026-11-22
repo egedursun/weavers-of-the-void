@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.relations import BOND_OF, ROMANTIC_KINDS_RELATION_TYPES
+from aerona.catalog.life_traits import FACTION_KIND_TRAITS, RELATION_TYPE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.key_index import index_spec, keyed_rows
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -13,7 +15,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.relations import RelationshipRow, SocialCircleRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.life_traits import FactionKindTrait, RelationTypeTrait
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import MoodState
 from aerona.domain.enums.relations import CircleKind, RelationType
@@ -26,17 +28,8 @@ from aerona.rules.registry import Rules
 
 R = RelationType
 RELATIONS_KEY = "relations"
-FRIENDLY = frozenset({R.FRIEND, R.CLOSE_FRIEND, R.BEST_FRIEND, R.CONFIDANT})
-WARLIKE = frozenset(
-    {
-        FactionKind.WARRIOR_ORDER,
-        FactionKind.MERCENARY_COMPANY,
-        FactionKind.BANDITS,
-        FactionKind.PIRATES,
-        FactionKind.ROUTE_RAIDERS,
-        FactionKind.PIRATE_CONFEDERACY,
-    }
-)
+FRIENDLY = having(RELATION_TYPE_TRAITS, RelationTypeTrait.FRIENDLY)
+WARLIKE = having(FACTION_KIND_TRAITS, FactionKindTrait.WARLIKE)
 MOODS = {
     MoodState.ELATED: 2,
     MoodState.CONTENT: 1,
@@ -45,14 +38,6 @@ MOODS = {
     MoodState.UNHAPPY: -2,
     MoodState.MISERABLE: -3,
     MoodState.BROKEN: -4,
-}
-BOND_OF = {
-    R.LOVER: BondKind.LOVES,
-    R.RIVAL: BondKind.RIVAL,
-    R.NEMESIS: BondKind.RIVAL,
-    R.ENEMY: BondKind.ENEMY,
-    R.BEST_FRIEND: BondKind.COMPANION,
-    R.CLOSE_FRIEND: BondKind.COMPANION,
 }
 
 
@@ -185,7 +170,7 @@ def romantic_kinds(reading: Reading) -> set[RelationType]:
         kinds.add(R.LOVER)
     elif reading.above(row.romance, table.crush_at, R.CRUSH):
         kinds.add(R.CRUSH)
-    if R.LOVER not in kinds and reading.had & {R.LOVER, R.EX_LOVER}:
+    if R.LOVER not in kinds and reading.had & ROMANTIC_KINDS_RELATION_TYPES:
         kinds.add(R.EX_LOVER)
     return kinds
 

@@ -2,6 +2,7 @@ from collections.abc import Callable, Mapping
 
 from sqlalchemy import select
 
+from aerona.catalog.life.living import DEPTH
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.total import total
@@ -15,7 +16,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.living import HostPlacement, HostRelation
+from aerona.domain.enums.living import HostRelation
 from aerona.domain.enums.mind import MemoryKind, SkillSource
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
@@ -44,7 +45,6 @@ HOST_HEALTH: Mapping[HostRelation, Callable[[SymbiontRules], int]] = total(
         HostRelation.CONTROLLING: lambda table: -table.parasite_harm,
     },
 )
-DEPTH = total(HostPlacement, {HostPlacement.SKIN: 1, HostPlacement.BLOOD: 2, HostPlacement.ORGAN: 3, HostPlacement.NERVE: 4, HostPlacement.MIND: 5})
 
 
 async def bank_the_wild(ctx: TickContext, bank: GeneBankRow, atlas: RegionAtlas) -> GeneBankSampleRow | None:

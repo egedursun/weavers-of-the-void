@@ -3,6 +3,9 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.domain import ENGINE_OF_KIND
+from aerona.catalog.life.phases import BASE_STATS_FACTION_KINDS, BASE_STATS_FACTION_KINDS_2
+from aerona.catalog.life_traits import TECHNIQUE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import FACTION_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, ValidationFailedError
@@ -17,7 +20,8 @@ from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.faction import ENGINE_OF_KIND, FactionKind
+from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.life_traits import TechniqueTrait
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import DistrictKind
@@ -61,8 +65,8 @@ class FactionBlueprint:
         return self.modern if self.modern is not None and era_order(era) >= era_order(MODERN_FROM) else self.suffix
 
 
-ENGINEERING = frozenset({Technique.STEAM_POWER, Technique.MACHINE_TOOLS, Technique.RAILWAYS})
-FINANCE = frozenset({Technique.BANKING, Technique.JOINT_STOCK})
+ENGINEERING = having(TECHNIQUE_TRAITS, TechniqueTrait.ENGINEERING)
+FINANCE = having(TECHNIQUE_TRAITS, TechniqueTrait.FINANCE)
 
 BLUEPRINTS = (
     FactionBlueprint(K.MERCHANT_GUILD, "trade association", "Guild", "merchants", "Trade Association"),
@@ -109,9 +113,9 @@ def blueprint(kind: FactionKind) -> FactionBlueprint:
 
 def base_stats(rules: Rules, kind: FactionKind) -> tuple[int, int, int]:
     factions = rules.factions
-    if kind in {K.MERCHANT_GUILD, K.CRAFT_GUILD, K.WANDERING_MARKET}:
+    if kind in BASE_STATS_FACTION_KINDS:
         return factions.guild_strength, factions.guild_wealth, factions.guild_sway
-    if kind in {K.PRIESTHOOD, K.SCHOLARS_ACADEMY, K.SECRET_SOCIETY, K.NOBLE_COUNCIL, K.SOCIAL_CIRCLE}:
+    if kind in BASE_STATS_FACTION_KINDS_2:
         return factions.council_strength, factions.council_wealth, factions.council_sway
     return factions.order_strength, factions.order_wealth, factions.order_sway
 

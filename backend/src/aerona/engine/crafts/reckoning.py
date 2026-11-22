@@ -1,14 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import KNOWLEDGE_BRANCH_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import NumberSystemRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.crafts import Notation
+from aerona.domain.enums.life_traits import KnowledgeBranchTrait
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import people_of
 from aerona.rules.registry import Rules
 
-RECKONED = frozenset({KnowledgeBranch.ASTRONOMY, KnowledgeBranch.ARCHITECTURE, KnowledgeBranch.TRADE, KnowledgeBranch.SEAFARING})
+RECKONED = having(KNOWLEDGE_BRANCH_TRAITS, KnowledgeBranchTrait.RECKONED)
 
 
 async def system_of(session: AsyncSession, holder_id: int | None) -> NumberSystemRow | None:

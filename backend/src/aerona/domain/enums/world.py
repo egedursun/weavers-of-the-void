@@ -38,6 +38,13 @@ class WorldType(StrEnum):
     METHANE = "methane"
 
 
+class SurfaceLiquid(StrEnum):
+    WATER = "water"
+    METHANE = "methane"
+    MOLTEN_ROCK = "molten_rock"
+    NONE = "none"
+
+
 class Gravity(StrEnum):
     LOW = "low"
     NORMAL = "normal"

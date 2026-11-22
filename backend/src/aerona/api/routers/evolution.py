@@ -9,6 +9,7 @@ from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.evolution import (
     CarrierView,
     CureResearchView,
+    CycleFlowView,
     HerdRef,
     LineageMarkView,
     NodeEvolutionView,
@@ -25,7 +26,10 @@ from aerona.api.schemas.evolution import (
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.catalog.evolution import STAGE_COVER, trophic_level
+from aerona.catalog.planetary_cycles import CYCLES, SOURCE_LABELS, CycleFlow, cycle_label
+from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import NotFoundError
+from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -41,6 +45,7 @@ from aerona.db.tables.evolution import (
     TrophicLevelRow,
     WorldCycleRow,
 )
+from aerona.engine.cosmos.cycles import BALANCE
 from aerona.engine.disease.research import institutions
 from aerona.rules.registry import Rules
 
@@ -185,22 +190,31 @@ def pathogen_view(profile: DiseaseProfileRow | None) -> PathogenView | None:
     )
 
 
-def cycle_view(row: WorldCycleRow | None) -> WorldCycleView | None:
-    if row is None:
-        return None
-    return WorldCycleView(
-        carbon=row.carbon,
-        water=row.water,
-        nutrients=row.nutrients,
-        carbon_in=row.carbon_in,
-        carbon_out=row.carbon_out,
-        water_in=row.water_in,
-        water_out=row.water_out,
-        nutrients_in=row.nutrients_in,
-        nutrients_out=row.nutrients_out,
-        updated_epoch=row.updated_epoch,
-        locked=list(row.locked),
-    )
+def flow_views(rules: Rules, flows: tuple[CycleFlow, ...]) -> list[CycleFlowView]:
+    return [CycleFlowView(source=flow.source, source_label=SOURCE_LABELS[flow.source], rate=flow.rate(rules)) for flow in flows]
+
+
+async def cycle_views(session: AsyncSession, rules: Rules, node_id: int) -> list[WorldCycleView]:
+    world = await session.get(WorldRow, node_id)
+    if world is None:
+        return []
+    rows = {row.cycle: row for row in await session.scalars(select(WorldCycleRow).where(WorldCycleRow.world_id == node_id).order_by(WorldCycleRow.cycle))}
+    liquid = WORLD_TYPES[world.world_type].liquid
+    return [
+        WorldCycleView(
+            cycle=cycle,
+            label=cycle_label(cycle, liquid),
+            stock=row.stock if row is not None else BALANCE,
+            inflow=row.inflow if row is not None else 0,
+            outflow=row.outflow if row is not None else 0,
+            sources=flow_views(rules, spec.sources),
+            sinks=flow_views(rules, spec.sinks),
+            updated_epoch=row.updated_epoch if row is not None else 0,
+            held=row is not None and "stock" in row.locked,
+        )
+        for cycle, spec in CYCLES.items()
+        for row in (rows.get(cycle),)
+    ]
 
 
 async def research_of(session: AsyncSession, node_id: int) -> list[CureResearchRow]:
@@ -257,5 +271,5 @@ async def node_evolution(services: ServicesDep, node_id: NodeId) -> NodeEvolutio
                 ),
             ),
             research=await research_views(session, services.rules.current, await research_of(session, node_id)),
-            cycle=cycle_view(await session.get(WorldCycleRow, node_id)),
+            cycles=await cycle_views(session, services.rules.current, node_id),
         )

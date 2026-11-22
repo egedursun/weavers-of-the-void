@@ -1,12 +1,13 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import STANDING_STATES, UNFINISHED_STATES
 from aerona.core.grammar import agree, several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import ConstructionRow, StructureProfileRow, StructureStaffRow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.structure import STANDING_STATES, UNFINISHED_STATES, ConstructionState, ConstructionStatus
+from aerona.domain.enums.structure import ConstructionState, ConstructionStatus
 from aerona.engine.structures.profiles import resolved_of
 
 

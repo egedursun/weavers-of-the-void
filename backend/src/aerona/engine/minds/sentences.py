@@ -1,9 +1,11 @@
 from sqlalchemy import delete, select, update
 
+from aerona.catalog.life_traits import PUNISHMENT_KIND_TRAITS, having
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.minds import MindProfileRow, MindStateRow, MindWillChangeRow
 from aerona.db.tables.networks import NetworkNodeRow
 from aerona.domain.enums.constructs import MindWill
+from aerona.domain.enums.life_traits import PunishmentKindTrait
 from aerona.domain.enums.minds import WillCause
 from aerona.domain.enums.mortal import PunishmentKind
 from aerona.domain.enums.polity import LawKind
@@ -13,9 +15,7 @@ from aerona.engine.minds.profiles import WILL_ORDER, is_made, will_rank
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.records import retire_in
 
-MIND_PUNISHMENTS = frozenset(
-    {PunishmentKind.FORCED_DORMANCY, PunishmentKind.FORCED_EDIT, PunishmentKind.SEAT_CONFINEMENT, PunishmentKind.STATE_SEIZURE, PunishmentKind.ERASURE}
-)
+MIND_PUNISHMENTS = having(PUNISHMENT_KIND_TRAITS, PunishmentKindTrait.MIND_PUNISHMENTS)
 
 
 async def forced_edit(ctx: TickContext, mind: MindProfileRow) -> None:

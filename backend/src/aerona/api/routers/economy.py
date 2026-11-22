@@ -35,11 +35,11 @@ from aerona.api.schemas.economy import (
     WorkshopView,
 )
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.goods_tables import ORIGIN_SOURCE
 from aerona.catalog.materials import MATERIALS
 from aerona.catalog.production import CHAIN_STEPS, WORKSHOP_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
-from aerona.db.kind_concepts.nature import ORIGIN_SOURCE
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import ResourceMechanicRow

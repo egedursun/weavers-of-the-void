@@ -1,5 +1,7 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.made import ADMIT_BY_ENTRY_REALM_ENTRYS
+from aerona.catalog.life_traits import MIND_UPKEEP_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cosmography import DimensionRow
@@ -10,6 +12,7 @@ from aerona.db.tables.networks import NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import ENDED_STATUSES, EntityStatus, EntityType
+from aerona.domain.enums.life_traits import MindUpkeepTrait
 from aerona.domain.enums.made import RealmAwareness, RealmEntry, RealmPurpose
 from aerona.domain.enums.minds import MindSeat, MindUpkeep
 from aerona.domain.enums.modifier import IncidentRole
@@ -27,7 +30,7 @@ from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_hal
 from aerona.engine.primitives.queries import connect
 from aerona.engine.recording.record import StepDraft, record
 
-SELF_KEPT = frozenset({MindUpkeep.NONE, MindUpkeep.PLACE})
+SELF_KEPT = having(MIND_UPKEEP_TRAITS, MindUpkeepTrait.REALMS_SELF_KEPT)
 
 
 async def host_down(ctx: TickContext, realm: MadeRealmRow) -> bool:
@@ -142,7 +145,7 @@ async def escapes(ctx: TickContext, realm: MadeRealmRow, minds: list[MindProfile
 
 
 async def admit_by_entry(ctx: TickContext, realm: MadeRealmRow, keeper: EntityRow | None) -> int:
-    if keeper is None or realm.entry not in {RealmEntry.DEATH, RealmEntry.BIRTH}:
+    if keeper is None or realm.entry not in ADMIT_BY_ENTRY_REALM_ENTRYS:
         return 0
     kin = (EntityRow.entity_type == EntityType.MORTAL, EntityRow.affiliated_entity_id == keeper.id)
     if realm.entry is RealmEntry.BIRTH:

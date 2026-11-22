@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import STANDING_STATES
 from aerona.catalog.means import BUILDING, WATER_WORKS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import NodeMaterialRow
@@ -11,7 +12,6 @@ from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.integrity import HarmForce
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.structure import STANDING_STATES
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.means.strength import fire_loss

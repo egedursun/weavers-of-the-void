@@ -2,6 +2,7 @@ from collections import Counter
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import ALLOCATION_MODE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyTenetRow
 from aerona.db.tables.estates import MovementProfileRow
@@ -11,7 +12,8 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import IdeologyTenet
 from aerona.domain.enums.faction import MovementCause
-from aerona.domain.enums.orders import AllocationMode, Compensation, OrderLabour, OwnershipRegime, TransitionKind
+from aerona.domain.enums.life_traits import AllocationModeTrait
+from aerona.domain.enums.orders import Compensation, OrderLabour, OwnershipRegime, TransitionKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.orders.economy import OrderTally, begin_transition, open_transition, towns_of_realm
@@ -20,7 +22,7 @@ from aerona.engine.primitives.queries import living_entity
 BOUND_LABOUR = frozenset({OrderLabour.SERF, OrderLabour.ENSLAVED, OrderLabour.BOUND, OrderLabour.CORVEE})
 HELD_LAND = frozenset({OwnershipRegime.RULER, OwnershipRegime.TEMPLE, OwnershipRegime.PRIVATE, OwnershipRegime.COMPANY})
 CENTRAL_LAND = frozenset({OwnershipRegime.STATE, OwnershipRegime.RULER, OwnershipRegime.COMMUNITY})
-PLANNED = frozenset({AllocationMode.COMMAND, AllocationMode.REDISTRIBUTION})
+PLANNED = having(ALLOCATION_MODE_TRAITS, AllocationModeTrait.STATE_BUYERS)
 FAILURES = ("economy.plan_shortfall", "economy.centre_collapsed")
 
 

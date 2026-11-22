@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.living import FEED_OF
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.ecology import SpeciesRangeRow
@@ -9,7 +10,6 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.ecology import Temperament
-from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.living import CultivationMethod, Fertility, GrowthStage, HostPlacement, HostRelation, LineTrait, Metabolism
 from aerona.domain.enums.modifier import IncidentRole
@@ -21,8 +21,6 @@ from aerona.engine.living.traits import scaled, traits_of
 from aerona.engine.powers.control import PowerDraft, create_power
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.recording.record import record
-
-FEED_OF = {Metabolism.FEEDING: CommodityKind.FODDER, Metabolism.CHEMICAL: CommodityKind.ORE}
 
 
 async def node_exists(ctx: TickContext, node_id: int | None, what: str) -> None:

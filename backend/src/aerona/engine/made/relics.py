@@ -1,13 +1,13 @@
 from sqlalchemy import select
 
-from aerona.core.total import partial
+from aerona.catalog.life.made import DECLINE, STANCE_USE
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import MadeRelicRow, SalvageSiteRow
 from aerona.db.tables.networks import NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.eras import TechFamily
-from aerona.domain.enums.made import RelicStance, RelicState, RelicUse
+from aerona.domain.enums.made import RelicState, RelicUse
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.augments import seek_enhancements
 from aerona.engine.context import TickContext
@@ -19,13 +19,6 @@ from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import record
 from aerona.engine.technology.profiles import family_level
-
-DECLINE = {RelicState.WORKING: RelicState.FAILING, RelicState.FAILING: RelicState.BROKEN}
-STANCE_USE = partial(
-    RelicStance,
-    {RelicStance.SACRED: RelicUse.REVERED, RelicStance.FORBIDDEN: RelicUse.FEARED, RelicStance.HERITAGE: RelicUse.DISPLAYED},
-    without={RelicStance.TOOL},
-)
 
 
 async def holder_of(ctx: TickContext, thing: EntityRow) -> EntityRow | None:

@@ -20,14 +20,14 @@ TIER_CAPABILITY = total(
             checked_by=(),
             used_by=(
                 "catalog.civilization.TIER_UNLOCKS",
+                "catalog.life.phases.INTENT_CAPABILITY",
+                "catalog.life.tools.INTENT_TIERS",
                 "engine.interworld.migrations.blocked",
                 "engine.phases.travel.choose_intent",
-                "engine.phases.travel.send_expedition",
-                "tools.mortal.cosmos.INTENT_TIERS",
             ),
         ),
         TierCapability.CONQUEST: Defined(
-            "Conquest", checked_by=(), used_by=("catalog.civilization.TIER_UNLOCKS", "engine.phases.travel.send_expedition", "tools.mortal.cosmos.INTENT_TIERS")
+            "Conquest", checked_by=(), used_by=("catalog.civilization.TIER_UNLOCKS", "catalog.life.phases.INTENT_CAPABILITY", "catalog.life.tools.INTENT_TIERS")
         ),
         TierCapability.ROUTE_SEARCH: Defined(
             "Route search",

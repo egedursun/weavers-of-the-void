@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.daily_shapes import SERVICE_COST_PCT, SERVICE_ENDING
+from aerona.catalog.life_traits import LEISURE_KIND_TRAITS, LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.customs import TimeBudgetRow
 from aerona.db.tables.daily_life import CareCustomRow, DomesticServiceRow, HouseworkRow, LeisurePursuitRow, SpaceNormRow
@@ -16,6 +17,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.daily_life import LeisureKind, NormKind, ServiceTerms, WashFrequency, WashPlace, WasteHandling
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.genetics import HouseholdRole
+from aerona.domain.enums.life_traits import LeisureKindTrait, LifeStageTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
@@ -30,9 +32,9 @@ from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 
 TEN = 10
-YOUNG = frozenset({LifeStage.INFANT, LifeStage.CHILD, LifeStage.YOUTH})
-CARED_FOR = frozenset({LifeStage.INFANT, LifeStage.CHILD, LifeStage.ELDER, LifeStage.ANCIENT})
-TRAVEL_PURSUITS = frozenset({LeisureKind.TOURISM, LeisureKind.EXCURSION})
+YOUNG = having(LIFE_STAGE_TRAITS, LifeStageTrait.GROWING)
+CARED_FOR = having(LIFE_STAGE_TRAITS, LifeStageTrait.CARED_FOR)
+TRAVEL_PURSUITS = having(LEISURE_KIND_TRAITS, LeisureKindTrait.TRAVEL_PURSUITS)
 WASH_KEEPING = {WashFrequency.NONE: 0, WashFrequency.BY_RITE: 1, WashFrequency.SEASONAL: 1, WashFrequency.WEEKLY: 2, WashFrequency.DAILY: 3}
 WASTE_KEEPING = {
     WasteHandling.NONE: 0,

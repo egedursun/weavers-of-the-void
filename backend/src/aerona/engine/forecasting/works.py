@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.forecasting import NEEDS
+from aerona.catalog.life_traits import OBSERVATION_METHOD_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.climes import MonsoonSeasonRow
 from aerona.db.tables.culture import HolderLevelRow
@@ -15,6 +17,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
+from aerona.domain.enums.life_traits import ObservationMethodTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -31,8 +34,7 @@ from aerona.engine.recording.terms import explaining_alone, term
 from aerona.engine.services.community_relations import change_relation
 from aerona.rules.registry import Rules
 
-M = ObservationMethod
-TRUSTED_BY_FAITH = frozenset({M.SIGHT, M.LORE, M.ALMANAC, M.DIVINATION, M.POWER})
+TRUSTED_BY_FAITH = having(OBSERVATION_METHOD_TRAITS, ObservationMethodTrait.TRUSTED_BY_FAITH)
 AIM_WEATHER: dict[WeatherAim, WeatherKind] = {
     WeatherAim.RAIN: WeatherKind.RAIN,
     WeatherAim.DRY: WeatherKind.DROUGHT_WIND,
@@ -56,14 +58,6 @@ LEVELS: tuple[tuple[ObservationMethod, KnowledgeBranch, int], ...] = (
 )
 
 
-NEEDS: dict[WeatherWorkMethod, KnowledgeBranch] = {
-    WeatherWorkMethod.RITE: KnowledgeBranch.MAGIC,
-    WeatherWorkMethod.POWER: KnowledgeBranch.MAGIC,
-    WeatherWorkMethod.SEEDING: KnowledgeBranch.AGRICULTURE,
-    WeatherWorkMethod.DIVERSION: KnowledgeBranch.ARCHITECTURE,
-    WeatherWorkMethod.MADE_STRUCTURE: KnowledgeBranch.ARCHITECTURE,
-    WeatherWorkMethod.LIVING_CRAFT: KnowledgeBranch.BIOMANCY,
-}
 EPOCH_STRENGTH = 25
 
 

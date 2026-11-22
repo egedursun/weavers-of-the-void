@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.catalog.life.tools import SABOTAGE_SKILL_KINDS
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -124,7 +125,7 @@ async def sabotage(call: MortalCall, args: SabotageInput) -> str:
         await fail_with_candidates(call, MortalResult.TOO_FAR, SABOTAGE_TARGETS)
     guile = scaled_by(await effect_of(call.session, call.me.id, TraitEffect.DECEIT, call.rules.traits.effect_scale_pct))
     cunning = await wits_of(call) * guile + call.die(tools.sabotage_die, "cunning")
-    await practised(call, (SkillKind.INTRIGUE, SkillKind.DECEPTION), call.rules.skills.preach_xp)
+    await practised(call, SABOTAGE_SKILL_KINDS, call.rules.skills.preach_xp)
     watch = first_stat(target, WATCH_CHAIN, tools.default_stat) + call.die(tools.sabotage_die, "watch")
     caught = watch > cunning + tools.sabotage_caught_margin
     call.target(target.id)

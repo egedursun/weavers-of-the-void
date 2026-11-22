@@ -4,12 +4,14 @@ from dataclasses import dataclass, field, replace
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.phases import DUEL_ENDINGS, DUEL_FATES, END_WAR_BY_DECREE_WAR_ENDINGS, SACKED_SACK_CHOICES
+from aerona.catalog.life.services import ENDING_LABELS
+from aerona.catalog.life_traits import STARVATION_STAGE_TRAITS, having
 from aerona.catalog.mind import COMMAND_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import BATTLE_NAME_TEMPLATE, SIEGE_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.core.grammar import several, spoken
-from aerona.core.total import total
 from aerona.db.faction_kinds import kind_of
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.chronicle import ChronicleRepository, caused_by
@@ -33,8 +35,9 @@ from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, Ent
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.life_traits import StarvationStageTrait
 from aerona.domain.enums.limits import PERCENT_MAX
-from aerona.domain.enums.military import BattlePhase, CasualtyFate, CommandArea, DuelContext, DuelEnd, OutcomeClass, SackChoice, Stance, StarvationStage
+from aerona.domain.enums.military import BattlePhase, CasualtyFate, CommandArea, DuelContext, DuelEnd, OutcomeClass, SackChoice, Stance
 from aerona.domain.enums.mind import ActKind, MemoryKind, ThoughtKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.renown import ReputationAxis
@@ -164,7 +167,7 @@ from aerona.engine.services.war import (
     world_war_limit,
 )
 from aerona.engine.services.war_geography import Neighbourhood
-from aerona.engine.services.war_resolution import ENDING_LABELS, WarSettlement, close_stale_wars, end_war, settle_peace
+from aerona.engine.services.war_resolution import WarSettlement, close_stale_wars, end_war, settle_peace
 from aerona.engine.urban.morphology import siege_of
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
@@ -1001,26 +1004,7 @@ async def _mark_ground(ctx: TickContext, ground: BattleGround, gap: float, outco
         await scar_region(ctx.session, ctx.rules, region, ScarKind.HAUNTED, settings.haunted_depth)
 
 
-DUEL_FATES: Mapping[DuelEnd, CasualtyFate] = total(
-    DuelEnd,
-    {
-        DuelEnd.YIELD: CasualtyFate.WOUNDED,
-        DuelEnd.DISARM: CasualtyFate.WOUNDED,
-        DuelEnd.CRIPPLED: CasualtyFate.MAIMED,
-        DuelEnd.DEATH: CasualtyFate.KILLED,
-        DuelEnd.EXHAUSTION: CasualtyFate.WOUNDED,
-        DuelEnd.UNCONSCIOUS: CasualtyFate.WOUNDED,
-    },
-)
-DUEL_ENDINGS = {
-    DuelEnd.YIELD: "{loser} yielded",
-    DuelEnd.DISARM: "{loser} lost the weapon and yielded",
-    DuelEnd.CRIPPLED: "{loser} was crippled",
-    DuelEnd.DEATH: "{loser} died",
-    DuelEnd.EXHAUSTION: "both were spent and {winner} stood the steadier",
-    DuelEnd.UNCONSCIOUS: "{loser} lost consciousness",
-}
-HUNGRY = frozenset({StarvationStage.FAMINE, StarvationStage.TABOO_BROKEN})
+HUNGRY = having(STARVATION_STAGE_TRAITS, StarvationStageTrait.HUNGRY)
 GREAT_CLASSES = frozenset({OutcomeClass.DECISIVE, OutcomeClass.MASSACRE, OutcomeClass.ROUT})
 
 
@@ -1203,7 +1187,7 @@ async def _sacked(
     homeward = [March(army, besieged, await profile_of(ctx, army, besieged), None, False) for owner, (army, _) in armies.items() if owner == besieged.id]
     choice = await sack_choice(ctx, siege, attacker, armies[attacker.id][1].commander_entity_id) if siege is not None else SackChoice.SACK
     ctx.count("sack_dead", await sack(ctx, besieged, profile, homeward=homeward, victor=attacker, siege=siege, choice=choice))
-    if siege is not None and choice in {SackChoice.SACK, SackChoice.RAZE}:
+    if siege is not None and choice in SACKED_SACK_CHOICES:
         await terror(ctx, siege.war_id, attacker, besieged, choice.value)
     ctx.count("temple_loot", await loot_temples(ctx, besieged, attacker))
 
@@ -2162,7 +2146,7 @@ async def grant_victory(ctx: TickContext, war_id: int, victor_id: int) -> WarSet
 
 
 async def end_war_by_decree(ctx: TickContext, war_id: int, ending: WarEnding = WarEnding.PEACE) -> WarSettlement:
-    if ending in (WarEnding.VICTORY, WarEnding.CONQUEST, WarEnding.TRIBUTE):
+    if ending in END_WAR_BY_DECREE_WAR_ENDINGS:
         raise ValidationFailedError("Grant a victory to a side instead.")
     item = await require_ongoing_war(ctx.session, war_id)
     return await end_war(ctx, item.war, ending, reason=f"{ENDING_LABELS[ending]} by decree", close_hostility=True)

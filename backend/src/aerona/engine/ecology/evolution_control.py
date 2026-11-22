@@ -1,11 +1,14 @@
-from aerona.core.errors import ValidationFailedError
+from sqlalchemy import select
+
+from aerona.constants.units import PERCENT
+from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.total import partial
+from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.evolution import (
     CARRIER_FIELDS,
-    CYCLE_FIELDS,
     MARK_FIELDS,
     RESEARCH_FIELDS,
     RESPONSE_FIELDS,
@@ -22,7 +25,7 @@ from aerona.db.tables.evolution import (
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, PlagueResponse
+from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, PlagueResponse, PlanetaryCycle
 from aerona.domain.enums.happening import LandAct
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.cycles import BALANCE
@@ -35,8 +38,10 @@ from aerona.engine.ecology.lineages import mark
 from aerona.engine.environment.shaping import LandOutcome, reshape_ground
 from aerona.engine.gatherings.control import Values, allowed, entity, found
 from aerona.engine.gods.worship import creator_node_id
+from aerona.engine.primitives.numbers import clamp_int
 
 ECOLOGY_FIELDS = ("keystone", "feral_epoch")
+CYCLE_NAMES = tuple(cycle.value for cycle in PlanetaryCycle)
 OUTCOME_REASONS = partial(
     LandOutcome,
     {
@@ -230,18 +235,39 @@ async def delete_research(ctx: TickContext, institution_id: int, disease_id: int
     await ctx.session.flush()
 
 
-async def edit_cycle(ctx: TickContext, world_id: int, values: Values, release: list[str]) -> WorldCycleRow:
-    row = await ctx.session.get(WorldCycleRow, world_id)
-    if row is None:
-        row = WorldCycleRow(world_id=world_id, carbon=BALANCE, water=BALANCE, nutrients=BALANCE, locked=[])
-        ctx.session.add(row)
-    apply(row, allowed(values, CYCLE_FIELDS, "world cycle"), release)
+async def edit_cycle(ctx: TickContext, world_id: int, values: Values, release: list[str]) -> list[WorldCycleRow]:
+    await found(ctx, WorldRow, world_id, "world")
+    chosen = allowed(values, CYCLE_NAMES, "world cycle")
+    unknown = sorted(set(release) - set(CYCLE_NAMES))
+    if unknown:
+        raise ValidationFailedError(f"A world has no cycle named {', '.join(unknown)}.")
+    rows = await world_cycles(ctx, world_id)
+    for name in sorted({*chosen, *release}):
+        cycle = PlanetaryCycle(name)
+        row = rows.get(cycle)
+        if row is None:
+            row = rows[cycle] = WorldCycleRow(world_id=world_id, cycle=cycle, stock=BALANCE, locked=[])
+            ctx.session.add(row)
+        if name in chosen:
+            row.stock = clamp_int(int(chosen[name]), 0, PERCENT)
+            row.locked = sorted({*row.locked, "stock"})
+        if name in release:
+            row.locked = [key for key in row.locked if key != "stock"]
     await ctx.session.flush()
-    return row
+    return [rows[cycle] for cycle in sorted(rows)]
+
+
+async def world_cycles(ctx: TickContext, world_id: int) -> dict[PlanetaryCycle, WorldCycleRow]:
+    rows = await ctx.session.scalars(select(WorldCycleRow).where(WorldCycleRow.world_id == world_id).order_by(WorldCycleRow.cycle))
+    return {row.cycle: row for row in rows}
 
 
 async def reset_cycle(ctx: TickContext, world_id: int) -> None:
-    await ctx.session.delete(await found(ctx, WorldCycleRow, world_id, "world cycle"))
+    rows = await world_cycles(ctx, world_id)
+    if not rows:
+        raise NotFoundError("That world's cycles are already in balance.")
+    for row in rows.values():
+        await ctx.session.delete(row)
     await ctx.session.flush()
 
 

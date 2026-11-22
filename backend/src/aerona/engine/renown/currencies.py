@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import OUTLAW_KINDS
+from aerona.catalog.life_traits import ACT_KIND_TRAITS, having
 from aerona.catalog.renown import GLORIOUS
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -12,8 +14,9 @@ from aerona.db.tables.museums import MuseumPieceRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.renown import RulerCurrencyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.faction import OUTLAW_KINDS, FactionKind
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.justice import Verdict
+from aerona.domain.enums.life_traits import ActKindTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -26,7 +29,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
 from aerona.engine.renown.book import among
 
-FEARSOME = frozenset({ActKind.EXECUTION, ActKind.MUTILATION, ActKind.TORTURE})
+FEARSOME = having(ACT_KIND_TRAITS, ActKindTrait.FEARSOME)
 PIOUS = frozenset({ReputationAxis.PIETY})
 
 

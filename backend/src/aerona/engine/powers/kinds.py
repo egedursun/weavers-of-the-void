@@ -4,7 +4,10 @@ from collections.abc import Awaitable, Callable, Mapping
 from sqlalchemy import func, select
 
 from aerona.catalog.kinds.power_hazards import POWER_HAZARDS
+from aerona.catalog.life.powers import BLOODLINE_POWER_ORIGINS
+from aerona.catalog.life_traits import POWER_ORIGIN_TRAITS, having
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
@@ -15,11 +18,10 @@ from aerona.db.tables.powers import MagicSystemRow, PowerRegistryRow, PowerRow, 
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.life_traits import PowerOriginTrait
 from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import (
-    GiftedAttitude,
-    GiftedStance,
     Learnability,
     PowerHazard,
     PowerOrigin,
@@ -39,20 +41,10 @@ from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 
 Check = Callable[[TickContext, EntityRow], Awaitable[bool]]
-GIFTED_ORIGINS = frozenset({PowerOrigin.BORN, PowerOrigin.AWAKENED, PowerOrigin.EXPOSURE, PowerOrigin.BLOODLINE})
+GIFTED_ORIGINS = having(POWER_ORIGIN_TRAITS, PowerOriginTrait.GIFTED_ORIGINS)
 MADE_ORIGINS = frozenset({MindOrigin.MADE, MindOrigin.GROWN, MindOrigin.TRAINED, MindOrigin.COPIED, MindOrigin.MERGED, MindOrigin.DIVIDED})
 PACT_BONDS = frozenset({BondKind.WORSHIPS, BondKind.PARTY_TO, BondKind.SWORN_KIN})
 SEASONS = 4
-STANCE_ATTITUDE: Mapping[GiftedStance, GiftedAttitude | None] = total(
-    GiftedStance,
-    {
-        GiftedStance.SACRED: GiftedAttitude.HONOURED,
-        GiftedStance.FORBIDDEN: GiftedAttitude.PERSECUTED,
-        GiftedStance.SUSPECT: GiftedAttitude.FEARED,
-        GiftedStance.TOOL: GiftedAttitude.REGULATED,
-        GiftedStance.SILENT: None,
-    },
-)
 
 
 async def holds_origin(ctx: TickContext, user: EntityRow, origins: frozenset[PowerOrigin]) -> bool:
@@ -60,26 +52,35 @@ async def holds_origin(ctx: TickContext, user: EntityRow, origins: frozenset[Pow
     return found is not None
 
 
+ACCESS: Handlers[SourceAccess, Check] = Handlers(SourceAccess)
+
+
+@ACCESS.on(SourceAccess.ANYONE)
 async def anyone(_ctx: TickContext, _user: EntityRow) -> bool:
     return True
 
 
+@ACCESS.on(SourceAccess.GIFTED)
 async def gifted(ctx: TickContext, user: EntityRow) -> bool:
     return await holds_origin(ctx, user, GIFTED_ORIGINS)
 
 
+@ACCESS.on(SourceAccess.TRAINED)
 async def trained(ctx: TickContext, user: EntityRow) -> bool:
     return await holds_origin(ctx, user, frozenset({PowerOrigin.DISCIPLINE})) or await gifted(ctx, user)
 
 
+@ACCESS.on(SourceAccess.GRANTED)
 async def granted(ctx: TickContext, user: EntityRow) -> bool:
     return await holds_origin(ctx, user, frozenset({PowerOrigin.GRANTED}))
 
 
+@ACCESS.on(SourceAccess.BLOODLINE)
 async def bloodline(ctx: TickContext, user: EntityRow) -> bool:
-    return await holds_origin(ctx, user, frozenset({PowerOrigin.BLOODLINE, PowerOrigin.BORN}))
+    return await holds_origin(ctx, user, frozenset(BLOODLINE_POWER_ORIGINS))
 
 
+@ACCESS.on(SourceAccess.BONDED)
 async def bonded(ctx: TickContext, user: EntityRow) -> bool:
     if await holds_origin(ctx, user, frozenset({PowerOrigin.BONDED})):
         return True
@@ -93,23 +94,13 @@ async def nobody(_ctx: TickContext, _user: EntityRow) -> bool:
     return False
 
 
+@ACCESS.on(SourceAccess.MADE)
 async def made(ctx: TickContext, user: EntityRow) -> bool:
     mind = await ctx.session.get(MindProfileRow, user.id)
     return mind is not None and mind.origin in MADE_ORIGINS
 
 
-ACCESS: Mapping[SourceAccess, Check] = total(
-    SourceAccess,
-    {
-        SourceAccess.ANYONE: anyone,
-        SourceAccess.GIFTED: gifted,
-        SourceAccess.TRAINED: trained,
-        SourceAccess.GRANTED: granted,
-        SourceAccess.BLOODLINE: bloodline,
-        SourceAccess.BONDED: bonded,
-        SourceAccess.MADE: made,
-    },
-)
+ACCESS.seal()
 TEACHING: Mapping[Learnability, Check] = total(
     Learnability,
     {

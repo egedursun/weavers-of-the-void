@@ -1,13 +1,13 @@
 from collections.abc import Mapping
-from types import MappingProxyType
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.civics import OFFICE_GATES, OFFICE_LEVELS
+from aerona.catalog.life.polity import COUNCIL, DEFAULT_POWERS, OFFICE_SKILLS, POWER_SKILLS, SUCCESSION_LINE_SUCCESSION_RULES
+from aerona.catalog.life_traits import OFFICE_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
-from aerona.core.total import partial
 from aerona.db.read_memo import memoized
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
@@ -27,6 +27,7 @@ from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.intrigue import FavourOrigin
+from aerona.domain.enums.life_traits import OfficeKindTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -72,95 +73,7 @@ from aerona.engine.settlement.districts import office_tier
 from aerona.engine.storyteller.pace import paced
 from aerona.rules.registry import Rules
 
-S = SkillKind
-OFFICE_SKILLS = partial(
-    OfficeKind,
-    {
-        OfficeKind.CHANCELLOR: ((S.NEGOTIATION, S.ETIQUETTE, S.ORATORY), "charisma"),
-        OfficeKind.MARSHAL: ((S.TACTICS, S.STRATEGY, S.LEADERSHIP), "strength"),
-        OfficeKind.TREASURER: ((S.ACCOUNTING, S.WRITING), "intellect"),
-        OfficeKind.HIGH_JUDGE: ((S.LAW, S.LORE), "intellect"),
-        OfficeKind.SPYMASTER: ((S.INTRIGUE, S.DECEPTION), "agility"),
-        OfficeKind.GOVERNOR: ((S.LEADERSHIP, S.LAW, S.LOGISTICS), "charisma"),
-        OfficeKind.AMBASSADOR: ((S.NEGOTIATION, S.LANGUAGES, S.ETIQUETTE), "charisma"),
-        OfficeKind.HERALD: ((S.ORATORY, S.ETIQUETTE), "charisma"),
-        OfficeKind.CHAPLAIN: ((S.THEOLOGY, S.ORATORY), "wisdom"),
-        OfficeKind.REGENT: ((S.LEADERSHIP, S.LAW), "charisma"),
-        OfficeKind.COURT_SCHOLAR: ((S.LORE, S.WRITING, S.ASTRONOMY), "intellect"),
-        OfficeKind.HEAD_OF_STATE: ((S.LEADERSHIP, S.ORATORY, S.ETIQUETTE), "charisma"),
-        OfficeKind.HEAD_OF_GOVERNMENT: ((S.ADMINISTRATION, S.LEADERSHIP, S.NEGOTIATION), "intellect"),
-        OfficeKind.MINISTER: ((S.ADMINISTRATION, S.LAW, S.ACCOUNTING), "intellect"),
-        OfficeKind.GENERAL: ((S.STRATEGY, S.TACTICS, S.LOGISTICS), "strength"),
-        OfficeKind.ADMIRAL: ((S.NAVAL_COMBAT, S.NAVIGATION, S.STRATEGY), "wisdom"),
-        OfficeKind.SPEAKER: ((S.ORATORY, S.LAW, S.NEGOTIATION), "charisma"),
-        OfficeKind.CHIEF_SCIENTIST: ((S.SCIENCE, S.COMPUTING, S.ENGINEERING), "intellect"),
-        OfficeKind.JESTER: ((S.ORATORY, S.DECEPTION, S.ETIQUETTE), "charisma"),
-        OfficeKind.WARDEN: ((S.HUNTING, S.TRACKING, S.LAW), "wisdom"),
-    },
-    without={OfficeKind.HEIR_DESIGNATE, OfficeKind.RULER},
-)
-COUNCIL = (
-    OfficeKind.CHANCELLOR,
-    OfficeKind.MARSHAL,
-    OfficeKind.TREASURER,
-    OfficeKind.HIGH_JUDGE,
-    OfficeKind.SPYMASTER,
-    OfficeKind.HERALD,
-    OfficeKind.CHAPLAIN,
-    OfficeKind.COURT_SCHOLAR,
-    OfficeKind.HEAD_OF_STATE,
-    OfficeKind.HEAD_OF_GOVERNMENT,
-    OfficeKind.MINISTER,
-    OfficeKind.GENERAL,
-    OfficeKind.ADMIRAL,
-    OfficeKind.SPEAKER,
-    OfficeKind.CHIEF_SCIENTIST,
-)
-MANY_SEATS = frozenset({OfficeKind.MINISTER, OfficeKind.GENERAL, OfficeKind.ADMIRAL})
-W = OfficePower
-DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
-    {
-        OfficeKind.RULER: (W.RULE,),
-        OfficeKind.HEIR_DESIGNATE: (W.SUCCEED,),
-        OfficeKind.REGENT: (W.RULE,),
-        OfficeKind.CHANCELLOR: (W.NEGOTIATE,),
-        OfficeKind.MARSHAL: (W.COMMAND,),
-        OfficeKind.TREASURER: (W.TREASURY,),
-        OfficeKind.HIGH_JUDGE: (W.JUDGE,),
-        OfficeKind.SPYMASTER: (W.SPY,),
-        OfficeKind.GOVERNOR: (W.GOVERN,),
-        OfficeKind.AMBASSADOR: (W.EMBASSY,),
-        OfficeKind.HERALD: (W.PROCLAIM,),
-        OfficeKind.CHAPLAIN: (W.PREACH,),
-        OfficeKind.COURT_SCHOLAR: (W.RESEARCH,),
-        OfficeKind.HEAD_OF_STATE: (W.PROCLAIM,),
-        OfficeKind.HEAD_OF_GOVERNMENT: (W.GOVERN, W.NEGOTIATE),
-        OfficeKind.MINISTER: (W.TREASURY,),
-        OfficeKind.GENERAL: (W.COMMAND,),
-        OfficeKind.ADMIRAL: (W.COMMAND,),
-        OfficeKind.SPEAKER: (W.PROCLAIM,),
-        OfficeKind.CHIEF_SCIENTIST: (W.RESEARCH,),
-        OfficeKind.JESTER: (W.JEST,),
-        OfficeKind.WARDEN: (W.JUDGE,),
-    }
-)
-POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
-    {
-        W.RULE: OfficeKind.REGENT,
-        W.SUCCEED: OfficeKind.REGENT,
-        W.NEGOTIATE: OfficeKind.CHANCELLOR,
-        W.COMMAND: OfficeKind.MARSHAL,
-        W.TREASURY: OfficeKind.TREASURER,
-        W.JUDGE: OfficeKind.HIGH_JUDGE,
-        W.SPY: OfficeKind.SPYMASTER,
-        W.GOVERN: OfficeKind.GOVERNOR,
-        W.EMBASSY: OfficeKind.AMBASSADOR,
-        W.PROCLAIM: OfficeKind.HERALD,
-        W.PREACH: OfficeKind.CHAPLAIN,
-        W.RESEARCH: OfficeKind.COURT_SCHOLAR,
-        W.JEST: OfficeKind.JESTER,
-    }
-)
+MANY_SEATS = having(OFFICE_KIND_TRAITS, OfficeKindTrait.MANY_SEATS)
 POWER_VALUES = frozenset(item.value for item in OfficePower)
 
 
@@ -442,7 +355,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
     def key(entry: tuple[int, EntityRow]) -> tuple[float, ...]:
         rank, item = entry
         age = stat(item, "age") or 0
-        if rule in {SuccessionRule.PRIMOGENITURE, SuccessionRule.ULTIMOGENITURE}:
+        if rule in SUCCESSION_LINE_SUCCESSION_RULES:
             return (order[item.id] >= len(children), rank, age if rule is SuccessionRule.ULTIMOGENITURE else -age, item.id)
         if rule is SuccessionRule.SENIORITY:
             return (rank, -age, item.id)

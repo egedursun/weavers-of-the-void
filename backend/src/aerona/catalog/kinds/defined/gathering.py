@@ -48,7 +48,7 @@ COLLECTION_KIND = total(
             ),
         ),
         CollectionKind.ABDUCTION: Defined(
-            "Abduction", checked_by=(), used_by=("catalog.incident_kinds.g01_single_combat.KINDS", "engine.history.collections.SCHEME_COLLECTIONS")
+            "Abduction", checked_by=(), used_by=("catalog.incident_kinds.g01_single_combat.KINDS", "catalog.life.history.SCHEME_COLLECTIONS")
         ),
         CollectionKind.BEAST_ATTACK: Defined(
             "Beast attack",
@@ -103,8 +103,8 @@ COLLECTION_KIND = total(
                 "catalog.gatherings.KEY_COLLECTIONS",
                 "catalog.gatherings.NEST_PARENTS",
                 "catalog.incident_kinds.g07_law.KINDS",
+                "catalog.life.history.SCHEME_COLLECTIONS",
                 "engine.collective.accounts.RECORDED",
-                "engine.history.collections.SCHEME_COLLECTIONS",
             ),
         ),
         CollectionKind.SUCCESSION_CRISIS: Defined(
@@ -227,7 +227,7 @@ COLLECTION_KIND = total(
                 "engine.collective.accounts.RECORDED",
             ),
         ),
-        CollectionKind.THEFT: Defined("Theft", checked_by=(), used_by=("catalog.gatherings.KEY_COLLECTIONS", "engine.history.collections.SCHEME_COLLECTIONS")),
+        CollectionKind.THEFT: Defined("Theft", checked_by=(), used_by=("catalog.gatherings.KEY_COLLECTIONS", "catalog.life.history.SCHEME_COLLECTIONS")),
         CollectionKind.INVESTIGATION: Defined(
             "Investigation",
             checked_by=(),

@@ -2,6 +2,7 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from aerona.catalog.life_traits import GATHERING_KIND_TRAITS, having
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
@@ -9,6 +10,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.gathering import GatheringKind
+from aerona.domain.enums.life_traits import GatheringKindTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.gatherings.hold import plan
 from aerona.engine.gatherings.occasions import Occasion
@@ -21,9 +23,7 @@ from aerona.tools.framework.validation import fail, require_canon, require_type
 from aerona.tools.son.support import ensure_in_reach
 
 HOSTS = frozenset({*COMMUNITY_TYPES, EntityType.CULT, EntityType.PLACE})
-SON_KINDS = frozenset(
-    {GatheringKind.FESTIVAL, GatheringKind.PROCESSION, GatheringKind.PILGRIMAGE, GatheringKind.FEAST, GatheringKind.GAMES, GatheringKind.PERFORMANCE}
-)
+SON_KINDS = having(GATHERING_KIND_TRAITS, GatheringKindTrait.SON_KINDS)
 
 
 class ConveneGatheringInput(ToolInput):

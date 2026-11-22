@@ -22,6 +22,7 @@ from aerona.api.schemas.military_depth import (
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.catalog.equipment import FAMILIES
+from aerona.catalog.life.api import GRIEF
 from aerona.catalog.vehicles import FRAMES, MOUNTS, FrameSpec, frame_layout
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -32,7 +33,6 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.vehicles import DesignMountRow
 from aerona.db.tables.warfare import BattleRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.military import records
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
@@ -41,7 +41,6 @@ from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["military"])
 Id = Annotated[int, Path(ge=1)]
-GRIEF = (MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME, MemoryKind.HUMILIATED_ME)
 
 
 async def vessel_weapons(session: AsyncSession, row: VesselProfileRow) -> list[VesselWeaponView]:

@@ -5,12 +5,14 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_traits import commodities_with
 from aerona.core.random import SeededRandom
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import RiverClass
+from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.structure import BuildingForm, StructureKind
 from aerona.domain.enums.urban import LandCover, LandGround, Morphology
 from aerona.engine.urban.coverage import home_of
@@ -46,8 +48,8 @@ BIOME_GROUND = (
     LandGround.PEAKS,
 )
 DIGGINGS = frozenset({StructureKind.MINE, StructureKind.QUARRY})
-DEEP = frozenset({CommodityKind.ORE, CommodityKind.STONE, CommodityKind.COAL})
-WOODS = frozenset({CommodityKind.TIMBER, CommodityKind.FUEL})
+DEEP = frozenset(commodities_with(CommodityTrait.DUG))
+WOODS = frozenset(commodities_with(CommodityTrait.WOODY))
 WATERS = frozenset({CommodityKind.FISH})
 
 

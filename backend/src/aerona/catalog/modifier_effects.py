@@ -4,7 +4,6 @@ from types import MappingProxyType
 
 from aerona.constants.units import PERCENT
 from aerona.domain.enums.entity import EngineKind
-from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.faith import FanaticismKind, TenetKind
 from aerona.domain.enums.modifier import ModifierOp
 from aerona.domain.enums.polity import LawKind, TreatyKind
@@ -115,29 +114,3 @@ MORTAL_STAT_KEYS = ("strength", "agility", "intellect", "charisma")
 CURSE_KEYS = ("prosperity", "fertility", "abundance", "strength", "wealth")
 BLESSING_MORTAL_KEYS = ("strength", "charisma")
 BLESSING_COMMUNITY_KEYS = ("prosperity", "piety")
-
-ROUGH = (
-    TerrainKind.MOUNTAINS,
-    TerrainKind.HIGH_PASS,
-    TerrainKind.HILLS,
-    TerrainKind.CANYON,
-    TerrainKind.MARSH,
-    TerrainKind.JUNGLE,
-    TerrainKind.FOREST,
-    TerrainKind.ISLAND,
-    TerrainKind.UNDERGROUND,
-)
-WATERED = (TerrainKind.RIVER_VALLEY, TerrainKind.COAST)
-HARSH = (TerrainKind.DESERT, TerrainKind.TUNDRA, TerrainKind.ICE_SHEET, TerrainKind.FLESH, TerrainKind.VOID_SHORE)
-TERRAIN_EFFECTS: MappingProxyType[TerrainKind, tuple[StatEffect, ...]] = MappingProxyType(
-    {
-        **{kind: (add("defense", lambda rules: rules.modifiers.terrain_rough_defense),) for kind in ROUGH},
-        **{kind: (add("prosperity", lambda rules: rules.modifiers.terrain_water_prosperity),) for kind in WATERED},
-        **{kind: (add("prosperity", lambda rules: -rules.modifiers.terrain_harsh_prosperity),) for kind in HARSH},
-        TerrainKind.CRYSTAL_FIELD: (add("magic", lambda rules: rules.modifiers.terrain_crystal_magic),),
-        TerrainKind.VOLCANIC: (
-            add("defense", lambda rules: rules.modifiers.terrain_rough_defense),
-            add("prosperity", lambda rules: -rules.modifiers.terrain_harsh_prosperity),
-        ),
-    }
-)

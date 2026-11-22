@@ -1,13 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.anatomy import MUTILATIONS
 from aerona.catalog.crimes import CRIMES, PENALTY_WORDS
 from aerona.catalog.ethics import CRIME_ACTS, HONOUR_MODELS
 from aerona.catalog.laws import PENALTY_CRUELTY
+from aerona.catalog.life.mortal import MUTILATION_KINDS
 from aerona.catalog.thoughts import THOUGHTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.customs import BodyMarkRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.body import BodyPart, DamageType, HarmCause, InjuryKind
+from aerona.domain.enums.body import BodyPart, DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.customs import MarkKind, MarkMeaning
 from aerona.domain.enums.entity import EntityFlag, EntityType
@@ -38,16 +40,6 @@ from aerona.engine.recording.record import FactInput, RoleValue, record
 
 JUDGED_CRIMES = frozenset({CrimeKind.THEFT, CrimeKind.BLASPHEMY, CrimeKind.TREASON})
 CODE_PUNISHMENTS = PENALTY_WORDS
-MUTILATIONS: dict[PunishmentKind, tuple[BodyPart, ...]] = {
-    PunishmentKind.HAND: (BodyPart.RIGHT_HAND,),
-    PunishmentKind.TONGUE: (BodyPart.TONGUE,),
-    PunishmentKind.EYES: (BodyPart.LEFT_EYE, BodyPart.RIGHT_EYE),
-}
-MUTILATION_KINDS: dict[PunishmentKind, InjuryKind] = {
-    PunishmentKind.HAND: InjuryKind.SEVERED,
-    PunishmentKind.TONGUE: InjuryKind.SEVERED,
-    PunishmentKind.EYES: InjuryKind.GOUGED,
-}
 CRIME_TEXT = {kind: spec.text for kind, spec in CRIMES.items()}
 
 

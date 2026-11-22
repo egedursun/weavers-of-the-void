@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import REVOLT_CAUSES
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.mind import MemoryRow
@@ -13,7 +14,6 @@ from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import HouseEnd, OathBreach, OathKind, OathStatus, OfficeKind
 from aerona.domain.enums.settlement import SizeTier, TreasuryEntry
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.war import REVOLT_CAUSES
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.phases.warfare import incite_uprising
 from aerona.engine.polity.book import RealmBook

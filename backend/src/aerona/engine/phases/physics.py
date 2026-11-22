@@ -3,11 +3,13 @@ from collections import defaultdict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.physics import StarPhysicsRow, WorldLifeRow, WorldPhysicsRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
@@ -33,7 +35,7 @@ from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
-BROKEN = frozenset({WorldType.SHATTERED, WorldType.ASTEROID_BELT})
+BROKEN = having(WORLD_TYPE_TRAITS, WorldTypeTrait.BROKEN_WORLDS)
 MAKE_FIXUP = "world_make"
 MATERIALS = frozenset(kind.value for kind in MaterialKind)
 

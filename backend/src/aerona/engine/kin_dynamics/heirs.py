@@ -1,13 +1,14 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import INHERITANCE_CUSTOM_TRAITS, having
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.kin_dynamics import KinDisowningRow, KinFavourRow
-from aerona.domain.enums.demography import InheritanceCustom
+from aerona.domain.enums.life_traits import InheritanceCustomTrait
 from aerona.engine.body.customs import people_of
 
-DISCRETION = frozenset({InheritanceCustom.ELECTIVE, InheritanceCustom.BY_MERIT, InheritanceCustom.EQUAL_SHARES})
+DISCRETION = having(INHERITANCE_CUSTOM_TRAITS, InheritanceCustomTrait.DISCRETION)
 FAVOUR_REACH = 4
 
 

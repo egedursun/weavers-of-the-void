@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.calendar_slots import SLOTS
 from aerona.catalog.preferences import ACTIVITY_VALUES, DRINKS, SPECIES_KINDS, STATIC_TARGETS
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -15,7 +16,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.mind import PreferenceRow, SkillRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import CalendarSlot, TraditionFunction
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import PreferenceKind, ValueAxis, ValueHolder
@@ -147,7 +148,8 @@ async def leanings(session: AsyncSession, rules: Rules, people: EntityRow) -> di
     for activity, weights in ACTIVITY_VALUES.items():
         lean[(PreferenceKind.ACTIVITY, activity)] += sum(values.get(axis, 0) * weight for axis, weight in weights.items()) / STRENGTH_SPAN
     lean[(PreferenceKind.MATERIAL, "gold")] += values.get(ValueAxis.WEALTH, 0) / STRENGTH_SPAN
-    lean[(PreferenceKind.SEASON, CalendarSlot.HARVEST.value)] += values.get(ValueAxis.NATURE, 0) / STRENGTH_SPAN
+    for slot, spec in SLOTS.items():
+        lean[(PreferenceKind.SEASON, slot.value)] += values.get(spec.lean, 0) / STRENGTH_SPAN
     return lean
 
 

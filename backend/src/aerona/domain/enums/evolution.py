@@ -23,6 +23,33 @@ class KeystoneRole(StrEnum):
     SCAVENGER = "scavenger"
 
 
+class PlanetaryCycle(StrEnum):
+    CARBON = "carbon"
+    WATER = "water"
+    NUTRIENTS = "nutrients"
+
+
+class CycleSource(StrEnum):
+    VOLCANOES = "volcanoes"
+    FIRES = "fires"
+    LIFE = "life"
+    FORESTS = "forests"
+    OCEANS = "oceans"
+    WEATHERING = "weathering"
+    MELTING = "melting"
+    EVAPORATION = "evaporation"
+    FREEZING = "freezing"
+    RIVERS = "rivers"
+    EROSION = "erosion"
+
+
+class CycleEffect(StrEnum):
+    GREENHOUSE = "greenhouse"
+    RAIN = "rain"
+    SEA_LEVEL = "sea_level"
+    SOIL = "soil"
+
+
 class TrophicLevel(StrEnum):
     PRODUCER = "producer"
     HERBIVORE = "herbivore"

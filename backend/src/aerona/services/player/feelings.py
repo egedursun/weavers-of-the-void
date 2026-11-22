@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.catalog.life.services import DREAM_THOUGHTS
 from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, THOUGHTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -15,15 +16,6 @@ from aerona.engine.mind.grief import start_grief
 from aerona.engine.mind.thoughts import MOOD_FIELD, mood_state, think, thinker
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
-
-DREAM_THOUGHTS = {
-    DreamKind.ORDINARY: ThoughtKind.HAD_GOOD_DREAM,
-    DreamKind.NIGHTMARE: ThoughtKind.HAD_NIGHTMARE,
-    DreamKind.LONGING: ThoughtKind.DREAMED_OF_LONGING,
-    DreamKind.PROPHETIC: ThoughtKind.RECEIVED_VISITATION,
-    DreamKind.VISITATION: ThoughtKind.RECEIVED_VISITATION,
-    DreamKind.SHARED: ThoughtKind.HAD_GOOD_DREAM,
-}
 
 
 class SendThought(Command):

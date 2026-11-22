@@ -42,6 +42,7 @@ from aerona.api.schemas.depth_society import (
     WorkFactor,
 )
 from aerona.api.views.disease import afflictions, community_holds, disease_incidents, disease_sick, host_views, named_mortals, unseen_pct
+from aerona.catalog.life.demography import AGE_WORK
 from aerona.catalog.peoples import KIN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
@@ -82,7 +83,7 @@ from aerona.engine.demography.biology import (
     record_of,
     scaled,
 )
-from aerona.engine.demography.labour import AGE_WORK, condition_work, jobs_for, mobilisation
+from aerona.engine.demography.labour import condition_work, jobs_for, mobilisation
 from aerona.engine.demography.mobility import inequality
 from aerona.engine.disease.harm import community_targets
 from aerona.engine.lore.motifs import motifs_of

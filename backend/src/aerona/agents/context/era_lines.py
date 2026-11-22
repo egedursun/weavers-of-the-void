@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.catalog.genesis import TECHNOLOGY_LABELS
+from aerona.catalog.life.eras import LIVE
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
@@ -10,7 +11,6 @@ from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.sons import SonRow
 from aerona.engine.cycles.book import realm_of
 from aerona.engine.eras.effects import era_of, era_techniques, world_start
-from aerona.engine.eras.progress import LIVE
 
 LIST_LINES = 3
 

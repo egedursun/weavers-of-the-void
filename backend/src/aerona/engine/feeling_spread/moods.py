@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life_traits import EMOTION_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.collective import CrowdMoodRow
 from aerona.db.tables.entities import EntityRow
@@ -12,6 +13,7 @@ from aerona.db.tables.mind import ThoughtRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import EmotionTrait
 from aerona.domain.enums.mind import Emotion, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
@@ -23,9 +25,9 @@ from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import record
 
 SPREAD_BONDS = (BondKind.PARENT_OF, BondKind.SPOUSE_OF, BondKind.LOVES, BondKind.COMPANION, BondKind.SWORN_KIN, BondKind.APPRENTICE_OF, BondKind.ADHERENT_OF)
-ANGRY = frozenset({Emotion.ANGER, Emotion.RAGE})
-AFRAID = frozenset({Emotion.FEAR, Emotion.ANXIETY})
-STIRRED = frozenset({Emotion.AWE, Emotion.JOY, Emotion.PRIDE})
+ANGRY = having(EMOTION_TRAITS, EmotionTrait.ANGRY)
+AFRAID = having(EMOTION_TRAITS, EmotionTrait.AFRAID)
+STIRRED = having(EMOTION_TRAITS, EmotionTrait.STIRRED)
 KEPT = 3
 FADED = 10
 

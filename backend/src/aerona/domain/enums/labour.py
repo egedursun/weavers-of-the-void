@@ -51,9 +51,6 @@ class DisputeOutcome(StrEnum):
     SETTLED = "settled"
 
 
-OPEN_CONTRACTS = frozenset({ContractStatus.PROPOSED, ContractStatus.BARGAINING, ContractStatus.AGREED})
-
-
 class WorkerAct(StrEnum):
     STRIKE = DisputeAct.STRIKE.value
     GO_SLOW = DisputeAct.GO_SLOW.value

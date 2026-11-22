@@ -1,6 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.conditions import OPEN_INJURY_STATES
+from aerona.catalog.life_traits import SKILL_KIND_TRAITS, having
 from aerona.catalog.mind import CAREER_SKILLS, HUMILIATING_MEMORIES, PLEASURE_TRAITS, SKILLS, THREAT_MEMORIES
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memo_of, memoized, table_names
@@ -15,13 +17,13 @@ from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.tables.mind import MemoryRow, NeedRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
-from aerona.domain.enums.body import OPEN_INJURY_STATES
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.industry import QualityTier
-from aerona.domain.enums.mind import NeedKind, PreferenceKind, PressureKind, SkillFamily, SkillKind, TraitKind, ValueAxis
+from aerona.domain.enums.life_traits import SkillKindTrait
+from aerona.domain.enums.mind import NeedKind, PreferenceKind, PressureKind, SkillFamily, TraitKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import Commodity
@@ -58,7 +60,7 @@ BEGGAR_TAG = "beggar"
 LEARNED_SKILLS = frozenset(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.KNOWLEDGE)
 MAKING_SKILLS = frozenset(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.CRAFT)
 FIGHT_SKILLS = frozenset(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.COMBAT)
-TRAVEL_SKILLS = frozenset({SkillKind.SAILING, SkillKind.NAVIGATION, SkillKind.MOUNTAINEERING, SkillKind.RIDING, SkillKind.TRACKING})
+TRAVEL_SKILLS = having(SKILL_KIND_TRAITS, SkillKindTrait.NEEDS_TRAVEL_SKILLS)
 
 
 def role_status(rules: Rules, role: MortalRole) -> int:

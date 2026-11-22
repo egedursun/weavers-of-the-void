@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.faith import FEAR_OF_TORMENT_VALUE_AXISS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import CastingRow, RiteEffectRow
@@ -493,7 +494,7 @@ async def fear_of_torment(ctx: TickContext, church: Church) -> int:
         if not values:
             continue
         changed = False
-        for axis in (ValueAxis.HONOUR, ValueAxis.TRADITION):
+        for axis in FEAR_OF_TORMENT_VALUE_AXISS:
             current = values.get(axis, 0)
             if current < table.torment_value_target:
                 values[axis] = min(table.torment_value_target, current + table.torment_honour)

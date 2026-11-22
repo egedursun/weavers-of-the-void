@@ -2,6 +2,8 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.power_costs import POWER_COSTS
+from aerona.catalog.life.powers import RENEWAL_KINDS
+from aerona.catalog.life_traits import SOURCE_LOCUS_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -25,6 +27,7 @@ from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.life_traits import SourceLocusTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
@@ -33,9 +36,7 @@ from aerona.domain.enums.powers import (
     PowerHazard,
     ResistanceKind,
     SourceLawLevel,
-    SourceLocus,
     SourceRelation,
-    SourceRenewal,
 )
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -55,18 +56,7 @@ from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import record
 
-LAND_LOCI = frozenset({SourceLocus.PLACE, SourceLocus.SKY, SourceLocus.SURROUNDINGS, SourceLocus.LIFE, SourceLocus.DEATH})
-RENEWAL_KINDS = {
-    SourceRenewal.REST: "rest",
-    SourceRenewal.TIME: "rest",
-    SourceRenewal.SEASON: "season",
-    SourceRenewal.SKY_CYCLE: "season",
-    SourceRenewal.RETURN_TO_PLACE: "rest",
-    SourceRenewal.VOWS_KEPT: "rest",
-    SourceRenewal.FEEDING: "taking",
-    SourceRenewal.TAKING: "taking",
-    SourceRenewal.WORSHIP: "worship",
-}
+LAND_LOCI = having(SOURCE_LOCUS_TRAITS, SourceLocusTrait.LAND_LOCI)
 
 
 async def costs_of(session: AsyncSession, source_id: int) -> list[PowerSourceCostRow]:

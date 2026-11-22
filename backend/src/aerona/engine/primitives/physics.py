@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.primitives import AIR_ATTRITION_PCT_ATMOSPHERES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.domain.enums.world import Atmosphere, Gravity, WorldType
@@ -99,5 +100,5 @@ def flight_capacity_pct(rules: Rules, world: WorldRow | None) -> int:
 
 
 def air_attrition_pct(rules: Rules, world: WorldRow | None) -> int:
-    thin = world is not None and world.atmosphere in (Atmosphere.THIN, Atmosphere.NONE)
+    thin = world is not None and world.atmosphere in AIR_ATTRITION_PCT_ATMOSPHERES
     return PERCENT + rules.world_life.thin_air_attrition_pct if thin else PERCENT

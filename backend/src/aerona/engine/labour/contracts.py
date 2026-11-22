@@ -1,12 +1,13 @@
 from sqlalchemy import select
 
 from aerona.catalog.labour import DEMAND_TERMS
+from aerona.catalog.life.domain import OPEN_CONTRACTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.labour import HOURS_MAX, WAGE_MAX, LabourContractRow, WorkerBodyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.demography import Job
-from aerona.domain.enums.labour import OPEN_CONTRACTS, ContractStatus, LabourDemand
+from aerona.domain.enums.labour import ContractStatus, LabourDemand
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin

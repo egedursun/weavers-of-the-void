@@ -1,13 +1,15 @@
-from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.goods_traits import commodities_with
+from aerona.catalog.life.economy import BRANCH_OF, CRAFT_FACTOR_EXTRACTION_KINDS, HAZARD_HARM, HAZARD_MAIMS, HAZARD_RULES, KIND_JOBS, ROLL_HAZARDS_HAZARD_KINDS
+from aerona.catalog.life_traits import EXTRACTION_KIND_TRAITS, HAZARD_KIND_TRAITS, WORLD_TYPE_TRAITS, having
 from aerona.catalog.materials import MATERIALS
 from aerona.catalog.production import EXTRACTION, EXTRACTION_OF
+from aerona.catalog.terrain import terrains
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import ProductionRunRow, ResourceProfileRow, ResourceWorkerRow
 from aerona.db.tables.entities import EntityRow
@@ -15,18 +17,19 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.made import SalvageSiteRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import DamageType, HarmCause, MaimedKind
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.demography import Job
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow, HazardKind
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.environment import TerrainKind
+from aerona.domain.enums.environment import TerrainTrait
 from aerona.domain.enums.eras import EraChannel
+from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.industry import MethodKind
+from aerona.domain.enums.life_traits import ExtractionKindTrait, HazardKindTrait, WorldTypeTrait
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import SpeciesStats
@@ -64,53 +67,8 @@ from aerona.rules.registry import Rules
 
 THOUSAND = 1000
 WORKING_ROLES = frozenset({MortalRole.FARMER, MortalRole.ARTISAN, MortalRole.COMMONER, MortalRole.APPRENTICE, MortalRole.HUNTER, MortalRole.ENGINEER})
-ARTISAN_KINDS = frozenset({ExtractionKind.MINING, ExtractionKind.QUARRYING})
-BRANCH_OF: dict[ExtractionKind, KnowledgeBranch] = {
-    ExtractionKind.MINING: KnowledgeBranch.METALLURGY,
-    ExtractionKind.QUARRYING: KnowledgeBranch.ARCHITECTURE,
-    ExtractionKind.FISHING: KnowledgeBranch.SEAFARING,
-    ExtractionKind.FARMING: KnowledgeBranch.AGRICULTURE,
-    ExtractionKind.HERDING: KnowledgeBranch.AGRICULTURE,
-}
-HAZARD_HARM: Mapping[HazardKind, tuple[DamageType, str, int]] = total(
-    HazardKind,
-    {
-        HazardKind.CAVE_IN: (DamageType.BLUNT, "crushed in a cave-in", 40),
-        HazardKind.FLOODED_SHAFT: (DamageType.COLD, "drowned in a flooded shaft", 30),
-        HazardKind.FELLING_ACCIDENT: (DamageType.BLUNT, "struck by a falling tree", 30),
-        HazardKind.DROWNING: (DamageType.COLD, "dragged under by rough water", 35),
-        HazardKind.GORING: (DamageType.PIERCE, "gored by the herd", 25),
-        HazardKind.BLOWOUT: (DamageType.FIRE, "caught in a blowout at the well", 45),
-        HazardKind.EXPLOSION: (DamageType.EXPLOSIVE, "caught in an explosion", 50),
-        HazardKind.TOXIC_RELEASE: (DamageType.CHEMICAL, "poisoned by a release of fumes", 35),
-        HazardKind.DECOMPRESSION: (DamageType.BLUNT, "torn by a loss of pressure", 45),
-        HazardKind.RADIATION_EXPOSURE: (DamageType.RADIATION, "burned by radiation", 40),
-        HazardKind.SUBSIDENCE: (DamageType.BLUNT, "buried as the ground sank", 35),
-        HazardKind.BEAST_ATTACK: (DamageType.PIERCE, "attacked by the beasts it tended", 30),
-        HazardKind.SOURCE_BACKLASH: (DamageType.MAGIC, "struck by the backlash of the source", 35),
-        HazardKind.MACHINE_ACCIDENT: (DamageType.CUT, "caught in the machinery", 35),
-    },
-)
-WORKS_HAZARDS = frozenset({HazardKind.CAVE_IN, HazardKind.FLOODED_SHAFT, HazardKind.BLOWOUT, HazardKind.EXPLOSION, HazardKind.SUBSIDENCE})
-HAZARD_MAIMS: Mapping[HazardKind, MaimedKind] = total(
-    HazardKind,
-    {
-        HazardKind.CAVE_IN: MaimedKind.ONE_LEGGED,
-        HazardKind.FLOODED_SHAFT: MaimedKind.BROKEN_MINDED,
-        HazardKind.FELLING_ACCIDENT: MaimedKind.ONE_ARMED,
-        HazardKind.DROWNING: MaimedKind.SCARRED,
-        HazardKind.GORING: MaimedKind.LAME,
-        HazardKind.BLOWOUT: MaimedKind.SCARRED,
-        HazardKind.EXPLOSION: MaimedKind.DEAF,
-        HazardKind.TOXIC_RELEASE: MaimedKind.BLIND,
-        HazardKind.DECOMPRESSION: MaimedKind.DEAF,
-        HazardKind.RADIATION_EXPOSURE: MaimedKind.SCARRED,
-        HazardKind.SUBSIDENCE: MaimedKind.ONE_LEGGED,
-        HazardKind.BEAST_ATTACK: MaimedKind.LAME,
-        HazardKind.SOURCE_BACKLASH: MaimedKind.BROKEN_MINDED,
-        HazardKind.MACHINE_ACCIDENT: MaimedKind.ONE_ARMED,
-    },
-)
+ARTISAN_KINDS = having(EXTRACTION_KIND_TRAITS, ExtractionKindTrait.ARTISAN_KINDS)
+WORKS_HAZARDS = having(HAZARD_KIND_TRAITS, HazardKindTrait.WORKS_HAZARDS)
 
 
 @dataclass
@@ -126,12 +84,12 @@ def extraction_kind(profile: ResourceProfileRow) -> ExtractionKind:
     return profile.extraction or EXTRACTION_OF.get(profile.commodity, ExtractionKind.GATHERING)
 
 
-ORE_LIKE = frozenset({CommodityKind.ORE, CommodityKind.STONE, CommodityKind.COAL})
-BELTS = frozenset({WorldType.ASTEROID_BELT, WorldType.RINGED})
-GIANTS = frozenset({WorldType.GAS, WorldType.ICE_GIANT})
-SEAS = frozenset({TerrainKind.COAST, TerrainKind.ISLAND})
-WETLANDS = frozenset({TerrainKind.RIVER_VALLEY, TerrainKind.MARSH})
-DRYLANDS = frozenset({TerrainKind.DESERT, TerrainKind.STEPPE})
+ORE_LIKE = frozenset(commodities_with(CommodityTrait.DUG))
+BELTS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.BELTS)
+GIANTS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.GIANTS)
+SEAS = terrains(TerrainTrait.COASTAL)
+WETLANDS = terrains(TerrainTrait.WET)
+DRYLANDS = terrains(TerrainTrait.ARID)
 
 
 async def extraction_method(ctx: TickContext, resource: EntityRow, profile: ResourceProfileRow) -> ExtractionKind | None:
@@ -202,31 +160,6 @@ def season_fit(book: EconomyBook, world_id: int | None, kind: ExtractionKind) ->
     return warmest.travel / PERCENT
 
 
-KIND_JOBS = total(
-    ExtractionKind,
-    {
-        ExtractionKind.MINING: Job.MINING,
-        ExtractionKind.QUARRYING: Job.MINING,
-        ExtractionKind.FISHING: Job.FISHING,
-        ExtractionKind.HERDING: Job.HERDING,
-        ExtractionKind.FARMING: Job.FARMING,
-        ExtractionKind.GATHERING: Job.FARMING,
-        ExtractionKind.LOGGING: Job.BUILDING,
-        ExtractionKind.DRILLING: Job.MINING,
-        ExtractionKind.PUMPING: Job.MINING,
-        ExtractionKind.DREDGING: Job.MINING,
-        ExtractionKind.DEEP_SEA: Job.MINING,
-        ExtractionKind.ATMOSPHERIC: Job.MINING,
-        ExtractionKind.ASTEROID: Job.MINING,
-        ExtractionKind.STELLAR: Job.CRAFTING,
-        ExtractionKind.SOURCE_HARVEST: Job.SCHOLARSHIP,
-        ExtractionKind.SALVAGE: Job.CRAFTING,
-        ExtractionKind.LIVING_HARVEST: Job.HERDING,
-        ExtractionKind.DISTILLATION: Job.CRAFTING,
-    },
-)
-
-
 def labour_pool(rules: Rules, book: EconomyBook, community: EntityRow, kind: ExtractionKind) -> int:
     hands = book.hands(community.id, KIND_JOBS[kind])
     if hands is not None:
@@ -268,14 +201,14 @@ def material_value(profile: ResourceProfileRow) -> int:
     return COMMODITIES[profile.commodity].base_price
 
 
-HILLY = frozenset({TerrainKind.HILLS, TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.CANYON})
+HILLY = terrains(TerrainTrait.ROUGH)
 
 
 def craft_factor(ctx: TickContext, book: EconomyBook, community_id: int, resource_id: int, kind: ExtractionKind) -> float:
     table = ctx.rules.technique_effects
     known = book.techniques.get(community_id, set())
     lift = 0.0
-    if kind in (ExtractionKind.FARMING, ExtractionKind.HERDING) and Technique.SELECTIVE_BREEDING in known:
+    if kind in CRAFT_FACTOR_EXTRACTION_KINDS and Technique.SELECTIVE_BREEDING in known:
         lift += table.breeding_pct / PERCENT
     if kind is ExtractionKind.FARMING:
         land = book.ground.region_of(resource_id)
@@ -355,27 +288,6 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
         ladder = await cosmography_of(ctx.session)
         raw *= ladder.pull(ctx.rules, ladder.place_world_id(resource.world_id)).ore
     return max(0, min(profile.reserve, round_half_up(raw)))
-
-
-HAZARD_RULES: Mapping[HazardKind, str] = total(
-    HazardKind,
-    {
-        HazardKind.CAVE_IN: "cave_in_pct",
-        HazardKind.FLOODED_SHAFT: "cave_in_pct",
-        HazardKind.FELLING_ACCIDENT: "felling_pct",
-        HazardKind.DROWNING: "drowning_pct",
-        HazardKind.GORING: "goring_pct",
-        HazardKind.BLOWOUT: "blowout_pct",
-        HazardKind.EXPLOSION: "explosion_pct",
-        HazardKind.TOXIC_RELEASE: "toxic_release_pct",
-        HazardKind.DECOMPRESSION: "decompression_pct",
-        HazardKind.RADIATION_EXPOSURE: "radiation_pct",
-        HazardKind.SUBSIDENCE: "subsidence_pct",
-        HazardKind.BEAST_ATTACK: "beast_attack_pct",
-        HazardKind.SOURCE_BACKLASH: "source_backlash_pct",
-        HazardKind.MACHINE_ACCIDENT: "machine_accident_pct",
-    },
-)
 
 
 def hazard_chance(rules: Rules, kind: HazardKind, difficulty: int, engineering: int) -> int:
@@ -491,7 +403,7 @@ async def roll_hazards(
     if hazard is HazardKind.CAVE_IN and region is not None and region.rainfall >= ctx.rules.mining_hazards.flood_rainfall:
         hazard = HazardKind.FLOODED_SHAFT
     chance = hazard_chance(ctx.rules, hazard, profile.extraction_difficulty, book.skill(community.id, SkillKind.ENGINEERING))
-    if hazard in (HazardKind.CAVE_IN, HazardKind.FLOODED_SHAFT):
+    if hazard in ROLL_HAZARDS_HAZARD_KINDS:
         chance = round_half_up(chance * shaft_factor(ctx, book, resource, profile, community=community, hazard=hazard))
     for year in world_years(ctx.environment, resource.world_id or 0, "mining"):
         if ctx.rng(f"hazard.{resource.id}.{community.id}.{year.year}").chance(chance):

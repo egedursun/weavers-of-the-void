@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.catalog.life.eras import LIVE, SPECIALISMS
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.eras import TechProgrammeRow
@@ -7,7 +8,6 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.cycles.book import realm_of
-from aerona.engine.eras.progress import LIVE, SPECIALISMS
 from aerona.engine.mind.book import skills_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.prompts import MortalToolId

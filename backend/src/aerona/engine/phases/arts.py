@@ -158,6 +158,7 @@ async def monster_contracts(ctx: TickContext) -> None:
     "settlement.population",
     "table.divination_systems",
     "table.entities",
+    "table.node_births",
     "table.nodes",
 )
 @writes("mortal.perception", "mortal.willpower", "table.birth_signs", "table.entities")

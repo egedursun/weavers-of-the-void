@@ -1,11 +1,13 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import ROBBER_KINDS
+from aerona.catalog.life.factions import SUPPRESS_FACTION_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.polity import TreatyProfileRow
 from aerona.db.tables.warfare import WarSideRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.faction import ROBBER_KINDS, FactionActionKind, FactionKind
+from aerona.domain.enums.faction import FactionActionKind, FactionKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, OfficePower, PartyRole, TreatyBreach, TreatyKind, TreatyStatus
@@ -33,7 +35,7 @@ async def suppress(ctx: TickContext, factions: FactionBook, realms: RealmBook) -
         if profile.kind not in ROBBER_KINDS or profile.chartered_by_entity_id is not None or held(faction_id):
             continue
         realm = realms.realm_of(profile.home_entity_id)
-        if realm is None or not (profile.outlawed or profile.kind in {FactionKind.BANDITS, FactionKind.PIRATES}):
+        if realm is None or not (profile.outlawed or profile.kind in SUPPRESS_FACTION_KINDS):
             continue
         if not ctx.rng(f"suppress.{faction_id}.{ctx.epoch}").chance(table.suppress_chance):
             continue

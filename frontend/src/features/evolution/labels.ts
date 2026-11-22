@@ -41,6 +41,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
+import type { ProgressTone } from '@/components/ui/progress'
 import { type KpiTone } from '@/components/domain/KpiTile'
 
 type Schema = components['schemas']
@@ -123,10 +124,18 @@ export const LAND_ACTS: Record<Schema['LandAct'], Named> = {
   sink_coast: { label: 'Sink its coast', icon: Waves, tone: 'danger' },
 }
 
-export const CYCLES: Record<'carbon' | 'water' | 'nutrients', Named> = {
-  carbon: { label: 'Carbon', icon: Cloud, tone: 'muted' },
-  water: { label: 'Water', icon: Droplets, tone: 'info' },
-  nutrients: { label: 'Nutrients', icon: Sprout, tone: 'success' },
+export const CYCLES: Record<
+  Schema['PlanetaryCycle'],
+  Named & { meter: ProgressTone }
+> = {
+  carbon: { label: 'Carbon', icon: Cloud, tone: 'muted', meter: 'warning' },
+  water: { label: 'Water', icon: Droplets, tone: 'info', meter: 'info' },
+  nutrients: {
+    label: 'Nutrients',
+    icon: Sprout,
+    tone: 'success',
+    meter: 'success',
+  },
 }
 
 export const MARK_ICONS = { blessing: Crown, taint: Bug }

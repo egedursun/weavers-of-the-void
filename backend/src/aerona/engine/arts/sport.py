@@ -1,9 +1,9 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from types import MappingProxyType
 
 from sqlalchemy import select
 
+from aerona.catalog.life.arts import FIELD_GAMES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.arts import BetRow, ClubRow, LeagueRow, MatchRow
 from aerona.db.tables.crafts import GameRow
@@ -17,7 +17,6 @@ from aerona.domain.enums.arts import ClubKind, FandomLine
 from aerona.domain.enums.collective import CollectiveTrigger
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
-from aerona.domain.enums.kind_crafts import GameCategory
 from aerona.domain.enums.kinds import KindConcept
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
@@ -38,15 +37,6 @@ from aerona.engine.sacred.places import church_of, realm_of_town, ruler_of
 from aerona.engine.structures.readers import working
 
 ARENAS = (StructureKind.ARENA, StructureKind.STADIUM)
-FIELD_GAMES = MappingProxyType(
-    {
-        GameCategory.BALL: ClubKind.TEAM_GAME,
-        GameCategory.TEAM: ClubKind.TEAM_GAME,
-        GameCategory.RACING: ClubKind.RACING,
-        GameCategory.COMBAT_SPORT: ClubKind.COMBAT,
-        GameCategory.ATHLETIC: ClubKind.ATHLETICS,
-    }
-)
 MIDDLING = 50
 PAIR = 2
 

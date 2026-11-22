@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.military import BLACKMAIL_OFFICE_OFFICE_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
@@ -257,7 +258,7 @@ async def blackmail_office(ctx: TickContext, owner: EntityRow, target: EntityRow
     elif office.kind is OfficeKind.MARSHAL:
         network.intel = clamp_int(network.intel + table.intel_gain, 0, PERCENT)
         network.warned_epoch = ctx.epoch
-    elif office.kind in {OfficeKind.CHANCELLOR, OfficeKind.AMBASSADOR}:
+    elif office.kind in BLACKMAIL_OFFICE_OFFICE_KINDS:
         await change_relation(ctx, target.id, owner.id, table.blackmail_relation, MemoryKind.GOODWILL, note=f"{holder.name} spoke for them")
     else:
         record, _ = await ensure_profile(ctx.session, holder.id, ctx.epoch)

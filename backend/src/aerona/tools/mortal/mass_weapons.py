@@ -2,6 +2,7 @@ from typing import Any
 
 from pydantic import Field
 
+from aerona.catalog.life.domain import ARMED_STAGES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
@@ -10,7 +11,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.mass_weapons import ARMED_STAGES, MassHarm, MassReach, Posture
+from aerona.domain.enums.mass_weapons import MassHarm, MassReach, Posture
 from aerona.engine.mass_weapons.book import ArsenalTally, can_build, technique_for
 from aerona.engine.mass_weapons.deterrence import declare
 from aerona.engine.mass_weapons.programme import begin

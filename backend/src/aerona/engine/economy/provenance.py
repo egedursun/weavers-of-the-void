@@ -1,13 +1,13 @@
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.materials import ARMOUR_MATERIALS, LUXURY_MATERIALS, TOOL_MATERIALS, WEAPON_MATERIALS
+from aerona.catalog.goods_tables import FABRICS, HOLY_STOCK, HULLS, JEWEL_STOCK, STRUCTURE_STOCK
+from aerona.catalog.goods_traits import materials_with
+from aerona.catalog.materials import ARMOUR_MATERIALS, TOOL_MATERIALS, WEAPON_MATERIALS
 from aerona.catalog.means import BUILDING
-from aerona.core.total import total
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -18,6 +18,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import VehicleKind
@@ -29,31 +30,9 @@ from aerona.rules.registry import Rules
 
 M = MaterialKind
 MADE_TYPES = frozenset({EntityType.ITEM, EntityType.STRUCTURE, EntityType.VESSEL})
-COMMON = frozenset({M.WOOD, M.STONE, M.BONE, M.HIDE, M.CLAY, M.CLOTH, M.MUD_BRICK, M.RUBBLE, M.THATCH})
+COMMON = frozenset(materials_with(MaterialTrait.COMMON))
 HOLY_WORKS = frozenset({EngineKind.TEMPLE, EngineKind.WONDER})
 STONE_WORKS = frozenset({EngineKind.WALL, EngineKind.LIBRARY, EngineKind.SCHOOL, EngineKind.OBSERVATORY, EngineKind.COSMIC_ARCHIVE})
-HULLS: Mapping[VehicleKind, tuple[MaterialKind, ...]] = total(
-    VehicleKind,
-    {
-        VehicleKind.SHIP: (M.SKYSTEEL, M.STEEL, M.IRON, M.BRONZE, M.GREAT_BONE, M.LIVING_WOOD, M.WOOD),
-        VehicleKind.GATE: (M.CRYSTAL, M.OBSIDIAN, M.STONE),
-        VehicleKind.BRIDGE: (M.CRYSTAL, M.STONE, M.WOOD),
-        VehicleKind.MOUNT: (M.CHITIN, M.LEATHER, M.HIDE),
-        VehicleKind.RAIL: (M.STEEL, M.IRON, M.WOOD),
-        VehicleKind.ROAD_VEHICLE: (M.STEEL, M.IRON, M.WOOD),
-        VehicleKind.AIRCRAFT: (M.SKYSTEEL, M.STEEL, M.WOOD, M.CLOTH),
-        VehicleKind.TELEPORT: (M.CRYSTAL, M.STEEL, M.STONE),
-        VehicleKind.LIVING: (M.LIVING_WOOD, M.CHITIN, M.HIDE),
-        VehicleKind.RIFT: (M.CRYSTAL, M.OBSIDIAN, M.STONE),
-        VehicleKind.ON_FOOT: (M.LEATHER, M.CLOTH, M.HIDE),
-    },
-)
-FABRICS: MappingProxyType[VehicleKind, tuple[MaterialKind, ...]] = MappingProxyType(
-    {VehicleKind.SHIP: (M.CLOTH, M.LEATHER, M.HIDE), VehicleKind.MOUNT: (M.LEATHER, M.CLOTH, M.HIDE)}
-)
-STRUCTURE_STOCK = (M.LIVING_WOOD, M.HYDRAULIC_CONCRETE, M.DRESSED_STONE, M.LIME_MORTAR, M.FIRED_BRICK, M.TILE, M.STONE, M.RUBBLE, M.MUD_BRICK, M.WOOD, M.THATCH)
-HOLY_STOCK = (M.GOLD, M.SILVER, M.CRYSTAL, M.DRESSED_STONE, M.STONE, M.FIRED_BRICK, M.MUD_BRICK, M.WOOD)
-JEWEL_STOCK = (*LUXURY_MATERIALS, M.BONE, M.WOOD)
 
 
 @dataclass

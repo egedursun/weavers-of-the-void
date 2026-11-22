@@ -1,13 +1,24 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from types import MappingProxyType
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.cuisine import DISH_FOODS, STAPLE_FOODS
+from aerona.catalog.life.cuisine import (
+    CATEGORY_ROLES,
+    COURSE_LABELS,
+    COURSE_SLOTS,
+    DISH_TRAITS_DISH_COURSES,
+    FIRST_COURSES,
+    INVENT_DISH_DISH_COURSES,
+    METHOD_GATES,
+    METHOD_KEEPS,
+    SAVOUR_DISH_COURSES,
+    SAVOUR_DISH_COURSES_2,
+    SAVOUR_DISH_COURSES_3,
+)
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.read_memo import memoized
 from aerona.db.tables.cuisine import FLAVOURS, CommunityDishRow, DishIngredientRow, DishRow, DishStepRow
 from aerona.db.tables.entities import EntityRow
@@ -20,7 +31,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.kinds import GoodCategory, IngredientRole, KindConcept, KindSpread, KindStance, MealSlot
+from aerona.domain.enums.kinds import IngredientRole, KindConcept, KindSpread, KindStance
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import KnowledgeBranch
@@ -39,178 +50,11 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import StepDraft, record
 
-M = CookingMethod
 D = DishCourse
 C = CommodityKind
 BASE_MEALS = 2
 SKILL_PER_LEVEL = 10
 COOKED = frozenset({KindStance.MAKES, KindStance.USES, KindStance.FAVOURS})
-METHOD_GATES: MappingProxyType[CookingMethod, tuple[KnowledgeBranch | None, int]] = total(
-    CookingMethod,
-    {
-        M.RAW: (None, 0),
-        M.BOILED: (None, 0),
-        M.STEWED: (None, 0),
-        M.STEAMED: (KnowledgeBranch.AGRICULTURE, 1),
-        M.ROASTED: (None, 0),
-        M.GRILLED: (None, 0),
-        M.BAKED: (KnowledgeBranch.AGRICULTURE, 1),
-        M.FRIED: (KnowledgeBranch.AGRICULTURE, 2),
-        M.SMOKED: (None, 0),
-        M.DRIED: (None, 0),
-        M.CURED: (KnowledgeBranch.TRADE, 1),
-        M.PICKLED: (KnowledgeBranch.TRADE, 1),
-        M.FERMENTED: (KnowledgeBranch.AGRICULTURE, 1),
-        M.BRAISED: (KnowledgeBranch.AGRICULTURE, 2),
-        M.SIMMERED: (None, 0),
-        M.GROUND: (KnowledgeBranch.AGRICULTURE, 1),
-        M.PRESSED: (KnowledgeBranch.AGRICULTURE, 2),
-        M.CONJURED: (KnowledgeBranch.MAGIC, 1),
-        M.FREEZE_DRIED: (KnowledgeBranch.AGRICULTURE, 5),
-        M.IRRADIATED: (KnowledgeBranch.METALLURGY, 7),
-        M.PRINTED: (KnowledgeBranch.METALLURGY, 7),
-        M.SYNTHESISED: (KnowledgeBranch.MEDICINE, 6),
-        M.VAT_GROWN: (KnowledgeBranch.BIOMANCY, 1),
-        M.INFUSED: (None, 0),
-        M.DISTILLED: (KnowledgeBranch.MEDICINE, 2),
-        M.CHURNED: (None, 0),
-        M.SPROUTED: (KnowledgeBranch.AGRICULTURE, 1),
-        M.ALKALI_TREATED: (KnowledgeBranch.AGRICULTURE, 2),
-        M.CULTURED: (KnowledgeBranch.AGRICULTURE, 2),
-        M.CURED_WITH_MINERAL: (KnowledgeBranch.TRADE, 1),
-        M.AGED: (KnowledgeBranch.AGRICULTURE, 1),
-        M.EXTRUDED: (KnowledgeBranch.METALLURGY, 6),
-        M.PRESSURE_COOKED: (KnowledgeBranch.METALLURGY, 5),
-    },
-)
-METHOD_KEEPS: MappingProxyType[CookingMethod, int] = total(
-    CookingMethod,
-    {
-        M.RAW: 0,
-        M.BOILED: 0,
-        M.STEWED: 0,
-        M.STEAMED: 0,
-        M.ROASTED: 1,
-        M.GRILLED: 0,
-        M.BAKED: 1,
-        M.FRIED: 0,
-        M.SMOKED: 3,
-        M.DRIED: 4,
-        M.CURED: 4,
-        M.PICKLED: 3,
-        M.FERMENTED: 3,
-        M.BRAISED: 0,
-        M.SIMMERED: 0,
-        M.GROUND: 2,
-        M.PRESSED: 2,
-        M.CONJURED: 0,
-        M.FREEZE_DRIED: 6,
-        M.IRRADIATED: 6,
-        M.PRINTED: 3,
-        M.SYNTHESISED: 5,
-        M.VAT_GROWN: 3,
-        M.INFUSED: 0,
-        M.DISTILLED: 6,
-        M.CHURNED: 1,
-        M.SPROUTED: 0,
-        M.ALKALI_TREATED: 2,
-        M.CULTURED: 3,
-        M.CURED_WITH_MINERAL: 4,
-        M.AGED: 5,
-        M.EXTRUDED: 3,
-        M.PRESSURE_COOKED: 0,
-    },
-)
-COURSE_LABELS: MappingProxyType[DishCourse, str] = total(
-    DishCourse,
-    {
-        D.STAPLE: "Dish",
-        D.SIDE: "Side dish",
-        D.FESTIVE: "Feast dish",
-        D.RITE: "Rite dish",
-        D.RATION: "Ration",
-        D.DELICACY: "Delicacy",
-        D.REMEDY: "Remedy",
-        D.DRINK: "Drink",
-    },
-)
-
-
-COURSE_SLOTS: MappingProxyType[DishCourse, MealSlot] = total(
-    DishCourse,
-    {
-        D.STAPLE: MealSlot.DAILY_MEAL,
-        D.SIDE: MealSlot.DAILY_MEAL,
-        D.FESTIVE: MealSlot.FEAST,
-        D.RITE: MealSlot.RITE,
-        D.RATION: MealSlot.RATION,
-        D.DELICACY: MealSlot.SNACK,
-        D.REMEDY: MealSlot.REMEDY,
-        D.DRINK: MealSlot.DAILY_MEAL,
-    },
-)
-G = GoodCategory
-R = IngredientRole
-CATEGORY_ROLES: MappingProxyType[GoodCategory, IngredientRole] = total(
-    GoodCategory,
-    {
-        G.GRAIN: R.BASE,
-        G.ROOT_AND_TUBER: R.BASE,
-        G.VEGETABLE: R.BASE,
-        G.LEGUME: R.PROTEIN,
-        G.FRUIT: R.GARNISH,
-        G.NUT_AND_SEED: R.FAT,
-        G.OIL_AND_FAT: R.FAT,
-        G.SWEETENER: R.SEASONING,
-        G.SEASONING: R.SEASONING,
-        G.MINERAL_SEASONING: R.PRESERVATIVE,
-        G.MEAT: R.PROTEIN,
-        G.FISH_AND_SEAFOOD: R.PROTEIN,
-        G.DAIRY: R.FAT,
-        G.EGGS: R.BINDER,
-        G.INSECTS: R.PROTEIN,
-        G.FUNGI: R.BASE,
-        G.ALGAE: R.BASE,
-        G.OFFAL_AND_BLOOD: R.PROTEIN,
-        G.FODDER: R.BASE,
-        G.DRINK_BASE: R.LIQUID,
-        G.STIMULANT: R.SEASONING,
-        G.INTOXICANT: R.LIQUID,
-        G.MEDICINE: R.SEASONING,
-        G.FIBRE: R.BINDER,
-        G.TEXTILE: R.BINDER,
-        G.HIDE_AND_LEATHER: R.BINDER,
-        G.TIMBER: R.BASE,
-        G.FUEL: R.BASE,
-        G.ORE: R.BASE,
-        G.METAL: R.BASE,
-        G.STONE: R.BASE,
-        G.CLAY_AND_CERAMIC: R.BASE,
-        G.GLASS: R.BASE,
-        G.CHEMICAL: R.PRESERVATIVE,
-        G.DYE_AND_PIGMENT: R.COLOURING,
-        G.SCENT_MATERIAL: R.SEASONING,
-        G.REAGENT: R.LEAVENING,
-        G.TOOLS: R.BASE,
-        G.WEAPONS: R.BASE,
-        G.ARMOUR: R.BASE,
-        G.GARMENTS: R.BASE,
-        G.FURNISHINGS: R.BASE,
-        G.CONTAINERS: R.BASE,
-        G.INSTRUMENTS: R.BASE,
-        G.ORNAMENTS: R.GARNISH,
-        G.BOOKS_AND_RECORDS: R.BASE,
-        G.MACHINES: R.BASE,
-        G.PARTS: R.BASE,
-        G.ENERGY_STORE: R.BASE,
-        G.DATA: R.BASE,
-        G.LIVING_GOODS: R.PROTEIN,
-        G.SACRED_GOODS: R.GARNISH,
-        G.LUXURIES: R.GARNISH,
-        G.LIVESTOCK: R.PROTEIN,
-        G.MOUNTS: R.PROTEIN,
-    },
-)
 
 
 @dataclass
@@ -243,7 +87,7 @@ def dish_traits(method: CookingMethod, course: DishCourse, chosen: list[Commodit
         "nourishment": clamp_int(20 + (20 if staple else 0) + 5 * len(chosen) + fed // 2, 0, PERCENT),
         "delight": clamp_int(20 + 15 * len(chosen) + (20 if C.HERBS in chosen else 0), 0, PERCENT),
         "keeps": METHOD_KEEPS[method],
-        "prestige": clamp_int(10 + (30 if course in {D.DELICACY, D.FESTIVE} else 0), 0, PERCENT),
+        "prestige": clamp_int(10 + (30 if course in DISH_TRAITS_DISH_COURSES else 0), 0, PERCENT),
     }
 
 
@@ -304,7 +148,7 @@ async def invent_dish(ctx: TickContext, people: EntityRow, knowledge: KnowledgeM
         method = cuisine.signature_method
     ranked = sorted(stock, key=lambda food: (not staple_of(cuisine, goods, food), -stock[food], food.value))
     chosen = ranked[: 1 + rng.below(min(3, len(ranked)))]
-    course = course or rng.pick([D.STAPLE, D.STAPLE, D.SIDE, D.FESTIVE, D.RITE, D.RATION, D.DELICACY, D.REMEDY, D.DRINK])
+    course = course or rng.pick(INVENT_DISH_DISH_COURSES)
     if METHOD_KEEPS[method] >= ctx.rules.cuisine.ration_keeping and course is D.STAPLE:
         course = D.RATION
     flavours = {flavour: getattr(cuisine, flavour) + rng.below(21) - 10 for flavour in FLAVOURS} if cuisine is not None else None
@@ -348,9 +192,6 @@ def staple_of(cuisine: CuisineRow | None, goods: GoodBook, food: CommodityKind) 
 def shunned(cuisine: CuisineRow | None, goods: GoodBook, food: CommodityKind) -> bool:
     good = goods.rows.get(food)
     return cuisine is not None and good is not None and cuisine.taboo_category is good.category
-
-
-FIRST_COURSES = (D.STAPLE, D.DRINK, D.FESTIVE, D.SIDE, D.RITE, D.RATION, D.DELICACY, D.REMEDY)
 
 
 async def invent(ctx: TickContext, knowledge: KnowledgeMap, tally: KitchenTally) -> None:
@@ -413,16 +254,16 @@ async def savour(ctx: TickContext, town: EntityRow, dish: DishRow, *, skill: int
     profile = await ctx.session.get(SettlementProfileRow, town.id)
     skilled = 1.0 if skill >= dish.prep_skill else table.skill_pct / PERCENT
     lift = round_half_up(dish.delight * skilled * table.delight_pct / PERCENT * await culture_lift(ctx.session, ctx.rules, town.id, dish.method, dish.course))
-    if profile is not None and dish.course in {D.STAPLE, D.SIDE, D.DRINK, D.FESTIVE} and "unrest" not in profile.locked:
+    if profile is not None and dish.course in SAVOUR_DISH_COURSES and "unrest" not in profile.locked:
         profile.unrest = clamp_int(profile.unrest - lift, 0, PERCENT)
-    if profile is not None and dish.course in {D.DELICACY, D.FESTIVE} and "prestige" not in profile.locked:
+    if profile is not None and dish.course in SAVOUR_DISH_COURSES_2 and "prestige" not in profile.locked:
         fresh = await novelty_of(ctx.session, dish.entity_id) / PERCENT
         steps = await ctx.session.scalar(select(func.count()).select_from(DishStepRow).where(DishStepRow.dish_id == dish.id)) or 1
         craft = 1 + (steps - 1) * table.step_prestige_pct / PERCENT
         profile.prestige = clamp_int(profile.prestige + round_half_up(dish.prestige * fresh * craft * table.prestige_pct / PERCENT), 0, PERCENT)
     if dish.course is D.RITE and stat(town, "piety") is not None:
         shift_stat(town, "piety", round_half_up(dish.delight * table.rite_pct / PERCENT))
-    if dish.course in {D.STAPLE, D.REMEDY} and stat(town, "prosperity") is not None:
+    if dish.course in SAVOUR_DISH_COURSES_3 and stat(town, "prosperity") is not None:
         shift_stat(town, "prosperity", round_half_up(dish.nourishment * table.nourish_pct / PERCENT))
 
 

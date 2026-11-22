@@ -1,13 +1,14 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.domestication import UNBOUND_BIOCHEMISTRY
 from aerona.catalog.flora import world_life
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.flora import WorldBiochemistryRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.ecology import UNBOUND_BIOCHEMISTRY, Biochemistry
+from aerona.domain.enums.ecology import Biochemistry
 
 LIFE_FIXUP = "flora.world_life"
 ORDER = tuple(Biochemistry)

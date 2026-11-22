@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.discovery import DANGEROUS_BRANCHES
+from aerona.catalog.life.lore import PRINTED
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import BookContentRow, IdeologyAdherentRow
 from aerona.db.tables.discovery import BannedWorkRow
@@ -10,7 +11,6 @@ from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
@@ -20,8 +20,6 @@ from aerona.engine.lore.learning import realm_of
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
-
-PRINTED = (Technique.PRINTING, Technique.PRINTING_PRESS)
 
 
 async def printed(session: AsyncSession, holder_id: int | None) -> bool:

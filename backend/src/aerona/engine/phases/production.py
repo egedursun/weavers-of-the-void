@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
+from aerona.catalog.body_plans import MINED_PLANS
 from aerona.catalog.commodities import commodity_label
 from aerona.catalog.materials import SPECIES_GOODS, SPECIES_GROUNDS, SPECIES_YIELDS
 from aerona.constants.units import PERCENT
@@ -273,7 +274,7 @@ async def _deposit_at(ctx: TickContext, place_id: int, material: MaterialKind) -
 async def _god_remains(ctx: TickContext) -> int:
     made = 0
     for corpse in await canon(ctx.session, [EntityType.PLACE]):
-        if corpse.engine_kind is not EngineKind.DEAD_GOD or await _deposit_at(ctx, corpse.id, MaterialKind.GODFLESH):
+        if corpse.engine_kind is not EngineKind.DEAD_GOD or await _deposit_at(ctx, corpse.id, MaterialKind.DIVINE_TISSUE):
             continue
         await open_deposit(
             ctx,
@@ -282,7 +283,7 @@ async def _god_remains(ctx: TickContext) -> int:
                 body=f"The remains of the dead god at {corpse.name} can be taken and carried away.",
                 place=corpse,
                 commodity=CommodityKind.ORE,
-                material=MaterialKind.GODFLESH,
+                material=MaterialKind.DIVINE_TISSUE,
                 richness=80,
                 quality=90,
             ),
@@ -472,7 +473,7 @@ async def _herded(ctx: TickContext) -> set[int]:
 
 
 def _wanted(plan: BodyPlan | None, abundance: int, rules: Rules, herded: bool) -> list[tuple[CommodityKind, MaterialKind | None]]:
-    materials = SPECIES_YIELDS.get(plan, ()) if plan in (BodyPlan.COLOSSAL, BodyPlan.INSECTOID) else ()
+    materials = SPECIES_YIELDS.get(plan, ()) if plan in MINED_PLANS else ()
     wanted: list[tuple[CommodityKind, MaterialKind | None]] = [(CommodityKind.ORE, materials[0])] if materials else []
     if plan is not None and not herded and abundance >= rules.extraction.species_ground_abundance:
         wanted.extend((good, None) for good in SPECIES_GOODS.get(plan, ()))

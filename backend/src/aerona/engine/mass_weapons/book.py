@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import ARMED_STAGES
 from aerona.core.total import total
 from aerona.db.tables.leagues import LeagueMemberRow
 from aerona.db.tables.mass_weapons import DeterrencePostureRow, MassWeaponRow
@@ -10,7 +11,7 @@ from aerona.db.tables.polity import PolityMemberRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.leagues import LeagueStanding
-from aerona.domain.enums.mass_weapons import ARMED_STAGES, MassHarm, MassReach, RemnantKind
+from aerona.domain.enums.mass_weapons import MassHarm, MassReach, RemnantKind
 from aerona.engine.lore.research import lacks, techniques_of
 from aerona.engine.primitives.queries import active_bonds
 

@@ -5,6 +5,7 @@ from types import MappingProxyType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.settlement import BASE_PARAMETERS_DISTRICT_KINDS, BASE_PARAMETERS_DISTRICT_KINDS_2, DISASTER_TARGETS, OFFICE_TIER_RULES
 from aerona.catalog.urban import DENSITY_RULE, HOUSING_RULE
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import WorkshopRow
@@ -29,39 +30,6 @@ CONDITION_KEY = "condition"
 LEVEL_KEY = "level"
 MATERIAL_KEY = "material"
 DISTRICT_LOCKS = (LEVEL_KEY, CONDITION_KEY, MATERIAL_KEY)
-DISASTER_TARGETS: Mapping[DistrictHarm, frozenset[DistrictKind]] = MappingProxyType(
-    {
-        DistrictHarm.FLOOD: frozenset(
-            {
-                DistrictKind.FARMLAND,
-                DistrictKind.HARBOUR,
-                DistrictKind.SLUMS,
-                DistrictKind.MARKET,
-                DistrictKind.NECROPOLIS,
-                DistrictKind.TRANSPORT_HUB,
-                DistrictKind.SUBURB,
-            }
-        ),
-        DistrictHarm.EARTHQUAKE: frozenset(DistrictKind),
-        DistrictHarm.STORM: frozenset({DistrictKind.HARBOUR, DistrictKind.SLUMS, DistrictKind.FARMLAND, DistrictKind.FOREIGN_QUARTER}),
-        DistrictHarm.DROUGHT: frozenset({DistrictKind.FARMLAND}),
-        DistrictHarm.SACK: frozenset(
-            {
-                DistrictKind.BUSINESS,
-                DistrictKind.INDUSTRIAL,
-                DistrictKind.ENTERTAINMENT,
-                DistrictKind.SUBURB,
-                DistrictKind.MARKET,
-                DistrictKind.PALACE,
-                DistrictKind.TEMPLE_QUARTER,
-                DistrictKind.CRAFT_QUARTER,
-                DistrictKind.FOREIGN_QUARTER,
-                DistrictKind.HARBOUR,
-                DistrictKind.SLUMS,
-            }
-        ),
-    }
-)
 HARM_STEPS: Mapping[DistrictHarm, StepAction] = MappingProxyType(
     {
         DistrictHarm.FLOOD: StepAction.FLOOD_LAND,
@@ -69,20 +37,6 @@ HARM_STEPS: Mapping[DistrictHarm, StepAction] = MappingProxyType(
         DistrictHarm.STORM: StepAction.BLOW,
         DistrictHarm.DROUGHT: StepAction.DRY,
         DistrictHarm.SACK: StepAction.PILLAGE,
-    }
-)
-OFFICE_TIER_RULES: Mapping[OfficeKind, str] = MappingProxyType(
-    {
-        OfficeKind.CHANCELLOR: "chancellor_tier",
-        OfficeKind.MARSHAL: "marshal_tier",
-        OfficeKind.TREASURER: "treasurer_tier",
-        OfficeKind.HIGH_JUDGE: "high_judge_tier",
-        OfficeKind.SPYMASTER: "spymaster_tier",
-        OfficeKind.HERALD: "herald_tier",
-        OfficeKind.CHAPLAIN: "chaplain_tier",
-        OfficeKind.GOVERNOR: "governor_tier",
-        OfficeKind.COURT_SCHOLAR: "court_scholar_tier",
-        OfficeKind.JESTER: "jester_tier",
     }
 )
 
@@ -124,9 +78,9 @@ def base_parameters(rules: Rules, kind: DistrictKind) -> dict[str, int]:
     table = rules.districts
     found = dict.fromkeys(DESIGN_PARAMETERS, 0)
     found["housing"] = urban.housing_per_level * density_pct(rules, kind) // PERCENT
-    if kind in (DistrictKind.FARMLAND, DistrictKind.MARKET):
+    if kind in BASE_PARAMETERS_DISTRICT_KINDS:
         found["food_store"] = urban.granary_per_level
-    if kind in (DistrictKind.MARKET, DistrictKind.CRAFT_QUARTER):
+    if kind in BASE_PARAMETERS_DISTRICT_KINDS_2:
         found["goods_store"] = table.warehouse_per_level
     if kind is DistrictKind.HARBOUR:
         found["harbour"] = urban.harbour_per_level

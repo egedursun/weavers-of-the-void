@@ -3,6 +3,7 @@ from dataclasses import replace
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_tables import ORIGIN_BASE
 from aerona.catalog.materials import MATERIALS
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.body import BodyRow
@@ -28,7 +29,7 @@ from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.economy import control_depth
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.control_depth import Substance
-from aerona.engine.economy.deposits import ORIGIN_BASE, has_substance, new_substance
+from aerona.engine.economy.deposits import has_substance, new_substance
 from aerona.engine.economy.extraction import knowledge_gate
 from aerona.engine.economy.loot import loot_temples
 from aerona.engine.economy.markets import quote_market

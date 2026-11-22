@@ -1,12 +1,12 @@
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.grammar import an, spoken
-from aerona.core.total import total
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, SpiritProfileRow
@@ -130,6 +130,13 @@ async def fall(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None
     await record(ctx, "mythic.servitor_fell", roles={IncidentRole.SUBJECT: [row.spirit_entity_id, old, master]}, kind=ChronicleKind.WORLD)
 
 
+Duty = Callable[[TickContext, ServitorRow, ServitorTally], Awaitable[None]]
+
+
+DUTIES: Handlers[ServitorRole, Duty] = Handlers(ServitorRole)
+
+
+@DUTIES.on(ServitorRole.JUDGE)
 async def judge(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:
     son = await ctx.session.get(SonRow, row.god_node_id)
     if son is None:
@@ -145,10 +152,15 @@ async def standings(ctx: TickContext, god_id: int) -> list[DivineStandingRow]:
     return [row for row in rows if not held(row.community_entity_id)]
 
 
+@DUTIES.on(ServitorRole.MESSENGER)
+@DUTIES.on(ServitorRole.GUARD)
+@DUTIES.on(ServitorRole.HOST)
+@DUTIES.on(ServitorRole.SPY)
 async def stand_by(_ctx: TickContext, _row: ServitorRow, _tally: ServitorTally) -> None:
     return None
 
 
+@DUTIES.on(ServitorRole.AGENT)
 async def act_as_agent(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:
     post = await ctx.session.get(EntityRow, row.post_entity_id) if row.post_entity_id is not None else None
     if post is not None and post.status is EntityStatus.CANON and not held(post.id):
@@ -156,6 +168,7 @@ async def act_as_agent(ctx: TickContext, row: ServitorRow, tally: ServitorTally)
         tally.served += 1
 
 
+@DUTIES.on(ServitorRole.AVENGER)
 async def avenge(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:
     table = ctx.rules.servitors
     for standing in await standings(ctx, row.god_node_id):
@@ -164,6 +177,7 @@ async def avenge(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> No
             tally.served += 1
 
 
+@DUTIES.on(ServitorRole.GUIDE_OF_SOULS)
 async def guide_souls(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:
     son = await ctx.session.get(SonRow, row.god_node_id)
     if son is None:
@@ -180,6 +194,7 @@ async def guide_souls(ctx: TickContext, row: ServitorRow, tally: ServitorTally) 
             tally.served += 1
 
 
+@DUTIES.on(ServitorRole.WORSHIPPER)
 async def worship(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:
     for standing in await standings(ctx, row.god_node_id):
         if standing.love >= ctx.rules.servitors.avenger_scorn and "awe" not in standing.locked:
@@ -187,6 +202,7 @@ async def worship(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> N
             tally.served += 1
 
 
+@DUTIES.on(ServitorRole.WARDEN)
 async def ward(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:
     town = await ctx.session.get(SettlementProfileRow, row.post_entity_id) if row.post_entity_id is not None else None
     if town is None or held(town.settlement_entity_id):
@@ -199,6 +215,7 @@ async def ward(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None
     tally.served += 1
 
 
+@DUTIES.on(ServitorRole.SCRIBE)
 async def keep_accounts(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:
     tellers = set(await ctx.session.scalars(select(FolkBeliefRow.people_entity_id).where(FolkBeliefRow.god_node_id == row.god_node_id)))
     for standing in await standings(ctx, row.god_node_id):
@@ -209,23 +226,7 @@ async def keep_accounts(ctx: TickContext, row: ServitorRow, tally: ServitorTally
             tally.served += 1
 
 
-Duty = Callable[[TickContext, ServitorRow, ServitorTally], Awaitable[None]]
-DUTIES: Mapping[ServitorRole, Duty] = total(
-    ServitorRole,
-    {
-        ServitorRole.MESSENGER: stand_by,
-        ServitorRole.GUARD: stand_by,
-        ServitorRole.JUDGE: judge,
-        ServitorRole.HOST: stand_by,
-        ServitorRole.SPY: stand_by,
-        ServitorRole.AGENT: act_as_agent,
-        ServitorRole.AVENGER: avenge,
-        ServitorRole.GUIDE_OF_SOULS: guide_souls,
-        ServitorRole.WORSHIPPER: worship,
-        ServitorRole.WARDEN: ward,
-        ServitorRole.SCRIBE: keep_accounts,
-    },
-)
+DUTIES.seal()
 
 
 async def raise_saints(ctx: TickContext, tally: ServitorTally) -> None:

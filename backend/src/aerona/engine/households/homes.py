@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.households import CLASS_DISTRICTS, RULES_REALM_OFFICE_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.dwelling_kinds import DwellingKindRow
 from aerona.db.tables.entities import EntityRow
@@ -11,8 +12,6 @@ from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.place import PlaceKind
-from aerona.domain.enums.polity import OfficeKind
-from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.genetics.life import disease_factor
@@ -98,9 +97,7 @@ def expectation(social_class: SocialClass | None) -> int:
 
 
 async def rules_realm(session: AsyncSession, mortal_id: int) -> bool:
-    found = await session.scalar(
-        select(OfficeRow.id).where(OfficeRow.holder_entity_id == mortal_id, OfficeRow.kind.in_([OfficeKind.RULER, OfficeKind.REGENT])).limit(1)
-    )
+    found = await session.scalar(select(OfficeRow.id).where(OfficeRow.holder_entity_id == mortal_id, OfficeRow.kind.in_(RULES_REALM_OFFICE_KINDS)).limit(1))
     return found is not None
 
 
@@ -135,25 +132,6 @@ async def dwelling_key_for(session: AsyncSession, rules: Rules, mortal: EntityRo
 async def dwelling_kind_for(session: AsyncSession, rules: Rules, mortal: EntityRow) -> DwellingKindRow:
     people = await people_of(session, mortal)
     return await dwelling_of_people(session, people.id if people is not None else None, await dwelling_key_for(session, rules, mortal))
-
-
-CLASS_DISTRICTS: dict[SocialClass, tuple[DistrictKind, ...]] = {
-    SocialClass.NOBLE: (DistrictKind.PALACE, DistrictKind.CITADEL, DistrictKind.MARKET),
-    SocialClass.MERCHANT: (DistrictKind.MARKET, DistrictKind.HARBOUR, DistrictKind.FOREIGN_QUARTER),
-    SocialClass.PRIEST: (DistrictKind.TEMPLE_QUARTER,),
-    SocialClass.MONASTIC: (DistrictKind.TEMPLE_QUARTER,),
-    SocialClass.SCRIBE: (DistrictKind.TEMPLE_QUARTER, DistrictKind.MARKET),
-    SocialClass.ARTISAN: (DistrictKind.CRAFT_QUARTER, DistrictKind.MARKET),
-    SocialClass.WARRIOR: (DistrictKind.CITADEL,),
-    SocialClass.FARMER: (DistrictKind.FARMLAND,),
-    SocialClass.SERF_OR_SLAVE: (DistrictKind.SLUMS, DistrictKind.FARMLAND),
-    SocialClass.OUTCAST: (DistrictKind.SLUMS,),
-    SocialClass.WORKER: (DistrictKind.INDUSTRIAL, DistrictKind.RESIDENTIAL, DistrictKind.SLUMS),
-    SocialClass.PROFESSIONAL: (DistrictKind.BUSINESS, DistrictKind.RESEARCH, DistrictKind.SUBURB),
-    SocialClass.OFFICIAL: (DistrictKind.CIVIC_QUARTER, DistrictKind.BUSINESS),
-    SocialClass.CITIZEN: (DistrictKind.RESIDENTIAL, DistrictKind.SUBURB, DistrictKind.MARKET),
-    SocialClass.UNEMPLOYED: (DistrictKind.SLUMS, DistrictKind.RESIDENTIAL),
-}
 
 
 async def district_for(session: AsyncSession, settlement_id: int | None, social_class: SocialClass | None) -> int | None:

@@ -2,7 +2,10 @@ from collections import defaultdict
 from collections.abc import Mapping
 
 from aerona.catalog.commodities import STRATEGIC_KINDS
+from aerona.catalog.goods_tables import STRATEGIC_INPUTS
+from aerona.catalog.goods_traits import materials_with
 from aerona.catalog.materials import COIN_MATERIALS
+from aerona.catalog.movement import trade_modes
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import spoken
@@ -15,8 +18,8 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.folkways import BiasedDecision
+from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole, ModifierOp
 from aerona.domain.enums.records import StepAction
@@ -44,15 +47,10 @@ from aerona.engine.services.war import declare_war
 from aerona.rules.registry import Rules
 
 TRADER_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.FACTION, EntityType.PEOPLE})
-STRATEGIC_INPUTS: dict[CommodityKind, tuple[CommodityKind, ...]] = {
-    CommodityKind.ORE: (CommodityKind.WEAPONS, CommodityKind.ARMOUR, CommodityKind.TOOLS),
-    CommodityKind.LIVESTOCK: (CommodityKind.MOUNTS,),
-    CommodityKind.TIMBER: (CommodityKind.SIEGE_MATERIEL,),
-}
-STRATEGIC_MATERIALS = frozenset({MaterialKind.IRON, MaterialKind.STAR_METAL, MaterialKind.SKYSTEEL, MaterialKind.GREAT_BONE})
+STRATEGIC_MATERIALS = frozenset(materials_with(MaterialTrait.STRATEGIC))
 
 
-TRADE_MODES = (MovementMode.ON_FOOT, MovementMode.WHEELED, MovementMode.BOAT)
+TRADE_MODES = trade_modes()
 
 
 def footed_ease(ground: EnvironmentBook, seed: int, epoch: int, region: RegionEnvironmentRow) -> float:

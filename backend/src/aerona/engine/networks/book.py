@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.networks import CARRIER_DAYS
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.economy import CurrencyRow
@@ -10,16 +11,6 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.networks import NetworkCarrier
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.rules.registry import Rules
-
-CARRIER_DAYS = {
-    NetworkCarrier.RELAY: "relay_days",
-    NetworkCarrier.WIRED: "wired_days",
-    NetworkCarrier.BROADCAST: "broadcast_days",
-    NetworkCarrier.MESH: "mesh_days",
-    NetworkCarrier.MIND_LINK: "mind_link_days",
-    NetworkCarrier.RITE_LINK: "rite_link_days",
-    NetworkCarrier.GROWN_LINK: "grown_link_days",
-}
 
 
 def carrier_days(rules: Rules, carrier: NetworkCarrier) -> int:

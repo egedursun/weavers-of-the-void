@@ -2,6 +2,16 @@ from collections import defaultdict
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.powers import (
+    AT_DEATH_POWER_ORIGINS,
+    BROKEN_VOWS_RESTRICTION_KINDS,
+    CASTE_STANDING,
+    HEIRS_POWER_ORIGINS,
+    KEEP_APART_GIFTED_ATTITUDES,
+    MOVE_LAWS_GIFTED_ATTITUDES,
+    STANCE_ATTITUDE,
+)
+from aerona.catalog.life_traits import POWER_ORIGIN_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -14,12 +24,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import IdentityReason, IntrigueSecret
+from aerona.domain.enums.life_traits import PowerOriginTrait
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind
-from aerona.domain.enums.powers import BloodlineRule, GiftedAttitude, PowerDeviceEffect, PowerOrigin, PowerState, PowerVisibility, RestrictionKind
+from aerona.domain.enums.powers import BloodlineRule, GiftedAttitude, PowerDeviceEffect, PowerOrigin, PowerState, PowerVisibility
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -30,7 +41,7 @@ from aerona.engine.mind.book import values_for
 from aerona.engine.polity.laws import enact, law_param
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.powers.devices import devices_of
-from aerona.engine.powers.kinds import STANCE_ATTITUDE, teachable
+from aerona.engine.powers.kinds import teachable
 from aerona.engine.powers.war import field_gifted
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.queries import connect
@@ -38,8 +49,7 @@ from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.recording.record import record
 
 CASTE_NAME = "those born with powers"
-CASTE_STANDING = {GiftedAttitude.HONOURED: 85, GiftedAttitude.PERSECUTED: 10}
-BORN_ORIGINS = frozenset({PowerOrigin.BORN, PowerOrigin.BLOODLINE})
+BORN_ORIGINS = having(POWER_ORIGIN_TRAITS, PowerOriginTrait.BORN_ORIGINS)
 GIFTED_LAWS = frozenset({"registered", "licensed", "conscripted"})
 HUNTING_LAWS = frozenset({"hunted", "banned"})
 LEAN = 25
@@ -241,9 +251,7 @@ async def registry_pull(ctx: TickContext) -> int:
 async def move_laws(ctx: TickContext) -> int:
     table = ctx.rules.powered_society
     moved = await registry_pull(ctx)
-    for row in list(
-        await ctx.session.scalars(select(GiftedAttitudeRow).where(GiftedAttitudeRow.attitude.in_([GiftedAttitude.FEARED, GiftedAttitude.PERSECUTED])))
-    ):
+    for row in list(await ctx.session.scalars(select(GiftedAttitudeRow).where(GiftedAttitudeRow.attitude.in_(MOVE_LAWS_GIFTED_ATTITUDES)))):
         homes = await towns_of_people(ctx.session, row.people_entity_id)
         polity_id = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id.in_(homes)).limit(1))
         polity = await ctx.session.get(EntityRow, polity_id) if polity_id is not None else None
@@ -293,11 +301,7 @@ async def heirs(ctx: TickContext) -> int:
         )
         if rule is BloodlineRule.ELDEST and int(siblings or 0) > 0:
             continue
-        for power in list(
-            await ctx.session.scalars(
-                select(PowerRow).where(PowerRow.holder_node_id.in_(parents), PowerRow.origin.in_([PowerOrigin.BLOODLINE, PowerOrigin.EXPOSURE]))
-            )
-        ):
+        for power in list(await ctx.session.scalars(select(PowerRow).where(PowerRow.holder_node_id.in_(parents), PowerRow.origin.in_(HEIRS_POWER_ORIGINS)))):
             if power.origin is PowerOrigin.BLOODLINE and not housed:
                 continue
             if rule is BloodlineRule.SKIPPED and ctx.rng(f"power.skip.{child.id}.{power.id}").chance(PERCENT // 2):
@@ -333,7 +337,7 @@ async def at_death(ctx: TickContext) -> int:
     for power in list(await ctx.session.scalars(select(PowerRow).where(PowerRow.holder_node_id.in_(gone), PowerRow.state != PowerState.LOST))):
         if held(power.holder_node_id) or "state" in power.locked:
             continue
-        if power.origin in {PowerOrigin.MADE, PowerOrigin.GROWN, PowerOrigin.HELD} and power.item_node_id is not None:
+        if power.origin in AT_DEATH_POWER_ORIGINS and power.item_node_id is not None:
             power.holder_node_id = power.item_node_id
             power.state = PowerState.LATENT
         else:
@@ -363,7 +367,7 @@ async def keep_apart(ctx: TickContext) -> int:
         town = await ctx.session.get(EntityRow, holder.location_id)
         folk = await people_of(ctx.session, town) if town is not None else None
         home = await ctx.session.get(GiftedAttitudeRow, folk.id) if folk is not None else None
-        feared = home is not None and home.attitude in {GiftedAttitude.FEARED, GiftedAttitude.PERSECUTED}
+        feared = home is not None and home.attitude in KEEP_APART_GIFTED_ATTITUDES
         if level not in HUNTING_LAWS and not feared:
             continue
         found = await assume(ctx, holder, IdentityReason.HIDDEN_POWER, f"{holder.name.split()[0]} of no note", community_id=holder.location_id)
@@ -427,7 +431,7 @@ async def broken_vows(ctx: TickContext) -> int:
     vows = await ctx.session.execute(
         select(PowerRestrictionRow, PowerRow)
         .join(PowerRow, PowerRow.id == PowerRestrictionRow.power_id)
-        .where(PowerRestrictionRow.kind.in_([RestrictionKind.SPOKEN_VOW, RestrictionKind.FORBIDDEN_ACT]), PowerRestrictionRow.broken.is_(False))
+        .where(PowerRestrictionRow.kind.in_(BROKEN_VOWS_RESTRICTION_KINDS), PowerRestrictionRow.broken.is_(False))
     )
     for restriction, power in vows.all():
         if held(power.holder_node_id) or "broken" in restriction.locked:

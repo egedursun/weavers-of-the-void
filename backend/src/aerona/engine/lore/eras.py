@@ -3,6 +3,7 @@ from collections import defaultdict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.lore import SETTLE_AGES_AGE_KINDS
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
@@ -168,7 +169,7 @@ async def settle_ages(ctx: TickContext) -> int:
                 await record_incident(ctx, f"discovery.age_{age.value}", roles={IncidentRole.SUBJECT: polity.id}, facts={"age": age, "score": row.score})
         profile = await ctx.session.get(PolityProfileRow, polity.id)
         if profile is not None and "stability" not in profile.locked:
-            if row.age in {AgeKind.GOLDEN, AgeKind.HEROIC}:
+            if row.age in SETTLE_AGES_AGE_KINDS:
                 profile.stability = clamp_int(profile.stability + table.golden_stability, 0, PERCENT)
             elif row.age is AgeKind.DARK:
                 profile.stability = clamp_int(profile.stability - table.dark_stability, 0, PERCENT)

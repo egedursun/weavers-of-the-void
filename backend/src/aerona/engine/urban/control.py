@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import CRIME_KINDS
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -32,7 +33,7 @@ from aerona.db.tables.urban import (
 )
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.faction import CRIME_KINDS, FactionKind
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.urban import CrimeStance, MarketPlay, OrderLaw, RacketKind, TransportKind, UrbanService
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext

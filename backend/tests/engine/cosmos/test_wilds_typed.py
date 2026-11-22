@@ -101,7 +101,7 @@ async def test_a_profile_is_built_from_typed_fields_and_never_from_its_words(ctx
     assert row.diet is Diet.HERBIVORE and row.sociality is Sociality.HERD
     assert not row.nocturnal and not row.migratory and row.body_plan is BodyPlan.QUADRUPED
     products = set(await ctx.session.scalars(select(SpeciesProductRow.product).where(SpeciesProductRow.species_entity_id == species.id)))
-    assert "silk" not in products and "great_bone" not in products
+    assert "silk" not in products and "great_beast_tissue" not in products
     typed = await kind(
         ctx,
         cosmos,
@@ -337,7 +337,7 @@ async def test_a_slain_kind_of_beast_yields_trophies_to_its_mortal_slayer(ctx: T
     assert await beasts.corpse(ctx, beast, row, hero) >= 2
     trophies = await beasts.owned_items(ctx, [hero.id])
     classes = {profile.material for profile in await ctx.session.scalars(select(ItemProfileRow).where(ItemProfileRow.item_entity_id.in_(trophies)))}
-    assert "great_bone" in classes
+    assert "great_beast_tissue" in classes
 
 
 async def test_a_cowed_town_swears_tribute_and_breaks_it_when_it_cannot_pay(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:

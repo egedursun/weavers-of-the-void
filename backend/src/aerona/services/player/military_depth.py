@@ -2,8 +2,10 @@ from typing import Any
 
 from pydantic import Field
 
+from aerona.catalog.life_traits import DUEL_CONTEXT_TRAITS, having
 from aerona.core.grammar import an, several, spoken
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.life_traits import DuelContextTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import DuelContext, PeaceTermKind, WarAimKind
 from aerona.domain.enums.vehicles import VehicleFrame
@@ -15,7 +17,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 KIND_PATTERN = r"^[a-z][a-z_]*$"
-DUEL_CONTEXTS = frozenset({DuelContext.HONOUR, DuelContext.TRIAL, DuelContext.GOD, DuelContext.CHAMPION, DuelContext.WAR})
+DUEL_CONTEXTS = having(DUEL_CONTEXT_TRAITS, DuelContextTrait.DUEL_CONTEXTS)
 
 
 class RecordCreate(Command):

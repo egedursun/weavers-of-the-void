@@ -2,6 +2,8 @@ from collections.abc import Awaitable, Callable
 
 from sqlalchemy import Select, or_, select
 
+from aerona.catalog.life.minds import SHIELDED_HOSTS_INTRUSION_AIMS
+from aerona.catalog.life_traits import CLAUSE_KIND_TRAITS, ORDER_KIND_TRAITS, SPELL_TECHNIQUE_TRAITS, having
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.constructs import InstructionOrderRow, InstructionSetRow
 from aerona.db.tables.disease import DiseaseProfileRow
@@ -12,33 +14,20 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.networks import NetworkProfileRow
 from aerona.db.tables.polity import PolityMemberRow, TreatyClauseRow
 from aerona.db.tables.powers import PowerRow
-from aerona.domain.enums.arcana import SpellForm, SpellTechnique
+from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.entity import MortalRole
+from aerona.domain.enums.life_traits import ClauseKindTrait, OrderKindTrait, SpellTechniqueTrait
 from aerona.domain.enums.made import IntrusionAim, ReplicatorOutput, ReplicatorStage
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind
 from aerona.engine.context import TickContext
 from aerona.engine.mass_weapons.limits import past_limit
 
-WEAPON_ORDERS = frozenset({OrderKind.DESTROY, OrderKind.GUARD})
-METHOD_CLAUSES = frozenset(
-    {
-        ClauseKind.AUTONOMOUS_WEAPONS_BAN,
-        ClauseKind.MIND_SEIZURE_BAN,
-        ClauseKind.SOLDIER_COPY_BAN,
-        ClauseKind.REPLICATOR_WEAPON_BAN,
-        ClauseKind.CIVIL_NETWORK_SHIELD,
-        ClauseKind.CIVIL_HOST_SHIELD,
-        ClauseKind.NO_MIND_COMPULSION,
-        ClauseKind.NO_PLAGUE_POWERS,
-        ClauseKind.NO_DESIGNED_DISEASE,
-        ClauseKind.MASS_WEAPON_LIMIT,
-    }
-)
+WEAPON_ORDERS = having(ORDER_KIND_TRAITS, OrderKindTrait.WEAPON_ORDERS)
+METHOD_CLAUSES = having(CLAUSE_KIND_TRAITS, ClauseKindTrait.METHOD_CLAUSES)
 SEIZED = "it seized what the other side's minds and machines obeyed"
-HARMING = frozenset({SpellTechnique.DESTROY, SpellTechnique.DRAIN})
+HARMING = having(SPELL_TECHNIQUE_TRAITS, SpellTechniqueTrait.HARMING)
 
 
 async def side_of(ctx: TickContext, party_id: int) -> set[int]:
@@ -167,4 +156,4 @@ async def method_breached(ctx: TickContext, clause: TreatyClauseRow) -> str | No
 
 
 async def shielded_hosts(ctx: TickContext, actors: set[int], victims: set[int]) -> bool:
-    return await intruded(ctx, actors, victims, {IntrusionAim.DENY, IntrusionAim.SEIZE, IntrusionAim.ALTER}, await civil_hosts(ctx, victims))
+    return await intruded(ctx, actors, victims, set(SHIELDED_HOSTS_INTRUSION_AIMS), await civil_hosts(ctx, victims))

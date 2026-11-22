@@ -3,6 +3,7 @@ from types import MappingProxyType
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import STANDING_STATES
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gardens import GardenRow
@@ -16,7 +17,7 @@ from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.orders import TouristSight
 from aerona.domain.enums.settlement import SizeTier
-from aerona.domain.enums.structure import STANDING_STATES, StructureKind
+from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.outbreaks import open_outbreak

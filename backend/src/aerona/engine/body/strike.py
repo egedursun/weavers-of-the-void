@@ -2,6 +2,7 @@ from dataclasses import dataclass, replace
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.harm_kinds import damage_where
 from aerona.catalog.kinds.harm import HARM_CAUSES
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
@@ -17,7 +18,7 @@ from aerona.domain.enums.mortal import EquipmentSlot
 from aerona.engine.economy.materials import MaterialBook, MaterialProps, from_spec, node_material
 from aerona.rules.registry import Rules
 
-EDGED = frozenset({DamageType.CUT, DamageType.PIERCE, DamageType.BALLISTIC})
+EDGED = damage_where(lambda spec: spec.edged)
 HEAD = frozenset({BodyRegion.HEAD})
 BODY = frozenset({BodyRegion.TORSO, BodyRegion.ARMS, BodyRegion.LEGS, BodyRegion.WINGS, BodyRegion.TAIL})
 EVERYWHERE = frozenset(BodyRegion)

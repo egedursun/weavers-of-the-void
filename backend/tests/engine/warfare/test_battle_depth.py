@@ -1,6 +1,8 @@
 from collections.abc import Callable
 
-from aerona.catalog.units import DEFENDER_TERRAIN, TERRAIN_EFFECTS, UNITS, WEATHER_EFFECTS
+from aerona.catalog.terrain import TERRAIN
+from aerona.catalog.units import UNITS
+from aerona.catalog.weather import WEATHER
 from aerona.core.random import RandomKey, SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
@@ -23,7 +25,7 @@ from aerona.engine.military.battle import (
     treat,
     weather_factor,
 )
-from aerona.engine.military.tables import defender_cell, matchup, terrain_cell, weather_cell
+from aerona.engine.military.tables import defender_cell, matchup, terrain_cell, unit_terrain, weather_cell
 from aerona.rules.registry import Rules
 
 RULES = Rules()
@@ -67,14 +69,22 @@ def side(name: str, rows: list[ArmyUnitRow], *, defending: bool = False, ident: 
 
 
 def test_rule_tables_start_equal_to_the_old_catalog() -> None:
-    for terrain, row in TERRAIN_EFFECTS.items():
-        for family, value in row.items():
-            assert terrain_cell(RULES, terrain, family) == round(value * 100) / 100
-    for terrain, value in DEFENDER_TERRAIN.items():
-        assert defender_cell(RULES, terrain) == round(value * 100) / 100
-    for weather, row in WEATHER_EFFECTS.items():
-        for family, value in row.items():
-            assert weather_cell(RULES, weather, family) == round(value * 100) / 100
+    for terrain, spec in TERRAIN.items():
+        for family, value in spec.unit_factors(RULES).items():
+            assert terrain_cell(RULES, terrain, family) == value / 100
+        for kind, value in spec.unit_kinds(RULES).items():
+            assert unit_terrain(RULES, kind, terrain) == value / 100
+        assert defender_cell(RULES, terrain) == spec.defender(RULES) / 100
+    assert terrain_cell(RULES, TerrainKind.MOUNTAINS, UnitFamily.MOUNTED) == 0.3
+    assert terrain_cell(RULES, TerrainKind.PLAIN, UnitFamily.INFANTRY) == 1.0
+    assert defender_cell(RULES, TerrainKind.MOUNTAINS) == 1.5 and defender_cell(RULES, TerrainKind.PLAIN) == 1.0
+    assert unit_terrain(RULES, UnitKind.LIGHT_INFANTRY, TerrainKind.FOREST) == 1.2
+    assert unit_terrain(RULES, UnitKind.PARTISANS, TerrainKind.FOREST) == 1.3
+    assert unit_terrain(RULES, UnitKind.PARTISANS, TerrainKind.DESERT) == 1.0
+    for weather, weather_spec in WEATHER.items():
+        for family, value in weather_spec.unit_factors(RULES).items():
+            assert weather_cell(RULES, weather, family) == value / 100
+    assert weather_cell(RULES, WeatherKind.STORM, UnitFamily.AIR) == RULES.battle_weather.storm_air_pct / 100
     assert matchup(RULES, Tactic.HOLD_LINE, Tactic.FRONTAL_ASSAULT) == RULES.tactic_matchups.hold_line_vs_frontal_assault_pct / 100
     assert matchup(RULES, Tactic.HOLD_LINE, Tactic.AMBUSH) == 1.0
 

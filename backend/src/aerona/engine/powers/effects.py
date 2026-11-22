@@ -3,6 +3,15 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.powers import (
+    EFFECT_FOR_SPELL_FORMS_2,
+    EFFECT_FOR_SPELL_FORMS_4,
+    EFFECT_FOR_SPELL_FORMS_5,
+    EFFECT_FOR_SPELL_TECHNIQUES,
+    EFFECT_FOR_SPELL_TECHNIQUES_3,
+    FORM_WEATHER,
+    HARM_TYPES,
+)
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.collective import AccountRow
@@ -47,19 +56,6 @@ T = SpellTechnique
 F = SpellForm
 E = RiteEffectKind
 
-HARM_TYPES = {
-    F.FIRE: DamageType.FIRE,
-    F.WATER: DamageType.COLD,
-    F.AIR: DamageType.BLUNT,
-    F.EARTH: DamageType.BLUNT,
-    F.FORCE: DamageType.BLUNT,
-    F.SOUND: DamageType.BLUNT,
-    F.MIND: DamageType.PSYCHIC,
-    F.EMOTION: DamageType.PSYCHIC,
-    F.LIGHT: DamageType.FIRE,
-}
-FORM_WEATHER = {F.AIR: WeatherKind.STORM, F.WATER: WeatherKind.RAIN, F.FIRE: WeatherKind.HEAT_WAVE, F.IMAGE: WeatherKind.FOG}
-
 
 @dataclass(frozen=True)
 class Act:
@@ -99,16 +95,16 @@ def effect_for(technique: SpellTechnique, form: SpellForm, *, on_self: bool) -> 
     if (technique, form) in paired:
         return paired[(technique, form)]
     by_technique = {
-        T.DRAIN: E.DRAIN_LIFE if form in {F.BODY, F.PLANT, F.ANIMAL} else E.DRAIN_POWER,
+        T.DRAIN: E.DRAIN_LIFE if form in EFFECT_FOR_SPELL_FORMS_4 else E.DRAIN_POWER,
         T.MIMIC: E.COPY_POWER,
-        T.WARD: E.NULLIFY if form in {F.SPIRIT, F.VOID} else E.WARD,
+        T.WARD: E.NULLIFY if form in EFFECT_FOR_SPELL_FORMS_5 else E.WARD,
         T.PERCEIVE: E.SCRY,
     }
     if technique in by_technique:
         return by_technique[technique]
-    if technique in {T.CREATE, T.TRANSFORM} and form in {F.BODY, F.PLANT}:
+    if technique in EFFECT_FOR_SPELL_TECHNIQUES and form in EFFECT_FOR_SPELL_FORMS_2:
         return E.HEAL
-    return E.DAMAGE if technique in {T.DESTROY, T.CONTROL, T.TRANSFORM} else E.BLESS
+    return E.DAMAGE if technique in EFFECT_FOR_SPELL_TECHNIQUES_3 else E.BLESS
 
 
 async def span(ctx: TickContext, act: Act, effect: RiteEffectKind, *, prior: int = 0) -> PowerSpanRow:

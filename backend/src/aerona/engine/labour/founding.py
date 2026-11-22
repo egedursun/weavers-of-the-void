@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.labour import TRADE_CLASS, TRADE_FORM
+from aerona.catalog.life_traits import JOB_TRAITS, having
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -10,6 +11,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.faction import FactionKind, FactionRank
 from aerona.domain.enums.labour import LegalStanding, WorkerBodyForm
+from aerona.domain.enums.life_traits import JobTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.labour.bodies import LabourTally, body_covering, new_body, standing_at, trades_of
@@ -19,7 +21,7 @@ from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 
-MADE_MIND_TRADES = frozenset({Job.SERVICE, Job.SCHOLARSHIP, Job.CRAFTING})
+MADE_MIND_TRADES = having(JOB_TRAITS, JobTrait.MADE_MIND_TRADES)
 UNFOUNDED = frozenset({Job.IDLE})
 
 

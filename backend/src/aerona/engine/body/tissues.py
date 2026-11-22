@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from aerona.catalog.anatomy import Part
 from aerona.catalog.creature_anatomy import TISSUES as MATERIALS
+from aerona.catalog.harm_kinds import DAMAGE, damage_where
 from aerona.catalog.tissues import MAJOR_VESSELS, TISSUES, covering_of, stack_of
 from aerona.constants.units import PERCENT
 from aerona.db.tables.anatomy import CreatureAnatomyRow
@@ -10,9 +11,9 @@ from aerona.domain.enums.ecology import TissueMaterial
 from aerona.rules.registry import Rules
 
 T = TissueKind
-CUTTING = frozenset({DamageType.CUT, DamageType.PIERCE, DamageType.BALLISTIC})
-STRIKING = frozenset({*CUTTING, DamageType.BLUNT, DamageType.EXPLOSIVE, DamageType.SONIC})
-SEARING = frozenset({DamageType.FIRE, DamageType.COLD, DamageType.ENERGY, DamageType.ELECTRIC, DamageType.CHEMICAL})
+CUTTING = damage_where(lambda spec: spec.edged)
+STRIKING = damage_where(lambda spec: spec.striking)
+SEARING = damage_where(lambda spec: spec.searing)
 
 
 @dataclass(frozen=True)
@@ -50,7 +51,7 @@ def property_kept(skin: TissueMaterial, damage_type: DamageType | None) -> float
     spec = MATERIALS[skin]
     if damage_type is DamageType.ELECTRIC:
         return 1 + spec.conductivity / PERCENT / 2
-    if damage_type in (DamageType.FIRE, DamageType.COLD):
+    if damage_type is not None and DAMAGE[damage_type].thermal:
         return 1 - spec.heat_resistance / PERCENT / 2
     if damage_type is DamageType.BLUNT:
         return 1 - spec.flexibility / PERCENT / 4

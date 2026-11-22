@@ -34,6 +34,7 @@ from aerona.api.schemas.wilds import (
     YieldView,
 )
 from aerona.api.views.common import node_refs
+from aerona.catalog.domestication import UNBOUND_BIOCHEMISTRY
 from aerona.catalog.flora import BIOCHEMISTRY_LABELS, plant_product_of
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
@@ -60,7 +61,7 @@ from aerona.db.tables.kinds import GoodKindRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.ecology import UNBOUND_BIOCHEMISTRY, Biochemistry, FoodLink
+from aerona.domain.enums.ecology import Biochemistry, FoodLink
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import OFFICE_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.demography import PeopleCultureRow
@@ -15,6 +16,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.genetics import HouseholdRole
+from aerona.domain.enums.life_traits import OfficeKindTrait
 from aerona.domain.enums.mind import ActKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind, OfficePower
@@ -44,7 +46,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining
 from aerona.engine.regime.book import HALF, clients_of
 
-SEATS_KEPT = frozenset({OfficeKind.RULER, OfficeKind.HEIR_DESIGNATE, OfficeKind.REGENT})
+SEATS_KEPT = having(OFFICE_KIND_TRAITS, OfficeKindTrait.SEATS_KEPT)
 TROOP_UNIT = 100
 
 

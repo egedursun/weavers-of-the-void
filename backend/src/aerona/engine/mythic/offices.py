@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life_traits import OFFICE_DUTY_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.kind_concepts.nature import DUTY_DOMAINS, DUTY_FORMS
 from aerona.db.tables.cosmos import CreatorRow
@@ -18,6 +19,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faith import AfterlifeState
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.life_traits import OfficeDutyTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import CosmicOffice, OfficeChoice
 from aerona.domain.enums.nature_kinds import OfficeDuty
@@ -93,11 +95,9 @@ async def income_of(ctx: TickContext, row: CosmicOfficeRow) -> int:
     return round_half_up(int(total or 0) * ctx.rules.cosmic_offices.income_pct / PERCENT * share / PERCENT)
 
 
-DUTY_TOWNS = frozenset(
-    {OfficeDuty.THE_SKY, OfficeDuty.OATHS, OfficeDuty.MESSAGES, OfficeDuty.JUDGEMENT, OfficeDuty.MEMORY, OfficeDuty.MAKING, OfficeDuty.HEALING}
-)
-UNREST_DUTIES = frozenset({OfficeDuty.OATHS, OfficeDuty.JUDGEMENT})
-PIETY_DUTIES = frozenset({OfficeDuty.THE_SKY, OfficeDuty.MESSAGES, OfficeDuty.MEMORY})
+DUTY_TOWNS = having(OFFICE_DUTY_TRAITS, OfficeDutyTrait.DUTY_TOWNS)
+UNREST_DUTIES = having(OFFICE_DUTY_TRAITS, OfficeDutyTrait.UNREST_DUTIES)
+PIETY_DUTIES = having(OFFICE_DUTY_TRAITS, OfficeDutyTrait.PIETY_DUTIES)
 
 
 async def neglect_towns(ctx: TickContext, duty: OfficeDuty, weight: float) -> None:

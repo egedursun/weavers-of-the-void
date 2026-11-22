@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.aspirations import FEARS, GOALS, INSPIRATION_LABELS, WANTS
 from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS, STANCE_READINGS
+from aerona.catalog.life.mind import OPEN_GRIEF
 from aerona.catalog.mind import MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
 from aerona.catalog.preferences import target_label
@@ -22,7 +23,7 @@ from aerona.db.tables.renown import DeedClaimRow, ReputationRow, RulerCurrencyRo
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.mind import DreamReading, Emotion, EthicalStance, GriefStage, IdeaState, InspirationState, PressureKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import DreamReading, Emotion, EthicalStance, IdeaState, InspirationState, PressureKind, ValueAxis, ValueHolder
 from aerona.domain.enums.relations import ContestEnd, RelationType
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus
 from aerona.engine.mind.book import Holder, holder_kind, needs_of, pressures_of, skills_of, traits_of, values_of
@@ -48,7 +49,6 @@ HOLDER_WORDS = {
 }
 STRONG = 60
 FAINT = 25
-OPEN_GRIEF = (GriefStage.SHOCK, GriefStage.MOURNING)
 HOME_BONDS = (BondKind.LIVES_IN, BondKind.MEMBER_OF, BondKind.PROTECTS, BondKind.DESCENDS_FROM)
 
 

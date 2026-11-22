@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.life.tools import VENUE_REACH
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
@@ -20,16 +21,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-
-VENUE_REACH = {
-    SpeechVenue.ASSEMBLY: 60,
-    SpeechVenue.COURT: 30,
-    SpeechVenue.TEMPLE: 50,
-    SpeechVenue.SQUARE: 50,
-    SpeechVenue.SCHOOL: 30,
-    SpeechVenue.CAMP: 40,
-    SpeechVenue.OUTLET: 0,
-}
 
 
 class GiveSpeechInput(ToolInput):

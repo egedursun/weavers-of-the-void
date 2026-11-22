@@ -3,13 +3,15 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.domestication import KEPT_STAGES
+from aerona.catalog.life.domain import GROWN
 from aerona.core.grammar import an
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.ecology import GROWN, KEPT_STAGES, AnimalRole, BeastTemper
+from aerona.domain.enums.ecology import AnimalRole, BeastTemper
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole

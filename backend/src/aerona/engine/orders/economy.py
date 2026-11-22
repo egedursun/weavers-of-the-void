@@ -6,6 +6,8 @@ from types import MappingProxyType
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import LENDER_KINDS
+from aerona.catalog.life_traits import ALLOCATION_MODE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.faction_kinds import of_kinds
@@ -22,7 +24,8 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import LENDER_KINDS, FactionKind
+from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.life_traits import AllocationModeTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.orders import (
@@ -79,8 +82,8 @@ AXIS_ENUMS: MappingProxyType[str, type[OwnershipRegime] | type[AllocationMode] |
 )
 BOUND_LABOUR = frozenset({L.CORVEE, L.SERF, L.BOUND, L.ENSLAVED, L.CONSCRIPTED})
 FREE_LABOUR = frozenset({L.FREE, L.COOPERATIVE})
-CENTRES = frozenset({A.REDISTRIBUTION, A.OBLIGATION})
-SHARING = frozenset({A.NEED, A.ABUNDANCE})
+CENTRES = having(ALLOCATION_MODE_TRAITS, AllocationModeTrait.CENTRES)
+SHARING = having(ALLOCATION_MODE_TRAITS, AllocationModeTrait.SHARING)
 TARGETS: MappingProxyType[TransitionKind, dict[str, str]] = MappingProxyType(
     {
         TransitionKind.COLLECTIVISATION: {"ownership": OWN.COOPERATIVE.value},

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.kinds.siege import STARVATION
+from aerona.catalog.life.military import BATTER_SIEGE_ACTIONS, DEFENCE_ACTIONS, SIEGE_ACTIONS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow
@@ -205,7 +206,7 @@ async def shelled(ctx: TickContext, siege: SiegeRow, engines: float) -> int:
 async def batter(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None, action: SiegeAction, engines: float) -> None:
     table = ctx.rules.siegecraft
     if walls is None:
-        siege.breaches += 1 if action in {SiegeAction.BOMBARD, SiegeAction.MINE} else 0
+        siege.breaches += 1 if action in BATTER_SIEGE_ACTIONS else 0
         return
     material = wall_material(walls, siege)
     gates = gate_factor(ctx, walls) * await ctx.hook_easing(siege.besieged_entity_id, DomainHook.BORDER_GUARD)
@@ -313,19 +314,6 @@ class SeasonMarks:
 
 
 WORK_KEYS = frozenset(work.value for work in SiegeWork)
-SIEGE_ACTIONS = {
-    SiegeAction.BLOCKADE: StepAction.HOLD,
-    SiegeAction.BOMBARD: StepAction.BOMBARD,
-    SiegeAction.MINE: StepAction.UNDERMINE,
-    SiegeAction.ASSAULT: StepAction.STORM,
-    SiegeAction.NEGOTIATE: StepAction.NEGOTIATE,
-}
-DEFENCE_ACTIONS = {
-    DefenderAction.SALLY: StepAction.SORTIE,
-    DefenderAction.REPAIR: StepAction.REPAIR,
-    DefenderAction.RATION: StepAction.HOLD,
-    DefenderAction.SEEK_RELIEF: StepAction.REINFORCE,
-}
 
 
 def season_steps(found: SiegeSeason, besieged: EntityRow, march: March, marks: SeasonMarks) -> list[StepDraft]:

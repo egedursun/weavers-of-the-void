@@ -2,9 +2,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.catalog.goods_traits import materials_with
 from aerona.catalog.materials import ARMOUR_MATERIALS, LUXURY_MATERIALS, TOOL_MATERIALS, WEAPON_MATERIALS
 from aerona.domain.enums.economy import CommodityFamily, CommodityKind
-from aerona.domain.enums.material import MINERAL_KINDS, MaterialKind
+from aerona.domain.enums.goods_traits import MaterialTrait
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity
 from aerona.rules.registry import Rules
 
@@ -66,7 +68,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 F.INDUSTRIAL,
                 Commodity.ORE,
                 110,
-                materials=tuple(sorted(MINERAL_KINDS)),
+                materials=tuple(sorted(materials_with(MaterialTrait.MINERAL))),
                 consumption=lambda rules: rules.consumption.ore_per_1000,
             ),
             CommoditySpec(
@@ -161,7 +163,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 F.LUXURY,
                 Commodity.GOODS,
                 320,
-                materials=(M.CRYSTAL, M.SULFUR, M.SALT),
+                materials=(M.CRYSTAL, M.SULFUR, M.HALITE),
                 consumption=lambda rules: rules.consumption.magical_reagents_per_1000,
                 strategic=True,
             ),

@@ -1,8 +1,11 @@
 from dataclasses import dataclass
-from types import MappingProxyType
 
 from sqlalchemy import select
 
+from aerona.catalog.goods_tables import YARD_ROLES
+from aerona.catalog.goods_traits import workshops_with
+from aerona.catalog.life.domain import STANDING_STATES
+from aerona.catalog.life_traits import TRADE_MODE_TRAITS, having
 from aerona.catalog.vehicles import FRAMES
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.collective import DesignRow
@@ -15,8 +18,10 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.goods_traits import WorkshopTrait
+from aerona.domain.enums.life_traits import TradeModeTrait
 from aerona.domain.enums.military import UnitKind
-from aerona.domain.enums.structure import STANDING_STATES, StructureKind
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.vehicles import VehicleStatus
 from aerona.engine.collective.makers import makers_of
 from aerona.engine.context import TickContext
@@ -33,15 +38,8 @@ from aerona.engine.vehicles.fleet import land_cargo, role_design
 from aerona.engine.vehicles.groups import add_vehicles, burn_fuel, groups_of, move_vehicles, repair_group
 
 W = WorkshopKind
-YARD_ROLES: MappingProxyType[WorkshopKind, tuple[UnitKind, ...]] = MappingProxyType(
-    {
-        W.SHIPYARD: (UnitKind.NAVAL_CREW,),
-        W.SIEGE_YARD: (UnitKind.SIEGE_CREW, UnitKind.ARTILLERY_CREW, UnitKind.VEHICLE_CREW),
-        W.STABLE: (UnitKind.CHARIOTS,),
-    }
-)
-CART_WORKS = (W.MARKET, W.STABLE, W.LUMBER_CAMP)
-LAND_MODES = frozenset({TradeMode.ROAD, TradeMode.CARAVAN})
+CART_WORKS = workshops_with(WorkshopTrait.CART_WORKS)
+LAND_MODES = having(TRADE_MODE_TRAITS, TradeModeTrait.LAND_MODES)
 SPACE_WORKS = frozenset({StructureKind.ORBITAL_RING, StructureKind.SPACE_STATION, StructureKind.SPACE_ELEVATOR, StructureKind.SPACEPORT})
 SKY_WORKS = frozenset({StructureKind.AIRFIELD})
 

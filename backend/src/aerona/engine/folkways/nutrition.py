@@ -4,8 +4,11 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.diets import DIETS
+from aerona.catalog.domestication import CHARGED_BIOCHEMISTRY
+from aerona.catalog.goods_traits import commodities_with
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.ages import IrregularSeasonRow
 from aerona.db.tables.agrarian import FamineLoreRow
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
@@ -19,13 +22,14 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.ages import SeasonSpell
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.culture import TraditionFunction
-from aerona.domain.enums.ecology import Biochemistry, Diet
+from aerona.domain.enums.ecology import Diet
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.folkways import Nutrient
+from aerona.domain.enums.goods_traits import CommodityTrait
+from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.domain.enums.mind import Attribute, PressureKind
-from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.customs import people_id_of, people_of
@@ -41,33 +45,17 @@ from aerona.engine.technology.profiles import family_level
 
 SHARES = ("staple", "protein", "fat", "fresh", "mineral")
 GROUPS: Mapping[str, frozenset[CommodityKind]] = {
-    "staple": frozenset({CommodityKind.GRAIN, CommodityKind.BREAD, CommodityKind.TUBERS}),
-    "protein": frozenset({CommodityKind.MEAT, CommodityKind.FISH, CommodityKind.EGGS, CommodityKind.LIVESTOCK}),
-    "fat": frozenset({CommodityKind.MILK, CommodityKind.CHEESE}),
-    "fresh": frozenset({CommodityKind.FRUIT, CommodityKind.HERBS}),
-    "mineral": frozenset({CommodityKind.FISH, CommodityKind.HERBS}),
+    "staple": frozenset(commodities_with(CommodityTrait.FOOD_STARCH)),
+    "protein": frozenset(commodities_with(CommodityTrait.FOOD_PROTEIN)),
+    "fat": frozenset(commodities_with(CommodityTrait.FOOD_FAT)),
+    "fresh": frozenset(commodities_with(CommodityTrait.FOOD_FRESH)),
+    "mineral": frozenset(commodities_with(CommodityTrait.FOOD_MINERAL)),
 }
-SPECIAL = frozenset({CommodityKind.LUXURIES, CommodityKind.MAGICAL_REAGENTS})
-NEEDS: Mapping[Diet, tuple[Nutrient, ...]] = total(
-    Diet,
-    {
-        Diet.OMNIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.FAT, Nutrient.FRESH, Nutrient.MINERAL),
-        Diet.HERBIVORE: (Nutrient.ENERGY, Nutrient.FRESH, Nutrient.MINERAL),
-        Diet.CARNIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.FAT, Nutrient.MINERAL),
-        Diet.PISCIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.FAT, Nutrient.MINERAL),
-        Diet.FILTER: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.MINERAL),
-        Diet.SCAVENGER: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.MINERAL),
-        Diet.SANGUIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN),
-        Diet.MINERAL: (Nutrient.ENERGY, Nutrient.MINERAL),
-        Diet.SOUL: (Nutrient.ENERGY, Nutrient.ESSENCE),
-        Diet.VOID: (Nutrient.ENERGY, Nutrient.ESSENCE),
-        Diet.PHOTOSYNTHETIC: (Nutrient.ENERGY, Nutrient.LIGHT, Nutrient.MINERAL),
-    },
-)
-CHARGED = frozenset({Biochemistry.CRYSTAL, Biochemistry.SILICON})
+SPECIAL = frozenset(commodities_with(CommodityTrait.FOOD_SPECIAL))
+CHARGED = CHARGED_BIOCHEMISTRY
 ELITE = frozenset({SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.MERCHANT, SocialClass.PROFESSIONAL})
 LOWLY = frozenset({SocialClass.SERF_OR_SLAVE, SocialClass.OUTCAST})
-YOUNG = frozenset({LifeStage.INFANT, LifeStage.CHILD, LifeStage.YOUTH})
+YOUNG = having(LIFE_STAGE_TRAITS, LifeStageTrait.GROWING)
 STATURE = (Attribute.STRENGTH, Attribute.TOUGHNESS)
 COGNITION = (Attribute.ANALYTICAL_ABILITY, Attribute.MEMORY)
 
@@ -82,8 +70,8 @@ class NutritionTally:
 
 def needs_for(biology: PeopleBiologyRow | None) -> tuple[Nutrient, ...]:
     if biology is None:
-        return NEEDS[Diet.OMNIVORE]
-    found = NEEDS[biology.diet]
+        return DIETS[Diet.OMNIVORE].needs
+    found = DIETS[biology.diet].needs
     return (*found, Nutrient.CHARGE) if biology.biochemistry in CHARGED else found
 
 
@@ -262,7 +250,7 @@ async def keep_nutrition(ctx: TickContext, tally: NutritionTally) -> None:
             ctx.session.add(diet)
         await derive_diet(ctx, town, diet)
         tally.diets += 1
-        needs = await needs_of(ctx, people) if people is not None else {nutrient: ctx.rules.nutrition.need_weight for nutrient in NEEDS[Diet.OMNIVORE]}
+        needs = await needs_of(ctx, people) if people is not None else {nutrient: ctx.rules.nutrition.need_weight for nutrient in DIETS[Diet.OMNIVORE].needs}
         row = await score_row(ctx, town.id)
         magic = await branch_level(ctx.session, town.id, KnowledgeBranch.MAGIC) * ctx.rules.nutrition.essence_per_magic
         score_from(ctx, row, diet, needs, light=await light_of(ctx, town.world_id), magic=magic)

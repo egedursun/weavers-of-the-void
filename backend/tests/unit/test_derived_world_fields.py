@@ -53,7 +53,12 @@ def test_only_the_heavens_and_holding_levers_write_what_the_heavens_derive() -> 
 
 
 def test_every_value_of_the_heavens_is_produced_or_read_by_the_engine() -> None:
-    readers = [*(SOURCE / "engine").rglob("*.py"), *(SOURCE / "catalog" / "kinds").glob("*.py")]
+    readers = [
+        *(SOURCE / "engine").rglob("*.py"),
+        *(SOURCE / "catalog" / "kinds").glob("*.py"),
+        *(SOURCE / "catalog" / "life").glob("*.py"),
+        SOURCE / "catalog" / "life_traits.py",
+    ]
     engine = {node.attr for path in readers for node in ast.walk(ast.parse(path.read_text())) if isinstance(node, ast.Attribute)}
     kinds: list[type[Enum]] = [
         value for value in vars(physics).values() if isinstance(value, type) and issubclass(value, Enum) and value.__module__ == physics.__name__

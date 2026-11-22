@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import STANDING_STATES
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionParticipationRow, TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -23,7 +24,7 @@ from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, Guest
 from aerona.domain.enums.mortal import LifeStage, PunishmentKind
 from aerona.domain.enums.polity import DecisionRule, LawKind, OfficeKind
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.structure import STANDING_STATES, StructureKind
+from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.mortal.kin import children_of, close_kin_of, parents_of, spouses_of
 from aerona.engine.polity.laws import law_param

@@ -6,9 +6,11 @@ from itertools import pairwise
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import CONTEST_STAKE_TRAITS, having
 from aerona.catalog.relations import CONTESTS
 from aerona.catalog.renown import CONTEST_RENOWN
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.errors import AeronaError
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
@@ -20,6 +22,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.life_traits import ContestStakeTrait
 from aerona.domain.enums.mind import PreferenceKind, SkillKind, ThoughtKind, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
@@ -46,7 +49,7 @@ from aerona.engine.services.war import release_captive
 
 LEARNED_AT = 40
 VALUE_SPAN = 100
-NOTED = frozenset({ContestStake.UNION, ContestStake.CAPTIVE, ContestStake.OFFICE, ContestStake.DIVINE_FAVOUR})
+NOTED = having(CONTEST_STAKE_TRAITS, ContestStakeTrait.NOTED)
 
 
 @dataclass
@@ -106,6 +109,10 @@ async def pass_wealth(session: AsyncSession, loser: int, winner: int, amount: in
     won.wealth = min(PERCENT, won.wealth + moved)
 
 
+STAKES: Handlers[ContestStake, Callable[[TickContext, Bout, EntityRow, EntityRow], Awaitable[None]]] = Handlers(ContestStake)
+
+
+@STAKES.on(ContestStake.UNION)
 async def win_union(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
     if bout.stake_node_id is None:
         return
@@ -115,10 +122,12 @@ async def win_union(ctx: TickContext, bout: Bout, winner: EntityRow, loser: Enti
     await think(ctx.session, ctx.rules, loser.id, ThoughtKind.HEARTBROKEN, ctx.epoch, subject_id=bout.stake_node_id)
 
 
+@STAKES.on(ContestStake.WAGER)
 async def win_wager(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
     await pass_wealth(ctx.session, loser.id, winner.id, bout.wager or ctx.rules.contests.wager_wealth)
 
 
+@STAKES.on(ContestStake.CAPTIVE)
 async def win_freedom(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
     if winner.id != bout.challenger.id:
         return
@@ -127,6 +136,7 @@ async def win_freedom(ctx: TickContext, bout: Bout, winner: EntityRow, loser: En
         await release_captive(ctx, row, CaptiveStatus.RELEASED)
 
 
+@STAKES.on(ContestStake.OFFICE)
 async def win_place(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
     if bout.stake_node_id is None or winner.id != bout.challenger.id:
         return
@@ -137,6 +147,7 @@ async def win_place(ctx: TickContext, bout: Bout, winner: EntityRow, loser: Enti
         await think(ctx.session, ctx.rules, winner.id, ThoughtKind.ROSE_IN_STANDING, ctx.epoch, subject_id=bout.stake_node_id)
 
 
+@STAKES.on(ContestStake.DIVINE_FAVOUR)
 async def win_favour(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
     god = await living_patron(ctx.session, winner)
     if god is None:
@@ -148,19 +159,10 @@ async def win_favour(ctx: TickContext, bout: Bout, winner: EntityRow, loser: Ent
             set_stats(cult, followers=round(followers * (1 + ctx.rules.contests.favour_followers_pct / PERCENT)))
 
 
+@STAKES.on(ContestStake.HONOUR)
 async def win_honour(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
     await add_renown(ctx.session, winner.id, ctx.rules.contests.renown / 2, ctx.epoch, rules=ctx.rules)
     await add_infamy(ctx.session, loser.id, ctx.rules.contests.infamy, ctx.epoch, rules=ctx.rules)
-
-
-STAKES: dict[ContestStake, Callable[[TickContext, Bout, EntityRow, EntityRow], Awaitable[None]]] = {
-    ContestStake.HONOUR: win_honour,
-    ContestStake.UNION: win_union,
-    ContestStake.WAGER: win_wager,
-    ContestStake.CAPTIVE: win_freedom,
-    ContestStake.OFFICE: win_place,
-    ContestStake.DIVINE_FAVOUR: win_favour,
-}
 
 
 async def judge_taste(ctx: TickContext, bout: Bout) -> int:

@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.regime import TYPE_LABELS
 from aerona.catalog.structures import RESEARCH_HOUSES
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -29,11 +30,6 @@ from aerona.rules.registry import Rules
 
 HALF = PERCENT // 2
 PROOFING = ("rotation", "parallel_guard", "loyalty_promotion", "hostages")
-TYPE_LABELS = {
-    LegitimacyType.TRADITIONAL: ("the weight of custom", "custom forsaken"),
-    LegitimacyType.CHARISMATIC: ("the ruler's charisma", "a ruler without charisma"),
-    LegitimacyType.RATIONAL: ("the rule of law", "laws that bind no one"),
-}
 
 
 async def realm_seat(session: AsyncSession, entity_id: int | None) -> int | None:

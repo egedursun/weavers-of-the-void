@@ -1,9 +1,12 @@
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import select
 
 from aerona.catalog.law_depth import METHOD_HARM, METHOD_SEEMING, METHOD_TEXT
+from aerona.catalog.life.phases import PEACE_OPERATIONS, WAR_OPERATIONS
+from aerona.catalog.senses import AGENTS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
@@ -55,7 +58,6 @@ from aerona.engine.mind.book import skill_level
 from aerona.engine.mind.drives import deceit_drive
 from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.nature.effects import sensed
-from aerona.engine.nature.senses import AGENTS
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.phases.society_support.knowledge import teach
@@ -152,6 +154,10 @@ async def _stealable(ctx: TickContext, spymaster: EntityRow, target: EntityRow) 
     return found
 
 
+OPERATIONS: Handlers[SpyOperation, Callable[[TickContext, EntityRow, EntityRow, SpyNetworkRow], Awaitable[str | None]]] = Handlers(SpyOperation)
+
+
+@OPERATIONS.on(SpyOperation.STEAL_KNOWLEDGE)
 async def steal(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     secret = await steal_technique(ctx, spymaster.location_id or spymaster.id, target.id)
     design = await steal_design(ctx, spymaster.location_id or spymaster.id, target.id)
@@ -167,6 +173,7 @@ async def steal(ctx: TickContext, spymaster: EntityRow, target: EntityRow, netwo
     return await told(ctx, "espionage.stole_knowledge", spymaster, target, facts={"knowledge": knowledge.id})
 
 
+@OPERATIONS.on(SpyOperation.SABOTAGE)
 async def sabotage(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     kind = await sabotage_kind(ctx, target)
     rules = ctx.rules.espionage
@@ -213,6 +220,7 @@ async def sabotage_kind(ctx: TickContext, target: EntityRow) -> SabotageKind:
     return SabotageKind.ARSON
 
 
+@OPERATIONS.on(SpyOperation.ASSASSINATE)
 async def assassinate(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     rulers = await mortal_rulers(ctx.session, target.id)
     victim = await living_entity(ctx.session, rulers[0]) if rulers else None
@@ -243,6 +251,7 @@ async def answer_murder(ctx: TickContext, network: SpyNetworkRow, victim: Entity
         await report_crime(ctx, town, killers[0], CrimeKind.MURDER)
 
 
+@OPERATIONS.on(SpyOperation.INCITE)
 async def incite(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     rules = ctx.rules.espionage
     town = await ctx.session.get(SettlementProfileRow, target.id)
@@ -261,6 +270,7 @@ async def incite_uprising_quietly(ctx: TickContext, community: EntityRow) -> boo
     return target.id != community.id and await declare_war(ctx, community.id, target.id, "uprising", cause=WarCause.UPRISING, world_cap=False)
 
 
+@OPERATIONS.on(SpyOperation.INTEL)
 async def gather(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     privacy = await law_param(ctx.session, target.id, LawKind.DATA_PRIVACY, "strictness")
     shield = 1 - (int(privacy) if isinstance(privacy, int) else 0) * ctx.rules.espionage.privacy_pct / PERCENT / PERCENT
@@ -270,6 +280,7 @@ async def gather(ctx: TickContext, spymaster: EntityRow, target: EntityRow, netw
     return await told(ctx, "espionage.intel", spymaster, target, facts={"intel": network.intel, "aims": len(aims)})
 
 
+@OPERATIONS.on(SpyOperation.BLACKMAIL)
 async def blackmail(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     rules = ctx.rules.espionage
     if network.intel < rules.assassinate_depth // 2:
@@ -284,25 +295,13 @@ async def blackmail(ctx: TickContext, spymaster: EntityRow, target: EntityRow, n
     return await told(ctx, "espionage.blackmail", spymaster, target, facts=facts, **others)
 
 
+@OPERATIONS.on(SpyOperation.COUNTERFEIT)
 async def counterfeit(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     coin = await ctx.session.scalar(select(CurrencyRow).where(CurrencyRow.issuer_entity_id == target.id).order_by(CurrencyRow.id).limit(1))
     if coin is None:
         return None
     coin.trust = clamp_int(coin.trust - ctx.rules.espionage.counterfeit_trust, 0, PERCENT)
     return await told(ctx, "espionage.counterfeit", spymaster, target, facts={"currency": coin.name, "trust_lost": ctx.rules.espionage.counterfeit_trust})
-
-
-OPERATIONS = {
-    SpyOperation.STEAL_KNOWLEDGE: steal,
-    SpyOperation.SABOTAGE: sabotage,
-    SpyOperation.ASSASSINATE: assassinate,
-    SpyOperation.INCITE: incite,
-    SpyOperation.INTEL: gather,
-    SpyOperation.BLACKMAIL: blackmail,
-    SpyOperation.COUNTERFEIT: counterfeit,
-}
-WAR_OPERATIONS = (SpyOperation.SABOTAGE, SpyOperation.ASSASSINATE, SpyOperation.INTEL)
-PEACE_OPERATIONS = (SpyOperation.STEAL_KNOWLEDGE, SpyOperation.BLACKMAIL, SpyOperation.COUNTERFEIT, SpyOperation.INCITE, SpyOperation.INTEL)
 
 
 async def perform_operation(ctx: TickContext, spymaster: EntityRow, target: EntityRow, operation: SpyOperation) -> str:

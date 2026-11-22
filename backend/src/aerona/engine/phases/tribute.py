@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.phases import TRIBUTE_TREATY_KINDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
@@ -142,7 +143,7 @@ async def tribute(ctx: TickContext) -> None:
         if held(*pair):
             continue
         payer, receiver = await living_entity(ctx.session, row.payer_entity_id), await living_entity(ctx.session, row.receiver_entity_id)
-        pact = await treaty_between(ctx.session, row.payer_entity_id, row.receiver_entity_id, [TreatyKind.TRIBUTE, TreatyKind.VASSALAGE])
+        pact = await treaty_between(ctx.session, row.payer_entity_id, row.receiver_entity_id, TRIBUTE_TREATY_KINDS)
         if payer is None or receiver is None or pact is None:
             await end_tribute(ctx, row, TributeStatus.ENDED, "tribute ended")
             if payer is not None and receiver is not None:

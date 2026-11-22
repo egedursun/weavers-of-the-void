@@ -4,6 +4,7 @@ from itertools import combinations
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.db.tables.belonging import PeerGroupRow, PeerMemberRow
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
@@ -19,8 +20,8 @@ from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.enums.kinds import KindConcept
+from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.domain.enums.mind import Facet, SkillKind
-from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
@@ -33,7 +34,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, connect
 from aerona.engine.relations.book import ensure_relation
 
-YOUNG = frozenset({LifeStage.CHILD, LifeStage.YOUTH})
+YOUNG = having(LIFE_STAGE_TRAITS, LifeStageTrait.YOUNG)
 PLAY_SKILLS = {
     PlayKind.GAMES: SkillKind.TACTICS,
     PlayKind.MOCK_FIGHTS: SkillKind.UNARMED,

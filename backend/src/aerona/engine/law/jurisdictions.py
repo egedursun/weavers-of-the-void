@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import GUILD_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -12,7 +13,6 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.urban import TradingPostRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import GUILD_KINDS
 from aerona.domain.enums.law_depth import CourtLevel, JurisdictionClaim
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole

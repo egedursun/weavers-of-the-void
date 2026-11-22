@@ -3,12 +3,13 @@ from typing import Any
 from sqlalchemy import func, select
 
 from aerona.catalog.gates import Gate
+from aerona.catalog.life.domain import GROWN
 from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.flora import PlantProfileRow, RegionCropRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.ecology import GROWN, SOWN, Cultivation
+from aerona.domain.enums.ecology import SOWN, Cultivation
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.ecology.flora_control import plant_of, set_crop

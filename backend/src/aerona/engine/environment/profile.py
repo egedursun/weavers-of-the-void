@@ -3,114 +3,30 @@ from dataclasses import dataclass, field
 
 from aerona.cartography.biomes import Biome
 from aerona.catalog.climate import CLIMATES, climate_profile
+from aerona.catalog.goods_tables import WORLD_MINERALS
+from aerona.catalog.goods_traits import materials_with
+from aerona.catalog.life.environment import WORLD_SOIL, WORLD_TEMPERATURE, WORLD_TERRAIN
+from aerona.catalog.movement import MOVEMENT, MovementSpec
+from aerona.catalog.terrain import TERRAIN
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.domain.enums.environment import (
     CoastKind,
-    MovementMode,
+    MovementMedium,
+    MovementWork,
     RiverClass,
     ScarKind,
     SoilKind,
     TemperatureBand,
     TerrainKind,
 )
+from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.world import ClimateEra, WorldType
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
-
-WORLD_TEMPERATURE: dict[WorldType, Callable[[Rules], int]] = {
-    WorldType.ORDINARY: lambda rules: rules.environment.temperature_ordinary,
-    WorldType.OCEAN: lambda rules: rules.environment.temperature_ocean,
-    WorldType.SAND: lambda rules: rules.environment.temperature_sand,
-    WorldType.ICE: lambda rules: rules.environment.temperature_ice,
-    WorldType.LAVA: lambda rules: rules.environment.temperature_lava,
-    WorldType.CRYSTAL: lambda rules: rules.environment.temperature_crystal,
-    WorldType.LIVING: lambda rules: rules.environment.temperature_living,
-    WorldType.DEAD: lambda rules: rules.environment.temperature_dead,
-    WorldType.DREAM: lambda rules: rules.environment.temperature_dream,
-    WorldType.MIRROR: lambda rules: rules.environment.temperature_mirror,
-    WorldType.GAS: lambda rules: rules.environment.temperature_gas,
-    WorldType.RINGED: lambda rules: rules.environment.temperature_ringed,
-    WorldType.ASTEROID_BELT: lambda rules: rules.environment.temperature_asteroid_belt,
-    WorldType.TIDALLY_LOCKED: lambda rules: rules.environment.temperature_tidally_locked,
-    WorldType.VOID_POCKET: lambda rules: rules.environment.temperature_void_pocket,
-    WorldType.GODS_PALACE: lambda rules: rules.environment.temperature_gods_palace,
-    WorldType.GENERATION_SHIP: lambda rules: rules.environment.temperature_generation_ship,
-    WorldType.CORPSE_WORLD: lambda rules: rules.environment.temperature_corpse_world,
-    WorldType.FORGE: lambda rules: rules.environment.temperature_forge,
-    WorldType.SUPER_EARTH: lambda rules: rules.environment.temperature_super_earth,
-    WorldType.ICE_GIANT: lambda rules: rules.environment.temperature_ice_giant,
-    WorldType.HOT_GIANT: lambda rules: rules.environment.temperature_hot_giant,
-    WorldType.IRON: lambda rules: rules.environment.temperature_iron,
-    WorldType.CARBON: lambda rules: rules.environment.temperature_carbon,
-    WorldType.GREENHOUSE: lambda rules: rules.environment.temperature_greenhouse,
-    WorldType.DWARF_PLANET: lambda rules: rules.environment.temperature_dwarf_planet,
-    WorldType.CHTHONIAN: lambda rules: rules.environment.temperature_chthonian,
-    WorldType.HYCEAN: lambda rules: rules.environment.temperature_hycean,
-    WorldType.JUNGLE: lambda rules: rules.environment.temperature_jungle,
-    WorldType.FUNGAL: lambda rules: rules.environment.temperature_fungal,
-    WorldType.SHATTERED: lambda rules: rules.environment.temperature_shattered,
-    WorldType.HOLLOW: lambda rules: rules.environment.temperature_hollow,
-    WorldType.ICE_SHELL: lambda rules: rules.environment.temperature_ice_shell,
-    WorldType.METHANE: lambda rules: rules.environment.temperature_methane,
-}
-
-WORLD_TERRAIN: dict[WorldType, TerrainKind] = {
-    WorldType.LAVA: TerrainKind.VOLCANIC,
-    WorldType.CRYSTAL: TerrainKind.CRYSTAL_FIELD,
-    WorldType.LIVING: TerrainKind.FLESH,
-    WorldType.CORPSE_WORLD: TerrainKind.FLESH,
-    WorldType.VOID_POCKET: TerrainKind.VOID_SHORE,
-    WorldType.GENERATION_SHIP: TerrainKind.UNDERGROUND,
-    WorldType.ASTEROID_BELT: TerrainKind.CANYON,
-    WorldType.GREENHOUSE: TerrainKind.VOLCANIC,
-    WorldType.DWARF_PLANET: TerrainKind.ICE_SHEET,
-    WorldType.CHTHONIAN: TerrainKind.VOLCANIC,
-    WorldType.JUNGLE: TerrainKind.JUNGLE,
-    WorldType.ICE_SHELL: TerrainKind.ICE_SHEET,
-    WorldType.METHANE: TerrainKind.TUNDRA,
-}
-
-WORLD_SOIL: dict[WorldType, SoilKind] = {
-    WorldType.LAVA: SoilKind.VOLCANIC,
-    WorldType.CRYSTAL: SoilKind.CRYSTALLINE,
-    WorldType.DEAD: SoilKind.CALCAREOUS,
-    WorldType.CORPSE_WORLD: SoilKind.CALCAREOUS,
-    WorldType.SAND: SoilKind.SAND,
-    WorldType.ICE: SoilKind.PERMAFROST,
-    WorldType.ASTEROID_BELT: SoilKind.REGOLITH,
-    WorldType.VOID_POCKET: SoilKind.TEPHRA,
-    WorldType.FORGE: SoilKind.TEPHRA,
-    WorldType.IRON: SoilKind.THIN,
-    WorldType.CARBON: SoilKind.TEPHRA,
-    WorldType.GREENHOUSE: SoilKind.VOLCANIC,
-    WorldType.DWARF_PLANET: SoilKind.REGOLITH,
-    WorldType.CHTHONIAN: SoilKind.VOLCANIC,
-    WorldType.JUNGLE: SoilKind.LATERITE,
-    WorldType.FUNGAL: SoilKind.PEAT,
-    WorldType.SHATTERED: SoilKind.THIN,
-    WorldType.ICE_SHELL: SoilKind.PERMAFROST,
-    WorldType.METHANE: SoilKind.THIN,
-    WorldType.HYCEAN: SoilKind.SALINE,
-    WorldType.GODS_PALACE: SoilKind.ARTIFICIAL,
-    WorldType.GENERATION_SHIP: SoilKind.ARTIFICIAL,
-}
-
-WORLD_MINERALS: dict[WorldType, tuple[MaterialKind, ...]] = {
-    WorldType.IRON: (MaterialKind.IRON, MaterialKind.LEAD),
-    WorldType.CARBON: (MaterialKind.GEMS,),
-    WorldType.GREENHOUSE: (MaterialKind.SULFUR,),
-    WorldType.CHTHONIAN: (MaterialKind.IRON, MaterialKind.GOLD),
-    WorldType.HYCEAN: (MaterialKind.SALT,),
-    WorldType.JUNGLE: (MaterialKind.AMBER,),
-    WorldType.FORGE: (MaterialKind.IRON, MaterialKind.COPPER),
-    WorldType.SHATTERED: (MaterialKind.STAR_METAL,),
-    WorldType.HOLLOW: (MaterialKind.GEMS,),
-    WorldType.ICE_SHELL: (MaterialKind.SALT,),
-}
 
 SOIL_FERTILITY: Mapping[SoilKind, Callable[[Rules], int]] = total(
     SoilKind,
@@ -158,37 +74,6 @@ RIVER_IRRIGATION: dict[RiverClass, Callable[[Rules], int]] = {
 
 RIVER_RANK: dict[RiverClass, int] = {RiverClass.NONE: 0, RiverClass.STREAM: 1, RiverClass.RIVER: 2, RiverClass.GREAT_RIVER: 3}
 RIVER_TOP_RANK = 3
-
-MODE_SENSITIVITY: dict[MovementMode, Callable[[Rules], tuple[int, int, int, int, int]]] = {
-    MovementMode.ON_FOOT: lambda rules: (
-        rules.passability.foot_roughness_pct,
-        rules.passability.foot_forest_pct,
-        rules.passability.foot_wetland_pct,
-        rules.passability.foot_river_pct,
-        rules.passability.foot_cold_pct,
-    ),
-    MovementMode.MOUNTED: lambda rules: (
-        rules.passability.mounted_roughness_pct,
-        rules.passability.mounted_forest_pct,
-        rules.passability.mounted_wetland_pct,
-        rules.passability.mounted_river_pct,
-        rules.passability.mounted_cold_pct,
-    ),
-    MovementMode.WHEELED: lambda rules: (
-        rules.passability.wheeled_roughness_pct,
-        rules.passability.wheeled_forest_pct,
-        rules.passability.wheeled_wetland_pct,
-        rules.passability.wheeled_river_pct,
-        rules.passability.wheeled_cold_pct,
-    ),
-    MovementMode.BURROWING: lambda rules: (
-        rules.passability.burrowing_roughness_pct,
-        0,
-        rules.passability.burrowing_wetland_pct,
-        rules.passability.burrowing_river_pct,
-        rules.passability.burrowing_cold_pct,
-    ),
-}
 
 
 @dataclass(frozen=True)
@@ -451,41 +336,6 @@ COAST_BOATING: dict[CoastKind, Callable[[Rules], int]] = {
 }
 
 
-GROUND_MODES = frozenset({MovementMode.ON_FOOT, MovementMode.MOUNTED, MovementMode.WHEELED, MovementMode.BURROWING})
-ROAD_MODES = frozenset({MovementMode.ON_FOOT, MovementMode.MOUNTED, MovementMode.WHEELED})
-
-
-TERRAIN_BASE: dict[TerrainKind, Callable[[Rules], int]] = {
-    TerrainKind.PLAIN: lambda rules: rules.passability.plain_base,
-    TerrainKind.STEPPE: lambda rules: rules.passability.steppe_base,
-    TerrainKind.FOREST: lambda rules: rules.passability.forest_base,
-    TerrainKind.JUNGLE: lambda rules: rules.passability.jungle_base,
-    TerrainKind.MARSH: lambda rules: rules.passability.marsh_base,
-    TerrainKind.HILLS: lambda rules: rules.passability.hills_base,
-    TerrainKind.MOUNTAINS: lambda rules: rules.passability.mountains_base,
-    TerrainKind.HIGH_PASS: lambda rules: rules.passability.high_pass_base,
-    TerrainKind.DESERT: lambda rules: rules.passability.desert_base,
-    TerrainKind.TUNDRA: lambda rules: rules.passability.tundra_base,
-    TerrainKind.ICE_SHEET: lambda rules: rules.passability.ice_sheet_base,
-    TerrainKind.VOLCANIC: lambda rules: rules.passability.volcanic_base,
-    TerrainKind.COAST: lambda rules: rules.passability.coast_base,
-    TerrainKind.ISLAND: lambda rules: rules.passability.island_base,
-    TerrainKind.RIVER_VALLEY: lambda rules: rules.passability.river_valley_base,
-    TerrainKind.CANYON: lambda rules: rules.passability.canyon_base,
-    TerrainKind.UNDERGROUND: lambda rules: rules.passability.underground_base,
-    TerrainKind.CRYSTAL_FIELD: lambda rules: rules.passability.crystal_field_base,
-    TerrainKind.FLESH: lambda rules: rules.passability.flesh_base,
-    TerrainKind.VOID_SHORE: lambda rules: rules.passability.void_shore_base,
-    TerrainKind.RUIN_FIELD: lambda rules: rules.passability.ruin_field_base,
-    TerrainKind.URBAN: lambda rules: rules.passability.urban_base,
-    TerrainKind.SEA: lambda rules: rules.passability.sea_base,
-}
-
-
-def terrain_base(rules: Rules, terrain: TerrainKind) -> int:
-    return TERRAIN_BASE[terrain](rules)
-
-
 @dataclass(frozen=True)
 class Ground:
     roughness: int
@@ -499,26 +349,32 @@ class Ground:
     works: Works = field(default_factory=Works)
 
 
+def water_passage(rules: Rules, ground: Ground, river_pct: int, spec: MovementSpec) -> float:
+    settings = rules.passability
+    tide = ground.tides * settings.tide_boat_pct / PERCENT if ground.coast is not CoastKind.NONE else 0
+    shored = ground.coast is not CoastKind.NONE or ground.river is not RiverClass.NONE
+    harbours = ground.works.harbours * settings.harbour_works_pct if shored and spec.takes(MovementWork.HARBOURS) else 0
+    return river_pct * settings.boat_river_pct / PERCENT + COAST_BOATING[ground.coast](rules) - tide + harbours
+
+
 def passability_of(rules: Rules, ground: Ground) -> dict[str, int]:
     settings = rules.passability
     works = ground.works
     cold = max(0, rules.weather.cold_threshold - ground.temperature) * PERCENT // max(1, rules.weather.cold_threshold)
-    crossing = max(0.0, 1 - works.bridges * settings.bridge_crossing_pct / PERCENT)
+    bridged = max(0.0, 1 - works.bridges * settings.bridge_crossing_pct / PERCENT)
     river_pct = RIVER_RANK[ground.river] * PERCENT // RIVER_TOP_RANK
-    roads = min(settings.road_cap_pct, works.roads * settings.road_step_pct)
-    base = terrain_base(rules, ground.terrain) / PERCENT
+    passage = TERRAIN[ground.terrain].passage(rules)
     values: dict[str, int] = {}
-    for mode, sensitivity in MODE_SENSITIVITY.items():
-        weights = sensitivity(rules)
+    for mode, spec in MOVEMENT.items():
+        share = passage[mode] / PERCENT
+        if spec.medium is MovementMedium.WATER_SURFACE:
+            values[mode.value] = clamp_int(water_passage(rules, ground, river_pct, spec) * share, 0, PERCENT)
+            continue
+        crossing = bridged if spec.takes(MovementWork.BRIDGES) else 1.0
         features = (ground.roughness, ground.forest, ground.wetland, river_pct * crossing, cold)
-        loss = sum(weight * value / PERCENT for weight, value in zip(weights, features, strict=True))
-        raw = (PERCENT - loss) * (base if mode in GROUND_MODES else 1.0) + (roads if mode in ROAD_MODES else 0)
-        values[mode.value] = clamp_int(raw, settings.floor, PERCENT)
-    tide = ground.tides * settings.tide_boat_pct / PERCENT if ground.coast is not CoastKind.NONE else 0
-    harbours = works.harbours * settings.harbour_works_pct if ground.coast is not CoastKind.NONE or ground.river is not RiverClass.NONE else 0
-    boat = river_pct * settings.boat_river_pct / PERCENT + COAST_BOATING[ground.coast](rules) - tide + harbours
-    values[MovementMode.BOAT.value] = clamp_int(boat, 0, PERCENT)
-    values[MovementMode.FLYING.value] = clamp_int(PERCENT - ground.roughness * settings.flying_roughness_pct / PERCENT, settings.floor, PERCENT)
+        loss = sum(weight * value / PERCENT for weight, value in zip(spec.sensitivity(rules), features, strict=True))
+        roads = min(settings.road_cap_pct, works.roads * settings.road_step_pct) if spec.takes(MovementWork.ROADS) else 0
+        values[mode.value] = clamp_int((PERCENT - loss) * share + roads, settings.floor, PERCENT)
     return values
 
 
@@ -552,9 +408,9 @@ def make_of(rules: Rules, physics: WorldPhysicsRow | None) -> Make:
     )
 
 
-METAL_SEAMS = frozenset({MaterialKind.IRON, MaterialKind.COPPER, MaterialKind.TIN, MaterialKind.LEAD, MaterialKind.SILVER, MaterialKind.GOLD})
-STONE_SEAMS = frozenset({MaterialKind.STONE, MaterialKind.FLINT, MaterialKind.CLAY})
-RARE_SEAMS = frozenset({MaterialKind.GEMS, MaterialKind.CRYSTAL, MaterialKind.VOID_GLASS, MaterialKind.OBSIDIAN})
+METAL_SEAMS = frozenset(materials_with(MaterialTrait.METAL_SEAM))
+STONE_SEAMS = frozenset(materials_with(MaterialTrait.STONE_SEAM))
+RARE_SEAMS = frozenset(materials_with(MaterialTrait.RARE_SEAM))
 
 
 def make_factor(make: Make, material: MaterialKind) -> float:
@@ -574,20 +430,19 @@ def mineral_layers(
     hills = share(mix, Biome.DRY_HILLS, Biome.WET_HILLS)
     shore = share(mix, Biome.SHORE)
     lowland = share(mix, Biome.DRY_LOWLAND, Biome.MID_LOWLAND, Biome.WET_LOWLAND)
-    candidates: dict[MaterialKind, int] = {
-        MaterialKind.STONE: mountains + hills,
-        MaterialKind.IRON: mountains + hills // 2,
-        MaterialKind.COPPER: hills + mountains // 2,
-        MaterialKind.TIN: mountains // 2,
-        MaterialKind.LEAD: mountains // 2,
-        MaterialKind.SILVER: mountains // 3,
-        MaterialKind.GOLD: mountains // 4 + geography.roughness // 8,
-        MaterialKind.GEMS: mountains // 5,
-        MaterialKind.FLINT: hills // 2 + lowland // 4,
-        MaterialKind.CLAY: lowland // 2 + geography.base_wetland // 2,
-        MaterialKind.SALT: shore + (settings.desert_salt if terrain is TerrainKind.DESERT else 0),
-        MaterialKind.AMBER: shore // 2 + geography.base_forest // 4,
-    }
+    candidates: dict[MaterialKind, int] = {}
+    candidates[MaterialKind.STONE] = mountains + hills
+    candidates[MaterialKind.IRON] = mountains + hills // 2
+    candidates[MaterialKind.COPPER] = hills + mountains // 2
+    candidates[MaterialKind.TIN] = mountains // 2
+    candidates[MaterialKind.LEAD] = mountains // 2
+    candidates[MaterialKind.SILVER] = mountains // 3
+    candidates[MaterialKind.GOLD] = mountains // 4 + geography.roughness // 8
+    candidates[MaterialKind.GEMS] = mountains // 5
+    candidates[MaterialKind.FLINT] = hills // 2 + lowland // 4
+    candidates[MaterialKind.CLAY] = lowland // 2 + geography.base_wetland // 2
+    candidates[MaterialKind.HALITE] = shore + (settings.desert_halite if terrain is TerrainKind.DESERT else 0)
+    candidates[MaterialKind.AMBER] = shore // 2 + geography.base_forest // 4
     if terrain is TerrainKind.VOLCANIC or world_type is WorldType.LAVA:
         candidates[MaterialKind.OBSIDIAN] = settings.volcanic_mineral
         candidates[MaterialKind.SULFUR] = settings.volcanic_mineral

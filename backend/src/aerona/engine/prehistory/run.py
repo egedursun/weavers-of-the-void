@@ -6,6 +6,7 @@ from sqlalchemy import delete, event, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
+from aerona.catalog.life.prehistory import DERIVE_PREHISTORY_KINDS
 from aerona.catalog.prehistory import COARSE_PHASES, PREHISTORY_GROWTH, PREHISTORY_PHASES, SIMULATED_KINDS
 from aerona.core.errors import AeronaError, NotFoundError
 from aerona.core.random import SeededRandom
@@ -187,7 +188,7 @@ async def derive(database: Database, world_id: int, rules: Rules | None, publish
         if row is None or world is None or row.state is not PrehistoryState.RUNNING:
             return
         god = world.creator_son_id or world.patron_son_id
-        if row.kind in (PrehistoryKind.PALACE, PrehistoryKind.CORPSE):
+        if row.kind in DERIVE_PREHISTORY_KINDS:
             summary.events += await digest.deeds_of(ctx, row, god)
         elif row.kind is PrehistoryKind.SOULS:
             summary.events += await digest.souls_of(ctx, row, world)

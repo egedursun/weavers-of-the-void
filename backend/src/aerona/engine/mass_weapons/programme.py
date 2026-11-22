@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.mass_weapons import NEXT, WORK_ON_PROGRAMME_STAGES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mass_weapons import MassWeaponRow
@@ -16,8 +17,6 @@ from aerona.engine.mass_weapons.deterrence import declare
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
-
-NEXT = {ProgrammeStage.SOUGHT: ProgrammeStage.BUILDING, ProgrammeStage.BUILDING: ProgrammeStage.READY}
 
 
 async def begin(ctx: TickContext, holder: EntityRow, harm: MassHarm, reach: MassReach, tally: ArsenalTally) -> MassWeaponRow:
@@ -101,7 +100,7 @@ async def work_on(ctx: TickContext, weapon: MassWeaponRow, tally: ArsenalTally) 
         weapon.stage = NEXT[weapon.stage]
         tally.staged += 1
         await reveal(ctx, weapon, tally)
-    if weapon.stage in {ProgrammeStage.READY, ProgrammeStage.TESTED} and "count" not in (weapon.locked or []):
+    if weapon.stage in WORK_ON_PROGRAMME_STAGES and "count" not in (weapon.locked or []):
         weapon.count += 1
         tally.built += 1
         await take_stance(ctx, holder.id, tally)

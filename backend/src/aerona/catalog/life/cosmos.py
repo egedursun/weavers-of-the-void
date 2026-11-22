@@ -1,0 +1,78 @@
+from collections.abc import Mapping
+
+from aerona.catalog.life.domain import PERIODIC_BODIES
+from aerona.core.total import partial, total
+from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.ecology import SizeClass
+from aerona.domain.enums.physics import AirNeed, CosmicFeatureKind
+from aerona.domain.enums.travel import ArrivalOutcome, JourneyIntent, VehicleKind
+from aerona.domain.enums.world import Atmosphere, Gravity, WorldType
+from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
+
+ARRIVALS: Mapping[JourneyIntent, ArrivalOutcome] = total(
+    JourneyIntent,
+    {
+        JourneyIntent.COLONY: ArrivalOutcome.SETTLERS,
+        JourneyIntent.TRADE: ArrivalOutcome.SETTLERS,
+        JourneyIntent.EXPLORATION: ArrivalOutcome.SETTLERS,
+        JourneyIntent.CONQUEST: ArrivalOutcome.INVADERS,
+        JourneyIntent.PILGRIMAGE: ArrivalOutcome.SETTLERS,
+    },
+)
+
+
+AIR_GAS = partial(AirNeed, {AirNeed.OXYGEN: "oxygen", AirNeed.CARBON_DIOXIDE: "carbon_dioxide", AirNeed.METHANE: "methane"}, without={AirNeed.NONE})
+
+
+GRAVITY_G: dict[Gravity, float] = {Gravity.LOW: 0.4, Gravity.NORMAL: 1.0, Gravity.HIGH: 1.8}
+
+
+AIR: dict[Atmosphere, tuple[float, dict[str, int]]] = {
+    Atmosphere.NONE: (0.0, {"nitrogen": 0, "oxygen": 0, "carbon_dioxide": 0, "methane": 0, "water_vapour": 0, "exotic_gas": 0}),
+    Atmosphere.THIN: (0.3, {"nitrogen": 80, "oxygen": 16, "carbon_dioxide": 4, "methane": 0, "water_vapour": 0, "exotic_gas": 0}),
+    Atmosphere.NORMAL: (1.0, {"nitrogen": 78, "oxygen": 21, "carbon_dioxide": 1, "methane": 0, "water_vapour": 0, "exotic_gas": 0}),
+    Atmosphere.DENSE: (4.0, {"nitrogen": 75, "oxygen": 18, "carbon_dioxide": 5, "methane": 0, "water_vapour": 2, "exotic_gas": 0}),
+    Atmosphere.TOXIC: (1.5, {"nitrogen": 40, "oxygen": 2, "carbon_dioxide": 40, "methane": 8, "water_vapour": 0, "exotic_gas": 10}),
+}
+
+
+STAR_BOUND = frozenset({CosmicFeatureKind.ASTEROID_FIELD, CosmicFeatureKind.GRAVITY_WELL, *PERIODIC_BODIES})
+
+
+GREAT_MOUNTS = (SizeClass.HUGE, SizeClass.COLOSSAL)
+
+
+VEHICLE_TECHNIQUES: Mapping[VehicleKind, Technique | None] = total(
+    VehicleKind,
+    {
+        VehicleKind.GATE: None,
+        VehicleKind.SHIP: None,
+        VehicleKind.MOUNT: None,
+        VehicleKind.BRIDGE: None,
+        VehicleKind.RAIL: Technique.RAILWAYS,
+        VehicleKind.ROAD_VEHICLE: Technique.COMBUSTION_ENGINE,
+        VehicleKind.AIRCRAFT: Technique.AVIATION,
+        VehicleKind.TELEPORT: Technique.ARTIFICIAL_MINDS,
+        VehicleKind.LIVING: Technique.GENETIC_ENGINEERING,
+        VehicleKind.RIFT: None,
+        VehicleKind.ON_FOOT: None,
+    },
+)
+
+
+CAUSE_END: Mapping[WorldEndCause, WorldEnd] = total(
+    WorldEndCause,
+    {
+        WorldEndCause.IMPACT: WorldEnd.SHATTERED,
+        WorldEndCause.DIVINE_WRATH: WorldEnd.SHATTERED,
+        WorldEndCause.STAR_GIANT: WorldEnd.CONSUMED,
+        WorldEndCause.STAR_DEATH: WorldEnd.FROZEN_DEAD,
+        WorldEndCause.VOID: WorldEnd.SUNK_INTO_VOID,
+        WorldEndCause.OBLIVION: WorldEnd.FORGOTTEN,
+        WorldEndCause.BELIEF_DRIFT: WorldEnd.TRANSFIGURED,
+    },
+)
+
+END_WORLD_WORLD_ENDS = frozenset({WorldEnd.SHATTERED, WorldEnd.TRANSFIGURED})
+
+LIFE_BARRING_WORLDS = frozenset({WorldType.VOID_POCKET, WorldType.ASTEROID_BELT, WorldType.SHATTERED})

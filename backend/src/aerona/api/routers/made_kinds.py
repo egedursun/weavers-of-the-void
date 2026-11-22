@@ -39,6 +39,7 @@ from aerona.api.schemas.made_kinds import (
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.catalog.equipment import FAMILIES
+from aerona.catalog.life.cuisine import COURSE_LABELS
 from aerona.catalog.structure_sections import FORMS
 from aerona.catalog.structure_sections import LAYOUTS as STRUCTURE_LAYOUTS
 from aerona.catalog.structures import MEGASTRUCTURES, STRUCTURES
@@ -69,7 +70,6 @@ from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.structure import BuildingForm
 from aerona.engine.body.decline import decline_severity
 from aerona.engine.cosmos.being_wounds import VAST, can_roam, can_see, effective_might
-from aerona.engine.cuisine.dishes import COURSE_LABELS
 from aerona.engine.equipment.models import MOUNT_FAMILIES
 from aerona.engine.primitives.stats import stat
 from aerona.engine.vehicles.fleet import army_pace

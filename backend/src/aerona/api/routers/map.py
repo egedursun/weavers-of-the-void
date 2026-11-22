@@ -45,6 +45,7 @@ from aerona.api.schemas.maps import (
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
 from aerona.cartography.generator import generate_map
 from aerona.cartography.model import MARKER_TYPES, WorldMap
+from aerona.catalog.life.economy import OPEN
 from aerona.core.errors import NotFoundError
 from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -83,7 +84,6 @@ from aerona.domain.enums.works import WorksStatus
 from aerona.domain.models.records import GroundSnapshot
 from aerona.engine.cosmos.maps import MAPPED_STATUSES, map_is_stale, map_request, store_world_map, world_entities
 from aerona.engine.ecology.niches import NicheKey, niche_of
-from aerona.engine.economy.convoys import OPEN
 from aerona.engine.economy.routes import LIVE_STATUSES
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import homes_of

@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from sqlalchemy import func, select
 
 from aerona.catalog.finance import ILLEGAL_GOODS
+from aerona.catalog.life.finance import ALLIANCES, MERCHANT_GUILDS, OUTLAW_KINDS
+from aerona.catalog.life_traits import TRADE_POLICY_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.economy import MarketPriceRow, ProductionRunRow, WorkshopRow
@@ -15,12 +17,12 @@ from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyPar
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
-from aerona.domain.enums.faction import CRIME_KINDS, FactionKind
 from aerona.domain.enums.finance import TradePolicyKind
+from aerona.domain.enums.life_traits import TradePolicyKindTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import PressureKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.polity import TreatyKind, TreatyStatus
+from aerona.domain.enums.polity import TreatyStatus
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
@@ -36,12 +38,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import ongoing_wars
 
-OUTLAW_KINDS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.ROUTE_RAIDERS, *sorted(CRIME_KINDS))
-MERCHANT_GUILDS = (FactionKind.MERCHANT_GUILD, FactionKind.WANDERING_MARKET)
-ALLIANCES = (TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.ALLIANCE_OFFENSIVE)
-
-
-BARRING = frozenset({TradePolicyKind.EMBARGO, TradePolicyKind.SANCTION})
+BARRING = having(TRADE_POLICY_KIND_TRAITS, TradePolicyKindTrait.BARRING)
 
 
 @dataclass(frozen=True)

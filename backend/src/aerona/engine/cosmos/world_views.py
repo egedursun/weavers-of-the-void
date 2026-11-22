@@ -4,9 +4,12 @@ from typing import Any, cast
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_traits import commodities_with
+from aerona.catalog.life_traits import SETTLE_MODE_TRAITS, WAR_TERRAIN_TRAITS, having
 from aerona.catalog.prehistory import WORLD_PREHISTORY
 from aerona.catalog.world_views import WORLD_VIEWS, WorldViewSpec
 from aerona.constants.units import PER_MILLE, PERCENT
+from aerona.core.total import partial
 from aerona.db.read_memo import memo_of
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.demography import PeopleBiologyRow
@@ -19,7 +22,9 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.life_traits import SettleModeTrait, WarTerrainTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.prehistory import PrehistoryKind
@@ -39,12 +44,21 @@ from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 VIEW_TABLES = frozenset({WorldViewRow.__tablename__, WorldRow.__tablename__})
-HEAT_STOCKS = (CommodityKind.FUEL, CommodityKind.PEAT, CommodityKind.COAL)
+HEAT_STOCKS = commodities_with(CommodityTrait.HEAT_STOCK)
 AIR_STOCKS = (CommodityKind.TOOLS,)
-OFFERING_STOCKS = (CommodityKind.SACRED_GOODS, CommodityKind.INCENSE)
-UPKEPT = frozenset({SettleMode.FLOATING, SettleMode.HABITAT})
+OFFERING_STOCKS = commodities_with(CommodityTrait.OFFERING)
+DRAWN_FROM = partial(
+    BindingNeed,
+    {
+        BindingNeed.HEAT: (HEAT_STOCKS, GoodsFlow.CONSUMPTION),
+        BindingNeed.AIR: (AIR_STOCKS, GoodsFlow.CONSUMPTION),
+        BindingNeed.OFFERINGS: (OFFERING_STOCKS, GoodsFlow.OFFERING),
+    },
+    without=(BindingNeed.NONE, BindingNeed.WATER, BindingNeed.BELIEF),
+)
+UPKEPT = having(SETTLE_MODE_TRAITS, SettleModeTrait.UPKEPT)
 COLD_BORN = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
-LAND_UNFIT = frozenset({WarTerrain.NAVAL, WarTerrain.SKY, WarTerrain.BOARDING})
+LAND_UNFIT = having(WAR_TERRAIN_TRAITS, WarTerrainTrait.LAND_UNFIT)
 
 
 @dataclass(frozen=True)
@@ -249,15 +263,10 @@ async def need_met(ctx: TickContext, town: EntityRow, view: WorldView, atlas: Re
     table = ctx.rules.world_views
     people = stat(town, "population") or 0
     wanted = max(1, people * table.need_per_100 // PERCENT)
-    drawn_from = {
-        BindingNeed.HEAT: (HEAT_STOCKS, GoodsFlow.CONSUMPTION),
-        BindingNeed.AIR: (AIR_STOCKS, GoodsFlow.CONSUMPTION),
-        BindingNeed.OFFERINGS: (OFFERING_STOCKS, GoodsFlow.OFFERING),
-    }
     if view.need is BindingNeed.WATER:
         return await water_met(ctx, town, atlas, people)
-    if view.need in drawn_from:
-        stocks, flow = drawn_from[view.need]
+    if view.need in DRAWN_FROM:
+        stocks, flow = DRAWN_FROM[view.need]
         return await drawn(ctx, town.id, stocks, wanted, flow) >= wanted
     if view.need is BindingNeed.BELIEF:
         return (stat(town, "piety") or 0) >= table.belief_from

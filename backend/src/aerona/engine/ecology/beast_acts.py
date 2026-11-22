@@ -2,6 +2,9 @@ from collections.abc import Mapping
 
 from sqlalchemy import select
 
+from aerona.catalog.conditions import MADNESS_CONDITIONS
+from aerona.catalog.life.ecology import CARRIED_BY
+from aerona.catalog.life_traits import ATTACK_RANGE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.total import total
@@ -14,10 +17,11 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
-from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, DamageType, HarmCause
-from aerona.domain.enums.ecology import AttackDelivery, AttackEffect, AttackRange, AwakeningTrigger, Habitat, Temperament
+from aerona.domain.enums.body import ConditionKind, DamageType, HarmCause
+from aerona.domain.enums.ecology import AttackEffect, AttackRange, AwakeningTrigger, Habitat, Temperament
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import AttackRangeTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -132,22 +136,7 @@ WOUNDS: Mapping[AttackEffect, DamageType | None] = total(
         AttackEffect.DRAIN: DamageType.VOID,
     },
 )
-CARRIED_BY: Mapping[AttackDelivery, Transmission] = total(
-    AttackDelivery,
-    {
-        AttackDelivery.BREATH: Transmission.INHALATION,
-        AttackDelivery.SPIT: Transmission.CONTACT,
-        AttackDelivery.SPRAY: Transmission.CONTACT,
-        AttackDelivery.EMANATION: Transmission.INHALATION,
-        AttackDelivery.GAZE: Transmission.GAZE,
-        AttackDelivery.VOICE: Transmission.EXPERIENCE,
-        AttackDelivery.TOUCH: Transmission.CONTACT,
-        AttackDelivery.SPORES: Transmission.INHALATION,
-        AttackDelivery.BITE: Transmission.BITE,
-        AttackDelivery.STING: Transmission.BLOOD,
-    },
-)
-WHOLE_TOWN = frozenset({AttackRange.FAR, AttackRange.SIGHT})
+WHOLE_TOWN = having(ATTACK_RANGE_TRAITS, AttackRangeTrait.WHOLE_TOWN)
 
 
 def ready(attack: CreatureAttackRow, epoch: int) -> bool:

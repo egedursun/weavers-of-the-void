@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.services import VENUE_STRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.childhood import STANDING_AGES, TECHNIQUE_WEIGHTS, ChildStandingRow, SocializationRow
@@ -35,7 +36,6 @@ from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.population import PopulationInstrument
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.speech import SpeechVenue
-from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.cycles.lineage import sexes_fixed
 from aerona.engine.death_work.handling import allowed_remains
@@ -290,12 +290,6 @@ async def fit_item(session: AsyncSession, key: int) -> None:
         await session.delete(item)
         return
     item.reach = min(item.reach, outlet.reach)
-
-
-VENUE_STRUCTURES = {
-    SpeechVenue.TEMPLE: frozenset({StructureKind.TEMPLE, StructureKind.SHRINE, StructureKind.MONASTERY}),
-    SpeechVenue.SCHOOL: frozenset({StructureKind.SCHOOL, StructureKind.ACADEMY, StructureKind.UNIVERSITY}),
-}
 
 
 async def venue_missing(session: AsyncSession, speech: SpeechRow) -> bool:

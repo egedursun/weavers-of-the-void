@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.carriers import CARRIER_OF, CARRIERS
 from aerona.catalog.kinds.trade_modes import TRADE_MODES
+from aerona.catalog.life.economy import OPEN
 from aerona.catalog.preservation import PRESERVATION, WATER_DEFAULT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.discovery import ArtFormPractitionerRow
@@ -43,7 +44,6 @@ from aerona.rules.registry import Rules
 WEALTH = "wealth"
 
 ANIMAL_KINDS = frozenset(kind for kind in TransportKind if CARRIERS[CARRIER_OF[kind]].upkeep == "feed" and CARRIERS[CARRIER_OF[kind]].capacity <= 10)
-OPEN = (ConvoyStatus.LOADING, ConvoyStatus.TRAVELLING, ConvoyStatus.DELAYED)
 SICK_SEVERITY = 20
 MIGRANTS = "migrants"
 MISSIONARIES = "missionaries"

@@ -5,6 +5,7 @@ from math import ceil
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import CRIME_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -13,7 +14,6 @@ from aerona.db.tables.urban import DistrictServiceRow, TurfRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.faction import CRIME_KINDS
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.urban import UrbanService
 from aerona.engine.body.hits import Harm

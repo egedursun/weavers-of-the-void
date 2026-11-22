@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.kin import RAISE_ORDER
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -15,9 +17,9 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.kin import KinDuty, KinRole
+from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.domain.enums.mind import MemoryKind, RelationComponent, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.mortal import LifeStage
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import shift_points
@@ -30,16 +32,7 @@ from aerona.engine.primitives.queries import connect
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 
-YOUNG = frozenset({LifeStage.INFANT, LifeStage.CHILD})
-RAISE_ORDER = (
-    KinRole.GRANDPARENT,
-    KinRole.PARENT_SIBLING_FIRST_LINE,
-    KinRole.PARENT_SIBLING_SECOND_LINE,
-    KinRole.SIBLING,
-    KinRole.GODPARENT,
-    KinRole.CHOSEN_KIN,
-    KinRole.SWORN_KIN,
-)
+YOUNG = having(LIFE_STAGE_TRAITS, LifeStageTrait.DUTIES_YOUNG)
 TEN = 10
 
 
@@ -164,7 +157,9 @@ async def foster_orphans(ctx: TickContext, duties: Duties, tally: KinTally) -> N
             continue
         folk = await people_of(ctx.session, child)
         owed = duties.get(folk.id, {}) if folk is not None else {}
-        ranked = sorted(RAISE_ORDER, key=lambda role: (-owed.get((role, KinDuty.RAISE), 0), RAISE_ORDER.index(role)))
+        ranked = sorted(
+            RAISE_ORDER, key=lambda role: (-owed.get((role, KinDuty.RAISE), 0), RAISE_ORDER.index(role) if role in RAISE_ORDER else len(RAISE_ORDER))
+        )
         for role in ranked:
             if owed.get((role, KinDuty.RAISE), 0) < table.duty_floor:
                 continue

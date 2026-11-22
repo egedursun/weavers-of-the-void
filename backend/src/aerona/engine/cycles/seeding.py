@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.body_plans import BUDDING_PLANS
+from aerona.catalog.life.cycles import COUSINS_FOR_KINSHIP_DESCENTS, LINE_FOR_KINSHIP_DESCENTS, RESIDENCES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.collective import RoleNormRow
@@ -10,7 +12,6 @@ from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.collective import RoleEligibility, RoleKind
 from aerona.domain.enums.cycles import (
     AdoptionKind,
@@ -32,8 +33,6 @@ from aerona.rules.registry import Rules
 
 MALE_LINES = frozenset({RoleEligibility.MALE_ONLY, RoleEligibility.MALE_PREFERRED})
 FEMALE_LINES = frozenset({RoleEligibility.FEMALE_ONLY, RoleEligibility.FEMALE_PREFERRED})
-RESIDENCES = {KinshipDescent.THROUGH_FIRST_LINE: ResidenceRule.WITH_FIRST_FAMILY, KinshipDescent.THROUGH_SECOND_LINE: ResidenceRule.WITH_SECOND_FAMILY}
-BUDDING_PLANS = frozenset({BodyPlan.AMORPHOUS, BodyPlan.CONSTRUCT})
 
 
 @dataclass
@@ -85,7 +84,7 @@ def reading_of(spread: Spread, values: dict[ValueAxis, int]) -> Reading:
 
 
 def line_for(people_id: int) -> KinshipDescent:
-    return SeededRandom.for_epoch(people_id, 0, "descent").pick([KinshipDescent.THROUGH_FIRST_LINE, KinshipDescent.THROUGH_SECOND_LINE])
+    return SeededRandom.for_epoch(people_id, 0, "descent").pick(LINE_FOR_KINSHIP_DESCENTS)
 
 
 def line_of_sex(first: Sex, sex: Sex) -> KinshipDescent:
@@ -143,7 +142,7 @@ def group_for(reading: Reading, rules: Rules) -> DescentGroup:
 
 def cousins_for(reading: Reading, rules: Rules, descent: KinshipDescent) -> KinTermSystem:
     table = rules.kinship_systems
-    unilineal = descent in (KinshipDescent.THROUGH_FIRST_LINE, KinshipDescent.THROUGH_SECOND_LINE)
+    unilineal = descent in COUSINS_FOR_KINSHIP_DESCENTS
     if reading.kin >= table.all_siblings_at:
         return KinTermSystem.GENERATIONAL
     if reading.kin >= table.parallel_siblings_at:

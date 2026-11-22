@@ -3,6 +3,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from aerona.catalog.anatomy import FINGERS, Anatomy
+from aerona.catalog.harm_kinds import injuries_where
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
 from aerona.domain.enums.body import BodyFunction, Handedness, InjuryKind, NerveDamage
@@ -36,7 +37,7 @@ def redundancy(rules: CapacityRules, function: BodyFunction) -> int:
     return table.get(function, rules.default_redundancy_pct)
 
 
-MIND_WOUNDS = frozenset({InjuryKind.VOID_TOUCH, InjuryKind.MIND_SCAR, InjuryKind.CONCUSSION})
+MIND_WOUNDS = injuries_where(lambda spec: spec.of_the_mind)
 
 
 def part_losses(anatomy: Anatomy, wounds: Iterable[Wound], venom_paralysis_at: int) -> tuple[dict[str, float], dict[BodyFunction, float]]:

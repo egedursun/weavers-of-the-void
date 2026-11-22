@@ -1,29 +1,27 @@
 import math
-from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from aerona.catalog.anatomy import Anatomy, Part
+from aerona.catalog.harm_kinds import DAMAGE, damage_where, injuries_where
 from aerona.catalog.kinds.harm import HARM_CAUSES
 from aerona.catalog.kinds.strikes import STRIKE_STYLES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
-from aerona.domain.enums.body import BodyFunction, BodyRegion, DamageType, HarmCause, InjuryKind, StrikeStyle
+from aerona.domain.enums.body import BodyRegion, DamageType, HarmCause, InjuryKind, StrikeStyle
 from aerona.domain.enums.records import InstrumentKind
 from aerona.engine.body.strike import EDGED, Layer, Scorch, Wielding, heat_of, resolve, strike_of
 from aerona.engine.body.tissues import PLAIN, Hardness, TissueHit, tissue_hit
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import InjuryRules
 
-PHYSICAL = frozenset({DamageType.CUT, DamageType.PIERCE, DamageType.BLUNT, DamageType.FIRE, DamageType.BALLISTIC, DamageType.EXPLOSIVE})
-PERMANENT_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED, InjuryKind.DESTROYED, InjuryKind.VOID_TOUCH, InjuryKind.DIVINE_BRAND})
-MARK_KINDS = frozenset({InjuryKind.VOID_TOUCH, InjuryKind.DIVINE_BRAND})
-DEEP_DAMAGE = frozenset({DamageType.PIERCE, DamageType.BLUNT, DamageType.VENOM, DamageType.BALLISTIC, DamageType.EXPLOSIVE})
-BODILY_DAMAGE = frozenset(
-    {DamageType.CUT, DamageType.PIERCE, DamageType.BLUNT, DamageType.COLD, DamageType.VENOM, DamageType.BALLISTIC, DamageType.EXPLOSIVE, DamageType.CHEMICAL}
-)
-TOTAL_LOSS_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED, InjuryKind.DESTROYED})
-CLEAN_HEALING_KINDS = frozenset({InjuryKind.BRUISE, InjuryKind.SICKNESS, InjuryKind.CONCUSSION, InjuryKind.VENOM, InjuryKind.RADIATION_SICKNESS})
+PHYSICAL = damage_where(lambda spec: spec.physical)
+PERMANENT_KINDS = injuries_where(lambda spec: spec.permanent)
+MARK_KINDS = injuries_where(lambda spec: spec.mark)
+DEEP_DAMAGE = damage_where(lambda spec: spec.deep)
+BODILY_DAMAGE = damage_where(lambda spec: spec.bodily)
+TOTAL_LOSS_KINDS = injuries_where(lambda spec: spec.total_loss)
+CLEAN_HEALING_KINDS = injuries_where(lambda spec: spec.clean_healing)
 
 
 @dataclass(frozen=True)
@@ -130,102 +128,8 @@ def severity_of(rules: InjuryRules, magnitude: float, rng: SeededRandom) -> int:
     return max(SEVERITY_MIN, min(SEVERITY_MAX, math.ceil(raw)))
 
 
-def _sight(part: Part) -> bool:
-    return BodyFunction.SIGHT in part.functions
-
-
-def _small(part: Part) -> bool:
-    return part.severable and (part.counted > 0 or part.region in {BodyRegion.HEAD, BodyRegion.TAIL})
-
-
-def _cut(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    sever_at = rules.cut_sever_small_at if _small(part) else rules.cut_sever_at
-    if part.severable and severity >= sever_at:
-        return InjuryKind.SEVERED
-    return InjuryKind.DEEP_CUT if severity >= rules.cut_deep_at else InjuryKind.CUT
-
-
-def _pierce(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    if _sight(part) and severity >= rules.pierce_gouge_at:
-        return InjuryKind.GOUGED
-    if part.vital and severity >= rules.pierce_destroy_at:
-        return InjuryKind.DESTROYED
-    return HARM_CAUSES[cause].pierce
-
-
-def _blunt(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    if severity >= rules.blunt_crush_at:
-        return InjuryKind.CRUSH
-    return InjuryKind.FRACTURE if severity >= rules.blunt_fracture_at else InjuryKind.BRUISE
-
-
-def _fire(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    return InjuryKind.DESTROYED if _sight(part) and severity >= rules.fire_blind_at else InjuryKind.BURN
-
-
-def _cold(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    return InjuryKind.SEVERED if part.severable and severity >= rules.cold_loss_at else InjuryKind.FROSTBITE
-
-
-def _magic(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    return InjuryKind.CURSE_WITHER if severity >= rules.magic_wither_at else InjuryKind.BURN
-
-
-def _ballistic(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    if _sight(part) and severity >= rules.pierce_gouge_at:
-        return InjuryKind.GOUGED
-    if part.vital and severity >= rules.pierce_destroy_at:
-        return InjuryKind.DESTROYED
-    return InjuryKind.GUNSHOT
-
-
-def _explosive(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    if part.severable and severity >= rules.blast_sever_at:
-        return InjuryKind.SEVERED
-    if part.region is BodyRegion.HEAD and severity >= rules.blast_concussion_at:
-        return InjuryKind.CONCUSSION
-    return InjuryKind.SHRAPNEL
-
-
-def _energy(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    if (_sight(part) and severity >= rules.fire_blind_at) or (part.vital and severity >= rules.pierce_destroy_at):
-        return InjuryKind.DESTROYED
-    return InjuryKind.BURN
-
-
-def _chemical(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    return InjuryKind.DESTROYED if _sight(part) and severity >= rules.fire_blind_at else InjuryKind.CHEMICAL_BURN
-
-
-KindRule = Callable[[InjuryRules, Part, int, HarmCause], InjuryKind]
-
-KIND_RULES: dict[DamageType, KindRule] = {
-    DamageType.CUT: _cut,
-    DamageType.PIERCE: _pierce,
-    DamageType.BLUNT: _blunt,
-    DamageType.FIRE: _fire,
-    DamageType.COLD: _cold,
-    DamageType.MAGIC: _magic,
-    DamageType.BALLISTIC: _ballistic,
-    DamageType.EXPLOSIVE: _explosive,
-    DamageType.ENERGY: _energy,
-    DamageType.CHEMICAL: _chemical,
-}
-
-FIXED_KINDS: dict[DamageType, InjuryKind] = {
-    DamageType.VOID: InjuryKind.VOID_TOUCH,
-    DamageType.HOLY: InjuryKind.DIVINE_BRAND,
-    DamageType.VENOM: InjuryKind.VENOM,
-    DamageType.ELECTRIC: InjuryKind.ELECTRICAL_BURN,
-    DamageType.RADIATION: InjuryKind.RADIATION_SICKNESS,
-    DamageType.SONIC: InjuryKind.CONCUSSION,
-    DamageType.PSYCHIC: InjuryKind.MIND_SCAR,
-}
-
-
 def kind_for(rules: InjuryRules, damage_type: DamageType, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
-    chooser = KIND_RULES.get(damage_type)
-    return chooser(rules, part, severity, cause) if chooser is not None else FIXED_KINDS[damage_type]
+    return DAMAGE[damage_type].wound(rules, part, severity, cause)
 
 
 def loss_for(rules: InjuryRules, kind: InjuryKind, severity: int) -> int:

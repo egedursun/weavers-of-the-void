@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.settlement import STARTING_DISTRICTS_DISTRICT_KINDS, TOWN_OF_DISTRICT_KINDS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import DistrictDesignRow, DistrictRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.domain.enums.settlement import TIER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
@@ -93,7 +94,7 @@ def starting_districts(rules: Rules, settlement: EntityRow, epoch: int) -> list[
     if population >= rules.urban.town_population:
         kinds.extend([DistrictKind.MARKET] * quarters)
     if population >= rules.urban.city_population:
-        kinds.extend([DistrictKind.CRAFT_QUARTER, DistrictKind.TEMPLE_QUARTER] * quarters)
+        kinds.extend(STARTING_DISTRICTS_DISTRICT_KINDS * quarters)
     kinds.extend([DistrictKind.RESIDENTIAL] * (population // rules.urban.district_people))
     return kinds
 
@@ -121,7 +122,7 @@ async def town_of(ctx: TickContext, settlement: EntityRow, knowledge: KnowledgeM
             )
             session.add(district)
             districts.append(district)
-        granary = sum(district.level for district in districts if district.kind in {DistrictKind.FARMLAND, DistrictKind.MARKET})
+        granary = sum(district.level for district in districts if district.kind in TOWN_OF_DISTRICT_KINDS)
         profile = SettlementProfileRow(
             settlement_entity_id=settlement.id,
             size_tier=tier_for(ctx.rules, stat(settlement, "population") or 0, infrastructure, granary),

@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.conditions import CURABLE_CONDITIONS
+from aerona.catalog.goods_traits import materials_with
 from aerona.catalog.lore import ITEM_CLASSES, KNOWLEDGE_ITEMS, REGALIA, WEAPONS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
@@ -22,13 +24,14 @@ from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, OfficeRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.affliction import PackageKind, Transmission
-from aerona.domain.enums.body import ConditionKind, HarmCause, InjuryState
+from aerona.domain.enums.body import HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CurseKind, CustomCatalog, ItemClass, ItemDeed, RiteEffectKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialFamily, MaterialSlot
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignment
+from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind, SkillKind, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -63,20 +66,11 @@ from aerona.engine.recording.record import record as record_incident
 HALF = 2
 TEN = 10
 WORLD_PREFIX = WORLD_KEY_PREFIX
-CURABLE = frozenset(
-    {
-        ConditionKind.CHRONIC_ILLNESS,
-        ConditionKind.MELANCHOLY,
-        ConditionKind.PARANOIA,
-        ConditionKind.AGE_BLINDNESS,
-        ConditionKind.WITHERED_LIMB,
-        ConditionKind.NIGHTMARES,
-    }
-)
+CURABLE = CURABLE_CONDITIONS
 C = ItemClass
 E = RiteEffectKind
 WAYFINDERS = frozenset({C.MAP, C.ASTROLABE})
-ORGANIC_CLOTH = frozenset({MaterialKind.CLOTH, MaterialKind.HIDE, MaterialKind.LEATHER})
+ORGANIC_CLOTH = frozenset(materials_with(MaterialTrait.ORGANIC_CLOTH))
 FAMILY_STOCK = {
     MaterialFamily.METAL: CommodityKind.ORE,
     MaterialFamily.PRECIOUS: CommodityKind.ORE,

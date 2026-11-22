@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.nature import Dormancy, PlantDefence, SenseKind, SymbiosisKind, Thermoregulation
+from aerona.domain.enums.nature import Dormancy, PlantDefence, SymbiosisKind, Thermoregulation
 
 DORMANCY = total(
     Dormancy,
@@ -23,41 +23,6 @@ PLANT_DEFENCE = total(
         PlantDefence.TOXINS: Defined("Toxins", checked_by=(), used_by=("engine.nature.plants.keep_plant_defences", "engine.phases.environment.region_harvest")),
         PlantDefence.ALLELOPATHY: Defined("Poisons its neighbours", checked_by=(), used_by=("engine.phases.environment.region_harvest",)),
         PlantDefence.CARNIVOROUS: Defined("Eats flesh", checked_by=(), used_by=("engine.nature.plants.keep_plant_defences",)),
-    },
-)
-
-SENSE_KIND = total(
-    SenseKind,
-    {
-        SenseKind.SIGHT: Defined(
-            "Sight",
-            checked_by=("engine.nature.senses.PURPOSES", "engine.nature.senses.born_people", "engine.nature.senses.born_species"),
-            used_by=("engine.genetics.pools.SENSE_LOCI",),
-        ),
-        SenseKind.NIGHT_VISION: Defined(
-            "Night vision",
-            checked_by=("engine.nature.senses.PURPOSES", "engine.nature.senses.born_people", "engine.nature.senses.born_species"),
-            used_by=("engine.genetics.pools.SENSE_LOCI",),
-        ),
-        SenseKind.SMELL: Defined(
-            "Smell",
-            checked_by=("engine.nature.senses.PURPOSES", "engine.nature.senses.born_people", "engine.nature.senses.born_species"),
-            used_by=("engine.genetics.pools.SENSE_LOCI",),
-        ),
-        SenseKind.HEARING: Defined(
-            "Hearing",
-            checked_by=("engine.nature.senses.PURPOSES", "engine.nature.senses.born_people", "engine.nature.senses.born_species"),
-            used_by=("engine.genetics.pools.SENSE_LOCI", "engine.nature.senses.born_people"),
-        ),
-        SenseKind.ECHOLOCATION: Defined("Echolocation", checked_by=("engine.nature.senses.PURPOSES", "engine.nature.senses.born_species"), used_by=()),
-        SenseKind.VIBRATION: Defined(
-            "Feeling vibration",
-            checked_by=("engine.nature.senses.PURPOSES", "engine.nature.senses.born_people", "engine.nature.senses.born_species"),
-            used_by=(),
-        ),
-        SenseKind.MAGNETIC: Defined("Sense of direction", checked_by=("engine.nature.senses.PURPOSES", "engine.nature.senses.born_species"), used_by=()),
-        SenseKind.SPIRIT_SIGHT: Defined("Spirit sight", checked_by=("engine.nature.senses.PURPOSES", "engine.nature.senses.born_species"), used_by=()),
-        SenseKind.HEAT: Defined("Sensing heat", checked_by=("engine.nature.senses.PURPOSES", "engine.nature.senses.born_species"), used_by=()),
     },
 )
 
@@ -100,7 +65,7 @@ THERMOREGULATION = total(
         ),
         Thermoregulation.ECTOTHERM: Defined(
             "Cold-blooded",
-            checked_by=("agents.context.nature_lines.mortal_nature_lines", "engine.genetics.pools.climate_lean", "engine.nature.senses.born_species"),
+            checked_by=("agents.context.nature_lines.mortal_nature_lines", "engine.genetics.pools.climate_lean", "engine.nature.senses.BORN"),
             used_by=("engine.ecology.profiles.profile_of",),
         ),
     },

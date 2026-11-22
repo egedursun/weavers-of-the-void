@@ -9,10 +9,10 @@ COSMIC_FEATURE_KIND = total(
             "Asteroid field",
             checked_by=("engine.cosmos.physics_control.create_feature",),
             used_by=(
+                "catalog.life.cosmos.STAR_BOUND",
                 "engine.cosmos.features.harbour_pirates",
                 "engine.cosmos.features.mine_fields",
                 "engine.cosmos.impacts.forecast",
-                "engine.cosmos.physics_control.STAR_BOUND",
             ),
         ),
         CosmicFeatureKind.WORMHOLE: Defined(
@@ -21,7 +21,7 @@ COSMIC_FEATURE_KIND = total(
         CosmicFeatureKind.PERIODIC_COMET: Defined(
             "Periodic comet",
             checked_by=("engine.cosmos.features.return_comets",),
-            used_by=("engine.cosmos.features.WANDERING_SUBTYPES", "engine.cosmos.impacts.forecast"),
+            used_by=("catalog.life.domain.PERIODIC_BODIES", "engine.cosmos.features.WANDERING_SUBTYPES", "engine.cosmos.impacts.forecast"),
         ),
         CosmicFeatureKind.ROGUE_WORLD: Defined(
             "Rogue world",
@@ -29,12 +29,12 @@ COSMIC_FEATURE_KIND = total(
             used_by=("engine.cosmos.features.pass_rogues", "engine.cosmos.impacts.forecast"),
         ),
         CosmicFeatureKind.GRAVITY_WELL: Defined(
-            "Gravity well",
-            checked_by=(),
-            used_by=("engine.cosmos.features.devour", "engine.cosmos.features.ensure_wells", "engine.cosmos.physics_control.STAR_BOUND"),
+            "Gravity well", checked_by=(), used_by=("catalog.life.cosmos.STAR_BOUND", "engine.cosmos.features.devour", "engine.cosmos.features.ensure_wells")
         ),
         CosmicFeatureKind.WANDERING_STAR: Defined(
-            "Wandering star", checked_by=("engine.cosmos.features.periodic_period",), used_by=("engine.cosmos.features.WANDERING_SUBTYPES",)
+            "Wandering star",
+            checked_by=("engine.cosmos.features.periodic_period",),
+            used_by=("catalog.life.domain.PERIODIC_BODIES", "engine.cosmos.features.WANDERING_SUBTYPES"),
         ),
     },
 )

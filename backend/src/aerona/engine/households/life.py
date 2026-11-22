@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import inspect, select
 
 from aerona.catalog.genetics import CLASS_INCOME_PCT
+from aerona.catalog.life.households import RULER_DRAW_OFFICE_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
@@ -21,7 +22,7 @@ from aerona.domain.enums.genetics import HouseholdDecision, HouseholdRole
 from aerona.domain.enums.mind import ActKind, ThoughtKind, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause, LifeStage
-from aerona.domain.enums.polity import LawKind, OfficeKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.unions import UnionPurpose
@@ -175,7 +176,7 @@ async def ruler_draw(ctx: TickContext, household: HouseholdRow) -> int:
     if household.head_node_id is None:
         return 0
     office = await ctx.session.scalar(
-        select(OfficeRow).where(OfficeRow.holder_entity_id == household.head_node_id, OfficeRow.kind.in_([OfficeKind.RULER, OfficeKind.REGENT])).limit(1)
+        select(OfficeRow).where(OfficeRow.holder_entity_id == household.head_node_id, OfficeRow.kind.in_(RULER_DRAW_OFFICE_KINDS)).limit(1)
     )
     realm = await ctx.session.get(PolityProfileRow, office.polity_entity_id) if office is not None else None
     if realm is None or held(realm.polity_entity_id) or "treasury" in (realm.locked or []):

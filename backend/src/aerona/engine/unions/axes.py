@@ -1,10 +1,11 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from aerona.catalog.life.unions import DESCENT_OF
 from aerona.core.total import total
 from aerona.db.tables.cycles import KinshipSystemRow
 from aerona.db.tables.unions import UnionCustomRow
-from aerona.domain.enums.cycles import KinshipDescent, ResidenceRule
+from aerona.domain.enums.cycles import ResidenceRule
 from aerona.domain.enums.unions import PartnerScope, PluralSide, UnionDescent, UnionForm, UnionResidence
 
 RESIDENCE_OF: Mapping[ResidenceRule, UnionResidence] = total(
@@ -14,16 +15,6 @@ RESIDENCE_OF: Mapping[ResidenceRule, UnionResidence] = total(
         ResidenceRule.WITH_SECOND_FAMILY: UnionResidence.WITH_SECOND_FAMILY,
         ResidenceRule.NEW_HOUSEHOLD: UnionResidence.NEW_HOUSEHOLD,
         ResidenceRule.WITH_KIN_OF_THE_FIRST_LINE: UnionResidence.WITH_SECOND_FAMILY,
-    },
-)
-DESCENT_OF: Mapping[KinshipDescent, UnionDescent] = total(
-    KinshipDescent,
-    {
-        KinshipDescent.THROUGH_FIRST_LINE: UnionDescent.THROUGH_FIRST,
-        KinshipDescent.THROUGH_SECOND_LINE: UnionDescent.THROUGH_SECOND,
-        KinshipDescent.BILATERAL: UnionDescent.THROUGH_BOTH,
-        KinshipDescent.DOUBLE: UnionDescent.THROUGH_BOTH,
-        KinshipDescent.AMBILINEAL: UnionDescent.CHOSEN,
     },
 )
 PLURAL_FORMS = frozenset({UnionForm.PLURAL, UnionForm.GROUP})

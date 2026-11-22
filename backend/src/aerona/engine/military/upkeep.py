@@ -1,5 +1,6 @@
 from sqlalchemy import func, select
 
+from aerona.catalog.life.military import HIRE_MERCENARIES_CONTRACT_STATUSS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, MercenaryContractRow, OccupationRow
@@ -53,9 +54,7 @@ async def hire_mercenaries(ctx: TickContext) -> int:
     hired = 0
     table = ctx.rules.war_finance
     taken: set[int] = set(
-        await ctx.session.scalars(
-            select(MercenaryContractRow.company_entity_id).where(MercenaryContractRow.status.in_([ContractStatus.ACTIVE, ContractStatus.UNPAID]))
-        )
+        await ctx.session.scalars(select(MercenaryContractRow.company_entity_id).where(MercenaryContractRow.status.in_(HIRE_MERCENARIES_CONTRACT_STATUSS)))
     )
     companies = [
         company

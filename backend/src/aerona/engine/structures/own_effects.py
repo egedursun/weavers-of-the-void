@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.structures import BOUNDED
 from aerona.catalog.structure_effects import EFFECTS, STRUCTURE_OWN_EFFECTS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -27,7 +28,6 @@ from aerona.engine.primitives.stats import shift_stat
 
 T = EffectTarget
 Apply = Callable[[TickContext, EntityRow, SettlementProfileRow, int], Awaitable[None]]
-BOUNDED = frozenset({T.PUBLIC_ORDER, T.CRIME, T.UNREST, T.SANITATION, T.FIRE_RISK, T.PRESTIGE, T.SIEGE_SUPPLIES, T.SIEGE_WATER})
 
 
 def field_shift(name: str) -> Apply:

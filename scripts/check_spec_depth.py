@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SPECS = (
     ROOT / "docs" / "spec" / "13-depth-expansion.md",
     ROOT / "docs" / "spec" / "16-minds-powers-living-craft.md",
+    ROOT / "docs" / "spec" / "17-w52-expansions.md",
 )
 HEADING = re.compile(r"^(#{2,5}) (.+?)\s*$")
 NUMBER = r"(?:F\d+(?:\.\d+)*[a-z]?|\d+[a-z]?(?:\.\d+[a-z]?)+|\d+[a-z]?(?=\.\s)|[A-Z]\.\d+)"

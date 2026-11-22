@@ -3,11 +3,23 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.life.collective import CAREER_ROLES as ROLE_OF_CAREER
+from aerona.catalog.life.mortal import (
+    BREAK_TRAITS,
+    CAREER_NEEDS,
+    CAREER_ROLES,
+    CAREER_TRAITS,
+    CAREER_VALUES,
+    CHOOSE_PATH_LIFE_STAGES,
+    GRATEFUL,
+    OPENINGS_CAREER_PATHS,
+    OPENINGS_LIFE_STAGES_2,
+)
 from aerona.catalog.mind import CAREER_SKILLS, PROFESSIONS
 from aerona.catalog.mind_split import BREAK_FACETS, STRESS_FACETS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.random import SeededRandom
-from aerona.core.total import partial
 from aerona.db.record_context import Term
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
@@ -20,9 +32,9 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.folkways import BiasedDecision
-from aerona.domain.enums.mind import ActKind, Attribute, Facet, GratitudeDeed, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
+from aerona.domain.enums.mind import ActKind, Attribute, Facet, GratitudeDeed, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.mortal import CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
+from aerona.domain.enums.mortal import CareerPath, CrimeKind, DeathCause, StressBreak
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -31,7 +43,6 @@ from aerona.engine.body.bands import banded
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.hits import Harm
-from aerona.engine.collective.roles import CAREER_ROLES as ROLE_OF_CAREER
 from aerona.engine.collective.roles import breach_cost, career_open
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
@@ -62,60 +73,8 @@ from aerona.engine.recording.record import record as record_incident
 from aerona.engine.relations.passions import invoke
 from aerona.engine.services.war import ongoing_wars
 
-GRATEFUL = (MemoryKind.SAVED_ME, MemoryKind.GIFTED_ME, MemoryKind.TAUGHT_ME, MemoryKind.FREED_US)
 SCHEMERS = frozenset({TraitKind.AMBITIOUS, TraitKind.DECEITFUL})
-BREAK_TRAITS: dict[StressBreak, frozenset[TraitKind]] = {
-    StressBreak.RAGE: frozenset({TraitKind.WRATHFUL, TraitKind.CRUEL, TraitKind.RECKLESS, TraitKind.VENGEFUL}),
-    StressBreak.FLIGHT: frozenset({TraitKind.CRAVEN, TraitKind.FICKLE, TraitKind.PARANOID}),
-    StressBreak.DESPAIR: frozenset({TraitKind.MELANCHOLIC, TraitKind.RECLUSIVE}),
-    StressBreak.ZEAL: frozenset({TraitKind.ZEALOUS, TraitKind.ASCETIC, TraitKind.IMPRESSIONABLE}),
-    StressBreak.VICE: frozenset({TraitKind.GLUTTONOUS, TraitKind.LUSTFUL, TraitKind.GREEDY}),
-    StressBreak.REVELATION: frozenset({TraitKind.CURIOUS, TraitKind.SCHOLARLY}),
-}
 FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.CAPTAIN, MortalRole.OFFICER})
-CAREER_ROLES = partial(
-    CareerPath,
-    {
-        CareerPath.ARMY: MortalRole.WARRIOR,
-        CareerPath.OFFICE: MortalRole.SCRIBE,
-        CareerPath.APPRENTICE: MortalRole.APPRENTICE,
-        CareerPath.VOWS: MortalRole.PRIEST,
-        CareerPath.TRADE: MortalRole.MERCHANT,
-        CareerPath.WANDER: MortalRole.EXPLORER,
-        CareerPath.BANDIT: MortalRole.BANDIT,
-        CareerPath.STUDY: MortalRole.SCIENTIST,
-    },
-    without={CareerPath.STAY},
-)
-CAREER_TRAITS: dict[CareerPath, frozenset[TraitKind]] = {
-    CareerPath.ARMY: frozenset({TraitKind.BRAVE, TraitKind.WRATHFUL, TraitKind.RECKLESS, TraitKind.CUNNING_TACTICIAN}),
-    CareerPath.OFFICE: frozenset({TraitKind.AMBITIOUS, TraitKind.JUST, TraitKind.PROUD}),
-    CareerPath.APPRENTICE: frozenset({TraitKind.PATIENT, TraitKind.HUMBLE, TraitKind.CURIOUS}),
-    CareerPath.VOWS: frozenset({TraitKind.ZEALOUS, TraitKind.ASCETIC, TraitKind.CHASTE}),
-    CareerPath.TRADE: frozenset({TraitKind.GREEDY, TraitKind.GREGARIOUS, TraitKind.DECEITFUL}),
-    CareerPath.WANDER: frozenset({TraitKind.CURIOUS, TraitKind.RECKLESS, TraitKind.FICKLE}),
-    CareerPath.BANDIT: frozenset({TraitKind.CRUEL, TraitKind.GREEDY, TraitKind.DECEITFUL}),
-    CareerPath.STUDY: frozenset({TraitKind.CURIOUS, TraitKind.SCHOLARLY, TraitKind.PATIENT}),
-}
-CAREER_VALUES: dict[CareerPath, ValueAxis] = {
-    CareerPath.ARMY: ValueAxis.MARTIAL,
-    CareerPath.OFFICE: ValueAxis.HIERARCHY,
-    CareerPath.APPRENTICE: ValueAxis.TRADITION,
-    CareerPath.VOWS: ValueAxis.PIETY,
-    CareerPath.TRADE: ValueAxis.WEALTH,
-    CareerPath.WANDER: ValueAxis.XENOPHILIA,
-    CareerPath.STUDY: ValueAxis.KNOWLEDGE,
-}
-CAREER_NEEDS: dict[CareerPath, NeedKind] = {
-    CareerPath.ARMY: NeedKind.STATUS,
-    CareerPath.OFFICE: NeedKind.STATUS,
-    CareerPath.APPRENTICE: NeedKind.PURPOSE,
-    CareerPath.VOWS: NeedKind.FAITH,
-    CareerPath.TRADE: NeedKind.SUSTENANCE,
-    CareerPath.WANDER: NeedKind.PURPOSE,
-    CareerPath.BANDIT: NeedKind.SUSTENANCE,
-    CareerPath.STUDY: NeedKind.PURPOSE,
-}
 OFFICE_CLASSES = frozenset({SocialClass.NOBLE, SocialClass.SCRIBE, SocialClass.PRIEST, SocialClass.OFFICIAL, SocialClass.PROFESSIONAL})
 OFFICER_CLASSES = frozenset({SocialClass.NOBLE, SocialClass.OFFICIAL, SocialClass.PROFESSIONAL})
 STUDY_ROLES = frozenset({MortalRole.SCIENTIST, MortalRole.ENGINEER, MortalRole.PILOT, MortalRole.PHYSICIAN, MortalRole.JOURNALIST})
@@ -262,6 +221,10 @@ async def flee(ctx: TickContext, mortal: EntityRow) -> Broke:
     return Broke("stress.flight_wilds", {IncidentRole.ORIGIN: mortal.location_id})
 
 
+BREAKS: Handlers[StressBreak, Callable[[TickContext, EntityRow, MortalProfileRow, SeededRandom], Awaitable[Broke]]] = Handlers(StressBreak)
+
+
+@BREAKS.on(StressBreak.RAGE)
 async def rage(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     enemy = await worst_enemy(ctx, mortal)
     await gain_condition(ctx, mortal, ConditionKind.RAGE, HarmCause.ACCIDENT, severity=banded(ctx, ctx.rules.harm_bands.rage, mortal.id))
@@ -272,6 +235,7 @@ async def rage(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, r
     return Broke("stress.rage_at", {IncidentRole.TARGET: enemy.id}, {"harm": ctx.rules.skills.spar_hp})
 
 
+@BREAKS.on(StressBreak.FLIGHT)
 async def flight(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     return await flee(ctx, mortal)
 
@@ -285,10 +249,12 @@ async def despair(ctx: TickContext, mortal: EntityRow, rng: SeededRandom) -> boo
     return False
 
 
+@BREAKS.on(StressBreak.DESPAIR)
 async def sorrow(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     return Broke("stress.despair", facts={"condition": ConditionKind.MELANCHOLY})
 
 
+@BREAKS.on(StressBreak.ZEAL)
 async def zeal(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     community = await living_entity(ctx.session, mortal.location_id) if mortal.location_id is not None else None
     cults = await active_bonds(ctx.session, [BondKind.MEMBER_OF], targets=[community.id]) if community is not None else []
@@ -304,11 +270,13 @@ async def zeal(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, r
     return Broke("stress.zeal", {IncidentRole.HOST: joined}, {"loyalty_god": profile.loyalty_god})
 
 
+@BREAKS.on(StressBreak.VICE)
 async def vice(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     await afflict(ctx, mortal, PackageKind.DRINK_DEPENDENCE, Transmission.INGESTION)
     return Broke("stress.vice", facts={"package": PackageKind.DRINK_DEPENDENCE})
 
 
+@BREAKS.on(StressBreak.REVELATION)
 async def revelation(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     await gain_condition(ctx, mortal, ConditionKind.VISIONS, HarmCause.GOD, severity=banded(ctx, ctx.rules.harm_bands.revelation, mortal.id))
     seer = ctx.rules.stress.revelation_seer_chance * (1 + (await stored_attribute(ctx.session, mortal, Attribute.INTUITION) - FULL // 2) / PERCENT)
@@ -316,16 +284,6 @@ async def revelation(ctx: TickContext, mortal: EntityRow, profile: MortalProfile
         mortal.mortal_role = MortalRole.SEER
         return Broke("stress.revelation_seer", facts={"role": MortalRole.SEER})
     return Broke("stress.revelation", facts={"condition": ConditionKind.VISIONS})
-
-
-BREAKS: dict[StressBreak, Callable[[TickContext, EntityRow, MortalProfileRow, SeededRandom], Awaitable[Broke]]] = {
-    StressBreak.RAGE: rage,
-    StressBreak.FLIGHT: flight,
-    StressBreak.DESPAIR: sorrow,
-    StressBreak.ZEAL: zeal,
-    StressBreak.VICE: vice,
-    StressBreak.REVELATION: revelation,
-}
 
 
 async def stress_break(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> StressBreak | None:
@@ -470,7 +428,7 @@ async def best_level(ctx: TickContext, mortal_id: int, path: CareerPath) -> int:
 
 
 async def openings(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> set[CareerPath]:
-    open_paths = {CareerPath.STAY, CareerPath.TRADE, CareerPath.WANDER, CareerPath.VOWS}
+    open_paths = set(OPENINGS_CAREER_PATHS)
     if mortal.location_id is not None and await ongoing_wars(ctx.session, mortal.location_id):
         open_paths.add(CareerPath.ARMY)
     if profile.polity_id is not None and mortal.social_class in OFFICE_CLASSES:
@@ -479,7 +437,7 @@ async def openings(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRo
         )
         if empty is not None:
             open_paths.add(CareerPath.OFFICE)
-    if profile.life_stage in (LifeStage.YOUTH, LifeStage.ADULT) and mortal.mortal_role is MortalRole.COMMONER:
+    if profile.life_stage in OPENINGS_LIFE_STAGES_2 and mortal.mortal_role is MortalRole.COMMONER:
         open_paths.add(CareerPath.APPRENTICE)
     table = ctx.rules.careers
     if profile.wealth < table.bandit_wealth_below and profile.honour < table.bandit_honour_below:
@@ -503,7 +461,7 @@ def career_role(path: CareerPath, mortal: EntityRow, profile: MortalProfileRow) 
 
 async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> CareerPath | None:
     table = ctx.rules.careers
-    if is_held(profile, "career") or await role_locked(ctx, mortal) or profile.life_stage not in (LifeStage.YOUTH, LifeStage.ADULT):
+    if is_held(profile, "career") or await role_locked(ctx, mortal) or profile.life_stage not in CHOOSE_PATH_LIFE_STAGES:
         return None
     if mortal.mortal_role in (MortalRole.RULER, MortalRole.CHOSEN, MortalRole.SAINT, MortalRole.HERO):
         return None

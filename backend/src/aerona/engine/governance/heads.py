@@ -5,6 +5,7 @@ from types import MappingProxyType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.factions import CLASS_OF_KIND
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.read_memo import memoized
@@ -19,7 +20,6 @@ from aerona.domain.enums.governance import CliqueAim, GoverningBody, HeadSelecti
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of
-from aerona.engine.factions.book import CLASS_OF_KIND
 from aerona.engine.governance.seats import members_of, seats_of, shares_of, sync_seats
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int

@@ -3,6 +3,8 @@ from math import log2
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import RESTING
+from aerona.catalog.life.military import ENTRENCH_STANCES, FEED_STANCES, FEED_STANCES_2
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -19,7 +21,7 @@ from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherKind
 from aerona.domain.enums.eras import EraChannel
-from aerona.domain.enums.military import RESTING, CommandArea, MoraleState, MutinyOutcome, Stance
+from aerona.domain.enums.military import CommandArea, MoraleState, MutinyOutcome, Stance
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.agrarian.book import fell_plantings
 from aerona.engine.body.variants import fear_of
@@ -206,7 +208,7 @@ async def restock(ctx: TickContext, owner: EntityRow, profile: ArmyProfileRow, r
 
 
 def entrench(rules: Rules, profile: ArmyProfileRow, left: RegionEnvironmentRow | None = None, rate: float = 1.0) -> None:
-    if profile.stance in {Stance.ENTRENCH, Stance.GARRISON, Stance.BESIEGE}:
+    if profile.stance in ENTRENCH_STANCES:
         profile.entrenchment = clamp_int(profile.entrenchment + round_half_up(rules.logistics.entrench_gain * rate), 0, PERCENT)
     else:
         if left is not None and not held(left.entity_id):
@@ -248,11 +250,11 @@ def feed(
     if region is None:
         return 0
     fed = supply_limit(ctx.rules, region, season)
-    if profile.stance in {Stance.FORAGE, Stance.MARCH, Stance.BESIEGE, Stance.RAID}:
+    if profile.stance in FEED_STANCES:
         profile.supply_days = min(table.supply_days, profile.supply_days + round_half_up(table.forage_days * min(1.0, fed / max(1, size))))
         region.harvest_pct = clamp_int(region.harvest_pct - table.forage_scar, 0, PERCENT)
         log.foraged = True
-        if profile.stance in {Stance.FORAGE, Stance.RAID} or march.attacking:
+        if profile.stance in FEED_STANCES_2 or march.attacking:
             plunder(ctx.rules, region)
             log.plundered = True
     if size <= fed:

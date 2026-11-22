@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import LENDER_KINDS
 from aerona.catalog.methods import METHODS, PROCESS_METHODS
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
@@ -18,7 +19,6 @@ from aerona.db.tables.records import IncidentFactRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import CommodityKind, MoneyForm
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import TechnologyEra

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.polity import POSITION_STATS
 from aerona.constants.units import PERCENT
 from aerona.core.total import partial
 from aerona.db.tables.affairs import CourtPositionRow, CourtRow
@@ -27,14 +28,6 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import record
 
-POSITION_STATS: dict[CourtPosition, str] = {
-    CourtPosition.STEWARD: "intellect",
-    CourtPosition.CHAMPION: "strength",
-    CourtPosition.PHYSICIAN: "wisdom",
-    CourtPosition.TUTOR: "intellect",
-    CourtPosition.CHRONICLER: "creativity",
-    CourtPosition.MASTER_OF_REVELS: "charisma",
-}
 GRANDEUR = "grandeur"
 COURTIERS = "courtiers"
 TEN = 10

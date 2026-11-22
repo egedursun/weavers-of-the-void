@@ -7,13 +7,13 @@ ENDOWMENT_PURPOSE = total(
     {
         EndowmentPurpose.RELIEF: Defined(
             "Relief",
-            checked_by=("engine.endowments.trust.TOWN_EFFECTS",),
+            checked_by=("catalog.life.endowments.TOWN_EFFECTS",),
             used_by=("db.tables.endowments.EndowmentRow", "engine.endowments.seed.seed_endowments"),
         ),
         EndowmentPurpose.LEARNING: Defined("Learning", checked_by=("engine.endowments.trust.serve",), used_by=()),
-        EndowmentPurpose.WORSHIP: Defined("Worship", checked_by=("engine.endowments.trust.TOWN_EFFECTS",), used_by=()),
-        EndowmentPurpose.HEALTH: Defined("Health", checked_by=("engine.endowments.trust.TOWN_EFFECTS",), used_by=()),
-        EndowmentPurpose.WORKS: Defined("Works", checked_by=("engine.endowments.trust.TOWN_EFFECTS",), used_by=()),
+        EndowmentPurpose.WORSHIP: Defined("Worship", checked_by=("catalog.life.endowments.TOWN_EFFECTS",), used_by=()),
+        EndowmentPurpose.HEALTH: Defined("Health", checked_by=("catalog.life.endowments.TOWN_EFFECTS",), used_by=()),
+        EndowmentPurpose.WORKS: Defined("Works", checked_by=("catalog.life.endowments.TOWN_EFFECTS",), used_by=()),
         EndowmentPurpose.ART: Defined("Art", checked_by=("engine.endowments.trust.serve",), used_by=()),
         EndowmentPurpose.KIN: Defined("Kin", checked_by=("engine.endowments.trust.serve",), used_by=()),
         EndowmentPurpose.MEMORY: Defined("Memory", checked_by=("engine.endowments.trust.serve",), used_by=()),

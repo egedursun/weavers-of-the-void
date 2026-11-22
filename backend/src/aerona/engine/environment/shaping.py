@@ -2,6 +2,8 @@ from enum import StrEnum
 
 from sqlalchemy import select
 
+from aerona.catalog.life.environment import WATERING, WORK_SOIL_LAND_ACTS
+from aerona.catalog.life_traits import LAND_ACT_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -11,6 +13,7 @@ from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind
 from aerona.domain.enums.happening import LandAct, RiverShiftCause
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.life_traits import LandActTrait
 from aerona.engine.context import TickContext
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.environment.geomorph import downhill, erupted, ranked_up, set_soil, shape_of, shift_river
@@ -22,8 +25,8 @@ from aerona.engine.primitives.queries import canon
 from aerona.rules.registry import Rules
 
 A = LandAct
-FEARED = frozenset({A.CALL_LAVA, A.SINK_COAST, A.PARCH, A.MAKE_SALINE})
-WELCOMED = frozenset({A.RAISE_LAND, A.OPEN_SPRING, A.GREEN, A.ENRICH_SOIL})
+FEARED = having(LAND_ACT_TRAITS, LandActTrait.FEARED)
+WELCOMED = having(LAND_ACT_TRAITS, LandActTrait.WELCOMED)
 
 
 class LandOutcome(StrEnum):
@@ -73,8 +76,8 @@ def lift(ground: RegionEnvironmentRow, act: LandAct, step: int) -> bool:
     return hold_value(ground, "roughness", clamp_int(ground.roughness - step, 0, PERCENT))
 
 
-SOIL_ACTS = frozenset({A.SHIFT_RIVER, A.PARCH, A.GREEN, A.MAKE_SALINE, A.ENRICH_SOIL})
-LIFTS = frozenset({A.RAISE_LAND, A.LOWER_LAND, A.CARVE_VALLEY, A.FILL_VALLEY})
+SOIL_ACTS = having(LAND_ACT_TRAITS, LandActTrait.SOIL_ACTS)
+LIFTS = having(LAND_ACT_TRAITS, LandActTrait.LIFTS)
 
 
 async def work_soil(
@@ -84,7 +87,7 @@ async def work_soil(
     if act is A.SHIFT_RIVER:
         moved = await shift_river(ctx, region.id, target_region_id, RiverShiftCause.DIVINE)
         return LandOutcome.DONE if moved is not None else LandOutcome.NO_RIVER
-    if act in (A.PARCH, A.GREEN):
+    if act in WORK_SOIL_LAND_ACTS:
         shape = await shape_of(ctx.session, region.id, region.world_id)
         shape.desertification = geomorph.desertified_at if act is A.PARCH else 0
         shape.desertified = act is A.PARCH
@@ -114,9 +117,6 @@ async def stir_ground(ctx: TickContext, region: EntityRow, ground: RegionEnviron
     hold_value(ground, "elevation_mean", clamp_int(ground.elevation_mean - table.step, 0, PERCENT))
     await apply_disaster(ctx, region, Disaster.FLOOD, 1.0)
     return LandOutcome.DONE
-
-
-WATERING = {A.CARVE_VALLEY: 1, A.OPEN_SPRING: 1, A.FILL_VALLEY: -1}
 
 
 async def downstream(ctx: TickContext, region: EntityRow, act: LandAct) -> int | None:

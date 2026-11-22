@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.finance import FOOD_HOARDS
+from aerona.catalog.life.finance import SPECULATION_MERCHANT_GUILDS as MERCHANT_GUILDS
 from aerona.constants.units import PERCENT
 from aerona.db.record_context import Term
 from aerona.db.tables.economy import MarketPriceRow
@@ -15,7 +16,6 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.finance import SpeculationStatus
 from aerona.domain.enums.mind import ActKind, Facet, PressureKind
 from aerona.domain.enums.modifier import IncidentRole, ModifierOp
@@ -27,8 +27,6 @@ from aerona.engine.intrigue.beliefs import believed_prices
 from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
-
-MERCHANT_GUILDS = (FactionKind.MERCHANT_GUILD, FactionKind.WANDERING_MARKET)
 
 
 @dataclass

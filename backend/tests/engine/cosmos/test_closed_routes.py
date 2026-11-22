@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.phases import LOST_REASONS
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.domain.enums.entity import EntityType
@@ -9,7 +10,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus, RouteClosure, TravelMethod
 from aerona.domain.models.entity_stats import PeopleStats
 from aerona.engine.cosmos.routes import JourneySpec, _closed_status, start_journey
-from aerona.engine.phases.travel import LOST_REASONS, journeys
+from aerona.engine.phases.travel import journeys
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_world, teach, tick, tuned
 

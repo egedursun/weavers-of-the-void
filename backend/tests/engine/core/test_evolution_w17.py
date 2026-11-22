@@ -1,3 +1,6 @@
+import importlib.util
+from pathlib import Path
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,7 +10,7 @@ from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, Outbreak
 from aerona.db.tables.ecology import HerdRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.db.tables.evolution import CureResearchRow, EcosystemServiceRow, LineageMarkRow, SpeciesTraitRow, TrophicLevelRow, WorldCycleRow
+from aerona.db.tables.evolution import CureResearchRow, EcosystemServiceRow, LineageMarkRow, SpeciesTraitRow, TrophicLevelRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.affliction import PackageKind
@@ -17,14 +20,14 @@ from aerona.domain.enums.disease import ClimateAffinity, DiseaseTarget, DiseaseV
 from aerona.domain.enums.ecology import Diet, DomesticationStage, SizeClass
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, TemperatureBand
-from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, PlagueResponse, SuccessionStage, TrophicLevel
+from aerona.domain.enums.evolution import CycleEffect, EvolvedTrait, KeystoneRole, PlagueResponse, PlanetaryCycle, SuccessionStage, TrophicLevel
 from aerona.domain.enums.happening import LandAct
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.models.entity_stats import DiseaseStats, SpeciesStats, StructureStats
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.cycles import CycleTally, carbon_flux, turn_cycles
+from aerona.engine.cosmos.cycles import CycleTally, cycles_by_world, flux_of, rain_swing, turn_cycles
 from aerona.engine.cosmos.planetary import move_carbon
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.evolution import take_symptom
@@ -33,7 +36,7 @@ from aerona.engine.disease.research import ResearchTally, found_cure
 from aerona.engine.disease.responses import leaning, resentment, take_up
 from aerona.engine.disease.stigma import expel_sick
 from aerona.engine.ecology.evolution import EvolutionTally, apart, cold_reach, escape, evolve_traits, fecund, inherit_traits, wary
-from aerona.engine.ecology.evolution_control import set_trait, shape_land
+from aerona.engine.ecology.evolution_control import edit_cycle, reset_cycle, set_trait, shape_land
 from aerona.engine.ecology.feral import FeralTally, release_herd, run_wild
 from aerona.engine.ecology.keystones import KeystoneTally, keep_services, pollination
 from aerona.engine.ecology.lineages import LineageTally, mark, mark_lineages
@@ -268,13 +271,28 @@ async def test_lands_grow_toward_forest_and_fire_sets_them_back(session: AsyncSe
 async def test_world_cycles_turn_and_their_carbon_feeds_the_air(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await surveyed(session)
     await turn_cycles(ctx, CycleTally())
-    cycle = await session.get(WorldCycleRow, world.world.id)
-    assert cycle is not None
-    cycle.carbon_in, cycle.carbon_out = 9, 2
-    assert carbon_flux(cycle) == 1
+    cycles = (await cycles_by_world(session))[world.world.id]
+    assert set(cycles) == set(PlanetaryCycle)
+    carbon = cycles[PlanetaryCycle.CARBON]
+    carbon.inflow, carbon.outflow = 9, 2
+    assert flux_of(cycles, CycleEffect.GREENHOUSE) == 1
     physics = WorldPhysicsRow(world_id=world.world.id, carbon_dioxide=5, nitrogen=70, pressure=1.0, volcanism=0, locked=[])
-    assert move_carbon(ctx, physics, 0.0, cycle) == 1
+    assert move_carbon(ctx, physics, 0.0, cycles) == 1
     assert physics.carbon_dioxide == 6
+
+
+async def test_a_cycle_held_by_a_god_keeps_its_stock_and_the_rest_turn(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    rows = await edit_cycle(ctx, world.world.id, {"water": 80}, [])
+    assert [(row.cycle, row.stock, row.locked) for row in rows] == [(PlanetaryCycle.WATER, 80, ["stock"])]
+    await turn_cycles(ctx, CycleTally())
+    cycles = (await cycles_by_world(session))[world.world.id]
+    assert cycles[PlanetaryCycle.WATER].stock == 80
+    assert rain_swing(ctx.rules, cycles) == 30 * ctx.rules.world_cycles.rain_pct // 100
+    await edit_cycle(ctx, world.world.id, {}, ["water"])
+    assert cycles[PlanetaryCycle.WATER].locked == []
+    await reset_cycle(ctx, world.world.id)
+    assert (await cycles_by_world(session)).get(world.world.id, {}) == {}
 
 
 async def test_a_raised_land_keeps_its_height_and_a_land_without_coast_cannot_sink(session: AsyncSession, world: CoreWorld) -> None:
@@ -369,3 +387,13 @@ def test_a_people_that_reviles_every_response_still_weighs_each_above_zero() -> 
     scorn = dict.fromkeys(ValueAxis, -PERCENT)
     assert all(leaning(scorn, response) > 0 for response in PlagueResponse)
     assert leaning(dict.fromkeys(ValueAxis, PERCENT), PlagueResponse.QUARANTINE) > leaning(scorn, PlagueResponse.QUARANTINE)
+
+
+def test_a_fixed_cycle_column_is_caught() -> None:
+    spec = importlib.util.spec_from_file_location("check_cycle_fields", Path(__file__).resolve().parents[4] / "scripts" / "check_cycle_fields.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    text = "def flux(cycle):\n    return cycle.carbon_in - cycle.carbon_out + cycle.water\nNAMES = ('carbon', 'water', 'nutrients')\n"
+    assert len(module.fixed_in("engine/sample.py", text)) == 4
+    assert module.main() == 0

@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.estates import CAUSE_LABELS
+from aerona.catalog.life.factions import ENACTED, GOALS, LAW_TARGETS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import EstatePrivilegeRow, EstateProfileRow, MovementProfileRow, MovementSupportRow
@@ -15,7 +17,7 @@ from aerona.db.tables.society_depth import PolityLoyaltyRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionGoalKind, FactionKind, MovementCause
+from aerona.domain.enums.faction import FactionKind, MovementCause
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DecisionRule, LawKind
@@ -43,20 +45,6 @@ from aerona.engine.services.war import declare_war
 
 HALF = PERCENT // 2
 SUPPORT = "support"
-GOALS: dict[MovementCause, FactionGoalKind] = {
-    MovementCause.ABOLITION: FactionGoalKind.ABOLISH_LAW,
-    MovementCause.INDEPENDENCE: FactionGoalKind.INDEPENDENCE,
-    MovementCause.REVIVAL: FactionGoalKind.CONVERT_REALM,
-    MovementCause.LAND_REFORM: FactionGoalKind.ABOLISH_LAW,
-    MovementCause.FRANCHISE: FactionGoalKind.ENACT_LAW,
-    MovementCause.PEACE: FactionGoalKind.PEACE_WITH,
-    MovementCause.CONSERVATION: FactionGoalKind.ENACT_LAW,
-}
-LAW_TARGETS: dict[MovementCause, LawKind] = {
-    MovementCause.ABOLITION: LawKind.SLAVERY,
-    MovementCause.LAND_REFORM: LawKind.SERFDOM,
-}
-ENACTED = {MovementCause.FRANCHISE: LawKind.FRANCHISE, MovementCause.CONSERVATION: LawKind.ENVIRONMENT_LAW}
 ASSEMBLIES = frozenset({DecisionRule.ASSEMBLY, DecisionRule.COUNCIL})
 POWER = 2
 
@@ -80,6 +68,10 @@ class Ground:
     farmers_content: float
 
 
+PRESSURES: Handlers[MovementCause, Callable[[TickContext, Ground], Awaitable[float]]] = Handlers(MovementCause)
+
+
+@PRESSURES.on(MovementCause.ABOLITION)
 async def abolition(ctx: TickContext, ground: Ground) -> float:
     slavery = ground.laws.in_force(ground.realm.entity.id, LawKind.SLAVERY)
     if slavery is None or slavery.params.get("status") != "allowed":
@@ -97,6 +89,7 @@ async def abolition(ctx: TickContext, ground: Ground) -> float:
     )
 
 
+@PRESSURES.on(MovementCause.INDEPENDENCE)
 async def independence(ctx: TickContext, ground: Ground) -> float:
     folk = await people_of(ctx.session, ground.community)
     core = ground.realm.profile.core_entity_id
@@ -130,10 +123,12 @@ async def independence(ctx: TickContext, ground: Ground) -> float:
     )
 
 
+@PRESSURES.on(MovementCause.REVIVAL)
 async def revival(ctx: TickContext, ground: Ground) -> float:
     return max(0.0, HALF - (stat_or(ground.community, "piety", HALF)) + ground.values.get(ValueAxis.PIETY, 0) / 2)
 
 
+@PRESSURES.on(MovementCause.LAND_REFORM)
 async def land_reform(ctx: TickContext, ground: Ground) -> float:
     serfdom = ground.laws.in_force(ground.realm.entity.id, LawKind.SERFDOM)
     if serfdom is None or not serfdom.params.get("allowed"):
@@ -141,6 +136,7 @@ async def land_reform(ctx: TickContext, ground: Ground) -> float:
     return max(0.0, HALF - ground.farmers_content + ground.shares.get(SocialClass.FARMER, 0.0) / 2)
 
 
+@PRESSURES.on(MovementCause.FRANCHISE)
 async def franchise(ctx: TickContext, ground: Ground) -> float:
     if ground.realm.profile.decision_rule in ASSEMBLIES:
         return 0.0
@@ -156,6 +152,7 @@ async def sides_at_war(ctx: TickContext, community_id: int) -> list[WarSideRow]:
     )
 
 
+@PRESSURES.on(MovementCause.PEACE)
 async def peace(ctx: TickContext, ground: Ground) -> float:
     sides = await sides_at_war(ctx, ground.community.id)
     if not sides:
@@ -173,19 +170,9 @@ async def press_for_peace(ctx: TickContext, realm: Realm) -> int:
     return pressed
 
 
+@PRESSURES.on(MovementCause.CONSERVATION)
 async def conservation(ctx: TickContext, ground: Ground) -> float:
     return await loss_of_wild(ctx, ground.community) - ground.shares.get(SocialClass.FARMER, 0.0) / 2
-
-
-PRESSURES: dict[MovementCause, Callable[[TickContext, Ground], Awaitable[float]]] = {
-    MovementCause.ABOLITION: abolition,
-    MovementCause.INDEPENDENCE: independence,
-    MovementCause.REVIVAL: revival,
-    MovementCause.LAND_REFORM: land_reform,
-    MovementCause.FRANCHISE: franchise,
-    MovementCause.PEACE: peace,
-    MovementCause.CONSERVATION: conservation,
-}
 
 
 async def ground_of(ctx: TickContext, community: EntityRow, realm: Realm, laws: LawBook) -> Ground:

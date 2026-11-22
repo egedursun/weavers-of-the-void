@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.conditions import MADNESS_CONDITIONS
+from aerona.catalog.life_traits import OATH_KIND_TRAITS, PASSION_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import LifeDreamRow, MemoryRow
@@ -11,9 +13,10 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OathRow
 from aerona.db.tables.relations import PassionRow, RelationshipRow
 from aerona.db.write_guard import write_blocked
-from aerona.domain.enums.body import MADNESS_CONDITIONS, HarmCause
+from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.life_traits import OathKindTrait, PassionKindTrait
 from aerona.domain.enums.mind import DreamState, LifeGoal, MemoryKind, ThoughtKind, ValueAxis, ValueHolder
-from aerona.domain.enums.polity import OathKind, OathStatus
+from aerona.domain.enums.polity import OathStatus
 from aerona.domain.enums.relations import PassionKind, PassionSource, RelationType
 from aerona.engine.body.bands import banded
 from aerona.engine.body.conditions import gain_condition
@@ -29,8 +32,8 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.relations.feelings import from_feelings
 
 PASSIONS_KEY = "passions"
-LOYAL_OATHS = frozenset({OathKind.FEALTY, OathKind.PROTECTION, OathKind.SWORN_KINSHIP})
-TENDER = frozenset({PassionKind.LOVE, PassionKind.LOYALTY, PassionKind.DEVOTION})
+LOYAL_OATHS = having(OATH_KIND_TRAITS, OathKindTrait.LOYAL_OATHS)
+TENDER = having(PASSION_KIND_TRAITS, PassionKindTrait.TENDER)
 Key = tuple[PassionKind, int]
 
 

@@ -6,6 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.crimes import CRIMES, PUNISHMENTS
 from aerona.catalog.ethics import ACT_CRIMES, HONOUR_MODELS
 from aerona.catalog.laws import PENALTY_CRUELTY
+from aerona.catalog.life.demography import INHERITANCE_RULES
+from aerona.catalog.life.domain import LENDER_KINDS
+from aerona.catalog.life_traits import OFFICE_KIND_TRAITS, having
 from aerona.catalog.lore import IDEOLOGY_VALUES
 from aerona.catalog.mind import DOMAIN_VALUES
 from aerona.constants.units import PER_MILLE, PERCENT
@@ -32,13 +35,13 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.folkways import BiasedDecision
+from aerona.domain.enums.life_traits import OfficeKindTrait
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import PunishmentKind
-from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind, OfficePower, SuccessionRule
+from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficePower, SuccessionRule
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.unions import PluralSide, UnionForm
@@ -46,7 +49,6 @@ from aerona.domain.enums.war import WarCause
 from aerona.engine.body.customs import culture_of
 from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
-from aerona.engine.demography.kinship import INHERITANCE_RULES
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.factions.balance import faction_pull
 from aerona.engine.folkways.biases import lean_community
@@ -80,21 +82,7 @@ CREED_SCALE = 10
 LEAN = 25
 BASELINE_LAWS = frozenset({LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE, LawKind.TAX_RATE, LawKind.PENAL_CODE})
 SWAY_SCALE = 10
-COUNCIL_OFFICES = frozenset(
-    {
-        OfficeKind.CHANCELLOR,
-        OfficeKind.MARSHAL,
-        OfficeKind.TREASURER,
-        OfficeKind.HIGH_JUDGE,
-        OfficeKind.SPYMASTER,
-        OfficeKind.REGENT,
-        OfficeKind.CHAPLAIN,
-        OfficeKind.HEAD_OF_GOVERNMENT,
-        OfficeKind.MINISTER,
-        OfficeKind.GENERAL,
-        OfficeKind.SPEAKER,
-    }
-)
+COUNCIL_OFFICES = having(OFFICE_KIND_TRAITS, OfficeKindTrait.COUNCIL)
 T = TenetKind
 CHURCH_LAWS: dict[TenetKind, tuple[LawKind, dict[str, int | str | bool]]] = {
     T.ANTI_MAGIC: (LawKind.MAGIC_BAN, {"severity": 70}),

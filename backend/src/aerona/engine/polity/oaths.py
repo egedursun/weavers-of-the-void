@@ -2,6 +2,8 @@ from itertools import pairwise
 
 from sqlalchemy import select
 
+from aerona.catalog.life.polity import LAPSE_OATH_KINDS
+from aerona.catalog.life_traits import OATH_KIND_TRAITS, having
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OathRow
@@ -15,6 +17,7 @@ from aerona.domain.enums.entity import HERO_ROLES, EntityFlag, EntityStatus, Ent
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.intrigue import IntrigueSecret
+from aerona.domain.enums.life_traits import OathKindTrait
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, TraitSource, WantKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OathBreach, OathKind, OathStatus
@@ -41,7 +44,7 @@ from aerona.engine.recording.terms import explaining
 from aerona.engine.relations.passions import invoke
 from aerona.engine.services.community_relations import change_relation
 
-TIMED = frozenset({OathKind.VENGEANCE, OathKind.PILGRIMAGE})
+TIMED = having(OATH_KIND_TRAITS, OathKindTrait.TIMED)
 CLERGY = frozenset({MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER})
 
 
@@ -233,7 +236,7 @@ async def lapse(ctx: TickContext) -> tuple[int, int]:
         elif oath.kind in BREACHES and (breach := await BREACHES[oath.kind](ctx, oath, swearer)) is not None:
             await break_oath(ctx, oath, breach)
             broken += 1
-        elif oath.kind in {OathKind.FEALTY, OathKind.PROTECTION, OathKind.SWORN_KINSHIP, OathKind.CELIBACY, OathKind.SILENCE} or oath.kind in BREACHES:
+        elif oath.kind in LAPSE_OATH_KINDS or oath.kind in BREACHES:
             await reward_witness(ctx, oath)
     return kept, broken
 

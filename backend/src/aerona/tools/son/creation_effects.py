@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.catalog.life.tools import VESSEL_ROUTES
 from aerona.catalog.tenets import OPPOSED
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import fill, spoken
@@ -21,7 +22,7 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.polity import LegitimacyBasis
 from aerona.domain.enums.structure import StructureKind
-from aerona.domain.enums.travel import TravelMethod, VehicleKind
+from aerona.domain.enums.travel import VehicleKind
 from aerona.engine.cosmos.routes import RouteSpec, method_label, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.economy.materials import set_node_material
@@ -52,12 +53,6 @@ PERCENT = 100
 SEVERITY_KEY = "severity"
 MECHANIC_TYPES = frozenset({EntityType.RESOURCE, EntityType.NATURAL_LAW})
 HOLDER_BONDS = {EntityType.ITEM: BondKind.OWNS, EntityType.TRADITION: BondKind.CELEBRATES, EntityType.KNOWLEDGE: BondKind.KNOWS}
-VESSEL_ROUTES = {
-    VehicleKind.GATE: TravelMethod.ANCIENT_GATE,
-    VehicleKind.SHIP: TravelMethod.LIGHT_SAIL,
-    VehicleKind.MOUNT: TravelMethod.CARRIER_MOUNT,
-    VehicleKind.BRIDGE: TravelMethod.DIVINE_BRIDGE,
-}
 NONE_AVAILABLE = "none"
 LIST_SEPARATOR = ", "
 

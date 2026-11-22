@@ -1,64 +1,17 @@
-from collections.abc import Mapping
-
 from sqlalchemy import select
 
+from aerona.catalog.life.concealment import KIND_SPREAD, KIND_STRAIN, LEAKED_INTRUSION_AIMS, PAYING_ORDER, ROLE_WEIGHT, SCOPE_SPREAD
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.concealment import HiddenTruthRow, TruthKeeperRow, TruthSeekerRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import DataStoreRow, IntrusionRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.concealment import BreachCause, ConcealScope, HiddenTruthKind, KeeperRole, SeekerAim, TruthAttitude
+from aerona.domain.enums.concealment import BreachCause, SeekerAim, TruthAttitude
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.made import IntrusionAim
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.primitives.stats import shift_stat
 
-KIND_SPREAD: Mapping[HiddenTruthKind, int] = total(
-    HiddenTruthKind,
-    {
-        HiddenTruthKind.EXISTENCE: 100,
-        HiddenTruthKind.NATURE: 100,
-        HiddenTruthKind.PRESENCE: 100,
-        HiddenTruthKind.POWER: 110,
-        HiddenTruthKind.EVENT: 90,
-        HiddenTruthKind.ORIGIN: 80,
-        HiddenTruthKind.AWAKENING: 120,
-        HiddenTruthKind.PROGRAMME: 70,
-        HiddenTruthKind.COSMIC: 60,
-    },
-)
-KIND_STRAIN: Mapping[HiddenTruthKind, int] = total(
-    HiddenTruthKind,
-    {
-        HiddenTruthKind.EXISTENCE: 100,
-        HiddenTruthKind.NATURE: 100,
-        HiddenTruthKind.PRESENCE: 100,
-        HiddenTruthKind.POWER: 100,
-        HiddenTruthKind.EVENT: 100,
-        HiddenTruthKind.ORIGIN: 120,
-        HiddenTruthKind.AWAKENING: 130,
-        HiddenTruthKind.PROGRAMME: 110,
-        HiddenTruthKind.COSMIC: 200,
-    },
-)
-SCOPE_SPREAD: Mapping[ConcealScope, int] = total(
-    ConcealScope,
-    {
-        ConcealScope.EVERYONE: 100,
-        ConcealScope.A_PEOPLE: 100,
-        ConcealScope.A_POLITY: 100,
-        ConcealScope.THE_UNINITIATED: 90,
-        ConcealScope.A_WORLD: 80,
-        ConcealScope.THE_COSMOS: 50,
-    },
-)
-ROLE_WEIGHT: Mapping[KeeperRole, int] = total(
-    KeeperRole,
-    {KeeperRole.ENFORCER: 200, KeeperRole.GUARDIAN: 150, KeeperRole.MEMBER: 100, KeeperRole.PATRON: 50},
-)
-PAYING_ORDER = (KeeperRole.PATRON, KeeperRole.GUARDIAN, KeeperRole.MEMBER, KeeperRole.ENFORCER)
 LOW_TRUST = PERCENT // 4
 
 
@@ -103,7 +56,7 @@ async def leaked(ctx: TickContext, truth: HiddenTruthRow) -> BreachCause | None:
     keepers = select(TruthKeeperRow.keeper_node_id).where(TruthKeeperRow.truth_id == truth.id)
     struck = await ctx.session.scalar(
         select(IntrusionRow.target_node_id)
-        .where(IntrusionRow.epoch == ctx.epoch, IntrusionRow.aim.in_([IntrusionAim.READ, IntrusionAim.SEIZE]), IntrusionRow.target_node_id.in_(keepers))
+        .where(IntrusionRow.epoch == ctx.epoch, IntrusionRow.aim.in_(LEAKED_INTRUSION_AIMS), IntrusionRow.target_node_id.in_(keepers))
         .limit(1)
     )
     if struck is None:

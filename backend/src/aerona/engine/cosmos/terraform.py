@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.catalog.flora import world_life
 from aerona.catalog.kinds.terraform import TERRAFORM_AIMS
+from aerona.catalog.life.cosmos import AIR_GAS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import WorldRow
@@ -17,7 +18,7 @@ from aerona.domain.enums.physics import AirNeed, TerraformAim
 from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.lifeforms import AIR_GAS, habitability
+from aerona.engine.cosmos.lifeforms import habitability
 from aerona.engine.cosmos.orbits import air_band
 from aerona.engine.ecology.biochemistry import bearable
 from aerona.engine.mind.hooks import judged

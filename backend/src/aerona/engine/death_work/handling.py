@@ -13,6 +13,7 @@ from aerona.catalog.death_shapes import (
     TREATMENT_SANITATION,
     TREATMENT_SPIRIT_PCT,
 )
+from aerona.catalog.life_traits import DEATH_ROLE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.death_work import DeathWorkRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -26,6 +27,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.death_work import DeathRole, DeathStanding, RemainsTreatment
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import DeathRoleTrait
 from aerona.domain.enums.mind import Profession
 from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.modifier import IncidentRole
@@ -41,7 +43,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 from aerona.rules.registry import Rules
 
-TENDING = frozenset({DeathRole.PREPARER, DeathRole.CARRIER})
+TENDING = having(DEATH_ROLE_TRAITS, DeathRoleTrait.TENDING)
 TEN = 10
 
 

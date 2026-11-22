@@ -6,6 +6,8 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
+from aerona.catalog.life.lore import RANK
+from aerona.catalog.life_traits import WITNESS_MODE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -17,6 +19,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import WitnessModeTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import WitnessMode
 from aerona.domain.enums.son import SonStatus
@@ -37,9 +40,6 @@ class Seen:
         current = self.modes.get(node_id)
         if current is None or RANK[mode] > RANK[current]:
             self.modes[node_id] = mode
-
-
-RANK = {WitnessMode.WAS_TOLD: 0, WitnessMode.HEARD: 1, WitnessMode.SAW: 2, WitnessMode.TOOK_PART: 3}
 
 
 def fidelity_of(rules: Rules, mode: WitnessMode) -> int:
@@ -154,7 +154,7 @@ def told(kind: str) -> bool:
     return spec is None or spec.told
 
 
-PRESENT = frozenset({WitnessMode.SAW, WitnessMode.TOOK_PART})
+PRESENT = having(WITNESS_MODE_TRAITS, WitnessModeTrait.FIRST_HAND)
 
 
 async def born_keys(session: AsyncSession) -> dict[int, tuple[int, int, int, int]]:

@@ -5,6 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import SIGHT_PARTS, Part
+from aerona.catalog.conditions import OPEN_INJURY_STATES, SENSE_CONDITIONS
+from aerona.catalog.goods_tables import WORKABILITY
+from aerona.catalog.goods_traits import materials_with
+from aerona.catalog.harm_kinds import INJURIES, STEPS
+from aerona.catalog.life.domain import MEDICINE_ORDER
 from aerona.catalog.medicine import MEDICINE, infection_cut, tier_of
 from aerona.catalog.mind import HEALING_SKILLS
 from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS
@@ -21,19 +26,7 @@ from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import (
-    MADNESS_CONDITIONS,
-    MEDICINE_ORDER,
-    OPEN_INJURY_STATES,
-    BodyFunction,
-    BodyRegion,
-    ConditionKind,
-    HarmCause,
-    InjuryKind,
-    InjuryState,
-    MedicineTier,
-    TreatmentStep,
-)
+from aerona.domain.enums.body import BodyFunction, BodyRegion, ConditionKind, HarmCause, InjuryKind, InjuryState, MedicineTier, TreatmentStep
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.divine import DomainHook
@@ -41,6 +34,7 @@ from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.folk_knowledge import FolkDomain
+from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import Attribute, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -53,7 +47,7 @@ from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.digits import full_counts, lose_all, restore
 from aerona.engine.body.hits import CLEAN_HEALING_KINDS, MARK_KINDS, PERMANENT_KINDS, TOTAL_LOSS_KINDS
 from aerona.engine.body.state import refresh
-from aerona.engine.body.treatment import TREATMENT_ACTIONS, Treatment, bleed, regain_blood, treat
+from aerona.engine.body.treatment import Treatment, bleed, regain_blood, treat
 from aerona.engine.body.variants import ORDINARY, folk_biology, shaped
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import hospital_strengths
@@ -86,7 +80,7 @@ from aerona.rules.registry.body import HealingRules, ProstheticsRules
 HEALER_ROLES = frozenset({MortalRole.HEALER, MortalRole.PRIEST, MortalRole.SAINT, MortalRole.PHYSICIAN})
 FESTER_DEATH = "died of a festering wound"
 BLED_OUT = "bled to death from an open wound"
-PRECIOUS = frozenset({MaterialKind.SILVER, MaterialKind.GOLD, MaterialKind.STAR_METAL, MaterialKind.CRYSTAL, MaterialKind.GREAT_BONE, MaterialKind.SKYSTEEL})
+PRECIOUS = frozenset(materials_with(MaterialTrait.PRECIOUS))
 
 
 async def known_tier(session: AsyncSession, holder_id: int | None, tier: MedicineTier) -> MedicineTier:
@@ -102,65 +96,19 @@ def tier_index(tier: MedicineTier) -> int:
 
 
 def infection_base(rules: HealingRules, kind: InjuryKind) -> int:
-    table = {
-        InjuryKind.CUT: rules.infection_cut,
-        InjuryKind.DEEP_CUT: rules.infection_deep_cut,
-        InjuryKind.PUNCTURE: rules.infection_puncture,
-        InjuryKind.BITE: rules.infection_bite,
-        InjuryKind.BURN: rules.infection_burn,
-        InjuryKind.SEVERED: rules.infection_severed,
-        InjuryKind.GOUGED: rules.infection_gouged,
-        InjuryKind.CRUSH: rules.infection_crush,
-        InjuryKind.FROSTBITE: rules.infection_frostbite,
-        InjuryKind.GUNSHOT: rules.infection_gunshot,
-        InjuryKind.SHRAPNEL: rules.infection_shrapnel,
-        InjuryKind.CHEMICAL_BURN: rules.infection_chemical_burn,
-    }
-    return table.get(kind, rules.infection_other)
+    found = INJURIES[kind].infection
+    return found(rules) if found is not None else rules.infection_other
 
 
 def permanent_chance(rules: HealingRules, kind: InjuryKind) -> int:
-    table = {
-        InjuryKind.FRACTURE: rules.permanent_fracture,
-        InjuryKind.CRUSH: rules.permanent_crush,
-        InjuryKind.DEEP_CUT: rules.permanent_deep_cut,
-        InjuryKind.BURN: rules.permanent_burn,
-        InjuryKind.FROSTBITE: rules.permanent_frostbite,
-        InjuryKind.VENOM: rules.permanent_venom,
-        InjuryKind.CURSE_WITHER: rules.permanent_wither,
-        InjuryKind.GUNSHOT: rules.permanent_gunshot,
-        InjuryKind.SHRAPNEL: rules.permanent_shrapnel,
-        InjuryKind.CONCUSSION: rules.permanent_concussion,
-        InjuryKind.ELECTRICAL_BURN: rules.permanent_electrical_burn,
-        InjuryKind.CHEMICAL_BURN: rules.permanent_burn,
-        InjuryKind.RADIATION_SICKNESS: rules.permanent_radiation,
-        InjuryKind.MIND_SCAR: rules.permanent_mind_scar,
-    }
-    return table.get(kind, rules.permanent_other)
+    found = INJURIES[kind].lasting
+    return found(rules) if found is not None else rules.permanent_other
 
 
 def heal_chance(rules: HealingRules, severity: int, kind: InjuryKind) -> float:
     by_severity = (rules.heal_severity_1, rules.heal_severity_2, rules.heal_severity_3, rules.heal_severity_4, rules.heal_severity_5)[severity - 1]
-    by_kind = {
-        InjuryKind.BRUISE: rules.heal_bruise_pct,
-        InjuryKind.CUT: rules.heal_cut_pct,
-        InjuryKind.DEEP_CUT: rules.heal_deep_cut_pct,
-        InjuryKind.PUNCTURE: rules.heal_puncture_pct,
-        InjuryKind.FRACTURE: rules.heal_fracture_pct,
-        InjuryKind.CRUSH: rules.heal_crush_pct,
-        InjuryKind.BURN: rules.heal_burn_pct,
-        InjuryKind.FROSTBITE: rules.heal_frostbite_pct,
-        InjuryKind.BITE: rules.heal_bite_pct,
-        InjuryKind.VENOM: rules.heal_venom_pct,
-        InjuryKind.CURSE_WITHER: rules.heal_curse_wither_pct,
-        InjuryKind.GUNSHOT: rules.heal_gunshot_pct,
-        InjuryKind.SHRAPNEL: rules.heal_shrapnel_pct,
-        InjuryKind.CONCUSSION: rules.heal_concussion_pct,
-        InjuryKind.ELECTRICAL_BURN: rules.heal_electrical_burn_pct,
-        InjuryKind.CHEMICAL_BURN: rules.heal_chemical_burn_pct,
-        InjuryKind.RADIATION_SICKNESS: rules.heal_radiation_pct,
-        InjuryKind.MIND_SCAR: rules.heal_mind_scar_pct,
-    }.get(kind, PERCENT)
+    found = INJURIES[kind].healing
+    by_kind = found(rules) if found is not None else PERCENT
     return by_severity * by_kind / PERCENT
 
 
@@ -552,7 +500,7 @@ def wound_step(action: StepAction, row: InjuryRow, actor: int | None, patient: i
 def treatment_steps(treatment: Treatment, row: InjuryRow, healer: int | None, patient: int) -> list[StepDraft]:
     if treatment.misdiagnosed:
         return [wound_step(StepAction.EXAMINE, row, healer, patient, StepOutcome.FAILURE)]
-    return [wound_step(TREATMENT_ACTIONS[step], row, healer, patient, StepOutcome.SUCCESS) for step in treatment.steps]
+    return [wound_step(STEPS[step].action, row, healer, patient, StepOutcome.SUCCESS) for step in treatment.steps]
 
 
 def mending_step(row: InjuryRow, healer: int | None, patient: int, *, mended: bool) -> StepDraft:
@@ -614,29 +562,13 @@ def material_for(rules: ProstheticsRules, part: Part, metallurgy: int) -> Materi
     if part.key in SIGHT_PARTS:
         return MaterialKind.GLASS
     if part.region is BodyRegion.HEAD:
-        return MaterialKind.SILVER if metallurgy >= rules.metal_level else MaterialKind.BONE
+        return MaterialKind.SILVER if metallurgy >= rules.metal_level else MaterialKind.CALCIFIED_TISSUE
     return MaterialKind.IRON if metallurgy >= rules.metal_level else MaterialKind.WOOD
 
 
 def workability(rules: ProstheticsRules, material: MaterialKind) -> int:
-    table = {
-        MaterialKind.WOOD: rules.wood,
-        MaterialKind.BONE: rules.bone,
-        MaterialKind.IVORY: rules.ivory,
-        MaterialKind.COPPER: rules.copper,
-        MaterialKind.BRONZE: rules.bronze,
-        MaterialKind.IRON: rules.iron,
-        MaterialKind.STEEL: rules.steel,
-        MaterialKind.SILVER: rules.silver,
-        MaterialKind.GOLD: rules.gold,
-        MaterialKind.GLASS: rules.glass,
-        MaterialKind.CRYSTAL: rules.crystal,
-        MaterialKind.STAR_METAL: rules.star_metal,
-        MaterialKind.LIVING_WOOD: rules.living_wood,
-        MaterialKind.GREAT_BONE: rules.great_bone,
-        MaterialKind.SKYSTEEL: rules.skysteel,
-    }
-    return table.get(material, rules.other)
+    found = WORKABILITY.get(material)
+    return found(rules) if found is not None else rules.other
 
 
 def material_workability(rules: ProstheticsRules, material: MaterialKind, world_material: WorldMaterialRow | None) -> int:
@@ -817,9 +749,6 @@ async def mend(ctx: TickContext, bearer: Bearer, *, lasting: bool = False, heale
     if mended:
         await refresh(ctx.session, ctx.rules, bearer, ctx.epoch)
     return mended
-
-
-SENSE_CONDITIONS = (ConditionKind.AGE_BLINDNESS, ConditionKind.AGE_DEAFNESS, *MADNESS_CONDITIONS)
 
 
 async def restore_body_senses(ctx: TickContext, bearer: Bearer) -> int:

@@ -1,7 +1,7 @@
-from types import MappingProxyType
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_tables import BYPRODUCTS, DIFFICULTY, REQUIRED
+from aerona.catalog.goods_traits import commodities_with, materials_with
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -10,7 +10,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.material import MINERAL_KINDS, MaterialKind
+from aerona.domain.enums.goods_traits import CommodityTrait, MaterialTrait
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
@@ -18,14 +19,11 @@ from aerona.rules.registry import Rules
 
 C = CommodityKind
 M = MaterialKind
-RENEWABLE = frozenset({C.TIMBER, C.FISH, C.LIVESTOCK, C.GRAIN, C.FODDER, C.MOUNTS, C.MAGICAL_REAGENTS, C.INCENSE})
-BYPRODUCTS: MappingProxyType[MaterialKind, tuple[MaterialKind, int]] = MappingProxyType({M.LEAD: (M.SILVER, 10), M.COPPER: (M.GOLD, 3), M.IRON: (M.SULFUR, 5)})
-REQUIRED: MappingProxyType[CommodityKind, tuple[KnowledgeBranch, int]] = MappingProxyType(
-    {C.FISH: (KnowledgeBranch.SEAFARING, 0), C.MOUNTS: (KnowledgeBranch.AGRICULTURE, 1), C.MAGICAL_REAGENTS: (KnowledgeBranch.MAGIC, 1)}
-)
-DIFFICULTY: MappingProxyType[CommodityKind, int] = MappingProxyType({C.ORE: 55, C.STONE: 40, C.TIMBER: 30, C.FISH: 25, C.MAGICAL_REAGENTS: 45})
-STONE_KINDS = frozenset({M.STONE, M.CLAY, M.FLINT, M.OBSIDIAN})
+RENEWABLE = frozenset(commodities_with(CommodityTrait.RENEWABLE))
+STONE_KINDS = frozenset(materials_with(MaterialTrait.STONE_KIND))
 MATERIAL_KEYS = frozenset(kind.value for kind in MaterialKind)
+MINERALS = frozenset(materials_with(MaterialTrait.MINERAL))
+RAW_MATERIALS = frozenset(commodities_with(CommodityTrait.RAW_MATERIAL))
 
 
 def seam_material(region: RegionEnvironmentRow | None) -> MaterialKind:
@@ -35,7 +33,7 @@ def seam_material(region: RegionEnvironmentRow | None) -> MaterialKind:
     ranked = [(name, depth) for name, depth in ranked if name in MATERIAL_KEYS] or [(M.IRON.value, 0)]
     for name, _ in ranked:
         kind = MaterialKind(name)
-        if kind in MINERAL_KINDS and kind not in STONE_KINDS:
+        if kind in MINERALS and kind not in STONE_KINDS:
             return kind
     return MaterialKind(ranked[0][0])
 
@@ -110,7 +108,7 @@ async def set_resource_yield(
     resource = await session.get(EntityRow, resource_id)
     if resource is None or resource.entity_type is not EntityType.RESOURCE:
         raise NotFoundError("No such resource.")
-    if material is not None and commodity in (C.ORE, C.STONE, C.TIMBER) and material not in MATERIALS:
+    if material is not None and commodity in RAW_MATERIALS and material not in MATERIALS:
         raise ValidationFailedError("That material is unknown.")
     row = await session.get(ResourceProfileRow, resource_id)
     if row is None:

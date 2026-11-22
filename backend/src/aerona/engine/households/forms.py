@@ -2,8 +2,8 @@ from collections.abc import Mapping, Sequence
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.households import FORM_CARE, YOUNG
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import DwellingRow, HouseholdMemberRow, HouseholdRow
@@ -16,7 +16,6 @@ from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.genetics import DwellingTenure, HouseholdForm, HouseholdRole
 from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.minds import MindOrigin
-from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -25,21 +24,6 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.technology.profiles import family_level
 
-FORM_CARE: Mapping[HouseholdForm, int] = total(
-    HouseholdForm,
-    {
-        HouseholdForm.NUCLEAR: 20,
-        HouseholdForm.EXTENDED: 60,
-        HouseholdForm.STEM: 50,
-        HouseholdForm.JOINT: 60,
-        HouseholdForm.POLYGAMOUS: 50,
-        HouseholdForm.COMMUNAL: 70,
-        HouseholdForm.SINGLE: 0,
-        HouseholdForm.INSTITUTIONAL: 80,
-        HouseholdForm.MIXED: 40,
-        HouseholdForm.CHOSEN: 40,
-    },
-)
 CLASS_TENURE: Mapping[SocialClass, DwellingTenure] = {
     SocialClass.SERF_OR_SLAVE: DwellingTenure.GRANTED,
     SocialClass.OUTCAST: DwellingTenure.SQUATTED,
@@ -49,7 +33,6 @@ CLASS_TENURE: Mapping[SocialClass, DwellingTenure] = {
 }
 ENERGY_BY_LEVEL: tuple[tuple[int, EnergyKind], ...] = ((8, EnergyKind.FUSION), (6, EnergyKind.ELECTRIC), (3, EnergyKind.FUEL), (0, EnergyKind.HEAT))
 OPEN_FIRE = frozenset({EnergyKind.HEAT, EnergyKind.MUSCLE})
-YOUNG = frozenset({LifeStage.INFANT, LifeStage.CHILD, LifeStage.YOUTH, None})
 
 
 async def made_member(ctx: TickContext, node_id: int) -> bool:

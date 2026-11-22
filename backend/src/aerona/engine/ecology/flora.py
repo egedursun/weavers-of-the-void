@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.flora import PlantProduct, plant_product_of
+from aerona.catalog.life.domain import GROWN
 from aerona.constants.units import PERCENT
 from aerona.db.kind_concepts.nature import PRODUCT_PARTS
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -19,7 +20,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import OutbreakStatus
-from aerona.domain.enums.ecology import GROWN, SOWN, AnimalRole, Biochemistry, Cultivation, Diet, SpeciesClass
+from aerona.domain.enums.ecology import SOWN, AnimalRole, Biochemistry, Cultivation, Diet, SpeciesClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect

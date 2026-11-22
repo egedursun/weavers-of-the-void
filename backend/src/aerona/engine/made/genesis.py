@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.made import CARRIERS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.minds import MindLawRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -14,15 +15,6 @@ from aerona.engine.cycles.book import polities, realm_towns
 from aerona.engine.minds.profiles import profile_of
 from aerona.engine.minds.souls import default_law
 from aerona.engine.networks.backfill import relay
-
-CARRIERS = {
-    TechnologyEra.STEAM: NetworkCarrier.WIRED,
-    TechnologyEra.ELECTRICAL: NetworkCarrier.WIRED,
-    TechnologyEra.INFORMATION: NetworkCarrier.MESH,
-    TechnologyEra.ADVANCED: NetworkCarrier.BROADCAST,
-    TechnologyEra.INTERSTELLAR: NetworkCarrier.BROADCAST,
-    TechnologyEra.BEYOND: NetworkCarrier.MIND_LINK,
-}
 
 
 async def law_for(ctx: TickContext, world_id: int, prevalence: int) -> MindLawRow:

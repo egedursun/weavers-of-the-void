@@ -3,8 +3,11 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.constructs import DO_BUILD_CONSTRUCTION_STATES, DO_MAINTAIN_CONSTRUCTION_STATES
+from aerona.catalog.life_traits import COMMAND_TOKEN_TRAITS, having
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
@@ -20,6 +23,7 @@ from aerona.domain.enums.constructs import CommandToken, ConstructEnd, MindWill,
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.life_traits import CommandTokenTrait
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.minds import WillCause
 from aerona.domain.enums.modifier import IncidentRole
@@ -46,7 +50,7 @@ PER_MILLE = 1000
 LITERAL = 50
 WILL_LADDER = (MindWill.INSTRUCTED, MindWill.EMERGENT, MindWill.FULL, MindWill.EXCEEDING)
 FREE_WILLS = frozenset({MindWill.FULL, MindWill.EXCEEDING})
-OWNED_TOKENS = frozenset({CommandToken.ITEM, CommandToken.NETWORK_KEY})
+OWNED_TOKENS = having(COMMAND_TOKEN_TRAITS, CommandTokenTrait.OWNED_TOKENS)
 
 
 @dataclass
@@ -142,6 +146,10 @@ async def town_target(ctx: TickContext, charge: Charge) -> EntityRow | None:
     return await town_of(ctx.session, charge.target) if charge.target is not None else None
 
 
+EFFECTS: Handlers[OrderKind, Callable[[TickContext, Charge], Awaitable[bool]]] = Handlers(OrderKind)
+
+
+@EFFECTS.on(OrderKind.GUARD)
 async def do_guard(ctx: TickContext, charge: Charge) -> bool:
     ward = charge.target
     if ward is None or held(ward.id) or stat_or(ward, "defense", -1) < 0:
@@ -150,6 +158,7 @@ async def do_guard(ctx: TickContext, charge: Charge) -> bool:
     return True
 
 
+@EFFECTS.on(OrderKind.SERVE)
 async def do_serve(ctx: TickContext, charge: Charge) -> bool:
     town = await town_target(ctx, charge)
     if town is None or held(town.id):
@@ -157,6 +166,7 @@ async def do_serve(ctx: TickContext, charge: Charge) -> bool:
     return await shift_stock(ctx.session, ctx.rules, town.id, Commodity.GOODS, ctx.rules.constructs.serve_goods, epoch=ctx.epoch, flow=GoodsFlow.PRODUCTION)
 
 
+@EFFECTS.on(OrderKind.GATHER)
 async def do_gather(ctx: TickContext, charge: Charge) -> bool:
     town = await town_target(ctx, charge)
     if town is None or held(town.id):
@@ -182,8 +192,9 @@ async def works_at(ctx: TickContext, charge: Charge, states: tuple[ConstructionS
     return list(rows)
 
 
+@EFFECTS.on(OrderKind.BUILD)
 async def do_build(ctx: TickContext, charge: Charge) -> bool:
-    for work in await works_at(ctx, charge, (ConstructionState.PLANNED, ConstructionState.BUILDING)):
+    for work in await works_at(ctx, charge, DO_BUILD_CONSTRUCTION_STATES):
         if held(work.structure_entity_id) or "progress" in work.locked:
             continue
         work.progress = clamp_int(work.progress + ctx.rules.constructs.build_progress, 0, PERCENT)
@@ -191,8 +202,9 @@ async def do_build(ctx: TickContext, charge: Charge) -> bool:
     return False
 
 
+@EFFECTS.on(OrderKind.MAINTAIN)
 async def do_maintain(ctx: TickContext, charge: Charge) -> bool:
-    for work in await works_at(ctx, charge, (ConstructionState.COMPLETE, ConstructionState.DAMAGED)):
+    for work in await works_at(ctx, charge, DO_MAINTAIN_CONSTRUCTION_STATES):
         if held(work.structure_entity_id) or "condition" in work.locked:
             continue
         work.condition = clamp_int(work.condition + ctx.rules.constructs.maintain_repair, 0, PERCENT)
@@ -200,6 +212,7 @@ async def do_maintain(ctx: TickContext, charge: Charge) -> bool:
     return False
 
 
+@EFFECTS.on(OrderKind.PROTECT)
 async def do_protect(ctx: TickContext, charge: Charge) -> bool:
     ward = charge.target or charge.holder
     if ward is None or held(ward.id) or ward.entity_type is not EntityType.MORTAL:
@@ -208,6 +221,7 @@ async def do_protect(ctx: TickContext, charge: Charge) -> bool:
     return True
 
 
+@EFFECTS.on(OrderKind.DESTROY)
 async def do_destroy(ctx: TickContext, charge: Charge) -> bool:
     table = ctx.rules.constructs
     foe = charge.target
@@ -236,6 +250,7 @@ async def do_destroy(ctx: TickContext, charge: Charge) -> bool:
     return False
 
 
+@EFFECTS.on(OrderKind.REPORT)
 async def do_report(ctx: TickContext, charge: Charge) -> bool:
     ward = charge.target or charge.holder
     if ward is None or charge.holder is None:
@@ -252,6 +267,7 @@ async def do_report(ctx: TickContext, charge: Charge) -> bool:
     return found
 
 
+@EFFECTS.on(OrderKind.REPLICATE)
 async def do_replicate(ctx: TickContext, charge: Charge) -> bool:
     table = ctx.rules.constructs
     town = await town_of(ctx.session, charge.construct)
@@ -278,6 +294,7 @@ async def do_replicate(ctx: TickContext, charge: Charge) -> bool:
     return True
 
 
+@EFFECTS.on(OrderKind.FOLLOW)
 async def do_follow(ctx: TickContext, charge: Charge) -> bool:
     lead = charge.target or charge.holder
     place = await valid_location(ctx.session, charge.construct.entity_type, lead.location_id) if lead is not None else None
@@ -287,6 +304,7 @@ async def do_follow(ctx: TickContext, charge: Charge) -> bool:
     return True
 
 
+@EFFECTS.on(OrderKind.FORBID)
 async def do_forbid(ctx: TickContext, charge: Charge) -> bool:
     ward = charge.target or charge.construct
     region = await region_of(ctx.session, ward)
@@ -308,25 +326,10 @@ async def do_forbid(ctx: TickContext, charge: Charge) -> bool:
     return hurt
 
 
+@EFFECTS.on(OrderKind.OBEY_HOLDER)
+@EFFECTS.on(OrderKind.HOLD_STILL)
 async def do_nothing(ctx: TickContext, charge: Charge) -> bool:
     return charge.holder is not None and ctx.epoch >= 0
-
-
-EFFECTS: dict[OrderKind, Callable[[TickContext, Charge], Awaitable[bool]]] = {
-    OrderKind.GUARD: do_guard,
-    OrderKind.SERVE: do_serve,
-    OrderKind.OBEY_HOLDER: do_nothing,
-    OrderKind.BUILD: do_build,
-    OrderKind.GATHER: do_gather,
-    OrderKind.PROTECT: do_protect,
-    OrderKind.DESTROY: do_destroy,
-    OrderKind.REPORT: do_report,
-    OrderKind.MAINTAIN: do_maintain,
-    OrderKind.REPLICATE: do_replicate,
-    OrderKind.HOLD_STILL: do_nothing,
-    OrderKind.FOLLOW: do_follow,
-    OrderKind.FORBID: do_forbid,
-}
 
 
 async def target_for(ctx: TickContext, rules: InstructionSetRow, order: InstructionOrderRow, holder: EntityRow | None) -> EntityRow | None:

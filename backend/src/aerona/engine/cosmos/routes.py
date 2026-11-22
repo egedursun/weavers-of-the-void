@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import FOOD_KINDS
 from aerona.catalog.cosmography import SCOPE_LABELS, SCOPE_ORDER
+from aerona.catalog.life.cosmos import GREAT_MOUNTS, VEHICLE_TECHNIQUES
+from aerona.catalog.life_traits import JOURNEY_INTENT_TRAITS, having
 from aerona.catalog.travel import METHOD_REACH, TRAVEL_METHODS, medium_of, travel_method_profile
 from aerona.constants.cosmos import NUMBER_WORDS
 from aerona.constants.units import PERCENT
@@ -31,10 +33,10 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, ClusterKind, RouteScope
-from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.ecology import BeastTemper, Habitat, SizeClass
+from aerona.domain.enums.ecology import BeastTemper, Habitat
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.life_traits import JourneyIntentTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, SocialClass
@@ -74,7 +76,7 @@ HP_KEY = "hp"
 LIVE_JOURNEYS = (JourneyStatus.UNDERWAY, JourneyStatus.WAITING)
 WORMHOLE_LOOKAHEAD = 20
 
-PASSENGER_INTENTS = frozenset({JourneyIntent.COLONY, JourneyIntent.CONQUEST, JourneyIntent.PILGRIMAGE})
+PASSENGER_INTENTS = having(JOURNEY_INTENT_TRAITS, JourneyIntentTrait.PASSENGER_INTENTS)
 WEARING_METHODS = frozenset({TravelMethod.ANCIENT_GATE, TravelMethod.GALACTIC_GATE, TravelMethod.DIVINE_BRIDGE, TravelMethod.PLANAR_DOOR})
 
 
@@ -439,7 +441,6 @@ class RouteView:
 
 
 FAR_MOUNT_TRAITS = (CreatureTrait.FLYING, CreatureTrait.AQUATIC)
-GREAT_MOUNTS = (SizeClass.HUGE, SizeClass.COLOSSAL)
 
 
 async def has_beast_mount(session: AsyncSession, traveller_id: int) -> bool:
@@ -495,24 +496,6 @@ async def _knowledge_problem(session: AsyncSession, rules: Rules, traveller: Ent
         return None
     branch = spec.required_branch.value.replace("_", " ")
     return f'{spec.label} requires the "{branch}" knowledge (or trade with the route\'s controller).'
-
-
-VEHICLE_TECHNIQUES: Mapping[VehicleKind, Technique | None] = total(
-    VehicleKind,
-    {
-        VehicleKind.GATE: None,
-        VehicleKind.SHIP: None,
-        VehicleKind.MOUNT: None,
-        VehicleKind.BRIDGE: None,
-        VehicleKind.RAIL: Technique.RAILWAYS,
-        VehicleKind.ROAD_VEHICLE: Technique.COMBUSTION_ENGINE,
-        VehicleKind.AIRCRAFT: Technique.AVIATION,
-        VehicleKind.TELEPORT: Technique.ARTIFICIAL_MINDS,
-        VehicleKind.LIVING: Technique.GENETIC_ENGINEERING,
-        VehicleKind.RIFT: None,
-        VehicleKind.ON_FOOT: None,
-    },
-)
 
 
 async def _vehicle_problem(session: AsyncSession, traveller: EntityRow, route: RouteRow) -> str | None:

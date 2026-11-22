@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.death_shapes import RITE_TREATMENTS
+from aerona.catalog.life_traits import DEATH_ROLE_TRAITS, having
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.death_work import DeathWorkRow
@@ -9,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.death_work import DeathRole
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import DeathRoleTrait
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
@@ -16,8 +18,8 @@ from aerona.engine.mind.book import stored_values
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat_or
 
-HANDLING = frozenset({DeathRole.WASHER, DeathRole.PREPARER, DeathRole.CARRIER})
-SACRED = frozenset({DeathRole.OFFICIANT, DeathRole.KEEPER_OF_REMAINS})
+HANDLING = having(DEATH_ROLE_TRAITS, DeathRoleTrait.HANDLING)
+SACRED = having(DEATH_ROLE_TRAITS, DeathRoleTrait.SACRED)
 
 
 def needed_workers(per_mille: int, population: int) -> int:

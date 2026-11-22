@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.collective import MEDIUM_FADE
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.total import total
@@ -344,20 +345,6 @@ KIND_DECAY: Mapping[AccountKind, int] = total(
         AccountKind.ELDER_MEMORY: 140,
         AccountKind.RECORD: 20,
         AccountKind.TESTIMONY: 110,
-    },
-)
-
-
-MEDIUM_FADE: Mapping[AccountMedium, int] = total(
-    AccountMedium,
-    {
-        AccountMedium.ORAL: 100,
-        AccountMedium.BOOK: 0,
-        AccountMedium.INSCRIPTION: 0,
-        AccountMedium.ARTWORK: 0,
-        AccountMedium.RECORD: 0,
-        AccountMedium.PERFORMANCE: 50,
-        AccountMedium.MIND_STATE: 10,
     },
 )
 

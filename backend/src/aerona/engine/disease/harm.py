@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import Anatomy
+from aerona.catalog.life.disease import TARGET_JOBS
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.body import ConditionRow
@@ -23,7 +24,6 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.rules.registry import Rules
 
 T = DiseaseTarget
-J = Job
 TARGET_FUNCTION: Mapping[DiseaseTarget, BodyFunction] = MappingProxyType(
     {
         T.BREATH: BodyFunction.BREATH,
@@ -31,15 +31,6 @@ TARGET_FUNCTION: Mapping[DiseaseTarget, BodyFunction] = MappingProxyType(
         T.COGNITION: BodyFunction.COGNITION,
         T.SIGHT: BodyFunction.SIGHT,
         T.SKIN: BodyFunction.PRESENCE,
-    }
-)
-TARGET_JOBS: Mapping[DiseaseTarget, frozenset[Job]] = MappingProxyType(
-    {
-        T.BREATH: frozenset({J.FARMING, J.HERDING, J.FISHING, J.MINING, J.BUILDING, J.SOLDIERING}),
-        T.VITAL: frozenset(Job),
-        T.COGNITION: frozenset({J.SCHOLARSHIP, J.CLERGY, J.TRADE, J.CRAFTING}),
-        T.SIGHT: frozenset({J.CRAFTING, J.SCHOLARSHIP, J.FISHING, J.HERDING}),
-        T.SKIN: frozenset({J.TRADE, J.CLERGY}),
     }
 )
 LEVY_TARGETS = frozenset({T.BREATH, T.VITAL, T.SIGHT})

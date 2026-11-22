@@ -1,12 +1,11 @@
-from collections.abc import Mapping
-
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.domain import STANDING_STATES
+from aerona.catalog.life.structures import BUILDER_CONDITION, LIVING_ADULTS
 from aerona.catalog.materials import MATERIALS
 from aerona.catalog.peoples import STYLE_AXES, Style
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.read_memo import memoized
 from aerona.db.tables.demography import CohortRow, PeopleCultureRow
 from aerona.db.tables.economy import NodeMaterialRow, WorldMaterialRow
@@ -15,12 +14,12 @@ from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow, StructureStaffRow
-from aerona.domain.enums.demography import AgeBand, CohortCondition
+from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.minds import MindOrigin
-from aerona.domain.enums.structure import STANDING_STATES, BuilderKind, ConstructionState, StructureKind
+from aerona.domain.enums.structure import BuilderKind, ConstructionState, StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.economy.materials import MaterialProps, from_row, from_spec, set_node_material
 from aerona.engine.lore.style import axis_of, style_of
@@ -39,22 +38,8 @@ BUILDER_KINDS = {
     EntityType.SETTLEMENT: BuilderKind.COMMUNITY,
     EntityType.PEOPLE: BuilderKind.COMMUNITY,
 }
-LIVING_ADULTS = (CohortCondition.NONE, CohortCondition.VETERAN, CohortCondition.ENSLAVED)
 
 
-BUILDER_CONDITION: Mapping[BuilderKind, int] = total(
-    BuilderKind,
-    {
-        BuilderKind.COMMUNITY: 0,
-        BuilderKind.POLITY: 0,
-        BuilderKind.FACTION: 0,
-        BuilderKind.CULT: 0,
-        BuilderKind.PATRON: 0,
-        BuilderKind.GOD: 20,
-        BuilderKind.COMPANY: 5,
-        BuilderKind.MADE_MIND: 10,
-    },
-)
 MADE_ORIGINS = frozenset({MindOrigin.MADE, MindOrigin.GROWN, MindOrigin.TRAINED, MindOrigin.COPIED})
 
 

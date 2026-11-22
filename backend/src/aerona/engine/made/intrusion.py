@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.made import AIM_HARM, APPROACH_SKILLS, LAND_INTRUSION_AIMS, SEIZE_INTRUSION_TARGETS
+from aerona.catalog.life.networks import CONTENT_WORTH, TARGET_GUARD
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.collective import AccountRow
@@ -14,7 +16,7 @@ from aerona.db.tables.networks import NetworkNodeRow, NetworkOutageRow, NetworkP
 from aerona.db.write_guard import held
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.made import Attribution, Authenticity, IntrusionAim, IntrusionApproach, IntrusionOutcome, IntrusionTarget
-from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.networks import OutageCause
 from aerona.domain.enums.records import StepAction, StepOutcome
@@ -26,21 +28,12 @@ from aerona.engine.mind.book import best_skill
 from aerona.engine.minds.kinds import seizure_holds
 from aerona.engine.minds.values import best_level
 from aerona.engine.networks.book import shake_ledger
-from aerona.engine.networks.kinds import ACCESS_GUARD, CONTENT_WORTH, TAKEN_CONTENT, TARGET_GUARD
+from aerona.engine.networks.kinds import ACCESS_GUARD, TAKEN_CONTENT
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.recording.record import StepDraft
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.technology.profiles import family_level
-
-APPROACH_SKILLS = {
-    IntrusionApproach.TECHNICAL: (SkillKind.COMPUTING, SkillKind.CRYPTOGRAPHY, SkillKind.ELECTRONICS),
-    IntrusionApproach.SOCIAL: (SkillKind.DECEPTION, SkillKind.INTRIGUE),
-    IntrusionApproach.INSIDER: (SkillKind.INTRIGUE,),
-    IntrusionApproach.RITE: (SkillKind.RITUAL, SkillKind.SPELLCRAFT),
-    IntrusionApproach.POWER: (SkillKind.SPELLCRAFT, SkillKind.SPIRIT_SPEAKING),
-}
-AIM_HARM = {IntrusionAim.READ: 2, IntrusionAim.ALTER: 4, IntrusionAim.DENY: 5, IntrusionAim.SEIZE: 8, IntrusionAim.PLANT: 3, IntrusionAim.EXTORT: 6}
 
 
 @dataclass(frozen=True)
@@ -99,7 +92,7 @@ async def seize(ctx: TickContext, attempt: Attempt) -> None:
     if await seizure_holds(ctx, node_id):
         return
     mind = await ctx.session.get(MindProfileRow, node_id)
-    if attempt.target in {IntrusionTarget.MADE_MIND, IntrusionTarget.CONSTRUCT} and mind is not None and "made_by_node_id" not in mind.locked:
+    if attempt.target in SEIZE_INTRUSION_TARGETS and mind is not None and "made_by_node_id" not in mind.locked:
         mind.made_by_node_id, mind.maker_bond = attempt.actor_id, 0
     for orders in await ctx.session.scalars(select(InstructionSetRow).where(InstructionSetRow.owner_entity_id == node_id)):
         if "holder_node_id" not in orders.locked:
@@ -163,7 +156,7 @@ async def land(ctx: TickContext, attempt: Attempt, victim: EntityRow | None) -> 
         actor = await ctx.session.get(EntityRow, attempt.actor_id)
         if actor is not None and await take_coin(ctx.session, ctx.rules, victim, ctx.rules.intrusion.extort_take):
             await give_coin(ctx.session, ctx.rules, actor, ctx.rules.intrusion.extort_take)
-    elif attempt.aim in {IntrusionAim.ALTER, IntrusionAim.PLANT} and victim is not None:
+    elif attempt.aim in LAND_INTRUSION_AIMS and victim is not None:
         accounts = await ctx.session.scalars(select(AccountRow).where(AccountRow.holder_entity_id == victim.id).order_by(AccountRow.id.desc()).limit(1))
         for account in accounts:
             if "authenticity" not in account.locked:

@@ -1,12 +1,13 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import SPELL_FORM_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.powers import PowerRegistryRow, PowerRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.arcana import SpellForm
+from aerona.domain.enums.life_traits import SpellFormTrait
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import PowerState
@@ -14,7 +15,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
-BREACHING = frozenset({SpellForm.FORCE, SpellForm.EARTH, SpellForm.SPACE})
+BREACHING = having(SPELL_FORM_TRAITS, SpellFormTrait.BREACHING)
 DEFAULT_STRENGTH = 3
 
 

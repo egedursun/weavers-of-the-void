@@ -33,6 +33,7 @@ from aerona.agents.context.tongue_lines import son_tongue_lines
 from aerona.agents.context.world_view_lines import son_world_lines
 from aerona.catalog.domain_effects import ACTIVITY_LABELS, DOMAIN_EFFECTS, HOOKS, SYNERGY_OF
 from aerona.catalog.domains import DOMAIN_LABELS
+from aerona.catalog.life.divine import MOTION_LABELS, WOUND_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.db.tables.divine import AvatarRow, CouncilRulingRow, DivineStandingRow, DivineWoundRow, DomainActivityRow, GodGoalRow, WorldAttentionRow
@@ -41,8 +42,6 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.divine import GoalState
 from aerona.engine.divine.goals import aim_text
-from aerona.engine.divine.rulings import MOTION_LABELS
-from aerona.engine.divine.wounds import WOUND_LABELS
 
 
 async def name_of(scope: Scope, node_id: int | None) -> str | None:

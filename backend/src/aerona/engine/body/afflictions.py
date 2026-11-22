@@ -1,11 +1,14 @@
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.effect_packages import PACKAGES, PackageSpec, StageSpec
 from aerona.catalog.incident_kinds.body_lines import ONSET_STEPS
+from aerona.catalog.life.body import POWER_CURE_SPELL_FORMS
+from aerona.catalog.life_traits import MEMORY_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.afflictions import AfflictionRow
@@ -23,12 +26,12 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import HeroQuestRow
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission, Visibility
-from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.body import HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.life_traits import MemoryKindTrait
 from aerona.domain.enums.mind import ActKind, MemoryKind, ValueHolder
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.modifier import IncidentRole
@@ -246,41 +249,38 @@ async def quested(ctx: TickContext, bearer: EntityRow, since: int) -> bool:
     return found is not None and since <= ctx.epoch
 
 
+WIDER_CURES: Handlers[CureKind, Callable[[TickContext, EntityRow], Awaitable[bool]]] = Handlers(CureKind)
+
+
+@WIDER_CURES.on(CureKind.DIVINE)
 async def divine_cure(ctx: TickContext, bearer: EntityRow) -> bool:
     patron = await living_patron(ctx.session, bearer)
     return patron is not None and bool(await active_bonds(ctx.session, [BondKind.WORSHIPS], sources=[bearer.id], targets=[patron.id]))
 
 
+@WIDER_CURES.on(CureKind.POWER)
 async def power_cure(ctx: TickContext, bearer: EntityRow) -> bool:
     near = [item.id for item in await neighbours(ctx, bearer)]
     found = await ctx.session.scalar(
-        select(PowerRow.id)
-        .where(PowerRow.holder_node_id.in_(near), PowerRow.form.in_([SpellForm.BODY, SpellForm.SPIRIT]), PowerRow.state == PowerState.ACTIVE)
-        .limit(1)
+        select(PowerRow.id).where(PowerRow.holder_node_id.in_(near), PowerRow.form.in_(POWER_CURE_SPELL_FORMS), PowerRow.state == PowerState.ACTIVE).limit(1)
     )
     return found is not None
 
 
+@WIDER_CURES.on(CureKind.SYMBIONT)
 async def symbiont_cure(ctx: TickContext, bearer: EntityRow) -> bool:
     return await ctx.session.scalar(select(SymbiontRow.id).where(SymbiontRow.host_node_id == bearer.id).limit(1)) is not None
 
 
+@WIDER_CURES.on(CureKind.TRANSFER)
 async def transfer_cure(ctx: TickContext, bearer: EntityRow) -> bool:
     mind = await ctx.session.get(MindProfileRow, bearer.id)
     return mind is not None and mind.seat is not MindSeat.BODY
 
 
+@WIDER_CURES.on(CureKind.AUGMENT)
 async def augment_cure(ctx: TickContext, bearer: EntityRow) -> bool:
     return await ctx.session.scalar(select(AugmentRow.id).where(AugmentRow.bearer_node_id == bearer.id).limit(1)) is not None
-
-
-WIDER_CURES: Mapping[CureKind, Callable[[TickContext, EntityRow], Awaitable[bool]]] = {
-    CureKind.DIVINE: divine_cure,
-    CureKind.POWER: power_cure,
-    CureKind.SYMBIONT: symbiont_cure,
-    CureKind.TRANSFER: transfer_cure,
-    CureKind.AUGMENT: augment_cure,
-}
 
 
 async def try_cures(ctx: TickContext, bearer: EntityRow, row: AfflictionRow) -> CureKind | None:
@@ -473,17 +473,7 @@ async def blood_curse(ctx: TickContext, god: SonRow, target: EntityRow) -> Affli
     return await afflict(ctx, target, PackageKind.VAMPIRISM, Transmission.CURSE, source_node_id=god.id)
 
 
-TRAUMA_KINDS = frozenset(
-    {
-        MemoryKind.HARMED_ME,
-        MemoryKind.KILLED_KIN,
-        MemoryKind.MAIMED_ME,
-        MemoryKind.BETRAYED_ME,
-        MemoryKind.HELD_CAPTIVE,
-        MemoryKind.HUMILIATED_ME,
-        MemoryKind.FORMATIVE,
-    }
-)
+TRAUMA_KINDS = having(MEMORY_KIND_TRAITS, MemoryKindTrait.TRAUMA_KINDS)
 
 
 async def traumatise(ctx: TickContext) -> int:

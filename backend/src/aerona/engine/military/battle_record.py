@@ -1,30 +1,12 @@
 from collections.abc import Mapping
 from dataclasses import replace
 
+from aerona.catalog.life.military import PHASE_ACTIONS, PHASE_STATES
 from aerona.domain.enums.military import BattlePhase, Tactic
 from aerona.domain.enums.records import FactUnit, InstrumentKind, StepAction, StepOutcome, StepState
 from aerona.engine.military.battle import BattleResult, PhaseLog, Side, StackChange
 from aerona.engine.military.tables import counters
 from aerona.engine.recording.record import StepDraft
-
-PHASE_STATES: Mapping[BattlePhase, tuple[str, StepState]] = {
-    BattlePhase.SCOUTING: ("hidden", StepState.HIDDEN),
-    BattlePhase.MELEE: ("revealed", StepState.REVEALED),
-}
-
-PHASE_ACTIONS = {
-    BattlePhase.SCOUTING: StepAction.DEPLOY,
-    BattlePhase.PLAN: StepAction.DEPLOY,
-    BattlePhase.COMMAND: StepAction.DEPLOY,
-    BattlePhase.MISSILE: StepAction.VOLLEY,
-    BattlePhase.CHARGE: StepAction.CHARGE,
-    BattlePhase.MELEE: StepAction.ADVANCE,
-    BattlePhase.RESERVES: StepAction.REINFORCE,
-    BattlePhase.RITES: StepAction.PERFORM_RITE,
-    BattlePhase.PURSUIT: StepAction.PURSUE,
-    BattlePhase.SALVAGE: StepAction.PILLAGE,
-    BattlePhase.AFTERMATH: StepAction.HOLD,
-}
 
 
 def phase_action(log: PhaseLog) -> StepAction:

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import LENDER_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.faction_kinds import of_kinds
 from aerona.db.tables.entities import EntityRow
@@ -11,7 +12,6 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.orders import HoardState, SavingForm

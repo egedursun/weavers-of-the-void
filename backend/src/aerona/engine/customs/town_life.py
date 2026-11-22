@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.customs import PURPOSE_FOR_COOP_PURPOSES
+from aerona.catalog.life_traits import COOP_PURPOSE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.customs import CommuteRow, CooperativeRow, TavernRow, WelfareRow
@@ -15,6 +17,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.customs import CoopPurpose
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import CoopPurposeTrait
 from aerona.domain.enums.mind import PressureKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction
@@ -34,7 +37,7 @@ from aerona.engine.recording.record import StepDraft, record
 
 TAVERN_KINDS = frozenset({StructureKind.TAVERN, StructureKind.INN})
 WELFARE_KINDS = frozenset({StructureKind.ALMSHOUSE, StructureKind.ORPHANAGE, StructureKind.HOSPITAL})
-WORKING = frozenset({CoopPurpose.MILL, CoopPurpose.BOATS, CoopPurpose.IRRIGATION})
+WORKING = having(COOP_PURPOSE_TRAITS, CoopPurposeTrait.WORKING)
 THOUSAND = 1000
 
 
@@ -161,7 +164,7 @@ async def purpose_for(ctx: TickContext, town: EntityRow) -> CoopPurpose:
         return CoopPurpose.BOATS
     if stocks.get(CommodityKind.GRAIN, 0):
         return CoopPurpose.MILL
-    return ctx.rng(seed_of("cooperative", town.id)).pick([CoopPurpose.INSURANCE, CoopPurpose.BURIAL, CoopPurpose.CREDIT, CoopPurpose.IRRIGATION])
+    return ctx.rng(seed_of("cooperative", town.id)).pick(PURPOSE_FOR_COOP_PURPOSES)
 
 
 async def members_of(ctx: TickContext, faction: EntityRow) -> list[EntityRow]:

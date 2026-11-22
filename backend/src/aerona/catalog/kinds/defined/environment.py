@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.environment import LandUse, PlaceCover, WeatherKind
+from aerona.domain.enums.environment import LandUse, MovementMedium, MovementWork, PlaceCover, SeasonDating, TerrainTrait, WeatherKind, WeatherTrait, WorldLink
 
 LAND_USE = total(
     LandUse,
@@ -10,6 +10,27 @@ LAND_USE = total(
         LandUse.GRAZED: Defined("Grazed", checked_by=(), used_by=()),
         LandUse.MINED: Defined("Mined", checked_by=(), used_by=()),
         LandUse.BUILT: Defined("Built", checked_by=(), used_by=()),
+    },
+)
+
+MOVEMENT_MEDIUM = total(
+    MovementMedium,
+    {
+        MovementMedium.GROUND: Defined("Ground", checked_by=(), used_by=("catalog.movement.MOVEMENT",)),
+        MovementMedium.WATER_SURFACE: Defined(
+            "Water surface", checked_by=("catalog.movement.by_water", "engine.environment.profile.passability_of"), used_by=("catalog.movement.MOVEMENT",)
+        ),
+        MovementMedium.AIR: Defined("Air", checked_by=(), used_by=("catalog.movement.MOVEMENT",)),
+        MovementMedium.THROUGH_MATTER: Defined("Through matter", checked_by=(), used_by=("catalog.movement.MOVEMENT",)),
+    },
+)
+
+MOVEMENT_WORK = total(
+    MovementWork,
+    {
+        MovementWork.ROADS: Defined("Roads", checked_by=(), used_by=("catalog.movement.MOVEMENT", "engine.environment.profile.passability_of")),
+        MovementWork.BRIDGES: Defined("Bridges", checked_by=(), used_by=("catalog.movement.MOVEMENT", "engine.environment.profile.passability_of")),
+        MovementWork.HARBOURS: Defined("Harbours", checked_by=(), used_by=("catalog.movement.MOVEMENT", "engine.environment.profile.water_passage")),
     },
 )
 
@@ -37,68 +58,184 @@ PLACE_COVER = total(
     },
 )
 
+SEASON_DATING = total(
+    SeasonDating,
+    {
+        SeasonDating.POSITION: Defined("Position", checked_by=(), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
+        SeasonDating.DAY: Defined(
+            "Day",
+            checked_by=("engine.environment.season_remap.Move.of", "engine.environment.season_remap.remap_positions"),
+            used_by=("catalog.season_positions.SEASON_POSITIONS",),
+        ),
+    },
+)
+
+TERRAIN_TRAIT = total(
+    TerrainTrait,
+    {
+        TerrainTrait.WOODED: Defined(
+            "Wooded",
+            checked_by=(),
+            used_by=(
+                "catalog.terrain.TERRAIN",
+                "engine.demography.peoples.COVERED",
+                "engine.industry.fuels.COAL_TERRAINS_BLOCKED",
+                "engine.military.battle.SHELTER",
+                "engine.military.clash.WOODS",
+            ),
+        ),
+        TerrainTrait.OPEN: Defined(
+            "Open",
+            checked_by=(),
+            used_by=(
+                "catalog.terrain.TERRAIN",
+                "engine.environment.dangers.SNOW_TERRAIN",
+                "engine.environment.geomorph.DRY_LANDS",
+                "engine.industry.fuels.COAL_TERRAINS_BLOCKED",
+            ),
+        ),
+        TerrainTrait.ROUGH: Defined(
+            "Rough",
+            checked_by=(),
+            used_by=("catalog.terrain.TERRAIN", "engine.demography.biology.HEIGHTS", "engine.economy.extraction.HILLY", "engine.military.clash.DRYLANDS"),
+        ),
+        TerrainTrait.HIGH: Defined(
+            "High",
+            checked_by=(),
+            used_by=(
+                "catalog.terrain.TERRAIN",
+                "engine.demography.peoples.COVERED",
+                "engine.demography.peoples.HIGHLAND",
+                "engine.economy.route_dangers.PASS_TERRAIN",
+                "engine.environment.geomorph.DRY_LANDS",
+                "engine.industry.fuels.COAL_TERRAINS_BLOCKED",
+                "engine.military.battle.ELEVATED",
+                "engine.military.battle.HIGHLANDS",
+                "engine.military.battle.SHELTER",
+                "engine.military.clash.DRYLANDS",
+                "engine.military.clash.HILLS",
+                "engine.structures.types.CARVED_GROUND",
+            ),
+        ),
+        TerrainTrait.WET: Defined(
+            "Wet",
+            checked_by=(),
+            used_by=(
+                "catalog.terrain.TERRAIN",
+                "engine.demography.peoples.COVERED",
+                "engine.ecology.profiles.WATER",
+                "engine.economy.extraction.WETLANDS",
+                "engine.military.battle.SHELTER",
+                "engine.military.clash.WETLANDS",
+            ),
+        ),
+        TerrainTrait.ARID: Defined(
+            "Arid",
+            checked_by=(),
+            used_by=(
+                "catalog.terrain.TERRAIN",
+                "engine.demography.peoples.STEPPE",
+                "engine.economy.extraction.DRYLANDS",
+                "engine.economy.route_dangers.CARAVAN_TERRAIN",
+                "engine.military.clash.DRYLANDS",
+            ),
+        ),
+        TerrainTrait.COLD: Defined(
+            "Cold",
+            checked_by=(),
+            used_by=(
+                "catalog.terrain.TERRAIN",
+                "engine.demography.peoples.SKY_LANDS",
+                "engine.economy.route_dangers.PASS_TERRAIN",
+                "engine.environment.dangers.SNOW_TERRAIN",
+                "engine.environment.geomorph.DRY_LANDS",
+                "engine.industry.fuels.COAL_TERRAINS_BLOCKED",
+                "engine.military.battle.HIGHLANDS",
+                "engine.military.battle.SHELTER",
+                "engine.structures.types.CARVED_GROUND",
+                "engine.vehicles.caravans.SNOW_GROUNDS",
+            ),
+        ),
+        TerrainTrait.HOT: Defined("Hot", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.industry.fuels.COAL_TERRAINS_BLOCKED")),
+        TerrainTrait.COASTAL: Defined(
+            "Coastal",
+            checked_by=(),
+            used_by=("catalog.terrain.TERRAIN", "engine.ecology.profiles.WATER", "engine.economy.extraction.SEAS", "engine.military.clash.SHORES"),
+        ),
+        TerrainTrait.WATERY: Defined("Watery", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.demography.biology.WATERS")),
+        TerrainTrait.UNDERGROUND: Defined(
+            "Underground", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.environment.geomorph.DRY_LANDS", "engine.structures.types.CARVED_GROUND")
+        ),
+        TerrainTrait.BUILT: Defined("Built", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.military.aftermath.street_toll")),
+        TerrainTrait.AMBUSH_COVER: Defined(
+            "Ambush cover",
+            checked_by=(),
+            used_by=(
+                "catalog.terrain.TERRAIN",
+                "engine.demography.peoples.COVERED",
+                "engine.military.battle.SHELTER",
+                "engine.military.battle.choose_tactic",
+                "engine.military.battle.opening",
+            ),
+        ),
+        TerrainTrait.CONFINED: Defined(
+            "Confined",
+            checked_by=(),
+            used_by=(
+                "catalog.terrain.TERRAIN",
+                "engine.demography.peoples.COVERED",
+                "engine.demography.peoples.HIGHLAND",
+                "engine.military.battle.NARROW",
+                "engine.structures.types.CARVED_GROUND",
+            ),
+        ),
+        TerrainTrait.SLIPPERY: Defined("Slippery", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.military.duels.SLIPPERY")),
+        TerrainTrait.NON_MINERAL_GROUND: Defined(
+            "Non mineral ground",
+            checked_by=(),
+            used_by=(
+                "catalog.terrain.TERRAIN",
+                "engine.environment.geomorph.DRY_LANDS",
+                "engine.industry.fuels.COAL_TERRAINS_BLOCKED",
+                "engine.military.aftermath.EXOTIC",
+            ),
+        ),
+    },
+)
+
 WEATHER_KIND = total(
     WeatherKind,
     {
         WeatherKind.CLEAR: Defined(
-            "Clear",
-            checked_by=("engine.environment.weather.weather_weights",),
-            used_by=("catalog.weather.WEATHER", "engine.environment.weather.draw_weather", "engine.forecasting.works.AIM_WEATHER"),
+            "Clear", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.environment.weather.draw_weather", "engine.forecasting.works.AIM_WEATHER")
         ),
         WeatherKind.OVERCAST: Defined("Overcast", checked_by=(), used_by=("catalog.weather.WEATHER",)),
         WeatherKind.RAIN: Defined(
             "Rain",
-            checked_by=("catalog.units.WEATHER_EFFECTS",),
+            checked_by=(),
             used_by=(
+                "catalog.life.powers.FORM_WEATHER",
                 "catalog.weather.WEATHER",
-                "engine.environment.weather.LIQUID_KINDS",
-                "engine.environment.weather.WET_KINDS",
                 "engine.forecasting.works.AIM_WEATHER",
                 "engine.lore.rites.SCHOOL_WEATHER",
                 "engine.lore.rites.do_weather",
-                "engine.military.battle.RAIN",
-                "engine.military.duels.WET",
-                "engine.powers.effects.FORM_WEATHER",
                 "engine.powers.effects.weather",
             ),
         ),
-        WeatherKind.DOWNPOUR: Defined(
-            "Downpour",
-            checked_by=("catalog.units.WEATHER_EFFECTS",),
-            used_by=(
-                "catalog.weather.WEATHER",
-                "engine.environment.weather.LIQUID_KINDS",
-                "engine.environment.weather.WET_KINDS",
-                "engine.military.battle.RAIN",
-                "engine.military.campaign.SLOW_WEATHER",
-                "engine.military.duels.WET",
-            ),
-        ),
+        WeatherKind.DOWNPOUR: Defined("Downpour", checked_by=(), used_by=("catalog.weather.WEATHER",)),
         WeatherKind.STORM: Defined(
             "Storm",
-            checked_by=("catalog.units.WEATHER_EFFECTS",),
+            checked_by=(),
             used_by=(
                 "catalog.cosmography.PHENOMENON_WEATHER",
+                "catalog.life.powers.FORM_WEATHER",
                 "catalog.weather.WEATHER",
-                "engine.environment.weather.WET_KINDS",
-                "engine.intrigue.schemes.PURSUIT_CUTTING_WEATHER",
                 "engine.lore.rites.SCHOOL_WEATHER",
-                "engine.military.battle.RAIN",
-                "engine.military.battle.WIND",
-                "engine.military.campaign.SLOW_WEATHER",
-                "engine.military.duels.WET",
-                "engine.military.naval.STORMS",
-                "engine.military.naval.WINDY",
-                "engine.military.vessels.STORMS",
-                "engine.military.vessels.WINDY",
-                "engine.plants.bodies.STORMS",
-                "engine.powers.effects.FORM_WEATHER",
             ),
         ),
         WeatherKind.FOG: Defined(
             "Fog",
             checked_by=(
-                "catalog.units.WEATHER_EFFECTS",
                 "engine.military.battle.battle_width",
                 "engine.military.battle.choose_tactic",
                 "engine.military.battle.concealment",
@@ -106,141 +243,83 @@ WEATHER_KIND = total(
             ),
             used_by=(
                 "catalog.cosmography.PHENOMENON_WEATHER",
+                "catalog.life.powers.FORM_WEATHER",
                 "catalog.weather.WEATHER",
-                "engine.environment.weather.WET_KINDS",
-                "engine.intrigue.schemes.COVERING_WEATHER",
                 "engine.lore.rites.SCHOOL_WEATHER",
                 "engine.military.battle.weather_now",
-                "engine.powers.effects.FORM_WEATHER",
             ),
         ),
-        WeatherKind.SNOW: Defined(
-            "Snow",
-            checked_by=("catalog.units.WEATHER_EFFECTS",),
-            used_by=(
-                "catalog.units.HEAVY_WEATHER",
-                "catalog.weather.WEATHER",
-                "engine.demography.biology.WINTER",
-                "engine.environment.weather.COLD_KINDS",
-                "engine.forecasting.works.AIM_WEATHER",
-                "engine.military.battle.SNOW",
-                "engine.military.campaign.SLOW_WEATHER",
-                "engine.military.clash.WINTER",
-                "engine.military.duels.WET",
-            ),
-        ),
-        WeatherKind.BLIZZARD: Defined(
-            "Blizzard",
-            checked_by=("catalog.units.WEATHER_EFFECTS",),
-            used_by=(
-                "catalog.units.HEAVY_WEATHER",
-                "catalog.weather.WEATHER",
-                "engine.demography.biology.WINTER",
-                "engine.environment.weather.COLD_KINDS",
-                "engine.intrigue.schemes.COVERING_WEATHER",
-                "engine.military.battle.SNOW",
-                "engine.military.campaign.SLOW_WEATHER",
-                "engine.military.clash.WINTER",
-                "engine.military.duels.WET",
-                "engine.military.naval.STORMS",
-                "engine.military.vessels.STORMS",
-                "engine.phases.environment.EXTREME_WEATHER",
-                "engine.plants.bodies.STORMS",
-            ),
-        ),
+        WeatherKind.SNOW: Defined("Snow", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.forecasting.works.AIM_WEATHER")),
+        WeatherKind.BLIZZARD: Defined("Blizzard", checked_by=(), used_by=("catalog.weather.WEATHER",)),
         WeatherKind.HEAT_WAVE: Defined(
             "Heat wave",
-            checked_by=("catalog.units.WEATHER_EFFECTS",),
-            used_by=(
-                "catalog.units.HEAVY_WEATHER",
-                "catalog.weather.WEATHER",
-                "engine.demography.biology.HOT_WEATHER",
-                "engine.environment.weather.HOT_KINDS",
-                "engine.forecasting.works.AIM_WEATHER",
-                "engine.lore.rites.SCHOOL_WEATHER",
-                "engine.phases.environment.EXTREME_WEATHER",
-                "engine.powers.effects.FORM_WEATHER",
-            ),
+            checked_by=(),
+            used_by=("catalog.life.powers.FORM_WEATHER", "catalog.weather.WEATHER", "engine.forecasting.works.AIM_WEATHER", "engine.lore.rites.SCHOOL_WEATHER"),
         ),
         WeatherKind.DROUGHT_WIND: Defined(
-            "Drought wind",
-            checked_by=(),
-            used_by=(
-                "catalog.cosmography.PHENOMENON_WEATHER",
-                "catalog.weather.WEATHER",
-                "engine.demography.biology.HOT_WEATHER",
-                "engine.environment.weather.DRY_KINDS",
-                "engine.forecasting.works.AIM_WEATHER",
-                "engine.military.battle.WIND",
-                "engine.military.naval.WINDY",
-                "engine.military.vessels.WINDY",
-            ),
+            "Drought wind", checked_by=(), used_by=("catalog.cosmography.PHENOMENON_WEATHER", "catalog.weather.WEATHER", "engine.forecasting.works.AIM_WEATHER")
         ),
-        WeatherKind.SANDSTORM: Defined(
-            "Sandstorm",
-            checked_by=("catalog.units.WEATHER_EFFECTS", "engine.environment.weather.weather_weights"),
-            used_by=(
-                "catalog.weather.WEATHER",
-                "engine.demography.biology.HOT_WEATHER",
-                "engine.environment.weather.DRY_KINDS",
-                "engine.intrigue.schemes.COVERING_WEATHER",
-                "engine.military.battle.WIND",
-                "engine.military.campaign.SLOW_WEATHER",
-                "engine.military.naval.STORMS",
-                "engine.military.naval.WINDY",
-                "engine.military.vessels.STORMS",
-                "engine.military.vessels.WINDY",
-                "engine.phases.environment.EXTREME_WEATHER",
-            ),
-        ),
-        WeatherKind.HAIL: Defined(
-            "Hail",
-            checked_by=("catalog.units.WEATHER_EFFECTS",),
-            used_by=(
-                "catalog.weather.WEATHER",
-                "engine.environment.weather.WET_KINDS",
-                "engine.military.duels.WET",
-                "engine.military.vessels.STORMS",
-                "engine.phases.environment.EXTREME_WEATHER",
-                "engine.plants.bodies.STORMS",
-            ),
-        ),
+        WeatherKind.SANDSTORM: Defined("Sandstorm", checked_by=(), used_by=("catalog.weather.WEATHER",)),
+        WeatherKind.HAIL: Defined("Hail", checked_by=(), used_by=("catalog.weather.WEATHER",)),
         WeatherKind.MAGIC_STORM: Defined(
             "Magic storm",
-            checked_by=(
-                "catalog.units.WEATHER_EFFECTS",
-                "engine.environment.weather.weather_weights",
-                "engine.military.aftermath.flaring_items",
-                "engine.military.battle.backlash",
-            ),
-            used_by=(
-                "catalog.cosmography.PHENOMENON_WEATHER",
-                "catalog.weather.WEATHER",
-                "engine.intrigue.schemes.PURSUIT_CUTTING_WEATHER",
-                "engine.lore.rites.phenomenon",
-                "engine.military.naval.STORMS",
-                "engine.military.vessels.STORMS",
-                "engine.phases.environment.EXTREME_WEATHER",
-                "engine.plants.bodies.STORMS",
-            ),
+            checked_by=("engine.military.aftermath.flaring_items", "engine.military.battle.backlash"),
+            used_by=("catalog.cosmography.PHENOMENON_WEATHER", "catalog.weather.WEATHER", "engine.lore.rites.phenomenon"),
         ),
         WeatherKind.ASH_FALL: Defined(
-            "Ash fall",
-            checked_by=("catalog.units.WEATHER_EFFECTS", "engine.environment.weather.weather_weights", "engine.phases.environment.weather_year"),
-            used_by=("catalog.weather.WEATHER", "engine.cosmos.impacts.remember_the_fall", "engine.phases.environment.EXTREME_WEATHER"),
+            "Ash fall", checked_by=("engine.phases.environment.weather_year",), used_by=("catalog.weather.WEATHER", "engine.cosmos.impacts.remember_the_fall")
         ),
-        WeatherKind.VOID_RAIN: Defined(
-            "Void rain",
-            checked_by=("catalog.units.WEATHER_EFFECTS", "engine.environment.weather.weather_weights"),
-            used_by=("catalog.cosmography.PHENOMENON_WEATHER", "catalog.weather.WEATHER", "engine.phases.environment.EXTREME_WEATHER"),
+        WeatherKind.VOID_RAIN: Defined("Void rain", checked_by=(), used_by=("catalog.cosmography.PHENOMENON_WEATHER", "catalog.weather.WEATHER")),
+        WeatherKind.ECLIPSE_DARK: Defined("Eclipse dark", checked_by=(), used_by=("catalog.weather.WEATHER",)),
+        WeatherKind.AURORA: Defined("Aurora", checked_by=(), used_by=("catalog.cosmography.PHENOMENON_WEATHER", "catalog.weather.WEATHER")),
+    },
+)
+
+WEATHER_TRAIT = total(
+    WeatherTrait,
+    {
+        WeatherTrait.COLD: Defined("Cold", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.demography.biology.trait_edge")),
+        WeatherTrait.SNOW_COVER: Defined(
+            "Snow cover", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.military.battle.modifier", "engine.military.clash.wanted_traits")
         ),
-        WeatherKind.ECLIPSE_DARK: Defined(
-            "Eclipse dark",
-            checked_by=("catalog.units.WEATHER_EFFECTS", "engine.environment.weather.weather_weights"),
-            used_by=("catalog.weather.WEATHER", "engine.phases.environment.EXTREME_WEATHER"),
+        WeatherTrait.WET: Defined("Wet", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.military.duels.set_footing")),
+        WeatherTrait.LIQUID: Defined("Liquid", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.military.battle.weather_factor")),
+        WeatherTrait.HOT: Defined("Hot", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.demography.biology.trait_edge")),
+        WeatherTrait.DRY: Defined("Dry", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.demography.biology.trait_edge")),
+        WeatherTrait.WINDY: Defined(
+            "Windy",
+            checked_by=(),
+            used_by=(
+                "catalog.weather.WEATHER",
+                "engine.military.battle.weather_factor",
+                "engine.military.naval.fleet_power",
+                "engine.military.vessels.arms_weight",
+            ),
         ),
-        WeatherKind.AURORA: Defined(
-            "Aurora", checked_by=("engine.environment.weather.weather_weights",), used_by=("catalog.cosmography.PHENOMENON_WEATHER", "catalog.weather.WEATHER")
+        WeatherTrait.STORM: Defined(
+            "Storm",
+            checked_by=(),
+            used_by=(
+                "catalog.weather.WEATHER",
+                "engine.intrigue.schemes.conditions",
+                "engine.military.naval.weather_the_storm",
+                "engine.military.vessels.seas",
+                "engine.military.vessels.weather_leg",
+                "engine.plants.bodies.weather_crops",
+            ),
         ),
+        WeatherTrait.COVERING: Defined("Covering", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.intrigue.schemes.conditions")),
+        WeatherTrait.SLOWING: Defined("Slowing", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.military.campaign.march_budget")),
+        WeatherTrait.HEAVY: Defined("Heavy", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.military.battle.modifier")),
+        WeatherTrait.EXTREME: Defined("Extreme", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.phases.environment.region_years")),
+    },
+)
+
+WORLD_LINK = total(
+    WorldLink,
+    {
+        WorldLink.WORLD: Defined("World", checked_by=("engine.environment.season_remap.of_world",), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
+        WorldLink.ENTITY: Defined("Entity", checked_by=("engine.environment.season_remap.of_world",), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
+        WorldLink.INCIDENT: Defined("Incident", checked_by=(), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
     },
 )

@@ -9,11 +9,10 @@ from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.demography import FuneralCustom, Job, NaturalTrait
 from aerona.domain.enums.ecology import Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.environment import TemperatureBand, TerrainKind
+from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import CreatureTrait
 
-T = TerrainKind
 J = Job
 
 
@@ -41,7 +40,6 @@ class KinSpec:
     naval_pct: int
     mount: MountFit
     labour: dict[Job, int] = field(default_factory=dict)
-    terrain: dict[TerrainKind, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -78,18 +76,10 @@ class FuneralSpec:
 
 KIN: dict[BodyPlan, KinSpec] = {
     BodyPlan.HUMANOID: KinSpec(100, 100, 100, 100, MountFit.RIDES),
-    BodyPlan.QUADRUPED: KinSpec(
-        130, 140, 100, 70, MountFit.IS_MOUNT, {J.HERDING: 125, J.FARMING: 110, J.CRAFTING: 75}, {T.PLAIN: 115, T.STEPPE: 120, T.FOREST: 90, T.MOUNTAINS: 80}
-    ),
-    BodyPlan.AVIAN: KinSpec(
-        90, 80, 100, 50, MountFit.FLIES, {J.TRADE: 120, J.BUILDING: 80, J.MINING: 65}, {T.MOUNTAINS: 125, T.HILLS: 115, T.HIGH_PASS: 125, T.CANYON: 120}
-    ),
-    BodyPlan.SERPENTINE: KinSpec(
-        80, 90, 95, 90, MountFit.CANNOT, {J.FISHING: 110, J.CRAFTING: 85}, {T.MARSH: 125, T.JUNGLE: 120, T.DESERT: 110, T.MOUNTAINS: 80}
-    ),
-    BodyPlan.INSECTOID: KinSpec(
-        70, 60, 90, 50, MountFit.CANNOT, {J.BUILDING: 130, J.MINING: 120, J.SCHOLARSHIP: 80}, {T.FOREST: 110, T.DESERT: 115, T.UNDERGROUND: 120}
-    ),
+    BodyPlan.QUADRUPED: KinSpec(130, 140, 100, 70, MountFit.IS_MOUNT, {J.HERDING: 125, J.FARMING: 110, J.CRAFTING: 75}),
+    BodyPlan.AVIAN: KinSpec(90, 80, 100, 50, MountFit.FLIES, {J.TRADE: 120, J.BUILDING: 80, J.MINING: 65}),
+    BodyPlan.SERPENTINE: KinSpec(80, 90, 95, 90, MountFit.CANNOT, {J.FISHING: 110, J.CRAFTING: 85}),
+    BodyPlan.INSECTOID: KinSpec(70, 60, 90, 50, MountFit.CANNOT, {J.BUILDING: 130, J.MINING: 120, J.SCHOLARSHIP: 80}),
     BodyPlan.AQUATIC: KinSpec(
         100,
         100,
@@ -97,22 +87,13 @@ KIN: dict[BodyPlan, KinSpec] = {
         170,
         MountFit.CANNOT,
         {J.FISHING: 170, J.FARMING: 55, J.MINING: 60},
-        {T.MARSH: 130, T.COAST: 130, T.SEA: 150, T.DESERT: 55, T.MOUNTAINS: 70},
     ),
-    BodyPlan.AMORPHOUS: KinSpec(60, 70, 70, 80, MountFit.CANNOT, {J.CRAFTING: 115, J.FARMING: 80}, {T.UNDERGROUND: 125, T.MARSH: 115, T.PLAIN: 90}),
-    BodyPlan.ARBOREAL: KinSpec(
-        90, 90, 100, 80, MountFit.RIDES, {J.CRAFTING: 115, J.BUILDING: 110, J.FARMING: 90}, {T.FOREST: 130, T.JUNGLE: 130, T.PLAIN: 85, T.DESERT: 70}
-    ),
-    BodyPlan.INCORPOREAL: KinSpec(
-        20, 30, 10, 30, MountFit.FLIES, {J.CLERGY: 150, J.SCHOLARSHIP: 130, J.MINING: 40, J.FARMING: 40, J.BUILDING: 40}, {T.RUIN_FIELD: 130, T.VOID_SHORE: 120}
-    ),
-    BodyPlan.COLOSSAL: KinSpec(120, 130, 110, 40, MountFit.CANNOT, {J.BUILDING: 180, J.MINING: 150, J.CRAFTING: 55}, {T.FOREST: 80, T.MARSH: 70, T.PLAIN: 115}),
-    BodyPlan.CONSTRUCT: KinSpec(
-        30, 80, 15, 50, MountFit.CANNOT, {J.MINING: 140, J.BUILDING: 130, J.CRAFTING: 120, J.CLERGY: 50, J.SCHOLARSHIP: 70}, {T.UNDERGROUND: 110, T.MARSH: 80}
-    ),
-    BodyPlan.DIVINE_MANIFEST: KinSpec(
-        50, 120, 30, 60, MountFit.FLIES, {J.CLERGY: 200, J.SCHOLARSHIP: 120, J.FARMING: 70}, {T.CRYSTAL_FIELD: 125, T.MOUNTAINS: 110}
-    ),
+    BodyPlan.AMORPHOUS: KinSpec(60, 70, 70, 80, MountFit.CANNOT, {J.CRAFTING: 115, J.FARMING: 80}),
+    BodyPlan.ARBOREAL: KinSpec(90, 90, 100, 80, MountFit.RIDES, {J.CRAFTING: 115, J.BUILDING: 110, J.FARMING: 90}),
+    BodyPlan.INCORPOREAL: KinSpec(20, 30, 10, 30, MountFit.FLIES, {J.CLERGY: 150, J.SCHOLARSHIP: 130, J.MINING: 40, J.FARMING: 40, J.BUILDING: 40}),
+    BodyPlan.COLOSSAL: KinSpec(120, 130, 110, 40, MountFit.CANNOT, {J.BUILDING: 180, J.MINING: 150, J.CRAFTING: 55}),
+    BodyPlan.CONSTRUCT: KinSpec(30, 80, 15, 50, MountFit.CANNOT, {J.MINING: 140, J.BUILDING: 130, J.CRAFTING: 120, J.CLERGY: 50, J.SCHOLARSHIP: 70}),
+    BodyPlan.DIVINE_MANIFEST: KinSpec(50, 120, 30, 60, MountFit.FLIES, {J.CLERGY: 200, J.SCHOLARSHIP: 120, J.FARMING: 70}),
 }
 
 SIZES: dict[SizeClass, SizeSpec] = {

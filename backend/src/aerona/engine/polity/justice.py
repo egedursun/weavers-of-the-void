@@ -1,5 +1,7 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import ROBBER_KINDS
+from aerona.catalog.life_traits import FACTION_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import CastingRow
@@ -10,7 +12,8 @@ from aerona.db.tables.polity import ClaimRow, PolityMemberRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import ROBBER_KINDS, FactionKind
+from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.life_traits import FactionKindTrait
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind
@@ -26,7 +29,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 
 RECENT_EPOCHS = 2
-TREASON_KINDS = frozenset({FactionKind.REBELS, FactionKind.SECRET_SOCIETY})
+TREASON_KINDS = having(FACTION_KIND_TRAITS, FactionKindTrait.TREASON_KINDS)
 
 
 async def _members_of(ctx: TickContext, mortals: list[EntityRow]) -> dict[int, set[FactionKind]]:

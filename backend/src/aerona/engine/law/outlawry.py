@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.law import HUNTING
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.law_depth import OutlawRow
@@ -9,7 +10,6 @@ from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.engine.belonging.refuge import sheltered
@@ -23,8 +23,6 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 from aerona.engine.records import death_path
-
-HUNTING = (SkillKind.TRACKING, SkillKind.HUNTING, SkillKind.BLADE)
 
 
 @dataclass

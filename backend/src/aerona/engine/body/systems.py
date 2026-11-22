@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.domestication import UNBOUND_BIOCHEMISTRY
+from aerona.catalog.life_traits import BODY_SYSTEM_TRAITS, having
 from aerona.catalog.nature_kinds50 import BODY_SYSTEMS, SENSITIVITIES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.biology import BiologyRow
@@ -14,8 +16,8 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.body_systems import BodySystem
-from aerona.domain.enums.ecology import UNBOUND_BIOCHEMISTRY
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import BodySystemTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
@@ -30,7 +32,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining_alone, term
 from aerona.rules.registry import Rules
 
-BLOODLESS = frozenset({BodySystem.BREATH, BodySystem.CIRCULATION, BodySystem.DIGESTION})
+BLOODLESS = having(BODY_SYSTEM_TRAITS, BodySystemTrait.BLOODLESS)
 SYSTEMS = tuple(system for system in BodySystem if system is not BodySystem.NONE)
 TENTHS = 10
 

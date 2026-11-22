@@ -1,9 +1,8 @@
-from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import delete, select
 
-from aerona.core.total import total
+from aerona.catalog.life.crafts import BURN_AND_FADE_LINK_TOKENS, TOKEN_STRENGTH, TOKENS_WITHIN_REACH_LINK_TOKENS
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.crafts import MaterialAffinityRow, SympatheticLinkRow
 from aerona.db.tables.culture import ArtworkProfileRow, ItemHistoryRow, RiteEffectRow
@@ -26,14 +25,10 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import active_bonds, has_flag
 
 MAGICAL = frozenset({MaterialFamily.PRECIOUS, MaterialFamily.EXOTIC})
-TOKEN_STRENGTH: Mapping[LinkToken, int] = total(
-    LinkToken,
-    {LinkToken.HAIR: 50, LinkToken.BLOOD: 65, LinkToken.NAME: 90, LinkToken.PORTRAIT: 40, LinkToken.FRAGMENT: 55},
-)
 
 
 async def tokens_within_reach(ctx: TickContext, caster_id: int, target_id: int) -> list[LinkToken]:
-    found = [LinkToken.HAIR, LinkToken.BLOOD]
+    found = list(TOKENS_WITHIN_REACH_LINK_TOKENS)
     portrait = await ctx.session.scalar(select(ArtworkProfileRow.artwork_entity_id).where(ArtworkProfileRow.subject_node_id == target_id).limit(1))
     if portrait is not None:
         found.append(LinkToken.PORTRAIT)
@@ -125,7 +120,7 @@ async def burn_and_fade(ctx: TickContext, tally: SympathyTally) -> None:
         if held(row.holder_node_id) or held(row.target_node_id):
             continue
         burnt = (
-            row.token in {LinkToken.HAIR, LinkToken.BLOOD}
+            row.token in BURN_AND_FADE_LINK_TOKENS
             and await has_flag(ctx.session, row.target_node_id, EntityFlag.CURSED)
             and ctx.rng(seed_of("sympathy.burn", row.id, ctx.epoch)).chance(table.burn_chance)
         )

@@ -2,7 +2,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.environment import WeatherEffect, WeatherKind
+from aerona.domain.enums.environment import WeatherDraw, WeatherEffect, WeatherKind, WeatherTrait
+from aerona.domain.enums.military import UnitFamily
 from aerona.rules.registry import Rules
 
 
@@ -13,6 +14,9 @@ class WeatherSpec:
     weight: Callable[[Rules], int]
     effects: Callable[[Rules], dict[WeatherEffect, int]]
     favoured_by: frozenset[Domain]
+    draw: WeatherDraw
+    traits: frozenset[WeatherTrait]
+    unit_factors: Callable[[Rules], dict[UnitFamily, int]]
 
 
 WEATHER: dict[WeatherKind, WeatherSpec] = {
@@ -33,6 +37,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.clear_growth,
             },
             frozenset({Domain.SUN, Domain.LIGHT}),
+            WeatherDraw.CLEAR,
+            frozenset(),
+            lambda rules: {},
         ),
         WeatherSpec(
             WeatherKind.OVERCAST,
@@ -49,6 +56,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.overcast_growth,
             },
             frozenset({Domain.SHADOW}),
+            WeatherDraw.EVEN,
+            frozenset(),
+            lambda rules: {},
         ),
         WeatherSpec(
             WeatherKind.RAIN,
@@ -65,6 +75,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.rain_growth,
             },
             frozenset({Domain.HARVEST, Domain.PLANTS, Domain.SEA}),
+            WeatherDraw.WET_LIQUID,
+            frozenset({WeatherTrait.WET, WeatherTrait.LIQUID}),
+            lambda rules: {UnitFamily.MISSILE: rules.battle_weather.rain_missile_pct, UnitFamily.MOUNTED: rules.battle_weather.rain_mounted_pct},
         ),
         WeatherSpec(
             WeatherKind.DOWNPOUR,
@@ -81,6 +94,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.downpour_growth,
             },
             frozenset({Domain.SEA, Domain.STORM}),
+            WeatherDraw.WET_LIQUID,
+            frozenset({WeatherTrait.WET, WeatherTrait.LIQUID, WeatherTrait.SLOWING}),
+            lambda rules: {UnitFamily.MISSILE: rules.battle_weather.downpour_missile_pct, UnitFamily.MOUNTED: rules.battle_weather.downpour_mounted_pct},
         ),
         WeatherSpec(
             WeatherKind.STORM,
@@ -97,6 +113,15 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.storm_growth,
             },
             frozenset({Domain.STORM, Domain.SKY}),
+            WeatherDraw.WET,
+            frozenset({WeatherTrait.WET, WeatherTrait.WINDY, WeatherTrait.STORM, WeatherTrait.SLOWING}),
+            lambda rules: {
+                UnitFamily.MISSILE: rules.battle_weather.storm_missile_pct,
+                UnitFamily.MOUNTED: rules.battle_weather.storm_mounted_pct,
+                UnitFamily.VEHICLE: rules.battle_weather.storm_vehicle_pct,
+                UnitFamily.AIR: rules.battle_weather.storm_air_pct,
+                UnitFamily.ELECTRONIC: rules.battle_weather.storm_electronic_pct,
+            },
         ),
         WeatherSpec(
             WeatherKind.FOG,
@@ -113,6 +138,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.fog_growth,
             },
             frozenset({Domain.SHADOW, Domain.DREAM, Domain.TRICKERY}),
+            WeatherDraw.WET,
+            frozenset({WeatherTrait.WET, WeatherTrait.COVERING}),
+            lambda rules: {UnitFamily.MISSILE: rules.battle_weather.fog_missile_pct, UnitFamily.AIR: rules.battle_weather.fog_air_pct},
         ),
         WeatherSpec(
             WeatherKind.SNOW,
@@ -129,6 +157,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.snow_growth,
             },
             frozenset({Domain.ICE}),
+            WeatherDraw.COLD,
+            frozenset({WeatherTrait.COLD, WeatherTrait.SNOW_COVER, WeatherTrait.WET, WeatherTrait.SLOWING, WeatherTrait.HEAVY}),
+            lambda rules: {UnitFamily.MISSILE: rules.battle_weather.snow_missile_pct, UnitFamily.MOUNTED: rules.battle_weather.snow_mounted_pct},
         ),
         WeatherSpec(
             WeatherKind.BLIZZARD,
@@ -145,6 +176,24 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.blizzard_growth,
             },
             frozenset({Domain.ICE, Domain.STORM}),
+            WeatherDraw.COLD,
+            frozenset(
+                {
+                    WeatherTrait.COLD,
+                    WeatherTrait.SNOW_COVER,
+                    WeatherTrait.WET,
+                    WeatherTrait.STORM,
+                    WeatherTrait.COVERING,
+                    WeatherTrait.SLOWING,
+                    WeatherTrait.HEAVY,
+                    WeatherTrait.EXTREME,
+                }
+            ),
+            lambda rules: {
+                UnitFamily.MISSILE: rules.battle_weather.blizzard_missile_pct,
+                UnitFamily.MOUNTED: rules.battle_weather.blizzard_mounted_pct,
+                UnitFamily.INFANTRY: rules.battle_weather.blizzard_infantry_pct,
+            },
         ),
         WeatherSpec(
             WeatherKind.HEAT_WAVE,
@@ -161,6 +210,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.heat_wave_growth,
             },
             frozenset({Domain.SUN, Domain.FIRE}),
+            WeatherDraw.HOT,
+            frozenset({WeatherTrait.HOT, WeatherTrait.HEAVY, WeatherTrait.EXTREME}),
+            lambda rules: {UnitFamily.INFANTRY: rules.battle_weather.heat_wave_infantry_pct, UnitFamily.MOUNTED: rules.battle_weather.heat_wave_mounted_pct},
         ),
         WeatherSpec(
             WeatherKind.DROUGHT_WIND,
@@ -177,6 +229,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.drought_wind_growth,
             },
             frozenset({Domain.SUN, Domain.HUNGER}),
+            WeatherDraw.DRY,
+            frozenset({WeatherTrait.DRY, WeatherTrait.WINDY}),
+            lambda rules: {},
         ),
         WeatherSpec(
             WeatherKind.SANDSTORM,
@@ -193,6 +248,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.sandstorm_growth,
             },
             frozenset({Domain.SKY, Domain.SALT}),
+            WeatherDraw.DRY_HOT,
+            frozenset({WeatherTrait.DRY, WeatherTrait.WINDY, WeatherTrait.STORM, WeatherTrait.COVERING, WeatherTrait.SLOWING, WeatherTrait.EXTREME}),
+            lambda rules: {UnitFamily.MISSILE: rules.battle_weather.sandstorm_missile_pct, UnitFamily.AIR: rules.battle_weather.sandstorm_air_pct},
         ),
         WeatherSpec(
             WeatherKind.HAIL,
@@ -209,6 +267,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.hail_growth,
             },
             frozenset({Domain.STORM, Domain.STONE}),
+            WeatherDraw.WET,
+            frozenset({WeatherTrait.WET, WeatherTrait.STORM, WeatherTrait.EXTREME}),
+            lambda rules: {UnitFamily.MISSILE: rules.battle_weather.hail_missile_pct},
         ),
         WeatherSpec(
             WeatherKind.MAGIC_STORM,
@@ -225,6 +286,12 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.magic_storm_growth,
             },
             frozenset({Domain.KNOWLEDGE, Domain.MADNESS}),
+            WeatherDraw.MAGIC,
+            frozenset({WeatherTrait.STORM, WeatherTrait.EXTREME}),
+            lambda rules: {
+                UnitFamily.MAGIC: rules.battle_weather.magic_storm_magic_pct,
+                UnitFamily.ELECTRONIC: rules.battle_weather.magic_storm_electronic_pct,
+            },
         ),
         WeatherSpec(
             WeatherKind.ASH_FALL,
@@ -241,6 +308,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.ash_fall_growth,
             },
             frozenset({Domain.ASH, Domain.FIRE}),
+            WeatherDraw.ASH,
+            frozenset({WeatherTrait.EXTREME}),
+            lambda rules: {UnitFamily.MISSILE: rules.battle_weather.ash_fall_missile_pct},
         ),
         WeatherSpec(
             WeatherKind.VOID_RAIN,
@@ -257,6 +327,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.void_rain_growth,
             },
             frozenset({Domain.MADNESS}),
+            WeatherDraw.VOID,
+            frozenset({WeatherTrait.EXTREME}),
+            lambda rules: {UnitFamily.EXOTIC: rules.battle_weather.void_rain_exotic_pct},
         ),
         WeatherSpec(
             WeatherKind.ECLIPSE_DARK,
@@ -273,6 +346,9 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.eclipse_dark_growth,
             },
             frozenset({Domain.MOON, Domain.SHADOW}),
+            WeatherDraw.ECLIPSE,
+            frozenset({WeatherTrait.EXTREME}),
+            lambda rules: {UnitFamily.MISSILE: rules.battle_weather.eclipse_dark_missile_pct},
         ),
         WeatherSpec(
             WeatherKind.AURORA,
@@ -289,9 +365,20 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
                 WeatherEffect.GROWTH: rules.weather.aurora_growth,
             },
             frozenset({Domain.STAR, Domain.LIGHT, Domain.SKY}),
+            WeatherDraw.AURORA,
+            frozenset(),
+            lambda rules: {},
         ),
     )
 }
 
 SEASON_DOMAINS = frozenset({Domain.SKY, Domain.STORM, Domain.TIME, Domain.SUN, Domain.MOON, Domain.HARVEST, Domain.ICE, Domain.PLANTS})
 SEASON_DOMAIN_WORDS = ", ".join(domain.value for domain in Domain if domain in SEASON_DOMAINS)
+
+
+def has_trait(kind: WeatherKind | None, trait: WeatherTrait) -> bool:
+    return kind is not None and trait in WEATHER[kind].traits
+
+
+def with_trait(*traits: WeatherTrait) -> frozenset[WeatherKind]:
+    return frozenset(kind for kind, spec in WEATHER.items() if spec.traits & set(traits))

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import TRADE_MODE_TRAITS, having
 from aerona.catalog.nature_kinds50 import CARRIERS, COAST_FORMS, LOCAL_CAUSES, SEDIMENTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.disease import OutbreakRow
@@ -14,6 +15,7 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, TerrainKind
+from aerona.domain.enums.life_traits import TradeModeTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.water import CoastForm, LocalClimateCause, SedimentCarrier
 from aerona.engine.context import TickContext
@@ -32,7 +34,7 @@ COAST_OF_KIND: dict[CoastKind, CoastForm] = {
     CoastKind.HARBOUR_SITE: CoastForm.LAGOON,
     CoastKind.REEF: CoastForm.REEF,
 }
-WATER_MODES = frozenset({TradeMode.RIVER, TradeMode.SEA})
+WATER_MODES = having(TRADE_MODE_TRAITS, TradeModeTrait.WATER_MODES)
 THOUSAND = 1000
 ROUGH = 60
 HIGH = 70

@@ -1,9 +1,11 @@
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_traits import materials_with
 from aerona.catalog.mind import CRAFT_SKILLS, SKILLS
+from aerona.core.dispatch import Handlers
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import InspirationRow, SkillRow
@@ -13,6 +15,7 @@ from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityType, MortalRole
+from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import InspirationKind, InspirationState, MoodState, PreferenceKind, SkillFamily, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -38,7 +41,7 @@ SEERS = frozenset({MortalRole.PRIEST, MortalRole.SAGE})
 FIGHTERS = frozenset(
     {MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.HERO, MortalRole.CAPTAIN, MortalRole.HUNTER, MortalRole.OFFICER, MortalRole.PILOT}
 )
-FEVER_MATERIALS = (MaterialKind.GOLD, MaterialKind.SILVER, MaterialKind.IRON, MaterialKind.BRONZE, MaterialKind.STONE, MaterialKind.WOOD, MaterialKind.GLASS)
+FEVER_MATERIALS = materials_with(MaterialTrait.FEVER)
 ITEM_POWER = 3
 
 
@@ -94,6 +97,10 @@ async def insight(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> N
     row.state = InspirationState.FULFILLED
 
 
+SUDDEN: Handlers[InspirationKind, Callable[[TickContext, EntityRow, InspirationRow], Awaitable[None]]] = Handlers(InspirationKind)
+
+
+@SUDDEN.on(InspirationKind.TECHNICAL_BREAKTHROUGH)
 async def breakthrough(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> None:
     community = await community_of(ctx.session, mortal)
     holder = community.id if community is not None else mortal.id
@@ -104,6 +111,7 @@ async def breakthrough(ctx: TickContext, mortal: EntityRow, row: InspirationRow)
     row.state = InspirationState.FULFILLED
 
 
+@SUDDEN.on(InspirationKind.ARTISTIC_VISION)
 async def vision(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> None:
     await shift_standing(ctx.session, mortal, "renown", ctx.rules.aspirations.vision_renown, ctx.epoch, default=0)
     community = await community_of(ctx.session, mortal)
@@ -113,6 +121,7 @@ async def vision(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> No
     row.state = InspirationState.FULFILLED
 
 
+@SUDDEN.on(InspirationKind.SPIRITUAL_INSIGHT)
 async def revelation(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> None:
     await shift_standing(ctx.session, mortal, "piety", ctx.rules.aspirations.vision_renown, ctx.epoch, default=0)
     community = await community_of(ctx.session, mortal)
@@ -120,13 +129,6 @@ async def revelation(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -
         shift_stat(community, "piety", ctx.rules.aspirations.vision_renown // 2, 0)
         row.result_node_id = community.id
     row.state = InspirationState.FULFILLED
-
-
-SUDDEN: Mapping[InspirationKind, Callable[[TickContext, EntityRow, InspirationRow], Awaitable[None]]] = {
-    InspirationKind.TECHNICAL_BREAKTHROUGH: breakthrough,
-    InspirationKind.ARTISTIC_VISION: vision,
-    InspirationKind.SPIRITUAL_INSIGHT: revelation,
-}
 
 
 async def make_masterwork(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> bool:

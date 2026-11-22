@@ -123,6 +123,7 @@ async def magic_sites(ctx: TickContext) -> None:
     "table.stars",
     "table.structure_profiles",
     "table.thrones",
+    "table.traits",
     "table.worlds",
 )
 @writes(

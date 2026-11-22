@@ -3,6 +3,9 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, or_, select
 
+from aerona.catalog.life.crafts import SCHOOLING
+from aerona.catalog.life.domain import GROWN
+from aerona.catalog.life.folk_knowledge import THEORY_DOMAINS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.crafts import NumberSystemRow
@@ -17,15 +20,12 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.discovery import TheoryDomain
-from aerona.domain.enums.ecology import GROWN
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.folk_knowledge import FolkDomain, FolkTaking, LoreHolders, LoreTransmission, NumberReading
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.games import neighbours
-from aerona.engine.crafts.numbers import SCHOOLING
 from aerona.engine.folk_knowledge.truth import KIND_DOMAINS, ROAMING, blames, hurts, misjudged, mistaken, truth_of
 from aerona.engine.forecasting.reading import sky_marks
 from aerona.engine.lore.research import has_technique
@@ -38,14 +38,6 @@ from aerona.engine.recording.terms import explaining, term
 
 FRAIL = frozenset({LoreHolders.ELDERS, LoreHolders.SPECIALISTS})
 UNWRITTEN = frozenset({LoreTransmission.ORAL, LoreTransmission.APPRENTICESHIP, LoreTransmission.RITE})
-THEORY_DOMAINS: dict[TheoryDomain, tuple[FolkDomain, ...]] = {
-    TheoryDomain.MEDICINE: (FolkDomain.BODY, FolkDomain.ILLNESS),
-    TheoryDomain.COSMOLOGY: (FolkDomain.SKY, FolkDomain.TIME),
-    TheoryDomain.MATTER: (FolkDomain.MATTER,),
-    TheoryDomain.LIFE: (FolkDomain.PLANTS, FolkDomain.ANIMALS),
-    TheoryDomain.MIND: (FolkDomain.MIND,),
-    TheoryDomain.SOCIETY: (FolkDomain.SOCIETY,),
-}
 CALMING = frozenset({NumberReading.LUCKY})
 TROUBLING = frozenset({NumberReading.UNLUCKY, NumberReading.FORBIDDEN})
 

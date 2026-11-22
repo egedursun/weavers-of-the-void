@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.factions import CLASS_OF_KIND
 from aerona.constants.units import PERCENT
 from aerona.db.faction_kinds import kind_of
 from aerona.db.tables.entities import EntityRow
@@ -8,7 +9,6 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
-from aerona.engine.factions.book import CLASS_OF_KIND
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import shift_stat

@@ -2,6 +2,8 @@ from collections import defaultdict
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.powers import FADE_POWER_ORIGINS, TRAIN_POWER_STATES
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, POWER_STATE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmography import PhenomenonFootprintRow
@@ -15,9 +17,9 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.culture import RiteEffectKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import LifeStageTrait, PowerStateTrait
 from aerona.domain.enums.minds import MindOrigin, MindSeat
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.powers import PowerDeviceEffect, PowerOrigin, PowerState, PowerTrigger, PowerVisibility
 from aerona.domain.enums.records import InstrumentKind, StepAction, StepOutcome
 from aerona.domain.enums.society import CreatureTrait
@@ -37,8 +39,8 @@ from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import StepDraft, record
 
 E = RiteEffectKind
-QUIET = frozenset({PowerState.LATENT, PowerState.EXHAUSTED, PowerState.SUPPRESSED, PowerState.LOST})
-GROWN = frozenset({LifeStage.ADULT, LifeStage.ELDER, LifeStage.ANCIENT})
+QUIET = having(POWER_STATE_TRAITS, PowerStateTrait.QUIET)
+GROWN = having(LIFE_STAGE_TRAITS, LifeStageTrait.GROWN)
 
 
 async def grown(ctx: TickContext, holder: EntityRow) -> bool:
@@ -107,7 +109,7 @@ async def recover(ctx: TickContext, power: PowerRow) -> None:
 
 async def fade(ctx: TickContext, power: PowerRow, holder: EntityRow) -> None:
     span = stat_or(holder, "lifespan", 0)
-    if not span or power.origin in {PowerOrigin.MADE, PowerOrigin.GROWN, PowerOrigin.HELD}:
+    if not span or power.origin in FADE_POWER_ORIGINS:
         return
     if stat_or(holder, "age", 0) * PERCENT >= span * ctx.rules.powers.fade_age_pct and "strength" not in power.locked and power.strength > 1:
         power.strength -= 1
@@ -290,7 +292,7 @@ async def hive_minds(ctx: TickContext) -> int:
 
 
 async def train(ctx: TickContext, power: PowerRow) -> None:
-    if power.origin is not PowerOrigin.DISCIPLINE or power.state not in {PowerState.ACTIVE, PowerState.LATENT}:
+    if power.origin is not PowerOrigin.DISCIPLINE or power.state not in TRAIN_POWER_STATES:
         return
     if "control" not in power.locked:
         power.control = clamp_int(power.control + ctx.rules.powers.control_gain, 0, PERCENT)

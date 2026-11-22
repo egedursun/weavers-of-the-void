@@ -37,6 +37,7 @@ from aerona.catalog.heraldry import (
     VALUE_POOLS,
 )
 from aerona.catalog.kinds.motifs import MOTIF_SOURCES
+from aerona.catalog.life_traits import FACTION_KIND_TRAITS, having
 from aerona.core.grammar import an
 from aerona.core.random import SeededRandom
 from aerona.db.tables.collective import ARMS_FIELDS, ArmsRow
@@ -61,7 +62,7 @@ from aerona.domain.enums.collective import (
 )
 from aerona.domain.enums.demography import MotifSource
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.life_traits import FactionKindTrait
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
@@ -72,8 +73,8 @@ from aerona.engine.mind.book import stored_values
 from aerona.engine.recording.record import record
 
 H = HeraldryHolderKind
-ORDERS = frozenset({FactionKind.WARRIOR_ORDER, FactionKind.HOLY_ORDER, FactionKind.MAGE_ORDER})
-GUILDS = frozenset({FactionKind.MERCHANT_GUILD, FactionKind.CRAFT_GUILD, FactionKind.THIEVES_GUILD, FactionKind.WARRIOR_ORDER, FactionKind.HOLY_ORDER})
+ORDERS = having(FACTION_KIND_TRAITS, FactionKindTrait.ORDERS)
+GUILDS = having(FACTION_KIND_TRAITS, FactionKindTrait.HERALDRY_GUILDS)
 DESIGN_FIELDS = tuple(name for name in ARMS_FIELDS if name not in ("motto", "emblem_system_id"))
 STRONGEST = 3
 TRIES = 24

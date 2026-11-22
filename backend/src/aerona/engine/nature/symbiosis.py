@@ -4,13 +4,15 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.domestication import HOUSED_STAGES
+from aerona.catalog.life.domain import GROWN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.nature import SpeciesRelationRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.ecology import GROWN, SIZE_ORDER, DomesticationStage
+from aerona.domain.enums.ecology import SIZE_ORDER
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.nature import SymbiosisKind
@@ -24,7 +26,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
 K = SymbiosisKind
-HOUSED = frozenset({DomesticationStage.DOMESTICATED, DomesticationStage.BREED})
+HOUSED = HOUSED_STAGES
 
 
 @dataclass

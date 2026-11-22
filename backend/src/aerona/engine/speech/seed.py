@@ -1,26 +1,17 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.speech import FORM_AXES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.speech import HumourStyleRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
-from aerona.domain.enums.speech import HumourForm
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import stored_values
 from aerona.engine.primitives.numbers import clamp_int
 
 LEANING = 50
-FORM_AXES: dict[ValueAxis, HumourForm] = {
-    ValueAxis.TRUTH: HumourForm.IRONY,
-    ValueAxis.FRIENDSHIP: HumourForm.TEASING,
-    ValueAxis.ARTWORK: HumourForm.STORYTELLING,
-    ValueAxis.LEISURE: HumourForm.ABSURD,
-    ValueAxis.COMPETITION: HumourForm.WORDPLAY,
-    ValueAxis.SUPERSTITION: HumourForm.RITUAL_CLOWNING,
-    ValueAxis.LAW: HumourForm.SATIRE,
-}
 
 
 def half(value: int) -> int:

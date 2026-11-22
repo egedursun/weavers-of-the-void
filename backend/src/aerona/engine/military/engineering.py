@@ -1,16 +1,18 @@
 from collections.abc import Sequence
 
+from aerona.catalog.life_traits import STANCE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.domain.enums.environment import RiverClass, ScarKind
+from aerona.domain.enums.life_traits import StanceTrait
 from aerona.domain.enums.military import Stance, UnitKind
 from aerona.engine.environment.book import add_scar
 from aerona.engine.military.campaign import bridged, on_road, plundered_share
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.rules.registry import Rules
 
-LAYING = frozenset({Stance.MARCH, Stance.ENTRENCH, Stance.GARRISON, Stance.BESIEGE})
+LAYING = having(STANCE_TRAITS, StanceTrait.LAYING)
 RIVERS = frozenset({RiverClass.RIVER, RiverClass.GREAT_RIVER})
 
 

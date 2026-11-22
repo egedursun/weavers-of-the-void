@@ -2,15 +2,18 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.conditions import AIDED_CONDITIONS
+from aerona.catalog.life.crafts import FROM_SKILL
+from aerona.catalog.life_traits import ASSISTIVE_AID_TRAITS, having
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.crafts import AssistiveAidRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.crafts import AssistiveAid
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import AssistiveAidTrait
 from aerona.domain.enums.mind import SkillKind
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.chemistry import knows
@@ -18,17 +21,8 @@ from aerona.engine.mortal.learning import practise_subject
 from aerona.engine.primitives.naming import seed_of
 
 LENSES = (Technique.ASTRONOMY_INSTRUMENTS,)
-FROM_CONDITION = {
-    ConditionKind.AGE_BLINDNESS: AssistiveAid.SPECTACLES,
-    ConditionKind.AGE_DEAFNESS: AssistiveAid.HEARING_HORN,
-    ConditionKind.WITHERED_LIMB: AssistiveAid.CANE,
-}
-FROM_SKILL = {
-    SkillKind.ASTRONOMY: AssistiveAid.TELESCOPE,
-    SkillKind.SMITHING: AssistiveAid.MAGNIFIER,
-    SkillKind.CARPENTRY: AssistiveAid.MAGNIFIER,
-}
-GROUND_LENS = frozenset({AssistiveAid.SPECTACLES, AssistiveAid.TELESCOPE, AssistiveAid.MAGNIFIER})
+FROM_CONDITION = AIDED_CONDITIONS
+GROUND_LENS = having(ASSISTIVE_AID_TRAITS, AssistiveAidTrait.GROUND_LENS)
 SKILLED = 3
 
 

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.conditions import OPEN_INJURY_STATES
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.body import InjuryRow
@@ -19,7 +20,6 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import SentenceRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import OPEN_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CurseKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType

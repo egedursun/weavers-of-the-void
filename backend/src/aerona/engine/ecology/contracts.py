@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.ecology import OPEN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.contracts import MonsterContractRow
@@ -27,7 +28,6 @@ from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import RoleValue, StepDraft, record
 
-OPEN = (ContractStatus.POSTED, ContractStatus.TAKEN)
 MIDDLING = 50
 
 

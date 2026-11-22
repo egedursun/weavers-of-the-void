@@ -1,6 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.goods_traits import commodities_with
+from aerona.catalog.life.domain import GROWN
+from aerona.catalog.life_traits import SPECIES_CLASS_TRAITS, having
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.ecology import SpeciesProductRow, SpeciesProfileRow
 from aerona.db.tables.economy import WorldMaterialRow
@@ -8,20 +11,22 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.folk_knowledge import FolkClassRow
 from aerona.db.tables.node import NodeRow
-from aerona.domain.enums.ecology import GROWN, SpeciesClass
+from aerona.domain.enums.ecology import SpeciesClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.folk_knowledge import FolkDomain, FolkTaking
+from aerona.domain.enums.goods_traits import CommodityTrait
+from aerona.domain.enums.life_traits import SpeciesClassTrait
 from aerona.domain.enums.node import NodeKind
 
 KIND_DOMAINS = frozenset({FolkDomain.PLANTS, FolkDomain.ANIMALS, FolkDomain.ILLNESS, FolkDomain.MATTER, FolkDomain.SKY, FolkDomain.LAND, FolkDomain.WATERS})
 BENIGN = frozenset({FolkTaking.FOOD, FolkTaking.MEDICINE, FolkTaking.HARMLESS})
 HARMFUL = frozenset({FolkTaking.POISON, FolkTaking.DANGER, FolkTaking.CURSE})
 MEANINGS = frozenset({FolkTaking.OMEN, FolkTaking.SACRED})
-ROAMING = frozenset({SpeciesClass.ANIMAL, SpeciesClass.VERMIN})
+ROAMING = having(SPECIES_CLASS_TRAITS, SpeciesClassTrait.ROAMING)
 SKY_KINDS = frozenset({NodeKind.STAR, NodeKind.WORLD, NodeKind.GALAXY, NodeKind.CLUSTER})
-HEALING_GOODS = frozenset({CommodityKind.MEDICINE, CommodityKind.HERBS})
+HEALING_GOODS = frozenset(commodities_with(CommodityTrait.HEALING))
 DANGER_AT = 60
 TAINT_AT = 60
 

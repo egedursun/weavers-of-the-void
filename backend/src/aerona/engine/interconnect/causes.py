@@ -1,28 +1,9 @@
-from types import MappingProxyType
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.interconnect import WAR_CAUSE_INCIDENTS
 from aerona.db.repositories.chronicle import ChronicleRepository
 from aerona.domain.enums.war import WarCause
 
-WAR_CAUSE_INCIDENTS: MappingProxyType[WarCause, tuple[str, ...]] = MappingProxyType(
-    {
-        WarCause.VENDETTA: ("vendetta.", "memory.vengeance", "mortal.death.cause"),
-        WarCause.GRUDGE: ("grudges.",),
-        WarCause.DIVINE_GRUDGE: ("grudges.holy_war", "grudges."),
-        WarCause.BETRAYAL: ("treaty.broken",),
-        WarCause.DEBT: ("civilization.debt_late", "civilization.loan"),
-        WarCause.INDEPENDENCE: ("civilization.independence", "polity.secession"),
-        WarCause.UPRISING: ("polity.succession_war", "polity.usurped", "war.uprising"),
-        WarCause.TRIBUTE_REVOLT: ("war.ended_tribute", "tribute"),
-        WarCause.RESOURCE: ("resource_conflict", "trade.seize_resource"),
-        WarCause.TRADE_ROUTE: ("trade_route.",),
-        WarCause.INCITED: ("tools.son.incite",),
-        WarCause.SCHISM: ("faith.", "schism"),
-        WarCause.ESPIONAGE: ("espionage.",),
-        WarCause.SABOTAGE: ("espionage.", "sabotage"),
-    }
-)
 SUCCESSION_INCIDENTS = ("mortal.death", "polity.usurped", "polity.succession")
 KILLING_INCIDENTS = ("mortal.death.cause", "war.battle.", "duel.", "memory.vengeance")
 

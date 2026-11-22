@@ -2,14 +2,17 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.childhood import HARSH, SOCIABLE, THEORY_SPEED, YOUNG_ONES_LIFE_STAGES
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.childhood import InfantCareRow, PedagogyRow, SocializationRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.childhood import CarryWay, InfantCarer, InfantFeeding, PedagogyTheory, SleepArrangement, SocializationTechnique
+from aerona.domain.enums.childhood import CarryWay, InfantCarer, InfantFeeding, SleepArrangement
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause, LifeStage
@@ -25,7 +28,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 
 TEN = 10
-GROWING = frozenset({LifeStage.CHILD, LifeStage.YOUTH})
+GROWING = having(LIFE_STAGE_TRAITS, LifeStageTrait.YOUNG)
 FEEDING_STEPS = {
     InfantFeeding.NONE_NEEDED: 2,
     InfantFeeding.MADE_FOOD: 1,
@@ -37,16 +40,6 @@ FEEDING_STEPS = {
 CARER_STEPS = {InfantCarer.SPECIALIST: 1, InfantCarer.MADE_MIND: 1, InfantCarer.KIN: 0, InfantCarer.COMMUNITY: 0}
 CARRY_STEPS = {CarryWay.CARRIED: 1, CarryWay.CRADLED: 0, CarryWay.LEFT_TENDED: -1}
 SLEEP_STEPS = {SleepArrangement.WITH_PARENT: 1, SleepArrangement.WITH_SIBLINGS: 0, SleepArrangement.COMMUNAL: 0, SleepArrangement.APART: -1}
-THEORY_SPEED = {
-    PedagogyTheory.ROTE: 60,
-    PedagogyTheory.DIALECTIC: 80,
-    PedagogyTheory.APPRENTICESHIP: 70,
-    PedagogyTheory.DISCOVERY: 90,
-    PedagogyTheory.RITUAL_TRANSMISSION: 50,
-    PedagogyTheory.EXAMINATION: 70,
-    PedagogyTheory.NETWORK_LEARNING: 100,
-    PedagogyTheory.MIND_TRANSFER: 120,
-}
 AIM_AXES: tuple[tuple[str, ValueAxis, int], ...] = (
     ("aim_obedience", ValueAxis.HIERARCHY, 1),
     ("aim_obedience", ValueAxis.LOYALTY, 1),
@@ -57,8 +50,6 @@ AIM_AXES: tuple[tuple[str, ValueAxis, int], ...] = (
     ("aim_piety", ValueAxis.PIETY, 1),
     ("aim_craft", ValueAxis.CRAFTSMANSHIP, 1),
 )
-HARSH = (SocializationTechnique.SHAME, SocializationTechnique.PUNISHMENT, SocializationTechnique.RITUAL_ORDEAL)
-SOCIABLE = (SocializationTechnique.PLAY, SocializationTechnique.PEER_GROUP)
 SCHOOLS = frozenset({StructureKind.SCHOOL, StructureKind.ACADEMY, StructureKind.UNIVERSITY})
 
 
@@ -79,7 +70,7 @@ async def young_ones(ctx: TickContext) -> list[tuple[EntityRow, MortalProfileRow
         .where(
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
-            MortalProfileRow.life_stage.in_([LifeStage.INFANT, LifeStage.CHILD, LifeStage.YOUTH]),
+            MortalProfileRow.life_stage.in_(YOUNG_ONES_LIFE_STAGES),
         )
         .order_by(EntityRow.id)
     )

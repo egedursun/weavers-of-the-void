@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.senses import SPIRITS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.dominion import DominionRow
 from aerona.db.tables.entities import EntityRow
@@ -15,7 +16,6 @@ from aerona.engine.context import TickContext
 from aerona.engine.intrigue.secrets import learn
 from aerona.engine.lore.rites import countered
 from aerona.engine.nature.effects import sensed
-from aerona.engine.nature.senses import SPIRITS
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.recording.record import record

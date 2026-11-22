@@ -1,17 +1,19 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.belonging import FAULT_LAYERS
+from aerona.catalog.life_traits import IDENTITY_LAYER_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.domain.enums.belonging import IdentityLayer
+from aerona.domain.enums.life_traits import IdentityLayerTrait
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
-FAULT_LAYERS = (IdentityLayer.PEOPLE, IdentityLayer.FAITH, IdentityLayer.LOCALITY)
-GROUP_LAYERS = frozenset({IdentityLayer.HOUSE, IdentityLayer.PROFESSION, IdentityLayer.CIRCLE, IdentityLayer.LOCALITY})
+GROUP_LAYERS = having(IDENTITY_LAYER_TRAITS, IdentityLayerTrait.GROUP_LAYERS)
 
 
 @memoized(HeldIdentityRow)

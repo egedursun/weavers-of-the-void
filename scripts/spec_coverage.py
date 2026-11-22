@@ -10,6 +10,8 @@ SPEC = ROOT / "docs" / "spec" / "13-depth-expansion.md"
 MATRIX = ROOT / "docs" / "spec" / "13-coverage.md"
 MINDS_SPEC = ROOT / "docs" / "spec" / "16-minds-powers-living-craft.md"
 MINDS_MATRIX = ROOT / "docs" / "spec" / "16-coverage.md"
+EXPANSIONS_SPEC = ROOT / "docs" / "spec" / "17-w52-expansions.md"
+EXPANSIONS_MATRIX = ROOT / "docs" / "spec" / "17-coverage.md"
 
 COLUMNS = ("ID", "Kind", "Title", "Spec", "Module", "Trigger", "Lever", "UI", "LLM", "Templates", "Backfill", "Test", "Status")
 WORK_COLUMNS = ("Module", "Trigger", "Lever", "UI", "LLM", "Templates", "Backfill", "Test")
@@ -248,6 +250,13 @@ MATRICES = (
         MINDS_MATRIX,
         "Minds, powers and living craft coverage matrix",
         "`docs/spec/16-minds-powers-living-craft.md` (spec 5.10)",
+        extended=True,
+    ),
+    Matrix(
+        EXPANSIONS_SPEC,
+        EXPANSIONS_MATRIX,
+        "W52 expansions coverage matrix",
+        "`docs/spec/17-w52-expansions.md` (spec 0.2)",
         extended=True,
     ),
 )

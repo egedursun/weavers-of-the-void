@@ -1,35 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.constructs import CommandToken, MindWill, OrderCondition
-
-COMMAND_TOKEN = total(
-    CommandToken,
-    {
-        CommandToken.NONE: Defined("No token", checked_by=("engine.constructs.orders.holder_of",), used_by=("db.tables.constructs.InstructionSetRow",)),
-        CommandToken.ITEM: Defined(
-            "A held item",
-            checked_by=("engine.constructs.making.TOKEN_CLASS",),
-            used_by=("engine.constructs.making.make_construct", "engine.constructs.orders.OWNED_TOKENS", "engine.constructs.wards.forge_seal"),
-        ),
-        CommandToken.WORD: Defined(
-            "A spoken word",
-            checked_by=(),
-            used_by=(
-                "engine.constructs.making.make_construct",
-                "services.player.constructs.RulesDraft",
-                "tools.mortal.minds.bind_mind",
-                "tools.son.arts.seize_construct",
-            ),
-        ),
-        CommandToken.BLOODLINE: Defined(
-            "A bloodline", checked_by=("engine.constructs.orders.holder_of",), used_by=("engine.constructs.making.make_construct",)
-        ),
-        CommandToken.OFFICE: Defined("An office", checked_by=("engine.constructs.making.token_for", "engine.constructs.orders.holder_of"), used_by=()),
-        CommandToken.NETWORK_KEY: Defined(
-            "A network key", checked_by=("engine.constructs.making.TOKEN_CLASS",), used_by=("engine.constructs.orders.OWNED_TOKENS",)
-        ),
-    },
-)
+from aerona.domain.enums.constructs import MindWill, OrderCondition
 
 MIND_WILL = total(
     MindWill,

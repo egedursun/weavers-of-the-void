@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.cuisine import CATEGORY_ROLES, COURSE_SLOTS
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.cuisine import DishIngredientRow, DishRow, DishStepRow
 from aerona.db.tables.entities import EntityRow
@@ -7,7 +8,6 @@ from aerona.db.tables.kinds import KindHoldingRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.kinds import KindConcept, KindSpread, KindStance
 from aerona.engine.context import TickContext
-from aerona.engine.cuisine.dishes import CATEGORY_ROLES, COURSE_SLOTS
 from aerona.engine.economy.good_kinds import GoodBook, ensure_built_in_goods
 
 FOODWAYS_FIXUP = "w48_goods_and_foodways"

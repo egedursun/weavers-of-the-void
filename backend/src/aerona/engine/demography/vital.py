@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from aerona.catalog.life.demography import DEATH_RATES
 from aerona.catalog.reproduction import SexSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow
@@ -19,7 +20,6 @@ from aerona.engine.services.war import ongoing_wars
 from aerona.rules.registry import Rules
 
 A = AgeBand
-DEATH_RATES = (A.CHILD, A.ADULT, A.ELDER)
 
 
 @dataclass(frozen=True)

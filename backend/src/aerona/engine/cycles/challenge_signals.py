@@ -1,8 +1,9 @@
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.concealment import PublicKnowledgeRow
 from aerona.db.tables.culture import HolderTechniqueRow
@@ -22,10 +23,15 @@ def ids(towns: list[EntityRow]) -> list[int]:
     return [town.id for town in towns]
 
 
+SIGNALS: Handlers[ChallengeKind, Signal] = Handlers(ChallengeKind)
+
+
+@SIGNALS.on(ChallengeKind.COLLAPSE)
 async def collapse(ctx: TickContext, profile: PolityProfileRow, _towns: list[EntityRow]) -> int:
     return clamp_int((ctx.rules.challenge_response.collapse_below - profile.stability) * 2, 0, PERCENT)
 
 
+@SIGNALS.on(ChallengeKind.SECESSION)
 async def secession(ctx: TickContext, profile: PolityProfileRow, towns: list[EntityRow]) -> int:
     restless = await ctx.session.scalar(
         select(func.count())
@@ -35,6 +41,7 @@ async def secession(ctx: TickContext, profile: PolityProfileRow, towns: list[Ent
     return clamp_int(int(restless or 0) * PERCENT // max(1, len(towns)), 0, PERCENT)
 
 
+@SIGNALS.on(ChallengeKind.MIGRATION_WAVE)
 async def migration_wave(ctx: TickContext, _profile: PolityProfileRow, towns: list[EntityRow]) -> int:
     arrived = await ctx.session.scalar(
         select(func.count())
@@ -44,6 +51,7 @@ async def migration_wave(ctx: TickContext, _profile: PolityProfileRow, towns: li
     return clamp_int(int(arrived or 0) * ctx.rules.challenge_response.signal_step, 0, PERCENT)
 
 
+@SIGNALS.on(ChallengeKind.REVELATION)
 async def revelation(ctx: TickContext, _profile: PolityProfileRow, towns: list[EntityRow]) -> int:
     known = await ctx.session.scalar(
         select(func.max(PublicKnowledgeRow.know_pct)).where(
@@ -53,6 +61,7 @@ async def revelation(ctx: TickContext, _profile: PolityProfileRow, towns: list[E
     return int(known or 0)
 
 
+@SIGNALS.on(ChallengeKind.RUNAWAY)
 async def runaway(ctx: TickContext, profile: PolityProfileRow, towns: list[EntityRow]) -> int:
     owners = [profile.polity_entity_id, *ids(towns)]
     loose = await ctx.session.scalar(
@@ -61,12 +70,14 @@ async def runaway(ctx: TickContext, profile: PolityProfileRow, towns: list[Entit
     return clamp_int(int(loose or 0) * ctx.rules.challenge_response.signal_step * 2, 0, PERCENT)
 
 
+@SIGNALS.on(ChallengeKind.SOURCE_DEPLETION)
 async def source_depletion(ctx: TickContext, profile: PolityProfileRow, towns: list[EntityRow]) -> int:
     scopes = [profile.polity_entity_id, *ids(towns)]
     weakest = await ctx.session.scalar(select(func.min(PowerSourceRow.stability)).where(PowerSourceRow.scope_node_id.in_(scopes)))
     return clamp_int(ctx.rules.challenge_response.depleted_below - int(weakest), 0, PERCENT) * 2 if weakest is not None else 0
 
 
+@SIGNALS.on(ChallengeKind.TECHNOLOGICAL_SHOCK)
 async def technological_shock(ctx: TickContext, profile: PolityProfileRow, towns: list[EntityRow]) -> int:
     learned = await ctx.session.scalar(
         select(func.count())
@@ -74,17 +85,6 @@ async def technological_shock(ctx: TickContext, profile: PolityProfileRow, towns
         .where(HolderTechniqueRow.holder_entity_id.in_([profile.polity_entity_id, *ids(towns)]), HolderTechniqueRow.since_epoch == ctx.epoch)
     )
     return clamp_int(int(learned or 0) * ctx.rules.challenge_response.signal_step, 0, PERCENT)
-
-
-SIGNALS: Mapping[ChallengeKind, Signal] = {
-    ChallengeKind.COLLAPSE: collapse,
-    ChallengeKind.SECESSION: secession,
-    ChallengeKind.MIGRATION_WAVE: migration_wave,
-    ChallengeKind.REVELATION: revelation,
-    ChallengeKind.RUNAWAY: runaway,
-    ChallengeKind.SOURCE_DEPLETION: source_depletion,
-    ChallengeKind.TECHNOLOGICAL_SHOCK: technological_shock,
-}
 
 
 async def signalled(ctx: TickContext, profile: PolityProfileRow, towns: list[EntityRow]) -> dict[ChallengeKind, int]:

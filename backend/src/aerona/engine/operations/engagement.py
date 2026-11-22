@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.engagement import MOVING_SECTIONS, SHIELDED, WATERBORNE, chain_of, reached
 from aerona.catalog.equipment import FAMILIES
+from aerona.catalog.life.operations import HOLED_SECTIONS
 from aerona.catalog.operations import RAKED_SECTIONS, SHOT_TARGETS, SHOT_WEIGHT
 from aerona.catalog.vehicles import FRAMES
 from aerona.constants.units import PERCENT
@@ -391,13 +392,7 @@ def pick_weapon(rng: SeededRandom, weapons: list[Weapon], total: float) -> Weapo
 
 async def shot_effect(fight: Fight, shooter: Party, target: Party, *, section: VehicleSection, flammable: bool, round_index: int) -> None:
     sail = fight.ctx.rules.age_of_sail
-    if shooter.state.shot is ShotKind.ROUND and section in {
-        VehicleSection.HULL,
-        VehicleSection.KEEL,
-        VehicleSection.BOW,
-        VehicleSection.STERN,
-        VehicleSection.HOLD,
-    }:
+    if shooter.state.shot is ShotKind.ROUND and section in HOLED_SECTIONS:
         keep(target.state, "leak", clamp_int(target.state.leak + sail.leak_per_hit, 0, PERCENT))
     elif shooter.state.shot is ShotKind.GRAPE and "crew" not in target.row.locked:
         target.row.crew = max(0, target.row.crew - max(1, target.row.crew * sail.grape_crew_pct // PERCENT))

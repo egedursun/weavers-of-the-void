@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import LENDER_KINDS
 from aerona.db.faction_kinds import of_kinds
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
@@ -7,7 +8,6 @@ from aerona.db.tables.securities import IssuedSecurityRow, StockExchangeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.lore.research import lacks

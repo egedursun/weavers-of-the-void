@@ -1,4 +1,5 @@
 from aerona.catalog.anatomy import anatomy_of
+from aerona.catalog.harm_kinds import DAMAGE
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.domain.enums.body import BodyPlan, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.demography import MartialStyle
@@ -7,7 +8,7 @@ from aerona.domain.enums.integrity import SectionHazard
 from aerona.domain.enums.military import Tactic, UnitKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.vehicles import VehicleFrame
-from aerona.engine.body.hits import FIXED_KINDS, KIND_RULES, cause_mix, kind_for
+from aerona.engine.body.hits import cause_mix, kind_for
 from aerona.engine.demography.peoples import martial_of
 from aerona.engine.military.battle import Field, choose_tactic, fielded, missiles, treat
 from aerona.engine.vehicles.wrecks import wreck_cause
@@ -59,7 +60,7 @@ def test_medics_save_the_wounded_without_any_priest() -> None:
 
 
 def test_every_kind_of_damage_leaves_a_wound_and_every_cause_has_a_mix() -> None:
-    assert set(KIND_RULES) | set(FIXED_KINDS) == set(DamageType)
+    assert set(DAMAGE) == set(DamageType)
     torso = next(part for part in HUMAN.parts if part.key == "torso")
     for damage in DamageType:
         assert isinstance(kind_for(RULES.injury, damage, torso, 3, HarmCause.BATTLE), InjuryKind)

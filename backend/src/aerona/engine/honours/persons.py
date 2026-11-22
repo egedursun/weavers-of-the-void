@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import FACTION_KIND_TRAITS, having
 from aerona.catalog.renown import ACT_RENOWN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -13,8 +14,8 @@ from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.renown import DeedRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.honours import HonourPrivilege
+from aerona.domain.enums.life_traits import FactionKindTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.renown import ReputationAxis
@@ -29,7 +30,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import members_of, ruler_of_realm
 
 P = HonourPrivilege
-ORDER_KINDS = frozenset({FactionKind.WARRIOR_ORDER, FactionKind.HOLY_ORDER, FactionKind.MAGE_ORDER})
+ORDER_KINDS = having(FACTION_KIND_TRAITS, FactionKindTrait.ORDERS)
 
 
 @dataclass

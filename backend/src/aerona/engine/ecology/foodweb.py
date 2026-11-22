@@ -3,12 +3,13 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.diets import HUNTERS, INEDIBLE
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import HUNTERS, SIZE_ORDER, Diet
+from aerona.domain.enums.ecology import SIZE_ORDER, Diet
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
@@ -21,7 +22,6 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import shift_stat, stat
 
-INEDIBLE = frozenset({Diet.VOID, Diet.MINERAL})
 T = CreatureTrait
 
 

@@ -2,6 +2,7 @@ from collections import Counter, defaultdict
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.phases import EXPLORER_SKILLS, SEER_SKILLS
 from aerona.catalog.place_terrain import BATTLEFIELD_FROM, DEBRIS_FROM, MEGA_RUIN_FROM, WRECK_FROM, kind_spec
 from aerona.catalog.structures import MEGASTRUCTURES
 from aerona.catalog.vehicles import FRAMES
@@ -14,7 +15,6 @@ from aerona.db.tables.warfare import BattleRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.military import VesselStatus
-from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.place import DiscoveryMode, PlaceKind, SecretOrigin
 from aerona.domain.enums.structure import ConstructionState
@@ -44,8 +44,6 @@ from aerona.rules.registry import Rules
 EXPLORER_ROLES = frozenset({MortalRole.EXPLORER, MortalRole.HUNTER, MortalRole.HERO, MortalRole.SCIENTIST, MortalRole.PILOT})
 SEER_ROLES = frozenset({MortalRole.SEER, MortalRole.PRIEST, MortalRole.SAGE, MortalRole.SAINT})
 CALLED = frozenset({MortalRole.EXPLORER, MortalRole.SEER})
-EXPLORER_SKILLS = (SkillKind.TRACKING, SkillKind.NAVIGATION, SkillKind.MOUNTAINEERING)
-SEER_SKILLS = (SkillKind.PROPHECY, SkillKind.SPIRIT_SPEAKING, SkillKind.LORE)
 
 
 async def wrecks_by_region(ctx: TickContext) -> tuple[Counter[int], Counter[int]]:

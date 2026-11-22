@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.happenings import STARVING
 from aerona.constants.units import PERCENT
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
@@ -11,7 +12,6 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityStatus
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.happening import EventPhase
-from aerona.domain.enums.military import StarvationStage
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
@@ -23,8 +23,6 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat, stat_or
 from aerona.engine.services.community_relations import change_relation
-
-STARVING = {StarvationStage.FAMINE: 1.0, StarvationStage.TABOO_BROKEN: 2.0}
 
 
 def severity_scale(ctx: TickContext, event: EntityRow) -> float:

@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 from enum import StrEnum
 
+from aerona.catalog.life.interconnect import CURSE_RULES
 from aerona.catalog.lore import ART_MESSAGES, IDEOLOGY_APPEAL, IDEOLOGY_VALUES, LEGEND_MORALS, RITE_TEMPLATES, TRADITIONS
 from aerona.catalog.techniques import BRANCH_GRAPH, TECHNIQUES
 from aerona.core.grammar import an
@@ -28,7 +29,7 @@ from aerona.db.tables.culture import (
     TraditionParticipationRow,
     TraditionProfileRow,
 )
-from aerona.domain.enums.culture import BacklashKind, CurseKind, MagicSource, ProphecyPredicate, RiteEffectKind
+from aerona.domain.enums.culture import BacklashKind, MagicSource, ProphecyPredicate, RiteEffectKind
 from aerona.engine.interconnect.catalog_culture import CULTURE_RAW
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Mechanic, Subsystem, Surface
 
@@ -635,32 +636,6 @@ def media() -> tuple[Raw, ...]:
         )
         for medium, message in ART_MESSAGES.items()
     )
-
-
-CURSE_RULES = {
-    CurseKind.BLOODTHIRST: "item_curses.bloodthirst_pct",
-    CurseKind.MISFORTUNE: "item_curses.misfortune_pct",
-    CurseKind.WASTING: "item_curses.wasting_pct",
-    CurseKind.MADNESS: "item_curses.madness_pct",
-    CurseKind.BETRAYAL: "item_curses.betrayal_pct",
-    **dict.fromkeys(
-        (
-            CurseKind.BARRENNESS,
-            CurseKind.TRANSFORMATION,
-            CurseKind.SLEEP,
-            CurseKind.SILENCE,
-            CurseKind.FORGETTING,
-            CurseKind.RESTLESSNESS,
-            CurseKind.LINE_CURSE,
-            CurseKind.PLACE_CURSE,
-            CurseKind.COMPULSION,
-            CurseKind.EXPOSURE,
-        ),
-        "item_curses.wider_pct",
-    ),
-    CurseKind.HUNGER: "item_curses.wasting_pct",
-    CurseKind.AGING: "item_curses.aging_years",
-}
 
 
 SCRIPT_RULES = (

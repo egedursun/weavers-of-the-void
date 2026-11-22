@@ -5,6 +5,8 @@ from sqlalchemy import select
 
 from aerona.catalog.genetics import GIFT_LOCI_ORDER, LOCI, LocusSpec
 from aerona.catalog.kinds.gifts import GIFT_STANCES
+from aerona.catalog.life.genetics import LEANED_LOCUSS, SENSE_LOCI
+from aerona.catalog.life_traits import SIZE_CLASS_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.demography import PeopleBiologyRow
@@ -13,10 +15,10 @@ from aerona.db.tables.genetics import AllelePoolRow, GenomeRow
 from aerona.db.tables.nature import SenseProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.divine import DomainHook
-from aerona.domain.enums.ecology import SizeClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.genetics import GiftStance, Locus
+from aerona.domain.enums.life_traits import SizeClassTrait
 from aerona.domain.enums.mind import ActKind, ValueHolder
 from aerona.domain.enums.nature import SenseKind, Thermoregulation
 from aerona.domain.enums.polity import LawKind
@@ -38,13 +40,7 @@ SHARE = "gifted_share"
 COHORTS = "cohort_shares"
 HOT = frozenset({TemperatureBand.WARM, TemperatureBand.HOT, TemperatureBand.SEARING})
 COLD = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
-LARGE = frozenset({SizeClass.LARGE, SizeClass.HUGE, SizeClass.COLOSSAL})
-SENSE_LOCI: dict[Locus, SenseKind] = {
-    Locus.SIGHT: SenseKind.SIGHT,
-    Locus.NIGHT_VISION: SenseKind.NIGHT_VISION,
-    Locus.SMELL: SenseKind.SMELL,
-    Locus.HEARING: SenseKind.HEARING,
-}
+LARGE = having(SIZE_CLASS_TRAITS, SizeClassTrait.RIDEABLE)
 
 
 def normalised(weights: dict[str, float]) -> dict[str, int]:
@@ -81,7 +77,7 @@ def leaned(spec: LocusSpec, rng: SeededRandom, biology: PeopleBiologyRow | None,
                     weights[allele.key] *= (PERCENT + allele.score * LEAN // 5) / PERCENT
                 elif biology.acclimatised in COLD:
                     weights[allele.key] *= (PERCENT + (5 - allele.score) * LEAN // 5) / PERCENT
-        if spec.locus in (Locus.HEIGHT, Locus.GIANT_BLOOD, Locus.MUSCLE, Locus.BONE_DENSITY) and biology.size_class in LARGE:
+        if spec.locus in LEANED_LOCUSS and biology.size_class in LARGE:
             for allele in spec.alleles:
                 weights[allele.key] *= (PERCENT + max(0, allele.score) * LEAN) / PERCENT
         lean = climate_lean(spec.locus, biology)

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import WAR_CAUSE_TRAITS, having
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
@@ -13,9 +14,10 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.life_traits import WarCauseTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.war import WarCause, WarSide, WarStatus
+from aerona.domain.enums.war import WarSide, WarStatus
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.military.orders import raise_standing_army
@@ -36,7 +38,7 @@ STRENGTH = "strength"
 POWER = 3
 WEALTH = "wealth"
 VOWED = frozenset({SocialClass.WARRIOR, SocialClass.NOBLE})
-HOLY_CAUSES = frozenset({WarCause.HOLY_WAR, WarCause.SCHISM})
+HOLY_CAUSES = having(WAR_CAUSE_TRAITS, WarCauseTrait.HOLY_CAUSES)
 
 
 @dataclass

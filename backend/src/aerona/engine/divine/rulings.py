@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 
+from aerona.catalog.life.divine import LEANING_COUNCIL_MOTIONS, MOTION_LABELS, RULING_LASTING
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.repositories.sons import COUNCIL_SEATING, SonRepository
@@ -55,34 +56,7 @@ from aerona.engine.services.conflict import foreign_god_war
 from aerona.engine.transform.run import order
 
 M = CouncilMotion
-LASTING = frozenset({M.COSMIC_TRUCE, M.OUTLAW_RITE, M.PUNISH_SON, M.DIVIDE_WORLDS, M.HOLY_WORLD}) | ORDER_LASTING
-MOTION_LABELS = {
-    M.NONE: "No motion",
-    M.AGAINST_DOOMSDAY: "Stand against the doom",
-    M.JOINT_BLESSING: "Bless one another",
-    M.CONDEMN_REBEL: "Condemn a rebel",
-    M.CALL_FOR_PEACE: "Call for peace",
-    M.WAR_ON_FOREIGN_GOD: "War on a foreign god",
-    M.DIVIDE_WORLDS: "Divide the worlds",
-    M.OUTLAW_RITE: "Outlaw a rite",
-    M.PUNISH_SON: "Punish a son",
-    M.BLESS_HERO: "Bless a hero",
-    M.HOLY_WORLD: "Declare a holy world",
-    M.COSMIC_TRUCE: "Set a cosmic truce",
-    M.PETITION_CREATOR: "Petition the Creator",
-    M.APPOINT_OFFICE: "Appoint a holder to a cosmic office",
-    M.REASSIGN_WORLD: "Give a world to another son",
-    M.OUTLAW_POWER: "Outlaw a god's powers",
-    M.OUTLAW_SOURCE: "Close a source of power",
-    M.ADMIT_MEMBER: "Admit a god to the council",
-    M.EXPEL_MEMBER: "Put a god out of the council",
-    M.RECOGNISE_GOD: "Recognise a new god",
-    M.ESSENCE_TITHE: "Levy a tithe of essence for a common work",
-    M.SET_COUNCIL_RULES: "Change how the council decides",
-    M.REGULATE_MADE_MINDS: "Regulate made minds",
-    M.REGULATE_POWERS: "Regulate powers",
-    M.REGULATE_LIVING_CRAFT: "Regulate living craft",
-}
+LASTING = RULING_LASTING | ORDER_LASTING
 
 
 async def divide(ctx: TickContext) -> list[str]:
@@ -284,7 +258,7 @@ async def leaning(ctx: TickContext, son: SonRow, motion: Motion) -> int:
     martial, mercy = values.get(ValueAxis.MARTIAL, 0), values.get(ValueAxis.MERCY, 0)
     if motion.motion in {M.WAR_ON_FOREIGN_GOD}:
         lean += martial - mercy
-    if motion.motion in {M.COSMIC_TRUCE, M.CALL_FOR_PEACE}:
+    if motion.motion in LEANING_COUNCIL_MOTIONS:
         lean += mercy - martial
     if motion.motion is M.PETITION_CREATOR:
         lean += son.loyalty - PERCENT // 2

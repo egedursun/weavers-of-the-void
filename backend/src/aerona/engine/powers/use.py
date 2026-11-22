@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.kinds.resistances import RESISTANCES
+from aerona.catalog.life_traits import POWER_STATE_TRAITS, having
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
+from aerona.core.dispatch import Handlers
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.minds import MindProfileRow
@@ -14,6 +15,7 @@ from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.fortune import FortuneSourceKind
+from aerona.domain.enums.life_traits import PowerStateTrait
 from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.minds import MindSeat
@@ -48,7 +50,7 @@ from aerona.engine.recording.record import record
 
 WITNESSES = 5
 MADE_SEATS = frozenset({MindSeat.OBJECT, MindSeat.NETWORK, MindSeat.STRUCTURE, MindSeat.MEDIUM})
-USABLE = frozenset({PowerState.ACTIVE, PowerState.STRAINED, PowerState.EMERGING})
+USABLE = having(POWER_STATE_TRAITS, PowerStateTrait.USABLE)
 MIND_FORMS = frozenset({"mind", "emotion"})
 
 
@@ -86,35 +88,46 @@ class Asked:
     target: EntityRow | None
 
 
+BLOCKS: Handlers[RestrictionKind, Callable[[TickContext, Asked], Awaitable[bool]]] = Handlers(RestrictionKind)
+
+
+@BLOCKS.on(RestrictionKind.NEVER_ON_SELF)
 async def on_self(_ctx: TickContext, asked: Asked) -> bool:
     return asked.target is None or asked.target.id == asked.user.id
 
 
+@BLOCKS.on(RestrictionKind.ONLY_IN_PLACE)
 async def out_of_place(_ctx: TickContext, asked: Asked) -> bool:
     return asked.row.ref_node_id is not None and asked.user.location_id != asked.row.ref_node_id
 
 
+@BLOCKS.on(RestrictionKind.ONLY_AGAINST)
 async def wrong_target(_ctx: TickContext, asked: Asked) -> bool:
     ref, target = asked.row.ref_node_id, asked.target
     return ref is not None and (target is None or ref not in {target.id, target.affiliated_entity_id})
 
 
+@BLOCKS.on(RestrictionKind.MUST_TOUCH)
 async def out_of_reach(_ctx: TickContext, asked: Asked) -> bool:
     return asked.target is not None and asked.target.location_id != asked.user.location_id
 
 
+@BLOCKS.on(RestrictionKind.MUST_BE_SEEN)
 async def unseen(ctx: TickContext, asked: Asked) -> bool:
     return not await witnesses_of(ctx, asked.user)
 
 
+@BLOCKS.on(RestrictionKind.MUST_BE_UNSEEN)
 async def seen(ctx: TickContext, asked: Asked) -> bool:
     return bool(await witnesses_of(ctx, asked.user))
 
 
+@BLOCKS.on(RestrictionKind.ONLY_AT_TIME)
 async def out_of_time(ctx: TickContext, asked: Asked) -> bool:
     return not await in_its_time(ctx, asked.power)
 
 
+@BLOCKS.on(RestrictionKind.PRICE_EACH_USE)
 async def unpaid(ctx: TickContext, asked: Asked) -> bool:
     if await points_of(ctx.session, asked.user) <= 0:
         return True
@@ -122,25 +135,13 @@ async def unpaid(ctx: TickContext, asked: Asked) -> bool:
     return False
 
 
+@BLOCKS.on(RestrictionKind.SPOKEN_VOW)
+@BLOCKS.on(RestrictionKind.FORBIDDEN_ACT)
 async def kept(_ctx: TickContext, _asked: Asked) -> bool:
     return False
 
 
-BLOCKS: Mapping[RestrictionKind, Callable[[TickContext, Asked], Awaitable[bool]]] = total(
-    RestrictionKind,
-    {
-        RestrictionKind.NEVER_ON_SELF: on_self,
-        RestrictionKind.ONLY_IN_PLACE: out_of_place,
-        RestrictionKind.ONLY_AGAINST: wrong_target,
-        RestrictionKind.MUST_TOUCH: out_of_reach,
-        RestrictionKind.MUST_BE_SEEN: unseen,
-        RestrictionKind.MUST_BE_UNSEEN: seen,
-        RestrictionKind.ONLY_AT_TIME: out_of_time,
-        RestrictionKind.PRICE_EACH_USE: unpaid,
-        RestrictionKind.SPOKEN_VOW: kept,
-        RestrictionKind.FORBIDDEN_ACT: kept,
-    },
-)
+BLOCKS.seal()
 
 
 async def restriction_factor(ctx: TickContext, power: PowerRow, user: EntityRow, target: EntityRow | None) -> float | None:

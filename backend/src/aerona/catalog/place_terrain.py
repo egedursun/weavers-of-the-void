@@ -109,51 +109,12 @@ PLACE_KINDS = total(
     },
 )
 
-TERRAIN_KINDS: dict[TerrainKind, PlaceKind] = {
-    T.PLAIN: K.VALLEY,
-    T.STEPPE: K.CROSSROADS,
-    T.FOREST: K.FOREST,
-    T.JUNGLE: K.FOREST,
-    T.MARSH: K.SWAMP,
-    T.HILLS: K.MOUNTAIN,
-    T.MOUNTAINS: K.MOUNTAIN,
-    T.HIGH_PASS: K.PASS,
-    T.DESERT: K.CRATER,
-    T.TUNDRA: K.VALLEY,
-    T.ICE_SHEET: K.MOUNTAIN,
-    T.VOLCANIC: K.VOLCANO,
-    T.COAST: K.HARBOUR_SITE,
-    T.ISLAND: K.ISLAND,
-    T.RIVER_VALLEY: K.RIVER,
-    T.CANYON: K.CLIFF,
-    T.UNDERGROUND: K.CAVE,
-    T.CRYSTAL_FIELD: K.CRATER,
-    T.FLESH: K.SWAMP,
-    T.VOID_SHORE: K.CLIFF,
-    T.RUIN_FIELD: K.RUIN,
-    T.URBAN: K.CROSSROADS,
-    T.SEA: K.ISLAND,
-}
 DEFAULT_KIND = PlaceKind.VALLEY
 BATTLEFIELD_FROM = frozenset({PlaceKind.VALLEY, PlaceKind.CROSSROADS})
 WRECK_FROM = frozenset({PlaceKind.ISLAND, PlaceKind.REEF, PlaceKind.HARBOUR_SITE, PlaceKind.CLIFF, PlaceKind.LAKE, PlaceKind.RIVER, PlaceKind.FORD})
 DEBRIS_FROM = frozenset({PlaceKind.CRATER, PlaceKind.VALLEY, PlaceKind.PEAK, PlaceKind.ANOMALY})
 MEGA_RUIN_FROM = frozenset({PlaceKind.RUIN, PlaceKind.CRATER, PlaceKind.VALLEY, PlaceKind.CROSSROADS})
 DEEPENS = {PlaceKind.CAVE: PlaceKind.CAVERN_SYSTEM, PlaceKind.MINE_SITE: PlaceKind.CAVERN_SYSTEM}
-
-TERRAIN_NATURES: dict[TerrainKind, tuple[str, ...]] = {
-    T.MOUNTAINS: ("pass", "cave", "chasm"),
-    T.HILLS: ("hill", "upland", "cave"),
-    T.CANYON: ("chasm", "pass"),
-    T.MARSH: ("marsh", "lake"),
-    T.FOREST: ("forest", "misty grove"),
-    T.JUNGLE: ("forest", "marsh"),
-    T.RIVER_VALLEY: ("river", "valley"),
-    T.COAST: ("cove",),
-    T.DESERT: ("dune", "oasis"),
-    T.STEPPE: ("plain",),
-    T.PLAIN: ("plain", "river"),
-}
 
 
 def height_of(rules: Rules, height: PlaceHeight) -> int:

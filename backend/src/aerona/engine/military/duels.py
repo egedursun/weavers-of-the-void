@@ -3,6 +3,9 @@ from dataclasses import dataclass, field, replace
 
 from sqlalchemy import select
 
+from aerona.catalog.harm_kinds import DAMAGE
+from aerona.catalog.terrain import terrains
+from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyRow, InjuryRow
@@ -14,7 +17,7 @@ from aerona.domain.enums.body import BodyFunction, BodyRegion, DamageType, HarmC
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.environment import TerrainKind, WeatherKind
+from aerona.domain.enums.environment import TerrainKind, TerrainTrait, WeatherKind, WeatherTrait
 from aerona.domain.enums.military import DuelContext, DuelEnd
 from aerona.domain.enums.mind import Attribute, SkillKind, TraitEffect, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
@@ -40,8 +43,7 @@ from aerona.engine.relations.passions import invoke
 from aerona.rules.registry import Rules
 
 ARMOUR_CAP = 0.8
-SLIPPERY = frozenset({TerrainKind.MARSH, TerrainKind.ICE_SHEET, TerrainKind.TUNDRA, TerrainKind.RIVER_VALLEY, TerrainKind.FLESH})
-WET = frozenset({WeatherKind.RAIN, WeatherKind.DOWNPOUR, WeatherKind.STORM, WeatherKind.SNOW, WeatherKind.BLIZZARD, WeatherKind.HAIL})
+SLIPPERY = terrains(TerrainTrait.SLIPPERY)
 REACH_ITEMS = 2
 LANCES = frozenset({ItemClass.SPEAR, ItemClass.POLEARM})
 WEAPON_SKILLS: Mapping[ItemClass, SkillKind] = {
@@ -67,7 +69,6 @@ WEAPON_DAMAGE: Mapping[ItemClass, DamageType] = {
     ItemClass.BOW: DamageType.PIERCE,
     ItemClass.CROSSBOW: DamageType.PIERCE,
 }
-BLOWS: Mapping[DamageType, StepAction] = {DamageType.CUT: StepAction.CUT, DamageType.PIERCE: StepAction.THRUST}
 LOOSED: Mapping[ItemClass, StepAction] = {
     ItemClass.BOW: StepAction.SHOOT,
     ItemClass.CROSSBOW: StepAction.SHOOT,
@@ -280,7 +281,7 @@ def instrument_of(fighter: Fighter) -> tuple[InstrumentKind, int | None, str]:
 
 def blow_of(attacker: Fighter, kind: InstrumentKind, damage: DamageType) -> StepAction:
     loosed = LOOSED.get(attacker.weapon_class) if kind is InstrumentKind.ITEM and attacker.weapon_class is not None else None
-    return loosed or BLOWS.get(damage, StepAction.STRIKE)
+    return loosed or DAMAGE[damage].blow or StepAction.STRIKE
 
 
 def pick(rng: SeededRandom, keys: tuple[str, ...]) -> str | None:
@@ -617,7 +618,7 @@ def set_footing(rules: Rules, fighter: Fighter, terrain: TerrainKind | None, wea
     footing = PERCENT
     if terrain in SLIPPERY:
         footing -= table.terrain_footing
-    if weather in WET:
+    if has_trait(weather, WeatherTrait.WET):
         footing -= table.weather_footing
     footing -= injuries * table.injury_footing
     fighter.footing = max(table.footing_floor, footing)

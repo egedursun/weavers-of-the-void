@@ -4,15 +4,18 @@ from types import MappingProxyType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import VEHICLE_FAMILY_TRAITS, having
 from aerona.catalog.units import UnitSpec
 from aerona.catalog.vehicles import FRAMES, FrameSpec
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.vehicles import VehicleGroupRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import CivilizationTier
+from aerona.domain.enums.life_traits import VehicleFamilyTrait
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.vehicles import VehicleDomain, VehicleFamily, VehicleFrame, VehicleSize, VehicleStatus
 from aerona.engine.collective.designs import draw_design, succeed_design
@@ -27,7 +30,7 @@ from aerona.rules.registry import Rules
 
 D = VehicleDomain
 Y = VehicleFamily
-SIEGE = frozenset({Y.RAM, Y.TOWER, Y.THROWER})
+SIEGE = having(VEHICLE_FAMILY_TRAITS, VehicleFamilyTrait.SIEGE)
 LAND_DOMAINS = frozenset({D.LAND, D.UNDERGROUND, D.AMPHIBIOUS})
 ROLE_DOMAINS: MappingProxyType[UnitKind, frozenset[VehicleDomain]] = MappingProxyType(
     {
@@ -43,19 +46,64 @@ ROLE_DOMAINS: MappingProxyType[UnitKind, frozenset[VehicleDomain]] = MappingProx
         UnitKind.DROP_TROOPS: frozenset({D.SPACE, D.AIR}),
     }
 )
-ROLE_FAMILIES: MappingProxyType[UnitKind, frozenset[VehicleFamily]] = MappingProxyType(
-    {
-        UnitKind.NAVAL_CREW: frozenset({Y.BOAT, Y.GALLEY, Y.SAILING_SHIP, Y.STEAM_SHIP, Y.SUBMARINE, Y.LIVING}),
-        UnitKind.SKY_CREW: frozenset({Y.BALLOON, Y.AIRSHIP, Y.AIRCRAFT, Y.ROTORCRAFT, Y.CONSTRUCT}),
-        UnitKind.VOID_CREW: frozenset({Y.SPACECRAFT, Y.AIRSHIP}),
-        UnitKind.VEHICLE_CREW: frozenset({Y.WAGON, Y.MOTOR, Y.TRACKED, Y.WALKER, Y.CONSTRUCT, Y.MOUNT, Y.RAIL, Y.BURROWER}),
-        UnitKind.SIEGE_CREW: SIEGE,
-        UnitKind.ARTILLERY_CREW: frozenset({Y.GUN}),
-        UnitKind.CHARIOTS: frozenset({Y.CHARIOT}),
-        UnitKind.MECHANISED_INFANTRY: frozenset({Y.MOTOR, Y.TRACKED}),
-        UnitKind.PILOTS: frozenset({Y.AIRCRAFT, Y.ROTORCRAFT}),
-        UnitKind.DROP_TROOPS: frozenset({Y.SPACECRAFT, Y.ROTORCRAFT}),
-    }
+ROLE_FAMILIES: MappingProxyType[UnitKind, frozenset[VehicleFamily]] = partial(
+    UnitKind,
+    MappingProxyType(
+        {
+            UnitKind.NAVAL_CREW: frozenset({Y.BOAT, Y.GALLEY, Y.SAILING_SHIP, Y.STEAM_SHIP, Y.SUBMARINE, Y.LIVING}),
+            UnitKind.SKY_CREW: frozenset({Y.BALLOON, Y.AIRSHIP, Y.AIRCRAFT, Y.ROTORCRAFT, Y.CONSTRUCT}),
+            UnitKind.VOID_CREW: frozenset({Y.SPACECRAFT, Y.AIRSHIP}),
+            UnitKind.VEHICLE_CREW: frozenset({Y.WAGON, Y.MOTOR, Y.TRACKED, Y.WALKER, Y.CONSTRUCT, Y.MOUNT, Y.RAIL, Y.BURROWER}),
+            UnitKind.SIEGE_CREW: SIEGE,
+            UnitKind.ARTILLERY_CREW: frozenset({Y.GUN}),
+            UnitKind.CHARIOTS: frozenset({Y.CHARIOT}),
+            UnitKind.MECHANISED_INFANTRY: frozenset({Y.MOTOR, Y.TRACKED}),
+            UnitKind.PILOTS: frozenset({Y.AIRCRAFT, Y.ROTORCRAFT}),
+            UnitKind.DROP_TROOPS: frozenset({Y.SPACECRAFT, Y.ROTORCRAFT}),
+        }
+    ),
+    without=(
+        UnitKind.LEVY,
+        UnitKind.LINE_INFANTRY,
+        UnitKind.HEAVY_INFANTRY,
+        UnitKind.SHIELD_INFANTRY,
+        UnitKind.PIKE_INFANTRY,
+        UnitKind.LIGHT_INFANTRY,
+        UnitKind.SHOCK_INFANTRY,
+        UnitKind.GUARD_INFANTRY,
+        UnitKind.MARINES,
+        UnitKind.SLINGERS,
+        UnitKind.ARCHERS,
+        UnitKind.CROSSBOW_INFANTRY,
+        UnitKind.JAVELINEERS,
+        UnitKind.GUNNERS,
+        UnitKind.GRENADIERS,
+        UnitKind.LIGHT_CAVALRY,
+        UnitKind.HEAVY_CAVALRY,
+        UnitKind.MOUNTED_ARCHERS,
+        UnitKind.MOUNTED_GUNNERS,
+        UnitKind.BEAST_RIDERS,
+        UnitKind.SKY_RIDERS,
+        UnitKind.WAR_BEASTS,
+        UnitKind.BOUND_BEASTS,
+        UnitKind.SAPPERS,
+        UnitKind.ENGINEERS,
+        UnitKind.BATTLE_CASTERS,
+        UnitKind.SUPPORT_CASTERS,
+        UnitKind.SUMMONERS,
+        UnitKind.CONSTRUCTS,
+        UnitKind.SUMMONED_HOST,
+        UnitKind.SPECIAL_FORCES,
+        UnitKind.PARTISANS,
+        UnitKind.PEACEKEEPERS,
+        UnitKind.MEDICS,
+        UnitKind.DRONE_OPERATORS,
+        UnitKind.SIGNALS_TROOPS,
+        UnitKind.POWERED_TROOPERS,
+        UnitKind.GIFTED,
+        UnitKind.DAMPENERS,
+        UnitKind.DETECTORS,
+    ),
 )
 CREW_ROLES = frozenset(ROLE_DOMAINS)
 NAVAL = ROLE_DOMAINS[UnitKind.NAVAL_CREW]

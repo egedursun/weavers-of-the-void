@@ -1,18 +1,20 @@
 from sqlalchemy import select
 
+from aerona.catalog.goods_traits import commodities_with
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import WarProductionRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import holding
 from aerona.engine.primitives.numbers import clamp_int
 
-WAR_GOODS = (CommodityKind.WEAPONS, CommodityKind.ARMOUR, CommodityKind.SIEGE_MATERIEL)
-CIVILIAN_GOODS = frozenset({CommodityKind.CLOTH, CommodityKind.LUXURIES, CommodityKind.INCENSE})
+WAR_GOODS = commodities_with(CommodityTrait.WAR_GOOD)
+CIVILIAN_GOODS = frozenset(commodities_with(CommodityTrait.CIVILIAN))
 SWITCH_MARGIN = 2
 
 

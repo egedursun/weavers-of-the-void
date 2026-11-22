@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.ethics import HONOUR_MODELS
+from aerona.catalog.life.polity import MODEL_PENALTIES
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
@@ -12,7 +13,7 @@ from aerona.db.tables.relations import RelationshipRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.fortune import FortuneSourceKind
-from aerona.domain.enums.mind import HonourModel, MemoryKind
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import OathPenalty, OathStatus
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.context import TickContext
@@ -121,17 +122,6 @@ async def releases(ctx: TickContext) -> int:
         oath.note = (oath.note or "") + " Released by the one it was sworn to."
         freed += 1
     return freed
-
-
-MODEL_PENALTIES: Mapping[HonourModel, OathPenalty | None] = total(
-    HonourModel,
-    {
-        HonourModel.DIGNITY: OathPenalty.FINE,
-        HonourModel.HONOUR: OathPenalty.SHAME,
-        HonourModel.FACE: OathPenalty.SHAME,
-        HonourModel.NONE: None,
-    },
-)
 
 
 async def terms_for(ctx: TickContext, swearer: EntityRow) -> tuple[int | None, OathPenalty | None]:

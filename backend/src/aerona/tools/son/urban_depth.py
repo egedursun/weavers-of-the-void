@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.catalog.life.economy import OPEN
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -13,7 +14,6 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.urban import ConvoyStatus
-from aerona.engine.economy.convoys import OPEN
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result

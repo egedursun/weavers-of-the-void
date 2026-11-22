@@ -1,9 +1,10 @@
 from collections import defaultdict
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.goods_traits import commodities_with
+from aerona.catalog.life.agrarian import COMMONS_BOON, KIND_TOLL
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.total import total
@@ -24,6 +25,7 @@ from aerona.domain.enums.ecology import SOWN, GrowthCycle
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
+from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.living import LineTrait
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -54,7 +56,7 @@ from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, reco
 
 LONG_LIVED = frozenset({GrowthCycle.PERENNIAL, GrowthCycle.TREE})
 CITY_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY})
-CASH_CROPS = frozenset({CommodityKind.FIBRE, CommodityKind.DYE, CommodityKind.LUXURIES, CommodityKind.INCENSE, CommodityKind.HERBS})
+CASH_CROPS = frozenset(commodities_with(CommodityTrait.CASH_CROP))
 YIELD_KINDS: tuple[tuple[CommodityKind, PerennialKind], ...] = (
     (CommodityKind.TIMBER, PerennialKind.TIMBER),
     (CommodityKind.BREW_BASE, PerennialKind.VINEYARD),
@@ -129,19 +131,6 @@ def kind_of(yields: set[CommodityKind], land: RegionEnvironmentRow | None, fores
     if land is not None and land.forest_cover >= forest and CommodityKind.FRUIT in yields:
         return PerennialKind.FOREST_GARDEN
     return next((kind for commodity, kind in YIELD_KINDS if commodity in yields), PerennialKind.GROVE)
-
-
-KIND_TOLL: Mapping[PerennialKind, tuple[int, str, int]] = total(
-    PerennialKind,
-    {
-        PerennialKind.ORCHARD: (100, "soil_fertility", 0),
-        PerennialKind.VINEYARD: (110, "soil_fertility", 0),
-        PerennialKind.GROVE: (90, "soil_fertility", 0),
-        PerennialKind.TIMBER: (100, "forest_cover", 1),
-        PerennialKind.PLANTATION: (150, "soil_fertility", -1),
-        PerennialKind.FOREST_GARDEN: (70, "forest_cover", 1),
-    },
-)
 
 
 async def plant(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
@@ -260,22 +249,6 @@ async def commons_kinds(ctx: TickContext, land: RegionEnvironmentRow, towns: lis
     if await holders_know(ctx.session, holders, Technique.ROCKETRY):
         kinds.append(CommonsKind.ORBITS)
     return kinds
-
-
-COMMONS_BOON: Mapping[CommonsKind, tuple[str, int]] = total(
-    CommonsKind,
-    {
-        CommonsKind.PASTURE: ("prosperity", 1),
-        CommonsKind.WOODS: ("construction_capacity", 2),
-        CommonsKind.FISHERY: ("prosperity", 1),
-        CommonsKind.WATER: ("sanitation", 1),
-        CommonsKind.HUNTING_GROUND: ("prosperity", 1),
-        CommonsKind.QUARRY: ("construction_capacity", 3),
-        CommonsKind.SPECTRUM: ("prestige", 1),
-        CommonsKind.ORBITS: ("prestige", 2),
-        CommonsKind.SOURCE_GROUND: ("public_order", 1),
-    },
-)
 
 
 def bestow(row: CommonsRow, town: EntityRow, profile: SettlementProfileRow | None) -> None:

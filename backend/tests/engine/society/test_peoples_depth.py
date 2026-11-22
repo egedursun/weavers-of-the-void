@@ -1,6 +1,7 @@
 import pytest
 
 from aerona.catalog.peoples import CULTURAL_FUNERALS, DIETS, FUNERALS, KIN, SIZES, VALUE_STYLE, MountFit
+from aerona.catalog.terrain import TERRAIN
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import TraditionProfileRow
@@ -125,8 +126,16 @@ def test_every_body_plan_and_size_changes_food_room_and_strength() -> None:
 
 def test_every_body_plan_has_a_distinct_profile() -> None:
     profiles = {
-        (spec.food_pct, spec.space_pct, spec.disease_pct, spec.naval_pct, spec.mount, tuple(spec.labour.items()), tuple(spec.terrain.items()))
-        for spec in KIN.values()
+        (
+            spec.food_pct,
+            spec.space_pct,
+            spec.disease_pct,
+            spec.naval_pct,
+            spec.mount,
+            tuple(spec.labour.items()),
+            tuple(sorted((terrain.value, fit.body_fit.get(plan, 100)) for terrain, fit in TERRAIN.items())),
+        )
+        for plan, spec in KIN.items()
     }
     assert len(profiles) == len(BodyPlan)
     assert set(KIN) == set(BodyPlan)

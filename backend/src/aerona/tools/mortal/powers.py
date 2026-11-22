@@ -2,6 +2,7 @@ from typing import Any, Literal
 
 from sqlalchemy import select
 
+from aerona.catalog.life.tools import TRAIN_POWER_POWER_STATES
 from aerona.db.tables.concealment import HiddenTruthRow, PublicKnowledgeRow, TruthKeeperRow, TruthSeekerRow
 from aerona.db.tables.powers import PowerRow
 from aerona.db.write_guard import held
@@ -92,7 +93,7 @@ async def use_power_tool(call: MortalCall, args: UsePowerInput) -> str:
 
 async def train_power(call: MortalCall, args: PowerInput) -> str:
     power = await my_power(call, args.power_id, MortalResult.POWER_TRAINING_DECLINED)
-    if power.state in {PowerState.LOST, PowerState.EXHAUSTED}:
+    if power.state in TRAIN_POWER_POWER_STATES:
         fail(MortalResult.POWER_TRAINING_DECLINED, why="that power is lost or spent")
     if "control" not in power.locked:
         power.control = clamp_percent(power.control + call.rules.powers.control_gain * TRAINING)

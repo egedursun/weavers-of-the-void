@@ -300,7 +300,7 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
             m(M.WATER_SAW, P.MASONRY, "Water saw", "A wheel drives the stone saws", E.WATER, 2, output_pct=140, branch=B.ARCHITECTURE, level=2, labour_pct=60),
             m(M.CLAMP_KILN, P.CHARCOAL, "Clamp kiln", "Wood smoulders under turf", E.MUSCLE, 1, air=3),
             m(M.RETORT_KILN, P.CHARCOAL, "Retort kiln", "Sealed kilns waste little", E.MUSCLE, 1, output_pct=125, air=1, branch=B.METALLURGY, level=2),
-            m(M.SALTING, P.PRESERVING, "Salting", "Packed in salt", E.MUSCLE, 1, tool_wear=0, inputs=((CommodityKind.ORE, 1, MaterialKind.SALT),)),
+            m(M.SALTING, P.PRESERVING, "Salting", "Packed in salt", E.MUSCLE, 1, tool_wear=0, inputs=((CommodityKind.ORE, 1, MaterialKind.HALITE),)),
             m(M.SMOKING, P.PRESERVING, "Smoking", "Hung in smokehouses", E.HEAT, 1, air=1, tool_wear=0),
             m(M.DRYING, P.PRESERVING, "Drying", "Laid out in the sun and wind", E.WIND, 1, output_pct=80, tool_wear=0, climate=DRY_HEAT),
             m(M.ICING, P.PRESERVING, "Icing", "Kept in ice on cold land or in deep cellars", E.MUSCLE, 1, output_pct=130, tool_wear=0, climate=COLD),

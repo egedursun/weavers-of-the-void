@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.ethics import STANCE_ORDER
+from aerona.catalog.life.collective import CAREER_ROLES
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.collective import RoleNormRow, SexRatioRow
@@ -40,16 +40,6 @@ RANK_PREFERRED = 0
 RANK_OPEN = 1
 RANK_TOLERATED = 2
 MIN_AGES = total(RoleKind, {RoleKind.OFFICE: 16, RoleKind.PROFESSION: 12, RoleKind.COMBAT: 15, RoleKind.PRIESTHOOD: 14, RoleKind.INHERITANCE: 0})
-CAREER_ROLES: MappingProxyType[CareerPath, RoleKind] = MappingProxyType(
-    {
-        CareerPath.ARMY: RoleKind.COMBAT,
-        CareerPath.OFFICE: RoleKind.OFFICE,
-        CareerPath.APPRENTICE: RoleKind.PROFESSION,
-        CareerPath.TRADE: RoleKind.PROFESSION,
-        CareerPath.VOWS: RoleKind.PRIESTHOOD,
-        CareerPath.STUDY: RoleKind.PROFESSION,
-    }
-)
 ELITE = (SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.SCRIBE, SocialClass.WARRIOR)
 OPENING = {
     RoleEligibility.FEMALE_ONLY: RoleEligibility.FEMALE_PREFERRED,

@@ -4,6 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.labour import STANDING_COVERAGE_PCT
+from aerona.catalog.life.labour import UNION_TRADES
+from aerona.catalog.life_traits import FACTION_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
@@ -14,6 +16,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.labour import LegalStanding, WorkerBodyForm
+from aerona.domain.enums.life_traits import FactionKindTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
@@ -23,8 +26,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 
-BODY_KINDS = frozenset({FactionKind.WORKER_BODY, FactionKind.WORKERS_UNION})
-UNION_TRADES = (Job.MINING, Job.BUILDING, Job.CRAFTING)
+BODY_KINDS = having(FACTION_KIND_TRAITS, FactionKindTrait.BODY_KINDS)
 SOLIDARITY_REST = 50
 COVERED = (SocialClass.WORKER, SocialClass.ARTISAN)
 

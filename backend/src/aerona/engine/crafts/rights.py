@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.art_modes import ART_MODES
+from aerona.catalog.life_traits import RIGHT_KIND_TRAITS, having
 from aerona.db.tables.crafts import IncorporealRightRow
 from aerona.db.tables.culture import ArtworkProfileRow, RiteProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -10,6 +11,7 @@ from aerona.db.tables.polity import HouseMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.crafts import RightAcquired, RightKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import RightKindTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
@@ -24,7 +26,7 @@ from aerona.engine.sacred.places import ruler_of
 from aerona.engine.services.community_relations import change_relation
 
 MEDIUM_RIGHTS = {mode: spec.right for mode, spec in ART_MODES.items()}
-COPIED = frozenset({RightKind.DESIGN, RightKind.TRADEMARK, RightKind.MARKET_PRIVILEGE})
+COPIED = having(RIGHT_KIND_TRAITS, RightKindTrait.COPIED)
 
 
 @dataclass

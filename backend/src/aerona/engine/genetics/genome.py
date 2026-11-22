@@ -6,13 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.genetic_effects import ATTRIBUTE_WORDS, EFFECT_POINTS, EFFECT_SCALES, GENETIC_EFFECT_LABELS, LOCUS_EFFECTS, STAT_WORDS
 from aerona.catalog.genetics import GIFT_LOCI_ORDER, HARMFUL, LOCI, LOOKS_LOCI, SCHOOL_OF_LOCUS, VISIBLE_LOCI, LocusSpec
+from aerona.catalog.harm_kinds import injuries_where
 from aerona.catalog.mind import SKILLS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.genetics import GenomeRow
-from aerona.domain.enums.body import InjuryKind, InjuryState
+from aerona.domain.enums.body import InjuryState
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.genetics import GeneticEffect, Locus
 from aerona.domain.enums.living import LineTrait
@@ -24,7 +25,7 @@ from aerona.rules.registry import Rules
 
 Genes = dict[str, list[str]]
 Pool = Mapping[str, Mapping[str, int]]
-MISSING_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED, InjuryKind.DESTROYED})
+MISSING_KINDS = injuries_where(lambda spec: spec.total_loss)
 PAIR = 2
 
 

@@ -3,10 +3,11 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.constants.calendar import SEASONS_MAX
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
-from aerona.db.tables.celestial import SEASONS_MAX, WorldRow
+from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, StructureLeyRow, WorldSeasonRow
@@ -14,6 +15,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import NotableYearKind, WeatherKind
 from aerona.engine.environment.control import CALENDAR_FIELDS, SEASON_NUMBERS, hold_calendar
 from aerona.engine.environment.ley_works import LEY_WORK_KINDS, ley_row
+from aerona.engine.environment.season_remap import remap_positions
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
@@ -54,10 +56,11 @@ async def add_season(session: AsyncSession, world_id: int, name: str, values: di
     await session.flush()
     at = len(seasons) if position is None else max(0, min(position, len(seasons)))
     ordered = [*seasons[:at], row, *seasons[at:]]
+    mapping = {season.position: index for index, season in enumerate(ordered) if season is not row}
     await _renumber(session, ordered)
     world.season_count = len(ordered)
     hold_calendar(world, "season_count")
-    await session.flush()
+    await remap_positions(session, world_id, mapping, len(ordered))
     return row
 
 
@@ -69,18 +72,16 @@ async def remove_season(session: AsyncSession, season_id: int) -> WorldSeasonRow
     if len(seasons) <= 1:
         raise ValidationFailedError("A world keeps at least one season.")
     world = await _world(session, season.world_id)
-    removed = season.position
+    world_id = season.world_id
     await session.delete(season)
     await session.flush()
     rest = [item for item in seasons if item.id != season_id]
+    mapping: dict[int, int | None] = {item.position: None for item in seasons if item.id == season_id}
+    mapping.update({item.position: index for index, item in enumerate(rest)})
     await _renumber(session, rest)
     world.season_count = len(rest)
     hold_calendar(world, "season_count")
-    statement = select(TraditionProfileRow).where(TraditionProfileRow.season_position.is_not(None), TraditionProfileRow.season_position >= removed)
-    for row in await session.scalars(statement):
-        position = row.season_position or 0
-        row.season_position = None if position == removed else position - 1
-    await session.flush()
+    await remap_positions(session, world_id, mapping, len(rest))
     return season
 
 

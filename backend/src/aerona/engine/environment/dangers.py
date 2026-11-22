@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.terrain import terrains
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.culture import TraditionParticipationRow, TraditionProfileRow
@@ -18,7 +19,7 @@ from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.ecology import BeastTemper, DomesticationStage
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.environment import ScarKind, SoilKind, TerrainKind
+from aerona.domain.enums.environment import ScarKind, SoilKind, TerrainKind, TerrainTrait
 from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource
 from aerona.engine.cosmos.kinds import PHENOMENON_MECHANICS
 from aerona.engine.cosmos.placement import cosmography_of
@@ -32,7 +33,7 @@ from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.rules.registry import Rules
 
-SNOW_TERRAIN = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.ICE_SHEET})
+SNOW_TERRAIN = terrains(TerrainTrait.COLD, without=(TerrainTrait.OPEN,))
 VOLCANIC_SOILS = frozenset({SoilKind.VOLCANIC, SoilKind.TEPHRA})
 HELD_BEASTS = frozenset({BeastTemper.BOUND, BeastTemper.TAMED})
 DANGER_KEY = "danger"

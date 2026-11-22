@@ -1,3 +1,4 @@
+from aerona.catalog.diets import FLESH_SEEKERS, FORAGERS, PRODUCERS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.domain.enums.body import BodyPlan
@@ -28,9 +29,10 @@ FIRE_STAGE: dict[SuccessionStage, SuccessionStage] = {
     S.SWAMP_FOREST: S.MARSH,
 }
 
-PRODUCER_DIETS = frozenset({Diet.PHOTOSYNTHETIC, Diet.MINERAL})
-PLANT_EATERS = frozenset({Diet.HERBIVORE, Diet.FILTER})
-MEAT_EATERS = frozenset({Diet.CARNIVORE, Diet.OMNIVORE, Diet.SCAVENGER})
+PRODUCER_DIETS = PRODUCERS
+PLANT_EATERS = FORAGERS
+MEAT_EATERS = FLESH_SEEKERS
+PREY_TRAITS = (EvolvedTrait.SPEED, EvolvedTrait.CAMOUFLAGE)
 APEX_SIZES = frozenset({SizeClass.LARGE, SizeClass.HUGE, SizeClass.COLOSSAL})
 LITTLE = frozenset({SizeClass.TINY, SizeClass.SMALL})
 DAM_SIZES = frozenset({SizeClass.SMALL, SizeClass.MEDIUM})

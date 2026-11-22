@@ -1,6 +1,7 @@
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.services import MEND_CYCLE_LINKS_GIFT_STATES
 from aerona.db.tables.cycles import (
     CampRow,
     CircuitRow,
@@ -51,7 +52,7 @@ async def mend_cycle_links(session: AsyncSession, epoch: int) -> int:
         .where(LongPlanRow.status == LongPlanStatus.ACTIVE, LongPlanRow.holder_node_id.in_(vanished))
         .values(status=LongPlanStatus.ABANDONED, finished_epoch=epoch),
         update(GiftRow)
-        .where(GiftRow.state.in_([GiftState.OPEN, GiftState.DESTROYED]), GiftRow.receiver_node_id.in_(vanished))
+        .where(GiftRow.state.in_(MEND_CYCLE_LINKS_GIFT_STATES), GiftRow.receiver_node_id.in_(vanished))
         .values(state=GiftState.LAPSED, settled_epoch=epoch),
         delete(IndentureRow).where(IndentureRow.community_entity_id.in_(vanished)),
         update(SlaveMarketRow).where(SlaveMarketRow.open.is_(True), SlaveMarketRow.settlement_entity_id.in_(vanished)).values(open=False),

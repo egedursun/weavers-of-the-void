@@ -1,8 +1,9 @@
+from aerona.catalog.life.domain import GROWN
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import GROWN, BeastTemper
+from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.pets import pet_of, take_pet

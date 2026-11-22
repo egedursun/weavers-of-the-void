@@ -1,5 +1,7 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.minds import STANCE_BOND
+from aerona.catalog.life_traits import MADE_MIND_STANCE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.celestial import WorldRow
@@ -8,6 +10,7 @@ from aerona.db.tables.minds import MindArchiveRow, MindLawRow, MindProfileRow, M
 from aerona.db.write_guard import held
 from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.life_traits import MadeMindStanceTrait
 from aerona.domain.enums.made import MadeMindStance
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.minds import MadeMindSouls, StateMedium
@@ -26,8 +29,7 @@ from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 
 STATUS_STEPS = ("property", "ward", "servant", "citizen", "sovereign")
-STANCE_BOND = {MadeMindStance.ABOMINATION: -2, MadeMindStance.TOOL: 0, MadeMindStance.KIN: 1, MadeMindStance.SACRED: 2, MadeMindStance.SILENT: 0}
-KEEPING_STANCES = frozenset({MadeMindStance.KIN, MadeMindStance.SACRED})
+KEEPING_STANCES = having(MADE_MIND_STANCE_TRAITS, MadeMindStanceTrait.KEEPING_STANCES)
 
 
 async def grant_soul(ctx: TickContext, mind_id: int) -> MindProfileRow:

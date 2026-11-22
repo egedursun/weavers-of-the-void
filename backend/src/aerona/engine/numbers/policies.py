@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life_traits import POPULATION_INSTRUMENT_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
@@ -9,6 +10,7 @@ from aerona.db.tables.population import PopulationInstrumentRow, PopulationPolic
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.life_traits import PopulationInstrumentTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import PressureKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -24,8 +26,8 @@ from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 
-PULLS = frozenset({PopulationInstrument.SETTLEMENT_GRANT, PopulationInstrument.MIGRATION_PERMIT, PopulationInstrument.RECRUITMENT_ABROAD})
-HARSH = frozenset({PopulationInstrument.EXPULSION, PopulationInstrument.CHILD_LIMIT})
+PULLS = having(POPULATION_INSTRUMENT_TRAITS, PopulationInstrumentTrait.PULLS)
+HARSH = having(POPULATION_INSTRUMENT_TRAITS, PopulationInstrumentTrait.HARSH)
 PRESSED = 50
 TEN = 10
 QUARTER = 4

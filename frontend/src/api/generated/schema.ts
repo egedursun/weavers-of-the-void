@@ -56295,7 +56295,24 @@ export interface components {
       relief: components['schemas']['ReliefView'] | null
       measures: components['schemas']['MeasureView'] | null
     }
+    CycleFlowView: {
+      source: components['schemas']['CycleSource']
+      source_label: string
+      rate: number
+    }
     CyclePhase: 'growth' | 'stagflation' | 'crisis' | 'depression'
+    CycleSource:
+      | 'volcanoes'
+      | 'fires'
+      | 'life'
+      | 'forests'
+      | 'oceans'
+      | 'weathering'
+      | 'melting'
+      | 'evaporation'
+      | 'freezing'
+      | 'rivers'
+      | 'erosion'
     CyclesView: {
       node: components['schemas']['NodeRef']
       stress: components['schemas']['StressView'] | null
@@ -70776,7 +70793,7 @@ export interface components {
     }
     MaterialKind:
       | 'wood'
-      | 'bone'
+      | 'calcified_tissue'
       | 'hide'
       | 'leather'
       | 'cloth'
@@ -70794,12 +70811,12 @@ export interface components {
       | 'crystal'
       | 'ivory'
       | 'chitin'
-      | 'great_bone'
+      | 'great_beast_tissue'
       | 'star_metal'
       | 'void_glass'
-      | 'godflesh'
+      | 'divine_tissue'
       | 'living_wood'
-      | 'salt'
+      | 'halite'
       | 'amber'
       | 'lead'
       | 'skysteel'
@@ -73657,7 +73674,7 @@ export interface components {
       carriers: components['schemas']['CarrierView'][]
       responses: components['schemas']['PlagueResponseView'][]
       research: components['schemas']['CureResearchView'][]
-      cycle: components['schemas']['WorldCycleView'] | null
+      cycles: components['schemas']['WorldCycleView'][]
     }
     NodeGatheringsView: {
       node_id: number
@@ -76425,6 +76442,7 @@ export interface components {
       finished_epoch: number | null
       locked: string[]
     }
+    PlanetaryCycle: 'carbon' | 'water' | 'nutrients'
     PlantAnatomyCreateInput: {
       table: string
       values: {
@@ -91803,17 +91821,15 @@ export interface components {
       world_id: number
     }
     WorldCycleView: {
-      carbon: number
-      water: number
-      nutrients: number
-      carbon_in: number
-      carbon_out: number
-      water_in: number
-      water_out: number
-      nutrients_in: number
-      nutrients_out: number
+      cycle: components['schemas']['PlanetaryCycle']
+      label: string
+      stock: number
+      inflow: number
+      outflow: number
+      sources: components['schemas']['CycleFlowView'][]
+      sinks: components['schemas']['CycleFlowView'][]
       updated_epoch: number
-      locked: string[]
+      held: boolean
     }
     WorldDateGoldenAgeInput: {
       world_id: number
@@ -92412,7 +92428,7 @@ export interface components {
     YieldProduct:
       | 'meat'
       | 'hide'
-      | 'bone'
+      | 'calcified_tissue'
       | 'ivory'
       | 'chitin'
       | 'venom'
@@ -92421,7 +92437,7 @@ export interface components {
       | 'milk'
       | 'feathers'
       | 'magic_reagents'
-      | 'great_bone'
+      | 'great_beast_tissue'
       | 'eggs'
     YieldView: {
       product: string
@@ -188387,6 +188403,21 @@ export const customCatalogValues: ReadonlyArray<
 export const cyclePhaseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CyclePhase']
 > = ['growth', 'stagflation', 'crisis', 'depression']
+export const cycleSourceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CycleSource']
+> = [
+  'volcanoes',
+  'fires',
+  'life',
+  'forests',
+  'oceans',
+  'weathering',
+  'melting',
+  'evaporation',
+  'freezing',
+  'rivers',
+  'erosion',
+]
 export const damageTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DamageType']
 > = [
@@ -192388,7 +192419,7 @@ export const materialKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MaterialKind']
 > = [
   'wood',
-  'bone',
+  'calcified_tissue',
   'hide',
   'leather',
   'cloth',
@@ -192406,12 +192437,12 @@ export const materialKindValues: ReadonlyArray<
   'crystal',
   'ivory',
   'chitin',
-  'great_bone',
+  'great_beast_tissue',
   'star_metal',
   'void_glass',
-  'godflesh',
+  'divine_tissue',
   'living_wood',
-  'salt',
+  'halite',
   'amber',
   'lead',
   'skysteel',
@@ -194168,6 +194199,9 @@ export const plagueResponseValues: ReadonlyArray<
   'prayer',
   'seek_cure',
 ]
+export const planetaryCycleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PlanetaryCycle']
+> = ['carbon', 'water', 'nutrients']
 export const plantDefenceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlantDefence']
 > = ['none', 'thorns', 'toxins', 'allelopathy', 'carnivorous']
@@ -199173,7 +199207,7 @@ export const yieldProductValues: ReadonlyArray<
 > = [
   'meat',
   'hide',
-  'bone',
+  'calcified_tissue',
   'ivory',
   'chitin',
   'venom',
@@ -199182,7 +199216,7 @@ export const yieldProductValues: ReadonlyArray<
   'milk',
   'feathers',
   'magic_reagents',
-  'great_bone',
+  'great_beast_tissue',
   'eggs',
 ]
 export const zoneKindValues: ReadonlyArray<

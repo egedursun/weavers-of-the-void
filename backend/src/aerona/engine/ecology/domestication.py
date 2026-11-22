@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.diets import GRAZERS, MEAT_EATERS
+from aerona.catalog.domestication import HOUSED_STAGES, KEPT_STAGES, WILDISH_STAGES
 from aerona.catalog.methods import HERD_PROCESSES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -23,7 +25,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import GRAZERS, SIZE_ORDER, STAGE_ORDER, AnimalRole, BeastTemper, Diet, DomesticationStage, HerdTraining, SizeClass
+from aerona.domain.enums.ecology import SIZE_ORDER, STAGE_ORDER, AnimalRole, BeastTemper, DomesticationStage, HerdTraining, SizeClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.industry import ProcessKind
@@ -51,9 +53,9 @@ from aerona.rules.registry import Rules
 from aerona.rules.registry.wilds import DomesticationRules
 
 S = DomesticationStage
-KEPT = frozenset({S.HERDED, S.DOMESTICATED, S.BREED})
-HUNTING_DIETS = frozenset({Diet.CARNIVORE, Diet.OMNIVORE})
-HOUSED = frozenset({S.DOMESTICATED, S.BREED})
+KEPT = KEPT_STAGES
+HUNTING_DIETS = MEAT_EATERS
+HOUSED = HOUSED_STAGES
 TEN = 10
 PRODUCT_PROCESS = {product: process for process, product in HERD_PROCESSES.items()}
 PART_PROCESS = {ProductPart.MILK: ProcessKind.MILKING, ProductPart.FIBRE: ProcessKind.SHEARING, ProductPart.EGGS: ProcessKind.EGG_LAYING}
@@ -323,7 +325,7 @@ async def produce(ctx: TickContext, herd: HerdRow) -> int:
     return made
 
 
-WILDISH = frozenset({S.WILD, S.TAMED, S.HERDED})
+WILDISH = WILDISH_STAGES
 
 
 async def stage_from_herds(ctx: TickContext) -> int:

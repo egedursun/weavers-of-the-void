@@ -29,6 +29,7 @@ from aerona.domain.enums.environment import (
 from aerona.domain.enums.evolution import SuccessionStage
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.calendar import epoch_start_year
+from aerona.engine.environment.season_remap import remap_positions
 from aerona.engine.environment.seasons import season_count_for
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
@@ -276,7 +277,7 @@ async def reorder_seasons(session: AsyncSession, world_id: int, order: list[int]
     for new_position, old_position in enumerate(order):
         by_position[old_position].position = new_position
         by_position[old_position].edited = True
-    await session.flush()
+    await remap_positions(session, world_id, {old_position: new_position for new_position, old_position in enumerate(order)}, len(seasons))
     return sorted(seasons, key=lambda season: season.position)
 
 

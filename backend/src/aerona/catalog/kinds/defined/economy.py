@@ -79,7 +79,7 @@ GOODS_FLOW = total(
             used_by=(
                 "engine.body.treatment.supplied",
                 "engine.cosmos.routes.provision",
-                "engine.cosmos.world_views.need_met",
+                "engine.cosmos.world_views.DRAWN_FROM",
                 "engine.cuisine.dishes.cook_one",
                 "engine.customs.intoxicants.brew",
                 "engine.demography.basket.starve_herds",
@@ -202,7 +202,7 @@ GOODS_FLOW = total(
             "Offering",
             checked_by=(),
             used_by=(
-                "engine.cosmos.world_views.need_met",
+                "engine.cosmos.world_views.DRAWN_FROM",
                 "engine.faith.works.tithe",
                 "engine.gods.economy._pay_demand",
                 "engine.lore.traditions.feast",

@@ -4,6 +4,8 @@ from itertools import combinations
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.lore import SCHOLARLY
+from aerona.catalog.life_traits import KNOWLEDGE_BRANCH_TRAITS, having
 from aerona.catalog.structures import RESEARCH_HOUSES
 from aerona.catalog.techniques import BRANCH_SKILLS, TECHNIQUES, Gate
 from aerona.constants.units import PERCENT
@@ -24,7 +26,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel
-from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.life_traits import KnowledgeBranchTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -51,10 +53,7 @@ from aerona.engine.structures.readers import working
 from aerona.rules.registry import Rules
 
 THOUSAND = 1000
-NATURAL_BRANCHES = frozenset(
-    {KnowledgeBranch.ASTRONOMY, KnowledgeBranch.MEDICINE, KnowledgeBranch.AGRICULTURE, KnowledgeBranch.METALLURGY, KnowledgeBranch.SEAFARING}
-)
-SCHOLARLY = (SkillKind.LORE, SkillKind.THEOLOGY, SkillKind.WRITING, SkillKind.ASTRONOMY, SkillKind.MEDICINE, SkillKind.LAW, SkillKind.ALCHEMY)
+NATURAL_BRANCHES = having(KNOWLEDGE_BRANCH_TRAITS, KnowledgeBranchTrait.NATURAL_BRANCHES)
 Levels = dict[int, dict[KnowledgeBranch, int]]
 
 

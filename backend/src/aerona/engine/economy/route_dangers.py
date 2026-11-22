@@ -1,5 +1,5 @@
 from collections import defaultdict
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
@@ -7,6 +7,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.trade_modes import TRADE_LOSS_CULPRITS, TRADE_MODES
+from aerona.catalog.life.economy import EFFECT_WEIGHT
+from aerona.catalog.life_traits import STANCE_TRAITS, TRADE_MODE_TRAITS, WEATHER_EFFECT_TRAITS, having
+from aerona.catalog.terrain import terrains
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.ecology import BeastProfileRow
@@ -17,8 +20,8 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, TradeLoss, TradeMode
 from aerona.domain.enums.entity import EngineKind, EntityType
-from aerona.domain.enums.environment import TerrainKind, WeatherEffect
-from aerona.domain.enums.military import Stance
+from aerona.domain.enums.environment import TerrainTrait, WeatherEffect
+from aerona.domain.enums.life_traits import StanceTrait, TradeModeTrait, WeatherEffectTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus
 from aerona.engine.context import TickContext
@@ -30,13 +33,10 @@ from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
-PATROLS = frozenset({Stance.GARRISON, Stance.ENTRENCH})
+PATROLS = having(STANCE_TRAITS, StanceTrait.PATROLS)
 BANDIT_KINDS = frozenset({EngineKind.REBELS, EngineKind.ROUTE_RAIDERS})
-CARAVAN_TERRAIN = frozenset({TerrainKind.DESERT, TerrainKind.STEPPE})
-PASS_TERRAIN = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
-DANGER_KEYS: MappingProxyType[TradeLoss, str] = MappingProxyType(
-    {TradeLoss.BANDITS: "danger_bandits", TradeLoss.BEASTS: "danger_beasts", TradeLoss.WEATHER: "danger_weather", TradeLoss.SEA: "danger_sea"}
-)
+CARAVAN_TERRAIN = terrains(TerrainTrait.ARID)
+PASS_TERRAIN = terrains(every=(TerrainTrait.HIGH, TerrainTrait.COLD))
 TEMPER_WEIGHT: MappingProxyType[BeastTemper, Callable[[Rules], int]] = total(
     BeastTemper,
     {
@@ -49,20 +49,7 @@ TEMPER_WEIGHT: MappingProxyType[BeastTemper, Callable[[Rules], int]] = total(
         BeastTemper.COMPANION: lambda rules: rules.route_dangers.beast_tamed_pct,
     },
 )
-EFFECT_WEIGHT: Mapping[WeatherEffect, Callable[[Rules], int]] = total(
-    WeatherEffect,
-    {
-        WeatherEffect.GROWTH: lambda rules: 0,
-        WeatherEffect.MORALE: lambda rules: 0,
-        WeatherEffect.FOOTING: lambda rules: rules.route_dangers.weather_footing_pct,
-        WeatherEffect.COLD: lambda rules: rules.route_dangers.weather_cold_pct,
-        WeatherEffect.HEAT: lambda rules: rules.route_dangers.weather_heat_pct,
-        WeatherEffect.WET: lambda rules: rules.route_dangers.weather_wet_pct,
-        WeatherEffect.WIND: lambda rules: rules.route_dangers.weather_wind_pct,
-        WeatherEffect.VISIBILITY: lambda rules: rules.route_dangers.weather_visibility_pct,
-    },
-)
-FALLING_EFFECTS = frozenset({WeatherEffect.FOOTING, WeatherEffect.VISIBILITY})
+FALLING_EFFECTS = having(WEATHER_EFFECT_TRAITS, WeatherEffectTrait.FALLING_EFFECTS)
 
 
 @dataclass
@@ -211,7 +198,7 @@ def dangers_of(ctx: TickContext, book: EconomyBook, mode: TradeMode, path: list[
     return Dangers(bandits=bandits, beasts=beasts, weather=weather, bandit_id=band, beast_id=beast)
 
 
-ICE_MODES = frozenset({TradeMode.RIVER, TradeMode.ROAD, TradeMode.CARAVAN})
+ICE_MODES = having(TRADE_MODE_TRAITS, TradeModeTrait.ICE_MODES)
 
 
 def season_heat(region: RegionEnvironmentRow, season: WorldSeasonRow) -> int:

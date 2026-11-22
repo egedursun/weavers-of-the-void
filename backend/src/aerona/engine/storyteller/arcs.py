@@ -1,9 +1,12 @@
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.storyteller import ADVANCE_ARC_ROLES
+from aerona.catalog.life_traits import ARC_TEMPLATE_TRAITS, LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
 from aerona.db.tables.ages import AgeEchoRow, ArcBeatRow, ArcFigureRow, ArcRow
 from aerona.db.tables.bonds import BondRow
@@ -17,9 +20,10 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.ages import ArcOutcome, ArcRole, ArcStage, ArcTemplate
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import ArcTemplateTrait, LifeStageTrait
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.mortal import LifeStage, PunishmentKind
+from aerona.domain.enums.mortal import PunishmentKind
 from aerona.domain.enums.polity import OathStatus, OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
@@ -28,14 +32,14 @@ from aerona.engine.recording.record import record as record_incident
 
 STAGES = (ArcStage.INCITING, ArcStage.RISING, ArcStage.CRISIS, ArcStage.CLIMAX, ArcStage.RESOLUTION)
 MONOMYTH = (ArcStage.CALL, ArcStage.REFUSAL, ArcStage.MENTOR, ArcStage.THRESHOLD, ArcStage.ORDEAL, ArcStage.RETURN, ArcStage.RESOLUTION)
-YOUNG = frozenset({LifeStage.CHILD, LifeStage.YOUTH})
+YOUNG = having(LIFE_STAGE_TRAITS, LifeStageTrait.YOUNG)
 FLAWS = (TraitKind.WRATHFUL, TraitKind.PROUD, TraitKind.PARANOID, TraitKind.CRUEL)
 KIN = (BondKind.PARENT_OF, BondKind.SPOUSE_OF, BondKind.SWORN_KIN)
 FALLEN = 15
 INFAMOUS = 50
 RENOWNED = 30
 RECENT = 3
-ENDS_IN_DEATH = frozenset({ArcTemplate.TRAGEDY, ArcTemplate.FALL_OF_A_HOUSE, ArcTemplate.RISE_AND_FALL, ArcTemplate.CORRUPTION})
+ENDS_IN_DEATH = having(ARC_TEMPLATE_TRAITS, ArcTemplateTrait.ENDS_IN_DEATH)
 
 Figure = tuple[int, ArcRole]
 
@@ -329,27 +333,38 @@ def reached_climax(arc: ArcRow) -> bool:
     return arc.stage in stages and stages.index(arc.stage) >= len(stages) - 2
 
 
+Judge = Callable[[TickContext, ArcRow, list[int]], Awaitable[bool]]
+
+
+GOALS: Handlers[ArcTemplate, Judge] = Handlers(ArcTemplate)
+
+
+@GOALS.on(ArcTemplate.FOUNDING)
 async def house_stands(ctx: TickContext, arc: ArcRow, _others: list[int]) -> bool:
     houses = select(HouseProfileRow.house_entity_id).where(HouseProfileRow.founder_entity_id == arc.subject_node_id)
     standing = await ctx.session.scalar(select(EntityRow.id).where(EntityRow.id.in_(houses), EntityRow.status == EntityStatus.CANON).limit(1))
     return standing is not None
 
 
+@GOALS.on(ArcTemplate.RAGS_TO_RICHES)
 async def risen(ctx: TickContext, arc: ArcRow, _others: list[int]) -> bool:
     profile = await ctx.session.get(MortalProfileRow, arc.subject_node_id)
     return profile is not None and profile.renown >= RENOWNED
 
 
+@GOALS.on(ArcTemplate.REDEMPTION)
 async def redeemed(ctx: TickContext, arc: ArcRow, _others: list[int]) -> bool:
     profile = await ctx.session.get(MortalProfileRow, arc.subject_node_id)
     return profile is not None and profile.infamy < INFAMOUS
 
 
+@GOALS.on(ArcTemplate.COMING_OF_AGE)
 async def grown(ctx: TickContext, arc: ArcRow, _others: list[int]) -> bool:
     profile = await ctx.session.get(MortalProfileRow, arc.subject_node_id)
     return profile is not None and profile.life_stage not in YOUNG
 
 
+@GOALS.on(ArcTemplate.FORBIDDEN_LOVE)
 async def wed(ctx: TickContext, arc: ArcRow, others: list[int]) -> bool:
     subject = arc.subject_node_id
     union = await ctx.session.scalar(
@@ -365,21 +380,11 @@ async def wed(ctx: TickContext, arc: ArcRow, others: list[int]) -> bool:
     return union is not None
 
 
+@GOALS.on(ArcTemplate.RIVALRY)
+@GOALS.on(ArcTemplate.MENTOR_AND_HEIR)
+@GOALS.on(ArcTemplate.QUEST)
 async def outlived(ctx: TickContext, _arc: ArcRow, others: list[int]) -> bool:
     return bool(others) and not any([await living(ctx, node) for node in others])
-
-
-Judge = Callable[[TickContext, ArcRow, list[int]], Awaitable[bool]]
-GOALS: Mapping[ArcTemplate, Judge] = {
-    ArcTemplate.FOUNDING: house_stands,
-    ArcTemplate.RAGS_TO_RICHES: risen,
-    ArcTemplate.REDEMPTION: redeemed,
-    ArcTemplate.COMING_OF_AGE: grown,
-    ArcTemplate.FORBIDDEN_LOVE: wed,
-    ArcTemplate.RIVALRY: outlived,
-    ArcTemplate.MENTOR_AND_HEIR: outlived,
-    ArcTemplate.QUEST: outlived,
-}
 
 
 async def achieved(ctx: TickContext, arc: ArcRow, figures: list[ArcFigureRow]) -> bool:
@@ -408,7 +413,7 @@ async def close(ctx: TickContext, arc: ArcRow, outcome: ArcOutcome, tally: ArcTa
 
 async def advance(ctx: TickContext, arc: ArcRow, tally: ArcTally) -> bool:
     figures = await figures_of(ctx, arc.id)
-    foe_ids = [row.node_id for row in figures if row.role in (ArcRole.FOE, ArcRole.RIVAL)]
+    foe_ids = [row.node_id for row in figures if row.role in ADVANCE_ARC_ROLES]
     foes_alive = not foe_ids or any([await living(ctx, node) for node in foe_ids])
     killed = await ctx.session.scalar(
         select(BondRow.id)

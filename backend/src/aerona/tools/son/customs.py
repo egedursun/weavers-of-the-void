@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.catalog.life.tools import AIMS
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.grammar import spoken
 from aerona.db.tables.customs import RevivalRow
@@ -10,7 +11,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.customs import MemberRight, Membership, RevivalAim, RevivalGoal
+from aerona.domain.enums.customs import MemberRight, Membership, RevivalGoal
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.customs import control
@@ -24,12 +25,6 @@ from aerona.tools.framework.validation import fail
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
-AIMS = {
-    RevivalGoal.REVIVE_LANGUAGE: RevivalAim.RESTORE,
-    RevivalGoal.RESTORE_GOD: RevivalAim.RESTORE,
-    RevivalGoal.EXPEL_FOREIGNERS: RevivalAim.RESTORE,
-    RevivalGoal.ADOPT_WAYS: RevivalAim.ADOPT,
-}
 
 
 class StirRevivalInput(ToolInput):

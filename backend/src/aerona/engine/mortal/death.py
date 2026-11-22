@@ -1,11 +1,11 @@
-from types import MappingProxyType
-
 from sqlalchemy import select
 
-from aerona.core.total import total
+from aerona.catalog.kinds.harm import HARM_DEATHS
+from aerona.catalog.life_traits import DEATH_CAUSE_TRAITS, having
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.life_traits import DeathCauseTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
@@ -20,39 +20,8 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 
-HARM_DEATHS: MappingProxyType[HarmCause, DeathCause] = total(
-    HarmCause,
-    {
-        HarmCause.BATTLE: DeathCause.BATTLE,
-        HarmCause.DUEL: DeathCause.DUEL,
-        HarmCause.PUNISHMENT: DeathCause.EXECUTION,
-        HarmCause.TORTURE: DeathCause.EXECUTION,
-        HarmCause.ACCIDENT: DeathCause.ACCIDENT,
-        HarmCause.MONSTER: DeathCause.MONSTER,
-        HarmCause.DISASTER: DeathCause.DISASTER,
-        HarmCause.CURSE: DeathCause.CURSE,
-        HarmCause.MAGIC_BACKLASH: DeathCause.MAGIC,
-        HarmCause.GOD: DeathCause.DIVINE,
-        HarmCause.POISON: DeathCause.POISON,
-        HarmCause.QUEST: DeathCause.HARDSHIP,
-        HarmCause.ESCAPE: DeathCause.MURDER,
-        HarmCause.SACRIFICE: DeathCause.SACRIFICE,
-        HarmCause.AGE: DeathCause.OLD_AGE,
-        HarmCause.PLAYER: DeathCause.DIVINE,
-        HarmCause.EXPOSURE: DeathCause.EXPOSURE,
-        HarmCause.RITUAL: DeathCause.ACCIDENT,
-        HarmCause.BOMBARDMENT: DeathCause.BOMBARDMENT,
-        HarmCause.INDUSTRIAL: DeathCause.INDUSTRIAL,
-        HarmCause.CRASH: DeathCause.CRASH,
-        HarmCause.RADIATION: DeathCause.RADIATION,
-        HarmCause.DECOMPRESSION: DeathCause.DECOMPRESSION,
-        HarmCause.EXPERIMENT: DeathCause.EXPERIMENT,
-        HarmCause.POWER: DeathCause.MAGIC,
-        HarmCause.BODY: DeathCause.DISEASE,
-    },
-)
-GLORIOUS_DEATHS = frozenset({DeathCause.BATTLE, DeathCause.DUEL, DeathCause.MONSTER, DeathCause.SACRIFICE})
-SHAMEFUL_DEATHS = frozenset({DeathCause.EXECUTION, DeathCause.DESPAIR})
+GLORIOUS_DEATHS = having(DEATH_CAUSE_TRAITS, DeathCauseTrait.GLORIOUS_DEATHS)
+SHAMEFUL_DEATHS = having(DEATH_CAUSE_TRAITS, DeathCauseTrait.SHAMEFUL_DEATHS)
 
 
 def manner_of(harm: HarmCause | None, default: DeathCause = DeathCause.UNKNOWN) -> DeathCause:

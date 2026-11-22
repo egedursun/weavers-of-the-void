@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.catalog.kinds.selectorates import SELECTORATE_BASES
+from aerona.catalog.life.regime import LAW_TECHNIQUES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.total import total
@@ -76,7 +77,6 @@ COALITION_RULES = total(
 TRIBAL = frozenset({GovernmentKind.CHIEFDOM, GovernmentKind.TRIBAL_CONFEDERATION})
 LOWER_CLASSES = (SocialClass.FARMER, SocialClass.ARTISAN, SocialClass.WORKER)
 ELITES = (SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.WARRIOR, SocialClass.SCRIBE, SocialClass.MERCHANT, SocialClass.OFFICIAL, SocialClass.PROFESSIONAL)
-LAW_TECHNIQUES = (Technique.WRITTEN_LAW, Technique.CODIFIED_LAW)
 
 
 @dataclass

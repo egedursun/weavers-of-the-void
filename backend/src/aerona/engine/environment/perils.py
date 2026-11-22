@@ -74,9 +74,9 @@ async def strike_community(ctx: TickContext, community: EntityRow, region: Entit
             danger: DangerSource = source.source
             await record(
                 ctx,
-                f"danger.{danger.value}",
+                "danger.harm",
                 roles={IncidentRole.VICTIM: community.id, IncidentRole.PLACE: region.id, IncidentRole.ACTOR: source.source_node_id},
-                facts={"count": lost, "maimed": maimed},
+                facts={"source": danger, "count": lost, "maimed": maimed},
                 place=region.id,
                 world_id=community.world_id,
                 magnitude=clamp_int(lost, 0, PERCENT),

@@ -1,6 +1,10 @@
+from collections.abc import Awaitable, Callable
+
 from sqlalchemy import delete, select
 
+from aerona.catalog.life.divine import HUNGER_LABELS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.core.random import SeededRandom
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -34,9 +38,7 @@ from aerona.engine.primitives.records import RecordSpec, open_record, retire_in
 from aerona.engine.primitives.stats import POPULATION_KEY, stat_or
 from aerona.engine.recording.record import record
 
-H = OuterHunger
 VOID_TENETS = (TenetKind.VOID_COMMUNION, TenetKind.FEEDING_THE_HUNGER, TenetKind.WHISPERED_SECRETS)
-HUNGER_LABELS = {H.SOULS: "Souls", H.KNOWLEDGE: "Knowledge", H.LIGHT: "Light", H.NAMES: "Names", H.MEMORIES: "Memories"}
 
 
 def reach_of(rules_size_per_region: int, being: EntityRow) -> int:
@@ -61,6 +63,10 @@ async def outer_profile(ctx: TickContext, being: EntityRow) -> OuterBeingProfile
     return row
 
 
+EATERS: Handlers[OuterHunger, Callable[[TickContext, EntityRow, int], Awaitable[int]]] = Handlers(OuterHunger)
+
+
+@EATERS.on(OuterHunger.SOULS)
 async def eat_souls(ctx: TickContext, being: EntityRow, bite: int) -> int:
     souls = await ctx.session.scalars(
         select(EntityRow)
@@ -77,6 +83,7 @@ async def eat_souls(ctx: TickContext, being: EntityRow, bite: int) -> int:
     return eaten
 
 
+@EATERS.on(OuterHunger.KNOWLEDGE)
 async def eat_knowledge(ctx: TickContext, being: EntityRow, bite: int) -> int:
     holders = select(EntityRow.id).where(EntityRow.world_id == being.world_id, EntityRow.entity_type.in_(list(COMMUNITY_TYPES)))
     rows = await ctx.session.scalars(
@@ -90,6 +97,7 @@ async def eat_knowledge(ctx: TickContext, being: EntityRow, bite: int) -> int:
     return eaten
 
 
+@EATERS.on(OuterHunger.LIGHT)
 async def eat_light(ctx: TickContext, being: EntityRow, bite: int) -> int:
     world = await ctx.session.get(WorldRow, being.world_id)
     star = await ctx.session.get(StarRow, world.star_id) if world is not None and world.star_id is not None else None
@@ -100,6 +108,7 @@ async def eat_light(ctx: TickContext, being: EntityRow, bite: int) -> int:
     return taken
 
 
+@EATERS.on(OuterHunger.NAMES)
 async def eat_names(ctx: TickContext, being: EntityRow, bite: int) -> int:
     languages = select(EntityRow.id).where(EntityRow.world_id == being.world_id, EntityRow.entity_type == EntityType.LANGUAGE)
     words = list(await ctx.session.scalars(select(LexemeRow.id).where(LexemeRow.language_entity_id.in_(languages)).order_by(LexemeRow.id).limit(bite)))
@@ -108,6 +117,7 @@ async def eat_names(ctx: TickContext, being: EntityRow, bite: int) -> int:
     return len(words)
 
 
+@EATERS.on(OuterHunger.MEMORIES)
 async def eat_memories(ctx: TickContext, being: EntityRow, bite: int) -> int:
     legends = select(EntityRow.id).where(EntityRow.world_id == being.world_id, EntityRow.entity_type == EntityType.LEGEND)
     rows = await ctx.session.scalars(select(LegendProfileRow).where(LegendProfileRow.legend_entity_id.in_(legends)).order_by(LegendProfileRow.legend_entity_id))
@@ -117,9 +127,6 @@ async def eat_memories(ctx: TickContext, being: EntityRow, bite: int) -> int:
             row.credence = clamp_int(row.credence - ctx.rules.outer_beings.memory_bite, 0, PERCENT)
             eaten += 1
     return eaten
-
-
-EATERS = {H.SOULS: eat_souls, H.KNOWLEDGE: eat_knowledge, H.LIGHT: eat_light, H.NAMES: eat_names, H.MEMORIES: eat_memories}
 
 
 async def open_breaches(ctx: TickContext, being: EntityRow, row: OuterBeingProfileRow) -> int:

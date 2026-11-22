@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from aerona.core.total import total
 from aerona.domain.enums.body import DamageType, HarmCause, InjuryKind
+from aerona.domain.enums.mortal import DeathCause
 
 
 @dataclass(frozen=True)
@@ -74,3 +75,39 @@ HARM_CAUSES: Mapping[HarmCause, HarmCauseSpec] = total(
         H.POWER: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.PSYCHIC, "power_psychic"), (D.BLUNT, "power_blunt"))),
     },
 )
+
+HARM_DEATHS: Mapping[HarmCause, DeathCause] = total(
+    HarmCause,
+    {
+        HarmCause.BATTLE: DeathCause.BATTLE,
+        HarmCause.DUEL: DeathCause.DUEL,
+        HarmCause.PUNISHMENT: DeathCause.EXECUTION,
+        HarmCause.TORTURE: DeathCause.EXECUTION,
+        HarmCause.ACCIDENT: DeathCause.ACCIDENT,
+        HarmCause.MONSTER: DeathCause.MONSTER,
+        HarmCause.DISASTER: DeathCause.DISASTER,
+        HarmCause.CURSE: DeathCause.CURSE,
+        HarmCause.MAGIC_BACKLASH: DeathCause.MAGIC,
+        HarmCause.GOD: DeathCause.DIVINE,
+        HarmCause.POISON: DeathCause.POISON,
+        HarmCause.QUEST: DeathCause.HARDSHIP,
+        HarmCause.ESCAPE: DeathCause.MURDER,
+        HarmCause.SACRIFICE: DeathCause.SACRIFICE,
+        HarmCause.AGE: DeathCause.OLD_AGE,
+        HarmCause.PLAYER: DeathCause.DIVINE,
+        HarmCause.EXPOSURE: DeathCause.EXPOSURE,
+        HarmCause.RITUAL: DeathCause.ACCIDENT,
+        HarmCause.BOMBARDMENT: DeathCause.BOMBARDMENT,
+        HarmCause.INDUSTRIAL: DeathCause.INDUSTRIAL,
+        HarmCause.CRASH: DeathCause.CRASH,
+        HarmCause.RADIATION: DeathCause.RADIATION,
+        HarmCause.DECOMPRESSION: DeathCause.DECOMPRESSION,
+        HarmCause.EXPERIMENT: DeathCause.EXPERIMENT,
+        HarmCause.POWER: DeathCause.MAGIC,
+        HarmCause.BODY: DeathCause.DISEASE,
+    },
+)
+HONOURED_CAUSES = frozenset({HarmCause.BATTLE, HarmCause.DUEL, HarmCause.MONSTER, HarmCause.QUEST})
+SHAMEFUL_CAUSES = frozenset({HarmCause.PUNISHMENT, HarmCause.TORTURE})
+EXECUTIONS = (HarmCause.PUNISHMENT, HarmCause.SACRIFICE)
+BATTLE_CAUSES = frozenset({HarmCause.BATTLE, HarmCause.DUEL})

@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.harm_kinds import injuries_where
 from aerona.catalog.mind import COMMAND_SKILLS, HEALING_SKILLS, MELEE_SKILLS, MEMORIES, MISSILE_SKILLS
 from aerona.catalog.thoughts import ATROCITIES
 from aerona.constants.units import PERCENT
@@ -11,7 +12,7 @@ from aerona.db.repositories.chronicle import ChronicleRepository, incident_for
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
-from aerona.domain.enums.body import InjuryKind, InjuryState
+from aerona.domain.enums.body import InjuryState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.mind import ActKind, MemoryKind, SkillKind, ThoughtKind, TraitKind, TraitSource
@@ -32,7 +33,7 @@ from aerona.engine.renown.currencies import on_act
 from aerona.engine.renown.deeds import deed_seen
 from aerona.engine.standing.hypocrisy import professed_act
 
-LOSS_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED})
+LOSS_KINDS = injuries_where(lambda spec: spec.cut_away)
 FIGHTING_ROLES = frozenset({*HERO_ROLES, MortalRole.CAPTAIN, MortalRole.BANDIT, MortalRole.OFFICER, MortalRole.PILOT})
 BATTLE_TRAITS = (TraitKind.BRAVE, TraitKind.CRAVEN)
 MAIMED_TRAITS = (TraitKind.MELANCHOLIC, TraitKind.IRON_WILLED)

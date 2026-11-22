@@ -1,12 +1,14 @@
+from aerona.catalog.life_traits import TRADE_MODE_TRAITS, having
 from aerona.catalog.preservation import PRESERVATION
 from aerona.catalog.urban import CARGO
 from aerona.constants.units import PERCENT
 from aerona.domain.enums.economy import TradeMode
+from aerona.domain.enums.life_traits import TradeModeTrait
 from aerona.domain.enums.urban import CargoClass, PreservationMethod
 from aerona.rules.registry import Rules
 
-WATER_MODES = frozenset({TradeMode.RIVER, TradeMode.SEA})
-LAND_MODES = frozenset({TradeMode.ROAD, TradeMode.CARAVAN})
+WATER_MODES = having(TRADE_MODE_TRAITS, TradeModeTrait.WATER_MODES)
+LAND_MODES = having(TRADE_MODE_TRAITS, TradeModeTrait.LAND_MODES)
 
 
 def carriage_factor(rules: Rules, cargo: CargoClass, mode: TradeMode, bulk: float = 1.0) -> float:

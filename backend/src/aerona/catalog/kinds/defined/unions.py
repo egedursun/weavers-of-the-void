@@ -60,22 +60,22 @@ UNION_DESCENT = total(
     UnionDescent,
     {
         UnionDescent.THROUGH_FIRST: Defined(
-            "Through the first side", checked_by=("engine.unions.customs.line_house",), used_by=("engine.unions.axes.DESCENT_OF",)
+            "Through the first side", checked_by=("engine.unions.customs.line_house",), used_by=("catalog.life.unions.DESCENT_OF",)
         ),
         UnionDescent.THROUGH_SECOND: Defined(
-            "Through the second side", checked_by=("engine.unions.customs.line_house",), used_by=("engine.unions.axes.DESCENT_OF",)
+            "Through the second side", checked_by=("engine.unions.customs.line_house",), used_by=("catalog.life.unions.DESCENT_OF",)
         ),
         UnionDescent.THROUGH_BOTH: Defined(
             "Through both sides",
             checked_by=(),
             used_by=(
+                "catalog.life.unions.DESCENT_OF",
                 "db.tables.unions.UnionCustomRow",
-                "engine.unions.axes.DESCENT_OF",
                 "engine.unions.axes.fresh_custom",
                 "services.player.cycles.UnionDraft",
             ),
         ),
-        UnionDescent.CHOSEN: Defined("As each child chooses", checked_by=("engine.unions.customs.line_house",), used_by=("engine.unions.axes.DESCENT_OF",)),
+        UnionDescent.CHOSEN: Defined("As each child chooses", checked_by=("engine.unions.customs.line_house",), used_by=("catalog.life.unions.DESCENT_OF",)),
         UnionDescent.BY_HOUSE_RULE: Defined("By the rule of the greater house", checked_by=("engine.unions.customs.line_house",), used_by=()),
     },
 )

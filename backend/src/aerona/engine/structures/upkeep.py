@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import STANDING_STATES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
@@ -9,7 +10,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import TreasuryEntry
-from aerona.domain.enums.structure import STANDING_STATES, ConstructionState, RuinCause
+from aerona.domain.enums.structure import ConstructionState, RuinCause
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import decay_loss
 from aerona.engine.economy.stocks import goods_of

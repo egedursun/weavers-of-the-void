@@ -1,8 +1,9 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.cosmos import AIR_GAS, LIFE_BARRING_WORLDS
+from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.constants.units import PERCENT
-from aerona.core.total import partial
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleBiologyRow
@@ -11,9 +12,9 @@ from aerona.db.tables.physics import WorldLifeRow, WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ecology import Biochemistry
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import AirNeed, LifeComplexity, LifeEnvironment
-from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.orbits import GAS_WORLDS, LIFELESS_WORLDS
 from aerona.engine.ecology.biochemistry import bearable, tolerated
@@ -21,10 +22,9 @@ from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 COMPLEXITY_ORDER: tuple[LifeComplexity, ...] = tuple(LifeComplexity)
-BARREN_WORLDS = frozenset({*LIFELESS_WORLDS, WorldType.VOID_POCKET, WorldType.ASTEROID_BELT, WorldType.SHATTERED})
-HARSH_WORLDS = frozenset({WorldType.LAVA, WorldType.FORGE, WorldType.ICE, WorldType.ICE_SHELL, WorldType.METHANE, WorldType.GREENHOUSE, WorldType.DWARF_PLANET})
-BURIED_WORLDS = frozenset({WorldType.ICE_SHELL, WorldType.HOLLOW, WorldType.CHTHONIAN, WorldType.FUNGAL})
-AIR_GAS = partial(AirNeed, {AirNeed.OXYGEN: "oxygen", AirNeed.CARBON_DIOXIDE: "carbon_dioxide", AirNeed.METHANE: "methane"}, without={AirNeed.NONE})
+BARREN_WORLDS = LIFELESS_WORLDS | LIFE_BARRING_WORLDS
+HARSH_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.HARSH_WORLDS)
+BURIED_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.BURIED_WORLDS)
 GRAVITY_SPAN = (0.5, 1.6)
 HOMELAND_FIXUP = "homeland_body"
 

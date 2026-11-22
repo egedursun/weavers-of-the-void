@@ -2,11 +2,12 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.life.tools import VOICE_OF_OFFICE_KINDS
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow, TreatyPartyRow, TreatyProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.polity import OfficeKind, PartyRole, TreatyBreach, TreatyKind, TreatyStatus
+from aerona.domain.enums.polity import PartyRole, TreatyBreach, TreatyKind, TreatyStatus
 from aerona.engine.polity.accords import Clause, accept, propose
 from aerona.engine.polity.treaties import breach
 from aerona.prompts import MortalToolId
@@ -35,9 +36,7 @@ async def voice_of(call: MortalCall) -> int:
         return call.me.id
     if call.me.entity_type is EntityType.MORTAL:
         realm = await call.session.scalar(
-            select(OfficeRow.polity_entity_id)
-            .where(OfficeRow.holder_entity_id == call.me.id, OfficeRow.kind.in_([OfficeKind.RULER, OfficeKind.REGENT]))
-            .limit(1)
+            select(OfficeRow.polity_entity_id).where(OfficeRow.holder_entity_id == call.me.id, OfficeRow.kind.in_(VOICE_OF_OFFICE_KINDS)).limit(1)
         )
         profile = await call.session.get(PolityProfileRow, realm) if realm is not None else None
         if profile is not None and profile.core_entity_id is not None:

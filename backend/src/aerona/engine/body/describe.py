@@ -2,7 +2,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.body_plans import PLANS
+from aerona.catalog.conditions import CAPACITIES, CONDITIONS, MAIMS, OPEN_INJURY_STATES
 from aerona.catalog.effect_packages import PACKAGES
+from aerona.catalog.harm_kinds import INJURIES
 from aerona.catalog.tissues import digits_phrase
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an, spoken
@@ -14,18 +16,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.affliction import Visibility
-from aerona.domain.enums.body import (
-    OPEN_INJURY_STATES,
-    BodyReading,
-    Capacity,
-    ConditionKind,
-    Consciousness,
-    Handedness,
-    InjuryKind,
-    InjuryState,
-    MaimedKind,
-    NerveDamage,
-)
+from aerona.domain.enums.body import BodyReading, Capacity, Consciousness, Handedness, InjuryState, NerveDamage
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.body.book import anatomy_for
 from aerona.engine.body.cohorts import maimed_share
@@ -34,26 +25,6 @@ from aerona.rules.registry import Rules
 
 Bearer = EntityRow | SonRow | ForeignGodRow
 
-CONDITION_TEXT: dict[ConditionKind, str] = {
-    ConditionKind.CHRONIC_ILLNESS: "a lingering illness",
-    ConditionKind.PARANOIA: "paranoia",
-    ConditionKind.VISIONS: "visions",
-    ConditionKind.RAGE: "fits of rage",
-    ConditionKind.MELANCHOLY: "melancholy",
-    ConditionKind.ADDICTION: "an addiction",
-    ConditionKind.AGE_BLINDNESS: "blindness of age",
-    ConditionKind.AGE_DEAFNESS: "deafness of age",
-    ConditionKind.WITHERED_LIMB: "a withered limb",
-    ConditionKind.ENDLESS_HUNGER: "an endless hunger",
-    ConditionKind.POSSESSION: "a possessing spirit",
-    ConditionKind.VOID_TAINT: "the taint of the void",
-    ConditionKind.CHOSEN_MARK: "the mark of the chosen",
-    ConditionKind.DIVINE_BRAND: "a god's brand",
-    ConditionKind.NIGHTMARES: "recurring nightmares",
-    ConditionKind.COMATOSE: "a sleep no one can wake them from",
-    ConditionKind.COGNITIVE_DECLINE: "a failing memory and reckoning",
-    ConditionKind.MALNUTRITION: "a body wasted by a poor diet",
-}
 
 NERVE_TEXT: dict[NerveDamage, str] = {NerveDamage.MOTOR: "limp", NerveDamage.SENSORY: "numb"}
 
@@ -67,30 +38,6 @@ CONSCIOUSNESS_TEXT = partial(
     without={Consciousness.AWAKE},
 )
 
-LOST: dict[InjuryKind, str] = {InjuryKind.SEVERED: "lost", InjuryKind.GOUGED: "gouged out", InjuryKind.DESTROYED: "ruined"}
-
-CAPACITY_TEXT: dict[Capacity, str] = {
-    Capacity.MELEE: "fighting hand to hand",
-    Capacity.MISSILE: "shooting and throwing",
-    Capacity.COMMAND: "giving orders",
-    Capacity.CRAFT: "making things",
-    Capacity.SCHOLARSHIP: "reading and study",
-    Capacity.PRESENCE: "how others see them",
-    Capacity.MOBILITY: "getting about",
-    Capacity.FERTILITY: "bearing children",
-}
-
-MAIMED_TEXT: dict[MaimedKind, str] = {
-    MaimedKind.ONE_ARMED: "one-armed",
-    MaimedKind.ONE_LEGGED: "one-legged",
-    MaimedKind.ONE_EYED: "one-eyed",
-    MaimedKind.BLIND: "blind",
-    MaimedKind.DEAF: "deaf",
-    MaimedKind.MUTE: "mute",
-    MaimedKind.LAME: "lame",
-    MaimedKind.SCARRED: "disfigured",
-    MaimedKind.BROKEN_MINDED: "broken in mind",
-}
 
 READING_TEXT: dict[BodyReading, str] = {
     BodyReading.NEUTRAL: "they pity the maimed",
@@ -102,7 +49,7 @@ READING_TEXT: dict[BodyReading, str] = {
 
 def weakened(body: BodyRow, rules: Rules) -> list[str]:
     floor = PERCENT - rules.context.body_weakness_pct
-    return [f"{CAPACITY_TEXT[capacity]} {getattr(body, capacity.value)}%" for capacity in Capacity if getattr(body, capacity.value) <= floor]
+    return [f"{CAPACITIES[capacity].text} {getattr(body, capacity.value)}%" for capacity in Capacity if getattr(body, capacity.value) <= floor]
 
 
 def frame_line(body: BodyRow) -> str:
@@ -143,7 +90,7 @@ async def condition_text(session: AsyncSession, row: ConditionRow, *, private: b
     kind = await session.get(AgentlessConditionRow, row.kind_id) if row.kind_id is not None and private else None
     named = f" ({kind.name})" if kind is not None else ""
     cause = f", brought on by {spoken(row.cause)}" if row.cause is not None and private else ""
-    return f"{CONDITION_TEXT[row.kind]}{named}{cause}, condition {row.id} at severity {row.severity}" if private else CONDITION_TEXT[row.kind]
+    return f"{CONDITIONS[row.kind].text}{named}{cause}, condition {row.id} at severity {row.severity}" if private else CONDITIONS[row.kind].text
 
 
 async def _bearer_lines(session: AsyncSession, rules: Rules, body: BodyRow, bearer_id: int, *, private: bool) -> list[str]:
@@ -160,8 +107,12 @@ async def _bearer_lines(session: AsyncSession, rules: Rules, body: BodyRow, bear
 
     shown = [row for row in injuries if row.visible or private]
     groups = {
-        "Missing": [f"{label(row.part)} {LOST[row.kind]}{worn(row)}" for row in shown if row.kind in LOST and row.state not in OPEN_INJURY_STATES],
-        "Scars": [f"{spoken(row.kind)} on the {label(row.part)}" for row in shown if leaves_mark(row) and row.kind not in LOST],
+        "Missing": [
+            f"{label(row.part)} {INJURIES[row.kind].lost_word}{worn(row)}"
+            for row in shown
+            if INJURIES[row.kind].lost_word is not None and row.state not in OPEN_INJURY_STATES
+        ],
+        "Scars": [f"{spoken(row.kind)} on the {label(row.part)}" for row in shown if leaves_mark(row) and INJURIES[row.kind].lost_word is None],
         "Open wounds": [f"{spoken(row.kind)} on the {label(row.part)}" + wound_notes(row) for row in shown if row.state in OPEN_INJURY_STATES],
     }
     lines = [f"{title}: " + "; ".join(items) for title, items in groups.items() if items]
@@ -194,7 +145,7 @@ async def _community_lines(session: AsyncSession, rules: Rules, community: Entit
     cohorts = list(await session.scalars(select(MaimedCohortRow).where(MaimedCohortRow.community_entity_id == community.id, MaimedCohortRow.count > 0)))
     if cohorts:
         share = round(maimed_share(rules, community, cohorts) * PERCENT)
-        parts = ", ".join(f"{MAIMED_TEXT[row.kind]}: {row.count}" for row in sorted(cohorts, key=lambda row: -row.count))
+        parts = ", ".join(f"{MAIMS[row.kind].text}: {row.count}" for row in sorted(cohorts, key=lambda row: -row.count))
         lines.append(f"The maimed among them ({share}%): {parts}")
     custom = await session.get(BodyCustomRow, community.id) if community.entity_type is EntityType.PEOPLE else None
     if custom is not None:

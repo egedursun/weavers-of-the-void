@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
-from aerona.core.total import total
+from aerona.catalog.life.military import LEVELS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import FeudRow
 from aerona.db.write_guard import held
@@ -36,21 +36,6 @@ class Deed:
     steps: tuple[StepDraft, ...] = ()
 
 
-LEVELS: Mapping[FeudAction, FeudLevel | None] = total(
-    FeudAction,
-    {
-        FeudAction.RAID: FeudLevel.RAID,
-        FeudAction.ASSASSINATE: FeudLevel.BLOOD,
-        FeudAction.DEMAND_WERGILD: None,
-        FeudAction.ESCALATE: FeudLevel.WAR,
-        FeudAction.REST: None,
-        FeudAction.AMBUSH: FeudLevel.RAID,
-        FeudAction.ABDUCT: FeudLevel.BLOOD,
-        FeudAction.DESTROY_PROPERTY: FeudLevel.RAID,
-        FeudAction.SEEK_MEDIATION: None,
-        FeudAction.CALL_ALLIES: None,
-    },
-)
 RANK = {FeudLevel.INSULT: 0, FeudLevel.BLOOD: 1, FeudLevel.RAID: 2, FeudLevel.WAR: 3}
 
 

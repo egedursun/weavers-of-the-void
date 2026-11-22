@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.cosmos import CAUSE_END
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.arcana import LabTextRow, WarpingRow
@@ -27,7 +28,7 @@ from aerona.engine.arcana.warping import WarpTally, warp_world
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure_ladder
 from aerona.engine.cosmos.world_end_control import declare_end
-from aerona.engine.cosmos.world_ends import CAUSE_END, EndingTally, keep_world_ends
+from aerona.engine.cosmos.world_ends import EndingTally, keep_world_ends
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.divine.control import open_breach
 from aerona.engine.intrigue.decay import DecayTally, keep_decays

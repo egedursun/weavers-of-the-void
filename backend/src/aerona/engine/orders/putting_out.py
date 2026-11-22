@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from types import MappingProxyType
 
 from sqlalchemy import func, select
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.goods_tables import PUT_OUT
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.faction_kinds import of_kinds
 from aerona.db.tables.economy import ProductionRunRow, TradeRouteProfileRow
@@ -12,7 +12,7 @@ from aerona.db.tables.orders import ChainHoldingRow, PuttingOutRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeRouteStatus
+from aerona.domain.enums.economy import GoodsFlow, TradeRouteStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -26,14 +26,6 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 
-PUT_OUT: MappingProxyType[CommodityKind, CommodityKind] = MappingProxyType(
-    {
-        CommodityKind.WOOL: CommodityKind.CLOTH,
-        CommodityKind.FIBRE: CommodityKind.CLOTH,
-        CommodityKind.TIMBER: CommodityKind.TOOLS,
-        CommodityKind.ORE: CommodityKind.TOOLS,
-    }
-)
 VILLAGES = (SizeTier.HAMLET, SizeTier.VILLAGE)
 
 

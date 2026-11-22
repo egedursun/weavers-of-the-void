@@ -5,9 +5,9 @@ from sqlalchemy import Select, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.gatherings import EXCAVATION_FLAGS, EXCAVATION_PLACES, STAGE_ORDER, STAGE_SKILLS, STAGE_TECHNIQUES
+from aerona.catalog.life.sites import CURSES, FIND_CLASSES, FINDS, LOST_TECHNIQUES, RISKS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
-from aerona.core.total import partial
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
@@ -20,9 +20,9 @@ from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sites import BattlefieldFeatureRow, ExcavationRow, ExcavationStageRow
 from aerona.db.tables.warfare import BattleRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.affliction import PackageKind, Transmission
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.culture import ItemClass, ItemDeed, Technique
+from aerona.domain.enums.culture import ItemDeed, Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
@@ -55,22 +55,6 @@ from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.recording.record import FactInput
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import realm_of_community
-
-RISKS = (ExcavationRisk.CURSE, ExcavationRisk.SPIRIT, ExcavationRisk.COLLAPSE)
-FINDS = (ExcavationFind.ARTIFACT, ExcavationFind.BOOK, ExcavationFind.TECHNIQUE, ExcavationFind.REGALIA, ExcavationFind.ROUTE_MAP)
-CURSES = (PackageKind.HUNGER_CURSE, PackageKind.POSSESSION, PackageKind.VOID_TAINT)
-FIND_CLASSES = partial(
-    ExcavationFind,
-    {
-        ExcavationFind.ARTIFACT: ItemClass.IDOL,
-        ExcavationFind.BOOK: ItemClass.BOOK,
-        ExcavationFind.TECHNIQUE: ItemClass.TOOL,
-        ExcavationFind.REGALIA: ItemClass.CROWN,
-        ExcavationFind.ROUTE_MAP: ItemClass.MAP,
-    },
-    without={ExcavationFind.NOTHING, ExcavationFind.WAKING},
-)
-LOST_TECHNIQUES = (Technique.ARCH, Technique.CARTOGRAPHY, Technique.WARDING, Technique.ALCHEMY, Technique.ASTRONOMY_INSTRUMENTS, Technique.WRITTEN_LAW)
 
 
 @dataclass

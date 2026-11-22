@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.goods_tables import RECIPES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.crafts import ChemicalWorksRow
@@ -9,9 +10,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.crafts import ChemicalProduct
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.industry import Pollutant
 from aerona.domain.enums.modifier import IncidentRole
@@ -27,28 +27,6 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import record
-
-P = ChemicalProduct
-C = CommodityKind
-
-
-@dataclass(frozen=True)
-class Recipe:
-    techniques: tuple[Technique, ...]
-    raw: CommodityKind
-    made: CommodityKind | None
-
-
-RECIPES = {
-    P.DYE: Recipe((Technique.HERBALISM,), C.HERBS, C.DYE),
-    P.SOAP: Recipe((Technique.HERBALISM,), C.MEAT, None),
-    P.MORDANT: Recipe((Technique.ALCHEMY,), C.ORE, C.DYE),
-    P.TANNING: Recipe((Technique.HERBALISM,), C.TIMBER, C.CLOTH),
-    P.FERTILISER: Recipe((Technique.CROP_ROTATION,), C.DUNG, None),
-    P.MEDICINE: Recipe((Technique.HERBALISM,), C.HERBS, C.MEDICINE),
-    P.INCENDIARY: Recipe((Technique.ALCHEMY,), C.FUEL, C.SIEGE_MATERIEL),
-    P.EXPLOSIVE: Recipe((Technique.ALCHEMY, Technique.SIEGECRAFT), C.COAL, C.SIEGE_MATERIEL),
-}
 
 
 @dataclass

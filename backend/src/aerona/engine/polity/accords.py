@@ -1,10 +1,11 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
-from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.polity import DEFAULT_CLAUSES, DERIVED, END_TREATY_TREATY_STATUSS, TREATY_WORDS
+from aerona.catalog.life_traits import TREATY_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -18,6 +19,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.interpretation import InterpretationFault, InterpretedEvent
+from aerona.domain.enums.life_traits import TreatyKindTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, OathKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.models.entity_stats import TreatyStats
@@ -33,60 +35,6 @@ from aerona.engine.primitives.queries import active_bonds, close, connect, livin
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.tongues.grammar import misread_factor
 
-TREATY_WORDS = MappingProxyType(
-    {
-        TreatyKind.PEACE: "the Peace",
-        TreatyKind.TRUCE: "the Truce",
-        TreatyKind.ALLIANCE_DEFENSIVE: "the Alliance",
-        TreatyKind.ALLIANCE_OFFENSIVE: "the War Pact",
-        TreatyKind.NON_AGGRESSION: "the Pact of Restraint",
-        TreatyKind.VASSALAGE: "the Oath of Vassalage",
-        TreatyKind.TRIBUTE: "the Tribute",
-        TreatyKind.MARRIAGE_PACT: "the Marriage Pact",
-        TreatyKind.TRADE_PACT: "the Trade Pact",
-        TreatyKind.CONDOTTA: "the Condotta",
-        TreatyKind.GUARANTEE: "the Guarantee",
-        TreatyKind.INTERWORLD: "the Treaty of the Worlds",
-        TreatyKind.COALITION: "the Coalition",
-        TreatyKind.DIVINE_PACT: "the Divine Pact",
-        TreatyKind.NAVAL_LIMIT: "the Naval Treaty",
-        TreatyKind.ARMS_LIMIT: "the Arms Treaty",
-    }
-)
-DEFAULT_CLAUSES = MappingProxyType(
-    {
-        TreatyKind.ALLIANCE_DEFENSIVE: (ClauseKind.CALL_TO_ARMS,),
-        TreatyKind.ALLIANCE_OFFENSIVE: (ClauseKind.CALL_TO_ARMS,),
-        TreatyKind.NON_AGGRESSION: (ClauseKind.NON_AGGRESSION,),
-        TreatyKind.PEACE: (ClauseKind.NON_AGGRESSION,),
-        TreatyKind.TRUCE: (ClauseKind.NON_AGGRESSION,),
-        TreatyKind.VASSALAGE: (ClauseKind.TRIBUTE, ClauseKind.CALL_TO_ARMS),
-        TreatyKind.TRIBUTE: (ClauseKind.TRIBUTE,),
-        TreatyKind.TRADE_PACT: (ClauseKind.TRADE_RIGHTS, ClauseKind.TOLLS_WAIVED),
-        TreatyKind.MARRIAGE_PACT: (ClauseKind.MARRIAGE,),
-        TreatyKind.INTERWORLD: (ClauseKind.TRADE_RIGHTS, ClauseKind.NON_AGGRESSION),
-        TreatyKind.GUARANTEE: (ClauseKind.NON_AGGRESSION,),
-        TreatyKind.CONDOTTA: (ClauseKind.CALL_TO_ARMS,),
-        TreatyKind.COALITION: (ClauseKind.CALL_TO_ARMS,),
-        TreatyKind.DIVINE_PACT: (ClauseKind.NON_AGGRESSION,),
-        TreatyKind.NAVAL_LIMIT: (ClauseKind.FLEET_LIMIT,),
-        TreatyKind.ARMS_LIMIT: (ClauseKind.MASS_WEAPON_LIMIT,),
-    }
-)
-DERIVED = MappingProxyType(
-    {
-        TreatyKind.ALLIANCE_DEFENSIVE: BondKind.ALLY,
-        TreatyKind.ALLIANCE_OFFENSIVE: BondKind.ALLY,
-        TreatyKind.MARRIAGE_PACT: BondKind.ALLY,
-        TreatyKind.TRUCE: BondKind.TRUCE,
-        TreatyKind.PEACE: BondKind.TRUCE,
-        TreatyKind.VASSALAGE: BondKind.PAYS_TRIBUTE,
-        TreatyKind.TRIBUTE: BondKind.PAYS_TRIBUTE,
-        TreatyKind.TRADE_PACT: BondKind.TRADES_WITH,
-        TreatyKind.INTERWORLD: BondKind.TRADES_WITH,
-        TreatyKind.COALITION: BondKind.ALLY,
-    }
-)
 TRIBUTARY_ROLES = (PartyRole.VASSAL,)
 PARTY_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.POLITY, EntityType.HOUSE, EntityType.BEAST, EntityType.MORTAL})
 
@@ -99,7 +47,7 @@ class Clause:
     params: dict[str, int | str | bool] = field(default_factory=dict)
 
 
-MUTUAL = frozenset({TreatyKind.NAVAL_LIMIT, TreatyKind.ARMS_LIMIT})
+MUTUAL = having(TREATY_KIND_TRAITS, TreatyKindTrait.MUTUAL)
 
 
 def default_clauses(kind: TreatyKind, parties: Sequence[tuple[int, PartyRole]]) -> list[Clause]:
@@ -297,7 +245,7 @@ async def end_treaty(ctx: TickContext, profile: TreatyProfileRow, status: Treaty
     if treaty is not None:
         treaty.end_epoch = ctx.epoch
         treaty.fate_note = f"Epoch {ctx.epoch}: {reason}."
-    if status in {TreatyStatus.FULFILLED, TreatyStatus.EXPIRED}:
+    if status in END_TREATY_TREATY_STATUSS:
         await remember_kept(ctx, profile, treaty)
         parties = list(await ctx.session.scalars(select(TreatyPartyRow.party_node_id).where(TreatyPartyRow.treaty_entity_id == profile.treaty_entity_id)))
         await on_kept(ctx, parties, profile.kind)

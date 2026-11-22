@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.lore import COMMON_ANOMALIES, MEET_ANOMALIES_ANOMALY_KINDS
 from aerona.catalog.theories import DOMAINS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -191,7 +192,7 @@ async def meet_anomalies(ctx: TickContext) -> int:
             chance *= 1 - table.endorsed_anomaly_pct / PERCENT
         rng = ctx.rng(f"theory.anomaly.{profile.theory_entity_id}.{community.id}.{ctx.epoch}")
         if rng.chance(chance):
-            kinds = [AnomalyKind.FAILED_PREDICTION, AnomalyKind.OBSERVATION, *([AnomalyKind.CONTRARY_CURE] if profile.domain in CONTRARY else [])]
+            kinds = [*COMMON_ANOMALIES, *(MEET_ANOMALIES_ANOMALY_KINDS if profile.domain in CONTRARY else [])]
             ctx.session.add(
                 TheoryAnomalyRow(theory_entity_id=profile.theory_entity_id, kind=rng.pick(kinds), weight=1, witness_entity_id=community.id, epoch=ctx.epoch)
             )

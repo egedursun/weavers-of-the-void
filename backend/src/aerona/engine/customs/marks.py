@@ -1,15 +1,14 @@
-from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.customs import CALM_MARKED_MARK_MEANINGS, EVENT_BONDS, READ_MARK_MARK_MEANINGS, READ_MARK_MARK_MEANINGS_2
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.customs import BodyMarkRow, MarkCustomRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.customs import MarkKind, MarkMeaning
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.body.customs import people_of
@@ -22,11 +21,6 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 
 MARKABLE = tuple(kind for kind in MarkKind if kind is not MarkKind.BRAND)
-EVENT_BONDS: Mapping[MarkMeaning, BondKind] = {
-    MarkMeaning.DEED: BondKind.KILLED,
-    MarkMeaning.MARRIAGE: BondKind.SPOUSE_OF,
-    MarkMeaning.STATUS: BondKind.RULES,
-}
 
 
 @dataclass
@@ -67,9 +61,9 @@ async def read_mark(ctx: TickContext, mortal: EntityRow, meaning: MarkMeaning) -
     profile = await ctx.session.get(MortalProfileRow, mortal.id)
     if profile is None:
         return
-    if meaning in (MarkMeaning.DEED, MarkMeaning.STATUS) and not is_held(profile, "renown"):
+    if meaning in READ_MARK_MARK_MEANINGS and not is_held(profile, "renown"):
         await add_renown(ctx.session, mortal.id, table.renown_per_deed, ctx.epoch, rules=ctx.rules)
-    elif meaning in (MarkMeaning.CLAN, MarkMeaning.MARRIAGE, MarkMeaning.AGE_SET) and not is_held(profile, "loyalty_community"):
+    elif meaning in READ_MARK_MARK_MEANINGS_2 and not is_held(profile, "loyalty_community"):
         profile.loyalty_community = clamp_int(profile.loyalty_community + table.belonging_per_mark, 0, PERCENT)
     elif meaning is MarkMeaning.CRIME and not is_held(profile, "honour"):
         profile.honour = clamp_int(profile.honour - table.shame_per_brand, 0, PERCENT)
@@ -93,7 +87,7 @@ async def happened(ctx: TickContext, mortal: EntityRow, meaning: MarkMeaning) ->
 
 async def calm_marked(ctx: TickContext) -> None:
     table = ctx.rules.marks
-    calming = (MarkMeaning.PROTECTION, MarkMeaning.MOURNING)
+    calming = CALM_MARKED_MARK_MEANINGS
     for holder in sorted(set(await ctx.session.scalars(select(BodyMarkRow.holder_node_id).where(BodyMarkRow.meaning.in_(calming))))):
         profile = await ctx.session.get(MortalProfileRow, holder)
         if profile is not None and not held(holder) and not is_held(profile, "stress"):

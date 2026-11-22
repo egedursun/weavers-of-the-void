@@ -5,10 +5,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.world_bodies import WORLD_BODIES
+from aerona.catalog.life.cosmos import AIR, GRAVITY_G
+from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.physics import CosmicFeatureRow, StarPhysicsRow, StarSystemRow, WorldPhysicsRow
 from aerona.domain.enums.cosmography import WorldAge
+from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.physics import CosmicFeatureKind
 from aerona.domain.enums.world import Atmosphere, Gravity, WorldType
 from aerona.engine.cosmos.climate import band_heat
@@ -19,17 +22,9 @@ from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_hal
 from aerona.rules.registry import Rules
 
 FOURTH = 0.25
-GAS_WORLDS = frozenset({WorldType.GAS, WorldType.ICE_GIANT, WorldType.HOT_GIANT, WorldType.RINGED})
-LIFELESS_WORLDS = frozenset({WorldType.DEAD, WorldType.CORPSE_WORLD, WorldType.CHTHONIAN})
-SKYLESS_WORLDS = frozenset({WorldType.DREAM, WorldType.MIRROR, WorldType.VOID_POCKET, WorldType.GODS_PALACE, WorldType.GENERATION_SHIP, WorldType.HOLLOW})
-GRAVITY_G: dict[Gravity, float] = {Gravity.LOW: 0.4, Gravity.NORMAL: 1.0, Gravity.HIGH: 1.8}
-AIR: dict[Atmosphere, tuple[float, dict[str, int]]] = {
-    Atmosphere.NONE: (0.0, {"nitrogen": 0, "oxygen": 0, "carbon_dioxide": 0, "methane": 0, "water_vapour": 0, "exotic_gas": 0}),
-    Atmosphere.THIN: (0.3, {"nitrogen": 80, "oxygen": 16, "carbon_dioxide": 4, "methane": 0, "water_vapour": 0, "exotic_gas": 0}),
-    Atmosphere.NORMAL: (1.0, {"nitrogen": 78, "oxygen": 21, "carbon_dioxide": 1, "methane": 0, "water_vapour": 0, "exotic_gas": 0}),
-    Atmosphere.DENSE: (4.0, {"nitrogen": 75, "oxygen": 18, "carbon_dioxide": 5, "methane": 0, "water_vapour": 2, "exotic_gas": 0}),
-    Atmosphere.TOXIC: (1.5, {"nitrogen": 40, "oxygen": 2, "carbon_dioxide": 40, "methane": 8, "water_vapour": 0, "exotic_gas": 10}),
-}
+GAS_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.GAS_WORLDS)
+LIFELESS_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.LIFELESS_WORLDS)
+SKYLESS_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.SKYLESS_WORLDS)
 TOXIC_GASES = ("carbon_dioxide", "methane", "exotic_gas")
 LOCK_REACH_BY_AGE: dict[WorldAge, float] = {WorldAge.YOUNG: 0.5, WorldAge.MATURE: 1.0, WorldAge.OLD: 1.5, WorldAge.DYING: 2.0}
 

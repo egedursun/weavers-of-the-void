@@ -1,6 +1,7 @@
+from aerona.catalog.life_traits import EXTRACTION_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.domain.enums.economy import ExtractionKind
+from aerona.domain.enums.life_traits import ExtractionKindTrait
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.catch import regrowth_scale
 from aerona.engine.economy.book import EconomyBook
@@ -11,7 +12,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
-SEAM_KINDS = frozenset({ExtractionKind.MINING, ExtractionKind.QUARRYING})
+SEAM_KINDS = having(EXTRACTION_KIND_TRAITS, ExtractionKindTrait.ARTISAN_KINDS)
 
 
 def deepest_layer(ground: RegionEnvironmentRow | None) -> str | None:

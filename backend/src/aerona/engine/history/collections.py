@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from aerona.catalog.gatherings import INCIDENT_ROLES, KEY_COLLECTIONS, KEY_PREFIX_COLLECTIONS, NEST_PARENTS
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
+from aerona.catalog.life.history import SCHEME_COLLECTIONS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -15,14 +16,13 @@ from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
-from aerona.domain.enums.intrigue import PlotKind, SchemePhase
+from aerona.domain.enums.intrigue import SchemePhase
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import PunishmentKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.stats import stat_or
 
 TEN_THOUSAND = 10000
-SCHEME_COLLECTIONS = {PlotKind.ABDUCT: CollectionKind.ABDUCTION, PlotKind.STEAL_RELIC: CollectionKind.THEFT, PlotKind.COUP: CollectionKind.COUP}
 NAMED_ROLES = (CollectionRole.LEADER, CollectionRole.HOST, CollectionRole.FOUNDER, CollectionRole.MEMBER, CollectionRole.VICTIM, CollectionRole.ACCUSED)
 
 

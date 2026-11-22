@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import CAPTIVE_FATE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import SpeakerCohortRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
@@ -11,7 +12,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import SpeakerKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.military import CaptiveFate
+from aerona.domain.enums.life_traits import CaptiveFateTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.tongues import LanguageStage
 from aerona.domain.models.entity_stats import LanguageStats
@@ -31,7 +32,7 @@ CREOLE_SUBTYPE = "creole"
 PIDGIN_POWER = 1
 PIDGIN_WORDS = 8
 PIDGIN_SHARE = 20
-BOUND = frozenset({CaptiveFate.HELD, CaptiveFate.ENSLAVED, CaptiveFate.LABOUR})
+BOUND = having(CAPTIVE_FATE_TRAITS, CaptiveFateTrait.BOUND)
 
 
 @dataclass

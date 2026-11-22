@@ -1,6 +1,14 @@
 from sqlalchemy import select
 
 from aerona.catalog.discovery import ACCIDENT_BRANCHES, DANGEROUS_BRANCHES, DANGEROUS_TECHNIQUES
+from aerona.catalog.life.lore import (
+    ACCIDENTS_RESEARCH_INCIDENTS,
+    HARMS,
+    SCHOLARLY,
+    STRIKE_RESEARCH_INCIDENTS,
+    STRIKE_RESEARCH_INCIDENTS_2,
+    STRIKE_RESEARCH_INCIDENTS_3,
+)
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
 from aerona.db.record_context import Term
@@ -9,7 +17,6 @@ from aerona.db.tables.discovery import ResearchIncidentRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.discovery import ResearchIncident
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
@@ -23,7 +30,7 @@ from aerona.engine.ecology.control import commonest_species, spawn_beast
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.learning import realm_of
-from aerona.engine.lore.research import SCHOLARLY, has_technique
+from aerona.engine.lore.research import has_technique
 from aerona.engine.lore.research_depth import add_progress, neighbours
 from aerona.engine.lore.rites import phenomenon
 from aerona.engine.mind.ethics import BAD, culture_of, ethics_of
@@ -37,12 +44,6 @@ from aerona.engine.renown.currencies import ruler_of_realm
 from aerona.engine.services.community_relations import change_relation
 
 DANGEROUS = frozenset(DANGEROUS_TECHNIQUES)
-HARMS = {
-    ResearchIncident.FIRE: (HarmCause.EXPERIMENT, DamageType.FIRE),
-    ResearchIncident.EXPLOSION: (HarmCause.EXPERIMENT, DamageType.EXPLOSIVE),
-    ResearchIncident.POISONING: (HarmCause.POISON, DamageType.VENOM),
-    ResearchIncident.SUMMONING_GONE_WRONG: (HarmCause.MAGIC_BACKLASH, DamageType.MAGIC),
-}
 
 
 async def scholars_of(ctx: TickContext, holder_id: int) -> list[EntityRow]:
@@ -84,9 +85,9 @@ async def strike(
     atlas = await RegionAtlas.load(ctx.session)
     region_id = atlas.top_region(holder.id)
     region = await ctx.session.get(EntityRow, region_id) if region_id is not None else None
-    if kind in {ResearchIncident.FIRE, ResearchIncident.EXPLOSION}:
+    if kind in STRIKE_RESEARCH_INCIDENTS:
         shift_stat(holder, "prosperity", -round_half_up(table.incident_prosperity * severity / PERCENT))
-    if kind in {ResearchIncident.EXPLOSION, ResearchIncident.POISONING, ResearchIncident.SUMMONING_GONE_WRONG, ResearchIncident.FIRE}:
+    if kind in STRIKE_RESEARCH_INCIDENTS_2:
         people = stat(holder, "population") or 0
         row.dead = round_half_up(people * table.incident_dead_pct / PERCENT * severity / PERCENT)
         if row.dead:
@@ -101,7 +102,7 @@ async def strike(
         for other in sorted(await neighbours(ctx.session, atlas, holder.id))[:1]:
             if not held(other) and not await has_technique(ctx.session, other, technique):
                 await add_progress(ctx, other, technique, table.leak_progress)
-    if kind in {ResearchIncident.RELEASED_BEAST, ResearchIncident.SUMMONING_GONE_WRONG} and region is not None:
+    if kind in STRIKE_RESEARCH_INCIDENTS_3 and region is not None:
         species = await commonest_species(ctx, region.id)
         if species is not None and kind is ResearchIncident.RELEASED_BEAST:
             await spawn_beast(ctx, species)
@@ -199,7 +200,7 @@ async def accidents(ctx: TickContext) -> int:
     )
     for row in list(active):
         branch = TECHNIQUES[row.technique].branch
-        incidents = ACCIDENT_BRANCHES.get(branch) or ((ResearchIncident.POISONING, ResearchIncident.EXPLOSION) if row.technique is Technique.ALCHEMY else ())
+        incidents = ACCIDENT_BRANCHES.get(branch) or (ACCIDENTS_RESEARCH_INCIDENTS if row.technique is Technique.ALCHEMY else ())
         if not incidents:
             continue
         holder = await ctx.session.get(EntityRow, row.holder_entity_id)

@@ -1276,13 +1276,21 @@ function ResearchForm({
   )
 }
 
+type CycleRow = NodeEvolutionView['cycles'][number]
+
+function flowText(flows: CycleRow['sources']): string {
+  return flows.length === 0
+    ? 'nothing'
+    : flows.map((flow) => `${flow.source_label} ${flow.rate}`).join(', ')
+}
+
 function CycleCard({
   worldId,
-  cycle,
+  cycles,
   blocked,
 }: {
   worldId: number | null
-  cycle: NodeEvolutionView['cycle']
+  cycles: NodeEvolutionView['cycles']
   blocked: string | null
 }) {
   const edit = useEvolutionAction(
@@ -1300,23 +1308,25 @@ function CycleCard({
     edit.isPending,
     reset.isPending
   )
+  const turned = cycles.some((row) => row.updated_epoch > 0 || row.held)
+  const lastTurn = Math.max(0, ...cycles.map((row) => row.updated_epoch))
   return (
     <RecordRow
       icon={CYCLES.carbon.icon}
       tone='info'
       title='Cycles of the world'
       caption={
-        cycle
-          ? `Turned in epoch ${cycle.updated_epoch}; 50 is balance`
+        turned
+          ? `Turned in epoch ${lastTurn}; 50 is balance`
           : 'In balance; the engine turns them from the next epoch'
       }
       aside={
         <Button
           size='sm'
           variant='ghost'
-          disabled={busy !== null || !cycle}
+          disabled={busy !== null || !turned}
           disabledReason={
-            busy ?? (cycle ? undefined : 'The cycles are already in balance')
+            busy ?? (turned ? undefined : 'The cycles are already in balance')
           }
           onClick={() => reset.mutate()}
         >
@@ -1325,52 +1335,36 @@ function CycleCard({
         </Button>
       }
     >
-      {cycle && (
-        <>
+      {cycles.map((row) => (
+        <div key={row.cycle} className='flex min-w-0 flex-col gap-1'>
           <Meter
-            label={CYCLES.carbon.label}
-            value={cycle.carbon}
-            tone='warning'
-          />
-          <Meter label={CYCLES.water.label} value={cycle.water} tone='info' />
-          <Meter
-            label={CYCLES.nutrients.label}
-            value={cycle.nutrients}
-            tone='success'
+            label={row.held ? `${row.label} (held)` : row.label}
+            value={row.stock}
+            tone={CYCLES[row.cycle].meter}
           />
           <Facts
             items={[
               [
-                'Carbon in and out',
-                `${cycle.carbon_in} in, ${cycle.carbon_out} out`,
+                `${row.label} in and out`,
+                `${row.inflow} in, ${row.outflow} out`,
               ],
-              [
-                'Water in and out',
-                `${cycle.water_in} in, ${cycle.water_out} out`,
-              ],
-              [
-                'Nutrients in and out',
-                `${cycle.nutrients_in} in, ${cycle.nutrients_out} out`,
-              ],
+              ['Fed by', flowText(row.sources)],
+              ['Drained by', flowText(row.sinks)],
             ]}
           />
-        </>
-      )}
+        </div>
+      ))}
       <RecordEditor
         title='Set the cycles'
-        note='Carbon above balance warms every land, free water swells rain and seas, nutrients enrich the soil.'
-        fields={[
-          { key: 'carbon', label: 'Carbon', kind: 'number', min: 0, max: 100 },
-          { key: 'water', label: 'Water', kind: 'number', min: 0, max: 100 },
-          {
-            key: 'nutrients',
-            label: 'Nutrients',
-            kind: 'number',
-            min: 0,
-            max: 100,
-          },
-        ]}
-        locked={cycle?.locked ?? []}
+        note='Each cycle above balance moves the world values it feeds: carbon warms every land, free liquid swells rain and seas, nutrients enrich the soil.'
+        fields={cycles.map((row) => ({
+          key: row.cycle,
+          label: row.label,
+          kind: 'number' as const,
+          min: 0,
+          max: 100,
+        }))}
+        locked={cycles.filter((row) => row.held).map((row) => row.cycle)}
         busy={busy}
         onSave={(values) => edit.mutate({ values, release: [] })}
         onRelease={(release) => edit.mutate({ values: {}, release })}
@@ -1653,7 +1647,7 @@ function EvolutionBody({
       />
       <CycleCard
         worldId={isWorld ? nodeId : null}
-        cycle={data.cycle}
+        cycles={data.cycles}
         blocked={blocked}
       />
     </div>

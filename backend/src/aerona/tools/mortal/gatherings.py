@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import GATHERING_KIND_TRAITS, having
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringRow
@@ -11,6 +12,7 @@ from aerona.db.tables.sites import ExcavationRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GatheringStatus, GuestRole
+from aerona.domain.enums.life_traits import GatheringKindTrait
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.site import ExcavationStatus
@@ -28,10 +30,8 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail, require_canon
 
 GUESTS_MAX = 12
-RULER_KINDS = frozenset({GatheringKind.COUNCIL, GatheringKind.SUMMIT, GatheringKind.TOURNAMENT})
-ENGINE_KINDS = frozenset(
-    {GatheringKind.CORONATION, GatheringKind.TRIAL, GatheringKind.EXECUTION, GatheringKind.EXAMINATION, GatheringKind.ELECTION, GatheringKind.LAUNCH}
-)
+RULER_KINDS = having(GATHERING_KIND_TRAITS, GatheringKindTrait.RULER_KINDS)
+ENGINE_KINDS = having(GATHERING_KIND_TRAITS, GatheringKindTrait.ENGINE_KINDS)
 
 
 class HoldGatheringInput(ToolInput):

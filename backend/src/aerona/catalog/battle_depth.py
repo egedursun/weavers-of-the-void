@@ -1,11 +1,9 @@
 from dataclasses import dataclass
 
 from aerona.core.total import total
-from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.military import Formation, UnitFamily, UnitKind
 
 K = UnitKind
-T = TerrainKind
 F = UnitFamily
 
 
@@ -186,35 +184,6 @@ KIND_FORMATION = {
     K.ARTILLERY_CREW: Formation.ENTRENCHED,
     K.GUNNERS: Formation.DISPERSED,
 }
-
-TERRAIN_WIDTH = total(
-    TerrainKind,
-    {
-        T.PLAIN: 160,
-        T.STEPPE: 180,
-        T.FOREST: 70,
-        T.JUNGLE: 55,
-        T.MARSH: 65,
-        T.HILLS: 110,
-        T.MOUNTAINS: 50,
-        T.HIGH_PASS: 25,
-        T.DESERT: 150,
-        T.TUNDRA: 130,
-        T.ICE_SHEET: 120,
-        T.VOLCANIC: 80,
-        T.COAST: 120,
-        T.ISLAND: 90,
-        T.RIVER_VALLEY: 100,
-        T.CANYON: 30,
-        T.UNDERGROUND: 30,
-        T.CRYSTAL_FIELD: 90,
-        T.FLESH: 85,
-        T.VOID_SHORE: 75,
-        T.RUIN_FIELD: 70,
-        T.URBAN: 45,
-        T.SEA: 140,
-    },
-)
 
 
 def formation_for(kind: UnitKind, family: UnitFamily) -> Formation:

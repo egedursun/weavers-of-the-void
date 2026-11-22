@@ -1,20 +1,18 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.climes import SKY_READING
 from aerona.constants.units import PERCENT
 from aerona.db.tables.climes import ClimateOscillationRow, MonsoonSeasonRow, RegionWindRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.climes import OscillationPhase
 from aerona.domain.enums.cosmography import OceanCurrent
-from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.lore.research import has_technique
 from aerona.rules.registry import Rules
-
-SKY_READING = (Technique.ECLIPSE_PREDICTION, Technique.ASTRONOMY_INSTRUMENTS)
 
 
 def oscillation_shift(rules: Rules, row: ClimateOscillationRow | None, env: RegionEnvironmentRow) -> tuple[int, int]:

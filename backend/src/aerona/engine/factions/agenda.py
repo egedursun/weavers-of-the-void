@@ -2,6 +2,22 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import GUILD_KINDS, ROBBER_KINDS, SECRET_KINDS
+from aerona.catalog.life.factions import (
+    CHOICES,
+    CHOOSE_FACTION_GOAL_KINDS,
+    CHOOSE_FACTION_GOAL_KINDS_2,
+    CLASS_OF_KIND,
+    GOAL_PLANS,
+    GOAL_TARGET_FACTION_GOAL_KINDS,
+    LAW_GRIEVANCES,
+    LAW_WISHES,
+    MONOPOLY_GOODS,
+    PETITION_TERMS_FACTION_GOAL_KINDS,
+    REALM_GOAL_FACTION_GOAL_KINDS,
+)
+from aerona.catalog.life.finance import OUTLAWS
+from aerona.catalog.life_traits import FACTION_ACTION_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.record_context import Term
@@ -15,26 +31,18 @@ from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import (
-    GUILD_KINDS,
-    ROBBER_KINDS,
-    SECRET_KINDS,
-    FactionActionKind,
-    FactionGoalKind,
-    FactionKind,
-    FactionRank,
-    FactionScale,
-)
+from aerona.domain.enums.faction import FactionActionKind, FactionGoalKind, FactionKind, FactionRank, FactionScale
+from aerona.domain.enums.life_traits import FactionActionKindTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import CoupCause, LawKind, OfficeKind
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.factions.book import CLASS_OF_KIND, FactionBook, log
+from aerona.engine.factions.book import FactionBook, log
 from aerona.engine.factions.offshoots import found_offshoot
 from aerona.engine.faith.book import patron_node
-from aerona.engine.finance.contraband import OUTLAWS, smuggle_books
+from aerona.engine.finance.contraband import smuggle_books
 from aerona.engine.labour.walkouts import strike_as_body
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.memories import remember
@@ -65,58 +73,11 @@ class Move:
 
 
 A = FactionActionKind
-DEFIANT = frozenset({A.STRIKE, A.RIOT, A.COUP, A.ASSASSINATE})
+DEFIANT = having(FACTION_ACTION_KIND_TRAITS, FactionActionKindTrait.DEFIANT)
 ROBBER_STRENGTH = 30
 THIN_PURSE = 50
 HALF = 50
 PRESSING = 30
-GOAL_PLANS: dict[FactionKind, tuple[FactionGoalKind, ...]] = {
-    FactionKind.MERCHANT_GUILD: (G.LOWER_TAXES, G.MONOPOLY_ON, G.PEACE_WITH),
-    FactionKind.CRAFT_GUILD: (G.PROTECT_CRAFT, G.MONOPOLY_ON, G.LOWER_TAXES),
-    FactionKind.PRIESTHOOD: (G.CONVERT_REALM, G.ENACT_LAW),
-    FactionKind.WARRIOR_ORDER: (G.WAR_ON, G.ENACT_LAW),
-    FactionKind.NOBLE_COUNCIL: (G.INSTALL_CLAIMANT, G.ABOLISH_LAW, G.LOWER_TAXES),
-    FactionKind.PEASANT_LEAGUE: (G.LOWER_TAXES, G.ABOLISH_LAW),
-    FactionKind.REBELS: (G.INDEPENDENCE, G.INSTALL_CLAIMANT),
-    FactionKind.BANDITS: (G.LOOT,),
-    FactionKind.PIRATES: (G.LOOT,),
-    FactionKind.ROUTE_RAIDERS: (G.LOOT,),
-    FactionKind.SOCIAL_CIRCLE: (),
-    FactionKind.ASSASSINS: (G.INSTALL_CLAIMANT, G.LOOT),
-    FactionKind.SCHOLARS_ACADEMY: (G.ENACT_LAW, G.PROTECT_CRAFT),
-    FactionKind.SECRET_SOCIETY: (G.INSTALL_CLAIMANT, G.CONVERT_REALM),
-    FactionKind.MERCENARY_COMPANY: (G.LOOT, G.WAR_ON),
-    FactionKind.INTERWORLD_FEDERATION: (G.PEACE_WITH, G.LOWER_TAXES),
-    FactionKind.WANDERING_MARKET: (G.LOWER_TAXES, G.MONOPOLY_ON),
-    FactionKind.CRIME_FAMILY: (G.LOOT, G.MONOPOLY_ON),
-    FactionKind.THIEVES_GUILD: (G.LOOT,),
-    FactionKind.SMUGGLING_RING: (G.LOOT, G.LOWER_TAXES),
-    FactionKind.PIRATE_CONFEDERACY: (G.LOOT,),
-    FactionKind.WORKERS_UNION: (G.LOWER_TAXES, G.ABOLISH_LAW),
-    FactionKind.ENGINEERS_SOCIETY: (G.PROTECT_CRAFT, G.ENACT_LAW),
-    FactionKind.FINANCIERS: (G.MONOPOLY_ON, G.LOWER_TAXES, G.PEACE_WITH),
-    FactionKind.VETERANS: (G.ENACT_LAW, G.INSTALL_CLAIMANT, G.WAR_ON),
-    FactionKind.WORKER_BODY: (G.ENACT_LAW, G.ABOLISH_LAW, G.LOWER_TAXES),
-}
-LAW_WISHES: dict[FactionKind, tuple[LawKind, dict[str, int | str | bool]]] = {
-    FactionKind.PRIESTHOOD: (LawKind.TITHE, {"rate": 10, "enforced": True}),
-    FactionKind.WARRIOR_ORDER: (LawKind.VETERAN_PENSION, {"amount": 30}),
-    FactionKind.VETERANS: (LawKind.VETERAN_PENSION, {"amount": 30}),
-    FactionKind.WORKER_BODY: (LawKind.LABOUR_LAW, {"max_hours": 48, "unions": True, "bodies": "recognised"}),
-    FactionKind.SCHOLARS_ACADEMY: (LawKind.LICENSED_MAGIC, {"fee": 10}),
-    FactionKind.CRAFT_GUILD: (LawKind.GUILD_CHARTER, {"monopoly": True}),
-    FactionKind.MERCHANT_GUILD: (LawKind.GUILD_CHARTER, {"monopoly": True}),
-}
-LAW_GRIEVANCES: dict[FactionKind, LawKind] = {
-    FactionKind.PEASANT_LEAGUE: LawKind.SERFDOM,
-    FactionKind.NOBLE_COUNCIL: LawKind.TAX_RATE,
-    FactionKind.MERCHANT_GUILD: LawKind.TOLLS,
-}
-MONOPOLY_GOODS: dict[FactionKind, CommodityKind] = {
-    FactionKind.MERCHANT_GUILD: CommodityKind.LUXURIES,
-    FactionKind.CRAFT_GUILD: CommodityKind.TOOLS,
-    FactionKind.WANDERING_MARKET: CommodityKind.LUXURIES,
-}
 
 
 async def realm_for(book: RealmBook, profile: FactionProfileRow) -> Realm | None:
@@ -158,7 +119,7 @@ async def goal_target(ctx: TickContext, realms: RealmBook, profile: FactionProfi
     realm = await realm_for(realms, profile)
     home = profile.home_entity_id
     found: tuple[int | None, str | None] = (None, None)
-    if kind in {G.LOWER_TAXES, G.PROTECT_CRAFT}:
+    if kind in GOAL_TARGET_FACTION_GOAL_KINDS:
         found = (realm.entity.id if realm is not None else home), None
     elif kind is G.MONOPOLY_ON:
         good = MONOPOLY_GOODS.get(profile.kind)
@@ -187,7 +148,7 @@ async def realm_goal(ctx: TickContext, realm: Realm, profile: FactionProfileRow,
     if kind is G.CONVERT_REALM and home is not None:
         god = await patron_node(ctx.session, profile.faction_entity_id) or await patron_node(ctx.session, home)
         return (realm.entity.id, str(god)) if god is not None else (None, None)
-    if kind in {G.WAR_ON, G.PEACE_WITH} and core is not None:
+    if kind in REALM_GOAL_FACTION_GOAL_KINDS and core is not None:
         wars = await ongoing_wars(ctx.session, core)
         if not wars:
             return None, None
@@ -195,16 +156,6 @@ async def realm_goal(ctx: TickContext, realm: Realm, profile: FactionProfileRow,
     if kind is G.INDEPENDENCE and home is not None and home != core:
         return home, str(realm.entity.id)
     return (home, None) if kind is G.LOOT and home is not None else (None, None)
-
-
-CHOICES: dict[FactionGoalKind, FactionActionKind] = {
-    G.ENACT_LAW: A.LOBBY,
-    G.ABOLISH_LAW: A.LOBBY,
-    G.CONVERT_REALM: A.LOBBY,
-    G.WAR_ON: A.FUND_WAR,
-    G.INDEPENDENCE: A.RIOT,
-    G.PEACE_WITH: A.LOBBY,
-}
 
 
 def choose(profile: FactionProfileRow, goal: FactionGoalRow, faction: EntityRow) -> FactionActionKind:
@@ -215,13 +166,13 @@ def choose(profile: FactionProfileRow, goal: FactionGoalRow, faction: EntityRow)
         action = A.ASSASSINATE if profile.kind in SECRET_KINDS else A.COUP if profile.armed else A.BRIBE
     elif kind is G.LOOT:
         action = A.RAID if profile.kind in ROBBER_KINDS and strength >= ROBBER_STRENGTH else A.SMUGGLE
-    elif kind in {G.LOWER_TAXES, G.PROTECT_CRAFT}:
+    elif kind in CHOOSE_FACTION_GOAL_KINDS:
         action = A.PETITION if profile.treasury < THIN_PURSE else A.LOBBY
         if goal.progress >= HALF and profile.kind in GUILD_KINDS:
             action = A.STRIKE
         elif goal.progress >= HALF and profile.kind is FactionKind.PEASANT_LEAGUE:
             action = A.RIOT
-    elif kind in {G.ENACT_LAW, G.ABOLISH_LAW, G.CONVERT_REALM} and goal.progress >= PRESSING:
+    elif kind in CHOOSE_FACTION_GOAL_KINDS_2 and goal.progress >= PRESSING:
         action = A.PETITION
     elif kind is G.MONOPOLY_ON:
         action = A.BRIBE if profile.treasury >= THIN_PURSE else A.PETITION
@@ -389,7 +340,7 @@ async def petition(move: Move) -> bool:
 
 
 def petition_terms(laws: LawBook, realm: Realm, profile: FactionProfileRow, goal: FactionGoalRow) -> tuple[LawKind | None, dict[str, int | str | bool]]:
-    if goal.kind in {G.LOWER_TAXES, G.PROTECT_CRAFT}:
+    if goal.kind in PETITION_TERMS_FACTION_GOAL_KINDS:
         rate = laws.param(realm.entity.id, LawKind.TAX_RATE, "rate")
         return LawKind.TAX_RATE, {"rate": max(0, int(rate or 10) - 5)}
     if goal.kind is G.ENACT_LAW and goal.target_key is not None:

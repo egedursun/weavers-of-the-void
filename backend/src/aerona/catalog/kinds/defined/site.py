@@ -19,9 +19,9 @@ EXCAVATION_RISK = total(
         ExcavationRisk.NONE: Defined(
             "No risk", checked_by=("engine.sites.digs.dig_on",), used_by=("db.tables.sites.ExcavationStageRow", "engine.sites.digs.plan_stages")
         ),
-        ExcavationRisk.CURSE: Defined("Curse", checked_by=("engine.sites.digs.suffer",), used_by=("engine.sites.digs.RISKS",)),
-        ExcavationRisk.SPIRIT: Defined("Spirit", checked_by=("engine.sites.digs.suffer",), used_by=("engine.sites.digs.RISKS",)),
-        ExcavationRisk.COLLAPSE: Defined("Collapse", checked_by=("engine.sites.digs.suffer",), used_by=("engine.sites.digs.RISKS",)),
+        ExcavationRisk.CURSE: Defined("Curse", checked_by=("engine.sites.digs.suffer",), used_by=("catalog.life.sites.RISKS",)),
+        ExcavationRisk.SPIRIT: Defined("Spirit", checked_by=("engine.sites.digs.suffer",), used_by=("catalog.life.sites.RISKS",)),
+        ExcavationRisk.COLLAPSE: Defined("Collapse", checked_by=("engine.sites.digs.suffer",), used_by=("catalog.life.sites.RISKS",)),
     },
 )
 
@@ -36,9 +36,9 @@ ROOM_CONTENT_KIND = total(
         RoomContentKind.TRAP: Defined(
             "Trap", checked_by=("engine.gatherings.control.add_content", "engine.sites.rooms.loot"), used_by=("engine.sites.rooms.furnish",)
         ),
-        RoomContentKind.MIND: Defined("Mind", checked_by=("engine.sites.rooms.FOUND",), used_by=("engine.sites.rooms.furnish",)),
-        RoomContentKind.RELIC: Defined("Relic", checked_by=("engine.sites.rooms.FOUND",), used_by=("engine.sites.rooms.furnish",)),
-        RoomContentKind.REALM_GATE: Defined("Realm gate", checked_by=("engine.sites.rooms.FOUND",), used_by=("engine.sites.rooms.furnish",)),
+        RoomContentKind.MIND: Defined("Mind", checked_by=(), used_by=("engine.sites.rooms.furnish", "engine.sites.rooms.wake_mind")),
+        RoomContentKind.RELIC: Defined("Relic", checked_by=(), used_by=("engine.sites.rooms.claim_relic", "engine.sites.rooms.furnish")),
+        RoomContentKind.REALM_GATE: Defined("Realm gate", checked_by=(), used_by=("engine.sites.rooms.find_gate", "engine.sites.rooms.furnish")),
     },
 )
 
@@ -50,12 +50,12 @@ SITE_CHALLENGE = total(
             checked_by=("engine.sites.rooms.walk_room",),
             used_by=("db.tables.sites.SiteRoomRow", "engine.sites.rooms.furnish", "services.player.gatherings.RoomDraft"),
         ),
-        SiteChallenge.TRAP: Defined("Trap", checked_by=("engine.sites.rooms.furnish",), used_by=("engine.sites.rooms.CHALLENGES",)),
+        SiteChallenge.TRAP: Defined("Trap", checked_by=("engine.sites.rooms.furnish",), used_by=("catalog.life.sites.CHALLENGES",)),
         SiteChallenge.GUARDIAN: Defined(
-            "Guardian", checked_by=("engine.sites.rooms.walk_room",), used_by=("engine.sites.rooms.CHALLENGES", "engine.sites.rooms.furnish")
+            "Guardian", checked_by=("engine.sites.rooms.walk_room",), used_by=("catalog.life.sites.CHALLENGES", "engine.sites.rooms.furnish")
         ),
-        SiteChallenge.PUZZLE: Defined("Puzzle", checked_by=(), used_by=("engine.sites.rooms.CHALLENGES",)),
-        SiteChallenge.HAZARD: Defined("Hazard", checked_by=(), used_by=("engine.sites.rooms.CHALLENGES",)),
+        SiteChallenge.PUZZLE: Defined("Puzzle", checked_by=(), used_by=("catalog.life.sites.CHALLENGES",)),
+        SiteChallenge.HAZARD: Defined("Hazard", checked_by=(), used_by=("catalog.life.sites.CHALLENGES",)),
     },
 )
 
@@ -88,11 +88,16 @@ SITE_ROOM_KIND = total(
         ),
         SiteRoomKind.SHRINE: Defined(
             "Shrine",
-            checked_by=("engine.sites.rooms.furnish",),
-            used_by=("catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_SETTLEMENTS", "catalog.gatherings.ROOM_STRUCTURES"),
+            checked_by=(),
+            used_by=(
+                "catalog.gatherings.ROOM_PLACES",
+                "catalog.gatherings.ROOM_SETTLEMENTS",
+                "catalog.gatherings.ROOM_STRUCTURES",
+                "catalog.life.sites.FURNISH_SITE_ROOM_KINDS_2",
+            ),
         ),
         SiteRoomKind.LAIR: Defined(
-            "Lair", checked_by=("engine.sites.rooms.furnish",), used_by=("catalog.gatherings.GUARDED_ROOMS", "catalog.gatherings.ROOM_PLACES")
+            "Lair", checked_by=(), used_by=("catalog.gatherings.GUARDED_ROOMS", "catalog.gatherings.ROOM_PLACES", "catalog.life.sites.FURNISH_SITE_ROOM_KINDS")
         ),
         SiteRoomKind.LIBRARY: Defined(
             "Library",
@@ -109,13 +114,14 @@ SITE_ROOM_KIND = total(
         ),
         SiteRoomKind.CRYPT: Defined(
             "Crypt",
-            checked_by=("engine.sites.rooms.furnish",),
+            checked_by=(),
             used_by=(
                 "catalog.gatherings.GUARDED_ROOMS",
                 "catalog.gatherings.ITEM_ROOMS",
                 "catalog.gatherings.ROOM_PLACES",
                 "catalog.gatherings.ROOM_SETTLEMENTS",
                 "catalog.gatherings.ROOM_STRUCTURES",
+                "catalog.life.sites.FURNISH_SITE_ROOM_KINDS_2",
             ),
         ),
         SiteRoomKind.LABORATORY: Defined(
@@ -134,13 +140,15 @@ SITE_ROOM_KIND = total(
         ),
         SiteRoomKind.HEART: Defined(
             "Heart of the site",
-            checked_by=("engine.sites.rooms.furnish",),
+            checked_by=(),
             used_by=(
                 "catalog.gatherings.GUARDED_ROOMS",
                 "catalog.gatherings.ITEM_ROOMS",
                 "catalog.gatherings.ROOM_PLACES",
                 "catalog.gatherings.ROOM_SETTLEMENTS",
                 "catalog.gatherings.ROOM_STRUCTURES",
+                "catalog.life.sites.FURNISH_SITE_ROOM_KINDS",
+                "catalog.life.sites.FURNISH_SITE_ROOM_KINDS_2",
             ),
         ),
     },

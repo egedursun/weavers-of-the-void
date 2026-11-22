@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.intimacy import ACT_CONTEXTS
 from aerona.db.tables.cycles import PeopleReproductionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intimacy import IntimacyNormRow, LegitimacyRuleRow, ReproductiveCourseRow
@@ -20,7 +21,7 @@ from aerona.domain.enums.intimacy import (
     PostnatalCustom,
     RelationContext,
 )
-from aerona.domain.enums.mind import ActKind, EthicalStance, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import EthicalStance, ValueAxis, ValueHolder
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.lineage import sexes_fixed
 from aerona.engine.mind.book import stored_values
@@ -28,7 +29,6 @@ from aerona.engine.mind.ethics import ethics_of
 
 LEANING = 60
 RECOGNITION_COST = 10
-ACT_CONTEXTS = {ActKind.ADULTERY: RelationContext.OUTSIDE_UNION, ActKind.INCEST: RelationContext.WITH_KIN}
 ETHIC_STANCES = {EthicalStance.UNTHINKABLE: (NormStance.FORBIDDEN, NormEnforcer.LAW), EthicalStance.SHAMEFUL: (NormStance.DISCOURAGED, NormEnforcer.KIN)}
 
 

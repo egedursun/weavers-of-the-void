@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.made import KEEPERS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.entities import EntityRow
@@ -8,7 +9,6 @@ from aerona.db.tables.networks import NetworkNodeRow, NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import Authenticity
-from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.context import TickContext
@@ -20,7 +20,6 @@ from aerona.engine.recording.record import StepDraft
 from aerona.engine.recording.record import record as record_incident
 
 FALSE = frozenset({Authenticity.ALTERED, Authenticity.FORGED, Authenticity.GENERATED})
-KEEPERS = (SkillKind.WRITING, SkillKind.LAW, SkillKind.CRYPTOGRAPHY, SkillKind.COMPUTING)
 
 
 async def trust_of(ctx: TickContext, holder_id: int) -> InformationTrustRow:

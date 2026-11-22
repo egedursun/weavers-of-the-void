@@ -369,7 +369,6 @@ def design_spec(row: UnitDesignRow) -> UnitSpec:
         social_class=row.social_class,
         counters_charge=row.counters_charge,
         terror=row.terror,
-        terrain=dict(base.terrain),
         flying=row.flying,
         profile=WeaponProfile(row.reach, row.volleys, row.accuracy, row.piercing),
     )

@@ -4,6 +4,7 @@ from itertools import combinations
 
 from sqlalchemy import select
 
+from aerona.catalog.domestication import KEPT_STAGES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderTechniqueRow
@@ -19,7 +20,6 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
-from aerona.domain.enums.ecology import KEPT_STAGES
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.industry import ProcessKind

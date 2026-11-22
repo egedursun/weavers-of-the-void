@@ -1,7 +1,8 @@
 from aerona.catalog.law_areas import LAW_AREAS
+from aerona.catalog.life.polity import AREA_LOBBIES
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.polity import LawArea, LawKind
-from aerona.engine.polity.law_areas import AREA_LOBBIES, area_order, pressed
+from aerona.engine.polity.law_areas import area_order, pressed
 from aerona.rules.registry import Rules
 
 

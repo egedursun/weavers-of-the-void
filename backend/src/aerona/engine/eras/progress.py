@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.eras import ERA_FLOORS, ERA_MARKERS, POWDER, TECHNIQUE_ERAS
+from aerona.catalog.life.eras import LIVE, SPECIALISMS
 from aerona.catalog.techniques import BRANCH_GRAPH, PROGRAMMES, TECHNIQUES, TechniqueSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
@@ -18,7 +19,6 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel, ProgrammeStage
-from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.travel import TravelMethod
@@ -37,8 +37,6 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record as record_incident
 
 COMMUNITIES = (EntityType.SETTLEMENT, EntityType.PEOPLE)
-LIVE = (ProgrammeStage.PLANNING, ProgrammeStage.BUILDING, ProgrammeStage.TESTING)
-SPECIALISMS = (SkillKind.SCIENCE, SkillKind.ENGINEERING, SkillKind.COMPUTING)
 
 
 @dataclass

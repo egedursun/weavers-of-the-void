@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.catalog.aspirations import PERKS
+from aerona.catalog.conditions import CONDITIONS
 from aerona.catalog.modifier_effects import (
     BLESSING_COMMUNITY_KEYS,
     BLESSING_MORTAL_KEYS,
@@ -12,11 +13,10 @@ from aerona.catalog.modifier_effects import (
     LAW_EFFECTS,
     MORTAL_STAT_KEYS,
     STRUCTURE_EFFECTS,
-    TERRAIN_EFFECTS,
     TRADITION_EFFECT_STATS,
     TREATY_EFFECTS,
 )
-from aerona.domain.enums.body import ConditionKind
+from aerona.catalog.terrain import TERRAIN
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.engine.interconnect.registry import Subsystem
 from aerona.rules.registry import Rules
@@ -119,26 +119,7 @@ class DerivedEffect:
     magnitude: Callable[[Rules], float]
 
 
-CONDITION_EFFECTS: MappingProxyType[ConditionKind, tuple[DerivedEffect, ...]] = MappingProxyType(
-    {
-        ConditionKind.CHRONIC_ILLNESS: (
-            DerivedEffect("strength", ModifierOp.MULTIPLY, lambda rules: rules.modifiers.illness_strength_pct / 100),
-            DerivedEffect("agility", ModifierOp.MULTIPLY, lambda rules: rules.modifiers.illness_strength_pct / 100),
-        ),
-        ConditionKind.WITHERED_LIMB: (DerivedEffect("strength", ModifierOp.MULTIPLY, lambda rules: rules.modifiers.withered_strength_pct / 100),),
-        ConditionKind.MELANCHOLY: (DerivedEffect("intellect", ModifierOp.ADD, lambda rules: -rules.modifiers.melancholy_intellect),),
-        ConditionKind.RAGE: (
-            DerivedEffect("strength", ModifierOp.ADD, lambda rules: rules.modifiers.rage_strength),
-            DerivedEffect("intellect", ModifierOp.ADD, lambda rules: -rules.modifiers.rage_intellect),
-        ),
-        ConditionKind.PARANOIA: (DerivedEffect("charisma", ModifierOp.ADD, lambda rules: -rules.modifiers.paranoia_charisma),),
-        ConditionKind.ENDLESS_HUNGER: (DerivedEffect("charisma", ModifierOp.ADD, lambda rules: -rules.modifiers.hunger_charisma),),
-        ConditionKind.VOID_TAINT: (DerivedEffect("charisma", ModifierOp.ADD, lambda rules: -rules.modifiers.void_taint_charisma),),
-        ConditionKind.CHOSEN_MARK: (DerivedEffect("charisma", ModifierOp.ADD, lambda rules: rules.modifiers.chosen_charisma),),
-        ConditionKind.DIVINE_BRAND: (DerivedEffect("charisma", ModifierOp.ADD, lambda rules: rules.modifiers.brand_charisma),),
-        ConditionKind.NIGHTMARES: (DerivedEffect("willpower", ModifierOp.ADD, lambda rules: -rules.modifiers.nightmares_willpower),),
-    }
-)
+CONDITION_EFFECTS = MappingProxyType({kind: spec.effects for kind, spec in CONDITIONS.items() if spec.effects})
 DERIVED_SOURCES = frozenset({ModifierSource.WONDER, ModifierSource.CONDITION})
 SOURCE_KEYS: MappingProxyType[ModifierSource, frozenset[str]] = MappingProxyType(
     {
@@ -155,7 +136,7 @@ SOURCE_KEYS: MappingProxyType[ModifierSource, frozenset[str]] = MappingProxyType
         S.GOD_POWER: frozenset({"growth"}),
         S.GOD_DEATH: frozenset({"magic", "fertility"}),
         S.PHENOMENON: frozenset({"magic", "prosperity"}),
-        S.TERRAIN: frozenset(effect.key for effects in TERRAIN_EFFECTS.values() for effect in effects),
+        S.TERRAIN: frozenset(effect.key for spec in TERRAIN.values() for effect in spec.effects),
         S.SEASON: frozenset({"prosperity"}),
         S.WEATHER: frozenset({"prosperity", "morale"}),
         S.NATURAL_LAW: frozenset({"fertility"}),

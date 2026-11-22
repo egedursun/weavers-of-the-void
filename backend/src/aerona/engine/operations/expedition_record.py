@@ -1,39 +1,13 @@
-from collections.abc import Mapping
-from types import MappingProxyType
-
+from aerona.catalog.life.operations import EXPEDITION_STATES, EXPEDITION_STEPS
 from aerona.db.tables.operations import ExpeditionLogRow, ExpeditionRow
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import ExpeditionEvent
-from aerona.domain.enums.records import FactUnit, ProcessClock, StepAction, StepLocus, StepOutcome, StepState
+from aerona.domain.enums.records import FactUnit, ProcessClock, StepLocus, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.process_steps import append_steps, open_process
 from aerona.engine.recording.record import StepDraft
 
 EXPEDITION_KEY = "expedition.delve"
-EXPEDITION_STEPS: Mapping[ExpeditionEvent, StepAction] = MappingProxyType(
-    {
-        ExpeditionEvent.SETOUT: StepAction.DEPART,
-        ExpeditionEvent.LEG: StepAction.TRAVEL,
-        ExpeditionEvent.ROOM: StepAction.ENTER,
-        ExpeditionEvent.CAMP: StepAction.REST,
-        ExpeditionEvent.AMBUSH: StepAction.MEET_DANGER,
-        ExpeditionEvent.EXPOSURE: StepAction.WORSEN,
-        ExpeditionEvent.AFFLICTION: StepAction.WORSEN,
-        ExpeditionEvent.VIRTUE: StepAction.RALLY,
-        ExpeditionEvent.QUIRK: StepAction.LEARN,
-        ExpeditionEvent.FALLEN: StepAction.DIE,
-        ExpeditionEvent.RETURN: StepAction.RETURN,
-        ExpeditionEvent.LOSS: StepAction.LOSE_WAY,
-    }
-)
-EXPEDITION_STATES: Mapping[ExpeditionEvent, StepState] = MappingProxyType(
-    {
-        ExpeditionEvent.EXPOSURE: StepState.EXHAUSTED,
-        ExpeditionEvent.AFFLICTION: StepState.EXHAUSTED,
-        ExpeditionEvent.VIRTUE: StepState.RALLIED,
-        ExpeditionEvent.FALLEN: StepState.UNCONSCIOUS,
-    }
-)
 
 
 def expedition_roles(row: ExpeditionRow) -> list[tuple[int, IncidentRole]]:

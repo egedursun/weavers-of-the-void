@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import and_, func, or_, select
 
+from aerona.catalog.life.dominion import SCOUTING
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -38,9 +39,6 @@ from aerona.engine.recording.record import record
 
 SITE_KINDS = tuple(MagicSiteKind)
 SCHOOLS = tuple(MagicSchool)
-
-
-SCOUTING = (SkillKind.TRACKING, SkillKind.NAVIGATION, SkillKind.MOUNTAINEERING)
 
 
 @dataclass

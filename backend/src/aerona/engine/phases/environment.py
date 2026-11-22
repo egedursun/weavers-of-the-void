@@ -8,7 +8,7 @@ from aerona.cartography.biomes import Biome
 from aerona.cartography.model import RegionRecord
 from aerona.catalog.evolution import STAGE_COVER, climax_stage
 from aerona.catalog.place_terrain import height_of, kind_spec
-from aerona.catalog.weather import WEATHER
+from aerona.catalog.weather import WEATHER, has_trait
 from aerona.constants.cartography import BIOME_COUNT
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -26,7 +26,7 @@ from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
-from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind
+from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind, WeatherTrait
 from aerona.domain.enums.evolution import KeystoneRole
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
@@ -110,18 +110,6 @@ from aerona.rules.registry import Rules
 
 MIN_LAND_SIZE = 0.1
 HIGHLAND_BIOMES = (Biome.DRY_HILLS, Biome.WET_HILLS, Biome.MOUNTAINS, Biome.PEAKS)
-EXTREME_WEATHER = frozenset(
-    {
-        WeatherKind.BLIZZARD,
-        WeatherKind.HAIL,
-        WeatherKind.SANDSTORM,
-        WeatherKind.MAGIC_STORM,
-        WeatherKind.ASH_FALL,
-        WeatherKind.VOID_RAIN,
-        WeatherKind.ECLIPSE_DARK,
-        WeatherKind.HEAT_WAVE,
-    }
-)
 
 
 def fallback_geography(rules: Rules, region: EntityRow) -> Geography:
@@ -1124,7 +1112,7 @@ def region_years(ctx: TickContext, season: HarvestSeason, env: RegionEnvironment
         )
         results.append(YearHarvest(sampled.offset, sampled.year, value, weather.kind))
         severity = -weather.effect(WeatherEffect.GROWTH) - weather.effect(WeatherEffect.MORALE)
-        if weather.kind in EXTREME_WEATHER and (season.worst_weather is None or severity > season.worst_weather[0]):
+        if has_trait(weather.kind, WeatherTrait.EXTREME) and (season.worst_weather is None or severity > season.worst_weather[0]):
             season.worst_weather = (severity, results[-1], env)
     return results
 

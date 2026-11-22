@@ -1,8 +1,9 @@
-from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.life.services import ENDING_LABELS, ENDING_MEMORIES, RELATION_EFFECTS
+from aerona.catalog.life_traits import WAR_ENDING_TRAITS, having
 from aerona.catalog.structures import BOOK_HOUSES
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
@@ -10,6 +11,7 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.life_traits import WarEndingTrait
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
@@ -48,40 +50,7 @@ from aerona.engine.services.war import (
 )
 from aerona.rules.registry import Rules
 
-RELATION_EFFECTS: dict[WarEnding, Callable[[Rules], int]] = {
-    WarEnding.CONQUEST: lambda rules: -rules.campaigns.conquest_relation,
-    WarEnding.TRIBUTE: lambda rules: -rules.campaigns.tribute_relation,
-    WarEnding.WHITE_PEACE: lambda rules: rules.campaigns.white_peace_relation,
-    WarEnding.EXHAUSTION: lambda rules: rules.diplomacy.exhaustion_peace_relation,
-    WarEnding.PEACE: lambda rules: rules.diplomacy.peace_relation,
-    WarEnding.MIRACLE: lambda rules: rules.diplomacy.peace_relation,
-}
-
-ENDING_MEMORIES: dict[WarEnding, MemoryKind] = {
-    WarEnding.VICTORY: MemoryKind.HUMILIATED_ME,
-    WarEnding.CONQUEST: MemoryKind.CONQUERED_US,
-    WarEnding.TRIBUTE: MemoryKind.DEMANDED_TRIBUTE,
-    WarEnding.EXHAUSTION: MemoryKind.MADE_PEACE,
-    WarEnding.PEACE: MemoryKind.MADE_PEACE,
-    WarEnding.WHITE_PEACE: MemoryKind.MADE_PEACE,
-    WarEnding.BETRAYAL: MemoryKind.BETRAYED_ME,
-    WarEnding.MIRACLE: MemoryKind.DIVINE_WILL,
-}
-ENDING_LABELS: dict[WarEnding, str] = {
-    WarEnding.VICTORY: "victory",
-    WarEnding.CONQUEST: "conquest",
-    WarEnding.TRIBUTE: "tribute",
-    WarEnding.EXHAUSTION: "exhaustion peace",
-    WarEnding.PEACE: "peace",
-    WarEnding.WHITE_PEACE: "white peace",
-    WarEnding.BETRAYAL: "betrayal",
-    WarEnding.SAME_FRONT: "front of the same war",
-    WarEnding.NO_SIDE_LEFT: "no side left",
-    WarEnding.MIRACLE: "peace miracle",
-}
-
-
-SIGNED_ENDINGS = frozenset({WarEnding.WHITE_PEACE, WarEnding.EXHAUSTION, WarEnding.PEACE, WarEnding.MIRACLE})
+SIGNED_ENDINGS = having(WAR_ENDING_TRAITS, WarEndingTrait.SIGNED_ENDINGS)
 
 
 def relation_effect(rules: Rules, ending: WarEnding) -> int:

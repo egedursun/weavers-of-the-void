@@ -1,10 +1,9 @@
-from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.customs import PATH_WAIT, RIGHTS
 from aerona.constants.units import PER_MILLE, PERCENT
-from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.customs import BorderControlRow, EvidenceRow, MeasureStandardRow, MembershipCategoryRow, MembershipRow, PoorReliefRow
 from aerona.db.tables.entities import EntityRow
@@ -13,7 +12,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.customs import EvidenceKind, MemberRight, Membership, Naturalisation, ReliefKind
+from aerona.domain.enums.customs import EvidenceKind, Membership, Naturalisation, ReliefKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.justice import CaseStage, Deposition
 from aerona.domain.enums.mind import PressureKind, Profession
@@ -31,14 +30,6 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.renown.currencies import members_of, ruler_of_realm
 from aerona.engine.services.war import ongoing_wars, realms_of_side
-
-RIGHTS: Mapping[Membership, tuple[MemberRight, ...]] = {
-    Membership.CITIZEN: tuple(MemberRight),
-    Membership.SUBJECT: (MemberRight.MARRIAGE, MemberRight.COURTS, MemberRight.ARMS),
-    Membership.RESIDENT_FOREIGNER: (MemberRight.MARRIAGE, MemberRight.COURTS),
-    Membership.PROTECTED_MINORITY: (MemberRight.MARRIAGE, MemberRight.COURTS),
-    Membership.BOUND: (),
-}
 
 
 @dataclass
@@ -160,18 +151,6 @@ async def core_people(ctx: TickContext, realm_id: int) -> int | None:
 
 
 SERVING = frozenset({MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.CAPTAIN})
-PATH_WAIT: Mapping[Naturalisation, int] = total(
-    Naturalisation,
-    {
-        Naturalisation.DESCENT: 0,
-        Naturalisation.BIRTHPLACE: 0,
-        Naturalisation.RESIDENCE: 100,
-        Naturalisation.CONVERSION: 50,
-        Naturalisation.SERVICE: 50,
-        Naturalisation.PURCHASE: 0,
-        Naturalisation.GRANT: 0,
-    },
-)
 
 
 async def path_for(ctx: TickContext, mortal: EntityRow, realm: EntityRow) -> Naturalisation:

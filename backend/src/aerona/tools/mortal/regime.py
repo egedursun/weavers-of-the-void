@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.catalog.life.regime import EXAMINED
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import spoken
@@ -18,7 +19,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import definite
 from aerona.engine.regime import control
 from aerona.engine.regime.book import realm_seat
-from aerona.engine.regime.learning import EXAMINED, best_skill, holds
+from aerona.engine.regime.learning import best_skill, holds
 from aerona.engine.regime.patronage import SEATS_KEPT
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result

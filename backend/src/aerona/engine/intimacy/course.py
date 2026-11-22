@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.intimacy_shapes import POSTNATAL_RECOVERY_PCT
+from aerona.catalog.life.intimacy import SINGLE_COMPLICATIONS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intimacy import ReproductiveCourseRow
@@ -30,7 +31,6 @@ PLACE_RISK = {
     BirthPlace.APART: 1.2,
 }
 CYCLE_RISK = {CycleCustom.PURITY_RULES: 0.9, CycleCustom.SECLUSION: 0.95, CycleCustom.NONE: 1.0}
-SINGLE_COMPLICATIONS = (BirthComplication.POSITION, BirthComplication.BLEEDING, BirthComplication.FEVER, BirthComplication.EARLY, BirthComplication.LATE)
 
 
 async def course_of(session: AsyncSession, bearer: EntityRow) -> ReproductiveCourseRow | None:

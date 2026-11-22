@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import DwellingRow, HouseholdMemberRow, HouseholdRow
@@ -7,6 +8,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.genetics import HouseholdRole
+from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.domain.enums.mortal import LifeStage
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import community_of
@@ -14,8 +16,8 @@ from aerona.engine.households.homes import district_for, dwelling_kind_for, hous
 from aerona.engine.mortal.kin import fosterers_of, parents_of, spouses_of
 from aerona.engine.primitives.numbers import round_half_up
 
-YOUNG = frozenset({LifeStage.INFANT, LifeStage.CHILD, LifeStage.YOUTH})
-OLD = frozenset({LifeStage.ELDER, LifeStage.ANCIENT})
+YOUNG = having(LIFE_STAGE_TRAITS, LifeStageTrait.GROWING)
+OLD = having(LIFE_STAGE_TRAITS, LifeStageTrait.OLD)
 
 
 async def stage_of(ctx: TickContext, mortal_id: int) -> LifeStage | None:

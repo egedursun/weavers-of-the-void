@@ -8,7 +8,6 @@ from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.demography import NaturalTrait
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.ecology import PlantYield, YieldProduct
-from aerona.domain.enums.economy import MaterialOrigin
 from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.kinds import KindConcept
 from aerona.domain.enums.mythic import CosmicOffice, MythicRealm
@@ -221,7 +220,7 @@ YIELD_PARTS: Mapping[YieldProduct, ProductPart] = total(
     {
         YieldProduct.MEAT: P.FLESH,
         YieldProduct.HIDE: P.HIDE,
-        YieldProduct.BONE: P.BONE,
+        YieldProduct.CALCIFIED_TISSUE: P.BONE,
         YieldProduct.IVORY: P.TUSK,
         YieldProduct.CHITIN: P.SHELL,
         YieldProduct.VENOM: P.VENOM,
@@ -230,7 +229,7 @@ YIELD_PARTS: Mapping[YieldProduct, ProductPart] = total(
         YieldProduct.MILK: P.MILK,
         YieldProduct.FEATHERS: P.FEATHERS,
         YieldProduct.MAGIC_REAGENTS: P.REAGENT,
-        YieldProduct.GREAT_BONE: P.BONE,
+        YieldProduct.GREAT_BEAST_TISSUE: P.BONE,
         YieldProduct.EGGS: P.EGGS,
     },
 )
@@ -254,18 +253,6 @@ PRODUCT_PARTS: Mapping[str, ProductPart] = {
     **{product.value: part for product, part in PLANT_PARTS.items()},
 }
 
-ORIGIN_SOURCE: Mapping[MaterialOrigin, MaterialSource] = total(
-    MaterialOrigin,
-    {
-        MaterialOrigin.CATALOG: MaterialSource.WORLD,
-        MaterialOrigin.DEAD_GOD: MaterialSource.GOD,
-        MaterialOrigin.STAR: MaterialSource.STAR,
-        MaterialOrigin.BEAST: MaterialSource.CREATURE,
-        MaterialOrigin.RIFT: MaterialSource.RIFT,
-        MaterialOrigin.RESEARCH: MaterialSource.MAKERS,
-        MaterialOrigin.GOD_GIFT: MaterialSource.GOD,
-    },
-)
 SOURCE_NODES: Mapping[MaterialSource, frozenset[NodeKind]] = total(
     MaterialSource,
     {

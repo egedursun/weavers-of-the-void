@@ -1,59 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.customs import (
-    AgeGrade,
-    CoopPurpose,
-    EvidenceKind,
-    IntoxicantUse,
-    MarkKind,
-    MarkMeaning,
-    MemberRight,
-    NameForm,
-    NamingPattern,
-    ReliefKind,
-    RevivalAim,
-)
-
-AGE_GRADE = total(
-    AgeGrade,
-    {
-        AgeGrade.CHILDREN: Defined("Children", checked_by=(), used_by=("engine.customs.age_sets.GRADES", "engine.customs.grades.UNWED_GRADES")),
-        AgeGrade.YOUTHS: Defined(
-            "Youths",
-            checked_by=("engine.youth.seed.seed_from_age_sets",),
-            used_by=(
-                "db.tables.customs.AgeSetRow",
-                "engine.customs.age_sets.GRADES",
-                "engine.customs.age_sets.open_set",
-                "engine.customs.grades.UNWED_GRADES",
-                "services.player.customs.AgeSetDraft",
-            ),
-        ),
-        AgeGrade.WARRIORS: Defined("Warriors", checked_by=("engine.customs.grades.warriors_ready",), used_by=("engine.customs.age_sets.GRADES",)),
-        AgeGrade.JUNIOR_ELDERS: Defined("Junior elders", checked_by=(), used_by=("engine.customs.age_sets.GRADES",)),
-        AgeGrade.SENIOR_ELDERS: Defined("Senior elders", checked_by=("engine.customs.age_sets.promote",), used_by=("engine.customs.age_sets.GRADES",)),
-    },
-)
-
-COOP_PURPOSE = total(
-    CoopPurpose,
-    {
-        CoopPurpose.MILL: Defined(
-            "A mill",
-            checked_by=(),
-            used_by=("engine.customs.town_life.WORKING", "engine.customs.town_life.purpose_for", "services.player.customs.CooperativeDraft"),
-        ),
-        CoopPurpose.BOATS: Defined("Boats", checked_by=(), used_by=("engine.customs.town_life.WORKING", "engine.customs.town_life.purpose_for")),
-        CoopPurpose.IRRIGATION: Defined("Irrigation", checked_by=(), used_by=("engine.customs.town_life.WORKING", "engine.customs.town_life.purpose_for")),
-        CoopPurpose.INSURANCE: Defined(
-            "Insurance", checked_by=(), used_by=("engine.crafts.insurance.POOLING", "engine.customs.relief.RELIEVING", "engine.customs.town_life.purpose_for")
-        ),
-        CoopPurpose.BURIAL: Defined(
-            "Burial", checked_by=(), used_by=("engine.crafts.insurance.POOLING", "engine.customs.relief.RELIEVING", "engine.customs.town_life.purpose_for")
-        ),
-        CoopPurpose.CREDIT: Defined("Credit", checked_by=(), used_by=("engine.customs.relief.RELIEVING", "engine.customs.town_life.purpose_for")),
-    },
-)
+from aerona.domain.enums.customs import EvidenceKind, IntoxicantUse, MarkKind, MarkMeaning, MemberRight, NameForm, NamingPattern, ReliefKind, RevivalAim
 
 EVIDENCE_KIND = total(
     EvidenceKind,
@@ -78,15 +25,19 @@ INTOXICANT_USE = total(
     {
         IntoxicantUse.DAILY: Defined(
             "Daily",
-            checked_by=("engine.customs.intoxicants.keep_intoxication",),
-            used_by=("engine.customs.intoxicants.keep_intoxication", "engine.customs.intoxicants.seed_customs"),
+            checked_by=(),
+            used_by=(
+                "catalog.life.customs.KEEP_INTOXICATION_INTOXICANT_USES",
+                "catalog.life.customs.KEEP_INTOXICATION_INTOXICANT_USES_2",
+                "engine.customs.intoxicants.seed_customs",
+            ),
         ),
         IntoxicantUse.FEAST: Defined(
             "At feasts",
             checked_by=("engine.customs.intoxicants.keep_intoxication",),
             used_by=(
+                "catalog.life.customs.KEEP_INTOXICATION_INTOXICANT_USES",
                 "db.tables.customs.IntoxicantCustomRow",
-                "engine.customs.intoxicants.keep_intoxication",
                 "engine.customs.intoxicants.seed_customs",
                 "services.player.customs.IntoxicantCustomDraft",
             ),
@@ -96,7 +47,7 @@ INTOXICANT_USE = total(
         ),
         IntoxicantUse.MOURNING: Defined("In mourning", checked_by=("engine.customs.intoxicants.keep_intoxication",), used_by=()),
         IntoxicantUse.FORBIDDEN: Defined(
-            "Forbidden", checked_by=("engine.customs.intoxicants.habits", "engine.customs.intoxicants.keep_intoxication"), used_by=()
+            "Forbidden", checked_by=("engine.customs.intoxicants.habits",), used_by=("catalog.life.customs.KEEP_INTOXICATION_INTOXICANT_USES_2",)
         ),
     },
 )
@@ -119,20 +70,28 @@ MARK_MEANING = total(
     MarkMeaning,
     {
         MarkMeaning.STATUS: Defined(
-            "Status", checked_by=("engine.customs.marks.EVENT_BONDS", "engine.customs.marks.read_mark"), used_by=("services.player.customs.MarkCustomDraft",)
+            "Status",
+            checked_by=("catalog.life.customs.EVENT_BONDS",),
+            used_by=("catalog.life.customs.READ_MARK_MARK_MEANINGS", "services.player.customs.MarkCustomDraft"),
         ),
-        MarkMeaning.CLAN: Defined("Clan", checked_by=("engine.customs.marks.happened", "engine.customs.marks.read_mark"), used_by=()),
+        MarkMeaning.CLAN: Defined("Clan", checked_by=("engine.customs.marks.happened",), used_by=("catalog.life.customs.READ_MARK_MARK_MEANINGS_2",)),
         MarkMeaning.DEED: Defined(
-            "Deeds", checked_by=("engine.customs.marks.EVENT_BONDS", "engine.customs.marks.read_mark"), used_by=("services.player.customs.BodyMarkDraft",)
+            "Deeds",
+            checked_by=("catalog.life.customs.EVENT_BONDS",),
+            used_by=("catalog.life.customs.READ_MARK_MARK_MEANINGS", "services.player.customs.BodyMarkDraft"),
         ),
         MarkMeaning.AGE_SET: Defined(
             "Age-set",
-            checked_by=("engine.customs.age_sets.initiate", "engine.customs.marks.keep_marks", "engine.customs.marks.read_mark"),
-            used_by=("engine.customs.age_sets.initiate",),
+            checked_by=("engine.customs.age_sets.initiate", "engine.customs.marks.keep_marks"),
+            used_by=("catalog.life.customs.READ_MARK_MARK_MEANINGS_2", "engine.customs.age_sets.initiate"),
         ),
-        MarkMeaning.MARRIAGE: Defined("Marriage", checked_by=("engine.customs.marks.EVENT_BONDS", "engine.customs.marks.read_mark"), used_by=()),
-        MarkMeaning.MOURNING: Defined("Mourning", checked_by=("engine.customs.marks.happened",), used_by=("engine.customs.marks.calm_marked",)),
-        MarkMeaning.PROTECTION: Defined("Protection", checked_by=("engine.customs.marks.happened",), used_by=("engine.customs.marks.calm_marked",)),
+        MarkMeaning.MARRIAGE: Defined(
+            "Marriage", checked_by=("catalog.life.customs.EVENT_BONDS",), used_by=("catalog.life.customs.READ_MARK_MARK_MEANINGS_2",)
+        ),
+        MarkMeaning.MOURNING: Defined("Mourning", checked_by=("engine.customs.marks.happened",), used_by=("catalog.life.customs.CALM_MARKED_MARK_MEANINGS",)),
+        MarkMeaning.PROTECTION: Defined(
+            "Protection", checked_by=("engine.customs.marks.happened",), used_by=("catalog.life.customs.CALM_MARKED_MARK_MEANINGS",)
+        ),
         MarkMeaning.CRIME: Defined(
             "Crime", checked_by=("engine.customs.marks.read_mark", "engine.customs.marks.seed_customs"), used_by=("engine.mortal.justice.sentence",)
         ),
@@ -143,9 +102,9 @@ MEMBER_RIGHT = total(
     MemberRight,
     {
         MemberRight.OFFICE: Defined("Office", checked_by=(), used_by=("engine.polity.offices.appoint", "services.player.customs.RightGrant")),
-        MemberRight.MARRIAGE: Defined("Marriage", checked_by=(), used_by=("engine.customs.civics.RIGHTS", "engine.customs.rights.unwed_by_law")),
-        MemberRight.ARMS: Defined("Arms", checked_by=(), used_by=("engine.customs.civics.RIGHTS", "engine.customs.rights.unarmed")),
-        MemberRight.COURTS: Defined("The courts", checked_by=(), used_by=("engine.customs.civics.RIGHTS", "engine.polity.trials.by_judge")),
+        MemberRight.MARRIAGE: Defined("Marriage", checked_by=(), used_by=("catalog.life.customs.RIGHTS", "engine.customs.rights.unwed_by_law")),
+        MemberRight.ARMS: Defined("Arms", checked_by=(), used_by=("catalog.life.customs.RIGHTS", "engine.customs.rights.unarmed")),
+        MemberRight.COURTS: Defined("The courts", checked_by=(), used_by=("catalog.life.customs.RIGHTS", "engine.polity.trials.by_judge")),
     },
 )
 
@@ -188,7 +147,7 @@ REVIVAL_AIM = total(
         RevivalAim.RESTORE: Defined(
             "Restore the old ways",
             checked_by=("engine.customs.revival.open_revival",),
-            used_by=("engine.customs.revival.aim_for", "services.player.customs.RevivalDraft", "tools.son.customs.AIMS"),
+            used_by=("catalog.life.tools.AIMS", "engine.customs.revival.aim_for", "services.player.customs.RevivalDraft"),
         ),
         RevivalAim.SYNTHESISE: Defined(
             "Join old and new",
@@ -198,7 +157,7 @@ REVIVAL_AIM = total(
         RevivalAim.ADOPT: Defined(
             "Adopt the pressed ways",
             checked_by=("engine.customs.revival.open_revival", "engine.customs.revival.pull_values"),
-            used_by=("engine.customs.revival.aim_for", "tools.son.customs.AIMS"),
+            used_by=("catalog.life.tools.AIMS", "engine.customs.revival.aim_for"),
         ),
     },
 )

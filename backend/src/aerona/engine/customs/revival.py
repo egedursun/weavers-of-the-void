@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.customs import RESTORING
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import LanguageStandingRow
@@ -32,7 +33,6 @@ from aerona.engine.services.community_relations import change_relation
 
 PRESSING = frozenset({DriftCause.RULER, DriftCause.CONQUEST, DriftCause.NEIGHBOURS})
 STAGES = (RevivalStage.STEADY, RevivalStage.STRESS, RevivalStage.DISTORTION, RevivalStage.REVITALISATION, RevivalStage.NEW_STEADY)
-RESTORING = (RevivalGoal.REVIVE_LANGUAGE, RevivalGoal.RESTORE_GOD, RevivalGoal.EXPEL_FOREIGNERS)
 
 
 @dataclass

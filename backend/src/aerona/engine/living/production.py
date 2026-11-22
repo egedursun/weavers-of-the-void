@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
+from aerona.catalog.life.living import SEED_DUES_FERTILITYS
 from aerona.catalog.methods import METHODS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import PerennialRow
@@ -12,7 +13,7 @@ from aerona.db.tables.networks import NetworkOutageRow, NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.industry import MethodKind, ProcessKind
-from aerona.domain.enums.living import Fertility, LineTrait
+from aerona.domain.enums.living import LineTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.networks import NetworkCarrier
@@ -94,7 +95,7 @@ async def blight_monocultures(ctx: TickContext) -> int:
 async def seed_dues(ctx: TickContext) -> int:
     table = ctx.rules.living_production
     paid = 0
-    bound = select(LivingLineRow.id).where(LivingLineRow.fertility.in_([Fertility.STERILE, Fertility.NEEDS_MAKER]), LivingLineRow.owner_node_id.is_not(None))
+    bound = select(LivingLineRow.id).where(LivingLineRow.fertility.in_(SEED_DUES_FERTILITYS), LivingLineRow.owner_node_id.is_not(None))
     for row in list(await ctx.session.scalars(select(PerennialRow).where(PerennialRow.line_id.in_(bound)).order_by(PerennialRow.id))):
         line = await ctx.session.get(LivingLineRow, row.line_id)
         grower = await ctx.session.get(EntityRow, row.owner_node_id) if row.owner_node_id is not None else None

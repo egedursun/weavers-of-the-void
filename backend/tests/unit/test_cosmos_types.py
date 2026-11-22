@@ -3,27 +3,21 @@ from collections import Counter
 from aerona.cartography.terrain import default_terrain
 from aerona.cartography.world_types import WORLD_TYPE_PROFILES
 from aerona.catalog.climate import WORLD_CLIMATE_MULTIPLIERS
+from aerona.catalog.goods_tables import WORLD_MINERALS
+from aerona.catalog.goods_traits import materials_with
+from aerona.catalog.life.environment import WORLD_SOIL, WORLD_TEMPERATURE, WORLD_TERRAIN
 from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.random import SeededRandom
 from aerona.db.tables.celestial import StarRow
 from aerona.domain.enums.environment import RiverClass, TerrainKind
+from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.intervention import Disaster
-from aerona.domain.enums.material import MINERAL_KINDS
 from aerona.domain.enums.world import DARK_STAR_TYPES, EXTINGUISHED_STAR_TYPES, Atmosphere, ClimateEra, Gravity, StarType, WorldType
 from aerona.engine.cosmos.star_types import STAR_TYPE_MECHANICS, brightness_band, fitted_brightness, kindled_brightness, star_capacity_pct, star_heat
 from aerona.engine.cosmos.world_types import death_crossing_reaches, disaster_pct, mechanics_of, ore_yield_pct
 from aerona.engine.environment.battleground import ENDLESS_DAY_WORLDS
-from aerona.engine.environment.profile import (
-    WORLD_MINERALS,
-    WORLD_SOIL,
-    WORLD_TEMPERATURE,
-    WORLD_TERRAIN,
-    Geography,
-    Surroundings,
-    mineral_layers,
-    temperature_of,
-)
+from aerona.engine.environment.profile import Geography, Surroundings, mineral_layers, temperature_of
 from aerona.engine.environment.seasons import NO_SEASON_WORLDS, TWO_SEASON_WORLDS
 from aerona.engine.phases.geography import NATURES_BY_SUBTYPE, WORLD_NATURES
 from aerona.prompts.schemas.descriptions import star_type_catalogue, world_type_catalogue
@@ -148,7 +142,7 @@ def test_ore_yield_and_disasters_follow_the_world_type() -> None:
 
 def test_signature_minerals_appear_in_their_worlds() -> None:
     for world_type, minerals in WORLD_MINERALS.items():
-        assert set(minerals) <= MINERAL_KINDS
+        assert set(minerals) <= frozenset(materials_with(MaterialTrait.MINERAL))
         layers = mineral_layers(RULES, SeededRandom.for_epoch(1, 1, world_type.value), GEOGRAPHY, world_type, TerrainKind.PLAIN)
         assert all(material.value in layers for material in minerals), world_type
 

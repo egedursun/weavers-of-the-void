@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life_traits import UNIT_HONOUR_KIND_TRAITS, having
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
@@ -13,6 +14,7 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.honours import UnitHonourKind
+from aerona.domain.enums.life_traits import UnitHonourKindTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.lore.history import record
@@ -104,7 +106,7 @@ def esprit_shift(ctx: TickContext, kind: UnitHonourKind) -> int:
     }[kind]
 
 
-GLORIOUS = frozenset({UnitHonourKind.VICTORY, UnitHonourKind.STAND, UnitHonourKind.SIEGE})
+GLORIOUS = having(UNIT_HONOUR_KIND_TRAITS, UnitHonourKindTrait.GLORIOUS)
 
 
 async def bestow(ctx: TickContext, named: NamedUnitRow, kind: UnitHonourKind, place: str, tally: HonourTally, *, army_id: int | None = None) -> None:

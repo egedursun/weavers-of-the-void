@@ -1,15 +1,13 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.museums import MADE_PIECES, NATURAL_PIECES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.museums import MuseumCollectionRow, MuseumPieceRow
 from aerona.domain.enums.garden import GardenKind
 from aerona.domain.enums.museum import PieceKind
 from aerona.rules.registry import Rules
-
-NATURAL_PIECES = (PieceKind.SPECIMEN, PieceKind.FOSSIL)
-MADE_PIECES = (PieceKind.ARTIFACT, PieceKind.RELIC, PieceKind.ART)
 
 
 async def pieces_held(session: AsyncSession, keeper_ids: list[int], kinds: tuple[PieceKind, ...]) -> int:

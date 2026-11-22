@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.life.military import SETTLE_COHORT_CAPTIVE_FATES, SETTLE_COHORT_CAPTIVE_FATES_2
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
@@ -345,9 +346,9 @@ async def settle_cohort(ctx: TickContext, cohort_id: int, fate: CaptiveFate, cou
     elif row.fate is CaptiveFate.HELD:
         home = await living_entity(ctx.session, row.origin_entity_id)
         captor = await living_entity(ctx.session, row.captor_entity_id)
-        if fate in {CaptiveFate.RELEASED, CaptiveFate.RANSOMED, CaptiveFate.EXCHANGED}:
+        if fate in SETTLE_COHORT_CAPTIVE_FATES:
             settle_into(ctx, home, row.count)
-        elif fate in {CaptiveFate.ENSLAVED, CaptiveFate.LABOUR}:
+        elif fate in SETTLE_COHORT_CAPTIVE_FATES_2:
             settle_into(ctx, captor, row.count)
         row.fate, row.settled_epoch = fate, ctx.epoch
     await ctx.session.flush()

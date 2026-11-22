@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.gatherings import GATHERING_COLLECTIONS, GATHERING_THOUGHTS
 from aerona.catalog.intrigue import BELIEF_SOURCE_LABELS
+from aerona.catalog.life.folkways import LEANINGS, RESPONSES
+from aerona.catalog.life.households import FORM_CARE
 from aerona.catalog.needs_sources import ACTIVITY_COLUMNS, NEED_SOURCES
 from aerona.catalog.norms import BEHAVIOUR_READINGS, SITUATION_SHIFTS
 from aerona.catalog.preferences import STATIC_TARGETS
@@ -31,8 +33,7 @@ from aerona.engine.collective.norm_situations import deeper_behaviour
 from aerona.engine.cosmos.rift_control import chosen_work, work_on
 from aerona.engine.customs.time_budgets import shares_for
 from aerona.engine.divine.pantheon import blend
-from aerona.engine.folkways.mishaps import LEANINGS, RESPONSES
-from aerona.engine.households.forms import FORM_CARE, heir_by_custom
+from aerona.engine.households.forms import heir_by_custom
 from aerona.engine.interconnect.registry import MECHANICS
 from aerona.engine.intrigue.beliefs import believe
 from aerona.engine.mind.preference_depth import shared_taste

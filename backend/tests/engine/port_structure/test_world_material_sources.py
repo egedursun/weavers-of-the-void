@@ -20,7 +20,7 @@ async def godflesh_at(session: AsyncSession, place_id: int) -> list[int]:
     statement = (
         select(ResourceProfileRow.resource_entity_id)
         .join(EntityRow, EntityRow.id == ResourceProfileRow.resource_entity_id)
-        .where(EntityRow.location_id == place_id, ResourceProfileRow.material == MaterialKind.GODFLESH)
+        .where(EntityRow.location_id == place_id, ResourceProfileRow.material == MaterialKind.DIVINE_TISSUE)
     )
     return list(await session.scalars(statement))
 

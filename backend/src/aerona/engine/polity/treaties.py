@@ -2,6 +2,8 @@ from types import MappingProxyType
 
 from sqlalchemy import select
 
+from aerona.catalog.life.polity import DEFAULT_CLAUSES, HOSTILITIES_TREATY_KINDS, KEEP_CLAUSES_TREATY_KINDS, KEEP_CLAUSES_TREATY_KINDS_2
+from aerona.catalog.life_traits import CLAUSE_KIND_TRAITS, TREATY_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
@@ -16,6 +18,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand
+from aerona.domain.enums.life_traits import ClauseKindTrait, TreatyKindTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, OathBreach, PartyRole, TreatyBreach, TreatyKind, TreatyStatus
@@ -32,18 +35,7 @@ from aerona.engine.mind.drives import greed_drive
 from aerona.engine.minds.war_methods import method_breached
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.operations.limits import over_limit
-from aerona.engine.polity.accords import (
-    DEFAULT_CLAUSES,
-    Clause,
-    accept,
-    clause_pairs,
-    end_treaty,
-    parties_of,
-    reject,
-    sign,
-    sworn_by,
-    treaty_between,
-)
+from aerona.engine.polity.accords import Clause, accept, clause_pairs, end_treaty, parties_of, reject, sign, sworn_by, treaty_between
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.loyalty import vassal_loyalty
 from aerona.engine.polity.oaths import break_oath
@@ -75,9 +67,9 @@ BOND_KINDS = MappingProxyType(
 )
 ADOPT_FIXUP = "treaties_from_bonds"
 KIND = "kind"
-PEACEFUL = frozenset({ClauseKind.NON_AGGRESSION, ClauseKind.CALL_TO_ARMS})
-OFFENSIVE = frozenset({TreatyKind.ALLIANCE_OFFENSIVE, TreatyKind.CONDOTTA})
-DEFENSIVE = frozenset({TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.MARRIAGE_PACT, TreatyKind.VASSALAGE, TreatyKind.GUARANTEE, TreatyKind.COALITION})
+PEACEFUL = having(CLAUSE_KIND_TRAITS, ClauseKindTrait.PEACEFUL)
+OFFENSIVE = having(TREATY_KIND_TRAITS, TreatyKindTrait.OFFENSIVE)
+DEFENSIVE = having(TREATY_KIND_TRAITS, TreatyKindTrait.DEFENSIVE)
 
 
 async def adopt_bonds(ctx: TickContext) -> int:
@@ -221,7 +213,7 @@ async def hostilities(ctx: TickContext) -> int:
         if bond is None:
             continue
         clauses = await clauses_of(ctx, profile.treaty_entity_id)
-        if any(clause.kind in PEACEFUL for clause in clauses) or profile.kind in {TreatyKind.PEACE, TreatyKind.TRUCE, TreatyKind.NON_AGGRESSION}:
+        if any(clause.kind in PEACEFUL for clause in clauses) or profile.kind in HOSTILITIES_TREATY_KINDS:
             peaceful = next((item for item in clauses if item.kind in PEACEFUL), None)
             await breach(ctx, profile, bond.source_node_id, clause=peaceful, reason=TreatyBreach.WAR_ON_PARTY)
             broken += 1
@@ -284,13 +276,13 @@ async def keep_clauses(ctx: TickContext, book: RealmBook) -> dict[str, int]:
         if profile.until_epoch is not None and ctx.epoch >= profile.until_epoch and "until_epoch" not in profile.locked:
             parties = [party.party_node_id for party in await parties_of(ctx.session, profile.treaty_entity_id)]
             friendly = len(parties) >= 2 and await relation(ctx.session, ctx.rules, parties[0], parties[1]) >= table.renew_relation
-            if friendly and profile.kind not in {TreatyKind.TRUCE, TreatyKind.TRIBUTE}:
+            if friendly and profile.kind not in KEEP_CLAUSES_TREATY_KINDS:
                 profile.until_epoch = ctx.epoch + table.alliance_epochs
                 profile.renewals += 1
                 counts["renewed"] += 1
             else:
                 await end_treaty(
-                    ctx, profile, TreatyStatus.FULFILLED if profile.kind in {TreatyKind.TRIBUTE, TreatyKind.TRUCE} else TreatyStatus.EXPIRED, "its term ran out"
+                    ctx, profile, TreatyStatus.FULFILLED if profile.kind in KEEP_CLAUSES_TREATY_KINDS_2 else TreatyStatus.EXPIRED, "its term ran out"
                 )
                 counts["expired"] += 1
             continue

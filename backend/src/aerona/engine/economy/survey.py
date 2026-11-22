@@ -3,6 +3,7 @@ import re
 from sqlalchemy import select
 
 from aerona.catalog.backfill_words import MATERIAL_WORDS, RESOURCE_WORDS, WORKSHOP_WORDS
+from aerona.catalog.goods_traits import commodities_with, materials_with, workshops_with
 from aerona.catalog.production import EXTRACTION
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
@@ -16,7 +17,8 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityType
 from aerona.domain.enums.environment import CoastKind
-from aerona.domain.enums.material import MINERAL_KINDS, MaterialKind
+from aerona.domain.enums.goods_traits import CommodityTrait, MaterialTrait, WorkshopTrait
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -37,6 +39,9 @@ DEPTH_FIXUP = "economy.depth_backfill"
 PROFILE_FIXUP = "economy.resource_profiles"
 C = CommodityKind
 HIDDEN_SEAM_FLOOR = 70
+MINERALS = frozenset(materials_with(MaterialTrait.MINERAL))
+STONY = frozenset(materials_with(MaterialTrait.STONY))
+RAW_MATERIALS = frozenset(commodities_with(CommodityTrait.RAW_MATERIAL))
 
 
 def words_of(*texts: str | None) -> set[str]:
@@ -71,7 +76,7 @@ async def profile_resources(ctx: TickContext, book: EconomyBook) -> int:
             profile = await ensure_profile(ctx.session, ctx.rules, resource, region, commodity=commodity, material=material)
             book.profiles[resource.id] = profile
             made += 1
-        elif profile.material is None and profile.world_material_id is None and profile.commodity in (C.ORE, C.STONE, C.TIMBER):
+        elif profile.material is None and profile.world_material_id is None and profile.commodity in RAW_MATERIALS:
             profile.material = (guess_material(resource) if legacy else None) or default_material(profile.commodity, region)
     if legacy:
         ctx.session.add(AppliedFixupRow(key=PROFILE_FIXUP, result={"resources": made}))
@@ -101,9 +106,9 @@ def wanted_workshops(book: EconomyBook, community: EntityRow, structures: list[E
                 wanted.add(kind)
     level = book.level
     if level(community.id, KnowledgeBranch.METALLURGY) >= 1:
-        wanted |= {WorkshopKind.FORGE, WorkshopKind.CHARCOAL_KILN}
+        wanted |= set(workshops_with(WorkshopTrait.SMELTING))
     if level(community.id, KnowledgeBranch.AGRICULTURE) >= 1:
-        wanted |= {WorkshopKind.MILL, WorkshopKind.GRANARY}
+        wanted |= set(workshops_with(WorkshopTrait.MILLING))
     if level(community.id, KnowledgeBranch.MEDICINE) >= 1:
         wanted.add(WorkshopKind.ALCHEMIST)
     if level(community.id, KnowledgeBranch.WARFARE) >= 1:
@@ -113,7 +118,7 @@ def wanted_workshops(book: EconomyBook, community: EntityRow, structures: list[E
         wanted.add(WorkshopKind.SHIPYARD)
     row = book.societies.get(community.id)
     if (row is not None and row.share(SocialClass.MERCHANT) >= PERCENT // 10) or book.knowledge.knows(community.id, KnowledgeBranch.TRADE):
-        wanted |= {WorkshopKind.MARKET, WorkshopKind.WAREHOUSE}
+        wanted |= set(workshops_with(WorkshopTrait.TRADING))
     wanted.add(WorkshopKind.WEAVERY)
     wanted.add(WorkshopKind.TANNERY)
     for profile in owned:
@@ -245,7 +250,7 @@ def _item_material(book: EconomyBook, item: EntityRow) -> MaterialKind:
     maker = item.maker_entity_id or item.location_id
     level = book.level(maker, KnowledgeBranch.METALLURGY) if maker is not None else 0
     if (item.subtype or "").lower() in ("weapon", "sword", "armour", "shield"):
-        return MaterialKind.STEEL if level >= 5 else MaterialKind.IRON if level >= 3 else MaterialKind.BRONZE if level >= 2 else MaterialKind.BONE
+        return MaterialKind.STEEL if level >= 5 else MaterialKind.IRON if level >= 3 else MaterialKind.BRONZE if level >= 2 else MaterialKind.CALCIFIED_TISSUE
     return MaterialKind.WOOD if level == 0 else MaterialKind.BRONZE
 
 
@@ -254,7 +259,7 @@ async def hide_world_seam(ctx: TickContext, place: EntityRow, world_material_id:
     if material is None:
         return False
     label = material.name or (material.base_kind.value.replace("_", " ") if material.base_kind is not None else "strange stone")
-    stony = material.base_kind in (MaterialKind.STONE, MaterialKind.CLAY)
+    stony = material.base_kind in STONY
     await open_deposit(
         ctx,
         Deposit(
@@ -286,7 +291,7 @@ async def hide_seams(ctx: TickContext, book: EconomyBook) -> int:
             if depth >= HIDDEN_SEAM_FLOOR and rng.chance(ctx.rules.extraction.hidden_share_pct) and await hide_world_seam(ctx, place, world_id, depth):
                 hidden += 1
             continue
-        if depth < HIDDEN_SEAM_FLOOR or MaterialKind(name) not in MINERAL_KINDS or not rng.chance(ctx.rules.extraction.hidden_share_pct):
+        if depth < HIDDEN_SEAM_FLOOR or MaterialKind(name) not in MINERALS or not rng.chance(ctx.rules.extraction.hidden_share_pct):
             continue
         await open_deposit(
             ctx,
@@ -294,7 +299,7 @@ async def hide_seams(ctx: TickContext, book: EconomyBook) -> int:
                 name=f"Hidden {name.replace('_', ' ').title()} Seam of {place.name}",
                 body=f"A rich seam of {name.replace('_', ' ')} lies under {place.name}, unknown to anyone who lives there.",
                 place=place,
-                commodity=C.STONE if MaterialKind(name) in (MaterialKind.STONE, MaterialKind.CLAY) else C.ORE,
+                commodity=C.STONE if MaterialKind(name) in STONY else C.ORE,
                 material=MaterialKind(name),
                 richness=depth,
                 quality=depth,

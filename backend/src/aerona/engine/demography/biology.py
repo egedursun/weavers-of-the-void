@@ -15,6 +15,8 @@ from aerona.catalog.peoples import (
     FoodSource,
     MountFit,
 )
+from aerona.catalog.terrain import TERRAIN, terrains
+from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import DiseaseProfileRow
@@ -23,7 +25,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.demography import Job, NaturalTrait
 from aerona.domain.enums.ecology import Diet
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainKind, WeatherKind
+from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainKind, TerrainTrait, WeatherKind, WeatherTrait
 from aerona.domain.enums.military import UnitKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.demography.rites import contagion, raises_dead
@@ -32,11 +34,9 @@ from aerona.rules.registry import Rules
 
 FED = 100
 BANDS = tuple(TemperatureBand)
-WINTER = frozenset({WeatherKind.SNOW, WeatherKind.BLIZZARD})
-HOT_WEATHER = frozenset({WeatherKind.HEAT_WAVE, WeatherKind.DROUGHT_WIND, WeatherKind.SANDSTORM})
 WARM = frozenset({TemperatureBand.WARM, TemperatureBand.HOT, TemperatureBand.SEARING})
-HEIGHTS = frozenset({TerrainKind.HILLS, TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.CANYON})
-WATERS = frozenset({TerrainKind.MARSH, TerrainKind.COAST, TerrainKind.ISLAND, TerrainKind.RIVER_VALLEY, TerrainKind.SEA})
+HEIGHTS = terrains(TerrainTrait.ROUGH)
+WATERS = terrains(TerrainTrait.WATERY)
 NAVAL_UNITS = frozenset({UnitKind.NAVAL_CREW, UnitKind.MARINES})
 RIDDEN = frozenset({UnitKind.LIGHT_CAVALRY, UnitKind.HEAVY_CAVALRY, UnitKind.MOUNTED_ARCHERS, UnitKind.CHARIOTS, UnitKind.BEAST_RIDERS})
 
@@ -198,9 +198,9 @@ def trait_edge(
     if NaturalTrait.DARK_SIGHT in traits and night:
         factor *= table.dark_sight_night_pct / PERCENT
     if NaturalTrait.COLD_BLOODED in traits:
-        if weather in WINTER:
+        if has_trait(weather, WeatherTrait.COLD):
             factor *= table.cold_blooded_winter_pct / PERCENT
-        elif band in WARM or weather in HOT_WEATHER:
+        elif band in WARM or has_trait(weather, WeatherTrait.HOT) or has_trait(weather, WeatherTrait.DRY):
             factor *= table.cold_blooded_heat_pct / PERCENT
     if NaturalTrait.WINGED in traits and (terrain in HEIGHTS or river):
         factor *= table.winged_heights_pct / PERCENT
@@ -249,7 +249,7 @@ def battle_edge(
     if biology is None:
         return mastery(rules, culture)
     size = SIZES[biology.size_class].strength_pct / PERCENT
-    ground = KIN[biology.body_plan].terrain.get(terrain, PERCENT) / PERCENT if terrain is not None else 1.0
+    ground = TERRAIN[terrain].body_fit.get(biology.body_plan, PERCENT) / PERCENT if terrain is not None else 1.0
     traits = trait_edge(rules, natures(biology), terrain=terrain, weather=weather, night=night, river=river, defending=defending, band=band)
     return scaled(size * ground * traits, rules.biology.battle_pct) * mastery(rules, culture)
 

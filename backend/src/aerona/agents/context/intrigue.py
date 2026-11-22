@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.communication import CONTENT_LABELS, STATE_LABELS, SUBJECT_LABELS
 from aerona.catalog.intrigue import FAVOUR_LABELS, IDENTITY_LABELS, PHASE_LABELS, SCHEMES, SECRETS, belief_label
+from aerona.catalog.life.agents import ESTATE_LINES_FACTION_KINDS
 from aerona.catalog.titles import RANK_WORDS
 from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.communication import PublicOpinionRow
@@ -18,7 +19,7 @@ from aerona.db.tables.polity import ClaimRow, OfficeRow
 from aerona.db.tables.titles import TitleProfileRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.communication import DispatchState
-from aerona.domain.enums.faction import FactionKind, FactionRank
+from aerona.domain.enums.faction import FactionRank
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.intrigue.schemes import OPEN
 from aerona.rules.registry import Rules
@@ -151,7 +152,7 @@ async def estate_lines(session: AsyncSession, me: EntityRow) -> list[str]:
     member = await session.scalar(
         select(FactionMembershipRow)
         .join(FactionProfileRow, FactionProfileRow.faction_entity_id == FactionMembershipRow.faction_entity_id)
-        .where(FactionMembershipRow.mortal_entity_id == me.id, FactionProfileRow.kind.in_([FactionKind.CRAFT_GUILD, FactionKind.MERCHANT_GUILD]))
+        .where(FactionMembershipRow.mortal_entity_id == me.id, FactionProfileRow.kind.in_(ESTATE_LINES_FACTION_KINDS))
         .limit(1)
     )
     if member is not None:

@@ -1,11 +1,12 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import GROWN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
-from aerona.domain.enums.ecology import GROWN, Biochemistry
+from aerona.domain.enums.ecology import Biochemistry
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.biochemistry import LIFE_FIXUP, tolerated
 from aerona.engine.ecology.control import Values, patch, region_of, species_of

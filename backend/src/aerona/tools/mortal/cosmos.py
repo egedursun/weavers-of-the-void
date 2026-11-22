@@ -3,6 +3,8 @@ from typing import Any
 from sqlalchemy import select
 
 from aerona.catalog.civilization import unlocked
+from aerona.catalog.life.tools import INTENT_TIERS, WAY_KNOWLEDGE
+from aerona.catalog.life_traits import JOURNEY_INTENT_TRAITS, having
 from aerona.catalog.rarities import name_similarity_policy
 from aerona.catalog.travel import JOURNEY_INTENT_LABELS
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -13,12 +15,12 @@ from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.life_traits import JourneyIntentTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
-from aerona.domain.enums.travel import JourneyIntent, VehicleKind
+from aerona.domain.enums.travel import VehicleKind
 from aerona.engine.cosmos.routes import LIVE_JOURNEYS, JourneySpec, can_use_route, method_label, start_journey
 from aerona.engine.cosmos.vessels import owned_vessels, set_vessel_kind
 from aerona.engine.phases.exploration import SearchStatus, land_stats, pioneers, position_region, record_intuition, route_method, search_route
@@ -43,12 +45,10 @@ from aerona.tools.mortal.support import (
 )
 
 PERCENT = 100
-WAY_KNOWLEDGE = (KnowledgeBranch.SEAFARING, KnowledgeBranch.PATHFINDING, KnowledgeBranch.ASTRONOMY)
 SETTLERS = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 EXPLORER_WITS = ("intellect", "craft")
 SHIP_CRAFT = ("craft", "wealth")
-INTENT_TIERS = {JourneyIntent.COLONY: TierCapability.COLONY, JourneyIntent.CONQUEST: TierCapability.CONQUEST}
-CROWD_INTENTS = frozenset({JourneyIntent.COLONY, JourneyIntent.CONQUEST})
+CROWD_INTENTS = having(JOURNEY_INTENT_TRAITS, JourneyIntentTrait.CROWD_INTENTS)
 
 
 def clamp(value: float) -> int:

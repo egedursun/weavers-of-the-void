@@ -3,6 +3,7 @@ from collections import Counter
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.industry import FOOD_JOBS
 from aerona.catalog.methods import COLD, FUEL_HEAT
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -37,7 +38,6 @@ from aerona.rules.registry import Rules
 
 THOUSAND = 1000
 WORKING = tuple(job for job in Job if job is not Job.IDLE)
-FOOD_JOBS = (Job.FARMING, Job.HERDING, Job.FISHING)
 POOLED = tuple(job for job in WORKING if job not in FOOD_JOBS)
 
 

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.reproduction import ROLE_WEIGHTS, SEX_SYSTEMS, SexSpec, sex_shares
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.collective import RoleNormRow
 from aerona.db.tables.cycles import PeopleReproductionRow
 from aerona.db.tables.demography import CohortRow
@@ -32,20 +33,32 @@ from aerona.rules.registry import Rules
 A = AgeBand
 CohortKey = tuple[AgeBand, Sex, SocialClass, CohortCondition]
 FC = FlowCategory
-AGE_PROFILES: Mapping[FlowCategory, Mapping[AgeBand, float]] = MappingProxyType(
-    {
-        FC.FAMINE: {A.CHILD: 2.0, A.ELDER: 2.0, A.ADULT: 0.5},
-        FC.CASUALTY: {A.ADULT: 8.0, A.ELDER: 0.4},
-        FC.LEVY: {A.ADULT: 9.0, A.ELDER: 0.3},
-        FC.PLAGUE: {A.CHILD: 1.5, A.ELDER: 2.5, A.ADULT: 0.7},
-        FC.DEATH: {A.ELDER: 3.0, A.ADULT: 0.7, A.CHILD: 0.8},
-        FC.BIRTH: {A.CHILD: 1.0},
-        FC.GROWTH: {A.CHILD: 1.5, A.ADULT: 1.0},
-        FC.MIGRATION: {A.ADULT: 2.25, A.CHILD: 0.8, A.ELDER: 0.3},
-        FC.JOURNEY: {A.ADULT: 2.25, A.CHILD: 0.5},
-        FC.CAPTIVE: {A.ADULT: 2.0, A.CHILD: 1.0},
-        FC.CONVERSION: {A.ADULT: 1.25, A.ELDER: 1.0},
-    }
+AGE_PROFILES: Mapping[FlowCategory, Mapping[AgeBand, float]] = partial(
+    FlowCategory,
+    MappingProxyType(
+        {
+            FC.FAMINE: {A.CHILD: 2.0, A.ELDER: 2.0, A.ADULT: 0.5},
+            FC.CASUALTY: {A.ADULT: 8.0, A.ELDER: 0.4},
+            FC.LEVY: {A.ADULT: 9.0, A.ELDER: 0.3},
+            FC.PLAGUE: {A.CHILD: 1.5, A.ELDER: 2.5, A.ADULT: 0.7},
+            FC.DEATH: {A.ELDER: 3.0, A.ADULT: 0.7, A.CHILD: 0.8},
+            FC.BIRTH: {A.CHILD: 1.0},
+            FC.GROWTH: {A.CHILD: 1.5, A.ADULT: 1.0},
+            FC.MIGRATION: {A.ADULT: 2.25, A.CHILD: 0.8, A.ELDER: 0.3},
+            FC.JOURNEY: {A.ADULT: 2.25, A.CHILD: 0.5},
+            FC.CAPTIVE: {A.ADULT: 2.0, A.CHILD: 1.0},
+            FC.CONVERSION: {A.ADULT: 1.25, A.ELDER: 1.0},
+        }
+    ),
+    without=(
+        FlowCategory.DISASTER,
+        FlowCategory.MERGE,
+        FlowCategory.CREATION,
+        FlowCategory.DIVINE,
+        FlowCategory.PLAYER,
+        FlowCategory.TRANSFORMATION,
+        FlowCategory.UNSPECIFIED,
+    ),
 )
 COMBAT_FLOWS = frozenset({FC.CASUALTY, FC.LEVY})
 UNIFORM: Mapping[tuple[AgeBand, Sex], float] = MappingProxyType({(age, sex): 1.0 for age in AgeBand for sex in Sex})

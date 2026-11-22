@@ -4,6 +4,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.knowledge import branch_label
+from aerona.catalog.life_traits import KNOWLEDGE_BRANCH_TRAITS, having
 from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
@@ -15,7 +16,8 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, SocialClass
+from aerona.domain.enums.life_traits import KnowledgeBranchTrait
+from aerona.domain.enums.society import CreatureTrait, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.domain.enums.world import Discovery
@@ -61,8 +63,8 @@ from aerona.rules.registry import Rules
 SABOTEUR_TYPES = frozenset({EntityType.FACTION, EntityType.CULT, EntityType.MORTAL})
 SOCIETY_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 EXPLORER_TYPES = frozenset(COMMUNITY_TYPES | {EntityType.MORTAL})
-ROAD_BRANCHES = frozenset({KnowledgeBranch.GATE_LORE, KnowledgeBranch.PATHFINDING, KnowledgeBranch.SKY_NAVIGATION, KnowledgeBranch.MAGIC})
-EXPLORATION_BRANCHES = frozenset({KnowledgeBranch.SEAFARING, KnowledgeBranch.PATHFINDING, KnowledgeBranch.ASTRONOMY})
+ROAD_BRANCHES = having(KNOWLEDGE_BRANCH_TRAITS, KnowledgeBranchTrait.ROAD_BRANCHES)
+EXPLORATION_BRANCHES = having(KNOWLEDGE_BRANCH_TRAITS, KnowledgeBranchTrait.EXPLORATION_BRANCHES)
 
 
 @dataclass(frozen=True)
