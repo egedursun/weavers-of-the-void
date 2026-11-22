@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.db.faction_kinds import of_kinds
 from aerona.db.tables.affairs import ResolutionRow, ResolutionVoteRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import ROUTE_DANGER_COLUMNS, TradeRouteProfileRow
@@ -11,7 +12,8 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.statecraft import SphereRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.finance import TradePolicyKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind, LegitimacyBasis
@@ -45,9 +47,7 @@ async def assemblies(ctx: TickContext) -> list[EntityRow]:
     return list(
         await ctx.session.scalars(
             select(EntityRow)
-            .where(
-                EntityRow.entity_type == EntityType.FACTION, EntityRow.status == EntityStatus.CANON, EntityRow.engine_kind == EngineKind.INTERWORLD_FEDERATION
-            )
+            .where(EntityRow.entity_type == EntityType.FACTION, EntityRow.status == EntityStatus.CANON, of_kinds([FactionKind.INTERWORLD_FEDERATION]))
             .order_by(EntityRow.id)
         )
     )

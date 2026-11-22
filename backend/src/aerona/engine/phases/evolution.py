@@ -212,10 +212,12 @@ async def spillover(ctx: TickContext) -> None:
     "table.plague_responses",
     "table.quarantines",
     "table.structure_profiles",
+    "table.tradition_profiles",
 )
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
+    "table.disease_profiles",
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",

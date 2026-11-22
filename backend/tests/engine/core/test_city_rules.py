@@ -1,22 +1,22 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.db.tables.city_rules import ConurbationRow, MunicipalServiceRow
+from aerona.db.tables.city_rules import ConurbationRow, LandUseRuleRow, MunicipalServiceRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.polity import LawJurisdictionRow, PolityMemberRow, PolityProfileRow
-from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
+from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.domain.enums.city_rules import ConurbationGovernance, LandUseRule, MunicipalService
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, LawKind
-from aerona.domain.enums.settlement import DistrictKind, SizeTier
+from aerona.domain.enums.settlement import DistrictKind, SizeTier, WaterSupply
 from aerona.domain.enums.urban import HousingLevel, Morphology, UrbanService
 from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.city_rules.book import CityTally
 from aerona.engine.city_rules.conurbations import grow_together, join, tend_conurbations
 from aerona.engine.city_rules.effects import above_cap, cost_factor, fire_cut, housing_cap, municipal_cover, use_barred
-from aerona.engine.city_rules.land import rebuild, set_rule, tend_rules
-from aerona.engine.city_rules.services import found_service, run_service
+from aerona.engine.city_rules.land import plan_rules, rebuild, set_rule, tend_rules
+from aerona.engine.city_rules.services import found_service, run_service, town_services
 from aerona.engine.context import TickContext
 from aerona.engine.polity.laws import enact
 from aerona.engine.primitives.manual import manual_context
@@ -52,7 +52,7 @@ async def test_rules_bar_uses_cap_homes_cut_fire_and_raise_costs(ctx: TickContex
 
 
 async def test_a_weakly_enforced_rule_on_dear_land_is_evaded_and_a_wrecked_town_rebuilds_to_plan(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await manual_context(session, "evaded", tuned_rules(city_rules={"evasion_per_land_value_pct": 100}))
+    ctx = await manual_context(session, "evaded", tuned_rules(city_rules={"evasion_per_land_value_pct": 100, "enforcement_follow_pct": 0}))
     town, profile, district = await town_with(session, world, "Evadeburg")
     rule = await set_rule(ctx, town, LandUseRule.FRONTAGE_RULE, {}, CityTally())
     rule.enforcement = 0
@@ -112,3 +112,58 @@ async def test_a_joined_city_shares_unrest_under_one_council(ctx: TickContext, s
     await tend_conurbations(ctx, CityTally())
     assert core_profile.unrest == member_profile.unrest == 20
     assert await session.scalar(select(MunicipalServiceRow.id)) is None
+
+
+async def test_a_town_planned_or_given_water_in_a_later_epoch_gains_its_rules_and_service_once(
+    ctx: TickContext, session: AsyncSession, world: CoreWorld
+) -> None:
+    tally = CityTally()
+    await plan_rules(ctx, tally)
+    await town_services(ctx, tally)
+    town, profile, _district = await town_with(session, world, "Lateplan")
+    profile.morphology = Morphology.PLANNED
+    session.add(SettlementInfrastructureRow(settlement_entity_id=town.id, water=WaterSupply.WELL))
+    await session.flush()
+    await plan_rules(ctx, tally)
+    await town_services(ctx, tally)
+    rules = set(await session.scalars(select(LandUseRuleRow.rule).where(LandUseRuleRow.settlement_entity_id == town.id)))
+    assert rules == {LandUseRule.FIRE_SPACING, LandUseRule.FRONTAGE_RULE}
+    water = await session.scalar(select(MunicipalServiceRow).where(MunicipalServiceRow.settlement_entity_id == town.id))
+    assert water is not None and water.service is MunicipalService.WATER_DISTRIBUTION
+    water.failed_epoch, water.budget = ctx.epoch, 0
+    for row in list(await session.scalars(select(LandUseRuleRow).where(LandUseRuleRow.settlement_entity_id == town.id))):
+        await session.delete(row)
+    await session.flush()
+    await plan_rules(ctx, tally)
+    await town_services(ctx, tally)
+    assert await session.scalar(select(LandUseRuleRow.id).where(LandUseRuleRow.settlement_entity_id == town.id)) is None
+    assert water.failed_epoch == ctx.epoch and water.budget == 0
+
+
+async def test_a_service_paid_in_full_grows_better_its_budget_follows_need_and_an_unpaid_one_decays(
+    ctx: TickContext, session: AsyncSession, world: CoreWorld
+) -> None:
+    town, profile, _district = await town_with(session, world, "Tendton", treasury=10_000)
+    tally = CityTally()
+    refuse = await found_service(ctx, town, MunicipalService.REFUSE, tally, budget=1)
+    quality = refuse.quality
+    await run_service(ctx, refuse, town, tally)
+    assert refuse.budget > 1 and refuse.quality < quality
+    refuse.budget = 10_000
+    lowered = refuse.quality
+    await run_service(ctx, refuse, town, tally)
+    assert refuse.quality == lowered + ctx.rules.city_rules.quality_step and refuse.budget < 10_000
+    assert profile.treasury < 10_000
+
+
+async def test_a_rule_is_enforced_as_well_as_its_town_keeps_order_and_a_watch_helps(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "order", tuned_rules(city_rules={"enforcement_follow_pct": 100}))
+    town, profile, district = await town_with(session, world, "Orderby")
+    rule = await set_rule(ctx, town, LandUseRule.FIRE_SPACING, {}, CityTally())
+    profile.crime = 40
+    await tend_rules(ctx, CityTally())
+    assert rule.enforcement == 60
+    session.add(MunicipalServiceRow(settlement_entity_id=town.id, service=MunicipalService.NIGHT_WATCH, coverage={str(district.id): 100}, locked=[]))
+    await session.flush()
+    await tend_rules(ctx, CityTally())
+    assert rule.enforcement == 100

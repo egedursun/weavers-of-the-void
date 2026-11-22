@@ -15,6 +15,8 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
 
 
 @reads(
+    "faction.wealth",
+    "house.wealth",
     "item.curse",
     "item.damage",
     "item.might",
@@ -40,6 +42,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.node_births",
     "table.node_materials",
     "table.nodes",
+    "table.polity_members",
     "table.relics",
     "table.sons",
     "table.stars",
@@ -48,10 +51,12 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
 )
 @writes(
     "table.art_prices",
+    "table.art_sales",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.collectors",
+    "table.courts",
     "table.entities",
     "table.forgeries",
     "table.incident_facts",
@@ -64,6 +69,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.name_registry",
     "table.node_births",
     "table.node_materials",
+    "table.polity_profiles",
     "table.relics",
 )
 async def art_market(ctx: TickContext) -> None:

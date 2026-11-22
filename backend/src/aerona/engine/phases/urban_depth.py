@@ -114,8 +114,13 @@ async def magical_orders(ctx: TickContext) -> None:
 
 
 @reads(
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
     "settlement.defense",
+    "settlement.piety",
     "settlement.population",
+    "table.art_form_practitioners",
     "table.community_cohorts",
     "table.convoys",
     "table.disease_cures",
@@ -148,7 +153,7 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.vehicle_groups",
     "trade_route.capacity",
 )
-@writes("table.convoys", "table.transport_fleets")
+@writes("people.population", "settlement.population", "table.beliefs", "table.convoys", "table.entities", "table.transport_fleets")
 async def convoys(ctx: TickContext) -> None:
     tally = ConvoyTally()
     await run_convoys(ctx, tally)
@@ -163,7 +168,8 @@ async def transport_fleets(ctx: TickContext) -> None:
     count(ctx, "fleet", tally)
 
 
-@reads("table.community_stocks", "table.entities", "table.faction_profiles", "table.market_plays", "table.nodes", "table.trading_posts")
+@reads("table.community_stocks", "table.entities", "table.faction_profiles", "table.market_plays", "table.node_births", "table.nodes", "table.trading_posts")
+@writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.market_plays")
 async def market_manipulation(ctx: TickContext) -> None:
     tally = PlayTally()
     await play_markets(ctx, tally)

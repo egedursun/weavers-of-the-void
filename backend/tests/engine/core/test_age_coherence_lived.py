@@ -1,16 +1,24 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.methods import METHODS, PROCESS_METHODS
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
+from aerona.db.tables.city_rules import MunicipalServiceRow
+from aerona.db.tables.competition import MarketStructureRow
+from aerona.db.tables.economy import CurrencyRow
+from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.fertility_means import FertilityUseRow
+from aerona.db.tables.honours import HonourHeldRow, HonourKindRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.mortal import MarriageRow
 from aerona.db.tables.records import IncidentFactRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, MoneyForm
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import TechnologyEra
@@ -32,6 +40,7 @@ OLD_WORDS = ("scribe", "craft guild", "took the throne of", "alchemist", "charco
 DARK_AT = 50
 THRONG = 180000
 GATE_TOWN = 2000
+LIVED_RECORDS = (MarketStructureRow, HonourKindRow, HonourHeldRow, MarriageRow, MunicipalServiceRow, FertilityUseRow)
 
 
 async def throng_with_one_small_town(session: AsyncSession, frontier: Frontier) -> None:
@@ -125,5 +134,9 @@ async def test_a_world_that_begins_in_the_information_age_lives_like_one(databas
         lines = [
             text for text in await session.scalars(select(ChronicleRow.text).order_by(ChronicleRow.id)) if any(word in text.casefold() for word in OLD_WORDS)
         ]
-    found = {"lagging methods": lagging, "old shortages": old_shortages, "cold with power": cold, "dark works": dark, "old words": lines}
-    assert found == {"lagging methods": [], "old shortages": [], "cold with power": [], "dark works": [], "old words": []}
+        struck = [row.name for row in await session.scalars(select(CurrencyRow).where(CurrencyRow.minted_epoch > 0, CurrencyRow.form == MoneyForm.COIN))]
+        idle = [table.__tablename__ for table in LIVED_RECORDS if await session.scalar(select(func.count()).select_from(table)) == 0]
+        lenders = await session.scalar(select(func.count()).select_from(FactionProfileRow).where(FactionProfileRow.kind.in_(sorted(LENDER_KINDS))))
+    found = {"lagging methods": lagging, "old shortages": old_shortages, "cold with power": cold, "dark works": dark, "old words": lines, "new coin": struck}
+    assert found == {"lagging methods": [], "old shortages": [], "cold with power": [], "dark works": [], "old words": [], "new coin": []}
+    assert idle == [] and lenders

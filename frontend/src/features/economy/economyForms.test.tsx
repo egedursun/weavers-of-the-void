@@ -7,7 +7,13 @@ import {
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MaterialForge } from './MaterialsTab'
-import { CurrencyCards, DebtLaws, LoanCard, LoanForge } from './MoneyTab'
+import {
+  CoinForge,
+  CurrencyCards,
+  DebtLaws,
+  LoanCard,
+  LoanForge,
+} from './MoneyTab'
 import { WorkshopDesigns } from './WorkshopDesigns'
 
 vi.mock('@/api/client', async () => {
@@ -119,6 +125,7 @@ function serve() {
   onApi('GET', '/api/ledger/debt-laws', [LAW])
   onApi('GET', `/api/worlds/${WORLD}/workshop-designs`, [DESIGN])
   for (const action of [
+    'currency:create',
     'material:create',
     'loan:edit',
     'loan:grant',
@@ -131,6 +138,35 @@ function serve() {
 
 describe('economy forms', () => {
   beforeEach(resetApi)
+
+  it('strikes no coin until its metal is chosen, then strikes it in that metal', async () => {
+    serve()
+    const { screen } = await renderApp(<CoinForge worldId={WORLD} />)
+    await screen.getByRole('combobox', { name: 'Struck by' }).click()
+    await screen.getByRole('option', { name: /Nevrahim/ }).click()
+    await screen.getByRole('textbox', { name: 'Coin name' }).fill('Tallyroll')
+    const strike = screen.getByRole('button', { name: 'Strike it' })
+    await expect.element(strike).toHaveAttribute('aria-disabled', 'true')
+    await expect
+      .element(strike)
+      .toHaveAttribute(
+        'aria-description',
+        'Choose the metal it is struck in first.'
+      )
+    await screen.getByRole('combobox', { name: 'Metal' }).click()
+    await screen.getByRole('option', { name: 'Iron' }).click()
+    await strike.click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/currency:create').length)
+      .toBe(1)
+    expect(
+      callsTo('POST', '/api/actions/currency:create')[0]?.body
+    ).toMatchObject({
+      issuer_id: 32,
+      name: 'Tallyroll',
+      metal: 'iron',
+    })
+  })
 
   it('forges a material akin to a catalog one with every value', async () => {
     serve()

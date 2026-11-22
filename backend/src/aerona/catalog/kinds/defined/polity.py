@@ -255,6 +255,7 @@ LEGITIMACY_BASIS = total(
                 "engine.polity.assembly.ban_void",
                 "engine.polity.governance.agenda",
                 "engine.polity.governance.consider",
+                "engine.polity.policy.codify",
                 "engine.polity.policy.revolution",
                 "services.player.justice.CreateProposal",
                 "tools.mortal.justice.BASES",

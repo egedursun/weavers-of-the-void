@@ -11,7 +11,7 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | region | 650 / 215 met | 523 / 160 met | 400 / 120 met |
 | place | 178 / 25 met | 170 / 20 met | 293 / 15 met |
 | resource | 94 / 35 met | 70 / 50 met | 238 / 30 met |
-| settlement | 1805 / 280 met | 1415 / 230 met | 420 / 145 met |
+| settlement | 1805 / 280 met | 1416 / 230 met | 420 / 145 met |
 | species | 254 / 150 met | 227 / 150 met | 215 / 95 met |
 | people | 1586 / 320 met | 1113 / 220 met | 420 / 140 met |
 | mortal | 1338 / 355 met | 1018 / 340 met | 420 / 200 met |
@@ -20,7 +20,7 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | language | 1258 / 110 met | 717 / 90 met | 420 / 55 met |
 | legend | 79 / 30 met | 59 / 40 met | 123 / 35 met |
 | tradition | 67 / 20 met | 59 / 25 met | 83 / 25 met |
-| cult | 815 / 90 met | 562 / 100 met | 420 / 75 met |
+| cult | 815 / 90 met | 563 / 100 met | 420 / 75 met |
 | faction | 923 / 95 met | 543 / 110 met | 400 / 80 met |
 | celestial | 422 / 10 met | 271 / 12 met | 360 / 15 met |
 | artwork | 64 / 20 met | 50 / 20 met | 157 / 15 met |
@@ -32,7 +32,7 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | vessel | 859 / 80 met | 566 / 65 met | 400 / 35 met |
 | outer_being | 41 / 15 met | 20 / 20 met | 159 / 20 met |
 | army | 788 / 240 met | 392 / 200 met | 400 / 95 met |
-| natural_law | 945 / 10 met | 572 / 30 met | 420 / 30 met |
+| natural_law | 945 / 10 met | 575 / 30 met | 420 / 30 met |
 | trade_route | 94 / 25 met | 65 / 25 met | 220 / 25 met |
 | disease | 98 / 45 met | 70 / 50 met | 220 / 40 met |
 | polity | 567 / 225 met | 329 / 220 met | 371 / 150 met |
@@ -43,7 +43,7 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | rite | 103 / 50 met | 96 / 55 met | 120 / 45 met |
 | beast | 990 / 150 met | 788 / 90 met | 420 / 65 met |
 | theory | 415 / 15 met | 304 / 20 met | 400 / 25 met |
-| art_form | 189 / 20 met | 147 / 20 met | 220 / 20 met |
+| art_form | 189 / 20 met | 148 / 20 met | 220 / 20 met |
 | phenomenon | 52 / 20 met | 80 / 20 met | 200 / 25 met |
 | cosmic_being | 0 | 1 | 20 |
 | vehicle_type | 0 | 0 | 0 |
@@ -53,10 +53,10 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | building_type | 0 | 0 | 0 |
 | network | 0 | 5 | 100 |
 | league | 0 | 3 | 39 |
-| son | 1969 / 350 met | 1603 / 320 met | 420 / 190 met |
-| creator | 1664 / 35 met | 1381 / 40 met | 420 / 35 met |
-| foreign_god | 1729 / 200 met | 1446 / 140 met | 420 / 100 met |
+| son | 1969 / 350 met | 1604 / 320 met | 420 / 190 met |
+| creator | 1664 / 35 met | 1382 / 40 met | 420 / 35 met |
+| foreign_god | 1729 / 200 met | 1447 / 140 met | 420 / 100 met |
 | war | 1387 / 95 met | 949 / 110 met | 420 / 75 met |
-| world | 2081 / 195 met | 1694 / 135 met | 420 / 115 met |
-| star | 1816 / 35 met | 1556 / 30 met | 420 / 25 met |
-| route | 847 / 45 met | 506 / 30 met | 420 / 25 met |
+| world | 2081 / 195 met | 1698 / 135 met | 420 / 115 met |
+| star | 1816 / 35 met | 1560 / 30 met | 420 / 25 met |
+| route | 847 / 45 met | 510 / 30 met | 420 / 25 met |

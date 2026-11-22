@@ -1,4 +1,7 @@
 from enum import StrEnum
+from types import MappingProxyType
+
+from aerona.domain.enums.entity import EngineKind
 
 
 class FactionKind(StrEnum):
@@ -88,6 +91,7 @@ class FactionRank(StrEnum):
 CRIME_KINDS = frozenset({FactionKind.CRIME_FAMILY, FactionKind.THIEVES_GUILD, FactionKind.SMUGGLING_RING, FactionKind.PIRATE_CONFEDERACY})
 OUTLAW_KINDS = frozenset({FactionKind.REBELS, FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.ROUTE_RAIDERS, FactionKind.ASSASSINS, *CRIME_KINDS})
 ROBBER_KINDS = frozenset({FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.ROUTE_RAIDERS, FactionKind.REBELS, FactionKind.PIRATE_CONFEDERACY})
+LENDER_KINDS = frozenset({FactionKind.MERCHANT_GUILD, FactionKind.FINANCIERS})
 GUILD_KINDS = frozenset({FactionKind.MERCHANT_GUILD, FactionKind.CRAFT_GUILD, FactionKind.WANDERING_MARKET})
 ARMED_KINDS = frozenset(
     {
@@ -120,3 +124,30 @@ class MovementCause(StrEnum):
     FRANCHISE = "franchise"
     PEACE = "peace"
     CONSERVATION = "conservation"
+
+
+KIND_OF_ENGINE = MappingProxyType(
+    {
+        EngineKind.MERCHANT_GUILD: FactionKind.MERCHANT_GUILD,
+        EngineKind.PRIESTS_COUNCIL: FactionKind.PRIESTHOOD,
+        EngineKind.WARRIOR_BAND: FactionKind.WARRIOR_ORDER,
+        EngineKind.REBELS: FactionKind.REBELS,
+        EngineKind.ROUTE_RAIDERS: FactionKind.ROUTE_RAIDERS,
+        EngineKind.INTERWORLD_FEDERATION: FactionKind.INTERWORLD_FEDERATION,
+        EngineKind.WANDERING_MARKET: FactionKind.WANDERING_MARKET,
+        EngineKind.MERCENARY_ARMY: FactionKind.MERCENARY_COMPANY,
+        EngineKind.HOLY_GUARD: FactionKind.WARRIOR_ORDER,
+        EngineKind.PEOPLES_ARMY: FactionKind.REBELS,
+    }
+)
+ENGINE_OF_KIND = MappingProxyType(
+    {
+        FactionKind.MERCHANT_GUILD: EngineKind.MERCHANT_GUILD,
+        FactionKind.PRIESTHOOD: EngineKind.PRIESTS_COUNCIL,
+        FactionKind.WARRIOR_ORDER: EngineKind.WARRIOR_BAND,
+        FactionKind.REBELS: EngineKind.REBELS,
+        FactionKind.ROUTE_RAIDERS: EngineKind.ROUTE_RAIDERS,
+        FactionKind.INTERWORLD_FEDERATION: EngineKind.INTERWORLD_FEDERATION,
+        FactionKind.WANDERING_MARKET: EngineKind.WANDERING_MARKET,
+    }
+)

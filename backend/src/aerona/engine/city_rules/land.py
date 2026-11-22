@@ -2,12 +2,11 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
-from aerona.db.tables.city_rules import LandUseRuleRow
-from aerona.db.tables.cosmos import AppliedFixupRow
+from aerona.db.tables.city_rules import LandUseRuleRow, MunicipalServiceRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.city_rules import LandUseRule, RuleMaker
+from aerona.domain.enums.city_rules import LandUseRule, MunicipalService, RuleMaker
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import BuildMaterial
@@ -15,10 +14,12 @@ from aerona.domain.enums.urban import Morphology
 from aerona.engine.city_rules.book import CityTally
 from aerona.engine.city_rules.effects import rules_of
 from aerona.engine.context import TickContext
+from aerona.engine.primitives.mirrors import close_legacy, first_sight
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
 
 LEGACY_FIXUP = "land_use_rules.legacy_planned"
+PLANNED_FAMILY = "land_use_rules.planned"
 EVADED = 50
 PLAN_STRENGTH = 50
 CROWDED_LEVELS = 6
@@ -85,6 +86,14 @@ async def rebuild(ctx: TickContext, town: EntityRow, profile: SettlementProfileR
     await record(ctx, "city.planned_rebuild", roles={IncidentRole.SUBJECT: town.id}, facts={"districts": len(wrecked)})
 
 
+async def order_kept(ctx: TickContext, town_id: int, profile: SettlementProfileRow) -> int:
+    watch = select(MunicipalServiceRow).where(MunicipalServiceRow.settlement_entity_id == town_id, MunicipalServiceRow.service == MunicipalService.NIGHT_WATCH)
+    found = await ctx.session.scalar(watch.order_by(MunicipalServiceRow.id).limit(1))
+    covered = list((found.coverage or {}).values()) if found is not None and found.failed_epoch is None else []
+    guarded = sum(int(share) for share in covered) // len(covered) if covered else 0
+    return clamp_int(PERCENT - profile.crime + guarded // 2, 0, PERCENT)
+
+
 async def tend_rules(ctx: TickContext, tally: CityTally) -> None:
     towns = sorted(set(await ctx.session.scalars(select(LandUseRuleRow.settlement_entity_id))))
     for town_id in towns:
@@ -93,7 +102,12 @@ async def tend_rules(ctx: TickContext, tally: CityTally) -> None:
         if town is None or profile is None or held(town_id) or town.status is not EntityStatus.CANON:
             continue
         value = await land_value(ctx, town_id)
+        order = await order_kept(ctx, town_id, profile)
         for row in await rules_of(ctx.session, town_id):
+            if "enforcement" not in (row.locked or []):
+                row.enforcement = clamp_int(
+                    row.enforcement + round_half_up((order - row.enforcement) * ctx.rules.city_rules.enforcement_follow_pct / PERCENT), 0, PERCENT
+                )
             await weigh_evasion(ctx, row, value, tally)
         await rebuild(ctx, town, profile, tally)
 
@@ -108,18 +122,18 @@ async def crowded_towns(ctx: TickContext, tally: CityTally) -> None:
             await set_rule(ctx, town, LandUseRule.FIRE_SPACING, {}, tally)
 
 
-async def apply_legacy(ctx: TickContext, tally: CityTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
-        return
+async def plan_rules(ctx: TickContext, tally: CityTally) -> None:
     made = 0
     planned = select(SettlementProfileRow.settlement_entity_id).where(SettlementProfileRow.morphology == Morphology.PLANNED)
     for town_id in list(await ctx.session.scalars(planned.order_by(SettlementProfileRow.settlement_entity_id))):
         town = await ctx.session.get(EntityRow, town_id)
-        if town is None or held(town_id) or await rules_of(ctx.session, town_id):
+        if town is None or town.status is not EntityStatus.CANON or held(town_id) or not await first_sight(ctx.session, PLANNED_FAMILY, town_id):
+            continue
+        if await rules_of(ctx.session, town_id):
             continue
         for rule in (LandUseRule.FIRE_SPACING, LandUseRule.FRONTAGE_RULE):
             row = await set_rule(ctx, town, rule, {}, tally)
             row.strength = PLAN_STRENGTH
             made += 1
-    ctx.session.add(AppliedFixupRow(key=LEGACY_FIXUP, result={"rules": made}))
+    await close_legacy(ctx.session, LEGACY_FIXUP, {"rules": made})
     await ctx.session.flush()

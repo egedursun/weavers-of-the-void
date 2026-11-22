@@ -409,16 +409,18 @@ async def match(ctx: TickContext, household: HouseholdRow, members: list[Member]
     others = await ctx.session.scalars(
         select(HouseholdRow).where(HouseholdRow.settlement_node_id == household.settlement_node_id, HouseholdRow.id != household.id).order_by(HouseholdRow.id)
     )
-    best: tuple[int, HouseholdRow, Member] | None = None
+    best: tuple[tuple[int, int], HouseholdRow, Member] | None = None
+    age = stat(single.mortal, "age") or 0
     for other in others:
         if MEMBERS in (other.locked or []) or other.social_class is not household.social_class:
             continue
-        for candidate in await members_of(ctx, other):
+        kin = await members_of(ctx, other)
+        for candidate in kin:
             if (
                 candidate.mortal.status is not EntityStatus.CANON
                 or not candidate.grown
                 or held(candidate.mortal.id)
-                or candidate.row.role is HouseholdRole.HEAD
+                or (candidate.row.role is HouseholdRole.HEAD and any(member.mortal.id != candidate.mortal.id for member in kin))
                 or await spouses_of(ctx.session, candidate.mortal.id)
                 or not await may_wed(ctx.session, ctx.rules, single.mortal, candidate.mortal)
             ):
@@ -426,8 +428,9 @@ async def match(ctx: TickContext, household: HouseholdRow, members: list[Member]
             bonus = await preference_bonus(ctx.session, ctx.rules, single.mortal, candidate.mortal) + await shared_taste(
                 ctx.session, ctx.rules, single.mortal.id, candidate.mortal.id
             )
-            if best is None or bonus > best[0]:
-                best = (bonus, other, candidate)
+            standing = (bonus, -abs((stat(candidate.mortal, "age") or 0) - age))
+            if best is None or standing > best[0]:
+                best = (standing, other, candidate)
     if best is None:
         return False
     _, other, candidate = best

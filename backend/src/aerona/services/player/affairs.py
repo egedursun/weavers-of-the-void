@@ -3,6 +3,7 @@ from pydantic import Field
 from aerona.catalog.statecraft import RESOLUTION_TEXT as KIND_TEXT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import agree, an, several, spoken
+from aerona.db.faction_kinds import kind_of
 from aerona.db.tables.affairs import (
     RATE_MAX,
     CouncilSeatRow,
@@ -21,7 +22,8 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.entity import EngineKind, EntityType
+from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.statecraft import CouncilTask, CourtPosition, MandateKind, MandateState, NobleWant, ResolutionKind, ResolutionState, TaxKind
@@ -427,7 +429,7 @@ async def resolution_of(scope: PlayerScope, resolution_id: int) -> ResolutionRow
 @player_action("resolution:propose", ActionKind.EDIT_RECORD)
 async def propose_resolution(scope: PlayerScope, command: ProposeResolution) -> Effect:
     assembly = await scope.session.get(EntityRow, command.assembly_id)
-    if assembly is None or assembly.engine_kind is not EngineKind.INTERWORLD_FEDERATION:
+    if assembly is None or await kind_of(scope.session, assembly.id) is not FactionKind.INTERWORLD_FEDERATION:
         raise ValidationFailedError("Resolutions are brought before an interworld assembly.")
     if command.target_id is not None and await scope.session.get(NodeRow, command.target_id) is None:
         raise ValidationFailedError("The target must be a thing of the cosmos.")

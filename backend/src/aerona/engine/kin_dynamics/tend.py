@@ -160,6 +160,16 @@ async def sway(ctx: TickContext, dynamic: KinDynamicRow, head: EntityRow, tally:
         await record(ctx, "kin.elder_overthrown", roles={IncidentRole.ACTOR: head.id, IncidentRole.TARGET: row.elder_node_id}, facts={"sway": row.sway})
 
 
+async def weigh_tension(ctx: TickContext, dynamic: KinDynamicRow) -> None:
+    if "tension" in (dynamic.locked or []):
+        return
+    open_rivalries = select(KinRivalryRow.heat).where(KinRivalryRow.dynamic_id == dynamic.id, KinRivalryRow.ended_epoch.is_(None))
+    unmended = select(KinDisowningRow.id).where(KinDisowningRow.dynamic_id == dynamic.id, KinDisowningRow.reconciled_epoch.is_(None))
+    hottest = max(await ctx.session.scalars(open_rivalries), default=0)
+    disowned = len(list(await ctx.session.scalars(unmended)))
+    dynamic.tension = clamp_int(hottest + disowned * ctx.rules.kin_dynamics.disowning_tension, 0, PERCENT)
+
+
 async def tend_kin(ctx: TickContext) -> KinTally:
     tally = KinTally()
     for profile in list(await ctx.session.scalars(select(HouseProfileRow).order_by(HouseProfileRow.house_entity_id))):
@@ -175,4 +185,5 @@ async def tend_kin(ctx: TickContext) -> KinTally:
         await mend(ctx, dynamic, tally)
         await blend(ctx, dynamic, head, members, tally)
         await sway(ctx, dynamic, head, tally)
+        await weigh_tension(ctx, dynamic)
     return tally

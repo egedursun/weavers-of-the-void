@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.constants.units import PER_MILLE, PERCENT
+from aerona.db.faction_kinds import of_kinds
 from aerona.db.tables.economy import ProductionRunRow, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.orders import ChainHoldingRow, PuttingOutRow
@@ -12,7 +13,8 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeRouteStatus
-from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import SizeTier
 from aerona.engine.context import TickContext
@@ -49,7 +51,7 @@ async def merchant_houses(ctx: TickContext) -> list[EntityRow]:
         select(EntityRow)
         .where(
             EntityRow.entity_type == EntityType.FACTION,
-            EntityRow.engine_kind == EngineKind.MERCHANT_GUILD,
+            of_kinds([FactionKind.MERCHANT_GUILD]),
             EntityRow.status == EntityStatus.CANON,
             EntityRow.location_id.is_not(None),
         )

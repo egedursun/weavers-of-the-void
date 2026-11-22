@@ -5,7 +5,11 @@ from aerona.domain.enums.honours import HonourPrivilege, VeteranGrant
 HONOUR_PRIVILEGE = total(
     HonourPrivilege,
     {
-        HonourPrivilege.PRECEDENCE: Defined("Precedence", checked_by=("engine.honours.persons.confer",), used_by=("tools.son.person_honours.own_honour",)),
+        HonourPrivilege.PRECEDENCE: Defined(
+            "Precedence",
+            checked_by=("engine.honours.persons.confer",),
+            used_by=("engine.honours.persons.found_for_deeds", "tools.son.person_honours.own_honour"),
+        ),
         HonourPrivilege.PENSION: Defined("Pension", checked_by=("engine.honours.persons.pay_pensions",), used_by=()),
         HonourPrivilege.LAND: Defined("Land", checked_by=("engine.honours.persons.grant_privileges",), used_by=()),
         HonourPrivilege.SEAT: Defined("Seat", checked_by=("engine.honours.persons.grant_privileges",), used_by=()),

@@ -6,15 +6,18 @@ from aerona.catalog.materials import COIN_MATERIALS
 from aerona.catalog.money import MONEY_FORMS, REFORMS, issuer_kind_of
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.faction_kinds import kinds_by_faction
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.stored import stored_id
 from aerona.db.tables.economy import CommunityStockRow, CurrencyRow, LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MoneyBacking, MoneyForm, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
@@ -92,12 +95,12 @@ async def coin_metal(ctx: TickContext, community_id: int) -> CommunityStockRow |
     return min(lots, key=lambda lot: (COIN_MATERIALS.index(lot.material) if lot.material in COIN_MATERIALS else len(COIN_MATERIALS), lot.id), default=None)
 
 
-async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKind) -> CurrencyRow:
+async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKind | None, form: MoneyForm = MoneyForm.COIN) -> CurrencyRow:
     table = ctx.rules.money
     coin = await create_record(
         ctx,
         RecordSpec(
-            name=f"{issuer.name} Coin",
+            name=f"{issuer.name} Coin" if metal is not None else f"{issuer.name} {MONEY_FORMS[form].label}",
             entity_type=EntityType.ITEM,
             stats=ItemStats(
                 damage=0,
@@ -105,7 +108,9 @@ async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKin
                 might=clamp_int(ctx.rules.trade.currency_might_base + ctx.rng(f"coin.{issuer.id}").die(ctx.rules.trade.currency_might_die), 0, PERCENT),
                 curse=0,
             ),
-            body=f"{issuer.name} began to strike coins of {spoken(metal)}.",
+            body=f"{issuer.name} began to strike coins of {spoken(metal)}."
+            if metal is not None
+            else f"{issuer.name} began to issue {MONEY_FORMS[form].label.lower()}.",
             power=ctx.rules.trade.currency_power,
             world_id=issuer.world_id,
             location_id=issuer.id if issuer.entity_type is EntityType.SETTLEMENT else issuer.location_id,
@@ -126,6 +131,9 @@ async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKin
         trust=table.start_trust,
         minted_epoch=ctx.epoch,
         issuer_kind=issuer_kind_of(issuer.entity_type, issuer.engine_kind),
+        form=form,
+        backing=MoneyBacking.METAL if metal is not None else MoneyBacking.DECREE,
+        convertible=metal is not None,
     )
     ctx.session.add(currency)
     await ctx.session.flush()
@@ -133,15 +141,31 @@ async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKin
     row = await ctx.session.get(CommunitySocietyRow, issuer.id)
     if row is not None:
         row.currency_id = currency.id
-    await record(
-        ctx,
-        "money.minted",
-        roles={IncidentRole.MAKER: issuer.id, IncidentRole.PRODUCT: coin.id},
-        facts={"metal": metal, "purity": currency.purity, "trust": currency.trust},
-        steps=(StepDraft(StepAction.SHAPE, actor=issuer.id, target=coin.id),),
-        place=coin.location_id,
-    )
+    if metal is not None:
+        await record(
+            ctx,
+            "money.minted",
+            roles={IncidentRole.MAKER: issuer.id, IncidentRole.PRODUCT: coin.id},
+            facts={"metal": metal, "purity": currency.purity, "trust": currency.trust},
+            steps=(StepDraft(StepAction.SHAPE, actor=issuer.id, target=coin.id),),
+            place=coin.location_id,
+        )
+    else:
+        await record(
+            ctx,
+            "money.issued",
+            roles={IncidentRole.MAKER: issuer.id, IncidentRole.PRODUCT: coin.id},
+            facts={"form": form, "trust": currency.trust},
+            steps=(StepDraft(StepAction.SHAPE, actor=issuer.id, target=coin.id),),
+            place=coin.location_id,
+        )
     return currency
+
+
+def unminted_form(book: EconomyBook, issuer_id: int) -> MoneyForm | None:
+    techniques = book.techniques.get(issuer_id, set())
+    known = [form for form in REFORMS if MONEY_FORMS[form].technique in techniques]
+    return known[-1] if known else None
 
 
 async def mint(ctx: TickContext, book: EconomyBook, issuer: EntityRow, tally: MoneyTally) -> None:
@@ -149,16 +173,16 @@ async def mint(ctx: TickContext, book: EconomyBook, issuer: EntityRow, tally: Mo
     if not book.knowledge.knows(issuer.id, KnowledgeBranch.TRADE):
         return
     lot = await coin_metal(ctx, issuer.id)
-    if lot is None or lot.material is None:
-        return
+    metal = lot.material if lot is not None else None
     currency = await issued_by(ctx, issuer.id)
     if currency is None:
-        if book.lacks(issuer.id, Technique.COINAGE) or not await may_coin(ctx.session, ctx.rules, issuer.id):
+        form = unminted_form(book, issuer.id) or (MoneyForm.COIN if metal is not None and not book.lacks(issuer.id, Technique.COINAGE) else None)
+        if form is None or not await may_coin(ctx.session, ctx.rules, issuer.id):
             return
         if riches(issuer) < ctx.rules.trade.coinage_min_wealth or not ctx.rng(f"mint.{issuer.id}.{ctx.epoch}").chance(ctx.rules.trade.coinage_chance):
             return
-        currency = await found_currency(ctx, issuer, lot.material)
-    if not MONEY_FORMS[currency.form].uses_metal:
+        currency = await found_currency(ctx, issuer, metal if form is MoneyForm.COIN else None, form)
+    if not MONEY_FORMS[currency.form].uses_metal or lot is None or metal is None:
         return
     mint_works = book.workshop(issuer.id, WorkshopKind.MINT)
     units = min(lot.quantity, table.mint_ore_units * (mint_works.level if mint_works is not None else 1))
@@ -305,11 +329,12 @@ async def defaulted_before(ctx: TickContext, borrower_id: int) -> bool:
 
 async def banks(ctx: TickContext, book: EconomyBook) -> list[EntityRow]:
     table = ctx.rules.banking
+    kinds = await kinds_by_faction(ctx.session)
     return [
         entity
         for entity in book.entities.values()
         if entity.entity_type is EntityType.FACTION
-        and entity.engine_kind is EngineKind.MERCHANT_GUILD
+        and kinds.get(entity.id) in LENDER_KINDS
         and riches(entity) >= table.bank_wealth
         and not book.lacks(entity.location_id or 0, Technique.BANKING)
     ]
@@ -317,11 +342,11 @@ async def banks(ctx: TickContext, book: EconomyBook) -> list[EntityRow]:
 
 async def lend(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
     table = ctx.rules.banking
-    lenders = await banks(ctx, book)
+    lenders = [bank for bank in await banks(ctx, book) if not held(bank.id)]
     if not lenders:
         return
     for borrower in book.communities:
-        if riches(borrower) >= table.borrower_wealth_below or not await _at_war(ctx, borrower.id):
+        if held(borrower.id) or riches(borrower) >= table.borrower_wealth_below or not await _at_war(ctx, borrower.id):
             continue
         open_loan = await ctx.session.scalar(select(LoanRow.id).where(LoanRow.borrower_entity_id == borrower.id, LoanRow.status == LoanStatus.OPEN).limit(1))
         row = book.societies.get(borrower.id)
@@ -372,6 +397,8 @@ async def collect(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> Non
         if borrower is None or lender is None:
             loan.status = LoanStatus.FORGIVEN
             continue
+        if held(borrower.id) or held(lender.id):
+            continue
         spare = max(0, riches(borrower) - table.repay_wealth_floor)
         payment = min(owed(loan), max(0, round_half_up(owed(loan) * table.repay_pct / PERCENT)), spare)
         if payment > 0:
@@ -410,7 +437,7 @@ async def default(ctx: TickContext, book: EconomyBook, loan: LoanRow, borrower: 
     if law is not None and law.remedy is DebtRemedy.BONDAGE:
         await bind_debtor(ctx, borrower, lender)
     elif law is not None and law.remedy is DebtRemedy.PRISON:
-        await jail_debtor(ctx, borrower, lender, f"{max(0, owed(loan))} silver")
+        await jail_debtor(ctx, borrower, lender, f"a debt of {max(0, owed(loan))}")
     loan.status = LoanStatus.DEFAULTED
     gain(lender, -table.default_bank_loss)
     await on_default(ctx, borrower, lender)

@@ -41,6 +41,7 @@ from aerona.engine.phase import Phase
     "table.offices",
     "table.org_governance",
     "table.polity_profiles",
+    "table.settlement_profiles",
 )
 async def departures(ctx: TickContext) -> None:
     for key, value in asdict(await tend_departures(ctx)).items():

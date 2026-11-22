@@ -122,7 +122,7 @@ async def grow(ctx: TickContext, company: EntityRow, row: CompanyProfileRow) -> 
         await secede(ctx, company)
 
 
-@reads("table.company_holdings", "table.company_profiles", "table.entities", "table.polity_members", "table.polity_profiles")
+@reads("table.company_holdings", "table.company_profiles", "table.enclaves", "table.entities", "table.polity_members", "table.polity_profiles")
 @writes("table.company_presences", "table.enclaves", "table.polity_profiles", "table.settlement_profiles")
 async def keep_company_power(ctx: TickContext) -> None:
     for row in list(await ctx.session.scalars(select(CompanyProfileRow).order_by(CompanyProfileRow.faction_entity_id))):

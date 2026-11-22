@@ -7,7 +7,7 @@ SECURITY_KIND = total(
     {
         SecurityKind.SHARE: Defined(
             "Share",
-            checked_by=("engine.securities.holdings.share_security", "engine.securities.shares.sync_shares"),
+            checked_by=("engine.securities.holdings.share_security", "engine.securities.shares.float_shares", "engine.securities.shares.sync_shares"),
             used_by=("db.tables.securities.IssuedSecurityRow", "engine.securities.shares.issue_shares"),
         ),
         SecurityKind.BOND: Defined(

@@ -475,8 +475,33 @@ async def role_norms(ctx: TickContext) -> None:
     count(ctx, "role_norm", tally)
 
 
-@reads("table.calendars", "table.cosmos", "table.dating_systems", "table.entities", "table.holder_techniques", "table.nodes", "table.offices")
-@writes("table.dating_systems")
+@reads(
+    "table.bonds",
+    "table.calendars",
+    "table.community_relations",
+    "table.cosmos",
+    "table.culture_values",
+    "table.dating_systems",
+    "table.entities",
+    "table.holder_techniques",
+    "table.nodes",
+    "table.offices",
+    "table.personality_values",
+    "table.relationships",
+    "table.reputations",
+    "table.traits",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.dating_systems",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
+    "table.memories",
+)
 async def dating_systems(ctx: TickContext) -> None:
     tally = DatingTally()
     await keep_calendars(ctx, tally)

@@ -102,9 +102,12 @@ async def test_a_lender_of_last_resort_saves_a_bank_and_without_one_the_fall_run
     failing = await bank_at(session, world, town, "The Failing House", 1)
     other = await bank_at(session, world, town, "The Standing House", 80)
     assert not await rescue_bank(ctx, failing)
+    before = authority.reserve_requirement_pct
     struck = await spread_run(ctx, failing, [failing, other])
     assert struck == [other.id] and stat(other, "wealth") == 80 - 80 * ctx.rules.monetary.run_spread_pct // 100
-    authority.lender_of_last_resort, authority.reserves = True, 1000
+    assert authority.lender_of_last_resort and authority.reserve_requirement_pct == before + ctx.rules.monetary.run_reserve_step
+    assert await session.scalar(select(IncidentRow.id).where(IncidentRow.kind == "money.lender_of_last_resort")) is not None
+    authority.reserves = 1000
     assert await rescue_bank(ctx, failing)
     assert stat(failing, "wealth") == ctx.rules.monetary.rescue_wealth and authority.reserves == 1000 - ctx.rules.monetary.rescue_cost
 

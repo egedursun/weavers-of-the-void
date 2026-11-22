@@ -8,6 +8,7 @@ from aerona.engine.phase import Phase
 
 @reads(
     "settlement.population",
+    "settlement.prosperity",
     "species.intelligence",
     "table.beast_profiles",
     "table.creature_groups",
@@ -18,6 +19,7 @@ from aerona.engine.phase import Phase
     "table.species_ranges",
 )
 @writes(
+    "settlement.prosperity",
     "table.chronicle",
     "table.chronicle_entities",
     "table.creature_groups",

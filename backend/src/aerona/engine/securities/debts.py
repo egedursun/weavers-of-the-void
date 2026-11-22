@@ -15,6 +15,7 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 from aerona.engine.securities.holdings import SecuritiesTally, holdings_of
+from aerona.engine.securities.pricing import traded
 
 FACE_REPAID = frozenset({SecurityKind.BOND, SecurityKind.NOTE})
 COUPON_AT_MATURITY = frozenset({SecurityKind.NOTE})
@@ -46,6 +47,7 @@ async def mirror_loans(ctx: TickContext, tally: SecuritiesTally) -> None:
         ctx.session.add(bond)
         await ctx.session.flush()
         ctx.session.add(SecurityHoldingRow(holder_node_id=loan.lender_entity_id, security_id=bond.id, amount=bond.amount, bought_price=face, locked=[]))
+        await traded(ctx, bond, bond.amount)
         tally.bonds += 1
         await record(
             ctx,

@@ -10,6 +10,7 @@ from aerona.catalog.lore import IDEOLOGY_VALUES
 from aerona.catalog.mind import DOMAIN_VALUES
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.faction_kinds import of_kinds
 from aerona.db.read_memo import memoized
 from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.culture import IdeologyTenetRow
@@ -30,7 +31,8 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import LoanStatus
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, TraitKind, ValueAxis
@@ -610,7 +612,7 @@ async def lender_for(ctx: TickContext, book: RealmBook, realm: Realm) -> EntityR
             select(EntityRow).where(
                 EntityRow.entity_type == EntityType.FACTION,
                 EntityRow.status == EntityStatus.CANON,
-                EntityRow.engine_kind == EngineKind.MERCHANT_GUILD,
+                of_kinds(LENDER_KINDS),
                 EntityRow.affiliated_entity_id.in_(list(realm.members) or [-1]),
             )
         )

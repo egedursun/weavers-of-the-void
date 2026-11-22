@@ -16,7 +16,7 @@ from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.context import TickContext
 from aerona.engine.polity.laws import enact
 from aerona.engine.primitives.manual import manual_context
-from aerona.engine.restoration.rise import RestorationTally, advance, apply_legacy, raise_movement, tend_restorations
+from aerona.engine.restoration.rise import RestorationTally, advance, press_claims, raise_movement, tend_restorations
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
 
 
@@ -39,8 +39,8 @@ async def fallen_realm(session: AsyncSession, world: CoreWorld, *, unrest: int =
     return fallen, town
 
 
-async def claim_on(session: AsyncSession, world: CoreWorld, fallen: EntityRow, *, pressed: bool = False) -> EntityRow:
-    pretender = await mortal(session, "Aren Vost", world, None)
+async def claim_on(session: AsyncSession, world: CoreWorld, fallen: EntityRow, *, pressed: bool = False, name: str = "Aren Vost") -> EntityRow:
+    pretender = await mortal(session, name, world, None)
     session.add(ClaimRow(claimant_entity_id=pretender.id, polity_entity_id=fallen.id, basis=next(iter(ClaimBasis)), pressed=pressed, locked=[]))
     await session.flush()
     return pretender
@@ -120,9 +120,21 @@ async def test_pretenders_pressing_a_claim_on_a_fallen_realm_gain_a_restoration(
     assert claim is not None
     claim.title_entity_id = fallen.id
     tally = RestorationTally()
-    await apply_legacy(ctx, tally)
+    await press_claims(ctx, tally)
     row = await session.scalar(select(RestorationRow).where(RestorationRow.fallen_polity_id == fallen.id))
     assert row is not None and row.claimant_node_id == pretender.id and row.bases == [RestorationBasis.BLOODLINE.value] and tally.begun == 1
+    row.stage = RestorationStage.FAILED
+    later = await claim_on(session, world, fallen, pressed=True, name="Mira Vost")
+    second = await session.scalar(select(ClaimRow).where(ClaimRow.claimant_entity_id == later.id))
+    assert second is not None
+    second.title_entity_id = fallen.id
+    await session.flush()
+    await press_claims(ctx, tally)
+    raised = list(await session.scalars(select(RestorationRow).where(RestorationRow.fallen_polity_id == fallen.id).order_by(RestorationRow.id)))
+    assert [item.claimant_node_id for item in raised] == [pretender.id, later.id] and tally.begun == 2
+    raised[1].stage = RestorationStage.FAILED
+    await press_claims(ctx, tally)
+    assert tally.begun == 2
 
 
 async def test_foreign_backing_carries_a_rising_past_a_steady_holder(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:

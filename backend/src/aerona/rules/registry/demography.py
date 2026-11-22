@@ -80,6 +80,9 @@ class LabourRules(Spanned):
     dispute_max_years: int = span(2, 1, 500, S, "Years after which a labour dispute that neither side has won is settled")
     satisfaction_per_term: int = rule(5, 0, 100, S, "Contentment the workers of a trade gain or lose when their contract is good or bad, at the extremes")
     solidarity_won: int = rule(15, 0, 100, S, "Solidarity a worker body gains when it wins a dispute and loses when it loses one")
+    solidarity_drift_pct: int = rule(
+        40, 0, 100, S, "Share of the way a worker body's solidarity moves each epoch toward the discontent of the workers it covers (%)"
+    )
     strikebreaker_substitutes_pct: int = rule(40, 0, 100, S, "Share of substitute workers above which a hirer brings in strikebreakers (%)")
     strikebreaker_hits: int = rule(2, 0, 20, S, "Members of a worker body hurt when strikebreakers are brought in")
     prosecution_fund_pct: int = rule(50, 0, 100, S, "Share of a banned body's fund seized when it is prosecuted (%)")

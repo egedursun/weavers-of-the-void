@@ -14,7 +14,7 @@ from aerona.domain.models.entity_stats import HouseStats
 from aerona.engine.context import TickContext
 from aerona.engine.kin_dynamics.acts import disown, reconcile, rival
 from aerona.engine.kin_dynamics.book import KinTally, dynamic_of
-from aerona.engine.kin_dynamics.tend import heat_rivalries, tend_kin
+from aerona.engine.kin_dynamics.tend import heat_rivalries, tend_kin, weigh_tension
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.records import heir_of
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
@@ -106,3 +106,18 @@ async def test_step_kin_join_through_a_later_marriage_and_an_elder_holds_sway_un
     await tend_kin(ctx)
     assert sway.ended_epoch == ctx.epoch
     assert await session.scalar(select(KinRivalryRow.id).where(KinRivalryRow.cause == RivalryCause.LOVE)) is None
+
+
+async def test_a_familys_tension_is_its_hottest_rivalry_and_its_unmended_disownings(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "tension", tuned_rules(kin_dynamics={"disowning_tension": 15, "split_threshold": 100}))
+    house, head, children = await family(session, world)
+    dynamic = await dynamic_of(ctx, house=house.id)
+    tally = KinTally()
+    hot = await rival(ctx, dynamic, children[0].id, children[1].id, RivalryCause.INHERITANCE, tally=tally)
+    hot.heat = 40
+    await disown(ctx, dynamic, head.id, children[2], DisownReason.CRIME, tally=tally)
+    await weigh_tension(ctx, dynamic)
+    assert dynamic.tension == 55
+    hot.ended_epoch = ctx.epoch
+    await weigh_tension(ctx, dynamic)
+    assert dynamic.tension == 15

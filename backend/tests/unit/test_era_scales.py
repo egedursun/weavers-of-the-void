@@ -6,6 +6,7 @@ from aerona.catalog.materials import MATERIALS
 from aerona.catalog.techniques import UNIT_TECHNIQUES
 from aerona.catalog.units import SUCCESSORS, UNITS
 from aerona.catalog.vehicles import FRAMES
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.equipment import ArmamentSlot, EquipmentFamily
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import UnitKind
@@ -14,6 +15,7 @@ from aerona.domain.enums.vehicles import Propulsion
 from aerona.domain.enums.world import TechnologyEra as E
 from aerona.engine.equipment.models import best_family
 from aerona.engine.eras.effects import era_order, technique_era
+from aerona.engine.eras.progress import begun_by
 from aerona.engine.primitives.knowledge import KnowledgeMap
 
 ORDER = list(E)
@@ -104,3 +106,10 @@ def test_no_floor_falls_from_one_age_to_the_next() -> None:
         (era.value, branch.value) for earlier, era in pairwise(ORDER) for branch, level in ERA_FLOORS[earlier].items() if ERA_FLOORS[era].get(branch, 0) < level
     ]
     assert fallen == []
+
+
+def test_every_age_from_bronze_knows_trade_and_the_iron_age_begins_with_coinage() -> None:
+    lacking = [era.value for era in ORDER if era_order(era) >= era_order(E.BRONZE) and ERA_FLOORS[era].get(KnowledgeBranch.TRADE, 0) < 1]
+    assert lacking == []
+    assert Technique.COINAGE in begun_by(E.IRON, ERA_FLOORS[E.IRON])
+    assert Technique.COINAGE not in begun_by(E.STONE, ERA_FLOORS[E.STONE])

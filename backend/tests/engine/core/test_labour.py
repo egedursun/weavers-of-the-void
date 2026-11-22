@@ -214,3 +214,19 @@ async def test_an_agreed_contract_that_the_hirer_cannot_pay_is_broken(session: A
     tally = LabourTally()
     await tend_contract(ctx, contract, tally)
     assert contract.status is ContractStatus.BROKEN and tally.broken == 1
+
+
+async def test_a_bitter_trade_draws_its_body_together_and_a_content_one_lets_it_slacken(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "solidarity", tuned_rules(labour={"solidarity_drift_pct": 50}))
+    town = await works_town(session, world, artisans=10)
+    row = await session.get(CommunitySocietyRow, town.id)
+    assert row is not None
+    row.satisfaction_worker = 10
+    body = await found_body(ctx, town, [CRAFT], WorkerBodyForm.CRAFT_UNION)
+    tally = LabourTally()
+    await tend_body(ctx, body, tally)
+    assert body.solidarity == 70
+    row.satisfaction_artisan, row.satisfaction_worker = 90, 90
+    await tend_body(ctx, body, tally)
+    await tend_body(ctx, body, tally)
+    assert body.solidarity < 50

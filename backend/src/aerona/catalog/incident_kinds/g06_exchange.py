@@ -1002,6 +1002,23 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         chronicle_kind=K.TRADE,
     ),
     IncidentKindSpec(
+        "money.issued",
+        G.EXCHANGE,
+        "{maker} began to issue its own money as {form}: {product}.",
+        roles=(
+            RoleSpec(R.MAKER),
+            RoleSpec(R.PRODUCT),
+        ),
+        facts=(
+            FactSpec("form", FactValue.ENUM, enum=MoneyForm),
+            FactSpec("trust", FactValue.NUMBER, unit=FactUnit.PERCENT),
+        ),
+        steps=frozenset({StepAction.SHAPE}),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.INSTANT,
+        chronicle_kind=K.TRADE,
+    ),
+    IncidentKindSpec(
         "money.minted",
         G.EXCHANGE,
         "{maker} began minting its own coin of {metal}: {product}.",

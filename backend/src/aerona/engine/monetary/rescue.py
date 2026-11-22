@@ -1,6 +1,7 @@
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.monetary import MonetaryAuthorityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
@@ -58,4 +59,22 @@ async def spread_run(ctx: TickContext, bank: EntityRow, banks: list[EntityRow]) 
             roles={IncidentRole.SUBJECT: bank.id, IncidentRole.VICTIM: struck},
             facts={"currency": currency.name if currency is not None else "its money", "lost": table.run_spread_pct},
         )
+        await learn_from_run(ctx, bank, await authority_of(ctx.session, currency_id), currency)
     return struck
+
+
+async def learn_from_run(ctx: TickContext, bank: EntityRow, authority: MonetaryAuthorityRow | None, currency: CurrencyRow | None) -> None:
+    if authority is None or currency is None or (authority.holder_node_id is not None and held(authority.holder_node_id)):
+        return
+    locked = authority.locked or []
+    if authority.lender_of_last_resort or "lender_of_last_resort" in locked:
+        return
+    authority.lender_of_last_resort = True
+    if "reserve_requirement_pct" not in locked:
+        authority.reserve_requirement_pct = clamp_int(authority.reserve_requirement_pct + ctx.rules.monetary.run_reserve_step, 0, PERCENT)
+    await record(
+        ctx,
+        "money.lender_of_last_resort",
+        roles={IncidentRole.ACTOR: authority.holder_node_id, IncidentRole.SUBJECT: bank.id},
+        facts={"currency": currency.name, "reserve": authority.reserve_requirement_pct},
+    )

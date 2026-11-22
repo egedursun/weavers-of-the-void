@@ -21,6 +21,7 @@ from aerona.engine.economy.debt_law import DebtLaw, bind_debtor, coin_weight, de
 from aerona.engine.gods.economy import depletion_price, mechanics_of, shift_reserve
 from aerona.engine.gods.queries import owners_of
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.monetary.authorities import PLAIN_MONEY
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_int
@@ -50,7 +51,7 @@ async def close_debt(ctx: TickContext, bond: BondRow, reason: str, status: DebtS
 
 
 def debt_words(bond: BondRow) -> str:
-    return f"{bond.debt_amount or 0} {bond.debt_what or 'silver'}"
+    return f"{bond.debt_amount or 0} {bond.debt_what or PLAIN_MONEY}"
 
 
 async def debt_ended(
@@ -69,7 +70,7 @@ async def debt_ended(
         roles={IncidentRole.BORROWER: debtor.id, IncidentRole.LENDER: creditor.id, **(others or {})},
         facts={
             "owed": bond.debt_amount or 0,
-            "what": bond.debt_what or "silver",
+            "what": bond.debt_what or PLAIN_MONEY,
             "overdue": max(0, ctx.epoch - (bond.debt_due_epoch or ctx.epoch)),
             **(numbers or {}),
         },
@@ -354,7 +355,7 @@ async def write_off_debt(session: AsyncSession, rules: Rules, bond_id: int) -> s
         ctx,
         "market.written_off",
         roles={IncidentRole.BORROWER: bond.source_node_id, IncidentRole.LENDER: bond.target_node_id},
-        facts={"owed": bond.debt_amount or 0, "what": bond.debt_what or "silver"},
+        facts={"owed": bond.debt_amount or 0, "what": bond.debt_what or PLAIN_MONEY},
     )
     return written.text
 

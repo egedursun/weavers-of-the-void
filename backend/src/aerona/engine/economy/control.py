@@ -306,7 +306,7 @@ async def edit_currency(ctx: TickContext, currency_id: int, *, purity: int | Non
 async def debase_currency(ctx: TickContext, currency_id: int) -> CurrencyRow:
     row = await currency_row(ctx, currency_id)
     if not await debase(ctx, await EconomyBook.load(ctx), row, forced=True):
-        raise ValidationFailedError(f"{row.name} has no silver left to take out.")
+        raise ValidationFailedError(f"{row.name} cannot be debased any further.")
     return row
 
 

@@ -17,7 +17,7 @@ from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.faction import ENGINE_OF_KIND, FactionKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import DistrictKind
@@ -29,7 +29,7 @@ from aerona.engine.cycles.book import stress_factor
 from aerona.engine.demography.recruitment import founding_factor, recruit
 from aerona.engine.eras.effects import MODERN_FROM, era_at, era_order, era_techniques
 from aerona.engine.factions.agenda import dues, influence_from_members, monopolies, plan_goals, pursue, schisms
-from aerona.engine.factions.book import ENGINE_OF_KIND, FactionBook, backfill_profiles, new_profile
+from aerona.engine.factions.book import FactionBook, backfill_profiles, new_profile
 from aerona.engine.factions.outlaws import hire, pay_companies, privateers, suppress
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import faction_drive
@@ -122,7 +122,7 @@ async def disband_uprisings(ctx: TickContext) -> int:
     bonds = BondRepository(ctx.session)
     disbanded = 0
     for faction in await canon(ctx.session, [EntityType.FACTION]):
-        if not is_uprising(faction) or ctx.epoch - faction.birth_epoch < rules.revolt_disband_min_age:
+        if not await is_uprising(ctx.session, faction) or ctx.epoch - faction.birth_epoch < rules.revolt_disband_min_age:
             continue
         if await bonds.outgoing(faction.id, BondKind.ENEMY) or await bonds.incoming(faction.id, BondKind.ENEMY) or not rng.chance(rules.revolt_disband_chance):
             continue

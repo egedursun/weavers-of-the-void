@@ -406,6 +406,15 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=C.SEASON,
     ),
     IncidentKindSpec(
+        "money.lender_of_last_resort",
+        G.EXCHANGE,
+        "After the run on {subject}, {actor} became the lender of last resort for the banks of {currency} and asked them to hold {reserve} percent.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT)),
+        facts=(FactSpec("currency", FactValue.NAME), FactSpec("reserve", FactValue.NUMBER, FactUnit.PERCENT)),
+        place=PlaceRule.NONE,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
         "money.authority_founded",
         G.EXCHANGE,
         "{actor} set {owner} over {currency} as its monetary authority, aiming at {aim} with an independence of {independence}.",

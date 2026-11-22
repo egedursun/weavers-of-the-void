@@ -3,11 +3,15 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.forecasting import ObservationMethodRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.sea_waves import SeaWaveCoastRow, SeaWaveRow, WaveWarningRow
+from aerona.domain.enums.bond import BondKind, BondRole
+from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.forecasting import ObservationMethod
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.sea_waves import WaveOrigin
@@ -16,7 +20,7 @@ from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.sea_waves.waves import raise_wave
 from aerona.rules.registry import Rules
-from tests.engine.core.factories import CoreWorld, surveyed, tuned_rules
+from tests.engine.core.factories import CoreWorld, settlement, surveyed, tuned_rules
 
 
 @dataclass
@@ -95,3 +99,19 @@ async def test_a_quake_beside_the_sea_raises_a_wave_through_the_disaster_itself(
     await apply_disaster(ctx, region, Disaster.EARTHQUAKE, 1.0)
     wave = await session.scalar(select(SeaWaveRow))
     assert wave is not None and wave.origin is WaveOrigin.QUAKE and wave.origin_region_id == region.id
+
+
+async def test_a_people_that_watches_the_waters_gives_a_warning_that_is_kept(session: AsyncSession, world: CoreWorld) -> None:
+    await with_sea(session, world)
+    ctx = await manual_context(session, "watch", rules_with(observation_floor=40))
+    near = world.regions[1].id
+    town = await settlement(session, "Watchharbour", world, world.regions[1])
+    await BondRepository(session).connect(BondDraft(world.people.id, town.id, BondKind.LIVES_IN, 0, role=BondRole.HOMELAND))
+    session.add(ObservationMethodRow(people_entity_id=world.people.id, domain=FolkDomain.WATERS, method=ObservationMethod.SIGHT, accuracy=70))
+    await session.flush()
+    await raise_wave(ctx, near, WaveOrigin.DIVINE, 1.0, strike=Recorder(), sure=True)
+    row = await session.scalar(select(SeaWaveCoastRow).where(SeaWaveCoastRow.region_entity_id == near))
+    warning = await session.scalar(select(WaveWarningRow).where(WaveWarningRow.region_entity_id == near))
+    assert row is not None and row.warned
+    assert warning is not None and warning.method is ObservationMethod.SIGHT and warning.by_node_id == world.people.id
+    assert warning.until_epoch == ctx.epoch + ctx.rules.sea_waves.warning_epochs

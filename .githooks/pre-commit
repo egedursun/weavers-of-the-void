@@ -65,6 +65,7 @@ run canned_lines "$PYTHON" scripts/check_canned_lines.py
 run incident_kinds "$PYTHON" scripts/check_incident_kinds.py
 run text_ledger "$PYTHON" scripts/check_text_ledger.py
 run moon_orbits "$PYTHON" scripts/check_moon_orbits.py
+run faction_kinds "$PYTHON" scripts/check_faction_kinds.py
 run ocm_coverage "$PYTHON" scripts/check_ocm_coverage.py
 run mechanic_couplings "$PYTHON" scripts/check_mechanic_couplings.py
 run depth_targets "$PYTHON" scripts/depth_metric.py check
@@ -107,7 +108,7 @@ if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^backend/pyproject\.t
   PROVING="$PROVING tests/tools/test_every_tool.py tests/tools/test_catalogue.py tests/services/player/test_every_lever.py tests/services/player/test_every_job.py tests/api/test_every_endpoint.py"
   PROVING="$PROVING tests/epoch/test_epoch_llm.py::test_full_epoch_with_scripted_model"
   PROVING="$PROVING tests/epoch/test_epoch_engine_only.py::test_engine_only_epochs_run_end_to_end"
-  PROVING="$PROVING tests/unit/test_total_tables.py tests/unit/test_word_matching.py tests/unit/test_tool_enum_lists.py tests/unit/test_mechanic_compliance.py tests/unit/test_model_schemas.py tests/unit/test_produced_kinds.py tests/unit/test_rule_registry.py tests/unit/test_derived_world_fields.py tests/api/test_frontend_types.py tests/unit/test_unique_levers.py tests/api/test_unique_schema_names.py tests/unit/test_json_enum_columns.py tests/unit/test_enum_text_fields.py tests/unit/test_inline_enum_tables.py tests/unit/test_ordered_set_builds.py tests/unit/test_attr_history_reads.py tests/unit/test_status_companions.py tests/unit/test_prose_enum_values.py tests/unit/test_every_incident_kind.py"
+  PROVING="$PROVING tests/unit/test_total_tables.py tests/unit/test_word_matching.py tests/unit/test_tool_enum_lists.py tests/unit/test_mechanic_compliance.py tests/unit/test_model_schemas.py tests/unit/test_produced_kinds.py tests/unit/test_rule_registry.py tests/unit/test_derived_world_fields.py tests/api/test_frontend_types.py tests/unit/test_unique_levers.py tests/api/test_unique_schema_names.py tests/unit/test_json_enum_columns.py tests/unit/test_enum_text_fields.py tests/unit/test_inline_enum_tables.py tests/unit/test_ordered_set_builds.py tests/unit/test_attr_history_reads.py tests/unit/test_status_companions.py tests/unit/test_prose_enum_values.py tests/unit/test_every_incident_kind.py tests/unit/test_reaction_order.py tests/unit/test_faction_kind_reads.py tests/unit/test_engine_makes_records.py"
   PROVING="$PROVING $("$PYTHON" scripts/covering_tests.py | tr '\n' ' ')"
 fi
 if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^frontend/src/.*\.(ts|tsx)$|^scripts/check_frontend_orphans\.py$'; then

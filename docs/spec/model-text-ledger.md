@@ -175,7 +175,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/incident_kinds/g03_vessels.py` | 14 | 2026-11-17 | `52dbb454693fc582` |
 | `backend/src/aerona/catalog/incident_kinds/g04_body.py` | 118 | 2026-11-19 | `0276d57b89d57660` |
 | `backend/src/aerona/catalog/incident_kinds/g05_making.py` | 84 | 2026-11-20 | `f6d7cda3c4f6fa83` |
-| `backend/src/aerona/catalog/incident_kinds/g06_exchange.py` | 131 | 2026-11-20 | `401c8ace590faefc` |
+| `backend/src/aerona/catalog/incident_kinds/g06_exchange.py` | 132 | 2026-11-22 | `3bd00de4cf2f0e79` |
 | `backend/src/aerona/catalog/incident_kinds/g07_law.py` | 148 | 2026-11-20 | `14213ae5f391f17b` |
 | `backend/src/aerona/catalog/incident_kinds/g08_diplomacy.py` | 74 | 2026-11-17 | `ff6c8fa1fa2afe47` |
 | `backend/src/aerona/catalog/incident_kinds/g09_faith.py` | 125 | 2026-11-17 | `e4a8c0fc2663eceb` |
@@ -189,7 +189,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/incident_kinds/nature_kinds.py` | 125 | 2026-11-20 | `4f8373488e78e228` |
 | `backend/src/aerona/catalog/incident_kinds/registry.py` | 2 | 2026-11-17 | `5eafe1acaacca61a` |
 | `backend/src/aerona/catalog/incident_kinds/tellings.py` | 5 | 2026-11-17 | `6319f7aed2dddd67` |
-| `backend/src/aerona/catalog/incident_kinds/w51_orders.py` | 186 | 2026-11-21 | `051cd747662e9def` |
+| `backend/src/aerona/catalog/incident_kinds/w51_orders.py` | 187 | 2026-11-22 | `30fcfec7c7055d1d` |
 | `backend/src/aerona/catalog/interventions.py` | 18 | 2026-11-16 | `5a8f9b083be397b6` |
 | `backend/src/aerona/catalog/intrigue.py` | 80 | 2026-11-20 | `0d2ecf7d3c6a8de7` |
 | `backend/src/aerona/catalog/invariants.py` | 249 | 2026-11-21 | `bac55439dd45803e` |
@@ -449,13 +449,13 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/ecology/pets.py` | 4 | 2026-11-16 | `2afd83e2c9c918a2` |
 | `backend/src/aerona/engine/ecology/totems.py` | 3 | 2026-11-17 | `9538188b67f48643` |
 | `backend/src/aerona/engine/economy/chokepoints.py` | 1 | 2026-11-16 | `62abf758ff11b0e7` |
-| `backend/src/aerona/engine/economy/control.py` | 28 | 2026-11-16 | `5a00406871248b3c` |
+| `backend/src/aerona/engine/economy/control.py` | 28 | 2026-11-22 | `17c6704c78e9da01` |
 | `backend/src/aerona/engine/economy/control_depth.py` | 44 | 2026-11-19 | `98814e5c5d8e2d39` |
 | `backend/src/aerona/engine/economy/debt_law.py` | 1 | 2026-11-16 | `da7df1e5f03b6f7e` |
 | `backend/src/aerona/engine/economy/deposits.py` | 9 | 2026-11-17 | `aaab1b0c4c140a7f` |
 | `backend/src/aerona/engine/economy/extraction.py` | 17 | 2026-11-17 | `6a24ab4d36a9c73b` |
 | `backend/src/aerona/engine/economy/materials.py` | 3 | 2026-11-16 | `12417d8703a0f28f` |
-| `backend/src/aerona/engine/economy/money.py` | 2 | 2026-11-17 | `0cb99f7fc6cf51ef` |
+| `backend/src/aerona/engine/economy/money.py` | 3 | 2026-11-22 | `905e95d53185ba71` |
 | `backend/src/aerona/engine/economy/realm_credit.py` | 1 | 2026-11-17 | `094d6cb6957a86c7` |
 | `backend/src/aerona/engine/economy/resources.py` | 2 | 2026-11-16 | `19065a1d67f98137` |
 | `backend/src/aerona/engine/economy/route_backfill.py` | 1 | 2026-11-16 | `3421a32d8cad7114` |
@@ -521,6 +521,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/happenings/emergence.py` | 20 | 2026-11-17 | `fda8baeb0fdd5c5a` |
 | `backend/src/aerona/engine/happenings/progression.py` | 3 | 2026-11-17 | `578e8b0cdb0625a1` |
 | `backend/src/aerona/engine/honours/control.py` | 5 | 2026-11-16 | `40f407a0ac77265b` |
+| `backend/src/aerona/engine/honours/persons.py` | 1 | 2026-11-22 | `ae9662712d5e752b` |
 | `backend/src/aerona/engine/honours/veterans.py` | 4 | 2026-11-17 | `c53847cafc399a85` |
 | `backend/src/aerona/engine/households/life.py` | 6 | 2026-11-17 | `b1417284a9c33bf6` |
 | `backend/src/aerona/engine/industry/cold.py` | 1 | 2026-11-16 | `95f472086015163f` |
@@ -813,7 +814,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/phases/society_support/quests.py` | 5 | 2026-11-16 | `609585bde74cb552` |
 | `backend/src/aerona/engine/phases/sons.py` | 4 | 2026-11-17 | `23b22cc67e1f5f87` |
 | `backend/src/aerona/engine/phases/spirits.py` | 10 | 2026-11-17 | `864f3ec8c47e8d0d` |
-| `backend/src/aerona/engine/phases/trade.py` | 7 | 2026-11-17 | `56b11bbe8c801a59` |
+| `backend/src/aerona/engine/phases/trade.py` | 7 | 2026-11-22 | `218acada9dda0b5b` |
 | `backend/src/aerona/engine/phases/travel.py` | 51 | 2026-11-17 | `48d0367396dafb22` |
 | `backend/src/aerona/engine/phases/tribute.py` | 6 | 2026-11-17 | `f6eb2aaea54107fb` |
 | `backend/src/aerona/engine/phases/vendettas.py` | 5 | 2026-11-17 | `b68a2111cb30f282` |

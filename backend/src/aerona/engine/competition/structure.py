@@ -4,6 +4,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.commerce import ShopGoodRow, ShopRow, SupplyTierRow
 from aerona.db.tables.competition import MarketStructureRow
 from aerona.db.tables.culture import HolderTechniqueRow
+from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -16,6 +17,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.orders import AllocationMode
+from aerona.engine.commerce.seed import WORKSHOP_GOODS
 from aerona.engine.competition.clauses import clause_strength
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of
@@ -62,6 +64,17 @@ async def named_sellers(ctx: TickContext, market_id: int, commodity: CommodityKi
         .order_by(ShopGoodRow.shop_id)
     ):
         found[keeper] = found.get(keeper, 0.0) + ctx.rules.competition.shop_weight
+    for owner, kind, level in await ctx.session.execute(
+        select(WorkshopRow.owner_node_id, WorkshopRow.kind, WorkshopRow.level)
+        .where(WorkshopRow.community_entity_id == market_id, WorkshopRow.owner_node_id.is_not(None))
+        .order_by(WorkshopRow.id)
+    ):
+        if owner is None or WORKSHOP_GOODS.get(kind) is not commodity:
+            continue
+        if owner == market_id:
+            commons = True
+            continue
+        found[owner] = found.get(owner, 0.0) + max(1, level) * ctx.rules.competition.workshop_weight
     return found, commons
 
 
@@ -74,6 +87,12 @@ async def market_goods(ctx: TickContext) -> list[tuple[int, CommodityKind]]:
         select(ShopRow.settlement_entity_id, ShopGoodRow.commodity).join(ShopGoodRow, ShopGoodRow.shop_id == ShopRow.id)
     ):
         pairs.add((market, commodity))
+    for market, kind, owner in await ctx.session.execute(
+        select(WorkshopRow.community_entity_id, WorkshopRow.kind, WorkshopRow.owner_node_id).where(WorkshopRow.owner_node_id.is_not(None))
+    ):
+        good = WORKSHOP_GOODS.get(kind)
+        if good is not None and owner != market:
+            pairs.add((market, good))
     for home, monopoly in await ctx.session.execute(
         select(FactionProfileRow.home_entity_id, FactionProfileRow.monopoly).where(
             FactionProfileRow.monopoly.is_not(None), FactionProfileRow.home_entity_id.is_not(None)

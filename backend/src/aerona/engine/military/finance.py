@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PER_MILLE, PERCENT
+from aerona.db.faction_kinds import of_kinds
 from aerona.db.tables.economy import CurrencyRow, LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import MercenaryContractRow
@@ -8,7 +9,8 @@ from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.domain.enums.economy import LoanStatus
-from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.military import ContractStatus
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -46,7 +48,7 @@ async def lender_for(ctx: TickContext, owner: EntityRow, principal: int) -> Enti
         select(EntityRow)
         .where(
             EntityRow.entity_type == EntityType.FACTION,
-            EntityRow.engine_kind == EngineKind.MERCHANT_GUILD,
+            of_kinds(LENDER_KINDS),
             EntityRow.status == EntityStatus.CANON,
             EntityRow.world_id == owner.world_id,
             EntityRow.id != owner.id,

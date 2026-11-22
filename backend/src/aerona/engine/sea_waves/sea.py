@@ -41,7 +41,7 @@ async def shape_pct(ctx: TickContext, region_id: int) -> int:
     return SHAPE_PCT[coast.form] if coast is not None else PERCENT
 
 
-async def watched(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> bool:
+async def watcher(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> ObservationMethodRow | None:
     floor = ctx.rules.sea_waves.observation_floor
     for community_id in atlas.communities_in(region_id):
         community = await ctx.session.get(EntityRow, community_id)
@@ -49,11 +49,23 @@ async def watched(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> bool:
         if people is None:
             continue
         keen = (ObservationMethodRow.people_entity_id == people.id, ObservationMethodRow.domain.in_(WATCHING), ObservationMethodRow.accuracy >= floor)
-        if await ctx.session.scalar(select(ObservationMethodRow.id).where(*keen).limit(1)) is not None:
-            return True
-    return False
+        found = await ctx.session.scalar(
+            select(ObservationMethodRow).where(*keen).order_by(ObservationMethodRow.accuracy.desc(), ObservationMethodRow.id).limit(1)
+        )
+        if found is not None:
+            return found
+    return None
 
 
 async def warned(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> bool:
     given = select(WaveWarningRow.id).where(WaveWarningRow.region_entity_id == region_id, WaveWarningRow.until_epoch >= ctx.epoch).limit(1)
-    return await ctx.session.scalar(given) is not None or await watched(ctx, atlas, region_id)
+    if await ctx.session.scalar(given) is not None:
+        return True
+    seen = await watcher(ctx, atlas, region_id)
+    if seen is None:
+        return False
+    until = ctx.epoch + ctx.rules.sea_waves.warning_epochs
+    ctx.session.add(
+        WaveWarningRow(region_entity_id=region_id, method=seen.method, by_node_id=seen.people_entity_id, epoch=ctx.epoch, until_epoch=until, locked=[])
+    )
+    return True

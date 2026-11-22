@@ -32,6 +32,7 @@ async def file_failing(ctx: TickContext, tally: InsolvencyTally) -> None:
     "mortal.intellect",
     "mortal.wisdom",
     "table.company_profiles",
+    "table.company_shares",
     "table.entities",
     "table.faction_memberships",
     "table.faction_profiles",

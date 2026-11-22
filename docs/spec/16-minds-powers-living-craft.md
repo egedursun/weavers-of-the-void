@@ -5068,12 +5068,14 @@ A realm with no change in course is pressed toward one, read in this order: a mo
 | `competition.price_war_floor_pct` | 50 | 0–100 |
 | `competition.cartel_fine_pct` | 20 | 0–100 |
 | `competition.barrier_decay_per_epoch` | 3 | 0–50 |
+| `competition.shop_weight` | 10 | 1–100 |
+| `competition.workshop_weight` | 10 | 1–100 |
 
 **Codex and book.** Market sections in settlement and economy chapters with structure, sellers and shares; cartels and price wars in the entries of their members.
 
 **Integrity.** Shares in a market sum to 100; cartel members sell the good in that market; a price war's market exists.
 
-**Legacy.** Market structures are derived from existing output on the first epoch; guild monopolies become `one_seller` markets with a `guild_right` barrier.
+**Legacy.** Market structures are derived from existing output on the first epoch; guild monopolies become `one_seller` markets with a `guild_right` barrier. The sellers of a market are the holders of its supply tiers, the keepers of its shops and the owners of the workshops that make the good there, each weighed by its rule.
 
 **Applies to.** Every market of every era and world, from a fair with three traders to an interworld exchange. Shown on markets and in organisation drawers that hold shares.
 
@@ -5098,6 +5100,7 @@ A realm with no change in course is pressed toward one, read in this order: a mo
 3. Law sets what is allowed: banned bodies act in secret and their members are prosecuted; recognised bodies bargain by right; compulsory bodies tie every worker of a trade.
 4. Cooperatives own their works and share product by work (51.1 `by_work`); they compete in markets (51.3) and may fail like any organisation (51.2).
 5. Wages and conditions enter living standards, class grievance and migration; won disputes spread to other trades by contact and media (50.2).
+6. A body's solidarity moves each epoch toward the discontent of the workers and artisans it covers (`labour.solidarity_drift_pct`), so a bitter trade draws together and a content one slackens.
 
 **Tools and control.**
 
@@ -5130,6 +5133,7 @@ A realm with no change in course is pressed toward one, read in this order: a mo
 | `labour.dispute_max_epochs` | 3 | 1–50 |
 | `labour.satisfaction_per_term` | 5 | 0–100 |
 | `labour.solidarity_won` | 15 | 0–100 |
+| `labour.solidarity_drift_pct` | 40 | 0–100 |
 | `labour.strikebreaker_substitutes_pct` | 40 | 0–100 |
 | `labour.strikebreaker_hits` | 2 | 0–20 |
 | `labour.prosecution_fund_pct` | 50 | 0–100 |
@@ -5163,6 +5167,7 @@ The keys join the existing `labour` namespace beside the allocation rules. The l
 2. Issuing to fund the state raises supply and lowers trust and the exchange rate (50.3, W35); a peg holds while reserves last, then breaks with a rate shock.
 3. As lender of last resort the authority saves failing banks at the cost of supply and moral hazard; without it bank runs spread.
 4. Low independence lets rulers bend policy before wars and elections; high independence resists them at a cost in favour.
+5. An authority that is not yet a lender of last resort becomes one when a run spreads among its banks, and raises the reserve they must hold by `monetary.run_reserve_step` (`money.lender_of_last_resort`).
 
 **Tools and control.**
 
@@ -5201,6 +5206,7 @@ The keys join the existing `labour` namespace beside the allocation rules. The l
 | `monetary.rescue_trust_loss` | 3 | 0–50 |
 | `monetary.borrow_per_rate_point_pct` | 5 | 0–50 |
 | `monetary.reserve_lending_pct` | 50 | 0–100 |
+| `monetary.run_reserve_step` | 5 | 0–100 |
 | `monetary.bend_chance_pct` | 60 | 0–100 |
 | `monetary.resist_favour_loss` | 5 | 0–100 |
 
@@ -5362,6 +5368,8 @@ The charter also keeps a treasury, a depth (how bound the members are), a common
 2. Services act through coverage: refuse lowers disease and vermin; lighting lowers night crime and lengthens trade and leisure; water distribution lowers thirst and disease; inspection lowers fraud in markets. Uncovered districts suffer each.
 3. Settlements whose districts touch and whose ties pass a threshold join into a conurbation. Members keep their names as quarters; governance follows the rule chosen; the core's laws spread. A conurbation may split again under conflict.
 4. Planned rebuilds (after fire, war or a founding plan) apply land use rules at once and change morphology to `planned`.
+5. A service's budget moves each epoch toward what covering its people fully costs (`city_rules.budget_follow_pct`); its quality rises when it is paid in full and falls when it is not (`city_rules.quality_step`). A rule's enforcement moves toward the order its town keeps, read from its crime and its night watch (`city_rules.enforcement_follow_pct`).
+6. Wells, watch posts, burial grounds, planned towns, game reserves and sacred groves made in any epoch, not only the first, gain their services, rules and protection once; what a god lifts or deletes stays so.
 
 **Tools and control.**
 
@@ -5391,6 +5399,9 @@ The charter also keeps a treasury, a depth (how bound the members are), a common
 | `city_rules.rebuild_condition` | 30 | 0–100 |
 | `city_rules.rebuild_cost` | 200 | 0–100000 |
 | `city_rules.service_start_chance_pct` | 10 | 0–100 |
+| `city_rules.enforcement_follow_pct` | 40 | 0–100 |
+| `city_rules.budget_follow_pct` | 50 | 0–100 |
+| `city_rules.quality_step` | 10 | 0–100 |
 | `city_rules.rule_start_chance_pct` | 5 | 0–100 |
 
 A rule acts by its strength times its enforcement, less its evasion; evasion is the share left unenforced times the place's mean land value times `evasion_per_land_value_pct`. A rule of use acting at a quarter or more strikes banned district kinds (or kinds outside the allowed ones) from what the town wants to build, and every rule of use eases the nuisance districts and buildings put on their neighbours. A height limit stops homes rising past its level; a density limit caps how many levels a district may reach; a required material is what the town then builds in; fire spacing and a required material cut the town's fire risk by `fire_spread_cut_pct`; green share and frontage rules raise the desirability of the districts they cover. Every rule raises the cost of building a district by `build_cost_rise_pct` at full strength. A town with rules rebuilds districts wrecked below `rebuild_condition` to plan, in stone, and becomes `planned`. A service costs `service_cost_per_thousand` for each thousand people, paid by its provider up to its budget; it reaches each district as far as it is paid for, and its coverage (times quality) stands in for the matching coverage of the town (refuse and street cleaning for sanitation, water distribution for water, the night watch for the watch, burial grounds for burial, market inspection for markets). Refuse also raises the town's sanitation and lighting cuts crime and raises prosperity. A service left unpaid fails. Crowded towns may set a rule and towns found services they lack. In each region the largest town and any other whose ties to it (same realm 40, same people 30, a spreading form 20, together over twenty thousand people 10) reach `join_tie_threshold` grow into one city under federated councils. Under one council or the core's rule the core's laws spread to the members; under one council their unrest is shared. A city splits when the core and a member go to war, when a member's unrest stands `split_unrest_gap` above the core's, or when its core or all its members are gone, and its spread laws are lifted.
@@ -5952,6 +5963,7 @@ A realm at war with a realm whose seat is on another world, joined by an open wa
 3. Disowning removes a member from inheritance and the house by the culture's rules; the disowned may found a line of their own or seek revenge; reconciliation reverses it.
 4. Step kin have the standing the culture gives them; tensions and bonds form by the same rules as other kin.
 5. Elder power steers marriages, heirs and household budgets until death or overthrow by the heir.
+6. A family's tension is the heat of its hottest open rivalry, with `kin_dynamics.disowning_tension` more for each disowning not yet mended.
 
 **Tools and control.**
 
@@ -5973,6 +5985,7 @@ A realm at war with a realm whose seat is on another world, joined by an open wa
 | `kin_dynamics.reconcile_chance_pct` | 10 | 0–100 |
 | `kin_dynamics.favour_chance_pct` | 10 | 0–100 |
 | `kin_dynamics.heat_step` | 10 | 0–100 |
+| `kin_dynamics.disowning_tension` | 15 | 0–100 |
 | `kin_dynamics.relation_loss` | 5 | 0–100 |
 | `kin_dynamics.elder_sway` | 60 | 0–100 |
 | `kin_dynamics.sway_decay` | 10 | 0–100 |
@@ -6219,6 +6232,7 @@ Each epoch every living mortal with a body (made minds and peoples with no body 
 1. Use of a means changes birth chances by reliability, read by births and population policy.
 2. Stances decide whether use is open, hidden or punished; hidden use carries the risk of exposure.
 3. Means spread with knowledge and trade and are targeted by population policy (bans, rewards).
+4. Named beings take up the means of their people at its share of use: prevention by those in a union, remedies by those of low fertility; the use is hidden where the people forbid or discourage it.
 
 **Tools and control.**
 
@@ -6274,6 +6288,7 @@ Each epoch every people that conceives may find, by `discover_pct`, each means i
 1. Conferrers grant honours for deeds; holders gain prestige, loyalty to the conferrer and the privileges.
 2. Honours sold or given to favourites lose worth; revocation shames.
 3. Honours pass into heraldry, epitaphs and the book; some cultures make them hereditary.
+4. A realm, faith or order with a head and no honour founds its first when a deed its people praise is done in its lands; a deed counts when its people judged it well, so a deed they condemn is never honoured.
 
 **Tools and control.**
 
@@ -6292,14 +6307,15 @@ Each epoch every people that conceives may find, by `discover_pct`, each means i
 | `honours.prestige_per_rank` | 5 | 0–50 |
 | `honours.sale_worth_loss_pct` | 20 | 0–100 |
 | `honours.loyalty_gain` | 10 | 0–100 |
-| `honours.deed_floor` | 30 | 0–100 |
-| `honours.confer_cap` | 3 | 0–100 |
+| `honours.deed_floor` | 10 | 0–100 |
+| `honours.rank_step` | 4 | 0–50 |
+| `honours.confer_cap` | 1 | 0–100 |
 | `honours.pension_points` | 2 | 0–50 |
 | `honours.land_points` | 10 | 0–100 |
 | `honours.favour_pct` | 5 | 0–100 |
 | `honours.revoke_infamy` | 15 | 0–100 |
 
-Each epoch every conferrer honours the greatest deeds done in its places that epoch: a deed of at least `deed_floor`, ten more for each step of rank above the first, done by one who does not hold the honour, up to `confer_cap` honours a conferrer and the honour's limit. A conferred honour gives its holder `prestige_per_rank` renown for each step of rank at its worth (and the rank again with precedence), `loyalty_gain` goodwill toward the conferrer, and its privileges: land gives `land_points` of wealth once, a seat raises the holder's standing, a title names them by the honour if they bear none, a pension pays `pension_points` each epoch from the conferrer's purse while it can, and immunity drops any case against the holder in the conferrer's courts. By `favour_pct` an epoch the head sells an honour to the richest in its places who does not hold it, and the honour loses `sale_worth_loss_pct` of its worth. A revoked honour shames its holder by `revoke_infamy` and takes back the title it gave. A hereditary honour passes to the heir of a holder who died that epoch.
+Each epoch every conferrer honours the greatest deeds done in its places that epoch: a deed its people praise of at least `deed_floor`, `rank_step` more for each step of rank above the first, done by one who does not hold the honour, up to `confer_cap` honours a conferrer and the honour's limit. A conferred honour gives its holder `prestige_per_rank` renown for each step of rank at its worth (and the rank again with precedence), `loyalty_gain` goodwill toward the conferrer, and its privileges: land gives `land_points` of wealth once, a seat raises the holder's standing, a title names them by the honour if they bear none, a pension pays `pension_points` each epoch from the conferrer's purse while it can, and immunity drops any case against the holder in the conferrer's courts. By `favour_pct` an epoch the head sells an honour to the richest in its places who does not hold it, and the honour loses `sale_worth_loss_pct` of its worth. A revoked honour shames its holder by `revoke_infamy` and takes back the title it gave. A hereditary honour passes to the heir of a holder who died that epoch.
 
 **Codex and book.** Honours in holders' entries with the deed and conferrer; honour kinds in conferrers' entries.
 
@@ -6328,6 +6344,7 @@ Each epoch every conferrer honours the greatest deeds done in its places that ep
 1. Quakes, eruptions and slides under or beside a sea, impacts and strong storms roll for waves by strength and depth.
 2. Waves strike every coast of the sea by distance and the coast's shape, harming harbours, districts and fields, salting land and drowning those not warned.
 3. Warnings from observation methods and customs lower deaths; coastal works (50.4) lower harm.
+4. A people that watches the waters keeps a warning on its coast when a wave comes, by the method it watches with, holding for `sea_waves.warning_years`.
 
 **Tools and control.**
 

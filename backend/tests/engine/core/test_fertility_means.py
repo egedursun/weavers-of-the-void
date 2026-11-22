@@ -7,6 +7,7 @@ from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.fertility_means import FertilityMeansRow, FertilityUseRow
 from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.population import PopulationPolicyRow
 from aerona.domain.enums.body_systems import BodySystem
 from aerona.domain.enums.bond import BondKind, BondRole
@@ -14,10 +15,11 @@ from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.fertility_means import FertilityMeans, MeansSource
 from aerona.domain.enums.intimacy import NormStance
+from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.population import PopulationAim
 from aerona.domain.models.entity_stats import PeopleStats, RiteStats, TradeRouteStats
 from aerona.engine.fertility_means.factor import people_factor, user_factor
-from aerona.engine.fertility_means.tend import MeansTally, discover, expose, follow_policies, people_of_towns, peoples, spread
+from aerona.engine.fertility_means.tend import MeansTally, discover, expose, follow_policies, people_of_towns, peoples, spread, take_up
 from aerona.engine.mortal.standing import standing_of
 from aerona.engine.primitives.manual import manual_context
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
@@ -111,3 +113,22 @@ async def test_a_people_that_keeps_rites_finds_its_means_by_rite_without_bodily_
     await discover(ctx, world.people, MeansTally())
     rows = list(await session.scalars(select(FertilityMeansRow).where(FertilityMeansRow.people_entity_id == world.people.id)))
     assert rows and all(row.source is MeansSource.RITE and row.risk == 0 for row in rows)
+
+
+async def test_wed_folk_take_up_prevention_in_secret_where_it_is_forbidden_and_the_barren_seek_a_remedy(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "take", tuned_rules())
+    town = await homeland(session, world, world.people, "Takeby")
+    session.add(known(world.people, F.PREVENTION, stance=NormStance.FORBIDDEN, use_pct=100))
+    session.add(known(world.people, F.REMEDY_FOR_BARRENNESS, use_pct=100))
+    wed, partner, barren, single = [await mortal(session, name, world, town.id) for name in ("Ash Wed", "Bay Wed", "Cole Barren", "Dell Alone")]
+    for one, fertility in ((wed, 90), (partner, 90), (barren, 10), (single, 90)):
+        session.add(MortalProfileRow(entity_id=one.id, life_stage=LifeStage.ADULT, fertility=fertility))
+    await BondRepository(session).connect(BondDraft(wed.id, partner.id, BondKind.SPOUSE_OF, 0))
+    await session.flush()
+    tally = MeansTally()
+    await take_up(ctx, await peoples(ctx), tally)
+    uses = {(row.user_entity_id, row.means): row.hidden for row in await session.scalars(select(FertilityUseRow))}
+    assert uses == {(wed.id, F.PREVENTION): True, (partner.id, F.PREVENTION): True, (barren.id, F.REMEDY_FOR_BARRENNESS): False}
+    assert tally.used == 3 and await user_factor(session, ctx.rules, wed) < 1.0
+    await take_up(ctx, await peoples(ctx), tally)
+    assert tally.used == 3

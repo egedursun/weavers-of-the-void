@@ -21,6 +21,7 @@ class SecuritiesTally:
     insiders: int = 0
     bonds: int = 0
     synced: int = 0
+    floated: int = 0
 
 
 async def holdings_of(session: AsyncSession, security_id: int) -> list[SecurityHoldingRow]:

@@ -14,6 +14,7 @@ from aerona.engine.phase import Phase
     "table.fertility_uses",
     "table.holder_levels",
     "table.intimacy_norms",
+    "table.mortal_profiles",
     "table.node_births",
     "table.nodes",
     "table.population_instruments",

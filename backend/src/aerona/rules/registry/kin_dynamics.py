@@ -14,6 +14,7 @@ class KinDynamicsRules(Spanned):
     reconcile_chance_pct: int = rule(10, 0, 100, S, "Chance in an epoch that a reversible disowning is mended (%)")
     favour_chance_pct: int = rule(10, 0, 100, S, "Chance in an epoch that a head of a house favours one child (%)")
     heat_step: int = rule(10, 0, 100, S, "Heat a rivalry gains in an epoch")
+    disowning_tension: int = rule(15, 0, 100, S, "Tension each disowning not yet mended adds to its family, over the heat of its hottest rivalry")
     relation_loss: int = rule(5, 0, 100, S, "Regard rivals lose for each other in an epoch")
     elder_sway: int = rule(60, 0, 100, S, "Sway a surviving elder starts with over a house")
     sway_decay: int = rule(10, 0, 100, S, "Sway an elder loses in an epoch")

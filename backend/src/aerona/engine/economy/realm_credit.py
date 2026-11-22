@@ -6,6 +6,7 @@ from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityTreasuryRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityType
@@ -74,11 +75,13 @@ async def realm_currency(ctx: TickContext, realm: Realm) -> int | None:
 
 async def lend_to_realms(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
     table = ctx.rules.banking
-    lenders = await banks(ctx, book)
+    lenders = [bank for bank in await banks(ctx, book) if not held(bank.id)]
     if not lenders:
         return
     realms = await RealmBook.load(ctx.session)
     for realm in sorted(realms.realms.values(), key=lambda item: item.entity.id):
+        if held(realm.entity.id):
+            continue
         profile = realm.profile
         at_war = await realm_at_war(ctx, realm)
         if profile.treasury >= table.polity_treasury_below or not (at_war or profile.debt > 0):
@@ -135,7 +138,7 @@ async def realm_default(ctx: TickContext, book: EconomyBook, loan: LoanRow, real
             await bind_debtor(ctx, capital, lender)
             outcome = "bondage"
     elif law is not None and law.remedy is DebtRemedy.PRISON:
-        jailed = await jail_debtor(ctx, realm.entity, lender, f"{left} silver")
+        jailed = await jail_debtor(ctx, realm.entity, lender, f"a debt of {left}")
         if jailed is not None:
             outcome = "prison"
     await record(
@@ -157,7 +160,7 @@ async def collect_from_realms(ctx: TickContext, book: EconomyBook, tally: MoneyT
     for loan in await ctx.session.scalars(statement):
         realm = realms.realms.get(loan.borrower_entity_id)
         lender = book.entities.get(loan.lender_entity_id)
-        if realm is None:
+        if realm is None or held(loan.borrower_entity_id) or held(loan.lender_entity_id):
             continue
         if lender is None or lender.entity_type is not EntityType.FACTION:
             loan.status = LoanStatus.FORGIVEN

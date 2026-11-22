@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import Spanned, rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.MORTALS
 
@@ -29,7 +29,7 @@ class AgingRules:
 
 
 @dataclass(frozen=True)
-class FertilityRules:
+class FertilityRules(Spanned):
     window_start_pct: int = rule(16, 0, 100, G, "Share of a lifespan at which mortals can first bear children (%)")
     female_window_end_pct: int = rule(60, 0, 200, G, "Share of a lifespan past which women bear no more children (%)")
     male_window_end_pct: int = rule(85, 0, 200, G, "Share of a lifespan past which men father no more children (%)")
@@ -49,6 +49,8 @@ class FertilityRules:
     kinship_pct: int = rule(40, 0, 200, G, "How much a culture that prizes kinship lifts the birth rate (%)")
     ability_deviation: int = rule(8, 0, 50, G, "How far a child's abilities stray from their parents' mean")
     twin_cap: int = rule(4, 1, 12, G, "Most children one birth can bring; each child past the second needs the twin chance again")
+    birth_spacing_years: int = span(5, 1, 50, G, "Years between the chances a couple has to bear a child")
+    births_per_epoch_cap: int = rule(4, 1, 20, G, "Most births one couple has in an epoch")
 
 
 @dataclass(frozen=True)

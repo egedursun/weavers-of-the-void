@@ -244,7 +244,7 @@ function CreateBondForm({ ctx, readOnlyReason }: EntityBondsProps) {
       </FormRow>
       <FormRow
         label='Description'
-        description='Optional; for example 12 silver, due epoch 15'
+        description='Optional; a note on what the bond holds and when it falls due'
       >
         {(id) => (
           <Input

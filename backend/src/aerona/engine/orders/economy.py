@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.faction_kinds import of_kinds
 from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import ResourceProfileRow
@@ -20,7 +21,8 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import GoodsFlow
-from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faction import LENDER_KINDS, FactionKind
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.orders import (
@@ -147,9 +149,7 @@ async def read_order(ctx: TickContext, realm: PolityProfileRow) -> dict[str, str
         .limit(1)
     )
     guilds = await ctx.session.scalar(
-        select(EntityRow.id)
-        .where(EntityRow.engine_kind == EngineKind.MERCHANT_GUILD, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(towns or [anchor]))
-        .limit(1)
+        select(EntityRow.id).where(of_kinds(LENDER_KINDS), EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(towns or [anchor])).limit(1)
     )
     allocation = A.REDISTRIBUTION if stores is not None and guilds is None else A.MARKET
     labour = L.SERF if serfdom else L.ENSLAVED if slavery not in {None, "banned"} else L.CORVEE if allocation is A.REDISTRIBUTION else L.FREE
@@ -323,7 +323,7 @@ async def owner_for(ctx: TickContext, regime: OwnershipRegime, polity_id: int, t
     if regime in {OWN.PRIVATE, OWN.COMPANY}:
         return await ctx.session.scalar(
             select(EntityRow.id)
-            .where(EntityRow.engine_kind == EngineKind.MERCHANT_GUILD, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == town_id)
+            .where(of_kinds([FactionKind.MERCHANT_GUILD]), EntityRow.status == EntityStatus.CANON, EntityRow.location_id == town_id)
             .order_by(EntityRow.id)
             .limit(1)
         )

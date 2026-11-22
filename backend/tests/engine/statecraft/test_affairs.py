@@ -204,3 +204,22 @@ async def test_a_distinct_cohesive_people_with_grievances_yearns_to_break_away(r
     await realm.session.flush()
     stirred = await independence(ctx, ground)
     assert stirred > calm > 0
+
+
+async def test_a_realm_ruled_by_an_assembly_that_knows_codified_law_writes_its_constitution(realm: Realm) -> None:
+    ctx = context(realm.session)
+    assembly, town, _ = await realm_of(realm, "Velmar", DecisionRule.ASSEMBLY)
+    autocrat, other, _ = await realm_of(realm, "Orsk")
+    unlettered, _, _ = await realm_of(realm, "Tumb", DecisionRule.ASSEMBLY)
+    for seat in (town, other):
+        realm.session.add(HolderTechniqueRow(holder_entity_id=seat.id, technique=Technique.CODIFIED_LAW, since_epoch=0, secret=False))
+    await realm.session.flush()
+    tally = PolicyTally()
+    await tend_policy(ctx, tally)
+    laws = await LawBook.load(realm.session)
+    charter = laws.in_force(assembly.id, LawKind.CONSTITUTION)
+    assert tally.codified == 1 and charter is not None
+    assert charter.params["decision_rule"] == DecisionRule.ASSEMBLY.value and charter.params["voters"] == "citizens"
+    assert laws.in_force(autocrat.id, LawKind.CONSTITUTION) is None and laws.in_force(unlettered.id, LawKind.CONSTITUTION) is None
+    await tend_policy(ctx, tally)
+    assert tally.codified == 1

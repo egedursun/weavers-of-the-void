@@ -36,6 +36,7 @@ class MonetaryRules(Spanned):
         5, 0, 50, S, "How far borrowing grows for each point the applied rate stands below the neutral rate, and shrinks for each point above (%)"
     )
     reserve_lending_pct: int = rule(50, 0, 100, S, "How far a full reserve requirement holds banks back from lending (%)")
+    run_reserve_step: int = rule(5, 0, 100, S, "Points an authority raises the reserve its banks must hold after a run spreads among them")
     bend_chance_pct: int = rule(
         60, 0, 100, S, "Chance in an epoch that a ruler at war or before an election bends an authority with no independence to fund the state (%)"
     )

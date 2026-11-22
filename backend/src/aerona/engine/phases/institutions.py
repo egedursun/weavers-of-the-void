@@ -121,7 +121,11 @@ def repeal_chance(rules: Rules, law: EntityRow, *, orphaned: bool, conquered: fl
 async def laws(ctx: TickContext) -> int:
     cycles = ctx.rules.life_cycles
     conquered = await conquered_this_epoch(ctx)
-    rebels = {faction.location_id for faction in await canon(ctx.session, [EntityType.FACTION]) if is_uprising(faction) and faction.location_id is not None}
+    rebels = {
+        faction.location_id
+        for faction in await canon(ctx.session, [EntityType.FACTION])
+        if faction.location_id is not None and await is_uprising(ctx.session, faction)
+    }
     rng = ctx.rng("repeal")
     repealed = 0
     for law in ctx.rng("repeal.order").shuffled(unheld(await canon(ctx.session, [EntityType.LAW]))):
@@ -402,7 +406,9 @@ async def peoples(ctx: TickContext) -> int:
     "table.culture_values",
     "table.entities",
     "table.entity_flags",
+    "table.faction_profiles",
     "table.law_profiles",
+    "table.node_births",
     "table.nodes",
     "table.routes",
     "table.wars",
@@ -417,6 +423,7 @@ async def peoples(ctx: TickContext) -> int:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.routes",

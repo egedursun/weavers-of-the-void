@@ -277,7 +277,13 @@ async def order_measures(session: AsyncSession, epochs: int) -> dict[str, float]
         "sea_waves_per_epoch": await count(session, SeaWaveRow) / per_epoch,
         "creature_groups_per_region": await count(session, CreatureGroupRow)
         / max(1, regions),
-        "conceptions_per_faith": await count(session, DivineConceptionRow)
+        "conceptions_per_faith": await count(
+            session,
+            DivineConceptionRow,
+            DivineConceptionRow.cult_entity_id.in_(
+                select(EntityRow.id).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON)
+            ),
+        )
         / max(1, faiths),
     }
 

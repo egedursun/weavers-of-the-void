@@ -6,13 +6,15 @@ from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow
+from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MoneyBacking, MoneyForm
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import FactionStats, ResourceStats
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.lore.control import set_technique
 from aerona.engine.phases.society_economy import default_society, save_society
 from aerona.engine.phases.trade import barter_and_rivalry, currency, impose_trade, order_minting, trade_income
 from aerona.engine.primitives.stats import stat
@@ -97,3 +99,21 @@ async def test_manual_trade_and_minting(realm: Realm) -> None:
     assert coin.metal is MaterialKind.COPPER and item is not None and item.engine_kind is EngineKind.CURRENCY
     with pytest.raises(ValidationFailedError):
         await order_minting(ctx, guild.id)
+
+
+async def test_a_town_without_coin_metal_issues_the_money_its_age_knows(realm: Realm) -> None:
+    issuer = await settlement(realm, "Ledgerford", prosperity=90)
+    await society(realm, issuer)
+    trading = await knowledge(realm, "Reckoning", KnowledgeBranch.TRADE)
+    await link(realm.session, issuer.id, trading.id, BondKind.KNOWS)
+    plain = await settlement(realm, "Plainfold", prosperity=90)
+    await society(realm, plain)
+    await link(realm.session, plain.id, trading.id, BondKind.KNOWS)
+    ctx = context(realm.session, tuned(trade={"coinage_chance": 100}))
+    for technique in (Technique.COINAGE, Technique.PRINTING, Technique.DOUBLE_ENTRY):
+        await set_technique(ctx, issuer.id, technique, held=True, secret=False)
+    await currency(ctx)
+    money = await realm.session.scalar(select(CurrencyRow).where(CurrencyRow.issuer_entity_id == issuer.id))
+    assert money is not None and money.form is MoneyForm.LEDGER and money.metal is None and money.backing is MoneyBacking.DECREE
+    assert "money.issued" in await chronicle_keys(realm.session)
+    assert await realm.session.scalar(select(CurrencyRow).where(CurrencyRow.issuer_entity_id == plain.id)) is None

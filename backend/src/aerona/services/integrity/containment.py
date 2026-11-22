@@ -1,11 +1,13 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.faction_kinds import of_kinds
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
-from aerona.domain.enums.entity import EngineKind, EntityType
+from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.faction import FactionKind
 
 CONTAINER_TYPES = frozenset({EntityType.REGION, EntityType.PLACE, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT})
 MARKET_REASON = "market trade across worlds"
@@ -33,7 +35,7 @@ async def close_mismatched_inside(session: AsyncSession, epoch: int) -> int:
 async def close_market_trade(session: AsyncSession, epoch: int) -> int:
     markets = {
         entity_id: world_id
-        for entity_id, world_id in await session.execute(select(EntityRow.id, EntityRow.world_id).where(EntityRow.engine_kind == EngineKind.WANDERING_MARKET))
+        for entity_id, world_id in await session.execute(select(EntityRow.id, EntityRow.world_id).where(of_kinds([FactionKind.WANDERING_MARKET])))
     }
     if not markets:
         return 0

@@ -8,13 +8,23 @@ from aerona.engine.phase import Phase
 
 @reads(
     "mortal.charisma",
+    "table.creator",
     "table.crowd_moods",
+    "table.dimensions",
     "table.entities",
     "table.feeling_spread",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.household_members",
+    "table.mind_facets",
+    "table.minds",
     "table.node_births",
     "table.nodes",
+    "table.sons",
+    "table.stars",
     "table.thoughts",
+    "table.worlds",
 )
 @writes(
     "table.chronicle",

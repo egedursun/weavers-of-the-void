@@ -74,6 +74,7 @@ from aerona.db.tables.lore import HistorianViewRow, MessageRow
 from aerona.db.tables.mass_weapons import DeterrencePostureRow, MassWeaponRow, WarRemnantRow
 from aerona.db.tables.media import MediaItemRow, MediaOutletRow, RecordMediumRow
 from aerona.db.tables.military import ArmyUnitRow, OccupationRow
+from aerona.db.tables.mind import TraitRow
 from aerona.db.tables.monetary import MonetaryAuthorityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.museums import MuseumPieceRow
@@ -131,7 +132,7 @@ from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import MoleHuntOutcome
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.mind import TraitKind, ValueAxis
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.prehistory import DeepTimeState, PrehistoryKind, PrehistorySource, PrehistoryState
@@ -156,6 +157,8 @@ from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.rifts import open_rift
 from aerona.engine.economy.route_control import route_of
 from aerona.engine.economy.stocks import GoodsLedger
+from aerona.engine.phases.heroes import load_hero_world
+from aerona.engine.phases.society_support.quests import quest_options
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import connect, spoken_language
 from aerona.engine.primitives.records import RecordSpec, open_record
@@ -771,13 +774,26 @@ async def peopled_town(session: AsyncSession) -> int:
 
 
 async def free_hero(session: AsyncSession) -> int:
+    ctx = await manual_context(session, "free_hero", Rules())
+    world = await load_hero_world(ctx)
     questing = select(HeroQuestRow.hero_entity_id).where(HeroQuestRow.status == HeroQuestStatus.ACTIVE)
-    found = await session.scalar(
-        select(EntityRow.id)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(questing))
-        .order_by(EntityRow.id)
-        .limit(1)
-    )
+    query = select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(questing))
+    found = next((hero.id for hero in await session.scalars(query.order_by(EntityRow.id)) if quest_options(ctx.rules, world.quests, hero)), None)
+    assert found is not None
+    return int(found)
+
+
+async def questing_hero(session: AsyncSession) -> int:
+    query = select(HeroQuestRow.hero_entity_id).where(HeroQuestRow.status == HeroQuestStatus.ACTIVE)
+    found = await session.scalar(query.order_by(HeroQuestRow.id.desc()).limit(1))
+    assert found is not None
+    return int(found)
+
+
+async def unbrave_mortal(session: AsyncSession) -> int:
+    brave = select(TraitRow.node_id).where(TraitRow.trait == TraitKind.BRAVE)
+    query = select(EntityRow.id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(brave))
+    found = await session.scalar(query.order_by(EntityRow.id).limit(1))
     assert found is not None
     return int(found)
 
@@ -1460,7 +1476,8 @@ LEVERS: dict[str, Lever] = {
     "mind:unlock": after(("mind:lock", {"node_id": Pick(MORTAL), "field": "traits"}), field="traits"),
     "mind:pressure": given(node_id=Pick(TOWN)),
     "mind:skill_remove": after(("mind:skill", {"node_id": Pick(MORTAL), "skill": "blade", "level": 30})),
-    "mind:trait_remove": after(("mind:trait", {"node_id": Pick(MORTAL), "trait": "brave"})),
+    "mind:trait": given(node_id=Computed(unbrave_mortal), trait="brave"),
+    "mind:trait_remove": after(("mind:trait", {"node_id": Computed(unbrave_mortal), "trait": "brave"})),
     "modifier:add": given(key="strength", magnitude=5.0),
     "modifier:create": given(key="strength", magnitude=5.0),
     "modifier:release": after(("modifier:hold", {"modifier_id": Pick("modifier")})),
@@ -1829,7 +1846,7 @@ LEVERS: dict[str, Lever] = {
     ),
     "hero:hunt": given(monster_id=Pick(EntityType.SPECIES)),
     "hero:quest": given(hero_id=Computed(free_hero)),
-    **{name: after(("hero:quest", {"hero_id": Computed(free_hero)})) for name in ("hero:recall", "hero:resolve")},
+    **{name: after(("hero:quest", {"hero_id": Computed(free_hero)}), hero_id=Computed(questing_hero)) for name in ("hero:recall", "hero:resolve")},
     "holy_order:edit": after(*HOLY, order_id=Newest(EntityType.FACTION), tithe_share=10),
     "holy_order:remove": after(*HOLY, ("holy_order:edit", {"order_id": Newest(EntityType.FACTION), "tithe_share": 10}), order_id=Newest(EntityType.FACTION)),
     "horror:suppress_cult": after(("horror:cult", {"entity_id": Pick(TOWN)}), cult_id=Newest(EntityType.CULT)),

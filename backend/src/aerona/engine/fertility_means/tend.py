@@ -10,6 +10,7 @@ from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.fertility_means import FertilityMeansRow, FertilityUseRow
 from aerona.db.tables.intimacy import IntimacyNormRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.population import PopulationInstrumentRow, PopulationPolicyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
@@ -21,9 +22,11 @@ from aerona.domain.enums.population import PopulationInstrument
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.fertility_means.factor import DIRECTION, PREVENTING, conceives, means_of
+from aerona.engine.mortal.kin import partners_of
+from aerona.engine.mortal.life import adult
 from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.numbers.book import AIM_DIRECTION, scope_of
-from aerona.engine.primitives.folk import towns_of_people
+from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.knowledge import branch_level
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
@@ -34,6 +37,7 @@ SIMPLE = (F.PREVENTION, F.REMEDY_FOR_BARRENNESS, F.ENDING_PREGNANCY)
 LEARNED = (F.ASSISTED_CONCEPTION, F.SURROGACY)
 HIDING = frozenset({NormStance.FORBIDDEN, NormStance.DISCOURAGED})
 SPREAD_FLOOR = 20
+BARREN_BELOW = PERCENT // 2
 FIRST_USE = 10
 SPREAD_LOSS = 10
 EXPOSED_INFAMY = {NormStance.FORBIDDEN: 20, NormStance.DISCOURAGED: 10}
@@ -43,6 +47,7 @@ SOURCE_RISK = total(MeansSource, {MeansSource.FOLK: 1.0, MeansSource.MEDICINE: 0
 @dataclass
 class MeansTally:
     found: int = 0
+    used: int = 0
     spread: int = 0
     banned: int = 0
     exposed: int = 0
@@ -209,6 +214,43 @@ async def expose(ctx: TickContext, tally: MeansTally) -> None:
         tally.exposed += 1
 
 
+async def wants(ctx: TickContext, mortal: EntityRow, means: FertilityMeans) -> bool:
+    profile = await ctx.session.get(MortalProfileRow, mortal.id)
+    if profile is None or not adult(profile.life_stage):
+        return False
+    if means in PREVENTING:
+        return bool(await partners_of(ctx.session, mortal.id))
+    return profile.fertility < BARREN_BELOW
+
+
+async def take_up(ctx: TickContext, kinds: list[EntityRow], tally: MeansTally) -> None:
+    taken = {(user, means) for user, means in await ctx.session.execute(select(FertilityUseRow.user_entity_id, FertilityUseRow.means))}
+    for people in kinds:
+        known = await means_of(ctx.session, people.id)
+        if not known:
+            continue
+        here = await present_among(ctx.session, [people.id])
+        folk = select(EntityRow).where(here, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+        for mortal in list(await ctx.session.scalars(folk)):
+            if held(mortal.id):
+                continue
+            for row in known:
+                if (mortal.id, row.means) in taken or not ctx.rng(f"means.take.{mortal.id}.{row.means.value}").chance(row.use_pct):
+                    continue
+                if not await wants(ctx, mortal, row.means):
+                    continue
+                ctx.session.add(
+                    FertilityUseRow(
+                        user_entity_id=mortal.id, people_entity_id=people.id, means=row.means, hidden=row.stance in HIDING, since_epoch=ctx.epoch, locked=[]
+                    )
+                )
+                taken.add((mortal.id, row.means))
+                roles = {IncidentRole.SUBJECT: mortal.id, IncidentRole.MEMBER: people.id}
+                await record(ctx, "birth.means_used", roles=roles, facts={"means": row.means, "stance": row.stance})
+                tally.used += 1
+    await ctx.session.flush()
+
+
 async def tend_means(ctx: TickContext) -> MeansTally:
     tally = MeansTally()
     kinds = await peoples(ctx)
@@ -219,5 +261,6 @@ async def tend_means(ctx: TickContext) -> MeansTally:
     for people in kinds:
         for row in await means_of(ctx.session, people.id):
             drift(ctx, row)
+    await take_up(ctx, kinds, tally)
     await expose(ctx, tally)
     return tally

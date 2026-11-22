@@ -7,6 +7,7 @@ from aerona.catalog.civilization import TIER_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.total import total
+from aerona.db.faction_kinds import kinds_by_faction
 from aerona.db.record_context import Term
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -24,6 +25,7 @@ from aerona.domain.enums.chronicle import ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.civilization import DebtTiming, IndependenceAnswer, TierCapability
 from aerona.domain.enums.cycles import AdoptionKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
@@ -36,6 +38,7 @@ from aerona.engine.cosmos.routes import RouteBook, method_label
 from aerona.engine.cosmos.tiers import TierScene, may, planned_tiers, tier_lock, tier_of
 from aerona.engine.cycles.lineage import kinship_of
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.monetary.authorities import PLAIN_MONEY, money_word
 from aerona.engine.mortal.kin import fosterers_of, parents_of
 from aerona.engine.phase import Phase
 from aerona.engine.polity.accords import Clause, sign
@@ -58,8 +61,7 @@ VALUE_KEYS = ("might", "damage", "protection", "splendor", "speed")
 WEALTH_KEY = "wealth"
 PROSPERITY_KEY = "prosperity"
 AGE_KEY = "age"
-SILVER = "silver"
-GRAIN = "grain"
+GOODS = "goods"
 
 
 @dataclass(frozen=True)
@@ -172,7 +174,8 @@ async def declare_independence(ctx: TickContext, colony: EntityRow, mother: Enti
 
 
 async def _federated(session: AsyncSession) -> tuple[set[int], int]:
-    federations = {item.id for item in await canon(session, [EntityType.FACTION]) if item.engine_kind is EngineKind.INTERWORLD_FEDERATION}
+    kinds = await kinds_by_faction(session)
+    federations = {item.id for item in await canon(session, [EntityType.FACTION]) if kinds.get(item.id) is FactionKind.INTERWORLD_FEDERATION}
     members = {bond.source_node_id for bond in await active_bonds(session, [BondKind.MEMBER_OF], targets=list(federations))} if federations else set()
     return members, len(federations)
 
@@ -363,7 +366,7 @@ async def repay(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor: En
         ctx,
         "civilization.debt_paid",
         roles={IncidentRole.BORROWER: debtor.id, IncidentRole.LENDER: creditor.id},
-        facts={"amount": amount, "goods": bond.debt_what or SILVER, "overdue": DebtTiming.OVERDUE if overdue else DebtTiming.ON_TIME},
+        facts={"amount": amount, "goods": bond.debt_what or PLAIN_MONEY, "overdue": DebtTiming.OVERDUE if overdue else DebtTiming.ON_TIME},
         steps=(StepDraft(StepAction.REPAY, actor=debtor.id, target=creditor.id, amount=paid, unit=FactUnit.WEALTH_POINTS),),
     )
     return written.text
@@ -413,7 +416,7 @@ async def late_debts(ctx: TickContext) -> int:
             roles={IncidentRole.BORROWER: debtor.id, IncidentRole.LENDER: creditor.id},
             facts={
                 "amount": bond.debt_amount or 0,
-                "goods": bond.debt_what or SILVER,
+                "goods": bond.debt_what or PLAIN_MONEY,
                 "due_epoch": bond.debt_due_epoch,
                 "relation": -ctx.rules.civilization.loan_default_relation,
             },
@@ -425,7 +428,7 @@ async def late_debts(ctx: TickContext) -> int:
 async def lend(ctx: TickContext, lender: EntityRow, borrower: EntityRow, amount: int) -> str:
     civ = ctx.rules.civilization
     lent = max(1, min(amount, wealth_of(lender) or amount))
-    what = SILVER if wealth_key(lender) == WEALTH_KEY else GRAIN
+    what = await money_word(ctx.session, lender.id) if wealth_key(lender) == WEALTH_KEY else GOODS
     due = ctx.epoch + civ.loan_term
     transfer(ctx.rules, lender, -lent)
     transfer(ctx.rules, borrower, lent)
@@ -741,6 +744,7 @@ async def spontaneous_treaty(ctx: TickContext) -> int:
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.faction_profiles",
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -765,6 +769,7 @@ async def spontaneous_treaty(ctx: TickContext) -> int:
     "table.nodes",
     "table.offices",
     "table.personality_values",
+    "table.polity_members",
     "table.professions_of_value",
     "table.region_environment",
     "table.relation_components",

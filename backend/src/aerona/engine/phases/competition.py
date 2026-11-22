@@ -12,7 +12,25 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 
 
-@reads("table.cartels", "table.faction_profiles", "table.market_structures", "table.price_wars", "table.shop_goods", "table.shops", "table.supply_tiers")
+@reads(
+    "faction.wealth",
+    "table.cartels",
+    "table.company_profiles",
+    "table.economic_orders",
+    "table.faction_profiles",
+    "table.holder_techniques",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.market_structures",
+    "table.network_nodes",
+    "table.network_profiles",
+    "table.polity_members",
+    "table.price_wars",
+    "table.shop_goods",
+    "table.shops",
+    "table.supply_tiers",
+    "table.workshops",
+)
 @writes("table.market_structures")
 async def competition(ctx: TickContext) -> None:
     ctx.count("competition_markets", await survey_markets(ctx))

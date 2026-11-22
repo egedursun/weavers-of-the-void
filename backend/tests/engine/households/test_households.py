@@ -172,3 +172,44 @@ async def test_household_money_never_moves_through_a_locked_purse(realm: Realm) 
     assert not await lend_at_interest(ctx, giver, elder, HouseholdTally())
     assert not await renovate(ctx, seeker, await realm.session.scalar(select(DwellingRow).where(DwellingRow.household_id == seeker.id)), HouseholdTally())
     assert (seeker.wealth, giver.wealth) == (100, 10_000)
+
+
+async def test_two_who_each_head_a_household_alone_can_be_matched_and_share_one_home(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Lindmere")
+    first = await mortal(realm, "Ivo", location_id=town.id)
+    second = await mortal(realm, "Juna", location_id=town.id)
+    for one in (first, second):
+        await profile(realm, one.id, LifeStage.ADULT, wealth=10)
+    seeker = await found_household(ctx, first)
+    alone = await found_household(ctx, second)
+    alone.social_class = seeker.social_class
+    seeker.wealth = 100
+    await realm.session.flush()
+    assert await match(ctx, seeker, await members_of(ctx, seeker), HouseholdTally())
+    moved = await realm.session.get(HouseholdMemberRow, second.id)
+    assert moved is not None and moved.household_id == seeker.id and moved.role is HouseholdRole.SPOUSE
+    await tend_household(ctx, alone, await LawBook.load(realm.session), HouseholdTally())
+    await realm.session.flush()
+    assert await realm.session.get(HouseholdRow, alone.id) is None
+
+
+async def test_a_household_matches_its_single_with_the_candidate_nearest_in_age(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Ashby")
+    seeker_mortal = await mortal(realm, "Kel", location_id=town.id, age=24)
+    elder = await mortal(realm, "Lorn", location_id=town.id, age=66)
+    youth = await mortal(realm, "Mira", location_id=town.id, age=26)
+    for one in (seeker_mortal, elder, youth):
+        await profile(realm, one.id, LifeStage.ADULT, wealth=10)
+    seeker = await found_household(ctx, seeker_mortal)
+    for one in (elder, youth):
+        other = await found_household(ctx, one)
+        other.social_class = seeker.social_class
+    seeker.wealth = 100
+    await realm.session.flush()
+    assert await match(ctx, seeker, await members_of(ctx, seeker), HouseholdTally())
+    joined = await realm.session.get(HouseholdMemberRow, youth.id)
+    left = await realm.session.get(HouseholdMemberRow, elder.id)
+    assert joined is not None and joined.household_id == seeker.id
+    assert left is not None and left.household_id != seeker.id

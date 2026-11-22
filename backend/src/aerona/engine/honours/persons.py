@@ -3,16 +3,21 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.renown import ACT_RENOWN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.governance import OrgGovernanceRow
 from aerona.db.tables.honours import HonourHeldRow, HonourKindRow
+from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.renown import DeedRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.honours import HonourPrivilege
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points, take_coin
 from aerona.engine.interconnect.guards import blocked
@@ -24,11 +29,12 @@ from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import members_of, ruler_of_realm
 
 P = HonourPrivilege
-DEED_STEP = 10
+ORDER_KINDS = frozenset({FactionKind.WARRIOR_ORDER, FactionKind.HOLY_ORDER, FactionKind.MAGE_ORDER})
 
 
 @dataclass
 class HonourTally:
+    founded: int = 0
     conferred: int = 0
     sold: int = 0
     revoked: int = 0
@@ -125,10 +131,50 @@ async def immune(session: AsyncSession, holder_id: int, polity_id: int | None) -
 
 
 async def worthy_deeds(ctx: TickContext, kind: HonourKindRow, places: list[int]) -> list[DeedRow]:
-    floor = ctx.rules.honours.deed_floor + DEED_STEP * (kind.rank - 1)
+    table = ctx.rules.honours
+    floor = table.deed_floor + table.rank_step * (kind.rank - 1)
     here = DeedRow.place_node_id.in_(places)
     query = select(DeedRow).where(DeedRow.epoch == ctx.epoch, DeedRow.magnitude >= floor, here).order_by(DeedRow.magnitude.desc(), DeedRow.id)
-    return list(await ctx.session.scalars(query))
+    return [deed for deed in await ctx.session.scalars(query) if praised(deed)]
+
+
+def praised(deed: DeedRow) -> bool:
+    if deed.act is None:
+        return deed.axis is not ReputationAxis.TROUBLEMAKER
+    spec = ACT_RENOWN[deed.act]
+    return deed.axis is spec.approved and spec.approved is not spec.condemned
+
+
+async def conferrers(session: AsyncSession) -> list[EntityRow]:
+    realms = select(PolityProfileRow.polity_entity_id)
+    orders = select(FactionProfileRow.faction_entity_id).where(FactionProfileRow.kind.in_(sorted(ORDER_KINDS)))
+    faiths = select(EntityRow.id).where(EntityRow.entity_type == EntityType.CULT)
+    query = select(EntityRow).where(EntityRow.status == EntityStatus.CANON, EntityRow.id.in_(realms.union(orders, faiths))).order_by(EntityRow.id)
+    founded = set(await session.scalars(select(HonourKindRow.conferrer_node_id)))
+    return [row for row in await session.scalars(query) if row.id not in founded and not held(row.id)]
+
+
+async def found_for_deeds(ctx: TickContext, tally: HonourTally) -> None:
+    table = ctx.rules.honours
+    for conferrer in await conferrers(ctx.session):
+        if await head_of(ctx.session, conferrer.id) is None:
+            continue
+        here = DeedRow.place_node_id.in_(await places_of(ctx.session, conferrer.id))
+        query = select(DeedRow).where(DeedRow.epoch == ctx.epoch, DeedRow.magnitude >= table.deed_floor, here).order_by(DeedRow.id)
+        if not any(praised(deed) for deed in await ctx.session.scalars(query)):
+            continue
+        kind = HonourKindRow(
+            conferrer_node_id=conferrer.id,
+            name=f"the honour of {conferrer.name}",
+            rank=1,
+            privileges=[P.PRECEDENCE.value],
+            founded_epoch=ctx.epoch,
+            locked=[],
+        )
+        ctx.session.add(kind)
+        await ctx.session.flush()
+        await record(ctx, "honour.founded", roles={IncidentRole.ACTOR: conferrer.id}, facts={"honour": kind.name, "rank": kind.rank})
+        tally.founded += 1
 
 
 async def honour_deeds(ctx: TickContext, kind: HonourKindRow, tally: HonourTally, granted: dict[int, int]) -> None:
@@ -197,6 +243,7 @@ async def pass_on(ctx: TickContext, kind: HonourKindRow, tally: HonourTally) -> 
 async def tend_person_honours(ctx: TickContext) -> HonourTally:
     tally = HonourTally()
     granted: dict[int, int] = {}
+    await found_for_deeds(ctx, tally)
     for kind in list(await ctx.session.scalars(select(HonourKindRow).order_by(HonourKindRow.conferrer_node_id, HonourKindRow.rank, HonourKindRow.id))):
         if held(kind.conferrer_node_id):
             continue

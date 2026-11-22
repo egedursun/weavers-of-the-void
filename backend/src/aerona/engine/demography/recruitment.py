@@ -1,28 +1,26 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.faction_kinds import kind_of
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
-from aerona.engine.factions.book import CLASS_OF_KIND, ENGINE_OF_KIND
+from aerona.engine.factions.book import CLASS_OF_KIND
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import shift_stat
 from aerona.rules.registry import Rules
 
 MIDDLE = PERCENT // 2
-KIND_OF_ENGINE = {engine: kind for kind, engine in ENGINE_OF_KIND.items()}
 
 
 async def faction_class(session: AsyncSession, faction: EntityRow) -> SocialClass | None:
     if faction.social_class is not None:
         return faction.social_class
-    profile = await session.get(FactionProfileRow, faction.id)
-    kind = profile.kind if profile is not None else KIND_OF_ENGINE.get(faction.engine_kind) if faction.engine_kind is not None else None
+    kind = await kind_of(session, faction.id)
     return CLASS_OF_KIND.get(kind) if kind is not None else None
 
 

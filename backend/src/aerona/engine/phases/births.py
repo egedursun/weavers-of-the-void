@@ -11,11 +11,11 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
-from aerona.db.write_guard import unheld
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.demography import Sex
-from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityType, MortalRole
+from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitEffect, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage
@@ -1147,16 +1147,26 @@ async def couples_bear_children(ctx: TickContext) -> None:
         second = await living_entity(ctx.session, bond.target_node_id)
         if first is None or second is None or first.entity_type is not EntityType.MORTAL or second.entity_type is not EntityType.MORTAL:
             continue
+        if held(first.id) or held(second.id):
+            continue
         fertile = await bloodline_fertility(ctx.session, rules, first.id, second.id)
         limit = numbers.child_limit(first.location_id)
         if limit is not None and len(await children_of(ctx.session, first.id)) >= limit:
             ctx.count("births_held_by_child_limit")
             continue
-        if not rng.chance(await couple_chance(ctx, first, second, bond.kind) * fertile * numbers.birth_factor(first.location_id)):
-            continue
-        children = await deliver(ctx, first, second, namer)
-        if bond.kind is BondKind.LOVES:
-            await hidden_birth(ctx, first, second, children)
+        chance = await couple_chance(ctx, first, second, bond.kind) * fertile * numbers.birth_factor(first.location_id)
+        births = 0
+        for _spacing in range(max(1, rules.fertility.years_per_epoch // rules.fertility.birth_spacing_years)):
+            if births >= rules.fertility.births_per_epoch_cap or not rng.chance(chance):
+                continue
+            children = await deliver(ctx, first, second, namer)
+            births += 1
+            if bond.kind is BondKind.LOVES:
+                await hidden_birth(ctx, first, second, children)
+            if first.status is not EntityStatus.CANON or second.status is not EntityStatus.CANON:
+                break
+            if limit is not None and len(await children_of(ctx.session, first.id)) >= limit:
+                break
 
 
 async def require_living(ctx: TickContext, entity_id: int, types: frozenset[EntityType], label: str) -> EntityRow:

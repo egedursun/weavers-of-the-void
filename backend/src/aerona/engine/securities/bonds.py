@@ -17,6 +17,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import at_war, ruler_of
 from aerona.engine.securities.exchanges import bank_in, exchange_at, home_town
 from aerona.engine.securities.holdings import SecuritiesTally
+from aerona.engine.securities.pricing import traded
 
 BOND_COUPON = 5
 
@@ -78,6 +79,7 @@ async def issue_bonds(ctx: TickContext, tally: SecuritiesTally) -> None:
         ctx.session.add(bond)
         await ctx.session.flush()
         ctx.session.add(SecurityHoldingRow(holder_node_id=buyer.id, security_id=bond.id, amount=bond.amount, bought_price=table.bond_face, locked=[]))
+        await traded(ctx, bond, bond.amount)
         await give_coin(ctx.session, ctx.rules, realm, raised)
         tally.bonds += 1
         await record(

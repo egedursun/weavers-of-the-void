@@ -10,6 +10,7 @@ from aerona.constants.warfare import BATTLE_NAME_TEMPLATE, SIEGE_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.core.grammar import several, spoken
 from aerona.core.total import total
+from aerona.db.faction_kinds import kind_of
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.chronicle import ChronicleRepository, caused_by
 from aerona.db.repositories.entities import EntityRepository
@@ -31,6 +32,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.eras import EraChannel
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.military import BattlePhase, CasualtyFate, CommandArea, DuelContext, DuelEnd, OutcomeClass, SackChoice, Stance, StarvationStage
 from aerona.domain.enums.mind import ActKind, MemoryKind, ThoughtKind, ValueAxis
@@ -237,8 +239,8 @@ class BattleReport:
     ground: BattleGround | None = None
 
 
-def is_uprising(entity: EntityRow) -> bool:
-    return entity.entity_type is EntityType.FACTION and (entity.engine_kind is EngineKind.REBELS or entity.social_class is not None)
+async def is_uprising(session: AsyncSession, entity: EntityRow) -> bool:
+    return entity.entity_type is EntityType.FACTION and (entity.social_class is not None or await kind_of(session, entity.id) is FactionKind.REBELS)
 
 
 def battle_severity(rules: Rules, gap: float) -> int:
@@ -259,8 +261,8 @@ async def redirect_uprisings(ctx: TickContext) -> int:
             continue
         if is_community(first) and is_community(second):
             continue
-        rebels, overlord = (first, second) if is_uprising(first) and not is_community(second) else (second, first)
-        if not is_uprising(rebels) or is_community(overlord):
+        rebels, overlord = (first, second) if await is_uprising(ctx.session, first) and not is_community(second) else (second, first)
+        if not await is_uprising(ctx.session, rebels) or is_community(overlord):
             continue
         await bonds.deactivate(bond, ctx.epoch, "uprising redirected")
         if rebels.status is not EntityStatus.CANON or overlord.status is not EntityStatus.CANON:

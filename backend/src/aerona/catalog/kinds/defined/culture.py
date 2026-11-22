@@ -601,7 +601,7 @@ TECHNIQUE = total(
         ),
         Technique.CODIFIED_LAW: Defined(
             "Codified law",
-            checked_by=("catalog.civics.SOCIAL_CHANGE",),
+            checked_by=("catalog.civics.SOCIAL_CHANGE", "engine.polity.policy.codify"),
             used_by=(
                 "catalog.civics.LAW_GATES",
                 "catalog.civics.PRIVILEGE_GATES",

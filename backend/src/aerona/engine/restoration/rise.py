@@ -5,7 +5,6 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.collective import AccountRow
-from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import ClaimRow, LawJurisdictionRow, LawProfileRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.restoration import RestorationRow
@@ -22,11 +21,13 @@ from aerona.engine.polity.control import split
 from aerona.engine.polity.formation import found_polity, refresh_realms, set_ruler
 from aerona.engine.polity.laws import enact
 from aerona.engine.polity.titles import de_jure_lands
+from aerona.engine.primitives.mirrors import close_legacy, first_sight
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect, living_entity, remove_flag
 from aerona.engine.recording.record import record
 
 LEGACY_FIXUP = "restoration.legacy_pretenders"
+CLAIM_FAMILY = "restoration.claim"
 STABILITY_FLOOR = 0
 TRACE_MEMORY = 10
 B = RestorationBasis
@@ -228,7 +229,7 @@ async def advance(ctx: TickContext, row: RestorationRow, tally: RestorationTally
 
 async def tend_restorations(ctx: TickContext) -> RestorationTally:
     tally = RestorationTally()
-    await apply_legacy(ctx, tally)
+    await press_claims(ctx, tally)
     await memories(ctx, tally)
     for row in list(await ctx.session.scalars(select(RestorationRow).where(RestorationRow.stage.in_(sorted(OPEN_STAGES))).order_by(RestorationRow.id))):
         if held(row.fallen_polity_id) or "stage" in (row.locked or []):
@@ -255,16 +256,17 @@ async def memories(ctx: TickContext, tally: RestorationTally) -> None:
             await raise_movement(ctx, polity, claimant=None, bases=[RestorationBasis.MEMORY], territories=lands, tally=tally)
 
 
-async def apply_legacy(ctx: TickContext, tally: RestorationTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
-        return
+async def press_claims(ctx: TickContext, tally: RestorationTally) -> None:
     made = 0
     query = select(ClaimRow).where(ClaimRow.pressed.is_(True), ClaimRow.ended_epoch.is_(None), ClaimRow.title_entity_id.is_not(None)).order_by(ClaimRow.id)
     for claim in list(await ctx.session.scalars(query)):
         fallen = await ctx.session.get(EntityRow, claim.polity_entity_id)
-        if fallen is None or fallen.status is EntityStatus.CANON or await open_for(ctx, fallen.id) is not None:
+        if fallen is None or fallen.status is EntityStatus.CANON or held(fallen.id) or not await first_sight(ctx.session, CLAIM_FAMILY, claim.id):
+            continue
+        begun = select(RestorationRow.id).where(RestorationRow.fallen_polity_id == fallen.id, RestorationRow.claimant_node_id == claim.claimant_entity_id)
+        if await open_for(ctx, fallen.id) is not None or await ctx.session.scalar(begun.limit(1)) is not None:
             continue
         await raise_movement(ctx, fallen, claimant=claim.claimant_entity_id, bases=[RestorationBasis.BLOODLINE], territories=[], tally=tally)
         made += 1
-    ctx.session.add(AppliedFixupRow(key=LEGACY_FIXUP, result={"restorations": made}))
+    await close_legacy(ctx.session, LEGACY_FIXUP, {"restorations": made})
     await ctx.session.flush()

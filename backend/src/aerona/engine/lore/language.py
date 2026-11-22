@@ -18,7 +18,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
-from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.folk import homes_for
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import stat
@@ -107,17 +107,32 @@ async def intelligibility(session: AsyncSession, rules: Rules, first: int | None
     return row.value
 
 
+@memoized(SkillRow, EntityRow)
+async def readers_by_place(session: AsyncSession, level: int) -> dict[int, frozenset[int | None]]:
+    query = (
+        select(EntityRow.location_id, SkillRow.subject_node_id)
+        .join(EntityRow, EntityRow.id == SkillRow.holder_node_id)
+        .where(
+            SkillRow.skill == SkillKind.LANGUAGES,
+            SkillRow.level >= level,
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.location_id.is_not(None),
+        )
+    )
+    found: dict[int, set[int | None]] = {}
+    for place, subject in await session.execute(query):
+        if place is not None:
+            found.setdefault(place, set()).add(subject)
+    return {place: frozenset(subjects) for place, subjects in found.items()}
+
+
 async def interpreter(session: AsyncSession, rules: Rules, *communities: int, tongues: set[int] | None = None) -> bool:
-    mortals = select(EntityRow.id).where(
-        EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(session, communities)
-    )
-    subject = SkillRow.subject_node_id.is_(None) if not tongues else (SkillRow.subject_node_id.is_(None) | SkillRow.subject_node_id.in_(list(tongues)))
-    found = await session.scalar(
-        select(SkillRow.holder_node_id)
-        .where(SkillRow.skill == SkillKind.LANGUAGES, SkillRow.level >= rules.interpreters.interpreter_skill, SkillRow.holder_node_id.in_(mortals), subject)
-        .limit(1)
-    )
-    return found is not None
+    readers = await readers_by_place(session, rules.interpreters.interpreter_skill)
+    for place in sorted(await homes_for(session, communities)):
+        if any(subject is None or (tongues and subject in tongues) for subject in readers.get(place, ())):
+            return True
+    return False
 
 
 async def tongues_of(session: AsyncSession, community_id: int) -> set[int]:

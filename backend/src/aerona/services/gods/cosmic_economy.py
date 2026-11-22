@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
+from aerona.db.faction_kinds import kind_of
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmic_state import AddictionImmunityRow
@@ -10,6 +11,7 @@ from aerona.db.tables.society import AddictionRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.engine.context import Publisher
 from aerona.engine.gods.economy import cosmic_economy, create_deposit, found_faction, monopoly, resource_mechanics
 from aerona.engine.gods.queries import cosmos_row
@@ -82,7 +84,7 @@ async def _found(session: AsyncSession, rules: Rules, region_id: int, kind: Engi
 async def disband_faction(session: AsyncSession, rules: Rules, faction_id: int) -> EntityRow:
     ctx = await manual_context(session, "disband", rules)
     faction = require(await session.get(EntityRow, faction_id), "record")
-    if faction.engine_kind not in (EngineKind.WANDERING_MARKET, EngineKind.ROUTE_RAIDERS) or faction.status is not EntityStatus.CANON:
+    if await kind_of(session, faction.id) not in (FactionKind.WANDERING_MARKET, FactionKind.ROUTE_RAIDERS) or faction.status is not EntityStatus.CANON:
         raise ValidationFailedError("Only a living wandering market or pirate band can be disbanded.")
     await EntityRepository(session).set_status(faction, EntityStatus.DESTROYED, ctx.epoch)
     await record_action(ctx, ActionKind.DESTROY, faction.id)

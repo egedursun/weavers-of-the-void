@@ -9,7 +9,7 @@ PROTECTED_USE = total(
             "Hunting",
             checked_by=("engine.protected_nature.book.hunting_marks",),
             used_by=(
-                "engine.protected_nature.areas.apply_legacy",
+                "engine.protected_nature.areas.protect_rights",
                 "engine.protected_nature.areas.recover",
                 "engine.protected_nature.movement.AIMS",
                 "tools.son.protected_nature.hallow_wild",
@@ -19,7 +19,7 @@ PROTECTED_USE = total(
             "Logging",
             checked_by=("engine.protected_nature.areas.recover",),
             used_by=(
-                "engine.protected_nature.areas.apply_legacy",
+                "engine.protected_nature.areas.protect_rights",
                 "engine.protected_nature.book.LIVELIHOODS",
                 "engine.protected_nature.movement.AIMS",
                 "tools.son.protected_nature.hallow_wild",

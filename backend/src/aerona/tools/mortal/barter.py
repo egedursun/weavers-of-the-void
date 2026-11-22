@@ -11,6 +11,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.war import DebtStatus
+from aerona.engine.monetary.authorities import PLAIN_MONEY
 from aerona.engine.phases.civilization import transfer, wealth_key, wealth_of
 from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import StepDraft
@@ -187,7 +188,7 @@ async def repay_debt(call: MortalCall, args: RepayInput) -> str:
     await call.record(
         "tools.mortal.repaid",
         roles={IncidentRole.BORROWER: call.me.id, IncidentRole.LENDER: creditor.id},
-        facts={"amount": amount, "what": debt.debt_what or "silver", "late": int(late)},
+        facts={"amount": amount, "what": debt.debt_what or PLAIN_MONEY, "late": int(late)},
         steps=(StepDraft(StepAction.REPAY, actor=call.me.id, target=creditor.id, amount=amount, unit=FactUnit.WEALTH_POINTS),),
     )
     return result(MortalResult.REPAID, name=creditor.name)

@@ -12,7 +12,7 @@ class FactionsRules:
     )
     faction_chance: int = rule(15, 0, 100, RuleGroup.CIVILIZATION, "A faction is founded within a community (%)")
     revolt_disband_chance: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "An uprising whose war ended disbands (%)")
-    guild_min_merchant_pct: int = rule(11, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Minimum merchant share of a community that founds a guild (%)")
+    guild_min_merchant_pct: int = rule(7, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Minimum merchant share of a community that founds a guild (%)")
     engineers_min_professional_pct: int = rule(
         5,
         0,

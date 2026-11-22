@@ -9,12 +9,14 @@ from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.labour import WorkerBodyRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.labour import LegalStanding, WorkerBodyForm
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -24,7 +26,7 @@ from aerona.engine.recording.record import record
 BODY_KINDS = frozenset({FactionKind.WORKER_BODY, FactionKind.WORKERS_UNION})
 UNION_TRADES = (Job.MINING, Job.BUILDING, Job.CRAFTING)
 SOLIDARITY_REST = 50
-SOLIDARITY_DRIFT = 2
+COVERED = (SocialClass.WORKER, SocialClass.ARTISAN)
 
 
 @dataclass(frozen=True)
@@ -168,6 +170,14 @@ async def prosecute(ctx: TickContext, body: WorkerBodyRow, home: EntityRow, tall
     )
 
 
+async def discontent(session: AsyncSession, community_id: int) -> int:
+    society = await session.get(CommunitySocietyRow, community_id)
+    if society is None:
+        return SOLIDARITY_REST
+    content = sum(society.satisfaction(social) for social in COVERED) / len(COVERED)
+    return clamp_int(round_half_up(PERCENT - content), 0, PERCENT)
+
+
 async def tend_body(ctx: TickContext, body: WorkerBodyRow, tally: LabourTally) -> None:
     home = await home_of(ctx.session, body)
     if home is None or held(body.faction_node_id) or held(home.id):
@@ -191,8 +201,8 @@ async def tend_body(ctx: TickContext, body: WorkerBodyRow, tally: LabourTally) -
         body.members = round_half_up(workers * clamp_int(coverage, 0, PERCENT) / PERCENT)
     if "fund" not in locked:
         body.fund += body.members * body.dues
-    if "solidarity" not in locked and body.solidarity != SOLIDARITY_REST:
-        step = min(SOLIDARITY_DRIFT, abs(body.solidarity - SOLIDARITY_REST))
-        body.solidarity += step if body.solidarity < SOLIDARITY_REST else -step
+    if "solidarity" not in locked:
+        aim = await discontent(ctx.session, home.id)
+        body.solidarity = clamp_int(body.solidarity + round_half_up((aim - body.solidarity) * ctx.rules.labour.solidarity_drift_pct / PERCENT), 0, PERCENT)
     if body.standing is LegalStanding.BANNED:
         await prosecute(ctx, body, home, tally)

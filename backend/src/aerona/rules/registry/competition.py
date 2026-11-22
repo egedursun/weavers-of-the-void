@@ -27,6 +27,7 @@ class CompetitionRules(Spanned):
     war_max_years: int = span(10, 1, 500, S, "Years after which a price war that has no winner is called off")
     barrier_decay_per_epoch: int = rule(3, 0, 50, S, "Strength a barrier to entry loses in an epoch once what raised it is gone")
     shop_weight: int = rule(10, 1, 100, S, "Weight of each shop that sells a good when the sellers of its market are counted")
+    workshop_weight: int = rule(10, 1, 100, S, "Weight of each level of a workshop owned by a seller when the sellers of its market are counted")
     small_sellers_pct: int = rule(40, 0, 100, S, "Share of a market held by small sellers too many to name where common supply runs (%)")
     one_seller_share: int = rule(90, 50, 100, S, "Share at which one seller holds a market alone (%)")
     few_sellers_concentration: int = rule(25, 0, 100, S, "Concentration at which a market has few sellers")

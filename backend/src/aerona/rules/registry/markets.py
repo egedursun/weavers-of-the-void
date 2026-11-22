@@ -115,10 +115,10 @@ class BankingRules(Spanned):
     collapse_merchant_loss: int = rule(20, 0, 100, G, "Merchant satisfaction lost in a community whose bank collapses")
     polity_lend_chance: int = rule(30, 0, 100, G, "A rich guild lends to an indebted realm or a realm at war with an empty treasury (% per epoch)")
     polity_treasury_below: int = rule(40, 0, 100000, G, "Treasury below which a realm at war or in debt asks a bank for a loan")
-    polity_principal: int = rule(60, 1, 100000, G, "Silver a bank lends a realm")
+    polity_principal: int = rule(60, 1, 100000, G, "Treasury a bank lends a realm")
     polity_repay_pct: int = rule(35, 0, 100, G, "Share of what a realm owes that it pays its bank each epoch while its treasury allows (%)")
     polity_default_debt_pct: int = rule(100, 0, 500, G, "Share of an unpaid realm loan that becomes the realm's standing debt on default (%)")
-    polity_bank_wealth_per_silver: int = rule(4, 0, 100, G, "Wealth a bank gains or loses per hundred silver lent to or repaid by a realm")
+    polity_bank_wealth_per_silver: int = rule(4, 0, 100, G, "Wealth a bank gains or loses per hundred of treasury lent to or repaid by a realm")
     credit_shy_years: int = span(10, 0, 2500, G, "Years a bank refuses a borrower after it defaulted, unless the bank is its own")
 
     @property

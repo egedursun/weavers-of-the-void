@@ -2,20 +2,24 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
+from aerona.db.faction_kinds import kind_of
 from aerona.db.tables.concealment import HiddenTruthRow, TruthKeeperRow
 from aerona.db.tables.cycles import LongPlanRow
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyShareRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.finance import CreditProfileRow
 from aerona.db.tables.governance import OrgMergerRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.polity import PolityProfileRow
-from aerona.db.tables.securities import IssuedSecurityRow, SecurityHoldingRow, StockExchangeRow
+from aerona.db.tables.securities import IssuedSecurityRow, SecurityHoldingRow, SecurityPriceRow, StockExchangeRow
 from aerona.domain.enums.concealment import HiddenTruthKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import LongPlanKind, LongPlanStatus
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EngineKind, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.finance import CreditState
 from aerona.domain.enums.governance import MergerKind, MergerStage
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, LawKind
@@ -23,14 +27,15 @@ from aerona.domain.enums.securities import SecurityKind
 from aerona.domain.models.entity_stats import FactionStats, MortalStats, PolityStats
 from aerona.engine.context import TickContext
 from aerona.engine.governance.mergers import answer_bid
+from aerona.engine.lore.control import set_technique
 from aerona.engine.polity.laws import enact
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.securities.bonds import issue_bonds
 from aerona.engine.securities.debts import mirror_loans, owed_now, tend_debts
-from aerona.engine.securities.exchanges import list_unlisted
+from aerona.engine.securities.exchanges import list_unlisted, open_exchanges
 from aerona.engine.securities.holdings import SecuritiesTally, default_premium
 from aerona.engine.securities.pricing import SHOCKS, crash, move_price
-from aerona.engine.securities.shares import apply_legacy, sync_shares
+from aerona.engine.securities.shares import float_shares, sync_shares
 from tests.engine.core.factories import CoreWorld, entity, settlement, tuned_rules
 
 
@@ -69,7 +74,7 @@ async def test_company_shares_become_a_share_security_held_in_proportion(ctx: Ti
         ]
     )
     await session.flush()
-    await apply_legacy(ctx, SecuritiesTally())
+    await float_shares(ctx, SecuritiesTally())
     security = await session.scalar(select(IssuedSecurityRow).where(IssuedSecurityRow.issuer_node_id == firm.id))
     assert security is not None and security.kind is SecurityKind.SHARE and security.amount == 100
     held = {row.holder_node_id: row.amount for row in await session.scalars(select(SecurityHoldingRow).where(SecurityHoldingRow.security_id == security.id))}
@@ -235,5 +240,27 @@ async def test_a_realm_raising_a_wonder_on_an_empty_treasury_sells_bonds_to_the_
     holding = await session.scalar(select(SecurityHoldingRow).where(SecurityHoldingRow.security_id == bond.id))
     assert holding is not None and holding.holder_node_id == bank.id
     assert profile.treasury == table.bond_amount * table.bond_face
+    priced = await session.scalar(select(SecurityPriceRow).where(SecurityPriceRow.security_id == bond.id))
+    assert priced is not None and priced.volume == bond.amount
     await issue_bonds(ctx, tally)
     assert tally.bonds == 1
+
+
+async def test_the_bank_of_a_town_is_known_by_the_kind_its_profile_holds(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "exchange", tuned_rules(securities={"exchange_chance_pct": 100, "exchange_min_population": 1000}))
+    town, founded = await company(session, world, "Profiled", wealth=90)
+    _, retyped = await company(session, world, "Retyped", wealth=95)
+    retyped.location_id, retyped.engine_kind = town.id, EngineKind.MERCHANT_GUILD
+    session.add(FactionProfileRow(faction_entity_id=founded.id, kind=FactionKind.FINANCIERS, influence_over={}, locked=[]))
+    session.add(FactionProfileRow(faction_entity_id=retyped.id, kind=FactionKind.CRAFT_GUILD, influence_over={}, locked=[]))
+    await set_technique(ctx, town.id, Technique.BANKING, held=True, secret=False)
+    await session.flush()
+    assert await kind_of(session, retyped.id) is FactionKind.CRAFT_GUILD
+    tally = SecuritiesTally()
+    await open_exchanges(ctx, tally)
+    exchange = await session.scalar(select(StockExchangeRow).where(StockExchangeRow.settlement_entity_id == town.id))
+    assert tally.opened == 1 and exchange is not None and exchange.owner_node_id == founded.id
+    _, unprofiled = await company(session, world, "Unprofiled", wealth=80)
+    unprofiled.engine_kind = EngineKind.MERCHANT_GUILD
+    await session.flush()
+    assert await kind_of(session, unprofiled.id) is FactionKind.MERCHANT_GUILD

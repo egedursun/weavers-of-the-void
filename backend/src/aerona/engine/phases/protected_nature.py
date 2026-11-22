@@ -7,20 +7,32 @@ from aerona.engine.protected_nature.tend import tend_nature
 
 
 @reads(
+    "settlement.prosperity",
+    "table.applied_fixups",
     "table.conservation_movements",
     "table.game_reserves",
     "table.gardens",
     "table.movement_profiles",
+    "table.node_births",
     "table.protected_areas",
     "table.region_environment",
+    "table.settlement_profiles",
     "table.species_protections",
     "table.species_ranges",
 )
 @writes(
+    "settlement.prosperity",
     "table.applied_fixups",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.conservation_movements",
+    "table.entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
     "table.protected_areas",
     "table.region_environment",
+    "table.settlement_profiles",
     "table.species_protections",
     "table.species_ranges",
 )

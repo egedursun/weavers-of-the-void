@@ -245,6 +245,10 @@ PATTERNS = (
         re.compile(r"\bhuman (?:sacrifices?|blood|flesh|lives?|souls?)\b|\bmankind\b|\bhumanity\b", re.IGNORECASE),
     ),
     Pattern(
+        "assumed money",
+        re.compile(r"^\s+(?:silver|gold)$|\b(?:\d+|hundred|thousand) (?:silver|gold)\b|\b(?:silver|gold) (?:coins?|pieces?)\b", re.IGNORECASE),
+    ),
+    Pattern(
         "assumed carrier",
         re.compile(r"\b(caravans|no caravan|the caravan)\b(?! way)", re.IGNORECASE),
     ),

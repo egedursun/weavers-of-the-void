@@ -143,6 +143,7 @@ async def prisons(ctx: TickContext) -> None:
 
 @reads(
     "table.defections",
+    "table.mind_facets",
     "table.mortal_profiles",
     "table.node_births",
     "table.offices",

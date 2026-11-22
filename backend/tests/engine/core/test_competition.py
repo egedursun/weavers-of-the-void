@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.commerce import SupplyTierRow
 from aerona.db.tables.competition import CartelRow, MarketStructureRow, PriceWarRow
+from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.governance import InsolvencyCaseRow, OrgMergerRow
@@ -11,7 +12,7 @@ from aerona.db.tables.orders import EconomicOrderRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.domain.enums.commerce import SupplyTier
 from aerona.domain.enums.competition import EntryBarrier, MarketForm, PriceWarOutcome
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.governance import MergerKind, MergerStage
@@ -21,7 +22,7 @@ from aerona.domain.models.entity_stats import FactionStats, PolityStats
 from aerona.engine.competition.cartels import tend_cartel, tend_cartels
 from aerona.engine.competition.law import break_monopoly, merger_barred
 from aerona.engine.competition.pricing import market_factors
-from aerona.engine.competition.structure import survey_market
+from aerona.engine.competition.structure import survey_market, survey_markets
 from aerona.engine.competition.wars import start_war, tend_war
 from aerona.engine.context import TickContext
 from aerona.engine.governance.insolvency import InsolvencyTally
@@ -159,3 +160,16 @@ async def test_a_barrier_fades_once_what_raised_it_is_gone_and_its_fall_is_told(
     assert EntryBarrier.GUILD_RIGHT.value not in row.barriers
     assert await session.scalar(select(IncidentRow.id).where(IncidentRow.kind == "market.barrier_fell")) is not None
     assert await session.scalar(select(MarketStructureRow.id)) == row.id
+
+
+async def test_the_owners_of_a_towns_workshops_are_the_sellers_of_what_they_make(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
+    market = await settlement(session, "Forgeholm", world, world.regions[0], population=4000)
+    first = await seller(session, world, "The Anvil House", market)
+    second = await seller(session, world, "The Hammer House", market)
+    for owner, kind, level in ((first, WorkshopKind.TANNERY, 3), (second, WorkshopKind.WEAVERY, 2), (market, WorkshopKind.FORGE, 1)):
+        session.add(WorkshopRow(community_entity_id=market.id, kind=kind, level=level, built_epoch=0, owner_node_id=owner.id))
+    await session.flush()
+    assert await survey_markets(ctx) == 1
+    row = await session.scalar(select(MarketStructureRow).where(MarketStructureRow.market_entity_id == market.id))
+    assert row is not None and row.commodity is CommodityKind.CLOTH
+    assert set(row.sellers) == {str(first.id), str(second.id)} and row.sellers[str(first.id)] > row.sellers[str(second.id)]

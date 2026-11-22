@@ -53,7 +53,7 @@ class WorldEngineRules:
     spirit_haunt_chance: int = rule(30, 0, 100, RuleGroup.THE_BEYOND, "A restless spirit haunts a settlement (%)")
     sorcerer_act_chance: int = rule(30, 0, 100, RuleGroup.HEROES_AND_MORTALS, "A sorcerer casts magic this epoch (%)")
     sorcerer_curse_chance: int = rule(50, 0, 100, RuleGroup.HEROES_AND_MORTALS, "A sorcerer curses an enemy (otherwise protects) (%)")
-    birth_chance: int = rule(30, 0, 100, RuleGroup.HEROES_AND_MORTALS, "A child from lover or married mortals (%)")
+    birth_chance: int = rule(30, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Chance in each spacing of births that lovers or married mortals have a child (%)")
     dialect_split_chance: int = rule(15, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Dialect divergence in an isolated settlement (%)")
     ghost_chance: int = rule(50, 0, 100, RuleGroup.THE_BEYOND, "If the dead return, the deceased becomes a ghost (%)")
     famous_spirit_chance: int = rule(30, 0, 100, RuleGroup.THE_BEYOND, "A famous dead person's spirit does not rest (%)")

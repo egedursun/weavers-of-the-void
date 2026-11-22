@@ -39,6 +39,15 @@ async def authority_of(session: AsyncSession, currency_id: int | None) -> Moneta
     return await session.scalar(select(MonetaryAuthorityRow).where(MonetaryAuthorityRow.currency_id == currency_id))
 
 
+PLAIN_MONEY = "wealth"
+
+
+async def money_word(session: AsyncSession, node_id: int | None) -> str:
+    currency_id = await currency_for(session, node_id)
+    currency = await session.get(CurrencyRow, currency_id) if currency_id is not None else None
+    return currency.name if currency is not None else PLAIN_MONEY
+
+
 async def currency_for(session: AsyncSession, node_id: int | None) -> int | None:
     if node_id is None:
         return None

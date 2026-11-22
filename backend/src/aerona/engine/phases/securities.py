@@ -7,11 +7,13 @@ from aerona.engine.securities.tend import tend_securities
 
 
 @reads(
+    "faction.wealth",
     "settlement.population",
     "table.company_shares",
     "table.credit_profiles",
     "table.currencies",
     "table.entities",
+    "table.hidden_truths",
     "table.incident_participants",
     "table.incidents",
     "table.issued_securities",
@@ -25,6 +27,7 @@ from aerona.engine.securities.tend import tend_securities
     "table.security_holdings",
     "table.security_prices",
     "table.stock_exchanges",
+    "table.truth_keepers",
     "table.war_sides",
     "table.wars",
 )

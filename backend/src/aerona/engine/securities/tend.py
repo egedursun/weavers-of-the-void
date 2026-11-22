@@ -8,12 +8,12 @@ from aerona.engine.securities.debts import mirror_loans, tend_debts
 from aerona.engine.securities.exchanges import calm, list_unlisted, open_exchanges
 from aerona.engine.securities.holdings import SecuritiesTally
 from aerona.engine.securities.pricing import move_price
-from aerona.engine.securities.shares import apply_legacy, delist_orphans, sync_shares
+from aerona.engine.securities.shares import delist_orphans, float_shares, sync_shares
 
 
 async def tend_securities(ctx: TickContext) -> SecuritiesTally:
     tally = SecuritiesTally()
-    await apply_legacy(ctx, tally)
+    await float_shares(ctx, tally)
     await open_exchanges(ctx, tally)
     await mirror_loans(ctx, tally)
     await issue_bonds(ctx, tally)

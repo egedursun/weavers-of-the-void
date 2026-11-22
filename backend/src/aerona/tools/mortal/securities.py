@@ -20,7 +20,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.securities.exchanges import list_on
 from aerona.engine.securities.holdings import holding, holdings_of
-from aerona.engine.securities.pricing import price_row
+from aerona.engine.securities.pricing import traded
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
@@ -154,8 +154,7 @@ async def trade_security_tool(call: MortalCall, args: TradeSecurityInput) -> str
     price = security.price
     paid = await sell(call, security, args.amount) if args.side is TradeSide.SELL else await buy(call, security, exchange, args.amount)
     nudge(security, args.amount, args.side)
-    row = await price_row(call.tick, security)
-    row.volume += args.amount
+    await traded(call.tick, security, args.amount)
     issuer: EntityRow | None = await call.session.get(EntityRow, security.issuer_node_id)
     call.target(issuer.id if issuer is not None else None)
     side = "bought" if args.side is TradeSide.BUY else "sold"

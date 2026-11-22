@@ -9,6 +9,7 @@ from aerona.db.tables.renown import DeedRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.honours import HonourPrivilege
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.models.entity_stats import PolityStats
@@ -42,6 +43,10 @@ async def crown(session: AsyncSession, world: CoreWorld, name: str) -> tuple[Ent
 
 def order_of(polity: EntityRow, *privileges: HonourPrivilege, **values: object) -> HonourKindRow:
     return HonourKindRow(conferrer_node_id=polity.id, name="Order of the Wall", rank=1, privileges=[item.value for item in privileges], locked=[], **values)
+
+
+def deed_at(town: EntityRow, doer: EntityRow, axis: ReputationAxis, magnitude: int, epoch: int) -> DeedRow:
+    return DeedRow(doer_node_id=doer.id, act=ActKind.RAIDING, axis=axis, place_node_id=town.id, magnitude=magnitude, epoch=epoch, locked=[])
 
 
 async def renown(session: AsyncSession, being: EntityRow) -> int:
@@ -109,3 +114,25 @@ async def test_a_hereditary_honour_passes_to_the_heir_and_a_limited_one_stays_wi
     heirs = await session.scalar(select(HonourHeldRow).where(HonourHeldRow.holder_node_id == child.id, HonourHeldRow.inherited.is_(True)))
     live = list(await session.scalars(select(HonourHeldRow).where(HonourHeldRow.kind_id == kind.id, HonourHeldRow.revoked_epoch.is_(None))))
     assert heirs is not None and tally.inherited == 1 and len(live) == 2
+
+
+async def test_a_ruled_realm_founds_its_first_honour_for_a_deed_its_people_praise_and_confers_it(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "found", tuned_rules(honours={"deed_floor": 10, "favour_pct": 0}))
+    polity, town, _ruler = await crown(session, world, "Founding")
+    scoundrel = await mortal(session, "Sly Pell", world, town.id)
+    session.add(
+        DeedRow(doer_node_id=scoundrel.id, act=ActKind.RAIDING, axis=ReputationAxis.CRUELTY, place_node_id=town.id, magnitude=40, epoch=ctx.epoch, locked=[])
+    )
+    await session.flush()
+    assert (await tend_person_honours(ctx)).founded == 0
+    hero = await mortal(session, "Bold Asa", world, town.id)
+    session.add(
+        DeedRow(doer_node_id=hero.id, act=ActKind.RAIDING, axis=ReputationAxis.HEROISM, place_node_id=town.id, magnitude=12, epoch=ctx.epoch, locked=[])
+    )
+    await session.flush()
+    tally = await tend_person_honours(ctx)
+    kind = await session.scalar(select(HonourKindRow).where(HonourKindRow.conferrer_node_id == polity.id))
+    assert tally.founded == 1 and kind is not None and kind.rank == 1 and kind.privileges == [P.PRECEDENCE.value]
+    holders = set(await session.scalars(select(HonourHeldRow.holder_node_id).where(HonourHeldRow.kind_id == kind.id)))
+    assert holders == {hero.id}
+    assert (await tend_person_honours(ctx)).founded == 0

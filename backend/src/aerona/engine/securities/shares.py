@@ -1,7 +1,6 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyShareRow
 from aerona.db.tables.securities import IssuedSecurityRow, SecurityHoldingRow
@@ -11,10 +10,13 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.securities import SecurityKind
 from aerona.engine.context import TickContext
 from aerona.engine.governance.seats import apportioned
+from aerona.engine.primitives.mirrors import close_legacy, first_sight
 from aerona.engine.recording.record import record
-from aerona.engine.securities.holdings import SecuritiesTally, holdings_of, share_security
+from aerona.engine.securities.holdings import SecuritiesTally, holdings_of
+from aerona.engine.securities.pricing import traded
 
 LEGACY_FIXUP = "securities.legacy_shares"
+COMPANY_FAMILY = "securities.company"
 SHARE_UNITS = 100
 SHARE_FACE = 10
 
@@ -36,21 +38,24 @@ async def issue_shares(ctx: TickContext, company: EntityRow, rows: list[CompanyS
     for holder, amount in sorted(apportioned(weights, SHARE_UNITS).items()):
         if amount:
             ctx.session.add(SecurityHoldingRow(holder_node_id=holder, security_id=security.id, amount=amount, bought_price=SHARE_FACE, locked=[]))
+            await traded(ctx, security, amount)
     return security
 
 
-async def apply_legacy(ctx: TickContext, tally: SecuritiesTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
-        return
+async def float_shares(ctx: TickContext, tally: SecuritiesTally) -> None:
     rows = list(await ctx.session.scalars(select(CompanyShareRow).order_by(CompanyShareRow.company_entity_id, CompanyShareRow.holder_node_id)))
     made = 0
     for company_id in sorted({row.company_entity_id for row in rows}):
         company = await ctx.session.get(EntityRow, company_id)
-        if company is None or held(company_id) or await share_security(ctx.session, company_id) is not None:
+        if company is None or company.status is not EntityStatus.CANON or held(company_id) or not await first_sight(ctx.session, COMPANY_FAMILY, company_id):
+            continue
+        issued = select(IssuedSecurityRow.id).where(IssuedSecurityRow.issuer_node_id == company_id, IssuedSecurityRow.kind == SecurityKind.SHARE)
+        if await ctx.session.scalar(issued.limit(1)) is not None:
             continue
         await issue_shares(ctx, company, [row for row in rows if row.company_entity_id == company_id])
         made += 1
-    ctx.session.add(AppliedFixupRow(key=LEGACY_FIXUP, result={"shares": made}))
+    tally.floated += made
+    await close_legacy(ctx.session, LEGACY_FIXUP, {"shares": made})
     await ctx.session.flush()
 
 

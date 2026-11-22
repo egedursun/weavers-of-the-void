@@ -2,7 +2,6 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.city_rules import MunicipalServiceRow
-from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -15,6 +14,7 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.engine.city_rules.book import CityTally
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
+from aerona.engine.primitives.mirrors import close_legacy, first_sight
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat_or
@@ -22,6 +22,8 @@ from aerona.engine.recording.record import record
 from aerona.engine.urban.coverage import people_of_districts
 
 LEGACY_FIXUP = "municipal_services.legacy"
+WATER_FAMILY = "municipal_services.water"
+POST_FAMILY = "municipal_services.post"
 THOUSAND = 1000
 LEGACY_OF = {
     StructureKind.WATCHTOWER: MunicipalService.NIGHT_WATCH,
@@ -72,7 +74,12 @@ async def run_service(ctx: TickContext, row: MunicipalServiceRow, town: EntityRo
     paid = await pay(ctx, row, town, min(row.budget, needed))
     row.cost = paid
     share = clamp_int(paid * PERCENT // needed, 0, PERCENT)
-    if "coverage" not in (row.locked or []):
+    locked = row.locked or []
+    if "budget" not in locked:
+        row.budget = max(0, row.budget + round_half_up((needed - row.budget) * table.budget_follow_pct / PERCENT))
+    if "quality" not in locked:
+        row.quality = clamp_int(row.quality + round_half_up(table.quality_step * (2 * share - PERCENT) / PERCENT), 0, PERCENT)
+    if "coverage" not in locked:
         row.coverage = {str(district.id): share for district in districts}
     if not share and row.failed_epoch is None:
         row.failed_epoch = ctx.epoch
@@ -117,19 +124,25 @@ async def towns_found_services(ctx: TickContext, tally: CityTally) -> None:
             await found_service(ctx, town, chosen, tally)
 
 
-async def apply_legacy(ctx: TickContext, tally: CityTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
-        return
+async def town_services(ctx: TickContext, tally: CityTally) -> None:
     before = tally.services
     wells = select(SettlementInfrastructureRow.settlement_entity_id).where(SettlementInfrastructureRow.water != WaterSupply.NONE)
     for town_id in list(await ctx.session.scalars(wells.order_by(SettlementInfrastructureRow.settlement_entity_id))):
         town = await living_entity(ctx.session, town_id)
-        if town is not None and not held(town.id):
-            await found_service(ctx, town, MunicipalService.WATER_DISTRIBUTION, tally)
+        if town is not None and not held(town.id) and await first_sight(ctx.session, WATER_FAMILY, town.id):
+            await founded_once(ctx, town, MunicipalService.WATER_DISTRIBUTION, tally)
     posts = select(StructureProfileRow).where(StructureProfileRow.kind.in_(sorted(LEGACY_OF))).order_by(StructureProfileRow.structure_entity_id)
     for structure in list(await ctx.session.scalars(posts)):
         town = await living_entity(ctx.session, structure.host_entity_id) if structure.host_entity_id is not None else None
-        if town is not None and town.entity_type is EntityType.SETTLEMENT and not held(town.id):
-            await found_service(ctx, town, LEGACY_OF[structure.kind], tally)
-    ctx.session.add(AppliedFixupRow(key=LEGACY_FIXUP, result={"services": tally.services - before}))
+        if town is None or town.entity_type is not EntityType.SETTLEMENT or held(town.id):
+            continue
+        if await first_sight(ctx.session, POST_FAMILY, structure.structure_entity_id):
+            await founded_once(ctx, town, LEGACY_OF[structure.kind], tally)
+    await close_legacy(ctx.session, LEGACY_FIXUP, {"services": tally.services - before})
     await ctx.session.flush()
+
+
+async def founded_once(ctx: TickContext, town: EntityRow, service: MunicipalService, tally: CityTally) -> None:
+    query = select(MunicipalServiceRow.id).where(MunicipalServiceRow.settlement_entity_id == town.id, MunicipalServiceRow.service == service)
+    if await ctx.session.scalar(query.limit(1)) is None:
+        await found_service(ctx, town, service, tally)

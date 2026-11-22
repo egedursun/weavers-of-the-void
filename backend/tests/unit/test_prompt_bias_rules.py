@@ -475,3 +475,11 @@ def test_a_question_that_puts_the_same_lore_in_every_world_is_caught() -> None:
         assert "imposed lore question" in rules_hit(module, PROMPT, text), text
     assert "imposed lore question" not in rules_hit(module, PROMPT, "4 to 6 sentences: the universe as the seed gives it")
     assert "imposed lore question" not in rules_hit(module, PROMPT, "What they keep to themselves, if anything")
+
+
+def test_a_money_our_text_assumes_is_caught() -> None:
+    module = checker()
+    for text in (" silver", "held in debtors' prison for 12 silver", "per hundred silver lent", "a purse of gold coins"):
+        assert "assumed money" in rules_hit(module, PROMPT, text), text
+    for text in ("a debt of 12", "the colour silver", "Coins are struck from copper, gold and silver."):
+        assert "assumed money" not in rules_hit(module, PROMPT, text), text

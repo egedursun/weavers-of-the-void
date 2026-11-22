@@ -346,6 +346,7 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
     "table.trade_route_regions",
     "table.trade_route_tolls",
     "table.tradition_effects",
+    "table.tradition_profiles",
     "table.worlds",
     "trade_route.culture",
 )

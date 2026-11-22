@@ -239,6 +239,8 @@ async def long_plans(ctx: TickContext) -> None:
     "table.cult_doctrines",
     "table.culture_ethics",
     "table.culture_values",
+    "table.deed_claims",
+    "table.deeds",
     "table.dimensions",
     "table.divine_debts",
     "table.divine_standing",
@@ -293,6 +295,8 @@ async def long_plans(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.community_relations",
     "table.cult_doctrines",
+    "table.deed_claims",
+    "table.deeds",
     "table.divine_debts",
     "table.divine_standing",
     "table.entities",
@@ -307,6 +311,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.mortal_profiles",
     "table.polity_profiles",
     "table.professions_of_value",
+    "table.reputations",
     "table.settlement_profiles",
 )
 async def reciprocity(ctx: TickContext) -> None:

@@ -6,8 +6,8 @@ from aerona.engine.context import TickContext
 
 async def tend_cities(ctx: TickContext) -> CityTally:
     tally = CityTally()
-    await land.apply_legacy(ctx, tally)
-    await services.apply_legacy(ctx, tally)
+    await land.plan_rules(ctx, tally)
+    await services.town_services(ctx, tally)
     await land.tend_rules(ctx, tally)
     await land.crowded_towns(ctx, tally)
     await services.tend_services(ctx, tally)

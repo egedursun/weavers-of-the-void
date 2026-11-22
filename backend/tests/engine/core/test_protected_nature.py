@@ -23,7 +23,7 @@ from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import add_flag, remove_flag
 from aerona.engine.primitives.stats import stat
-from aerona.engine.protected_nature.areas import apply_legacy, protect_area, tend_areas
+from aerona.engine.protected_nature.areas import lift, protect_area, protect_rights, tend_areas
 from aerona.engine.protected_nature.book import NatureTally, hunting_marks, spared_species
 from aerona.engine.protected_nature.movement import loss_of_wild, protect_for_movement, tend_movements
 from aerona.engine.protected_nature.species import protect_species, tend_species
@@ -122,7 +122,26 @@ async def test_lost_wild_land_raises_a_movement_that_protects_land_when_it_rises
 async def test_game_reserves_become_lands_protected_against_hunting(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
     session.add(GameReserveRow(region_entity_id=world.regions[2].id, strictness=70, locked=[]))
     await session.flush()
-    await apply_legacy(ctx, NatureTally())
+    await protect_rights(ctx, NatureTally())
     area = await session.scalar(select(ProtectedAreaRow).where(ProtectedAreaRow.region_entity_id == world.regions[2].id))
     assert area is not None and area.basis is ProtectionBasis.LAW and area.banned_uses == [ProtectedUse.HUNTING.value] and area.strength == 70
     assert await session.scalar(select(EntityRow.id).where(EntityRow.id == world.regions[2].id)) is not None
+
+
+async def test_a_reserve_set_aside_in_a_later_epoch_is_protected_and_a_lifted_protection_stays_lifted(
+    ctx: TickContext, session: AsyncSession, world: CoreWorld
+) -> None:
+    session.add(GameReserveRow(region_entity_id=world.regions[2].id, strictness=70, locked=[]))
+    await session.flush()
+    tally = NatureTally()
+    await protect_rights(ctx, tally)
+    first = await session.scalar(select(ProtectedAreaRow).where(ProtectedAreaRow.region_entity_id == world.regions[2].id))
+    assert first is not None
+    await lift(ctx, first, tally)
+    session.add(GameReserveRow(region_entity_id=world.regions[1].id, strictness=40, locked=[]))
+    await session.flush()
+    await protect_rights(ctx, tally)
+    later = await session.scalar(select(ProtectedAreaRow).where(ProtectedAreaRow.region_entity_id == world.regions[1].id))
+    assert later is not None and later.strength == 40
+    again = list(await session.scalars(select(ProtectedAreaRow).where(ProtectedAreaRow.region_entity_id == world.regions[2].id)))
+    assert len(again) == 1 and again[0].lifted_epoch is not None

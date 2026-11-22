@@ -3,7 +3,6 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.agrarian import GameReserveRow
-from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -17,6 +16,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.protected_nature import ProtectedUse, ProtectionBasis
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.mirrors import close_legacy, first_sight
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -24,6 +24,8 @@ from aerona.engine.protected_nature.book import LIVELIHOODS, NatureTally, effect
 from aerona.engine.recording.record import record
 
 LEGACY_FIXUP = "protected_areas.legacy"
+RESERVE_FAMILY = "protected_areas.reserve"
+GROVE_FAMILY = "protected_areas.grove"
 PB = ProtectionBasis
 BASIS_STRENGTH = total(ProtectionBasis, {PB.LAW: 60, PB.FAITH: 50, PB.CUSTOM: 40, PB.CHARTER: 50, PB.DIVINE_DECREE: 70})
 HALF = PERCENT // 2
@@ -134,20 +136,24 @@ async def tend_areas(ctx: TickContext, tally: NatureTally) -> None:
         await displace(ctx, row, strength, towns)
 
 
-async def apply_legacy(ctx: TickContext, tally: NatureTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
-        return
+async def protect_rights(ctx: TickContext, tally: NatureTally) -> None:
     before = tally.areas
+    ever = {(row.region_entity_id, row.site_entity_id) for row in await ctx.session.scalars(select(ProtectedAreaRow).order_by(ProtectedAreaRow.id))}
     for reserve in list(await ctx.session.scalars(select(GameReserveRow).order_by(GameReserveRow.id))):
         region = await living_entity(ctx.session, reserve.region_entity_id)
-        if region is not None and not held(region.id):
-            area = await protect_area(ctx, region, ProtectionBasis.LAW, [ProtectedUse.HUNTING], tally, protector=reserve.holder_node_id)
-            area.strength = reserve.strictness
+        if region is None or held(region.id) or not await first_sight(ctx.session, RESERVE_FAMILY, reserve.id) or (region.id, None) in ever:
+            continue
+        area = await protect_area(ctx, region, ProtectionBasis.LAW, [ProtectedUse.HUNTING], tally, protector=reserve.holder_node_id)
+        area.strength = reserve.strictness
+        ever.add((region.id, None))
     atlas = await RegionAtlas.load(ctx.session)
     for grove in list(await ctx.session.scalars(select(GardenRow).where(GardenRow.kind == GardenKind.SACRED_GROVE).order_by(GardenRow.id))):
         region_id = atlas.top_region(grove.settlement_entity_id)
         region = await living_entity(ctx.session, region_id) if region_id is not None else None
-        if region is not None and not held(region.id):
+        if region is None or held(region.id) or not await first_sight(ctx.session, GROVE_FAMILY, grove.id):
+            continue
+        if (region.id, grove.structure_entity_id) not in ever:
             await protect_area(ctx, region, ProtectionBasis.FAITH, [ProtectedUse.LOGGING], tally, site=grove.structure_entity_id)
-    ctx.session.add(AppliedFixupRow(key=LEGACY_FIXUP, result={"areas": tally.areas - before}))
+            ever.add((region.id, grove.structure_entity_id))
+    await close_legacy(ctx.session, LEGACY_FIXUP, {"areas": tally.areas - before})
     await ctx.session.flush()

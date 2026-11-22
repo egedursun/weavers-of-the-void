@@ -21,6 +21,7 @@ from aerona.api.schemas.affairs import (
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.core.errors import NotFoundError
+from aerona.db.faction_kinds import kind_of
 from aerona.db.tables.affairs import (
     RATE_MAX,
     CouncilSeatRow,
@@ -39,7 +40,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import EngineKind, EntityType
+from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.engine.polity.book import RealmBook
 
 router = APIRouter(tags=["affairs"])
@@ -183,7 +185,7 @@ async def affairs_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Affa
                 ApprovalView(social_class=row.social_class, approval=row.approval, parts=dict(row.parts or {}), locked=list(row.locked or []))
                 for row in approvals
             ],
-            is_assembly=entity is not None and entity.engine_kind is EngineKind.INTERWORLD_FEDERATION,
+            is_assembly=entity is not None and await kind_of(session, entity.id) is FactionKind.INTERWORLD_FEDERATION,
             resolutions=[
                 ResolutionView(
                     id=row.id,

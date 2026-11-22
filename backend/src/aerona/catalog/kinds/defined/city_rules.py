@@ -31,12 +31,12 @@ LAND_USE_RULE = total(
             used_by=(
                 "db.tables.city_rules.LandUseRuleRow",
                 "engine.city_rules.effects.FIRE_RULES",
-                "engine.city_rules.land.apply_legacy",
                 "engine.city_rules.land.crowded_towns",
+                "engine.city_rules.land.plan_rules",
             ),
         ),
         LandUseRule.FRONTAGE_RULE: Defined(
-            "Frontage rule", checked_by=("engine.city_rules.effects.amenity_of",), used_by=("engine.city_rules.land.apply_legacy",)
+            "Frontage rule", checked_by=("engine.city_rules.effects.amenity_of",), used_by=("engine.city_rules.land.plan_rules",)
         ),
         LandUseRule.GREEN_SHARE: Defined("Green share", checked_by=("engine.city_rules.effects.amenity_of",), used_by=()),
     },
@@ -52,11 +52,13 @@ MUNICIPAL_SERVICE = total(
         ),
         MunicipalService.LIGHTING: Defined("Lighting", checked_by=("engine.city_rules.services.act",), used_by=()),
         MunicipalService.WATER_DISTRIBUTION: Defined(
-            "Water distribution", checked_by=("engine.city_rules.effects.SERVICE_COVERS",), used_by=("engine.city_rules.services.apply_legacy",)
+            "Water distribution", checked_by=("engine.city_rules.effects.SERVICE_COVERS",), used_by=("engine.city_rules.services.town_services",)
         ),
         MunicipalService.STREET_CLEANING: Defined("Street cleaning", checked_by=("engine.city_rules.effects.SERVICE_COVERS",), used_by=()),
         MunicipalService.NIGHT_WATCH: Defined(
-            "Night watch", checked_by=("engine.city_rules.effects.SERVICE_COVERS",), used_by=("engine.city_rules.services.LEGACY_OF",)
+            "Night watch",
+            checked_by=("engine.city_rules.effects.SERVICE_COVERS", "engine.city_rules.land.order_kept"),
+            used_by=("engine.city_rules.services.LEGACY_OF",),
         ),
         MunicipalService.BURIAL_GROUND: Defined(
             "Burial ground", checked_by=("engine.city_rules.effects.SERVICE_COVERS",), used_by=("engine.city_rules.services.LEGACY_OF",)

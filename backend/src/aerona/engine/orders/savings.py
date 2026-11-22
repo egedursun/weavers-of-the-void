@@ -3,13 +3,15 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.faction_kinds import of_kinds
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.orders import HoardRow, SavingRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faction import LENDER_KINDS
 from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.orders import HoardState, SavingForm
@@ -53,7 +55,7 @@ async def bank_in(ctx: TickContext, town_id: int | None) -> EntityRow | None:
         select(EntityRow)
         .where(
             EntityRow.entity_type == EntityType.FACTION,
-            EntityRow.engine_kind == EngineKind.MERCHANT_GUILD,
+            of_kinds(LENDER_KINDS),
             EntityRow.status == EntityStatus.CANON,
             EntityRow.location_id == town_id,
         )

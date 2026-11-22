@@ -81,6 +81,12 @@ async def price_row(ctx: TickContext, security: IssuedSecurityRow) -> SecurityPr
     return row
 
 
+async def traded(ctx: TickContext, security: IssuedSecurityRow, units: int) -> None:
+    row = await price_row(ctx, security)
+    if units > 0 and "volume" not in (row.locked or []):
+        row.volume += units
+
+
 async def margin_calls(ctx: TickContext, security: IssuedSecurityRow, tally: SecuritiesTally) -> None:
     table = ctx.rules.securities
     insolvency = InsolvencyTally()
@@ -92,6 +98,7 @@ async def margin_calls(ctx: TickContext, security: IssuedSecurityRow, tally: Sec
         shortfall = max(0, row.on_margin - worth)
         sold, row.amount, row.on_margin = row.amount, 0, 0
         tally.margin_calls += 1
+        await traded(ctx, security, sold)
         bankrupt = holder is not None and shortfall and not await take_coin(ctx.session, ctx.rules, holder, shortfall)
         if bankrupt and holder is not None:
             await file_case(ctx, holder, None, insolvency)
@@ -124,6 +131,7 @@ async def insiders(ctx: TickContext, security: IssuedSecurityRow, before: int, e
             continue
         escaped = row.amount * max(0, before - security.price)
         await give_coin(ctx.session, ctx.rules, holder, row.amount * before)
+        await traded(ctx, security, row.amount)
         row.amount = 0
         if not ban or not ctx.rng(f"securities.insider.{security.id}.{holder.id}.{ctx.epoch}").chance(table.insider_exposure_pct * ban // PERCENT):
             continue

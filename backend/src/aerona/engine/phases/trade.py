@@ -5,6 +5,7 @@ from aerona.catalog.commodities import STRATEGIC_KINDS
 from aerona.catalog.materials import COIN_MATERIALS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.record_context import Term
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.economy import CurrencyRow, ResourceProfileRow
@@ -308,6 +309,7 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     "people.prosperity",
     "people.wealth",
     "settlement.prosperity",
+    "settlement.wealth",
     "table.army_profiles",
     "table.bonds",
     "table.calendars",
@@ -326,6 +328,7 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_members",
     "table.polity_profiles",
     "table.region_crops",
     "table.region_environment",
@@ -366,7 +369,7 @@ async def currency(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     tally = MoneyTally()
     for entity in sorted(book.entities.values(), key=lambda item: item.id):
-        if entity.entity_type in MINTERS:
+        if entity.entity_type in MINTERS and not held(entity.id):
             await mint(ctx, book, entity, tally)
     await adopt(ctx, book, tally)
     await tend_currencies(ctx, book, tally)
@@ -400,7 +403,7 @@ async def order_minting(ctx: TickContext, entity_id: int, metal: MaterialKind | 
     lot = await coin_metal(ctx, entity.id)
     chosen = metal or (lot.material if lot is not None and lot.material is not None else MaterialKind.COPPER)
     if chosen not in COIN_MATERIALS:
-        raise ValidationFailedError("Coins are struck from gold, silver, bronze or copper.")
+        raise ValidationFailedError(f"Coins are struck from {', '.join(spoken(material) for material in sorted(COIN_MATERIALS))}.")
     return await found_currency(ctx, entity, chosen)
 
 

@@ -6,6 +6,8 @@ from aerona.engine.phases.dominion import count
 
 
 @reads(
+    "faction.wealth",
+    "table.bonds",
     "table.community_cohorts",
     "table.community_relations",
     "table.creator",
@@ -21,10 +23,12 @@ from aerona.engine.phases.dominion import count
     "table.galaxy_clusters",
     "table.geasa",
     "table.held_identities",
+    "table.holder_techniques",
     "table.incident_participants",
     "table.incidents",
     "table.mind_profiles",
     "table.minds",
+    "table.name_registry",
     "table.node_births",
     "table.nodes",
     "table.offices",
@@ -45,15 +49,20 @@ from aerona.engine.phases.dominion import count
     "table.worlds",
 )
 @writes(
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_relations",
     "table.deed_claims",
     "table.deeds",
+    "table.entities",
+    "table.faction_profiles",
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.memories",
+    "table.name_registry",
+    "table.node_births",
     "table.polity_members",
     "table.polity_profiles",
     "table.reputations",

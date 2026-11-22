@@ -223,9 +223,12 @@ async def mishaps(ctx: TickContext) -> None:
     "settlement.population",
     "table.accusations",
     "table.beliefs",
+    "table.bonds",
     "table.castings",
     "table.chronicle_entities",
     "table.creator",
+    "table.cult_doctrines",
+    "table.cult_tenets",
     "table.dimensions",
     "table.divination_systems",
     "table.entities",
@@ -241,8 +244,10 @@ async def mishaps(ctx: TickContext) -> None:
     "table.node_births",
     "table.nodes",
     "table.offices",
+    "table.outbreaks",
     "table.polity_members",
     "table.relationships",
+    "table.reverences",
     "table.rumours",
     "table.sons",
     "table.stars",
@@ -258,6 +263,7 @@ async def mishaps(ctx: TickContext) -> None:
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.witch_hunts",
 )
 async def witchcraft(ctx: TickContext) -> None:
     tally = WitchTally()

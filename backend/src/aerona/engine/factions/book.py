@@ -13,39 +13,14 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionActionRow, FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
-from aerona.domain.enums.faction import ARMED_KINDS, ROBBER_KINDS, SECRET_KINDS, FactionActionKind, FactionKind, FactionRank, FactionScale
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faction import ARMED_KINDS, KIND_OF_ENGINE, ROBBER_KINDS, SECRET_KINDS, FactionActionKind, FactionKind, FactionRank, FactionScale
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat
 
 PROFILE_FIXUP = "faction_profiles_from_kinds"
-KIND_OF_ENGINE = MappingProxyType(
-    {
-        EngineKind.MERCHANT_GUILD: FactionKind.MERCHANT_GUILD,
-        EngineKind.PRIESTS_COUNCIL: FactionKind.PRIESTHOOD,
-        EngineKind.WARRIOR_BAND: FactionKind.WARRIOR_ORDER,
-        EngineKind.REBELS: FactionKind.REBELS,
-        EngineKind.ROUTE_RAIDERS: FactionKind.ROUTE_RAIDERS,
-        EngineKind.INTERWORLD_FEDERATION: FactionKind.INTERWORLD_FEDERATION,
-        EngineKind.WANDERING_MARKET: FactionKind.WANDERING_MARKET,
-        EngineKind.MERCENARY_ARMY: FactionKind.MERCENARY_COMPANY,
-        EngineKind.HOLY_GUARD: FactionKind.WARRIOR_ORDER,
-        EngineKind.PEOPLES_ARMY: FactionKind.REBELS,
-    }
-)
-ENGINE_OF_KIND = MappingProxyType(
-    {
-        FactionKind.MERCHANT_GUILD: EngineKind.MERCHANT_GUILD,
-        FactionKind.PRIESTHOOD: EngineKind.PRIESTS_COUNCIL,
-        FactionKind.WARRIOR_ORDER: EngineKind.WARRIOR_BAND,
-        FactionKind.REBELS: EngineKind.REBELS,
-        FactionKind.ROUTE_RAIDERS: EngineKind.ROUTE_RAIDERS,
-        FactionKind.INTERWORLD_FEDERATION: EngineKind.INTERWORLD_FEDERATION,
-        FactionKind.WANDERING_MARKET: EngineKind.WANDERING_MARKET,
-    }
-)
 CLASS_OF_KIND = MappingProxyType(
     {
         FactionKind.MERCHANT_GUILD: SocialClass.MERCHANT,

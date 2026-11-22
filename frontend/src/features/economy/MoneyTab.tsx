@@ -415,7 +415,7 @@ export function CoinForge({
 }) {
   const [issuer, setIssuer] = useState<string | null>(null)
   const [name, setName] = useState('')
-  const [metal, setMetal] = useState<string>('silver')
+  const [metal, setMetal] = useState<string>('')
   const [purity, setPurity] = useState('90')
   const [trust, setTrust] = useState('60')
   const [supply, setSupply] = useState('1000')
@@ -434,7 +434,8 @@ export function CoinForge({
           body: {
             issuer_id: Number(issuer),
             name: name.trim(),
-            metal: metalsAllowed(form) ? (metal as MaterialKind) : null,
+            metal:
+              metal && metalsAllowed(form) ? (metal as MaterialKind) : null,
             purity: whole(purity, PERCENT),
             trust: whole(trust, PERCENT),
             supply: whole(supply),
@@ -454,9 +455,11 @@ export function CoinForge({
     gate ??
     (issuer === null
       ? 'Choose who strikes the coin first.'
-      : name.trim()
-        ? null
-        : 'Give the coin a name first.')
+      : !name.trim()
+        ? 'Give the coin a name first.'
+        : metalsAllowed(form) && !metal
+          ? 'Choose the metal it is struck in first.'
+          : null)
   return (
     <div data-surface='CoinForge' className={FORM_CARD}>
       <PartHeader

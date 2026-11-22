@@ -93,6 +93,7 @@ async def folk_spirits(ctx: TickContext) -> None:
     "table.cult_offices",
     "table.cult_tenets",
     "table.dimensions",
+    "table.divine_conceptions",
     "table.divine_standing",
     "table.divine_wounds",
     "table.entities",

@@ -22,4 +22,7 @@ class CityRulesRules(Spanned):
     rebuild_condition: int = rule(30, 0, 100, S, "Condition below which a district of a town with rules is rebuilt to plan")
     rebuild_cost: int = rule(200, 0, 100000, S, "Treasury a planned rebuild costs a town")
     service_start_chance_pct: int = rule(10, 0, 100, S, "Chance in an epoch that a town founds a service it lacks (%)")
+    enforcement_follow_pct: int = rule(40, 0, 100, S, "Share of the way a land use rule's enforcement moves each epoch toward the order its town keeps (%)")
+    budget_follow_pct: int = rule(50, 0, 100, S, "Share of the way a service's budget moves each epoch toward what covering its people fully costs (%)")
+    quality_step: int = rule(10, 0, 100, S, "Quality a fully paid service gains in an epoch, and an unpaid one loses")
     rule_start_chance_pct: int = rule(5, 0, 100, S, "Chance in an epoch that a crowded town sets a land use rule it lacks (%)")

@@ -273,3 +273,16 @@ async def test_world_age_and_golden_ages(session: AsyncSession, world: CoreWorld
     assert await proclaim_golden_age(ctx, world.world.id) == 1
     assert await end_golden_age(ctx, world.world.id)
     assert isinstance(await session.get(WorldRow, world.world.id), WorldRow)
+
+
+async def test_a_fertile_couple_bears_several_children_across_an_epoch_and_no_more_than_its_cap(session: AsyncSession, world: CoreWorld) -> None:
+    rules = tuned_rules(
+        world_engine={"birth_chance": 100}, fertility={"stillbirth_pct": 0.0, "mortality_base_pct": 0.0, "twins_pct": 0.0, "births_per_epoch_cap": 3}
+    )
+    ctx = await manual_context(session, "several", rules)
+    first = await mortal(session, "Cara", world, world.regions[0].id, age=25)
+    second = await mortal(session, "Dov", world, world.regions[0].id, age=25)
+    await bond(session, first.id, second.id, BondKind.SPOUSE_OF)
+    await couples_bear_children(ctx)
+    born = list(await session.scalars(select(BondRow.target_node_id).where(BondRow.source_node_id == first.id, BondRow.kind == BondKind.PARENT_OF)))
+    assert len(born) == 3

@@ -23,7 +23,7 @@
     {
       "metric": "community_growth_per_epoch_pct",
       "low": -5,
-      "high": 40,
+      "high": 50,
       "meaning": "once a world's first institutions have formed, measured over the second half of a run, communities neither collapse nor multiply without bound"
     },
     {

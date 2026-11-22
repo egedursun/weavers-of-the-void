@@ -14,6 +14,7 @@ from aerona.engine.phase import Phase
     "settlement.wealth",
     "table.bonds",
     "table.community_labour",
+    "table.community_society",
     "table.company_profiles",
     "table.entities",
     "table.faction_profiles",

@@ -18,6 +18,7 @@ from aerona.engine.phase import Phase
     "table.bonds",
     "table.community_societies",
     "table.company_profiles",
+    "table.company_shares",
     "table.creator",
     "table.culture_values",
     "table.dimensions",
@@ -51,6 +52,7 @@ from aerona.engine.phase import Phase
     "table.sons",
     "table.species_ranges",
     "table.stars",
+    "table.trade_route_profiles",
     "table.vassalages",
     "table.war_sides",
     "table.wars",
@@ -58,6 +60,7 @@ from aerona.engine.phase import Phase
     "table.worlds",
 )
 @writes(
+    "faction.strength",
     "faction.wealth",
     "settlement.defense",
     "table.bonds",

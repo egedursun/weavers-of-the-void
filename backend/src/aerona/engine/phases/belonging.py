@@ -62,15 +62,24 @@ async def belonging(ctx: TickContext) -> None:
 
 
 @reads(
+    "cult.influence",
+    "table.bonds",
+    "table.community_relations",
     "table.crime_cases",
+    "table.cult_holdings",
+    "table.culture_values",
     "table.defections",
     "table.entities",
     "table.nodes",
     "table.outlaws",
+    "table.polity_members",
+    "table.relationships",
+    "table.reputations",
     "table.sanctuaries",
     "table.social_norms",
     "table.structure_profiles",
 )
+@writes("cult.influence", "table.community_relations", "table.cult_doctrines", "table.entities", "table.memories", "table.mortal_profiles", "table.sanctuaries")
 async def sanctuary(ctx: TickContext) -> None:
     tally = SanctuaryTally()
     await keep_sanctuaries(ctx, tally)
