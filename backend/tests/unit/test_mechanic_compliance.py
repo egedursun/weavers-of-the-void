@@ -1,4 +1,5 @@
 import re
+from functools import cache
 from pathlib import Path
 
 from aerona.db.base import Base
@@ -69,6 +70,7 @@ VERSIONS = BACKEND / "db" / "alembic" / "versions"
 PLAIN_BACKFILLS = ("none", "computed", "existing mechanic")
 
 
+@cache
 def backend_source() -> str:
     return "\n".join(path.read_text(encoding="utf-8") for path in BACKEND.rglob("*.py") if "alembic" not in path.parts)
 
@@ -76,12 +78,17 @@ def backend_source() -> str:
 def template_written(template: str, source: str) -> bool:
     if f'"{template}"' in source or f'"{template}' in source:
         return True
-    prefixes = set(re.findall(r'f"([a-z_.]+)\{', source))
-    return any(template.startswith(prefix) for prefix in prefixes)
+    return any(template.startswith(prefix) for prefix in written_prefixes(source))
 
 
-def fixup_keys() -> set[str]:
-    return set(re.findall(r'_FIXUP = "([a-z0-9_.]+)"', backend_source()))
+@cache
+def written_prefixes(source: str) -> frozenset[str]:
+    return frozenset(re.findall(r'f"([a-z_.]+)\{', source))
+
+
+@cache
+def fixup_keys() -> frozenset[str]:
+    return frozenset(re.findall(r'_FIXUP = "([a-z0-9_.]+)"', backend_source()))
 
 
 def backfill_known(text: str) -> bool:

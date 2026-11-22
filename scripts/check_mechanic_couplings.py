@@ -5,7 +5,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "backend" / "src"))
 
 from aerona.engine.interconnect.catalog import REGISTERED
-from aerona.engine.interconnect.edges import edges_of
+from aerona.engine.interconnect.edges import edges_by_mechanic, flow_reach
 from aerona.engine.interconnect.registry import EdgeKind, Mechanic
 
 MINIMUM = 2
@@ -15,10 +15,10 @@ def reach(mechanic: Mechanic) -> set[str]:
     declared = {coupling.target.value for coupling in mechanic.couplings}
     flowing = {
         subsystem.value
-        for edge in edges_of(mechanic.key)
+        for edge in edges_by_mechanic().get(mechanic.key, ())
         if edge.kind is not EdgeKind.RULE_SWITCH
         for subsystem in (edge.source, edge.target)
-    }
+    } | {subsystem.value for subsystem in flow_reach(mechanic)}
     return (declared | flowing) - {mechanic.subsystem.value}
 
 

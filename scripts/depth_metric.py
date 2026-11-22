@@ -21,9 +21,11 @@ from aerona.domain.models.entity_stats import EntityStats
 from aerona.engine.interconnect.catalog import REGISTERED
 from aerona.engine.interconnect.edges import (
     GENERIC_CARRIERS,
-    all_edges,
+    flow_carriers,
+    flow_pairs,
     mechanic_reads,
     mechanic_writes,
+    structural_edges,
 )
 from aerona.engine.interconnect.registry import Edge, EdgeKind
 
@@ -260,7 +262,8 @@ def subsystem_pairs(edges: Iterable[Edge]) -> set[tuple[str, str]]:
 
 
 def measure() -> list[Row]:
-    edges = all_edges()
+    edges = structural_edges()
+    carriers = [carrier for carrier in flow_carriers() if carrier not in GENERIC_CARRIERS]
     targets = spec_targets()
     rows: list[Row] = []
     for name in node_types():
@@ -296,7 +299,14 @@ def measure() -> list[Row]:
                 edge.carrier.startswith(prefix)
                 or (edge.carrier.startswith("table.") and edge.writer in keys)
             )
-        )
+        ) | {
+            (source.value, target.value)
+            for carrier in carriers
+            if carrier.startswith(prefix) or carrier.startswith("table.")
+            for writer, source, target in flow_pairs(carrier)
+            if (carrier.startswith(prefix) or writer in keys)
+            and (not CROSS_SUBSYSTEM_ONLY or source is not target)
+        }
         rows.append(
             Row(name, len(attributes), len(keys), len(carried), targets.get(name))
         )

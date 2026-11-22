@@ -57,18 +57,57 @@ def declared_edges() -> list[Edge]:
     ]
 
 
-def flow_edges() -> list[Edge]:
+@cache
+def flow_carriers() -> dict[str, tuple[tuple[Mechanic, ...], tuple[Mechanic, ...]]]:
+    writers: dict[str, list[Mechanic]] = defaultdict(list)
     readers: dict[str, list[Mechanic]] = defaultdict(list)
     for mechanic in REGISTERED.values():
+        for key in mechanic_writes(mechanic):
+            writers[key].append(mechanic)
         for key in mechanic_reads(mechanic):
             readers[key].append(mechanic)
-    edges: list[Edge] = []
-    for writer in REGISTERED.values():
-        for key in sorted(mechanic_writes(writer)):
-            for reader in readers.get(key, []):
-                if reader.key != writer.key:
-                    edges.append(Edge(writer.subsystem, reader.subsystem, key, None, EdgeKind.FLOW, writer.key, reader.key))
-    return edges
+    return {key: (tuple(writers[key]), tuple(readers[key])) for key in sorted(writers) if key in readers}
+
+
+def flow_count() -> int:
+    return sum(
+        len(writers) * len(readers) - len({item.key for item in writers} & {item.key for item in readers}) for writers, readers in flow_carriers().values()
+    )
+
+
+@cache
+def flow_pairs(carrier: str) -> frozenset[tuple[str, Subsystem, Subsystem]]:
+    writers, readers = flow_carriers().get(carrier, ((), ()))
+    return frozenset((writer.key, writer.subsystem, reader.subsystem) for writer in writers for reader in readers if reader.key != writer.key)
+
+
+@cache
+def carrier_sides(carrier: str) -> tuple[frozenset[str], frozenset[str], frozenset[Subsystem], frozenset[Subsystem]]:
+    writers, readers = flow_carriers().get(carrier, ((), ()))
+    return (
+        frozenset(item.key for item in writers),
+        frozenset(item.key for item in readers),
+        frozenset(item.subsystem for item in writers),
+        frozenset(item.subsystem for item in readers),
+    )
+
+
+def flow_reach(mechanic: Mechanic) -> set[Subsystem]:
+    reach: set[Subsystem] = set()
+    for key in mechanic_writes(mechanic):
+        _writers, readers, _sources, targets = carrier_sides(key)
+        if readers - {mechanic.key}:
+            reach |= targets
+    for key in mechanic_reads(mechanic):
+        writers, _readers, sources, _targets = carrier_sides(key)
+        if writers - {mechanic.key}:
+            reach |= sources
+    return reach
+
+
+def flows_through(mechanic: Mechanic) -> bool:
+    shared = [carrier_sides(key)[1] for key in mechanic_writes(mechanic)] + [carrier_sides(key)[0] for key in mechanic_reads(mechanic)]
+    return any(others - {mechanic.key} for others in shared)
 
 
 def modifier_targets() -> dict[ModifierSource, set[str]]:
@@ -100,31 +139,38 @@ def rule_switch_edges() -> list[Edge]:
 
 
 @cache
-def cached_edges() -> tuple[Edge, ...]:
-    return (*declared_edges(), *flow_edges(), *modifier_edges(), *rule_switch_edges())
+def structural_edges() -> tuple[Edge, ...]:
+    return (*declared_edges(), *modifier_edges(), *rule_switch_edges())
 
 
-def all_edges() -> list[Edge]:
-    return list(cached_edges())
+def edge_counts() -> dict[EdgeKind, int]:
+    counts = {kind: sum(1 for edge in structural_edges() if edge.kind is kind) for kind in EdgeKind}
+    counts[EdgeKind.FLOW] += flow_count()
+    return counts
 
 
 @cache
 def edges_by_mechanic() -> dict[str, tuple[Edge, ...]]:
     found: dict[str, list[Edge]] = defaultdict(list)
-    for edge in cached_edges():
+    for edge in structural_edges():
         found[edge.writer].append(edge)
         if edge.reader is not None and edge.reader != edge.writer:
             found[edge.reader].append(edge)
     return {key: tuple(edges) for key, edges in found.items()}
 
 
-def edges_of(mechanic_key: str) -> list[Edge]:
-    return list(edges_by_mechanic().get(mechanic_key, ()))
+def linked(mechanic_key: str) -> bool:
+    return bool(edges_by_mechanic().get(mechanic_key)) or (mechanic_key in REGISTERED and flows_through(REGISTERED[mechanic_key]))
 
 
-def matrix() -> dict[tuple[Subsystem, Subsystem], set[str]]:
+@cache
+def matrix() -> dict[tuple[Subsystem, Subsystem], frozenset[str]]:
     cells: dict[tuple[Subsystem, Subsystem], set[str]] = defaultdict(set)
-    for edge in all_edges():
+    for edge in structural_edges():
         if edge.kind is not EdgeKind.RULE_SWITCH and edge.source is not edge.target:
             cells[(edge.source, edge.target)].add(edge.carrier)
-    return cells
+    for carrier in flow_carriers():
+        for _writer, source, target in flow_pairs(carrier):
+            if source is not target:
+                cells[(source, target)].add(carrier)
+    return {pair: frozenset(carriers) for pair, carriers in cells.items()}

@@ -132,8 +132,31 @@ fi
 if echo "$STAGED" | grep -qE '^backend/src/aerona/(db/tables|db/alembic|db/migrations\.py|domain/enums)'; then
   PROVING="$PROVING tests/db/test_schema.py"
 fi
-if [ -n "$PROVING" ]; then
-  run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider --basetemp='$LOGS/pytest' -n auto --dist worksteal --durations=15 $PROVING"
+LONG_FILES="tests/engine/core/test_eager_epochs.py tests/engine/integration/test_balance_bands.py tests/engine/core/test_moments.py tests/db/test_schema.py tests/engine/core/test_god_control.py tests/engine/core/test_every_change_recorded.py tests/engine/core/test_unordered_reads.py tests/engine/core/test_terms.py tests/engine/core/test_age_coherence_lived.py tests/epoch/test_epoch_llm.py tests/epoch/test_epoch_engine_only.py tests/services/player/test_every_job.py"
+UNIQUE=$(printf '%s\n' $PROVING | awk 'NF && !seen[$0]++')
+LONG=""
+for file in $LONG_FILES; do
+  for test in $UNIQUE; do
+    if [ "${test%%::*}" = "$file" ]; then LONG="$LONG $test"; fi
+  done
+done
+REST=""
+for test in $UNIQUE; do
+  case " $LONG_FILES " in
+    *" ${test%%::*} "*) ;;
+    *) REST="$REST $test" ;;
+  esac
+done
+CORES=$(getconf _NPROCESSORS_ONLN)
+LONG_WORKERS=0
+if [ -n "$LONG" ]; then
+  LONG_WORKERS=4
+  run proving_long sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider --basetemp='$LOGS/pytest_long' -n $LONG_WORKERS --dist load --maxschedchunk 1 --durations=12 $LONG"
+fi
+REST_WORKERS=$((CORES - LONG_WORKERS))
+if [ "$REST_WORKERS" -lt 4 ]; then REST_WORKERS=4; fi
+if [ -n "$REST" ]; then
+  run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider --basetemp='$LOGS/pytest' -n $REST_WORKERS --dist worksteal --durations=15 $REST"
 fi
 
 FRONT=$(echo "$STAGED" | grep -E '^frontend/.*\.(ts|tsx)$' | grep -v '^frontend/src/api/generated/' | sed 's#^frontend/##' || true)
@@ -153,7 +176,7 @@ for name in $JOBS; do
   status=$(cat "$LOGS/$name.status" 2>/dev/null || echo 1)
   if [ "$status" = "0" ]; then
     echo "pre-commit: $name ok ($(grep -v "^[[:space:]]*$" "$LOGS/$name.log" | tail -n 1))"
-    if [ "$name" = "proving" ]; then
+    if [ "$name" = "proving" ] || [ "$name" = "proving_long" ]; then
       sed -n '/slowest/,/^$/p' "$LOGS/$name.log" | head -n 17
     fi
   else

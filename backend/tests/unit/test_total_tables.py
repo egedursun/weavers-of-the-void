@@ -4,6 +4,7 @@ import pkgutil
 import re
 from collections.abc import Mapping
 from enum import Enum, StrEnum
+from functools import cache
 from pathlib import Path
 
 import aerona
@@ -14,8 +15,18 @@ SKIPPED = ("aerona.db.alembic", "aerona.migration", "aerona.services.books.pdf_w
 NEAR_TOTAL = 0.75
 
 
+@cache
+def source_texts() -> dict[Path, str]:
+    return {path: path.read_text() for path in sorted(SOURCE.rglob("*.py")) if "alembic" not in path.parts}
+
+
 def source_text() -> str:
-    return "\n".join(path.read_text() for path in sorted(SOURCE.rglob("*.py")) if "alembic" not in path.parts)
+    return "\n".join(source_texts().values())
+
+
+@cache
+def subscripted() -> frozenset[str]:
+    return frozenset(re.findall(r"\b([A-Za-z_][A-Za-z0-9_]*)\[", source_text()))
 
 
 def enum_tables() -> dict[int, tuple[str, str, Mapping[Enum, object]]]:
@@ -33,12 +44,11 @@ def enum_tables() -> dict[int, tuple[str, str, Mapping[Enum, object]]]:
 
 
 def test_a_near_total_enum_table_read_by_subscript_is_total_or_declares_what_it_leaves_out() -> None:
-    text = source_text()
     gaps = []
     for table_id, (module, name, table) in sorted(enum_tables().items(), key=lambda item: item[1][:2]):
         kind = type(next(iter(table)))
         missing = sorted(member.value for member in kind if member not in table)
-        if not missing or table_id in DECLARED_PARTIAL or len(table) < NEAR_TOTAL * len(kind) or not re.search(rf"\b{name}\[", text):
+        if not missing or table_id in DECLARED_PARTIAL or len(table) < NEAR_TOTAL * len(kind) or name not in subscripted():
             continue
         gaps.append(f"{module}.{name} misses {kind.__name__} {missing}; fill it, or build it with partial(..., without=...)")
     assert gaps == [], "\n".join(gaps)
@@ -67,17 +77,15 @@ def text_tables() -> list[tuple[str, str, Mapping[str, object]]]:
 
 
 def test_a_near_total_table_keyed_by_the_text_of_enum_values_is_total() -> None:
-    text = source_text()
-    kinds = enum_kinds()
+    kinds = [(kind, frozenset(member.value for member in kind)) for kind in enum_kinds()]
     gaps = []
     for module, name, table in text_tables():
-        if id(table) in DECLARED_PARTIAL or not re.search(rf"\b{name}\[", text):
+        if id(table) in DECLARED_PARTIAL or name not in subscripted():
             continue
         keys = set(table)
-        if any(keys == {member.value for member in kind} for kind in kinds):
+        if any(keys == values for _kind, values in kinds):
             continue
-        for kind in kinds:
-            values = {member.value for member in kind}
+        for kind, values in kinds:
             if keys < values and len(keys) >= NEAR_TOTAL * len(values):
                 gaps.append(f"{module}.{name} misses {kind.__name__} {sorted(values - keys)}; build it from the enum so every value has a row")
                 break
@@ -100,15 +108,18 @@ def enum_orders() -> dict[tuple[str, str], tuple[Enum, ...]]:
 
 def is_defined_in(module: object, name: str) -> bool:
     path = getattr(module, "__file__", None)
-    return path is not None and re.search(rf"^{name}\b[^=\n]*=", Path(path).read_text(), re.MULTILINE) is not None
+    if path is None:
+        return False
+    text = source_texts().get(Path(path).resolve()) or Path(path).read_text()
+    return re.search(rf"^{name}\b[^=\n]*=", text, re.MULTILINE) is not None
 
 
 def readers_of(module: str, name: str) -> list[Path]:
     home = SOURCE.parent / Path(*module.split("."))
     files = [home.with_suffix(".py") if home.with_suffix(".py").exists() else home / "__init__.py"]
     imports = re.compile(rf"from {re.escape(module)} import [^\n]*\b{name}\b|from {re.escape(module)} import \([^)]*\b{name}\b", re.DOTALL)
-    for path in sorted(SOURCE.rglob("*.py")):
-        if "alembic" not in path.parts and path not in files and imports.search(path.read_text()):
+    for path, text in source_texts().items():
+        if path not in files and f"{name}.index(" in text and imports.search(text):
             files.append(path)
     return files
 
@@ -117,7 +128,7 @@ def unguarded_index_reads(module: str, name: str) -> list[str]:
     found: list[str] = []
     guard = re.compile(rf"\bin {name}\b")
     for path in readers_of(module, name):
-        text = path.read_text()
+        text = source_texts().get(path) or path.read_text()
         if f"{name}.index(" not in text:
             continue
         lines = text.splitlines()

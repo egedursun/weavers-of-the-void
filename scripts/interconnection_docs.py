@@ -4,7 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from aerona.engine.interconnect.catalog import REGISTERED
-from aerona.engine.interconnect.edges import all_edges, matrix
+from aerona.engine.interconnect.edges import edge_counts, matrix
 from aerona.engine.interconnect.registry import EdgeKind, Mechanic, Subsystem
 from aerona.engine.interconnect.sweeps import SWEEPS, SweepClass
 
@@ -60,10 +60,10 @@ def render() -> str:
     for source in subsystems:
         row = ["—" if source is target else str(len(cells.get((source, target), set())) or "·") for target in subsystems]
         lines.append(f"| {source.value} | " + " | ".join(row) + " |")
-    edges = all_edges()
+    counts = edge_counts()
     lines += ["", "## Edges by kind", ""]
     for kind in EdgeKind:
-        lines.append(f"- {kind.value}: {sum(1 for edge in edges if edge.kind is kind)}")
+        lines.append(f"- {kind.value}: {counts[kind]}")
     lines += ["", f"## Feedback cycles between subsystems (length ≤ {LISTED_LIMIT} listed)", ""]
     found = cycles()
     lines += [f"- {' → '.join(item.value for item in cycle)} → {cycle[0].value}" for cycle in found]
