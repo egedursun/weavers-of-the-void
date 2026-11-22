@@ -1,12 +1,24 @@
 import atexit
 import multiprocessing
 import os
+import threading
+import time
 from collections.abc import Callable, Sequence
 from concurrent.futures import ProcessPoolExecutor
 
 from aerona.rules.registry import Rules
 
 POOLS: dict[int, ProcessPoolExecutor] = {}
+PARENT_POLL_SECONDS = 2.0
+
+
+def exit_with_parent(parent: int) -> None:
+    def watch() -> None:
+        while os.getppid() == parent:
+            time.sleep(PARENT_POLL_SECONDS)
+        os._exit(0)
+
+    threading.Thread(target=watch, daemon=True).start()
 
 
 def workers_for(rules: Rules) -> int:
@@ -17,7 +29,9 @@ def workers_for(rules: Rules) -> int:
 def pool_of(workers: int) -> ProcessPoolExecutor:
     found = POOLS.get(workers)
     if found is None:
-        found = POOLS[workers] = ProcessPoolExecutor(max_workers=workers, mp_context=multiprocessing.get_context("spawn"))
+        found = POOLS[workers] = ProcessPoolExecutor(
+            max_workers=workers, mp_context=multiprocessing.get_context("spawn"), initializer=exit_with_parent, initargs=(os.getpid(),)
+        )
     return found
 
 

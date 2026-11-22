@@ -156,7 +156,7 @@ fi
 REST_WORKERS=$((CORES - LONG_WORKERS))
 if [ "$REST_WORKERS" -lt 4 ]; then REST_WORKERS=4; fi
 if [ -n "$REST" ]; then
-  run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider --basetemp='$LOGS/pytest' -n $REST_WORKERS --dist worksteal --durations=15 $REST"
+  run proving sh -c "cd backend && nice -n 10 .venv/bin/pytest -q -p no:cacheprovider --basetemp='$LOGS/pytest' -n $REST_WORKERS --dist worksteal --durations=15 $REST"
 fi
 
 FRONT=$(echo "$STAGED" | grep -E '^frontend/.*\.(ts|tsx)$' | grep -v '^frontend/src/api/generated/' | sed 's#^frontend/##' || true)
