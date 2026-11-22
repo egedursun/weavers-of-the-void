@@ -6,6 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.living import GeneBankRow, GeneBankSampleRow, LivingLineRow, SymbiontRow
@@ -13,7 +14,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.living import HostPlacement, HostRelation
 from aerona.domain.enums.mind import MemoryKind, SkillSource
 from aerona.domain.enums.modifier import IncidentRole
@@ -23,9 +24,10 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.mind.book import set_skill
 from aerona.engine.polity.laws import law_param
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
-from aerona.engine.primitives.queries import connect
+from aerona.engine.primitives.queries import connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
@@ -45,8 +47,30 @@ HOST_HEALTH: Mapping[HostRelation, Callable[[SymbiontRules], int]] = total(
 DEPTH = total(HostPlacement, {HostPlacement.SKIN: 1, HostPlacement.BLOOD: 2, HostPlacement.ORGAN: 3, HostPlacement.NERVE: 4, HostPlacement.MIND: 5})
 
 
+async def bank_the_wild(ctx: TickContext, bank: GeneBankRow, atlas: RegionAtlas) -> GeneBankSampleRow | None:
+    region_id = atlas.top_region(bank.structure_entity_id)
+    if region_id is None:
+        return None
+    banked = select(GeneBankSampleRow.organism_node_id).where(GeneBankSampleRow.bank_entity_id == bank.structure_entity_id)
+    ranged = select(SpeciesRangeRow.species_entity_id).where(SpeciesRangeRow.region_entity_id == region_id, SpeciesRangeRow.species_entity_id.not_in(banked))
+    candidates = sorted(set(await ctx.session.scalars(ranged.distinct())))
+    living = [
+        species for species in [await living_entity(ctx.session, species_id) for species_id in candidates] if species is not None and not held(species.id)
+    ]
+    endangered = [species for species in living if await has_flag(ctx.session, species.id, EntityFlag.ENDANGERED)]
+    chosen = next(iter(endangered or living), None)
+    if chosen is None:
+        return None
+    row = await sampled(ctx, bank.structure_entity_id, chosen.id, ctx.rules.genome_design.bank_sample_quality)
+    await record(
+        ctx, "living.sample_banked", roles={IncidentRole.SUBJECT: chosen.id, IncidentRole.DESTINATION: bank.structure_entity_id}, facts={"quality": row.quality}
+    )
+    return row
+
+
 async def keep_banks(ctx: TickContext) -> int:
     table = ctx.rules.genome_design
+    atlas = await RegionAtlas.load(ctx.session)
     lost = 0
     for bank in list(await ctx.session.scalars(select(GeneBankRow).order_by(GeneBankRow.structure_entity_id))):
         if held(bank.structure_entity_id):
@@ -55,6 +79,7 @@ async def keep_banks(ctx: TickContext) -> int:
         paid = holder is not None and holder.status is EntityStatus.CANON and await points_of(ctx.session, holder) >= bank.upkeep
         if paid and holder is not None and not held(holder.id):
             await shift_points(ctx.session, holder, -bank.upkeep)
+            await bank_the_wild(ctx, bank, atlas)
         if "unpaid_epochs" not in bank.locked:
             bank.unpaid_epochs = 0 if paid else bank.unpaid_epochs + 1
         if bank.unpaid_epochs < table.bank_unpaid_limit:

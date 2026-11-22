@@ -16,6 +16,7 @@ from aerona.domain.enums.commerce import LeaseDefault, LeaseThing, PromotionMedi
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.engine.commerce.dealings import media_known, promotion_cost
 from aerona.engine.economy.purse import points_of
 from aerona.engine.primitives.queries import active_bonds
 from aerona.prompts import MortalToolId
@@ -28,7 +29,6 @@ from aerona.tools.framework.validation import fail
 GOODS_MAX = 6
 RENT_MAX = 100
 TERM_MAX = 10
-REACH_COST = 10
 LEASE_THINGS = {
     EntityType.REGION: LeaseThing.LAND,
     EntityType.STRUCTURE: LeaseThing.STRUCTURE,
@@ -93,7 +93,9 @@ async def promote(call: MortalCall, args: PromoteInput) -> str:
         brand = await call.session.get(BrandRow, args.brand_id)
         if brand is None or brand.owner_node_id != call.me.id:
             fail(MortalResult.COMMERCE_REFUSED, why="you own no such brand")
-    cost = max(1, args.reach // REACH_COST)
+    if args.medium is PromotionMedium.MEDIA and not await media_known(call.session, call.me.location_id):
+        fail(MortalResult.COMMERCE_REFUSED, why="your town has no means of reaching many at once")
+    cost = promotion_cost(args.reach)
     if await points_of(call.session, call.me) < cost:
         fail(MortalResult.COMMERCE_REFUSED, why=f"spreading word that far costs {cost} of wealth each season and you have less")
     call.session.add(

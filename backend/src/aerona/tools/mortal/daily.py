@@ -13,10 +13,11 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.daily_life import HouseDuty, LeisureKind, ServiceTerms
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.engine.primitives.folk import present_among
+from aerona.engine.daily.service import willing_servant
+from aerona.engine.households.formation import join_household
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -63,35 +64,17 @@ async def ruled_household(call: MortalCall, household_id: int) -> HouseholdRow:
     return household
 
 
-async def willing_servant(call: MortalCall, household: HouseholdRow) -> EntityRow | None:
-    serving = select(DomesticServiceRow.servant_node_id)
-    housed = select(HouseholdMemberRow.member_node_id)
-    rows = await call.session.execute(
-        select(EntityRow, MortalProfileRow)
-        .join(MortalProfileRow, MortalProfileRow.entity_id == EntityRow.id)
-        .where(
-            EntityRow.entity_type == EntityType.MORTAL,
-            EntityRow.status == EntityStatus.CANON,
-            await present_among(call.session, [household.settlement_node_id]),
-            EntityRow.id.not_in(serving),
-            EntityRow.id.not_in(housed),
-            EntityRow.id != call.me.id,
-        )
-        .order_by(MortalProfileRow.wealth, EntityRow.id)
-    )
-    return next((mortal for mortal, _profile in rows if not held(mortal.id)), None)
-
-
 async def hire_servant(call: MortalCall, args: HireServantInput) -> str:
     household = await ruled_household(call, args.household_id)
     if args.terms is ServiceTerms.WAGE and household.wealth < args.wage:
         fail(MortalResult.DAILY_REFUSED, why="your household cannot pay that wage")
-    servant = await willing_servant(call, household)
+    servant = await willing_servant(call.session, household, call.me.id)
     if servant is None:
         fail(MortalResult.DAILY_REFUSED, why="no one in your town is free to enter service")
     call.session.add(
         DomesticServiceRow(servant_node_id=servant.id, household_id=household.id, terms=args.terms, wage=args.wage, since_epoch=call.epoch, locked=[])
     )
+    await join_household(call.tick, household, servant, HouseholdRole.SERVANT)
     load = PERCENT // DUTIES_MAX
     for duty in dict.fromkeys(args.duties):
         call.session.add(HouseworkRow(household_id=household.id, duty=duty, doer_node_id=servant.id, doer_role=HouseholdRole.SERVANT, load=load, locked=[]))

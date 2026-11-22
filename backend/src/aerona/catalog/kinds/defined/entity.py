@@ -752,11 +752,13 @@ ENTITY_FLAG = total(
             "Endangered",
             checked_by=(),
             used_by=(
+                "engine.living.kin.bank_the_wild",
                 "engine.phases.ecology.ecology",
                 "engine.phases.ecology.extinction",
                 "engine.phases.ecology.set_abundance",
                 "engine.phases.ecology.track_endangered",
                 "engine.protected_nature.movement.loss_of_wild",
+                "engine.protected_nature.movement.protect_for_movement",
                 "engine.protected_nature.species.protect_species",
                 "engine.protected_nature.species.tend_species",
             ),

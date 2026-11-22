@@ -116,6 +116,7 @@ MIND_SEAT = total(
             "In an object",
             checked_by=(),
             used_by=(
+                "engine.made.realms.UNHOUSED_SEATS",
                 "engine.minds.profiles.MADE_SEATS",
                 "engine.minds.seat_loss.SEATED_ELSEWHERE",
                 "engine.powers.use.MADE_SEATS",
@@ -130,6 +131,7 @@ MIND_SEAT = total(
                 "catalog.cosmography.BEING_MODEL",
                 "engine.made.backfill.cores",
                 "engine.made.genesis.made_minds",
+                "engine.made.realms.UNHOUSED_SEATS",
                 "engine.minds.profiles.MADE_SEATS",
                 "engine.minds.seat_loss.SEATED_ELSEWHERE",
                 "engine.powers.use.MADE_SEATS",
@@ -139,7 +141,13 @@ MIND_SEAT = total(
         MindSeat.NETWORK: Defined(
             "In a network",
             checked_by=(),
-            used_by=("engine.minds.profiles.MADE_SEATS", "engine.minds.seat_loss.SEATED_ELSEWHERE", "engine.powers.use.MADE_SEATS", "tools.mortal.minds.SEATS"),
+            used_by=(
+                "engine.made.realms.UNHOUSED_SEATS",
+                "engine.minds.profiles.MADE_SEATS",
+                "engine.minds.seat_loss.SEATED_ELSEWHERE",
+                "engine.powers.use.MADE_SEATS",
+                "tools.mortal.minds.SEATS",
+            ),
         ),
         MindSeat.MEDIUM: Defined(
             "In a medium",

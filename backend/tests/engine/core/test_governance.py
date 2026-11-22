@@ -31,6 +31,7 @@ from aerona.engine.governance.insolvency import InsolvencyTally, advance_case, f
 from aerona.engine.governance.mergers import advance_merger, open_bid
 from aerona.engine.governance.research import advance_research, begin_research, spread_secrets
 from aerona.engine.governance.seats import LEGACY_FIXUP, seed_governance, sync_seats
+from aerona.engine.governance.strategy import courses_open, set_course
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
@@ -261,3 +262,19 @@ async def test_insolvency_runs_to_liquidation_and_restructuring_by_its_path(ctx:
     assert loan is not None and loan.principal <= 100 and wound_up.recovered_pct >= ctx.rules.governance.creditor_recovery_floor_pct
     assert await session.scalar(select(InsolvencyCaseRow.id).where(InsolvencyCaseRow.debtor_node_id == failing.id)) is not None
     assert await session.scalar(select(OrgResearchRow.id)) is None
+
+
+async def test_a_head_sets_a_new_course_among_those_its_treasury_allows(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "course", tuned_rules(governance={"course_change_pct": 100}))
+    poor = await organisation(session, world, "The Lean Guild", FactionKind.MERCHANT_GUILD, await folk(session, world, 3, "Lean"), treasury=0)
+    rich = await organisation(session, world, "The Deep Guild", FactionKind.MERCHANT_GUILD, await folk(session, world, 3, "Deep"), treasury=5000)
+    await seed_governance(ctx)
+    poor_body, rich_body = await body_of(session, poor), await body_of(session, rich)
+    assert poor_body.head_node_id is not None and rich_body.head_node_id is not None
+    assert await set_course(ctx, poor_body, poor) and await set_course(ctx, rich_body, rich)
+    assert poor_body.strategy is not OrgStrategy.HOLD and poor_body.strategy not in {OrgStrategy.EXPAND_ABROAD, OrgStrategy.INTEGRATE_UP, OrgStrategy.RESEARCH}
+    poor_profile = await session.get(FactionProfileRow, poor.id)
+    rich_profile = await session.get(FactionProfileRow, rich.id)
+    assert poor_profile is not None and rich_profile is not None
+    assert OrgStrategy.WITHDRAW in await courses_open(ctx, poor, poor_profile)
+    assert OrgStrategy.EXPAND_ABROAD in await courses_open(ctx, rich, rich_profile) and OrgStrategy.WITHDRAW not in await courses_open(ctx, rich, rich_profile)

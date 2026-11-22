@@ -93,6 +93,7 @@ UNION_FORM = total(
                 "engine.demography.peoples.spousing_for",
                 "engine.mortal.course.match",
                 "engine.mortal.kinship.marry",
+                "engine.phases.births.wed_within_the_community",
                 "engine.unions.axes.Spousing",
                 "services.player.cycles.UnionDraft",
                 "services.player.mortals.ForceMarriage",

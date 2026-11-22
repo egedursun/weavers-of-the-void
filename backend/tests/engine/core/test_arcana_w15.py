@@ -28,7 +28,7 @@ from aerona.engine.arcana.casting import myth_factor, paradigm_factor, shape_cas
 from aerona.engine.arcana.enchantments import keep_law, lay_enchantment
 from aerona.engine.arcana.grammar import Shape, cost_factor, difficulty_of, ensure_grammar, write_grammar
 from aerona.engine.arcana.items import ChargeTally, recharge_all, use_charge
-from aerona.engine.arcana.labs import StudyTally, study, write_lab_text
+from aerona.engine.arcana.labs import StudyTally, study, write_down_rites, write_lab_text
 from aerona.engine.arcana.longevity import LongevityTally, begin_longevity, tend_longevity
 from aerona.engine.arcana.resistance import dispel_force
 from aerona.engine.arcana.vis import VisTally, flow_vis, vis_of
@@ -79,6 +79,29 @@ async def test_a_lab_text_teaches_the_mages_near_it(session: AsyncSession, world
     learned = await session.scalar(select(SkillRow).where(SkillRow.holder_node_id == reader.id, SkillRow.subject_node_id == rite.id))
     assert learned is not None
     assert (await session.scalar(select(LabTextRow).where(LabTextRow.rite_entity_id == rite.id))) is not None
+
+
+async def test_a_mage_who_masters_a_rite_sets_it_down_in_a_lab_text_once(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
+    _, rite, _ = await rite_of(ctx, session, world)
+    master = await mortal(session, "Arvel", world, world.regions[0].id)
+    level = ctx.rules.spell_grammar.lab_mastery
+    session.add(
+        SkillRow(
+            holder_node_id=master.id,
+            skill=SkillKind.SPELLCRAFT,
+            subject_node_id=rite.id,
+            level=level,
+            peak=level,
+            last_used_epoch=1,
+            source=SkillSource.PRACTICE,
+        )
+    )
+    await session.flush()
+    tally = StudyTally()
+    await write_down_rites(ctx, tally)
+    await write_down_rites(ctx, tally)
+    written = list(await session.scalars(select(LabTextRow).where(LabTextRow.author_entity_id == master.id)))
+    assert tally.written == 1 and [row.rite_entity_id for row in written] == [rite.id]
 
 
 async def test_sources_give_vis_and_a_rite_burns_it_for_strength(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:

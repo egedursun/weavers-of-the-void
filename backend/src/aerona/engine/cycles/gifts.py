@@ -55,6 +55,7 @@ class GiftTally:
     lapsed: int = 0
     potlatches: int = 0
     passes: int = 0
+    circuits: int = 0
     offerings: int = 0
     payments: int = 0
 
@@ -348,7 +349,58 @@ async def pass_circuit(ctx: TickContext, circuit: CircuitRow, tally: GiftTally) 
     return True
 
 
+CIRCUIT_KINDS = (EntityType.SETTLEMENT, EntityType.PEOPLE)
+
+
+async def gift_partners(ctx: TickContext) -> dict[int, set[int]]:
+    returned = select(GiftRow.giver_node_id, GiftRow.receiver_node_id).where(GiftRow.state == GiftState.RETURNED)
+    communities = set(await ctx.session.scalars(select(EntityRow.id).where(EntityRow.entity_type.in_(CIRCUIT_KINDS), EntityRow.status == EntityStatus.CANON)))
+    partners: dict[int, set[int]] = {}
+    for giver, receiver in (await ctx.session.execute(returned)).all():
+        if giver in communities and receiver in communities and giver != receiver:
+            partners.setdefault(giver, set()).add(receiver)
+            partners.setdefault(receiver, set()).add(giver)
+    return partners
+
+
+async def found_circuits(ctx: TickContext, tally: GiftTally) -> None:
+    partners = await gift_partners(ctx)
+    covered = [set(stops) for stops in await ctx.session.scalars(select(CircuitRow.stops).order_by(CircuitRow.id))]
+    begun: set[int] = set()
+    for first in sorted(partners):
+        for second, third in sorted((b, c) for b in partners[first] for c in partners[first] if first < b < c and c in partners.get(b, set())):
+            ring = {first, second, third}
+            if ring & begun or any(ring <= stops for stops in covered) or any(held(stop) for stop in ring):
+                continue
+            if not ctx.rng(f"circuit.found.{first}.{second}.{third}.{ctx.epoch}").chance(ctx.rules.ceremonial_circuits.found_pct):
+                continue
+            opener = await ctx.session.get(EntityRow, first)
+            if opener is None:
+                continue
+            circuit = CircuitRow(
+                name=f"the circuit of {opener.name}",
+                item_entity_id=None,
+                stops=[first, second, third],
+                position=0,
+                passes=0,
+                started_epoch=ctx.epoch,
+                locked=[],
+            )
+            ctx.session.add(circuit)
+            await ctx.session.flush()
+            covered.append(ring)
+            begun |= ring
+            tally.circuits += 1
+            await record(
+                ctx,
+                "circuits.founded",
+                roles={IncidentRole.GIVER: first, IncidentRole.MEMBER: [second, third]},
+                facts={"circuit": circuit.name, "stops": len(ring)},
+            )
+
+
 async def keep_circuits(ctx: TickContext, tally: GiftTally) -> None:
+    await found_circuits(ctx, tally)
     for circuit in list(await ctx.session.scalars(select(CircuitRow).order_by(CircuitRow.id))):
         if "position" not in circuit.locked:
             await pass_circuit(ctx, circuit, tally)

@@ -7,6 +7,7 @@ from aerona.catalog.kinds.minds import MIND_PURPOSES
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
@@ -35,9 +36,11 @@ from aerona.engine.networks.energy import starved
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import close
 from aerona.engine.primitives.stats import stat_or
-from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.recording.record import record as record_incident
+from aerona.rules.registry import Rules
 
+REMOTE_FEEDBACK = 30
 HARMS = frozenset({MemoryKind.HARMED_ME, MemoryKind.MAIMED_ME, MemoryKind.HUMILIATED_ME, MemoryKind.BETRAYED_ME})
 CARES = frozenset({MemoryKind.SAVED_ME, MemoryKind.GIFTED_ME, MemoryKind.TAUGHT_ME, MemoryKind.FREED_US})
 
@@ -305,6 +308,32 @@ async def break_links(ctx: TickContext) -> int:
     return broken
 
 
+def bodies_allowed(rules: Rules, mind: MindProfileRow | None) -> int:
+    capacity = mind.capacity if mind is not None else rules.minds.baseline_capacity
+    return max(1, capacity // rules.interfaces.bodies_per_capacity)
+
+
+async def take_up_bodies(ctx: TickContext) -> int:
+    running = {row.body_node_id: row.mind_node_id for row in await ctx.session.scalars(select(RemoteBodyRow))}
+    taken = 0
+    for construct in list(await ctx.session.scalars(select(ConstructRow).where(ConstructRow.maker_entity_id.is_not(None)).order_by(ConstructRow.entity_id))):
+        maker_id = construct.maker_entity_id
+        if maker_id is None or construct.entity_id in running or held(construct.entity_id, maker_id):
+            continue
+        body = await ctx.session.get(EntityRow, construct.entity_id)
+        mind = await ctx.session.get(MindProfileRow, maker_id)
+        maker = await ctx.session.get(EntityRow, maker_id)
+        if body is None or body.status is not EntityStatus.CANON or mind is None or mind.dormant or maker is None or maker.status is not EntityStatus.CANON:
+            continue
+        if sum(1 for owner in running.values() if owner == maker_id) >= bodies_allowed(ctx.rules, mind):
+            continue
+        ctx.session.add(RemoteBodyRow(body_node_id=body.id, mind_node_id=maker_id, feedback_pct=REMOTE_FEEDBACK, since_epoch=ctx.epoch, locked=[]))
+        running[body.id] = maker_id
+        await record(ctx, "minds.body_taken_up", roles={IncidentRole.ACTOR: maker_id, IncidentRole.INSTRUMENT: body.id})
+        taken += 1
+    return taken
+
+
 async def keep_remote_bodies(ctx: TickContext) -> int:
     stranded = 0
     for link in list(await ctx.session.scalars(select(RemoteBodyRow).order_by(RemoteBodyRow.body_node_id))):
@@ -365,6 +394,7 @@ async def minds(ctx: TickContext) -> None:
     ctx.count("archives_lost", await keep_archives(ctx))
     ctx.count("copy_disputes", await keep_disputes(ctx))
     ctx.count("remote_bodies_stranded", await keep_remote_bodies(ctx))
+    ctx.count("remote_bodies_taken_up", await take_up_bodies(ctx))
     ctx.count("saved_states_charged", await charge_states(ctx))
     ctx.count("links_broken", await break_links(ctx))
     await ctx.session.flush()

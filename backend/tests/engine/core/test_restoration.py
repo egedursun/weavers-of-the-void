@@ -5,6 +5,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.polity import ClaimRow, LawJurisdictionRow, LawProfileRow, PolityMemberRow, PolityProfileRow
+from aerona.db.tables.reckoning import ReckoningRow
 from aerona.db.tables.restoration import RestorationRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.bond import BondKind
@@ -154,3 +155,22 @@ async def test_foreign_backing_carries_a_rising_past_a_steady_holder(ctx: TickCo
     assert await advance(ctx, backed, tally) is RestorationStage.RESTORED
     profile = await session.get(PolityProfileRow, backed.restored_polity_id)
     assert profile is not None and profile.legitimacy >= 15
+
+
+async def test_a_realm_restored_out_of_a_holders_lands_opens_a_reckoning_with_the_holders_servants(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "restored", tuned_rules(reckoning={"open_chance_pct": 100}))
+    fallen, town = await fallen_realm(session, world)
+    pretender = await claim_on(session, world, fallen)
+    holder = await entity(session, "The Holding Realm", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add(
+        PolityProfileRow(
+            polity_entity_id=holder.id, government=next(iter(GovernmentKind)), decision_rule=next(iter(DecisionRule)), core_entity_id=town.id, stability=10
+        )
+    )
+    session.add(PolityMemberRow(polity_entity_id=holder.id, member_entity_id=town.id))
+    tally = RestorationTally()
+    row = await raise_movement(ctx, fallen, claimant=pretender.id, bases=[RestorationBasis.BLOODLINE], territories=[town.id], tally=tally)
+    row.stage = RestorationStage.RISING
+    assert await advance(ctx, row, tally) is RestorationStage.RESTORED
+    reckoning = await session.scalar(select(ReckoningRow).where(ReckoningRow.polity_entity_id == row.restored_polity_id))
+    assert reckoning is not None and reckoning.fallen_node_id == holder.id and reckoning.opened_by_node_id == pretender.id

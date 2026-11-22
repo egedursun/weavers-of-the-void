@@ -17,6 +17,7 @@ from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.engine.commerce.dealings import DealingsTally, lease_shops, promote_brands
 from aerona.engine.context import TickContext
 from aerona.engine.economy.household import Wear
 from aerona.engine.economy.purse import give_coin, points_of, shift_points
@@ -42,6 +43,7 @@ class CommerceTally:
     rent_paid: int = 0
     defaulted: int = 0
     leases_ended: int = 0
+    leased: int = 0
 
 
 async def living(session: AsyncSession, node_id: int | None) -> EntityRow | None:
@@ -250,5 +252,10 @@ async def keep_commerce(ctx: TickContext) -> CommerceTally:
     for lease in list(await ctx.session.scalars(select(LeaseRow).order_by(LeaseRow.id))):
         if not held(lease.owner_node_id) and not held(lease.lessee_node_id):
             await keep_lease(ctx, lease, tally)
+    dealings = DealingsTally()
+    await promote_brands(ctx, dealings)
+    await lease_shops(ctx, dealings)
+    tally.promoted += dealings.promotions
+    tally.leased += dealings.leases
     await ctx.session.flush()
     return tally

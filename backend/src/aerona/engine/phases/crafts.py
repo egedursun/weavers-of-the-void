@@ -82,6 +82,7 @@ from aerona.engine.phases.dominion import count
     "table.resource_profiles",
     "table.rite_profiles",
     "table.routes",
+    "table.ruler_currencies",
     "table.sons",
     "table.species_ranges",
     "table.stars",

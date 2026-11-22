@@ -10,11 +10,13 @@ from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.tables.dominion import CreatureLessonRow, DivineCreatureRow, DominionRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.dominion import CreatureDeed, CreatureLesson
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import BeastStats
 from aerona.engine.body.hits import Harm
@@ -239,6 +241,14 @@ async def perform(ctx: TickContext, atlas: RegionAtlas, beast: EntityRow, row: D
     return await DEED_ACTS[row.last_deed or CreatureDeed.REST](scene)
 
 
+async def tended_by_old_god(ctx: TickContext, row: DivineCreatureRow, beast: EntityRow, deed: CreatureDeed) -> None:
+    god = await ctx.session.get(ForeignGodRow, row.god_node_id)
+    if god is None or god.status is not ForeignGodStatus.AWAKE or "weights" in row.locked:
+        return
+    await teach(ctx, row, deed, CreatureLesson.REWARD)
+    await record(ctx, "divine.creature_taught", roles={IncidentRole.PATRON: god.id, IncidentRole.ACTOR: beast.id}, facts={"deed": deed})
+
+
 async def act_creatures(ctx: TickContext, tally: CreatureTally) -> None:
     table = ctx.rules.divine_creatures
     atlas = await RegionAtlas.load(ctx.session)
@@ -247,7 +257,7 @@ async def act_creatures(ctx: TickContext, tally: CreatureTally) -> None:
         beast = await ctx.session.get(EntityRow, row.creature_entity_id)
         if beast is None or beast.status is not EntityStatus.CANON or held(beast.id, row.god_node_id):
             continue
-        deed = choose(ctx, row)
+        deed: CreatureDeed = choose(ctx, row)
         if row.neglect_epochs >= table.neglect_epochs:
             tally.drifted += 1
         if "last_deed" not in row.locked:
@@ -269,4 +279,5 @@ async def act_creatures(ctx: TickContext, tally: CreatureTally) -> None:
                 roles={IncidentRole.ACTOR: beast.id, IncidentRole.PATRON: row.god_node_id, IncidentRole.TARGET: acted.target},
                 facts={"deed": deed},
             )
+            await tended_by_old_god(ctx, row, beast, deed)
     await ctx.session.flush()

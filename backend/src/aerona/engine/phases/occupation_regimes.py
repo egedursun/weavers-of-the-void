@@ -6,13 +6,24 @@ from aerona.engine.occupation_regime.tend import tend_regimes
 from aerona.engine.phase import Phase
 
 
-@reads("table.collaborations", "table.node_births", "table.occupation_measures", "table.occupation_regimes", "table.occupations", "table.polity_members")
+@reads(
+    "people.wealth",
+    "table.collaborations",
+    "table.node_births",
+    "table.occupation_measures",
+    "table.occupation_regimes",
+    "table.occupations",
+    "table.polity_members",
+    "table.polity_territories",
+)
 @writes(
+    "people.wealth",
     "table.applied_fixups",
     "table.captive_cohorts",
     "table.chronicle",
     "table.chronicle_entities",
     "table.collaborations",
+    "table.entities",
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",

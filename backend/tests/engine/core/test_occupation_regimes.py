@@ -6,7 +6,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow, OccupationRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.occupation_regimes import CollaborationRow, OccupationRegimeRow
-from aerona.db.tables.polity import LawJurisdictionRow, PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import LawJurisdictionRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow
 from aerona.db.tables.reckoning import ReckoningRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -129,3 +129,17 @@ async def test_annexation_takes_the_land_into_the_occupiers_realm_with_settlers(
     assert rules is not None and rules.source_node_id == profile.core_entity_id
     assert await session.get(OccupationRow, row.region_entity_id) is None
     assert await session.scalar(select(CollaborationRow.id)) is None
+
+
+async def test_a_peace_that_cedes_the_occupied_land_to_the_occupier_ends_the_regime_as_an_annexation_not_a_liberation(
+    ctx: TickContext, session: AsyncSession, world: CoreWorld
+) -> None:
+    row, _town, _owner, occupier = await occupied(session, world)
+    await tend_regimes(ctx)
+    regime = await regime_of(session)
+    session.add(PolityTerritoryRow(polity_entity_id=occupier.id, region_entity_id=row.region_entity_id, control=row.control))
+    await session.delete(row)
+    await session.flush()
+    tally = await tend_regimes(ctx)
+    assert regime.ending is OccupationEnding.ANNEXED and tally.annexed == 1 and tally.liberated == 0
+    assert await session.scalar(select(ReckoningRow)) is None

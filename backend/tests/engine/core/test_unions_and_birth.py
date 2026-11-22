@@ -1,6 +1,6 @@
 from dataclasses import replace
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.entities import EntityRow
@@ -8,14 +8,15 @@ from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.intimacy import ChildRecognitionRow, IntimacyNormRow, LegitimacyRuleRow, ReproductiveCourseRow, RestraintCustomRow
 from aerona.db.tables.mind import CultureEthicRow, CultureValueRow
 from aerona.db.tables.mortal import MortalProfileRow
-from aerona.db.tables.polity import OathRow
+from aerona.db.tables.polity import HouseProfileRow, OathRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.collective import RoleKind
-from aerona.domain.enums.entity import MortalRole
+from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.intimacy import (
     BirthAttendant,
     ChildLegitimacy,
+    LegitimacyPath,
     NormEnforcer,
     NormSanction,
     NormStance,
@@ -25,16 +26,22 @@ from aerona.domain.enums.intimacy import (
     RestraintRole,
 )
 from aerona.domain.enums.mind import ActKind, EthicalStance, ValueAxis
+from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.polity import OathKind, OathStatus
 from aerona.domain.enums.relations import RelationType
+from aerona.domain.models.entity_stats import HouseStats
 from aerona.engine.collective.roles import CAREER_ROLES, career_open
 from aerona.engine.context import TickContext
 from aerona.engine.intimacy.course import birth_course
 from aerona.engine.intimacy.legitimacy import legitimacy_of, legitimate_heirs, parent_union
 from aerona.engine.intimacy.norms import NormTally, keep_norms, lover_pairs, outside_union_weight
+from aerona.engine.intimacy.recognition import recognise_heirs
 from aerona.engine.intimacy.restraint import RestraintTally, break_vows, vow_customs
 from aerona.engine.intimacy.seed import seed_intimacy
-from tests.engine.core.factories import CoreWorld, bond, mortal, settlement, tuned_rules
+from aerona.engine.mortal.kin import partners_of
+from aerona.engine.phases.births import wed_within_the_community
+from aerona.engine.primitives.manual import manual_context
+from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
 
 async def home_town(session: AsyncSession, world: CoreWorld) -> int:
@@ -153,3 +160,37 @@ async def test_seeding_reads_the_ethics_of_a_people_and_weighs_affairs(session: 
     assert before is not None and before.stance is NormStance.TOLERATED
     spouse = await folk(session, world, "Lir")
     assert await outside_union_weight(session, spouse) == 2.0
+
+
+async def test_a_parent_with_no_child_of_full_standing_has_one_recognised_by_the_way_its_people_allow(
+    session: AsyncSession, world: CoreWorld, ctx: TickContext
+) -> None:
+    session.add(
+        LegitimacyRuleRow(
+            people_entity_id=world.people.id, parent_union=ParentUnion.UNWED, standing=ChildLegitimacy.NONE, path=LegitimacyPath.PAYMENT, cost=5, locked=[]
+        )
+    )
+    first, second = await folk(session, world, "Avo", wealth=80), await folk(session, world, "Bel", wealth=0)
+    child = await folk(session, world, "Cai")
+    for parent in (first, second):
+        await bond(session, parent.id, child.id, BondKind.PARENT_OF)
+    tally = await recognise_heirs(ctx)
+    row = await session.get(ChildRecognitionRow, child.id)
+    assert tally.recognised == 1 and row is not None and row.sponsor_node_id == first.id and row.path is LegitimacyPath.PAYMENT
+    assert await legitimacy_of(session, child) is ChildLegitimacy.FULL
+    assert (await recognise_heirs(ctx)).recognised == 0
+
+
+async def test_an_unwed_head_of_a_house_with_no_lover_weds_someone_of_its_own_community(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "community_wed", tuned_rules(kinship={"community_marriage_chance": 100}))
+    heads = [await folk(session, world, name, life_stage=LifeStage.ADULT) for name in ("Ivo Larch", "Mira Sel", "Tobin Ash", "Edda Fenn")]
+    for index, head in enumerate(heads):
+        house = await entity(session, f"House {index}", EntityType.HOUSE, HouseStats(), world_id=world.world.id)
+        session.add(HouseProfileRow(house_entity_id=house.id, founder_entity_id=head.id, head_entity_id=head.id, emblem={}, traits=[], seats=[], locked=[]))
+    await session.flush()
+    wed = await wed_within_the_community(ctx)
+    married = [head for head in heads if await partners_of(session, head.id)]
+    assert wed >= 1 and wed <= len(married) <= 2 * wed
+    marriages = await session.scalar(select(func.count()).select_from(IncidentRow).where(IncidentRow.kind == "kin.marriage"))
+    assert marriages == wed
+    assert await wed_within_the_community(ctx) <= len(heads) - wed

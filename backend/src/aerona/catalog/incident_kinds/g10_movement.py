@@ -575,6 +575,19 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         place=PlaceRule.NONE,
         clock=C.SEASON,
     ),
+    IncidentKindSpec(
+        "settlement.plan_drawn",
+        G.MOVEMENT,
+        "{place}, too crowded for its homes, drew up {plan} to build its {district} districts denser.",
+        roles=(RoleSpec(R.PLACE, frozenset({E.SETTLEMENT})),),
+        facts=(
+            FactSpec("plan", FactValue.NAME),
+            FactSpec("district", FactValue.ENUM, enum=DistrictKind),
+            FactSpec("housing", FactValue.NUMBER, FactUnit.PEOPLE),
+        ),
+        place=PlaceRule.REQUIRED,
+        clock=C.INSTANT,
+    ),
     *per_value(
         "settlement.district_",
         DistrictHarm,

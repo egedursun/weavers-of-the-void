@@ -99,7 +99,48 @@ async def crime_orgs(ctx: TickContext) -> None:
     count(ctx, "underworld", tally)
 
 
-@reads("table.bonds", "table.entities", "table.faction_profiles", "table.nodes", "table.polity_members", "table.trading_posts")
+@reads(
+    "structure.durability",
+    "table.bonds",
+    "table.camps",
+    "table.community_stocks",
+    "table.entities",
+    "table.faction_profiles",
+    "table.holder_levels",
+    "table.lexemes",
+    "table.name_registry",
+    "table.node_births",
+    "table.nodes",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.resource_profiles",
+    "table.secrets",
+    "table.skills",
+    "table.structure_designs",
+    "table.structure_sections",
+    "table.structure_staff",
+    "table.trading_posts",
+    "table.world_materials",
+)
+@writes(
+    "structure.durability",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.constructions",
+    "table.entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
+    "table.name_registry",
+    "table.node_births",
+    "table.node_materials",
+    "table.structure_designs",
+    "table.structure_profiles",
+    "table.structure_staff",
+    "table.trading_posts",
+)
 async def trading_posts(ctx: TickContext) -> None:
     tally = PostTally()
     await keep_posts(ctx, tally)
@@ -138,6 +179,7 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.nodes",
     "table.outbreaks",
     "table.plague_responses",
+    "table.polity_members",
     "table.quarantines",
     "table.settlement_profiles",
     "table.sons",
@@ -153,7 +195,7 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.vehicle_groups",
     "trade_route.capacity",
 )
-@writes("people.population", "settlement.population", "table.beliefs", "table.convoys", "table.entities", "table.transport_fleets")
+@writes("people.population", "settlement.piety", "settlement.population", "table.beliefs", "table.convoys", "table.entities", "table.transport_fleets")
 async def convoys(ctx: TickContext) -> None:
     tally = ConvoyTally()
     await run_convoys(ctx, tally)

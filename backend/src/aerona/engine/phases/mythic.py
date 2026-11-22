@@ -16,7 +16,8 @@ async def heroquests(ctx: TickContext) -> None:
     count(ctx, "heroquest", tally)
 
 
-@reads("table.bonds", "table.entities", "table.foreign_gods", "table.nodes", "table.reputations", "table.sons")
+@reads("table.bonds", "table.entities", "table.foreign_gods", "table.mantlings", "table.nodes", "table.reputations", "table.sons")
+@writes("table.mantlings")
 async def mantling(ctx: TickContext) -> None:
     tally = MantleTally()
     await mantle_world(ctx, tally)
@@ -31,6 +32,7 @@ async def servitors(ctx: TickContext) -> None:
 
 
 @reads("table.geasa")
+@writes("table.divine_standing", "table.dominions", "table.geasa")
 async def geasa(ctx: TickContext) -> None:
     tally = GeasTally()
     await tend_geasa(ctx, tally)

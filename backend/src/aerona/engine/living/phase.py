@@ -15,6 +15,7 @@ from aerona.engine.living.world import clone_peoples, designed_sapience, shape_l
     "table.breeding_plans",
     "table.community_methods",
     "table.cult_doctrines",
+    "table.culture_values",
     "table.disease_profiles",
     "table.dishes",
     "table.entities",
@@ -31,7 +32,7 @@ from aerona.engine.living.world import clone_peoples, designed_sapience, shape_l
     "table.symbionts",
     "table.vessel_profiles",
 )
-@writes("table.applied_fixups", "table.cult_doctrines", "table.living_profiles")
+@writes("table.applied_fixups", "table.cult_doctrines", "table.living_lines", "table.living_profiles")
 async def keep_living(ctx: TickContext) -> None:
     ctx.count("living_backfilled", await legacy_backfill(ctx))
     ctx.count("living_things_kept", await keep_profiles(ctx))

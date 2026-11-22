@@ -616,6 +616,15 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         )
     ),
     IncidentKindSpec(
+        "households.furnished",
+        G.SOCIAL,
+        "The household {household} of {actor} set {subject} in its home.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT)),
+        facts=(FactSpec("household", FactValue.NAME),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
         "households.abandon",
         G.SOCIAL,
         "In want, the household {household} of {actor} left {victim} to fend alone.",

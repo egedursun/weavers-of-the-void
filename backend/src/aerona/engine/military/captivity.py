@@ -15,16 +15,16 @@ from aerona.engine.economy.purse import receive_coin
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.finance.contraband import traffic
 from aerona.engine.gods.progress import cap_gained_essence
-from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.lore.taboos import forbidden
 from aerona.engine.military.ransom import carry_language, cohort_ransom, pay_from_treasury, release_by_opinion
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import judged
 from aerona.engine.polity.laws import law_param
-from aerona.engine.primitives.levies import levies_from
+from aerona.engine.primitives.levies import add_heads, levies_from
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, stat
+from aerona.engine.primitives.stats import stat
 from aerona.engine.primitives.strength import patron_bonus
 from aerona.engine.recording.record import RoleValue, record
 
@@ -34,10 +34,7 @@ HUNDRED = 100
 def settle_into(ctx: TickContext, community: EntityRow | None, count: int) -> int:
     if community is None or count <= 0 or not levies_from(community):
         return 0
-    before = headcount(community)
-    with flowing(FlowCategory.CAPTIVE):
-        after = put_stat(ctx.rules, community, headcount_key(community), before + count)
-    return (after or before) - before
+    return add_heads(ctx.rules, community, count, FlowCategory.CAPTIVE)
 
 
 async def slavery_lawful(ctx: TickContext, captor: EntityRow) -> bool:

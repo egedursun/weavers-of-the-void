@@ -178,6 +178,7 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.node_births",
     "table.node_materials",
     "table.place_environment",
     "table.place_profiles",

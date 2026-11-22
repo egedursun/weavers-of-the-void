@@ -14,6 +14,8 @@ from aerona.engine.phase import Phase
 
 @reads(
     "faction.wealth",
+    "people.wealth",
+    "table.bonds",
     "table.cartels",
     "table.company_profiles",
     "table.economic_orders",

@@ -160,6 +160,23 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         chronicle_kind=K.DEBT,
     ),
     IncidentKindSpec(
+        "banking.enterprise_loan",
+        G.EXCHANGE,
+        "{lender} lent {borrower} {principal} for its undertakings, at {interest} in a hundred, due in epoch {due_epoch}.",
+        roles=(
+            RoleSpec(R.BORROWER),
+            RoleSpec(R.LENDER),
+        ),
+        facts=(
+            FactSpec("principal", FactValue.NUMBER, unit=FactUnit.COIN),
+            FactSpec("interest", FactValue.NUMBER, unit=FactUnit.PERCENT),
+            FactSpec("due_epoch", FactValue.NUMBER, unit=FactUnit.COUNT),
+        ),
+        steps=frozenset({StepAction.LEND}),
+        place=PlaceRule.NONE,
+        clock=ProcessClock.INSTANT,
+    ),
+    IncidentKindSpec(
         "banking.war_loan",
         G.EXCHANGE,
         "{lender} lent {borrower} {principal} to keep fighting, at {interest} in a hundred, due in epoch {due_epoch}.",
@@ -206,6 +223,21 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             FactSpec("shamed", FactValue.NUMBER, unit=FactUnit.COUNT),
         ),
         place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.INSTANT,
+    ),
+    IncidentKindSpec(
+        "circuits.founded",
+        G.EXCHANGE,
+        "{giver} began to pass a treasure round {circuit}, among {stops:stop|stops} that trade gifts with each other.",
+        roles=(
+            RoleSpec(R.GIVER),
+            RoleSpec(R.MEMBER, many=True),
+        ),
+        facts=(
+            FactSpec("circuit", FactValue.NAME),
+            FactSpec("stops", FactValue.NUMBER, unit=FactUnit.COUNT),
+        ),
+        place=PlaceRule.NONE,
         clock=ProcessClock.INSTANT,
     ),
     IncidentKindSpec(

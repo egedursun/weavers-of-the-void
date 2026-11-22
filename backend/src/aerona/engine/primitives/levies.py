@@ -40,10 +40,14 @@ def discharge(army: EntityRow, soldiers: int, returned: int) -> None:
         set_stats(army, size=0)
 
 
+def add_heads(rules: Rules, community: EntityRow, count: int, category: FlowCategory) -> int:
+    before = headcount(community)
+    with flowing(category):
+        after = put_stat(rules, community, headcount_key(community), before + count)
+    return min(count, max(0, (after or before) - before))
+
+
 def demobilise(rules: Rules, owner: EntityRow | None, soldiers: int) -> int:
     if owner is None or owner.status is not EntityStatus.CANON or soldiers <= 0 or not levies_from(owner):
         return 0
-    before = headcount(owner)
-    with flowing(FlowCategory.LEVY):
-        after = put_stat(rules, owner, headcount_key(owner), before + soldiers)
-    return (after or before) - before
+    return add_heads(rules, owner, soldiers, FlowCategory.LEVY)

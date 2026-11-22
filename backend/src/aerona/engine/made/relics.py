@@ -9,6 +9,7 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.made import RelicStance, RelicState, RelicUse
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.engine.augments import seek_enhancements
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.interconnect.annotations import reads, writes
@@ -158,6 +159,7 @@ async def salvage(ctx: TickContext) -> int:
 async def keep_relics(ctx: TickContext) -> None:
     ctx.count("made_world_backfilled", await legacy_backfill(ctx))
     ctx.count("made_kinds_kept", await keep_made_kinds(ctx))
+    ctx.count("augments_sought", await seek_enhancements(ctx))
     ctx.count("relics_marked", await mark_collapse(ctx))
     for relic in list(await ctx.session.scalars(select(MadeRelicRow).order_by(MadeRelicRow.thing_node_id))):
         thing = await ctx.session.get(EntityRow, relic.thing_node_id)

@@ -5,7 +5,7 @@ from aerona.db.write_guard import held
 from aerona.engine.context import TickContext
 from aerona.engine.occupation_regime.book import RegimeTally, occupation_of
 from aerona.engine.occupation_regime.collaborators import recruit, tend_collaborators
-from aerona.engine.occupation_regime.liberation import liberate
+from aerona.engine.occupation_regime.liberation import ceded_to_occupier, end_by_cession, liberate
 from aerona.engine.occupation_regime.measures import tend_measures
 from aerona.engine.occupation_regime.rule import apply_legacy, ensure_regimes, govern
 
@@ -20,6 +20,9 @@ async def tend_regimes(ctx: TickContext) -> RegimeTally:
         if held(regime.region_entity_id) or held(regime.occupier_entity_id):
             continue
         occupation = await occupation_of(ctx, regime)
+        if occupation is None and await ceded_to_occupier(ctx, regime):
+            await end_by_cession(ctx, regime, tally)
+            continue
         if occupation is None:
             await liberate(ctx, regime, tally)
             continue

@@ -7,9 +7,9 @@ from aerona.engine.phase import Phase
 
 
 @reads(
-    "table.faction_profiles",
     "table.deeds",
     "table.entities",
+    "table.faction_profiles",
     "table.honour_kinds",
     "table.honours_held",
     "table.node_births",

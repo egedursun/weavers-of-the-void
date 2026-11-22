@@ -33,4 +33,4 @@ atexit.register(close_pools)
 def compute_shards[Item, Result](kernel: Callable[[Item], Result], shards: Sequence[Item], workers: int) -> list[Result]:
     if workers <= 1 or len(shards) <= 1:
         return [kernel(shard) for shard in shards]
-    return list(pool_of(min(workers, len(shards))).map(kernel, shards))
+    return list(pool_of(workers).map(kernel, shards))

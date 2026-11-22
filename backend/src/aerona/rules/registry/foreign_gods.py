@@ -64,3 +64,16 @@ class ForeignGodsRules:
     action_full_power: int = rule(
         50, 1, 100, RuleGroup.FOREIGN_GODS, "A foreign god's actions, attraction included, reach full chance at this power (below it they scale with power)"
     )
+    miracle_pct: int = rule(
+        20, 0, 100, RuleGroup.FOREIGN_GODS, "Chance each epoch an awake foreign god works a miracle of its domains for a people that worships it (%)"
+    )
+    avatar_pct: int = rule(
+        10,
+        0,
+        100,
+        RuleGroup.FOREIGN_GODS,
+        "Chance each epoch an awake foreign god with worshippers takes a mortal form among a people that does not yet worship it (%)",
+    )
+    creature_pct: int = rule(
+        10, 0, 100, RuleGroup.FOREIGN_GODS, "Chance each epoch an awake foreign god with worshippers and no creature raises one among them (%)"
+    )

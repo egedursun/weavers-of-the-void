@@ -279,6 +279,7 @@ async def resource_market(ctx: TickContext) -> None:
     "table.bonds",
     "table.captives",
     "table.community_cohorts",
+    "table.community_relations",
     "table.community_societies",
     "table.cosmos",
     "table.culture_ethics",

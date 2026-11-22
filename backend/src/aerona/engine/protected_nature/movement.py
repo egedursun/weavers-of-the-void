@@ -19,11 +19,14 @@ from aerona.engine.primitives.queries import has_flag, living_entity
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.protected_nature.areas import protect_area
 from aerona.engine.protected_nature.book import NatureTally
+from aerona.engine.protected_nature.species import protect_species
 
 ENDANGERED_WEIGHT = 10
 AIMS = [ProtectedUse.HUNTING.value, ProtectedUse.LOGGING.value, ProtectionMeasure.HUNTING_BAN.value]
 FOR_THE_WILD = frozenset({SocialClass.PRIEST, SocialClass.MONASTIC, SocialClass.SCRIBE, SocialClass.PROFESSIONAL})
 AGAINST_THE_WILD = frozenset({SocialClass.FARMER, SocialClass.WORKER})
+
+GUARDED = (ProtectionMeasure.HUNTING_BAN, ProtectionMeasure.HABITAT_GUARD)
 
 
 def leaning(support: int, social: SocialClass) -> int:
@@ -56,7 +59,14 @@ async def protect_for_movement(ctx: TickContext, realm: Realm, row: MovementProf
         return
     known = {item.value: item for item in ProtectedUse}
     uses = [known[aim] for aim in await aims_of(ctx, row.faction_entity_id) if aim in known]
-    await protect_area(ctx, region, ProtectionBasis.LAW, uses, NatureTally(), protector=realm.entity.id)
+    tally = NatureTally()
+    await protect_area(ctx, region, ProtectionBasis.LAW, uses, tally, protector=realm.entity.id)
+    ranged = select(SpeciesRangeRow.species_entity_id).where(SpeciesRangeRow.region_entity_id == region.id).distinct()
+    for species_id in sorted(set(await ctx.session.scalars(ranged))):
+        species = await living_entity(ctx.session, species_id)
+        if species is None or held(species.id) or not await has_flag(ctx.session, species.id, EntityFlag.ENDANGERED):
+            continue
+        await protect_species(ctx, species, ProtectionBasis.LAW, list(GUARDED), tally, holder=realm.entity.id)
 
 
 async def tend_movements(ctx: TickContext, tally: NatureTally) -> None:

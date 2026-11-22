@@ -415,7 +415,7 @@ async def predation_pressure(ctx: TickContext) -> int:
     rng = ctx.rng("depletion")
     extinct = 0
     for _bond, hunter, prey in await _hunt_pairs(ctx):
-        if hunter.status is not EntityStatus.CANON or prey.status is not EntityStatus.CANON:
+        if hunter.status is not EntityStatus.CANON or prey.status is not EntityStatus.CANON or held(hunter.id, prey.id):
             continue
         gap = species_danger(ctx.rules, hunter) - species_danger(ctx.rules, prey)
         if gap < creatures.depletion_danger_margin or prey.power_level > creatures.depletion_max_prey_power or not rng.chance(creatures.prey_depletion_chance):

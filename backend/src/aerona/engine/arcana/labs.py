@@ -27,6 +27,7 @@ TEXT_POWER = 2
 @dataclass
 class StudyTally:
     learned: int = 0
+    written: int = 0
 
 
 async def write_lab_text(ctx: TickContext, rite: EntityRow, author: EntityRow) -> LabTextRow | None:
@@ -106,3 +107,21 @@ async def study(ctx: TickContext, tally: StudyTally) -> None:
             studied += 1
             tally.learned += int(await learn(ctx, reader, text))
     await ctx.session.flush()
+
+
+async def write_down_rites(ctx: TickContext, tally: StudyTally) -> None:
+    written = select(LabTextRow.author_entity_id, LabTextRow.rite_entity_id)
+    done = {(author, rite) for author, rite in (await ctx.session.execute(written)).all()}
+    masters = select(SkillRow.holder_node_id, SkillRow.subject_node_id).where(
+        SkillRow.skill == SkillKind.SPELLCRAFT, SkillRow.subject_node_id.is_not(None), SkillRow.level >= ctx.rules.spell_grammar.lab_mastery
+    )
+    for author_id, rite_id in (await ctx.session.execute(masters.order_by(SkillRow.holder_node_id, SkillRow.subject_node_id))).all():
+        if rite_id is None or (author_id, rite_id) in done:
+            continue
+        author = await ctx.session.get(EntityRow, author_id)
+        rite = await ctx.session.get(EntityRow, rite_id)
+        if author is None or rite is None or author.status is not EntityStatus.CANON or rite.status is not EntityStatus.CANON:
+            continue
+        if await write_lab_text(ctx, rite, author) is not None:
+            done.add((author_id, rite_id))
+            tally.written += 1

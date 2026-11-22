@@ -2,28 +2,42 @@ from dataclasses import replace
 
 from sqlalchemy import select
 
+from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.daily_life import DomesticServiceRow
 from aerona.db.tables.demography import CohortRow
-from aerona.db.tables.households import DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
+from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.mind import CultureEthicRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.society_depth import ClassStandingRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.genetics import HouseholdDecision, HouseholdRole
 from aerona.domain.enums.mind import ActKind, EthicalStance, NeedKind
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.demography.basket import fed_index
 from aerona.engine.households.dwelling_kinds import built_in_dwelling
 from aerona.engine.households.formation import found_household, house_everyone
 from aerona.engine.households.homes import home_of, sickness_factor
-from aerona.engine.households.life import HouseholdTally, lend_at_interest, match, members_of, pay_debts, renovate, tend_aggregates, tend_household
+from aerona.engine.households.life import (
+    HouseholdTally,
+    furnish,
+    lend_at_interest,
+    match,
+    members_of,
+    pay_debts,
+    renovate,
+    servants,
+    tend_aggregates,
+    tend_household,
+)
 from aerona.engine.mind.needs import home_needs
 from aerona.engine.mortal.kinship import add_parent
 from aerona.engine.polity.laws import LawBook
 from aerona.rules.registry import Rules
-from tests.engine.society.factories import Realm, context, link, mortal, people, settlement
+from tests.engine.society.factories import Realm, context, link, make, mortal, people, settlement
 
 RULES = Rules()
 
@@ -213,3 +227,46 @@ async def test_a_household_matches_its_single_with_the_candidate_nearest_in_age(
     left = await realm.session.get(HouseholdMemberRow, elder.id)
     assert joined is not None and joined.household_id == seeker.id
     assert left is not None and left.household_id != seeker.id
+
+
+async def test_a_wealthy_household_takes_a_poorer_neighbour_into_service_and_lets_them_go_when_it_cannot_pay(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Servewick")
+    master = await mortal(realm, "Ona", location_id=town.id)
+    poor_head = await mortal(realm, "Pell", location_id=town.id)
+    worker = await mortal(realm, "Quin", location_id=town.id)
+    for one in (master, poor_head, worker):
+        await profile(realm, one.id, LifeStage.ADULT, wealth=10)
+    rich = await found_household(ctx, master)
+    poor = await found_household(ctx, poor_head)
+    realm.session.add(HouseholdMemberRow(member_node_id=worker.id, household_id=poor.id, role=HouseholdRole.DEPENDENT, joined_epoch=1))
+    rich.wealth, poor.wealth = 10_000, 5
+    await realm.session.flush()
+    assert await servants(ctx, rich, None, HouseholdTally())
+    service = await realm.session.get(DomesticServiceRow, worker.id)
+    member = await realm.session.get(HouseholdMemberRow, worker.id)
+    assert service is not None and service.household_id == rich.id and service.wage == ctx.rules.daily_life.servant_wage
+    assert member is not None and member.household_id == rich.id and member.role is HouseholdRole.SERVANT
+    rich.income, rich.expenses = 0, 100
+    assert await servants(ctx, rich, None, HouseholdTally())
+    assert await realm.session.get(DomesticServiceRow, worker.id) is None
+
+
+async def test_a_household_sets_the_belongings_of_its_members_in_its_home_but_not_their_arms(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Hearthby")
+    owner = await mortal(realm, "Rue", location_id=town.id)
+    await profile(realm, owner.id, LifeStage.ADULT, wealth=10)
+    home = await found_household(ctx, owner)
+    dwelling = await realm.session.scalar(select(DwellingRow).where(DwellingRow.household_id == home.id))
+    assert dwelling is not None
+    chest = await make(realm.session, "Oak Chest", EntityType.ITEM, ItemStats(damage=0, protection=0, might=0, curse=0), world_id=realm.world.id)
+    blade = await make(realm.session, "Long Blade", EntityType.ITEM, ItemStats(damage=40, protection=0, might=0, curse=0), world_id=realm.world.id)
+    for thing in (chest, blade):
+        await BondRepository(realm.session).connect(BondDraft(owner.id, thing.id, BondKind.OWNS, 0))
+    tally = HouseholdTally()
+    await furnish(ctx, home, await members_of(ctx, home), dwelling, tally)
+    placed = {row.item_node_id: row.dwelling_id for row in await realm.session.scalars(select(DwellingFurnishingRow))}
+    assert placed == {chest.id: dwelling.id} and tally.furnished == 1
+    await furnish(ctx, home, await members_of(ctx, home), dwelling, tally)
+    assert tally.furnished == 1

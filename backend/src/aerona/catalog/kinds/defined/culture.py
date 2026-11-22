@@ -957,7 +957,7 @@ TECHNIQUE = total(
         ),
         Technique.COMPUTATION: Defined(
             "Computation",
-            checked_by=("catalog.eras.ERA_EFFECTS",),
+            checked_by=("catalog.eras.ERA_EFFECTS", "engine.augments.make_known"),
             used_by=(
                 "catalog.carriers.CARRIERS",
                 "catalog.eras.ERA_MARKERS",
@@ -988,7 +988,7 @@ TECHNIQUE = total(
         ),
         Technique.MASS_MEDIA: Defined(
             "Mass media",
-            checked_by=("catalog.eras.ERA_EFFECTS",),
+            checked_by=("catalog.eras.ERA_EFFECTS", "engine.commerce.dealings.media_known"),
             used_by=(
                 "catalog.eras.TECHNIQUE_ERAS",
                 "catalog.techniques.TECHNIQUES",

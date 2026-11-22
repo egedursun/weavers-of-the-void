@@ -22,6 +22,7 @@ class MadeRealmRules(Spanned):
     freeze_years: int = span(1, 1, 2500, M, "Years a made realm stands frozen when its host goes down")
     upkeep_wealth: int = rule(10, 0, 100, M, "Wealth a keeper needs to keep its realm's host running")
     escape_pct: int = rule(5, 0, 100, M, "Chance each epoch a mind confined in a realm gets out")
+    dwelling_pct: int = rule(25, 0, 100, M, "Chance each epoch a mind that lives in a made thing builds a realm on it to dwell in (%)")
 
     @property
     def freeze_epochs(self) -> int:

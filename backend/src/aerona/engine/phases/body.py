@@ -251,6 +251,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.dimensions",
     "table.divine_wounds",
     "table.doctrine_sacraments",
+    "table.dominions",
     "table.endemic_diseases",
     "table.entities",
     "table.entity_flags",
@@ -260,6 +261,8 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.galaxy_clusters",
     "table.gardens",
     "table.genomes",
+    "table.god_designs",
+    "table.god_scales",
     "table.goods_flows",
     "table.grave_goods",
     "table.griefs",
@@ -297,6 +300,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.polity_members",
     "table.polity_profiles",
     "table.prostheses",
+    "table.region_dominion",
     "table.region_environment",
     "table.routes",
     "table.sacraments",
@@ -676,6 +680,7 @@ async def body_society(ctx: TickContext) -> None:
 
 
 @reads(
+    "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
@@ -696,6 +701,7 @@ async def body_society(ctx: TickContext) -> None:
     "table.culture_values",
     "table.entities",
     "table.entity_flags",
+    "table.entity_tags",
     "table.genomes",
     "table.hero_quests",
     "table.holder_levels",

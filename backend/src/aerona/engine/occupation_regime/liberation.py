@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.occupation_regimes import CollaborationRow, OccupationRegimeRow
-from aerona.db.tables.polity import PolityProfileRow
+from aerona.db.tables.polity import PolityProfileRow, PolityTerritoryRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.modifier import IncidentRole
@@ -45,3 +45,23 @@ async def liberate(ctx: TickContext, regime: OccupationRegimeRow, tally: RegimeT
         facts={"ending": regime.ending, "collaborators": len(collaborators)},
     )
     await reckon(ctx, regime, collaborators)
+
+
+async def ceded_to_occupier(ctx: TickContext, regime: OccupationRegimeRow) -> bool:
+    return await ctx.session.get(PolityTerritoryRow, (regime.occupier_entity_id, regime.region_entity_id)) is not None
+
+
+async def end_by_cession(ctx: TickContext, regime: OccupationRegimeRow, tally: RegimeTally) -> None:
+    await lift_laws(ctx, regime)
+    regime.ended_epoch, regime.ending = ctx.epoch, OccupationEnding.ANNEXED
+    query = select(CollaborationRow).where(CollaborationRow.regime_id == regime.id, CollaborationRow.fate == CollaborationFate.SERVING)
+    serving = list(await ctx.session.scalars(query.order_by(CollaborationRow.id)))
+    for row in serving:
+        await end_service(ctx, row, CollaborationFate.ENDED)
+    tally.annexed += 1
+    await record(
+        ctx,
+        "occupation.ceded",
+        roles={IncidentRole.ACTOR: regime.occupier_entity_id, IncidentRole.SUBJECT: regime.region_entity_id, IncidentRole.VICTIM: regime.owner_polity_id},
+        facts={"collaborators": len(serving)},
+    )

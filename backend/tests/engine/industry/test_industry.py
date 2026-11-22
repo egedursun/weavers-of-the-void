@@ -12,6 +12,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.factions import FactionGoalRow, FactionProfileRow
 from aerona.db.tables.industry import CommunityMethodRow, RegionPollutionRow
+from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.orders import EconomicOrderRow
+from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.culture import IdeologyTenet, Technique
 from aerona.domain.enums.demography import Job
@@ -21,9 +24,10 @@ from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBa
 from aerona.domain.enums.faction import FactionGoalKind, FactionKind
 from aerona.domain.enums.industry import EnergyKind, MethodKind, Pollutant, ProcessKind, QualityTier
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.orders import OwnershipRegime
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.world import TechnologyEra
-from aerona.domain.models.entity_stats import FactionStats, IdeologyStats
+from aerona.domain.models.entity_stats import FactionStats, IdeologyStats, PolityStats
 from aerona.engine.commerce.trade import without_shops
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import shaft_factor
@@ -46,14 +50,14 @@ from aerona.engine.industry.methods import (
     reveres_nature,
     step_method,
 )
-from aerona.engine.industry.owners import ProfitTally, barred_works, buy, tend_profits
+from aerona.engine.industry.owners import ProfitTally, barred_works, buy, pass_commons, tend_profits
 from aerona.engine.industry.pollution import PollutionTally, disease_extra, fertility_factor, fish_factor, tend_pollution, void_scar
 from aerona.engine.industry.quality import premium, tier_of
 from aerona.engine.industry.stores import StoreTally, kindle, preserve, spoil, wear_tools
 from aerona.engine.pipeline import TICK_ORDER
 from aerona.engine.primitives.stats import set_stats
 from aerona.rules.registry import Rules
-from tests.engine.society.factories import Realm, context, make, settlement
+from tests.engine.society.factories import Realm, context, make, mortal, settlement
 from tests.engine.society.factories import tuned as tuned_rules
 
 RULES = Rules()
@@ -464,3 +468,24 @@ async def test_scarce_hands_meet_every_need_before_any_good_is_stockpiled(realm:
     await realm.session.flush()
     assert await holding(realm.session, town.id, CommodityKind.FUEL) > 0
     assert await holding(realm.session, town.id, CommodityKind.CLOTH) > 0
+
+
+async def test_works_a_community_holds_in_common_pass_to_separate_households_under_a_private_order(realm: Realm) -> None:
+    ctx = context(realm.session, tuned_rules(ownership={"order_shift_pct": 100}))
+    town = await settlement(realm, "Kettleford")
+    crown = await make(realm.session, "The Kettle Crown", EntityType.POLITY, PolityStats(), world_id=realm.world.id)
+    realm.session.add(PolityMemberRow(polity_entity_id=crown.id, member_entity_id=town.id))
+    realm.session.add(EconomicOrderRow(polity_entity_id=crown.id, sector=None, ownership=OwnershipRegime.PRIVATE))
+    keepers = [await mortal(realm, name, location_id=town.id) for name in ("Orla Venn", "Bram Hale")]
+    realm.session.add_all([MortalProfileRow(entity_id=keeper.id, wealth=60 - index * 10, locked=[]) for index, keeper in enumerate(keepers)])
+    works = [
+        WorkshopRow(community_entity_id=town.id, kind=kind, level=1, built_epoch=1, owner_node_id=town.id)
+        for kind in (WorkshopKind.FISHERY, WorkshopKind.FORGE)
+    ]
+    realm.session.add_all(works)
+    await realm.session.flush()
+    tally = ProfitTally()
+    for work in works:
+        await pass_commons(ctx, town, work, tally)
+        await realm.session.flush()
+    assert sorted(work.owner_node_id or 0 for work in works) == sorted(keeper.id for keeper in keepers) and tally.owned == 2

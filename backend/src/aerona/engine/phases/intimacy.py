@@ -1,6 +1,7 @@
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.intimacy.norms import NormTally, keep_norms, lover_pairs
+from aerona.engine.intimacy.recognition import recognise_heirs
 from aerona.engine.intimacy.restraint import RestraintTally, break_vows, vow_customs
 from aerona.engine.intimacy.seed import seed_intimacy
 from aerona.engine.phase import Phase
@@ -8,6 +9,7 @@ from aerona.engine.phase import Phase
 
 @reads(
     "table.bonds",
+    "table.child_recognitions",
     "table.culture_ethics",
     "table.culture_values",
     "table.entities",
@@ -56,6 +58,7 @@ async def unions_and_birth(ctx: TickContext) -> None:
     await break_vows(ctx, pairs, restraint)
     ctx.count("restraint_vowed", restraint.vowed)
     ctx.count("restraint_broken", restraint.broken)
+    ctx.count("children_recognised", (await recognise_heirs(ctx)).recognised)
     norms = NormTally()
     await keep_norms(ctx, norms)
     ctx.count("union_scandals", norms.scandals)

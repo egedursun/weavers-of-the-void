@@ -5,7 +5,7 @@ from aerona.domain.enums.chronicle import ChronicleKind as K
 from aerona.domain.enums.chronicle import FeedCategory as F
 from aerona.domain.enums.disease_agents import CureClass, DiseaseAgent
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim
+from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
 from aerona.domain.enums.fossil import Preservation
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole as R
@@ -288,6 +288,17 @@ WEATHER: tuple[IncidentKindSpec, ...] = (
         clock=C.INSTANT,
         kind=K.CLIMATE,
         direct=True,
+    ),
+    happening(
+        "weather.work_raised",
+        G.NATURE,
+        "{actor} began to work the weather of {place} toward {aim} by {method}, at a strength of {strength}.",
+        roles=(one(R.ACTOR), one(R.PLACE)),
+        facts=(chosen("aim", WeatherAim), chosen("method", WeatherWorkMethod), amount("strength", U.PERCENT)),
+        steps=(A.PERFORM_RITE,),
+        place=P.REQUIRED,
+        clock=C.SEASON,
+        kind=K.CLIMATE,
     ),
     happening(
         "weather.worked",

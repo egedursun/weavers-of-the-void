@@ -197,6 +197,8 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.insurance_policies",
     "table.insurers",
     "table.item_profiles",
+    "table.kin_disownings",
+    "table.kin_group_members",
     "table.kinship_systems",
     "table.language_profiles",
     "table.law_jurisdictions",

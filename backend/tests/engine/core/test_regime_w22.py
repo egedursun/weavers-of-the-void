@@ -46,7 +46,7 @@ from aerona.domain.enums.intrigue import FavourOrigin, IntrigueSecret
 from aerona.domain.enums.military import FeudParty, FeudStatus
 from aerona.domain.enums.mind import SkillKind, SkillSource, TraitKind, TraitSource, ValueAxis
 from aerona.domain.enums.mortal import CareerPath
-from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
+from aerona.domain.enums.polity import ClaimBasis, DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.regime import CredentialKind, LeadershipMode, PowerStance, Routinisation, SegmentLevel, SelectorateKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
@@ -411,6 +411,24 @@ async def test_a_breeding_design_marries_the_house_to_carriers(session: AsyncSes
     ctx = await context(session, breeding_plans={"love_pct": 100})
     plan_two = await session.get(BreedingPlanRow, design.id)
     assert plan_two is not None and design.status is LongPlanStatus.ACTIVE
+
+
+async def test_a_house_whose_head_claims_a_foreign_throne_plans_to_keep_the_claim_in_its_blood(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Corrow")
+    realm = await realm_of(session, world, [town])
+    house = await entity(session, "House Verane", EntityType.HOUSE, HouseStats(), world_id=world.world.id)
+    head = await mortal(session, "Verane", world, town.id, age=40)
+    session.add(HouseProfileRow(house_entity_id=house.id, founder_entity_id=head.id, head_entity_id=head.id, emblem={}, traits=[], seats=[], locked=[]))
+    session.add(HouseMemberRow(house_entity_id=house.id, mortal_entity_id=head.id))
+    session.add(ClaimRow(claimant_entity_id=head.id, house_entity_id=house.id, polity_entity_id=realm.id, basis=ClaimBasis.INHERITANCE))
+    await session.flush()
+    ctx = await context(session)
+    tally = LineageTally()
+    await keep_lineages(ctx, tally)
+    await keep_lineages(ctx, tally)
+    plans = list(await session.scalars(select(BreedingPlanRow).where(BreedingPlanRow.house_entity_id == house.id)))
+    assert tally.begun == 1 and [plan.claim_polity_id for plan in plans] == [realm.id]
+    assert plans[0].target_share == ctx.rules.breeding_plans.claim_share
 
 
 async def test_examinations_grant_credentials_that_open_office_and_swell_the_aspirants(session: AsyncSession, world: CoreWorld) -> None:

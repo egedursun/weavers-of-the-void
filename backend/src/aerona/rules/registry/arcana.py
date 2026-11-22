@@ -16,6 +16,7 @@ class SpellGrammarRules:
     lab_learn_pct: int = rule(25, 0, 100, H, "Chance a mage near a lab text learns its rite each epoch (%)")
     lab_skill: int = rule(20, 0, 100, H, "Spellcraft in a rite a mage gains from learning it out of a lab text")
     lab_fidelity_floor: int = rule(40, 0, 100, H, "Fidelity of a lab text written by a mage with no skill in its rite")
+    lab_mastery: int = rule(60, 0, 100, H, "Spellcraft in a rite from which a mage sets it down in a lab text")
     learners_max: int = rule(0, 0, 10000000, H, "Mages who study lab texts each epoch at most (0: no limit)")
 
 

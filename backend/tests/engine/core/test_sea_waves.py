@@ -10,11 +10,13 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.forecasting import ObservationMethodRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.sea_waves import SeaWaveCoastRow, SeaWaveRow, WaveWarningRow
+from aerona.db.tables.water import CoastRow
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.forecasting import ObservationMethod
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.sea_waves import WaveOrigin
+from aerona.domain.enums.water import CoastForm
 from aerona.engine.context import TickContext
 from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.primitives.manual import manual_context
@@ -115,3 +117,14 @@ async def test_a_people_that_watches_the_waters_gives_a_warning_that_is_kept(ses
     assert row is not None and row.warned
     assert warning is not None and warning.method is ObservationMethod.SIGHT and warning.by_node_id == world.people.id
     assert warning.until_epoch == ctx.epoch + ctx.rules.sea_waves.warning_epochs
+
+
+async def test_a_world_mapped_without_open_water_still_sends_a_wave_along_its_coasts(session: AsyncSession, world: CoreWorld) -> None:
+    for region in world.regions[:2]:
+        session.add(CoastRow(region_entity_id=region.id, form=next(iter(CoastForm))))
+    await session.flush()
+    ctx = await manual_context(session, "coastal", rules_with())
+    wave = await raise_wave(ctx, world.regions[0].id, WaveOrigin.QUAKE, 0.8, strike=Recorder(), sure=True)
+    assert wave is not None and wave.sea_region_id is None
+    struck = set(await session.scalars(select(SeaWaveCoastRow.region_entity_id).where(SeaWaveCoastRow.wave_id == wave.id)))
+    assert struck == {world.regions[0].id, world.regions[1].id}

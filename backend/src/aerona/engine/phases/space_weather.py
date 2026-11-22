@@ -5,6 +5,7 @@ from aerona.engine.space_weather.weather import SpaceWeatherTally, keep_space_we
 
 
 @reads(
+    "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
@@ -29,6 +30,7 @@ from aerona.engine.space_weather.weather import SpaceWeatherTally, keep_space_we
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.entity_tags",
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",

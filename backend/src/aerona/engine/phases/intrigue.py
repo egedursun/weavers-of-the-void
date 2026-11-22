@@ -39,8 +39,10 @@ from aerona.engine.primitives.naming import Namer
     "table.lexemes",
     "table.name_registry",
     "table.nodes",
+    "table.secrets",
     "table.sons",
     "table.spy_agents",
+    "table.spy_networks",
     "table.true_names",
 )
 @writes("table.identities", "table.language_profiles", "table.secrets", "table.true_names")
@@ -83,6 +85,8 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "table.hooks",
     "table.identities",
     "table.intrusions",
+    "table.lexemes",
+    "table.mind_facets",
     "table.mind_profiles",
     "table.mortal_profiles",
     "table.network_nodes",
@@ -122,6 +126,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "table.hooks",
     "table.identities",
     "table.messages",
+    "table.mortal_profiles",
     "table.relationships",
     "table.schemes",
     "table.secrets",

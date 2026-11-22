@@ -115,13 +115,11 @@ async def think(
     same = await same_thought(session, holder_id, kind, epoch, subject)
     if same is not None:
         same.intensity = max(same.intensity, size)
-        await session.flush()
         return same
     row = ThoughtRow(
         holder_node_id=holder_id, kind=kind, emotion=feeling, subject_node_id=subject, intensity=size, epoch=epoch, decay_pct=rules.thoughts.decay_pct
     )
     session.add(row)
-    await session.flush()
     if size >= rules.thoughts.long_term_threshold:
         await take_to_heart(session, rules, holder, row)
     return row

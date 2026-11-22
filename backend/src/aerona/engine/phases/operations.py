@@ -107,6 +107,8 @@ async def admiralty(ctx: TickContext) -> None:
     "table.bonds",
     "table.charms",
     "table.conditions",
+    "table.cult_tenets",
+    "table.culture_values",
     "table.entities",
     "table.entity_flags",
     "table.expedition_members",
@@ -114,8 +116,10 @@ async def admiralty(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.incident_steps",
     "table.incidents",
+    "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
+    "table.mind_attributes",
     "table.node_births",
     "table.nodes",
     "table.prostheses",
@@ -123,10 +127,12 @@ async def admiralty(ctx: TickContext) -> None:
     "table.room_contents",
     "table.site_rooms",
     "table.skills",
+    "table.traits",
 )
 @writes(
     "mortal.hp",
     "table.bodies",
+    "table.body_customs",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
@@ -140,6 +146,7 @@ async def admiralty(ctx: TickContext) -> None:
     "table.injuries",
     "table.mortal_profiles",
     "table.quirks",
+    "table.room_contents",
     "table.site_rooms",
 )
 async def expeditions(ctx: TickContext) -> None:

@@ -104,6 +104,7 @@ class BankingRules(Spanned):
     lend_chance: int = rule(25, 0, 100, G, "A rich guild lends to a poor community at war (% per epoch)")
     borrower_wealth_below: int = rule(40, 0, 100, G, "Wealth or prosperity below which a community at war borrows")
     principal: int = rule(15, 1, 100, G, "Wealth a war loan brings the borrower")
+    enterprise_lend_chance: int = rule(15, 0, 100, G, "A rich guild lends to a poor organisation set on growing, researching or expanding (% per epoch)")
     interest_pct: int = rule(20, 0, 100, G, "Interest on a war loan")
     risk_interest_pct: int = rule(15, 0, 100, G, "Extra interest charged to a borrower that has defaulted before")
     term_years: int = span(5, 1, 2500, G, "Years before a war loan falls due")

@@ -72,6 +72,7 @@ async def thin_elites(ctx: TickContext, polity: EntityRow) -> int:
 
 
 @reads(
+    "faction.wealth",
     "place.fertility",
     "region.breadth",
     "region.fertility",
@@ -91,6 +92,7 @@ async def thin_elites(ctx: TickContext, polity: EntityRow) -> int:
     "table.galaxies",
     "table.galaxy_clusters",
     "table.holder_levels",
+    "table.name_registry",
     "table.node_births",
     "table.nodes",
     "table.offices",
@@ -107,6 +109,7 @@ async def thin_elites(ctx: TickContext, polity: EntityRow) -> int:
     "table.worlds",
 )
 @writes(
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.cohorts",
@@ -118,6 +121,8 @@ async def thin_elites(ctx: TickContext, polity: EntityRow) -> int:
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.name_registry",
+    "table.node_births",
     "table.polity_stress",
     "table.stress_readings",
 )
@@ -226,6 +231,7 @@ async def long_plans(ctx: TickContext) -> None:
 @reads(
     "faction.wealth",
     "house.wealth",
+    "mortal.age",
     "people.piety",
     "people.wealth",
     "settlement.piety",
@@ -509,6 +515,7 @@ async def labour_regimes(ctx: TickContext) -> None:
 
 @reads(
     "table.biology",
+    "table.culture_values",
     "table.entities",
     "table.kinship_systems",
     "table.nodes",

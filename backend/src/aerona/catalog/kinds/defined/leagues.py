@@ -55,7 +55,12 @@ LEAGUE_VOTE_BASIS = total(
         LeagueVoteBasis.ONE_MEMBER_ONE_VOTE: Defined(
             "One realm, one vote",
             checked_by=(),
-            used_by=("db.tables.leagues.PolityLeagueRow", "engine.leagues.rise.from_treaty", "services.player.leagues.FoundLeague"),
+            used_by=(
+                "db.tables.leagues.PolityLeagueRow",
+                "engine.leagues.rise.from_bloc",
+                "engine.leagues.rise.from_treaty",
+                "services.player.leagues.FoundLeague",
+            ),
         ),
         LeagueVoteBasis.BY_POPULATION: Defined("By population", checked_by=("engine.leagues.decisions.weight",), used_by=()),
         LeagueVoteBasis.BY_DUES: Defined("By dues paid", checked_by=("engine.leagues.decisions.weight",), used_by=()),

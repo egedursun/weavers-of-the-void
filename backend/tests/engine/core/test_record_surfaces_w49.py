@@ -22,6 +22,7 @@ from aerona.domain.enums.records import FactUnit, FactValue, InstrumentKind, Pro
 from aerona.engine.recording import accounts, legacy, search
 from aerona.engine.recording.accounts import account_of, history_of
 from aerona.engine.recording.legacy import LEGACY_FIXUP, upgrade_records
+from aerona.engine.recording.moments import told_no_earlier
 from aerona.engine.recording.search import RecordQuery, search_records
 from aerona.services.books import records as book_records
 from aerona.services.books.records import add_history_sections
@@ -225,3 +226,10 @@ def test_the_record_cuts_guard_finds_a_record_read_cut_short() -> None:
     single = "row = await session.scalar(select(IncidentRow).order_by(IncidentRow.id).limit(1))\n"
     assert guard.cuts({Path("a.py"): cut}) and not guard.cuts({Path("b.py"): paged}) and not guard.cuts({Path("c.py"): single})
     assert guard.cuts({Path("d.py"): "shown = incidents[:8]\n"})
+
+
+async def test_a_happening_is_told_no_earlier_than_the_first_record_of_what_it_names(session: AsyncSession, world: CoreWorld) -> None:
+    incident, first_id, second_id = await duel(session, world)
+    assert await told_no_earlier(session, 5, [first_id, None]) == incident.year
+    assert await told_no_earlier(session, 30, [first_id, second_id]) == 30
+    assert await told_no_earlier(session, 5, []) == 5

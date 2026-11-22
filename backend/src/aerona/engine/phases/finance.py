@@ -134,6 +134,7 @@ async def credit_ratings(ctx: TickContext) -> None:
     "table.worlds",
 )
 @writes(
+    "table.beliefs",
     "table.community_stocks",
     "table.faction_profiles",
     "table.goods_flows",

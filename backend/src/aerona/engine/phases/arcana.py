@@ -1,6 +1,6 @@
 from aerona.engine.arcana.grammar import ensure_all
 from aerona.engine.arcana.items import ChargeTally, recharge_all
-from aerona.engine.arcana.labs import StudyTally, study
+from aerona.engine.arcana.labs import StudyTally, study, write_down_rites
 from aerona.engine.arcana.longevity import LongevityTally, tend_longevity
 from aerona.engine.arcana.vis import VisTally, flow_vis
 from aerona.engine.arcana.warping import WarpTally, warp_world
@@ -10,11 +10,12 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases.dominion import count
 
 
-@reads("table.lab_texts", "table.rite_grammar", "table.rite_profiles")
+@reads("table.lab_texts", "table.rite_grammar", "table.rite_profiles", "table.skills")
 @writes("table.rite_grammar")
 async def spell_grammar(ctx: TickContext) -> None:
     ctx.count("grammar_shaped", await ensure_all(ctx))
     tally = StudyTally()
+    await write_down_rites(ctx, tally)
     await study(ctx, tally)
     count(ctx, "lab", tally)
 

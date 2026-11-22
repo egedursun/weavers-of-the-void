@@ -341,6 +341,7 @@ async def language_cycles(ctx: TickContext) -> None:
     "table.stars",
     "table.tradition_effects",
     "table.tradition_profiles",
+    "table.traits",
     "table.value_profiles",
     "table.world_domain_hooks",
     "table.worlds",
@@ -655,6 +656,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.research_boosts",
     "table.research_focus",
     "table.research_progress",
+    "table.ruler_currencies",
     "table.sieges",
     "table.skills",
     "table.sky_events",
@@ -813,6 +815,7 @@ async def research_cycles(ctx: TickContext) -> None:
     "table.name_registry",
     "table.node_materials",
     "table.polity_profiles",
+    "table.regimes",
     "table.value_profiles",
     "table.wars",
 )

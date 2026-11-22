@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import Spanned, rule
+from aerona.rules.model import Spanned, rule, span
 
 S = RuleGroup.ECONOMY
 
@@ -21,3 +21,5 @@ class CommerceRules(Spanned):
     shop_turnover: int = rule(4, 0, 10000, S, "Stock a shop sells each year, before the pace of its form")
     shop_credit_prosperity: int = rule(1, 0, 100, S, "Prosperity a town gains each epoch from the credit its shops extend, for each ten of credit, in tenths")
     upkeep_cost: int = rule(1, 0, 100, S, "Wealth the party bound to upkeep pays each epoch for a leased thing")
+    shop_rent: int = rule(2, 0, 1000, S, "Rent the keeper of a shop pays each epoch to the owner of the building it trades in")
+    shop_lease_years: int = span(100, 50, 1000, S, "Years a lease of a shop's building runs before it is signed again")

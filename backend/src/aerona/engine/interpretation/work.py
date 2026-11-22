@@ -14,6 +14,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import intelligibility, tongues_of
+from aerona.engine.mind.opinion import opinion
 from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.primitives.folk import homes_for, present_among
 from aerona.engine.primitives.numbers import clamp_int
@@ -92,7 +93,8 @@ async def interpret(ctx: TickContext, event: InterpretedEvent, first: int, secon
     loyal_to = await side_of(ctx, reader.node_id, first, second)
     rng = ctx.rng(f"interpret.{event.value}.{first}.{second}.{event_node or 0}.{ctx.epoch}")
     fault = IF.NONE
-    if loyal_to is not None and fidelity >= table.slant_loyalty_threshold and rng.chance(chance * 2):
+    regard = (await opinion(ctx.session, ctx.rules, ctx.epoch, reader.node_id, loyal_to)).value if loyal_to is not None else 0
+    if loyal_to is not None and regard >= table.slant_loyalty_threshold and rng.chance(chance * 2):
         fault = IF.SLANTED
     elif rng.chance(chance):
         fault = rng.pick(list(HONEST_FAULTS))

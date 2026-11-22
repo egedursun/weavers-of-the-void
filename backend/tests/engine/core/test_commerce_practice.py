@@ -3,6 +3,7 @@ from dataclasses import replace
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.agrarian import BrandRow
 from aerona.db.tables.commerce import LeaseRow, PromotionRow, ShopGoodRow, ShopRow, SupplyTierRow
 from aerona.db.tables.economy import LoanRow, MarketPriceRow, TradeRouteProfileRow, WorkshopRow
@@ -10,11 +11,13 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
-from aerona.domain.enums.commerce import LeaseDefault, ShopForm, SupplyTier
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.commerce import LeaseDefault, PromotionMedium, ShopForm, SupplyTier
 from aerona.domain.enums.economy import CommodityKind, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.settlement import SizeTier
-from aerona.domain.models.entity_stats import TradeRouteStats
+from aerona.domain.models.entity_stats import StructureStats, TradeRouteStats
+from aerona.engine.commerce.dealings import DealingsTally, lease_shops, promote_brands
 from aerona.engine.commerce.seed import seed_commerce
 from aerona.engine.commerce.trade import CommerceTally, keep_commerce, keep_lease, retail_short, without_shops
 from aerona.engine.context import TickContext
@@ -165,3 +168,34 @@ async def test_a_market_on_a_trade_route_also_keeps_a_wholesale_tier(session: As
     await seed_commerce(ctx)
     tiers = {row.tier: row.margin for row in await session.scalars(select(SupplyTierRow).where(SupplyTierRow.market_entity_id == home.id))}
     assert tiers == {SupplyTier.RETAIL: ctx.rules.commerce.retail_margin_pct, SupplyTier.WHOLESALE: ctx.rules.commerce.wholesale_margin_pct}
+
+
+async def test_a_brand_owner_spreads_word_by_the_means_of_its_age_and_a_keeper_rents_the_building_of_another(
+    session: AsyncSession, world: CoreWorld, ctx: TickContext
+) -> None:
+    home = await town(session, world)
+    smith = await trader(session, world, "Mav", home.id, wealth=60, honour=40)
+    landlord = await trader(session, world, "Nol", home.id)
+    hall = await entity(session, "Mav's Hall", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=home.id)
+    await BondRepository(session).connect(BondDraft(landlord.id, hall.id, BondKind.OWNS, 0))
+    forge = WorkshopRow(community_entity_id=home.id, kind=WorkshopKind.FORGE, level=1, built_epoch=0, owner_node_id=smith.id, structure_entity_id=hall.id)
+    session.add(forge)
+    await session.flush()
+    brand = BrandRow(workshop_id=forge.id, community_entity_id=home.id, owner_node_id=smith.id, name="Mav's Iron", locked=[])
+    session.add(brand)
+    session.add(
+        ShopRow(
+            settlement_entity_id=home.id, structure_entity_id=hall.id, keeper_node_id=smith.id, form=ShopForm.HOUSE_TRADE, margin=20, opened_epoch=0, locked=[]
+        )
+    )
+    await session.flush()
+    tally = DealingsTally()
+    await promote_brands(ctx, tally)
+    await lease_shops(ctx, tally)
+    promotion = await session.scalar(select(PromotionRow).where(PromotionRow.brand_id == brand.id))
+    lease = await session.scalar(select(LeaseRow).where(LeaseRow.lessee_node_id == smith.id))
+    assert promotion is not None and promotion.medium is PromotionMedium.DISPLAY and promotion.accuracy == 40 and promotion.reach == 60
+    assert lease is not None and lease.owner_node_id == landlord.id and lease.thing_node_id == hall.id and lease.rent == ctx.rules.commerce.shop_rent
+    await promote_brands(ctx, tally)
+    await lease_shops(ctx, tally)
+    assert tally.promotions == 1 and tally.leases == 1

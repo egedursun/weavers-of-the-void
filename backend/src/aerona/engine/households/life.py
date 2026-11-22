@@ -14,6 +14,7 @@ from aerona.db.tables.ownership import SiteProfitRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, OfficeRow, PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.daily_life import ServiceTerms
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.genetics import HouseholdDecision, HouseholdRole
@@ -27,6 +28,7 @@ from aerona.domain.enums.unions import UnionPurpose
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.lineage import preference_bonus
+from aerona.engine.daily.service import engage_servant, release_servant
 from aerona.engine.demography.kinship import has_room, may_wed
 from aerona.engine.factions.guilds import enrol_apprentice
 from aerona.engine.folkways.biases import lean
@@ -46,7 +48,7 @@ from aerona.engine.mortal.kinship import marry
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import active_bonds, connect
+from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.recording.record import StepDraft, record
@@ -87,6 +89,7 @@ class HouseholdTally:
     proud: int = 0
     ashamed: int = 0
     aggregates: int = 0
+    furnished: int = 0
 
 
 @dataclass
@@ -507,11 +510,13 @@ async def servants(ctx: TickContext, household: HouseholdRow, dwelling: Dwelling
         return False
     if household.servants and household.income < household.expenses:
         household.servants -= 1
+        await release_servant(ctx, household)
         dismissed = (StepDraft(StepAction.DISMISS, actor=household.head_node_id, amount=1, unit=FactUnit.PEOPLE),)
         return await decided(ctx, household, HouseholdDecision.DISMISS_SERVANT, amount=household.servants, tally=tally, steps=dismissed)
     rooms = dwelling.rooms if dwelling is not None else 1
     if household.wealth >= table.servant_wealth and household.servants < max(1, rooms // 2):
         household.servants += 1
+        await engage_servant(ctx, household, ServiceTerms.WAGE, ctx.rules.daily_life.servant_wage)
         hired = (StepDraft(StepAction.HIRE, actor=household.head_node_id, amount=1, unit=FactUnit.PEOPLE),)
         return await decided(ctx, household, HouseholdDecision.HIRE_SERVANT, amount=household.servants, tally=tally, steps=hired)
     return False
@@ -626,6 +631,28 @@ async def succeed_head(ctx: TickContext, household: HouseholdRow, members: list[
         household.head_node_id = heir
 
 
+def furnishes(item: EntityRow) -> bool:
+    if item.entity_type is EntityType.ARTWORK:
+        return True
+    return item.entity_type is EntityType.ITEM and not stat(item, "damage") and not stat(item, "protection")
+
+
+async def furnish(ctx: TickContext, household: HouseholdRow, members: list[Member], dwelling: DwellingRow | None, tally: HouseholdTally) -> None:
+    if dwelling is None or household.head_node_id is None:
+        return
+    placed = select(DwellingFurnishingRow.item_node_id)
+    for bond in await active_bonds(ctx.session, [BondKind.OWNS], sources=[member.mortal.id for member in members]):
+        item = await living_entity(ctx.session, bond.target_node_id)
+        if item is None or held(item.id) or not furnishes(item):
+            continue
+        if await ctx.session.scalar(placed.where(DwellingFurnishingRow.item_node_id == item.id)) is not None:
+            continue
+        ctx.session.add(DwellingFurnishingRow(item_node_id=item.id, dwelling_id=dwelling.id, placed_epoch=ctx.epoch))
+        roles = {IncidentRole.ACTOR: household.head_node_id, IncidentRole.SUBJECT: item.id}
+        await record(ctx, "households.furnished", roles=roles, facts={"household": household.name}, place=household.settlement_node_id)
+        tally.furnished += 1
+
+
 async def tend_household(ctx: TickContext, household: HouseholdRow, laws: LawBook, tally: HouseholdTally) -> None:
     state = inspect(household)
     if state.deleted or state.was_deleted or state.detached:
@@ -645,6 +672,7 @@ async def tend_household(ctx: TickContext, household: HouseholdRow, laws: LawBoo
     await bear_burden(ctx, household, members)
     await keep_form(ctx, household, [member.row for member in members], dwelling)
     await decide(ctx, household, members, dwelling, tally)
+    await furnish(ctx, household, members, dwelling, tally)
     quality = await judge_home(ctx, household, members, dwelling, tally)
     await house_prestige(ctx, household, quality)
 

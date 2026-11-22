@@ -8,6 +8,7 @@ from aerona.engine.works.seed import seed_works
 
 @reads(
     "table.currencies",
+    "table.economic_orders",
     "table.entities",
     "table.faction_profiles",
     "table.polity_members",
@@ -51,6 +52,7 @@ async def public_works(ctx: TickContext) -> None:
     ctx.count("enterprise_skimmed", enterprises.skimmed)
     ctx.count("enterprise_starved", enterprises.starved)
     ctx.count("enterprise_privatised", enterprises.privatised)
+    ctx.count("enterprise_founded", enterprises.founded)
 
 
 PHASES = (Phase("public_works", public_works),)

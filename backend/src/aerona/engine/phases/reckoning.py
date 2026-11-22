@@ -6,7 +6,15 @@ from aerona.engine.phase import Phase
 from aerona.engine.reckoning.tend import tend_reckonings
 
 
-@reads("table.incident_collections", "table.incidents", "table.offices", "table.reckoning_cases", "table.reckoning_measures", "table.reckonings")
+@reads(
+    "table.incident_collections",
+    "table.incident_participants",
+    "table.incidents",
+    "table.offices",
+    "table.reckoning_cases",
+    "table.reckoning_measures",
+    "table.reckonings",
+)
 @writes(
     "table.accounts", "table.applied_fixups", "table.offices", "table.polity_profiles", "table.reckoning_cases", "table.reckoning_measures", "table.reckonings"
 )

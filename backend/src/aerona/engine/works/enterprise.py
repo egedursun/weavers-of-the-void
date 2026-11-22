@@ -8,20 +8,25 @@ from aerona.db.tables.commerce import ShopGoodRow, ShopRow
 from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.orders import EconomicOrderRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.works import StateEnterpriseRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.orders import OwnershipRegime
 from aerona.domain.enums.works import EnterpriseForm, EnterpriseManagement
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.numbers.book import towns_in
+from aerona.engine.primitives.mirrors import first_sight
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.recording.record import record
 
 USUAL_CORRUPTION = 50
+ORDER_FAMILY = "state_enterprises.order"
+STATE_FORMS = {OwnershipRegime.RULER: EnterpriseForm.ROYAL_WORKS, OwnershipRegime.STATE: EnterpriseForm.STATE_COMPANY}
 
 
 @dataclass
@@ -30,6 +35,7 @@ class EnterpriseTally:
     skimmed: int = 0
     starved: int = 0
     privatised: int = 0
+    founded: int = 0
 
 
 async def starve(ctx: TickContext, enterprise: StateEnterpriseRow, tally: EnterpriseTally) -> None:
@@ -113,8 +119,33 @@ async def run_enterprise(ctx: TickContext, enterprise: StateEnterpriseRow, tally
         await privatise(ctx, enterprise, realm, tally)
 
 
+async def found_for_orders(ctx: TickContext, tally: EnterpriseTally) -> None:
+    query = select(EconomicOrderRow).where(EconomicOrderRow.ownership.in_(sorted(STATE_FORMS)), EconomicOrderRow.sector.is_not(None))
+    for order in list(await ctx.session.scalars(query.order_by(EconomicOrderRow.id))):
+        if held(order.polity_entity_id) or not await first_sight(ctx.session, ORDER_FAMILY, order.id):
+            continue
+        running = select(StateEnterpriseRow.id).where(StateEnterpriseRow.polity_entity_id == order.polity_entity_id, StateEnterpriseRow.sector == order.sector)
+        if await ctx.session.scalar(running.limit(1)) is not None:
+            continue
+        form = STATE_FORMS[order.ownership]
+        ctx.session.add(
+            StateEnterpriseRow(
+                polity_entity_id=order.polity_entity_id,
+                sector=order.sector,
+                form=form,
+                management=EnterpriseManagement.OFFICIAL,
+                output=PERCENT // 10,
+                founded_epoch=ctx.epoch,
+                locked=[],
+            )
+        )
+        await record(ctx, "enterprise.founded", roles={IncidentRole.ACTOR: order.polity_entity_id}, facts={"form": form})
+        tally.founded += 1
+
+
 async def keep_enterprises(ctx: TickContext) -> EnterpriseTally:
     tally = EnterpriseTally()
+    await found_for_orders(ctx, tally)
     for enterprise in list(await ctx.session.scalars(select(StateEnterpriseRow).order_by(StateEnterpriseRow.id))):
         if not held(enterprise.polity_entity_id):
             await run_enterprise(ctx, enterprise, tally)

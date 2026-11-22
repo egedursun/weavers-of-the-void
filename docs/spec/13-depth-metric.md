@@ -10,14 +10,14 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 |---|---:|---:|---:|
 | region | 650 / 215 met | 523 / 160 met | 400 / 120 met |
 | place | 178 / 25 met | 170 / 20 met | 293 / 15 met |
-| resource | 94 / 35 met | 70 / 50 met | 238 / 30 met |
+| resource | 94 / 35 met | 70 / 50 met | 239 / 30 met |
 | settlement | 1805 / 280 met | 1416 / 230 met | 420 / 145 met |
 | species | 254 / 150 met | 227 / 150 met | 215 / 95 met |
-| people | 1586 / 320 met | 1113 / 220 met | 420 / 140 met |
+| people | 1586 / 320 met | 1115 / 220 met | 420 / 140 met |
 | mortal | 1338 / 355 met | 1018 / 340 met | 420 / 200 met |
 | item | 141 / 65 met | 120 / 60 met | 240 / 45 met |
-| structure | 1371 / 55 met | 832 / 70 met | 420 / 55 met |
-| language | 1258 / 110 met | 717 / 90 met | 420 / 55 met |
+| structure | 1379 / 55 met | 851 / 70 met | 420 / 55 met |
+| language | 1277 / 110 met | 743 / 90 met | 420 / 55 met |
 | legend | 79 / 30 met | 59 / 40 met | 123 / 35 met |
 | tradition | 67 / 20 met | 59 / 25 met | 83 / 25 met |
 | cult | 815 / 90 met | 563 / 100 met | 420 / 75 met |
@@ -27,12 +27,12 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | law | 246 / 55 met | 89 / 60 met | 200 / 45 met |
 | spirit | 222 / 60 met | 207 / 60 met | 260 / 40 met |
 | knowledge | 322 / 70 met | 266 / 110 met | 300 / 85 met |
-| prophecy | 27 / 15 met | 24 / 15 met | 78 / 15 met |
+| prophecy | 27 / 15 met | 24 / 15 met | 79 / 15 met |
 | event | 377 / 15 met | 232 / 20 met | 340 / 15 met |
 | vessel | 859 / 80 met | 566 / 65 met | 400 / 35 met |
 | outer_being | 41 / 15 met | 20 / 20 met | 159 / 20 met |
 | army | 788 / 240 met | 392 / 200 met | 400 / 95 met |
-| natural_law | 945 / 10 met | 575 / 30 met | 420 / 30 met |
+| natural_law | 961 / 10 met | 580 / 30 met | 420 / 30 met |
 | trade_route | 94 / 25 met | 65 / 25 met | 220 / 25 met |
 | disease | 98 / 45 met | 70 / 50 met | 220 / 40 met |
 | polity | 567 / 225 met | 329 / 220 met | 371 / 150 met |
@@ -55,8 +55,8 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | league | 0 | 3 | 39 |
 | son | 1969 / 350 met | 1604 / 320 met | 420 / 190 met |
 | creator | 1664 / 35 met | 1382 / 40 met | 420 / 35 met |
-| foreign_god | 1729 / 200 met | 1447 / 140 met | 420 / 100 met |
-| war | 1387 / 95 met | 949 / 110 met | 420 / 75 met |
+| foreign_god | 1765 / 200 met | 1512 / 140 met | 420 / 100 met |
+| war | 1387 / 95 met | 950 / 110 met | 420 / 75 met |
 | world | 2081 / 195 met | 1698 / 135 met | 420 / 115 met |
 | star | 1816 / 35 met | 1560 / 30 met | 420 / 25 met |
-| route | 847 / 45 met | 510 / 30 met | 420 / 25 met |
+| route | 847 / 45 met | 511 / 30 met | 420 / 25 met |

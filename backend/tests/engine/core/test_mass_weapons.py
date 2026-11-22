@@ -54,6 +54,8 @@ async def test_a_programme_grows_ready_through_its_stages_and_rivals_see_it(sess
     await work_on(ctx, weapon, tally)
     await work_on(ctx, weapon, tally)
     assert stage_of(weapon) is ProgrammeStage.READY and weapon.count == 1 and tally.built == 1
+    stance = list(await session.scalars(select(DeterrencePostureRow).where(DeterrencePostureRow.holder_entity_id == holder.id)))
+    assert [(row.posture, row.toward_entity_id) for row in stance] == [(Posture.DECLARED, None)]
 
 
 async def test_a_credible_posture_holds_attackers_back_and_a_bluff_is_exposed(session: AsyncSession, world: CoreWorld) -> None:

@@ -10,13 +10,14 @@ AUGMENT_MAKE = total(
             checked_by=("engine.augments.install", "engine.made.backfill.prostheses"),
             used_by=(
                 "db.tables.made.AugmentRow",
+                "engine.augments.make_known",
                 "engine.made.backfill.prostheses",
                 "services.player.minds.AugmentDraft",
                 "tools.mortal.minds.InstallAugmentInput",
             ),
         ),
-        AugmentMake.RITE_BOUND: Defined("Rite-bound", checked_by=("engine.augments.install",), used_by=()),
-        AugmentMake.GROWN: Defined("Grown", checked_by=(), used_by=("engine.living.grown.grow_organ",)),
+        AugmentMake.RITE_BOUND: Defined("Rite-bound", checked_by=("engine.augments.install",), used_by=("engine.augments.make_known",)),
+        AugmentMake.GROWN: Defined("Grown", checked_by=(), used_by=("engine.augments.make_known", "engine.living.grown.grow_organ")),
     },
 )
 

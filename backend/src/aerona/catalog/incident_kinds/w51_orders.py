@@ -1040,6 +1040,15 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=C.SEASON,
     ),
     IncidentKindSpec(
+        "occupation.ceded",
+        G.DIPLOMACY,
+        "The peace gave {subject} to {actor}, which had held it by force, and its rule there stopped being an occupation.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT), RoleSpec(R.VICTIM, required=False)),
+        facts=(FactSpec("collaborators", FactValue.NUMBER, FactUnit.COUNT),),
+        place=PlaceRule.NONE,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
         "occupation.liberated",
         G.DIPLOMACY,
         "The occupation of {subject} by {victim} ended, {ending}, leaving {collaborators:collaborator|collaborators} to answer for it.",

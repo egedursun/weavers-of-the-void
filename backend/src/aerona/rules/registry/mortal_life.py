@@ -71,6 +71,9 @@ class KinshipRules(Spanned):
     purpose_bonus: int = rule(15, 0, 100, G, "Pull toward a match that serves the purpose a people holds unions for")
     purpose_pull_pct: int = rule(30, 0, 300, G, "Share of a match's prestige, friendship, strength or wealth that its purpose weighs (%)")
     marriage_chance: int = rule(5, 0, 100, G, "Chance that adult lovers or the betrothed wed (% per year)")
+    community_marriage_chance: int = rule(
+        1, 0, 100, G, "Chance that the unwed head of a house or household with no lover or promise weds someone of its own community (% per year)"
+    )
     divorce_chance: int = rule(2, 0, 100, G, "Chance each epoch that a cold marriage ends (%)")
     divorce_opinion_below: int = rule(-40, -100, 100, G, "Opinion between spouses below which they may part")
     annulment_chance: int = rule(2, 0, 100, G, "Chance each epoch that a cold, childless marriage is declared void where divorce is forbidden (%)")

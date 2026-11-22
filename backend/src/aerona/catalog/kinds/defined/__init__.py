@@ -318,7 +318,6 @@ DEFINITIONS: dict[str, Mapping[Any, Defined]] = {
     "occupation_regimes.CollaborationKind": occupation_regimes.COLLABORATION_KIND,
     "operations.QuirkKind": operations.QUIRK_KIND,
     "orders.OrderLabour": orders.ORDER_LABOUR,
-    "orders.OwnershipRegime": orders.OWNERSHIP_REGIME,
     "orders.SavingForm": orders.SAVING_FORM,
     "orders.TouristSight": orders.TOURIST_SIGHT,
     "outer.OuterSealKind": outer.OUTER_SEAL_KIND,

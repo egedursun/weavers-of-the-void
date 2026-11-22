@@ -4,8 +4,11 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import AugmentEffectRow, AugmentRow
+from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPart
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import AugmentKind, AugmentMake, AugmentSlot, EffectTarget, MadeMindStance
 from aerona.domain.enums.mind import SkillKind
@@ -13,13 +16,17 @@ from aerona.domain.enums.minds import MindUpkeep
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import points_of
+from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.research import techniques_of
 from aerona.engine.made.doctrine import doctrine_here
 from aerona.engine.mind.book import skill_level
 from aerona.engine.minds.continuity import law_for
 from aerona.engine.mortal.standing import add_stress
+from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.knowledge import knows
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
@@ -153,3 +160,64 @@ async def keep_augments(ctx: TickContext) -> None:
         await keep_one(ctx, being, row, counts[row.bearer_node_id])
         ctx.count("augments_kept")
     await ctx.session.flush()
+
+
+async def best_skill(ctx: TickContext, being_id: int) -> SkillKind | None:
+    query = select(SkillRow.skill).where(SkillRow.holder_node_id == being_id).order_by(SkillRow.level.desc(), SkillRow.skill)
+    return await ctx.session.scalar(query.limit(1))
+
+
+async def enhancement_effects(ctx: TickContext, being_id: int) -> list[tuple[EffectTarget, str, int]]:
+    skill = await best_skill(ctx, being_id)
+    return [(EffectTarget.SKILL, skill.value, ctx.rules.augments.enhance_lift)] if skill is not None else []
+
+
+async def make_known(ctx: TickContext, being: EntityRow) -> AugmentMake | None:
+    place = being.location_id
+    if await knows(ctx.session, being.id, KnowledgeBranch.MAGIC):
+        return AugmentMake.RITE_BOUND
+    if await knows(ctx.session, being.id, KnowledgeBranch.BIOMANCY):
+        return AugmentMake.GROWN
+    if place is not None and Technique.COMPUTATION in await techniques_of(ctx.session, place):
+        return AugmentMake.MADE
+    return None
+
+
+async def surgeon_near(ctx: TickContext, being: EntityRow) -> int | None:
+    here = await present_among(ctx.session, [being.location_id])
+    query = select(SkillRow.holder_node_id).join(EntityRow, EntityRow.id == SkillRow.holder_node_id).where(here, SkillRow.skill == SkillKind.SURGERY)
+    return await ctx.session.scalar(query.order_by(SkillRow.level.desc(), SkillRow.holder_node_id).limit(1))
+
+
+async def seek_enhancements(ctx: TickContext) -> int:
+    table = ctx.rules.augments
+    enhanced = select(AugmentRow.bearer_node_id).where(AugmentRow.kind == AugmentKind.ENHANCEMENT)
+    wealthy = select(MortalProfileRow.entity_id).where(MortalProfileRow.wealth >= table.enhance_wealth)
+    query = select(EntityRow).where(
+        EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(enhanced), EntityRow.id.in_(wealthy)
+    )
+    sought = 0
+    for being in list(await ctx.session.scalars(query.order_by(EntityRow.id))):
+        if held(being.id):
+            continue
+        make = await make_known(ctx, being)
+        effects = await enhancement_effects(ctx, being.id)
+        if make is None or not effects:
+            continue
+        try:
+            await install(
+                ctx,
+                being.id,
+                slot=AugmentSlot.WHOLE_BODY,
+                part=None,
+                kind=AugmentKind.ENHANCEMENT,
+                make=make,
+                quality=PERCENT // 2,
+                surgeon_id=await surgeon_near(ctx, being),
+                effects=effects,
+            )
+        except ValidationFailedError:
+            continue
+        await shift_points(ctx.session, being, -table.enhance_cost)
+        sought += 1
+    return sought

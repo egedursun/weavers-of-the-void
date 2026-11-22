@@ -10,13 +10,14 @@ from aerona.db.tables.networks import NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import ENDED_STATUSES, EntityStatus, EntityType
-from aerona.domain.enums.made import RealmEntry, RealmPurpose
+from aerona.domain.enums.made import RealmAwareness, RealmEntry, RealmPurpose
 from aerona.domain.enums.minds import MindSeat, MindUpkeep
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.made.control import RealmDraft, make_realm
 from aerona.engine.made.kinds import AWARE_ESCAPE, PURPOSES, entry_refused
 from aerona.engine.minds.profiles import profile_of
 from aerona.engine.minds.seat_loss import lose_seat
@@ -196,9 +197,41 @@ async def keep_realm(ctx: TickContext, realm: MadeRealmRow) -> None:
         await shift_points(ctx.session, keeper, round_half_up(table.labour_yield * working * ratio / PERCENT))
 
 
+UNHOUSED_SEATS = (MindSeat.STRUCTURE, MindSeat.NETWORK, MindSeat.OBJECT)
+
+
+async def realm_on(ctx: TickContext, host_id: int) -> MadeRealmRow | None:
+    query = select(MadeRealmRow).where(MadeRealmRow.host_node_id == host_id, MadeRealmRow.sealed.is_(False)).order_by(MadeRealmRow.dimension_id)
+    return await ctx.session.scalar(query.limit(1))
+
+
+async def house_minds(ctx: TickContext) -> int:
+    query = select(MindProfileRow).where(MindProfileRow.seat.in_(UNHOUSED_SEATS), MindProfileRow.seat_node_id.is_not(None)).order_by(MindProfileRow.node_id)
+    housed = 0
+    for mind in list(await ctx.session.scalars(query)):
+        host_id = mind.seat_node_id
+        if host_id is None or held(mind.node_id, host_id) or "seat" in (mind.locked or []):
+            continue
+        if not ctx.rng(f"realm.dwell.{mind.node_id}.{ctx.epoch}").chance(ctx.rules.made_realms.dwelling_pct):
+            continue
+        realm = await realm_on(ctx, host_id)
+        if realm is None:
+            host = await ctx.session.get(EntityRow, host_id)
+            name = f"the realm within {host.name}" if host is not None else "a made realm"
+            draft = RealmDraft(name, mind.node_id, host_id, RealmPurpose.DWELLING, PERCENT, RealmEntry.TRANSFER, RealmAwareness.KNOWS, MindUpkeep.MAINTENANCE)
+            realm = await make_realm(ctx, draft)
+        try:
+            await enter_realm(ctx, mind.node_id, realm.dimension_id)
+        except ValidationFailedError:
+            continue
+        housed += 1
+    return housed
+
+
 @reads("table.entities", "table.made_realm_profiles", "table.made_realms", "table.mind_profiles", "table.mortal_profiles", "table.network_profiles")
 @writes("table.entities", "table.made_realms", "table.mind_profiles", "table.mortal_profiles")
 async def keep_realms(ctx: TickContext) -> None:
+    ctx.count("minds_housed", await house_minds(ctx))
     for realm in list(await ctx.session.scalars(select(MadeRealmRow).order_by(MadeRealmRow.dimension_id))):
         if held(realm.dimension_id):
             continue

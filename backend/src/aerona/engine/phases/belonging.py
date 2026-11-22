@@ -24,6 +24,7 @@ from aerona.engine.phases.dominion import count
     "table.augment_effects",
     "table.augments",
     "table.bonds",
+    "table.charms",
     "table.coalition_members",
     "table.community_cohorts",
     "table.districts",
@@ -38,6 +39,7 @@ from aerona.engine.phases.dominion import count
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.marriages",
+    "table.mind_attributes",
     "table.mind_facets",
     "table.mortal_profiles",
     "table.movements",
@@ -78,6 +80,7 @@ async def belonging(ctx: TickContext) -> None:
     "table.sanctuaries",
     "table.social_norms",
     "table.structure_profiles",
+    "table.traits",
 )
 @writes("cult.influence", "table.community_relations", "table.cult_doctrines", "table.entities", "table.memories", "table.mortal_profiles", "table.sanctuaries")
 async def sanctuary(ctx: TickContext) -> None:

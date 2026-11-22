@@ -19,6 +19,7 @@ class ForecastingRules:
     accuracy_divination: int = rule(30, 0, 100, G, "Accuracy of a forecast read by divination")
     weather_work_strength: int = rule(20, 0, 100, G, "Strength of a weather work a mortal raises at the usual effort")
     weather_work_cost: int = rule(20, 0, 500, G, "Coin a weather work costs at the usual effort")
+    weather_work_shift: int = rule(40, 0, 100, G, "Shift of a land's rainfall from its usual at which its towns try to work the weather back")
     side_effect_share_pct: int = rule(50, 0, 100, G, "Share of a weather work's strength that falls on the land downwind as its opposite (%)")
     kept_accuracy: int = rule(50, 0, 100, G, "Accuracy at which a people's forecast foresees a failed or turned season")
     kept_refund: int = rule(2, 0, 50, G, "Prosperity a town keeps in a hard season because its people foresaw it")

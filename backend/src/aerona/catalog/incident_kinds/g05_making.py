@@ -18,6 +18,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.means import WaterLift
 from aerona.domain.enums.minds import WillCause
 from aerona.domain.enums.modifier import IncidentRole as R
+from aerona.domain.enums.orders import OwnershipRegime
 from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule, ProcessClock, StepAction
 from aerona.domain.enums.records import ProcessGroup as G
 from aerona.domain.enums.records import StepAction as A
@@ -514,6 +515,15 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             clock=ProcessClock.SEASON,
             chronicle_kind=K.DISASTER,
         ),
+    ),
+    IncidentKindSpec(
+        "ownership.commons_passed",
+        G.MAKING,
+        "Under the order of its realm, the {workshop} of {place} that its people held in common passed to {beneficiary}.",
+        roles=(RoleSpec(R.PLACE), RoleSpec(R.BENEFICIARY)),
+        facts=(FactSpec("workshop", FactValue.ENUM, enum=WorkshopKind), FactSpec("ownership", FactValue.ENUM, enum=OwnershipRegime)),
+        place=PlaceRule.REQUIRED,
+        clock=ProcessClock.SEASON,
     ),
     IncidentKindSpec(
         "refining.bottleneck",

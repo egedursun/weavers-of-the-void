@@ -8,6 +8,7 @@ from aerona.engine.divine.foreign import divine_pacts, god_opinions, old_god_doc
 from aerona.engine.divine.goals import pursue_goals
 from aerona.engine.divine.grammar import keep_powers
 from aerona.engine.divine.laws import tend_laws
+from aerona.engine.divine.old_gods import old_gods_act
 from aerona.engine.divine.outer import outer_feeding, void_rites
 from aerona.engine.divine.outer_agency import outer_agency
 from aerona.engine.divine.pantheon import keep_pantheons
@@ -154,9 +155,13 @@ async def divine_wounds(ctx: TickContext) -> None:
     await keep_powers(ctx)
 
 
-@reads("table.avatars", "table.bonds", "table.divine_standing", "table.entities", "table.foreign_gods", "table.sons")
+@reads("table.avatars", "table.bonds", "table.divine_standing", "table.entities", "table.foreign_gods", "table.nodes", "table.sons")
 @writes("table.avatars", "table.bonds", "table.chronicle", "table.divine_standing", "table.incident_participants", "table.incidents")
 async def avatars(ctx: TickContext) -> None:
+    deeds = await old_gods_act(ctx)
+    ctx.count("old_god_miracles", deeds.miracles)
+    ctx.count("old_god_avatars", deeds.avatars)
+    ctx.count("old_god_creatures", deeds.creatures)
     ctx.count("converted", await avatar_cycles(ctx))
 
 

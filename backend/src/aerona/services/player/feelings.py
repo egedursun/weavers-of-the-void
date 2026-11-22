@@ -128,6 +128,7 @@ async def send_thought(scope: PlayerScope, command: SendThought) -> Effect:
     )
     if row is None:
         raise ValidationFailedError(f"{mortal.name}'s temperament smothers that feeling entirely.")
+    await scope.session.flush()
     feeling = EMOTIONS[row.emotion].label.lower()
     return Effect(f"{mortal.name} now feels {feeling}: {THOUGHTS[row.kind].label.lower()}.", target_node_id=mortal.id, values={"thought_id": row.id})
 

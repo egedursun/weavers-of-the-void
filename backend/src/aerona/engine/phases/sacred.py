@@ -41,6 +41,7 @@ from aerona.engine.sacred.spirits import SpiritTally, keep_place_spirits
     "table.sons",
     "table.spirit_offices",
     "table.stars",
+    "table.traits",
     "table.world_domain_hooks",
     "table.worlds",
 )

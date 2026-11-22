@@ -69,6 +69,7 @@ from aerona.engine.mind.book import best_skill
 from aerona.engine.minds import continuity
 from aerona.engine.minds.crimes import binding_crime, copying_crime, mind_crime
 from aerona.engine.minds.making import Making, make_mind, missing_craft
+from aerona.engine.minds.phase import REMOTE_FEEDBACK, bodies_allowed
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_percent
@@ -412,7 +413,15 @@ async def install_augment(call: MortalCall, args: InstallAugmentInput) -> str:
     slot = AugmentSlot.PART if args.body_part is not None else AugmentSlot.WHOLE_BODY
     try:
         row = await augments.install(
-            call.tick, call.me.id, slot=slot, part=args.body_part, kind=args.kind, make=args.make, quality=50, surgeon_id=call.me.id, effects=[]
+            call.tick,
+            call.me.id,
+            slot=slot,
+            part=args.body_part,
+            kind=args.kind,
+            make=args.make,
+            quality=50,
+            surgeon_id=call.me.id,
+            effects=await augments.enhancement_effects(call.tick, call.me.id) if args.kind is AugmentKind.ENHANCEMENT else [],
         )
     except ValidationFailedError as error:
         fail(MortalResult.AUGMENT_DECLINED, why=why(error))
@@ -450,14 +459,13 @@ async def run_remote_body(call: MortalCall, args: BodyInput) -> str:
     body = await thing(call, args.body_id, MortalResult.REMOTE_DECLINED, "body")
     if body.id == call.me.id or (await call.session.get(ConstructRow, body.id) is None and body.entity_type is not EntityType.STRUCTURE):
         fail(MortalResult.REMOTE_DECLINED, why=f"{body.name} is not a made body you can run")
-    mind = await call.session.get(MindProfileRow, call.me.id)
-    allowed = max(1, (mind.capacity if mind is not None else call.rules.minds.baseline_capacity) // call.rules.interfaces.bodies_per_capacity)
+    allowed = bodies_allowed(call.rules, await call.session.get(MindProfileRow, call.me.id))
     running = int(await call.session.scalar(select(func.count()).where(RemoteBodyRow.mind_node_id == call.me.id, RemoteBodyRow.body_node_id != body.id)) or 0)
     if running >= allowed:
         fail(MortalResult.REMOTE_DECLINED, why=f"your mind can run only {several(allowed, 'remote body', 'remote bodies')} at once")
     row = await call.session.get(RemoteBodyRow, body.id)
     if row is None:
-        row = RemoteBodyRow(body_node_id=body.id, mind_node_id=call.me.id, feedback_pct=30, since_epoch=call.tick.epoch, locked=[])
+        row = RemoteBodyRow(body_node_id=body.id, mind_node_id=call.me.id, feedback_pct=REMOTE_FEEDBACK, since_epoch=call.tick.epoch, locked=[])
         call.session.add(row)
     row.mind_node_id = call.me.id
     call.target(body.id)

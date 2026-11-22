@@ -3,18 +3,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.climes import MonsoonSeasonRow
 from aerona.db.tables.cosmography import CelestialReadingRow
+from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.environment import ForcedWeatherRow
 from aerona.db.tables.forecasting import ObservationMethodRow, WeatherWorkRow
 from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.cosmography import OmenReading
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
+from aerona.domain.enums.settlement import SizeTier
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import CelestialStats
 from aerona.engine.context import TickContext
 from aerona.engine.forecasting.reading import sky_marks, sky_omens
 from aerona.engine.forecasting.works import ForecastTally, keep_forecasting
-from tests.engine.core.factories import CoreWorld, entity
+from tests.engine.core.factories import CoreWorld, entity, settlement, surveyed
 
 
 async def test_every_people_reads_the_weather_by_sight_at_least(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
@@ -75,3 +79,19 @@ async def test_good_and_evil_omens_in_a_people_s_sky_weigh_against_each_other(se
     )
     await session.flush()
     assert await sky_omens(session, world.people.id) == 2
+
+
+async def test_a_town_parched_by_a_failed_monsoon_works_the_weather_toward_rain_by_what_it_knows(
+    session: AsyncSession, world: CoreWorld, ctx: TickContext
+) -> None:
+    await surveyed(session, world)
+    town = await settlement(session, "Dryford", world, world.regions[0], population=3000)
+    session.add(SettlementProfileRow(settlement_entity_id=town.id, size_tier=SizeTier.TOWN, treasury=500, locked=[]))
+    session.add(HolderLevelRow(holder_entity_id=town.id, branch=KnowledgeBranch.AGRICULTURE, level=2))
+    session.add(MonsoonSeasonRow(world_id=world.world.id, epoch=ctx.epoch, strength=10, failed=True, locked=[]))
+    await session.flush()
+    tally = ForecastTally()
+    await keep_forecasting(ctx, tally)
+    work = await session.scalar(select(WeatherWorkRow).where(WeatherWorkRow.holder_node_id == town.id))
+    assert tally.raised == 1 and work is not None and work.aim is WeatherAim.RAIN and work.method is WeatherWorkMethod.SEEDING
+    assert await session.scalar(select(IncidentRow.id).where(IncidentRow.kind == "weather.work_raised")) is not None

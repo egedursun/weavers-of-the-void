@@ -17,6 +17,7 @@ from aerona.engine.phase import Phase
     "table.mortal_profiles",
     "table.node_births",
     "table.nodes",
+    "table.polity_members",
     "table.population_instruments",
     "table.population_policies",
     "table.trade_route_profiles",

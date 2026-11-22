@@ -157,6 +157,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.coalition_members",
     "table.incident_facts",
     "table.incident_participants",
+    "table.incident_terms",
     "table.incidents",
     "table.mortal_profiles",
     "table.oaths",
@@ -176,16 +177,32 @@ async def patronage(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.age",
     "table.breeding_plans",
+    "table.claims",
     "table.entities",
     "table.feuds",
+    "table.house_members",
     "table.house_profiles",
     "table.lineage_segments",
     "table.long_plans",
+    "table.marriages",
+    "table.node_births",
     "table.nodes",
     "table.polity_profiles",
 )
-@writes("table.lineage_segments")
+@writes(
+    "table.breeding_plans",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.house_profiles",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_terms",
+    "table.incidents",
+    "table.lineage_segments",
+    "table.long_plans",
+)
 async def kin_politics(ctx: TickContext) -> None:
     tally = LineageTally()
     await keep_lineages(ctx, tally)

@@ -25,3 +25,4 @@ class DailyLifeRules:
     trend_drift: int = rule(1, 0, 100, S, "Points a people's leisure shares move each epoch toward what its folk pursue")
     tourism_coin_min: int = rule(1, 0, 1000000, S, "Least coin a visit spends before it is told as a season of travellers")
     bound_flight_pct: int = rule(20, 0, 100, S, "Chance each epoch that a servant bound without wage leaves the household of their own choice (%)")
+    servant_wage: int = rule(2, 0, 1000, S, "Wage a household pays each epoch to a servant it takes into service")

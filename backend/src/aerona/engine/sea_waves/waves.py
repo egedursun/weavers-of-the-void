@@ -15,7 +15,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import FactInput, record
-from aerona.engine.sea_waves.sea import coasts_of, sea_of, shape_pct, warned
+from aerona.engine.sea_waves.sea import open_coast, shape_pct, warned
 
 Striker = Callable[[TickContext, EntityRow, Disaster, float], Awaitable[Any]]
 ORIGIN_OF = total(
@@ -87,9 +87,9 @@ async def raise_wave(
     atlas: RegionAtlas | None = None,
 ) -> SeaWaveRow | None:
     atlas = atlas or await RegionAtlas.load(ctx.session)
-    sea = sea_of(atlas, origin_region)
+    sea, coasts = await open_coast(ctx, atlas, origin_region)
     world = atlas.world_of(origin_region)
-    if not sea or world is None:
+    if not coasts or world is None:
         return None
     if not sure and not ctx.rng(f"wave.{origin.value}.{origin_region}.{ctx.epoch}").chance(wave_chance(ctx, origin, severity)):
         return None
@@ -97,7 +97,7 @@ async def raise_wave(
         world_id=world,
         origin=origin,
         origin_region_id=origin_region,
-        sea_region_id=min(sea),
+        sea_region_id=sea,
         strength=clamp_int(round(severity * PERCENT), 0, PERCENT),
         cause_node_id=cause,
         epoch=ctx.epoch,
@@ -106,7 +106,7 @@ async def raise_wave(
     ctx.session.add(wave)
     await ctx.session.flush()
     struck = []
-    for coast in coasts_of(atlas, sea):
+    for coast in coasts:
         hops = atlas.region_hops(origin_region, coast)
         row = await strike_coast(ctx, atlas, wave, coast, hops=hops if hops is not None else 0, strike=strike)
         if row is not None:

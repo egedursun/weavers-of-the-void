@@ -38,8 +38,17 @@ async def legal_systems(ctx: TickContext) -> None:
     count(ctx, "legal_system", tally)
 
 
-@reads("table.appeals")
-@writes("table.appeals")
+@reads("table.appeals", "table.crime_cases", "table.node_births")
+@writes(
+    "table.appeals",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.crime_cases",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
+)
 async def appeals(ctx: TickContext) -> None:
     tally = AppealTally()
     await hear_appeals(ctx, tally)
@@ -96,7 +105,9 @@ async def jurisdictions(ctx: TickContext) -> None:
     "table.wars",
     "table.worlds",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.pardons")
+@writes(
+    "table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.outlaws", "table.pardons"
+)
 async def pardons(ctx: TickContext) -> None:
     tally = PardonTally()
     await grant_pardons(ctx, tally)

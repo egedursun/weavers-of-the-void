@@ -164,6 +164,8 @@ class BreedingPlanRules(Spanned):
     conceal_pct: int = rule(15, 0, 100, H, "Chance a planned match is hidden behind a concealed parentage (%)")
     conceal_secrecy: int = rule(5, 0, 100, H, "Secrecy a concealed parentage adds to the plan")
     secret_severity: int = rule(40, 0, 100, H, "Severity of the secret of a concealed parentage")
+    claim_share: int = rule(50, 1, 100, H, "Share of a house that a plan to keep its head's claim in the blood aims to have carry it (%)")
+    claim_generations: int = rule(3, 1, 100, H, "Generations a house plans for when it sets out to keep its head's claim in the blood")
 
     @property
     def barren_epochs(self) -> int:

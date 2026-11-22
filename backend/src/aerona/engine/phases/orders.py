@@ -52,6 +52,7 @@ async def money_changing(ctx: TickContext) -> None:
     "table.entities",
     "table.holder_levels",
     "table.ideology_adherents",
+    "table.ideology_tenets",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.movement_profiles",

@@ -31,6 +31,7 @@ from aerona.engine.industry.energy import industry_row
 from aerona.engine.intrigue.beliefs import evidence_trusts
 from aerona.engine.leagues.book import unions_of
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.polity.signatories import realm_of_party, signatories_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import ongoing_wars
@@ -282,9 +283,11 @@ async def hungry_members(ctx: TickContext, members: list[int]) -> bool:
 
 async def allies_of(ctx: TickContext, realm_id: int) -> list[int]:
     live = select(TreatyProfileRow.treaty_entity_id).where(TreatyProfileRow.status == TreatyStatus.IN_FORCE, TreatyProfileRow.kind.in_(list(ALLIANCES)))
-    mine = select(TreatyPartyRow.treaty_entity_id).where(TreatyPartyRow.party_node_id == realm_id, TreatyPartyRow.treaty_entity_id.in_(live))
+    signing = await signatories_of(ctx.session, realm_id)
+    mine = select(TreatyPartyRow.treaty_entity_id).where(TreatyPartyRow.party_node_id.in_(signing), TreatyPartyRow.treaty_entity_id.in_(live))
     parties = await ctx.session.scalars(select(TreatyPartyRow.party_node_id).where(TreatyPartyRow.treaty_entity_id.in_(mine)))
-    return sorted({party for party in parties if party != realm_id})
+    realms = {await realm_of_party(ctx.session, party) for party in sorted(set(parties)) if party not in signing}
+    return sorted(realm for realm in realms if realm is not None and realm != realm_id)
 
 
 async def enemies_of(ctx: TickContext, realm: EntityRow, policies: PolicyBook) -> set[int]:

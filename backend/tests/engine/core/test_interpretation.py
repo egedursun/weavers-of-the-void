@@ -109,3 +109,11 @@ async def test_a_recurring_exchange_keeps_one_reading_whose_error_lasts_until_fo
     assert row.epoch == ctx.epoch and reach_of(ctx, row) < 1
     assert slant_of(row, first.id, second.id) == 0
     assert len(list(await session.scalars(select(InterpretationRow)))) == 1
+
+
+async def test_a_skilled_interpreter_with_no_regard_for_either_side_errs_but_never_slants(session: AsyncSession, world: CoreWorld) -> None:
+    rules = tuned_rules(interpreters={"fault_base_pct": 100, "fault_per_distance_pct": 100, "slant_loyalty_threshold": 40})
+    ctx = await manual_context(session, "unslanted", rules)
+    first, second, _reader = await two_peoples(session, world, skill=100)
+    row = await interpret(ctx, InterpretedEvent.TRADE, first.id, second.id)
+    assert row is not None and row.fault is not InterpretationFault.SLANTED and row.favoured_party_id is None

@@ -36,6 +36,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
+from aerona.engine.regime.control import new_breeding
 from aerona.engine.services.community_relations import change_relation
 
 TRIBAL = frozenset({GovernmentKind.CHIEFDOM, GovernmentKind.TRIBAL_CONFEDERATION})
@@ -51,6 +52,7 @@ class LineageTally:
     love_matches: int = 0
     concealed: int = 0
     bred: int = 0
+    begun: int = 0
 
 
 async def stateless(ctx: TickContext, house: HouseProfileRow) -> bool:
@@ -283,8 +285,39 @@ async def advance_breeding(ctx: TickContext, tally: LineageTally) -> None:
     await ctx.session.flush()
 
 
+async def keep_claims_in_the_blood(ctx: TickContext, tally: LineageTally) -> None:
+    table = ctx.rules.breeding_plans
+    planned = set(await ctx.session.scalars(select(BreedingPlanRow.house_entity_id)))
+    houses = select(HouseProfileRow).where(HouseProfileRow.head_entity_id.is_not(None)).order_by(HouseProfileRow.house_entity_id)
+    for house in list(await ctx.session.scalars(houses)):
+        head_id = house.head_entity_id
+        if head_id is None or house.house_entity_id in planned or held(house.house_entity_id, head_id):
+            continue
+        claim = await ctx.session.scalar(
+            select(ClaimRow).where(ClaimRow.claimant_entity_id == head_id, ClaimRow.ended_epoch.is_(None)).order_by(ClaimRow.id).limit(1)
+        )
+        house_row = await living_entity(ctx.session, house.house_entity_id)
+        realm = await living_entity(ctx.session, claim.polity_entity_id) if claim is not None else None
+        if claim is None or house_row is None or realm is None or realm.id == house.polity_entity_id:
+            continue
+        await new_breeding(
+            ctx,
+            head_id,
+            house_row.id,
+            f"{house_row.name} keeping its claim to {realm.name}",
+            locus=None,
+            allele=None,
+            claim_polity_id=realm.id,
+            target_share=table.claim_share,
+            steps=table.claim_generations,
+        )
+        planned.add(house_row.id)
+        tally.begun += 1
+
+
 async def keep_lineages(ctx: TickContext, tally: LineageTally) -> None:
     rows = await seed_segments(ctx, tally)
     await align(ctx, rows, tally)
+    await keep_claims_in_the_blood(ctx, tally)
     await advance_breeding(ctx, tally)
     await ctx.session.flush()

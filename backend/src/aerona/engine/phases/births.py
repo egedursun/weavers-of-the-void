@@ -2,20 +2,27 @@ import math
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 
+from sqlalchemy import select
+
 from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
+from aerona.db.tables.households import HouseholdMemberRow
+from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.polity import HouseProfileRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.affliction import PackageKind, Transmission
-from aerona.domain.enums.bond import BondKind, BondRole
+from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitEffect, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage
@@ -23,6 +30,7 @@ from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.storyteller import RecoveryKind
 from aerona.domain.enums.transform import TransformKind
+from aerona.domain.enums.unions import UnionForm, UnionPurpose
 from aerona.domain.enums.world import TechnologyEra
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
 from aerona.engine.agrarian.book import gap_site
@@ -35,6 +43,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.customs.time_budgets import rested_fertility
 from aerona.engine.cycles.breeding import assign_caste, bearer_among, born_sex
 from aerona.engine.cycles.lineage import breeds, system_of, union_of
+from aerona.engine.demography.kinship import may_wed
 from aerona.engine.demography.urban import founding_factor
 from aerona.engine.eras.effects import MODERN_FROM, era_at, era_order
 from aerona.engine.fertility_means.factor import user_factor
@@ -50,8 +59,8 @@ from aerona.engine.mind.book import effect_of, pressures_of, scaled_by
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.needs import sustenance_need
 from aerona.engine.mind.space import value_distance
-from aerona.engine.mortal.kin import children_of
-from aerona.engine.mortal.kinship import add_parent
+from aerona.engine.mortal.kin import betrothed_of, children_of, partners_of
+from aerona.engine.mortal.kinship import add_parent, marry
 from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_summaries, refresh_life, sex_of_stats
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.mythic.geasa import birth_geas
@@ -62,6 +71,7 @@ from aerona.engine.polity.houses import bloodline_fertility
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.harshness import harsh_chance
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -1049,6 +1059,70 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     return born
 
 
+async def unwed_heads(ctx: TickContext) -> list[int]:
+    houses = select(HouseProfileRow.head_entity_id).where(HouseProfileRow.head_entity_id.is_not(None))
+    households = select(HouseholdMemberRow.member_node_id).where(HouseholdMemberRow.role == HouseholdRole.HEAD)
+    found = set(await ctx.session.scalars(houses)) | set(await ctx.session.scalars(households))
+    return sorted(head for head in found if head is not None)
+
+
+SUITORS = 5
+
+
+async def neighbour_to_wed(ctx: TickContext, head: EntityRow, community: EntityRow) -> EntityRow | None:
+    wed = select(BondRow.source_node_id).where(BondRow.kind == BondKind.SPOUSE_OF, BondRow.state == BondState.ACTIVE)
+    wed_too = select(BondRow.target_node_id).where(BondRow.kind == BondKind.SPOUSE_OF, BondRow.state == BondState.ACTIVE)
+    grown = select(MortalProfileRow.entity_id).where(MortalProfileRow.life_stage.in_(sorted(stage for stage in LifeStage if adult(stage))))
+    query = select(EntityRow).where(
+        EntityRow.entity_type == EntityType.MORTAL,
+        EntityRow.status == EntityStatus.CANON,
+        await present_among(ctx.session, [community.id]),
+        EntityRow.id != head.id,
+        EntityRow.id.not_in(wed),
+        EntityRow.id.not_in(wed_too),
+        EntityRow.id.in_(grown),
+    )
+    for other in list(await ctx.session.scalars(query.order_by(EntityRow.id).limit(SUITORS))):
+        profile, _created = await ensure_profile(ctx.session, other.id, ctx.epoch)
+        if held(other.id) or not adult(profile.life_stage) or await partners_of(ctx.session, other.id):
+            continue
+        if await may_wed(ctx.session, ctx.rules, head, other):
+            return other
+    return None
+
+
+async def wed_within_the_community(ctx: TickContext) -> int:
+    table = ctx.rules.kinship
+    wed = 0
+    for head_id in await unwed_heads(ctx):
+        head = await living_entity(ctx.session, head_id)
+        community = await living_entity(ctx.session, head.location_id) if head is not None and head.location_id is not None else None
+        if head is None or community is None or community.entity_type not in SOCIETY_TYPES or held(head.id) or held(community.id):
+            continue
+        profile = await ctx.session.get(MortalProfileRow, head.id)
+        if profile is None or not adult(profile.life_stage) or await partners_of(ctx.session, head.id) or await betrothed_of(ctx.session, head.id):
+            continue
+        if await active_bonds(ctx.session, [BondKind.LOVES], sources=[head.id]):
+            continue
+        rng = ctx.rng(seed_of("community_marriage", head.id, ctx.epoch))
+        if not rng.chance(table.over_epoch(table.community_marriage_chance)):
+            continue
+        spouse = await neighbour_to_wed(ctx, head, community)
+        if spouse is None:
+            continue
+        await marry(ctx.session, head, spouse, ctx.epoch, purpose=UnionPurpose.KINSHIP, description="wed within the community")
+        await record(
+            ctx,
+            "kin.marriage",
+            roles={IncidentRole.SPOUSE: [head.id, spouse.id]},
+            facts={"form": UnionForm.PAIR, "purpose": UnionPurpose.KINSHIP},
+            steps=(StepDraft(StepAction.MARRY, actor=head.id, target=spouse.id),),
+            place=community.id,
+        )
+        wed += 1
+    return wed
+
+
 @reads(
     "mortal.age",
     "mortal.agility",
@@ -1062,11 +1136,15 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "mortal.strength",
     "mortal.willpower",
     "mortal.wisdom",
+    "people.population",
+    "settlement.population",
     "table.afflictions",
+    "table.age_set_members",
     "table.bodies",
     "table.bonds",
     "table.charms",
     "table.chemical_works",
+    "table.child_standing",
     "table.culture_values",
     "table.dwellings",
     "table.endemic_diseases",
@@ -1080,8 +1158,15 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.house_members",
     "table.house_profiles",
     "table.household_members",
+    "table.households",
+    "table.incident_participants",
+    "table.incidents",
+    "table.kin_group_members",
+    "table.kin_groups",
+    "table.kinship_systems",
     "table.language_profiles",
     "table.lexemes",
+    "table.marriages",
     "table.mind_attributes",
     "table.mortal_profiles",
     "table.name_registry",
@@ -1097,6 +1182,7 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.population_instruments",
     "table.population_policies",
     "table.pressures",
+    "table.purity",
     "table.region_environment",
     "table.reproductive_courses",
     "table.skills",
@@ -1105,11 +1191,13 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.traits",
 )
 @writes(
+    "mortal.age",
     "mortal.agility",
     "mortal.charisma",
     "mortal.creativity",
     "mortal.endurance",
     "mortal.intellect",
+    "mortal.lifespan",
     "mortal.perception",
     "mortal.strength",
     "mortal.willpower",
@@ -1120,11 +1208,13 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.conditions",
     "table.entities",
     "table.entity_flags",
+    "table.geasa",
     "table.genomes",
     "table.incident_facts",
     "table.incident_participants",
     "table.incident_steps",
     "table.incidents",
+    "table.marriages",
     "table.memories",
     "table.mind_attributes",
     "table.mortal_profiles",
@@ -1135,6 +1225,7 @@ async def couples_bear_children(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()
     namer = Namer(ctx.session, rules)
+    ctx.count("community_marriages", await wed_within_the_community(ctx))
     bonds = await BondIndex.load(ctx.session, COUPLE_KINDS)
     seen: set[frozenset[int]] = set()
     numbers = await PolicyBook.load(ctx)

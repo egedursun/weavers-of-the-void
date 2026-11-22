@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.ownership import GUILD_KINDS, OWNER_CLASS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.read_memo import memoized
 from aerona.db.tables.economy import ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -16,17 +17,21 @@ from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow
 from aerona.db.tables.labour import WorkerBodyRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.orders import EconomicOrderRow
 from aerona.db.tables.ownership import SiteProfitRow
 from aerona.db.tables.polity import HouseProfileRow, PolityMemberRow, PolityProfileRow, VassalageRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faction import FactionGoalKind, FactionKind
 from aerona.domain.enums.industry import OwnerClass
 from aerona.domain.enums.labour import WorkerBodyForm
 from aerona.domain.enums.minds import MindOrigin
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.orders import OwnershipRegime
 from aerona.domain.enums.polity import LawKind
+from aerona.engine.commerce.seed import WORKSHOP_GOODS
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.faith.book import patron_node
@@ -38,6 +43,7 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import PROSPERITY_KEY, add_prosperity
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 
 THOUSAND = 1000
 HARVEST_STEP = "harvest"
@@ -103,7 +109,9 @@ async def individual_owner(session: AsyncSession, community: EntityRow) -> int |
         .join(EntityRow, EntityRow.id == MortalProfileRow.entity_id)
         .where(EntityRow.location_id == community.id, EntityRow.status == EntityStatus.CANON)
     )
-    return await session.scalar(query.order_by(MortalProfileRow.wealth.desc(), MortalProfileRow.entity_id).limit(1))
+    owners = select(WorkshopRow.owner_node_id).where(WorkshopRow.community_entity_id == community.id, WorkshopRow.owner_node_id.is_not(None))
+    ordered = query.order_by(MortalProfileRow.entity_id.in_(owners), MortalProfileRow.wealth.desc(), MortalProfileRow.entity_id)
+    return await session.scalar(ordered.limit(1))
 
 
 async def made_mind_owner(session: AsyncSession, community: EntityRow) -> int | None:
@@ -172,14 +180,79 @@ async def owner_for(ctx: TickContext, community: EntityRow, owner_class: OwnerCl
     return community.id
 
 
+REGIME_OWNERS: Mapping[OwnershipRegime, OwnerClass] = total(
+    OwnershipRegime,
+    {
+        OwnershipRegime.HOUSEHOLD: OwnerClass.INDIVIDUAL,
+        OwnershipRegime.KIN_GROUP: OwnerClass.HOUSE,
+        OwnershipRegime.COMMUNITY: OwnerClass.COMMUNITY,
+        OwnershipRegime.TEMPLE: OwnerClass.CULT,
+        OwnershipRegime.RULER: OwnerClass.REALM,
+        OwnershipRegime.STATE: OwnerClass.REALM,
+        OwnershipRegime.PRIVATE: OwnerClass.INDIVIDUAL,
+        OwnershipRegime.COOPERATIVE: OwnerClass.COOPERATIVE,
+        OwnershipRegime.COMPANY: OwnerClass.COMPANY,
+        OwnershipRegime.COMMON: OwnerClass.COMMUNITY,
+        OwnershipRegime.NONE: OwnerClass.COMMUNITY,
+    },
+)
+
+
+@memoized(PolityMemberRow, EconomicOrderRow)
+async def orders_over(session: AsyncSession, community_id: int) -> tuple[EconomicOrderRow, ...]:
+    realm = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community_id).limit(1))
+    if realm is None:
+        return ()
+    return tuple(await session.scalars(select(EconomicOrderRow).where(EconomicOrderRow.polity_entity_id == realm).order_by(EconomicOrderRow.id)))
+
+
+async def order_over(ctx: TickContext, community: EntityRow, kind: WorkshopKind) -> EconomicOrderRow | None:
+    orders = await orders_over(ctx.session, community.id)
+    good = WORKSHOP_GOODS.get(kind)
+    return next((order for order in orders if order.sector is not None and order.sector is good), None) or next(
+        (order for order in orders if order.sector is None), None
+    )
+
+
+async def base_class(ctx: TickContext, community: EntityRow, kind: WorkshopKind) -> OwnerClass:
+    base = OWNER_CLASS.get(kind, OwnerClass.COMMUNITY)
+    order = await order_over(ctx, community, kind) if base is OwnerClass.COMMUNITY else None
+    return REGIME_OWNERS[order.ownership] if order is not None else base
+
+
+async def pass_commons(ctx: TickContext, community: EntityRow, workshop: WorkshopRow, tally: ProfitTally) -> None:
+    if workshop.owner_node_id != community.id or workshop.held:
+        return
+    order = await order_over(ctx, community, workshop.kind)
+    if order is None or REGIME_OWNERS[order.ownership] is OwnerClass.COMMUNITY:
+        return
+    if not ctx.rng(f"owner.commons.{workshop.id}.{ctx.epoch}").chance(ctx.rules.ownership.order_shift_pct):
+        return
+    owner = await owner_for(ctx, community, REGIME_OWNERS[order.ownership])
+    if owner == community.id or held(owner):
+        return
+    workshop.owner_node_id = owner
+    tally.owned += 1
+    await record(
+        ctx,
+        "ownership.commons_passed",
+        roles={IncidentRole.PLACE: community.id, IncidentRole.BENEFICIARY: owner},
+        facts={"workshop": workshop.kind, "ownership": order.ownership},
+        place=community.id,
+    )
+
+
 async def assign_owners(ctx: TickContext, book: EconomyBook, tally: ProfitTally) -> None:
     for community in book.communities:
         if held(community.id):
             continue
         for workshop in book.workshops.get(community.id, {}).values():
-            if workshop.owner_node_id is not None or workshop.held:
+            if workshop.owner_node_id is not None:
+                await pass_commons(ctx, community, workshop, tally)
                 continue
-            base = OWNER_CLASS.get(workshop.kind, OwnerClass.COMMUNITY)
+            if workshop.held:
+                continue
+            base = await base_class(ctx, community, workshop.kind)
             workshop.owner_node_id = await owner_for(ctx, community, await regime_class(ctx, community, base))
             tally.owned += 1
 

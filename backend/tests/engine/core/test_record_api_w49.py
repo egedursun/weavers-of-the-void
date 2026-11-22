@@ -13,6 +13,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, FactValue, IncidentTier, InstrumentKind, ProcessGroup, StepAction, StepLocus, StepOutcome, StepState
 from aerona.engine.context import TickContext
 from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining, term
 from tests.engine.core.factories import CoreWorld
 
 DUEL = IncidentKindSpec(
@@ -114,3 +115,26 @@ async def test_a_write_that_names_fewer_of_a_role_than_its_kind_tells_is_refused
         await record(ctx, pair.key, roles={IncidentRole.SUBJECT: [world.regions[0].id]})
     written = await record(ctx, pair.key, roles={IncidentRole.SUBJECT: [world.regions[0].id, world.regions[1].id]})
     assert written.text == f"{world.regions[0].name} met {world.regions[1].name}."
+
+
+async def test_each_term_of_a_scope_is_told_by_one_happening_only(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
+    roles = {IncidentRole.ACTOR: world.regions[0].id, IncidentRole.TARGET: world.regions[1].id}
+    facts = {"weapon": "a mace", "exchanges": 1}
+    with explaining():
+        term("records.first_strength", 2.0)
+        first = await record(ctx, DUEL.key, roles=roles, facts=facts, place=world.regions[0].id)
+        with explaining():
+            term("records.inner_strength", 3.0)
+            inner = await record(ctx, DUEL.key, roles=roles, facts=facts, place=world.regions[0].id)
+        term("records.second_strength", 5.0)
+        second = await record(ctx, DUEL.key, roles=roles, facts=facts, place=world.regions[0].id)
+    await session.flush()
+    told = {}
+    for written in (first, inner, second):
+        rows = await session.scalars(select(IncidentTermRow.term).where(IncidentTermRow.incident_id == written.incident_id).order_by(IncidentTermRow.position))
+        told[written.incident_id] = [key for key in rows if key.startswith("records.")]
+    assert told == {
+        first.incident_id: ["records.first_strength"],
+        inner.incident_id: ["records.inner_strength"],
+        second.incident_id: ["records.second_strength"],
+    }

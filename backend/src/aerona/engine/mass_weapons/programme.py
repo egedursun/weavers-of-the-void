@@ -6,12 +6,13 @@ from aerona.db.tables.mass_weapons import MassWeaponRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.mass_weapons import MassHarm, MassReach, ProgrammeStage
+from aerona.domain.enums.mass_weapons import MassHarm, MassReach, Posture, ProgrammeStage
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.lore.research import techniques_of
 from aerona.engine.mass_weapons.book import REACH_RANK, ArsenalTally, can_build, knows_how, league_partners, postures_of, rivals_of, technique_for
+from aerona.engine.mass_weapons.deterrence import declare
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
@@ -77,6 +78,14 @@ async def test(ctx: TickContext, weapon: MassWeaponRow, tally: ArsenalTally) -> 
     await reveal(ctx, weapon, tally)
 
 
+async def take_stance(ctx: TickContext, holder_id: int, tally: ArsenalTally) -> None:
+    holder = await living_entity(ctx.session, holder_id)
+    if holder is None or held(holder_id) or await postures_of(ctx.session, holder_id):
+        return
+    posture = Posture.SHARED_WITH_LEAGUE if await league_partners(ctx.session, holder_id) else Posture.DECLARED
+    await declare(ctx, holder, None, posture, tally)
+
+
 async def work_on(ctx: TickContext, weapon: MassWeaponRow, tally: ArsenalTally) -> None:
     table = ctx.rules.mass_weapons
     holder = await living_entity(ctx.session, weapon.holder_entity_id)
@@ -95,6 +104,7 @@ async def work_on(ctx: TickContext, weapon: MassWeaponRow, tally: ArsenalTally) 
     if weapon.stage in {ProgrammeStage.READY, ProgrammeStage.TESTED} and "count" not in (weapon.locked or []):
         weapon.count += 1
         tally.built += 1
+        await take_stance(ctx, holder.id, tally)
 
 
 async def tend_programmes(ctx: TickContext, tally: ArsenalTally) -> None:

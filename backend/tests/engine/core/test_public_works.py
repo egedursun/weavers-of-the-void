@@ -7,12 +7,14 @@ from aerona.db.tables.commerce import ShopGoodRow, ShopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.orders import EconomicOrderRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.works import PublicWorksRow, StateEnterpriseRow
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.orders import OwnershipRegime
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.works import EnterpriseForm, EnterpriseManagement, LabourRegime, WorksKind, WorksStatus
@@ -127,3 +129,16 @@ async def test_infrastructure_becomes_finished_works(session: AsyncSession, worl
     assert kinds == {WorksKind.ROAD, WorksKind.SEWER}
     builder = await session.scalar(select(PublicWorksRow.polity_entity_id).where(PublicWorksRow.place_node_id == town.id).limit(1))
     assert builder == realm.id
+
+
+async def test_a_realm_whose_order_puts_a_sector_in_state_hands_founds_its_enterprise_once(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
+    realm, _ = await realm_with_town(session, world)
+    session.add(EconomicOrderRow(polity_entity_id=realm.id, sector=CommodityKind.TOOLS, ownership=OwnershipRegime.STATE))
+    session.add(EconomicOrderRow(polity_entity_id=realm.id, sector=CommodityKind.CLOTH, ownership=OwnershipRegime.PRIVATE))
+    await session.flush()
+    tally = await keep_enterprises(ctx)
+    founded = list(await session.scalars(select(StateEnterpriseRow).where(StateEnterpriseRow.polity_entity_id == realm.id)))
+    assert tally.founded == 1 and [(row.sector, row.form) for row in founded] == [(CommodityKind.TOOLS, EnterpriseForm.STATE_COMPANY)]
+    await session.delete(founded[0])
+    await session.flush()
+    assert (await keep_enterprises(ctx)).founded == 0

@@ -11,6 +11,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.stored import stored_id
 from aerona.db.tables.economy import CommunityStockRow, CurrencyRow, LoanRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.governance import OrgGovernanceRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
@@ -18,6 +19,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MoneyBacking, MoneyForm, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faction import LENDER_KINDS
+from aerona.domain.enums.governance import OrgStrategy
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
@@ -31,6 +33,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.finance.credit import interest_for, on_default, refuses
+from aerona.engine.governance.insolvency import InsolvencyTally, file_case
 from aerona.engine.loops.delay import lagged
 from aerona.engine.monetary.authorities import borrow_factor, establish
 from aerona.engine.monetary.rescue import rescue_bank, spread_run
@@ -345,6 +348,7 @@ async def lend(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
     lenders = [bank for bank in await banks(ctx, book) if not held(bank.id)]
     if not lenders:
         return
+    await lend_to_organisations(ctx, book, lenders, tally)
     for borrower in book.communities:
         if held(borrower.id) or riches(borrower) >= table.borrower_wealth_below or not await _at_war(ctx, borrower.id):
             continue
@@ -382,6 +386,51 @@ async def lend(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
         )
 
 
+ENTERPRISING = (OrgStrategy.GROW, OrgStrategy.RESEARCH, OrgStrategy.EXPAND_ABROAD, OrgStrategy.INTEGRATE_UP, OrgStrategy.INTEGRATE_DOWN)
+
+
+async def lend_to_organisations(ctx: TickContext, book: EconomyBook, lenders: list[EntityRow], tally: MoneyTally) -> None:
+    table = ctx.rules.banking
+    query = select(OrgGovernanceRow.org_node_id).where(OrgGovernanceRow.strategy.in_(ENTERPRISING)).order_by(OrgGovernanceRow.org_node_id)
+    for org_id in list(await ctx.session.scalars(query)):
+        borrower = book.entities.get(org_id)
+        if borrower is None or held(org_id) or riches(borrower) >= table.borrower_wealth_below:
+            continue
+        open_loan = await ctx.session.scalar(select(LoanRow.id).where(LoanRow.borrower_entity_id == org_id, LoanRow.status == LoanStatus.OPEN).limit(1))
+        if open_loan is not None or not ctx.rng(f"lend.enterprise.{org_id}.{ctx.epoch}").chance(table.enterprise_lend_chance):
+            continue
+        others = [bank for bank in lenders if bank.id != org_id]
+        if not others or await refuses(ctx, org_id):
+            continue
+        lender = min(others, key=lambda bank: (bank.world_id != borrower.world_id, -riches(bank), bank.id))
+        risky = await defaulted_before(ctx, org_id)
+        loan = LoanRow(
+            lender_entity_id=lender.id,
+            borrower_entity_id=org_id,
+            principal=table.principal,
+            interest_pct=await interest_for(ctx, org_id, table.interest_pct + (table.risk_interest_pct if risky else 0)),
+            issued_epoch=ctx.epoch,
+            due_epoch=ctx.epoch + table.term_epochs,
+            status=LoanStatus.OPEN,
+            purpose="enterprise",
+        )
+        ctx.session.add(loan)
+        gain(borrower, table.principal)
+        gain(lender, -table.principal // 2)
+        tally.lent += 1
+        await record(
+            ctx,
+            "banking.enterprise_loan",
+            roles={IncidentRole.LENDER: lender.id, IncidentRole.BORROWER: org_id},
+            facts={"principal": loan.principal, "interest": loan.interest_pct, "due_epoch": loan.due_epoch},
+            steps=(StepDraft(StepAction.LEND, actor=lender.id, target=org_id, amount=loan.principal, unit=FactUnit.COIN),),
+        )
+
+
+async def governed(ctx: TickContext, borrower: EntityRow) -> bool:
+    return borrower.entity_type is EntityType.FACTION and await ctx.session.get(OrgGovernanceRow, borrower.id) is not None
+
+
 def owed(loan: LoanRow) -> int:
     return round_half_up(loan.principal * (PERCENT + loan.interest_pct) / PERCENT) - loan.repaid
 
@@ -408,6 +457,8 @@ async def collect(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> Non
         if owed(loan) <= 0:
             loan.status = LoanStatus.REPAID
             tally.repaid += 1
+        elif ctx.epoch >= loan.due_epoch and payment < owed(loan) and await governed(ctx, borrower):
+            await file_case(ctx, borrower, None, InsolvencyTally())
         elif ctx.epoch >= loan.due_epoch and payment < owed(loan):
             await default(ctx, book, loan, borrower, lender)
             tally.defaulted += 1

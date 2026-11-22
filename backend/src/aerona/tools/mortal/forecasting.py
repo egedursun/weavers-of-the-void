@@ -12,9 +12,9 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import people_of
 from aerona.engine.economy.purse import take_coin
+from aerona.engine.forecasting.works import EPOCH_STRENGTH, NEEDS
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import knows
 from aerona.engine.primitives.naming import seed_of
@@ -26,15 +26,6 @@ from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
 
-NEEDS: dict[WeatherWorkMethod, KnowledgeBranch] = {
-    WeatherWorkMethod.RITE: KnowledgeBranch.MAGIC,
-    WeatherWorkMethod.POWER: KnowledgeBranch.MAGIC,
-    WeatherWorkMethod.SEEDING: KnowledgeBranch.AGRICULTURE,
-    WeatherWorkMethod.DIVERSION: KnowledgeBranch.ARCHITECTURE,
-    WeatherWorkMethod.MADE_STRUCTURE: KnowledgeBranch.ARCHITECTURE,
-    WeatherWorkMethod.LIVING_CRAFT: KnowledgeBranch.BIOMANCY,
-}
-EPOCH_STRENGTH = 25
 AHEAD = 3
 
 

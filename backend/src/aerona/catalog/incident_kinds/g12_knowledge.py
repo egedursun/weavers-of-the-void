@@ -1368,6 +1368,17 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         chronicle_kind=K.EXPLORATION,
     ),
     IncidentKindSpec(
+        "minds.body_taken_up",
+        G.KNOWLEDGE,
+        "{actor} began to run {instrument}, a body of its own making, from afar.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.INSTRUMENT),
+        ),
+        facts=(),
+        chronicle_kind=K.WORLD,
+    ),
+    IncidentKindSpec(
         "tools.mortal.run_remote_body",
         G.KNOWLEDGE,
         "{actor} ran {instrument} from afar.",

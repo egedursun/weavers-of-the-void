@@ -6,16 +6,17 @@ from aerona.core.total import total
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import MovementProfileRow
-from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import LawJurisdictionRow, LawProfileRow, PolityMemberRow, PolityProfileRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.referendums import ReferendumRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import MovementCause
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.polity import DecisionRule, LawKind
+from aerona.domain.enums.polity import DecisionRule, LawKind, TreatyStatus
 from aerona.domain.enums.referendums import ReferendumCaller, ReferendumResult, ReferendumSubject
 from aerona.engine.context import TickContext
 from aerona.engine.polity.laws import ruling_law
+from aerona.engine.polity.signatories import signatories_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
 from aerona.engine.referendums.book import SALIENCE_PCT, ReferendumTally, enfranchised_pct, franchise_at, realm_of_holder, realm_profile
@@ -147,18 +148,32 @@ async def assembly_questions(ctx: TickContext, tally: ReferendumTally) -> None:
         ):
             continue
         realm = await ctx.session.get(EntityRow, profile.polity_entity_id)
-        charter = await ruling_law(ctx.session, profile.polity_entity_id, LawKind.CONSTITUTION)
-        if realm is not None and charter is not None and not await asked(ctx, realm.id, ReferendumSubject.CONSTITUTION):
-            await call_vote(
-                ctx,
-                realm,
-                ReferendumSubject.CONSTITUTION,
-                charter.law_entity_id,
-                binding=True,
-                caller=ReferendumCaller.ASSEMBLY,
-                called_by=realm.id,
-                tally=tally,
-            )
+        question = await open_question(ctx, realm) if realm is not None else None
+        if realm is not None and question is not None:
+            subject, target = question
+            await call_vote(ctx, realm, subject, target, binding=True, caller=ReferendumCaller.ASSEMBLY, called_by=realm.id, tally=tally)
+
+
+async def put_before(ctx: TickContext, target_id: int) -> bool:
+    return await ctx.session.scalar(select(ReferendumRow.id).where(ReferendumRow.target_node_id == target_id).limit(1)) is not None
+
+
+async def open_question(ctx: TickContext, realm: EntityRow) -> tuple[ReferendumSubject, int] | None:
+    charter = await ruling_law(ctx.session, realm.id, LawKind.CONSTITUTION)
+    if charter is not None and not await asked(ctx, realm.id, ReferendumSubject.CONSTITUTION) and not await put_before(ctx, charter.law_entity_id):
+        return ReferendumSubject.CONSTITUTION, charter.law_entity_id
+    ruled = select(LawJurisdictionRow.law_entity_id).where(LawJurisdictionRow.node_entity_id == realm.id)
+    living = select(EntityRow.id).where(EntityRow.status == EntityStatus.CANON, EntityRow.entity_type == EntityType.LAW, EntityRow.id.in_(ruled))
+    laws = select(LawProfileRow.law_entity_id).where(LawProfileRow.law_entity_id.in_(living))
+    for law_id in list(await ctx.session.scalars(laws.order_by(LawProfileRow.enacted_epoch.desc(), LawProfileRow.law_entity_id.desc()))):
+        if not await put_before(ctx, law_id):
+            return ReferendumSubject.LAW, law_id
+    bound = select(TreatyPartyRow.treaty_entity_id).where(TreatyPartyRow.party_node_id.in_(await signatories_of(ctx.session, realm.id)))
+    treaties = select(TreatyProfileRow.treaty_entity_id).where(TreatyProfileRow.treaty_entity_id.in_(bound), TreatyProfileRow.status == TreatyStatus.IN_FORCE)
+    for treaty_id in list(await ctx.session.scalars(treaties.order_by(TreatyProfileRow.signed_epoch.desc(), TreatyProfileRow.treaty_entity_id.desc()))):
+        if not await put_before(ctx, treaty_id):
+            return ReferendumSubject.TREATY, treaty_id
+    return None
 
 
 async def asked(ctx: TickContext, holder_id: int, subject: ReferendumSubject) -> bool:

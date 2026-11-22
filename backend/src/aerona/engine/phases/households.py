@@ -29,11 +29,14 @@ async def household_survey(ctx: TickContext) -> None:
 
 
 @reads(
+    "item.damage",
+    "item.protection",
     "mortal.age",
     "people.prosperity",
     "settlement.population",
     "settlement.prosperity",
     "table.age_set_members",
+    "table.bias_weights",
     "table.bonds",
     "table.child_standing",
     "table.community_cohorts",
@@ -47,6 +50,8 @@ async def household_survey(ctx: TickContext) -> None:
     "table.dwelling_kinds",
     "table.dwellings",
     "table.entities",
+    "table.faction_memberships",
+    "table.faction_profiles",
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -100,6 +105,7 @@ async def household_survey(ctx: TickContext) -> None:
     "table.dwelling_kinds",
     "table.dwellings",
     "table.entities",
+    "table.faction_memberships",
     "table.house_profiles",
     "table.household_aggregates",
     "table.household_members",

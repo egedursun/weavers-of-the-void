@@ -52,6 +52,7 @@ async def geomorphology(ctx: TickContext) -> None:
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.held_identities",
     "table.heresies",
     "table.incident_participants",
     "table.incidents",

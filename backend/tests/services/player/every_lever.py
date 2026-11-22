@@ -598,12 +598,13 @@ async def office_in_realm(session: AsyncSession, kind: OfficeKind) -> int:
     realm = await canon(session, EntityType.POLITY, 0)
     assert realm is not None
     holder = await canon(session, EntityType.MORTAL, 1)
-    if (
-        await session.scalar(select(OfficeRow.id).where(OfficeRow.polity_entity_id == realm, OfficeRow.kind == kind, OfficeRow.holder_entity_id.is_not(None)))
-        is None
-    ):
+    living = select(EntityRow.id).where(EntityRow.status == EntityStatus.CANON)
+    office = await session.scalar(select(OfficeRow).where(OfficeRow.polity_entity_id == realm, OfficeRow.kind == kind).order_by(OfficeRow.id).limit(1))
+    if office is None:
         session.add(OfficeRow(polity_entity_id=realm, kind=kind, holder_entity_id=holder))
-        await session.flush()
+    elif await session.scalar(select(OfficeRow.id).where(OfficeRow.id == office.id, OfficeRow.holder_entity_id.in_(living))) is None:
+        office.holder_entity_id = holder
+    await session.flush()
     return realm
 
 
@@ -2259,6 +2260,7 @@ LEVERS: dict[str, Lever] = {
     **{name: after(CLAIM, holder_id=Pick(REALM), claimant_id=Pick(EntityType.CULT), claim="clergy") for name in ("jurisdiction:edit", "jurisdiction:delete")},
     "pardon:grant": after(OUTLAW, granter_id=Pick(MORTAL), mortal_id=Pick(MORTAL, 2)),
     "amnesty:declare": given(polity_id=Computed(ruled_realm)),
+    "polity:depose": given(polity_id=Computed(ruled_realm)),
     "pardon:delete": after(OUTLAW, PARDON, pardon_id=Newest("pardon")),
     "outlaw:declare": given(mortal_id=Pick(MORTAL, 2), polity_id=Pick(REALM), bounty=20),
     **{name: after(OUTLAW, mortal_id=Pick(MORTAL, 2)) for name in ("outlaw:edit", "outlaw:delete")},

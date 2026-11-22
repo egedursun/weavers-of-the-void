@@ -24,6 +24,8 @@ from aerona.engine.polity.titles import de_jure_lands
 from aerona.engine.primitives.mirrors import close_legacy, first_sight
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect, living_entity, remove_flag
+from aerona.engine.reckoning.book import ReckoningTally
+from aerona.engine.reckoning.opening import choose, open_reckoning, victims_pressure
 from aerona.engine.recording.record import record
 
 LEGACY_FIXUP = "restoration.legacy_pretenders"
@@ -176,7 +178,8 @@ async def restore(ctx: TickContext, row: RestorationRow, tally: RestorationTally
     if fallen is None or not towns:
         await fail(ctx, row, RestorationFailure.NO_LANDS, tally)
         return None
-    for realm_id, members in sorted((await realms_holding(ctx, [town.id for town in towns])).items()):
+    holders = sorted((await realms_holding(ctx, [town.id for town in towns])).items())
+    for realm_id, members in holders:
         if not held(realm_id):
             await split(ctx, realm_id, members)
     book = await RealmBook.load(ctx.session)
@@ -195,6 +198,10 @@ async def restore(ctx: TickContext, row: RestorationRow, tally: RestorationTally
     await refresh_realms(ctx, book)
     row.stage, row.restored_polity_id, row.ended_epoch = RestorationStage.RESTORED, realm.entity.id, ctx.epoch
     tally.restored += 1
+    for realm_id, _members in holders:
+        if not held(realm_id) and ctx.rng(f"restoration.reckoning.{row.id}.{realm_id}").chance(ctx.rules.reckoning.open_chance_pct):
+            measures = await choose(ctx, ruler, realm.profile, await victims_pressure(ctx, realm.entity.id))
+            await open_reckoning(ctx, realm.entity, realm_id, measures, by=ruler, fallen_epoch=ctx.epoch, tally=ReckoningTally())
     await record(
         ctx,
         "polity.restored",

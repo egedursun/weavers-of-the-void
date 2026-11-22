@@ -29,7 +29,8 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats
 from aerona.engine.settlement.book import town_of
-from aerona.engine.settlement.life import add_district, housing_of, quarter_wants
+from aerona.engine.settlement.districts import base_parameters
+from aerona.engine.settlement.life import add_district, housing_of, quarter_wants, town_plan
 from aerona.engine.structures.needs import SiteFacts, wanted
 from aerona.engine.structures.readers import Working
 from aerona.engine.structures.settlement import civic_from
@@ -421,3 +422,17 @@ def test_people_live_where_a_district_has_homes_for_them() -> None:
     assert round(sum(people.values())) == 10000
     plan = rules.city_plan
     assert people[1] / people[2] == plan.residential_housing_pct / plan.market_housing_pct
+
+
+async def test_a_crowded_town_that_knows_enough_building_draws_up_one_plan_for_denser_homes(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town_id, _ = await built_town(session, world, ctx)
+    town = await town_of(ctx, await session.get_one(EntityRow, town_id), await KnowledgeMap.load(session))
+    set_stats(town.entity, population=housing_of(ctx.rules, town) * 2)
+    assert await town_plan(ctx, town, DistrictKind.RESIDENTIAL, ctx.rules.urban.planned_architecture - 1) is None
+    plan = await town_plan(ctx, town, DistrictKind.RESIDENTIAL, ctx.rules.urban.planned_architecture)
+    assert plan is not None and plan.housing is not None and plan.housing > base_parameters(ctx.rules, DistrictKind.RESIDENTIAL)["housing"]
+    again = await town_plan(ctx, town, DistrictKind.RESIDENTIAL, ctx.rules.urban.planned_architecture)
+    assert again is not None and again.id == plan.id
+    district = await add_district(ctx, town, DistrictKind.RESIDENTIAL, material=BuildMaterial.STONE, design_id=plan.id)
+    assert district.design_id == plan.id and plan.id in town.designs

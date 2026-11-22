@@ -9,7 +9,7 @@ from aerona.db.tables.estates import MovementProfileRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
-from aerona.db.tables.protected_nature import ConservationMovementRow, ProtectedAreaRow
+from aerona.db.tables.protected_nature import ConservationMovementRow, ProtectedAreaRow, SpeciesProtectionRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.faction import FactionKind, MovementCause
@@ -114,9 +114,14 @@ async def test_lost_wild_land_raises_a_movement_that_protects_land_when_it_rises
     aims = await session.get(ConservationMovementRow, movement.id)
     assert aims is not None and tally.movements == 1 and aims.cohort_support
     found = (await RealmBook.load(session)).realms[realm.id]
+    session.add(SpeciesRangeRow(species_entity_id=world.species.id, region_entity_id=world.regions[0].id, abundance=10, fit=60, locked=[]))
+    await add_flag(session, world.species.id, EntityFlag.ENDANGERED, 0)
+    await session.flush()
     await protect_for_movement(ctx, found, row)
     area = await session.scalar(select(ProtectedAreaRow).where(ProtectedAreaRow.region_entity_id == world.regions[0].id))
     assert area is not None and area.protector_node_id == realm.id and ProtectedUse.LOGGING.value in area.banned_uses
+    guarded = await session.scalar(select(SpeciesProtectionRow).where(SpeciesProtectionRow.species_entity_id == world.species.id))
+    assert guarded is not None and guarded.holder_node_id == realm.id and guarded.endangered_at_start
 
 
 async def test_game_reserves_become_lands_protected_against_hunting(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:

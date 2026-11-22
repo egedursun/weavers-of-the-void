@@ -4,15 +4,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.communication import SignalLinkRow
+from aerona.db.tables.constructs import ConstructRow
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.estates import CompanyShareRow
-from aerona.db.tables.made import AugmentRow, PeopleSubstrateRow, ReplicatorLineRow, ReplicatorPresenceRow
+from aerona.db.tables.made import AugmentRow, MadeRealmRow, PeopleSubstrateRow, ReplicatorLineRow, ReplicatorPresenceRow
 from aerona.db.tables.mind import MemoryRow, SkillRow
-from aerona.db.tables.minds import MindProfileRow
+from aerona.db.tables.minds import MindProfileRow, RemoteBodyRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.networks import NetworkGatewayRow, NetworkProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.communication import SignalKind, SignalState
 from aerona.domain.enums.constructs import MindWill
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.made import (
     AugmentKind,
@@ -30,14 +33,15 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind, SkillKind, SkillSource
 from aerona.domain.enums.minds import MindOrigin, MindSeat, MindUpkeep, StateMedium
 from aerona.domain.enums.networks import NetworkCarrier, OutageCause
-from aerona.domain.models.entity_stats import FactionStats, PeopleStats
-from aerona.engine.augments import install, keep_augments
+from aerona.domain.models.entity_stats import FactionStats, PeopleStats, StructureStats
+from aerona.engine.augments import install, keep_augments, seek_enhancements
 from aerona.engine.context import TickContext
 from aerona.engine.made import control
 from aerona.engine.made.realms import keep_realms
 from aerona.engine.made.replicators import run_replicators
 from aerona.engine.mind.book import effective_skill
 from aerona.engine.minds.continuity import copy_mind, restore_mind, save_mind
+from aerona.engine.minds.phase import take_up_bodies
 from aerona.engine.minds.profiles import profile_of
 from aerona.engine.networks.backfill import relay_backfill
 from aerona.engine.primitives.manual import manual_context
@@ -179,3 +183,58 @@ async def test_integrity_balances_substrates_trims_shares_and_closes_a_gateway_t
     assert await session.scalar(select(NetworkGatewayRow.id).where(NetworkGatewayRow.first_network_id == NetworkGatewayRow.second_network_id)) is None
     presences = list(await session.scalars(select(ReplicatorPresenceRow)))
     assert all(row.mass >= 0 for row in presences)
+
+
+async def test_a_maker_runs_the_bodies_it_made_from_afar_as_far_as_its_mind_allows(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await at(session, 3, interfaces={"bodies_per_capacity": 100})
+    maker = await mortal(session, "Ilo Wright", world, world.regions[0].id)
+    await profile_of(session, ctx.rules, maker.id, ctx.epoch)
+    bodies = [await entity(session, f"Frame {index}", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id) for index in range(2)]
+    for body in bodies:
+        session.add(ConstructRow(entity_id=body.id, maker_entity_id=maker.id, locked=[]))
+    await session.flush()
+    assert await take_up_bodies(ctx) == 1
+    running = list(await session.scalars(select(RemoteBodyRow).where(RemoteBodyRow.mind_node_id == maker.id)))
+    assert [row.body_node_id for row in running] == [bodies[0].id]
+    assert await take_up_bodies(ctx) == 0
+
+
+async def test_a_wealthy_being_where_computation_is_known_buys_an_augment_that_heightens_its_best_skill(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Coilmarket", world, world.regions[0])
+    session.add(HolderTechniqueRow(holder_entity_id=town.id, technique=Technique.COMPUTATION, since_epoch=0, secret=False))
+    buyer = await mortal(session, "Ressa", world, town.id)
+    session.add(
+        SkillRow(
+            holder_node_id=buyer.id, skill=SkillKind.ENGINEERING, subject_node_id=None, level=30, peak=30, xp=0, last_used_epoch=1, source=SkillSource.PRACTICE
+        )
+    )
+    session.add(MortalProfileRow(entity_id=buyer.id, wealth=80, locked=[]))
+    await session.flush()
+    ctx = await at(session, 2)
+    before = await effective_skill(session, buyer.id, SkillKind.ENGINEERING)
+    assert await seek_enhancements(ctx) == 1
+    augment = await session.scalar(select(AugmentRow).where(AugmentRow.bearer_node_id == buyer.id))
+    assert augment is not None and augment.kind is AugmentKind.ENHANCEMENT and augment.make is AugmentMake.MADE
+    assert await effective_skill(session, buyer.id, SkillKind.ENGINEERING) > before
+    assert (await profile_wealth(session, buyer.id)) == 80 - ctx.rules.augments.enhance_cost
+    assert await seek_enhancements(ctx) == 0
+
+
+async def profile_wealth(session: AsyncSession, node_id: int) -> int:
+    profile = await session.get(MortalProfileRow, node_id)
+    return profile.wealth if profile is not None else 0
+
+
+async def test_a_mind_that_lives_in_a_made_hall_builds_a_realm_on_it_and_moves_in(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Lanternfall", world, world.regions[0])
+    maker = await mortal(session, "Cass", world, town.id)
+    hall = await entity(session, "The Counting Hall", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=town.id)
+    ward = await mortal(session, "Echo of Cass", world, town.id)
+    ctx = await at(session, 2, made_realms={"dwelling_pct": 100})
+    mind = await made_mind(session, ctx, ward.id, maker.id)
+    mind.seat, mind.seat_node_id = MindSeat.STRUCTURE, hall.id
+    await session.flush()
+    await keep_realms(ctx)
+    realm = await session.scalar(select(MadeRealmRow).where(MadeRealmRow.host_node_id == hall.id))
+    assert realm is not None and realm.realm_purpose is RealmPurpose.DWELLING and realm.keeper_node_id == ward.id
+    assert mind.seat is MindSeat.REALM and mind.seat_node_id == realm.dimension_id

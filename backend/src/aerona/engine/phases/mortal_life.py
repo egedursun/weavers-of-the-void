@@ -253,6 +253,7 @@ async def mortal_life_course(ctx: TickContext) -> None:
     "table.incidents",
     "table.marriages",
     "table.memories",
+    "table.mortal_profiles",
     "table.node_births",
     "table.oaths",
 )
@@ -370,6 +371,7 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.law_profiles",
     "table.legitimacy_rules",
     "table.manumissions",
+    "table.marriages",
     "table.memories",
     "table.mind_attributes",
     "table.mind_facets",

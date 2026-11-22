@@ -310,6 +310,8 @@ async def withdrawal(ctx: TickContext) -> None:
     "table.nodes",
     "table.resource_mechanics",
     "table.resource_profiles",
+    "table.treaty_clauses",
+    "table.treaty_profiles",
 )
 @writes(
     "mortal.strength",

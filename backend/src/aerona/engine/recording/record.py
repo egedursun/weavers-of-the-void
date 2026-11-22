@@ -7,7 +7,7 @@ from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import spoken
 from aerona.db.fast_session import rows_by_id
-from aerona.db.record_context import Term, active_terms, current_scope
+from aerona.db.record_context import Term, current_scope, untold_terms
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository, scoped_cause
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
@@ -326,7 +326,7 @@ async def record(
     for row in fact_rows_found:
         row.incident_id = incident_id
     ctx.session.add_all(fact_rows_found)
-    ctx.session.add_all(term_rows(incident_id, terms if terms is not None else active_terms()))
+    ctx.session.add_all(term_rows(incident_id, terms if terms is not None else untold_terms()))
     if steps:
         await write_steps(ctx, incident_id, steps, moment, spec.clock, world_id=world_id)
     await mark_born(ctx.session, participants, moment, epoch)

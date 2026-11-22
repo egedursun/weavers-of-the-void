@@ -534,6 +534,12 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind("living.sample_lost", "An unkept bank of life, {subject}, lost a sample.", roles=(role(R.SUBJECT),), facts=(number("lost", U.COUNT),)),
     kind(
+        "living.sample_banked",
+        "A sample of {subject} was put into the bank of life {destination}.",
+        roles=(role(R.SUBJECT), role(R.DESTINATION)),
+        facts=(number("quality", U.PERCENT),),
+    ),
+    kind(
         "living.sapience",
         "{origin} rose to thought by design and became a people: {product}.",
         roles=(role(R.PRODUCT), role(R.ORIGIN), role(R.MAKER, required=False)),

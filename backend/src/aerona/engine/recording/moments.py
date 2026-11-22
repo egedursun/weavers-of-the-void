@@ -2,13 +2,13 @@ from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.celestial import WorldRow
-from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.made import MadeRealmRow
 from aerona.domain.enums.records import ProcessClock
 from aerona.domain.models.calendar import YearWindow, epoch_start_year
@@ -182,3 +182,17 @@ async def realm_ratio(session: AsyncSession, realm_id: int | None) -> int:
 
 def to_main_time(amount: int, time_ratio_pct: int) -> int:
     return round(amount * PERCENT / max(1, time_ratio_pct))
+
+
+async def told_no_earlier(session: AsyncSession, year: int, nodes: list[int | None]) -> int:
+    known = [node for node in nodes if node is not None]
+    if not known:
+        return year
+    first = (
+        select(func.min(IncidentRow.year))
+        .join(IncidentParticipantRow, IncidentParticipantRow.incident_id == IncidentRow.id)
+        .where(IncidentParticipantRow.node_id.in_(known), IncidentRow.year.is_not(None))
+        .group_by(IncidentParticipantRow.node_id)
+    )
+    years = [found for found in await session.scalars(first) if found is not None]
+    return max([year, *years])

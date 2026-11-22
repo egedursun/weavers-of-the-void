@@ -13,7 +13,7 @@ from aerona.engine.governance.insolvency import InsolvencyTally, file_case, tend
 from aerona.engine.governance.mergers import advance_merger, open_bids
 from aerona.engine.governance.research import tend_research
 from aerona.engine.governance.seats import seed_governance
-from aerona.engine.governance.strategy import follow_strategy
+from aerona.engine.governance.strategy import follow_strategy, set_course
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 
@@ -27,10 +27,13 @@ async def file_failing(ctx: TickContext, tally: InsolvencyTally) -> None:
 
 
 @reads(
+    "faction.strength",
+    "faction.sway",
     "faction.wealth",
     "mortal.charisma",
     "mortal.intellect",
     "mortal.wisdom",
+    "table.bonds",
     "table.company_profiles",
     "table.company_shares",
     "table.entities",
@@ -42,6 +45,7 @@ async def file_failing(ctx: TickContext, tally: InsolvencyTally) -> None:
     "table.incidents",
     "table.insolvency_cases",
     "table.issued_securities",
+    "table.name_registry",
     "table.node_births",
     "table.nodes",
     "table.org_cliques",
@@ -52,14 +56,21 @@ async def file_failing(ctx: TickContext, tally: InsolvencyTally) -> None:
     "table.polity_members",
 )
 @writes(
+    "faction.strength",
+    "faction.sway",
+    "faction.wealth",
     "table.applied_fixups",
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.entities",
     "table.faction_memberships",
     "table.faction_profiles",
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.name_registry",
+    "table.node_births",
     "table.org_cliques",
     "table.org_governance",
     "table.org_mergers",
@@ -68,7 +79,7 @@ async def file_failing(ctx: TickContext, tally: InsolvencyTally) -> None:
 async def governance(ctx: TickContext) -> None:
     seeded = await seed_governance(ctx)
     ctx.count("governance_bodies", seeded.bodies)
-    chosen = defied = removed = formed = split = done = leaked = acted = 0
+    chosen = defied = removed = formed = split = done = leaked = acted = courses = 0
     rows = list(await ctx.session.scalars(select(OrgGovernanceRow).order_by(OrgGovernanceRow.org_node_id)))
     orgs = await rows_by_id(ctx.session, EntityRow, [row.org_node_id for row in rows])
     for row in rows:
@@ -79,6 +90,7 @@ async def governance(ctx: TickContext) -> None:
         chosen, defied, removed = chosen + head, defied + defiance, removed + removal
         made, gone = await tend_cliques(ctx, row)
         formed, split = formed + made, split + gone
+        courses += await set_course(ctx, row, org)
         acted += 1 if await follow_strategy(ctx, row, org) is not None else 0
         finished, spread = await tend_research(ctx, org)
         done, leaked = done + finished, leaked + spread
@@ -93,6 +105,7 @@ async def governance(ctx: TickContext) -> None:
         "governance_cliques_formed": formed,
         "governance_splits": split,
         "governance_strategy_acts": acted,
+        "governance_courses_set": courses,
         "governance_research_done": done,
         "governance_secrets_leaked": leaked,
         "governance_mergers_closed": outcomes.count("closed"),

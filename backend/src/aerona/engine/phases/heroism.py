@@ -487,6 +487,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "mortal.charisma",
     "mortal.death_year",
     "mortal.hp",
+    "mortal.lifespan",
     "species.danger",
     "table.bodies",
     "table.bonds",

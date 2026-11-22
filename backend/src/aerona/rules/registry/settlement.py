@@ -38,6 +38,8 @@ class UrbanRules:
     prestige_per_artwork: int = rule(3, 0, 100, G, "Prestige per artwork kept in the settlement")
     prestige_per_renown: int = rule(1, 0, 100, G, "Prestige per renowned resident (importance over the bar)")
     renown_bar: int = rule(60, 0, 1000, G, "Importance at which a resident counts as renowned")
+    planned_housing_pct: int = rule(50, 0, 400, G, "Extra housing a town's own plan for its homes gives each level of such a district (%)")
+    planned_architecture: int = rule(3, 0, 20, G, "Architecture level from which a crowded town draws up its own plan for new homes")
     drift_tier: int = rule(3, 1, 5, G, "Size tier from which a settlement's own culture drifts away from its people (3 town)")
     drift_step: int = rule(2, 0, 50, G, "Xenophilia gained and tradition lost per epoch by a large settlement's own culture")
     tension_pct: int = rule(30, 0, 300, G, "Unrest from the gap between a city's culture and its countryside (%)")

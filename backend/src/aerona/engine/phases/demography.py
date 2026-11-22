@@ -201,6 +201,7 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.house_profiles",
     "table.loans",
     "table.memories",
+    "table.nodes",
     "table.people_culture",
     "table.polity_members",
     "table.war_sides",

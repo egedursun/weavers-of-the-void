@@ -10,12 +10,13 @@ from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.tables.living import GeneBankRow, GeneBankSampleRow, LivingLineRow, LivingLineSourceRow, LivingLineTraitRow, LivingProfileRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import TreatyClauseRow
 from aerona.domain.enums.agrarian import PerennialKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.ecology import DomesticationStage
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.industry import MethodKind, ProcessKind
 from aerona.domain.enums.living import CultivationMethod, GrowthStage, LineTrait, LivingCraftStance, Metabolism
 from aerona.domain.enums.mind import ValueAxis
@@ -24,13 +25,14 @@ from aerona.domain.models.entity_stats import DiseaseStats, SpeciesStats, Struct
 from aerona.engine.disease.designed import designed_aim
 from aerona.engine.disease.emergence import ensure_profile
 from aerona.engine.living.backfill import LEGACY_FIXUP, legacy_backfill
-from aerona.engine.living.kin import clone, sampled
+from aerona.engine.living.kin import clone, keep_banks, sampled
 from aerona.engine.living.lines import LineDraft, escape, make_line
 from aerona.engine.living.production import blight_monocultures, keep_living_works
 from aerona.engine.living.profiles import keep_profiles
 from aerona.engine.living.society import living_stance
 from aerona.engine.minds.war_methods import method_breached
 from aerona.engine.powers.control import add_part
+from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import stat_or
 from aerona.services.player.living import BANK_PARTS, LINE_PARTS
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement
@@ -241,3 +243,23 @@ async def test_making_a_disease_aimed_at_a_treaty_partner_breaks_the_clause_agai
     assert await method_breached(ctx, clause) == "it made a disease aimed at the other side"
     clause.kind = ClauseKind.NO_PLAGUE_POWERS
     assert await method_breached(ctx, clause) is None
+
+
+async def test_a_kept_bank_samples_the_endangered_kind_of_its_region_first_and_never_twice(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Fenhold", world, world.regions[0])
+    vault = await works(session, world, town.id, "the fen vault")
+    keeper = await mortal(session, "Oda Marrow", world, town.id)
+    common = await entity(session, "Reed hoppers", EntityType.SPECIES, SpeciesStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    rare = await entity(session, "Bog herons", EntityType.SPECIES, SpeciesStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    for kind in (common, rare):
+        session.add(SpeciesRangeRow(species_entity_id=kind.id, region_entity_id=world.regions[0].id, abundance=40, locked=[]))
+    await add_flag(session, rare.id, EntityFlag.ENDANGERED, 0)
+    session.add(GeneBankRow(structure_entity_id=vault.id, holder_node_id=keeper.id, upkeep=2, unpaid_epochs=0, locked=[]))
+    session.add(MortalProfileRow(entity_id=keeper.id, wealth=50, locked=[]))
+    await session.flush()
+    await keep_banks(await at(session, 2))
+    await keep_banks(await at(session, 3))
+    banked = list(
+        await session.scalars(select(GeneBankSampleRow.organism_node_id).where(GeneBankSampleRow.bank_entity_id == vault.id).order_by(GeneBankSampleRow.id))
+    )
+    assert banked == [rare.id, common.id]

@@ -148,6 +148,9 @@ class OwnershipRules:
     wider_owner_pct: int = rule(
         40, 0, 100, G, "Chance a work falls to a company, its workers, one owner, a made mind, a foreign power or a god where one is there to take it (%)"
     )
+    order_shift_pct: int = rule(
+        20, 0, 100, G, "Chance each epoch that a work its community holds in common passes to the owners its realm's order of ownership names (%)"
+    )
     wage_per_1000_workers: int = rule(20, 0, 1000, G, "Coin a thousand workers at a site are paid each epoch")
     upkeep_per_level: int = rule(4, 0, 100, G, "Value each level of a workshop costs its owner to keep each epoch")
     invest_pct: int = rule(20, 0, 100, G, "Share of a site's profit that goes into its settlement's investment pool (%)")

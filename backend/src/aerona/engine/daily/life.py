@@ -21,6 +21,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.daily.service import engage_servant
 from aerona.engine.economy.purse import coin_of, give_coin, take_coin
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.folk import towns_of_people
@@ -178,9 +179,10 @@ async def take_help(ctx: TickContext, household: HouseholdRow, load: int, tally:
     felt = await lagged(ctx, BalanceLoop.HOUSEWORK_BURDEN, household.head_node_id, load, subject=household.id)
     if felt < table.heavy_load or household.head_node_id is None or "servants" in (household.locked or []) or household.wealth < table.burdened_hire_wealth:
         return
-    with explaining():
-        term("daily_life.burdened_hire_wealth", 1, source_node_id=household.head_node_id)
-        household.servants += 1
+    if await engage_servant(ctx, household, ServiceTerms.WAGE, table.servant_wage) is None:
+        with explaining():
+            term("daily_life.burdened_hire_wealth", 1, source_node_id=household.head_node_id)
+            household.servants += 1
     await record(ctx, "daily.help_taken", roles={IncidentRole.ACTOR: household.head_node_id}, facts={"load": felt})
     tally.helped += 1
 

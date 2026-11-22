@@ -36,6 +36,17 @@ def coasts_of(atlas: RegionAtlas, sea: set[int]) -> list[int]:
     return sorted({other for water in sea for other in atlas.neighbours(water) if not atlas.is_water(other)})
 
 
+async def open_coast(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> tuple[int | None, list[int]]:
+    water = sea_of(atlas, region_id)
+    if water:
+        return min(water), coasts_of(atlas, water)
+    coastal = set(await ctx.session.scalars(select(CoastRow.region_entity_id)))
+    world = atlas.world_of(region_id)
+    if region_id not in coastal or world is None:
+        return None, []
+    return None, sorted(coast for coast in coastal if atlas.world_of(coast) == world)
+
+
 async def shape_pct(ctx: TickContext, region_id: int) -> int:
     coast = await ctx.session.get(CoastRow, region_id)
     return SHAPE_PCT[coast.form] if coast is not None else PERCENT

@@ -109,6 +109,9 @@ async def genetics_survey(ctx: TickContext) -> None:
     "table.entities",
     "table.genomes",
     "table.house_resemblances",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
     "table.mortal_profiles",
     "table.settlement_profiles",
 )

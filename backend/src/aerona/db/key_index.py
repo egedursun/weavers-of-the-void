@@ -22,6 +22,9 @@ class KeyIndex:
         return tuple(getattr(row, column) for column in self.columns)
 
     def add(self, row: Any) -> None:
+        if id(row) in self.keys:
+            self.moved(row)
+            return
         key = self.key_of(row)
         self.rows.setdefault(key, []).append(row)
         self.keys[id(row)] = key
@@ -69,9 +72,13 @@ async def keyed_rows(session: AsyncSession, spec: IndexSpec, scope: Hashable = N
     sync = session.sync_session
     if KEEP_KEY not in sync.info:
         return None
+    found: KeyIndex | None = sync.info.get(spec.key)
+    if found is not None and found.scope == scope:
+        follow(sync, spec, found)
+        return found
     if spec.table in pending_tables(sync):
         await session.flush()
-    found: KeyIndex | None = sync.info.get(spec.key)
+    found = sync.info.get(spec.key)
     if found is None or found.scope != scope:
         found = KeyIndex(spec.columns, scope)
         statement = select(spec.row_type)
@@ -83,22 +90,25 @@ async def keyed_rows(session: AsyncSession, spec: IndexSpec, scope: Hashable = N
     return found
 
 
+def follow(sync: Session, spec: IndexSpec, found: KeyIndex) -> None:
+    new, dirty, deleted = touched_rows(sync, spec.row_type)
+    for row in new:
+        if spec.covers(row, found):
+            found.add(row)
+    for row in dirty:
+        if spec.covers(row, found):
+            found.moved(row)
+        elif id(row) in found.keys:
+            found.remove(row)
+    for row in deleted:
+        found.remove(row)
+
+
 def follow_flush(sync: Session, *_: object) -> None:
     for key, spec in SPECS.items():
         found: KeyIndex | None = sync.info.get(key)
-        if found is None:
-            continue
-        new, dirty, deleted = touched_rows(sync, spec.row_type)
-        for row in new:
-            if spec.covers(row, found):
-                found.add(row)
-        for row in dirty:
-            if spec.covers(row, found):
-                found.moved(row)
-            elif id(row) in found.keys:
-                found.remove(row)
-        for row in deleted:
-            found.remove(row)
+        if found is not None:
+            follow(sync, spec, found)
 
 
 def drop_all(sync: Session, *_: object) -> None:

@@ -2,11 +2,8 @@ from typing import Any
 
 from pydantic import Field
 
-from aerona.catalog.intimacy_shapes import PATH_COST_PCT
-from aerona.constants.units import PERCENT
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.intimacy import ChildRecognitionRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -14,11 +11,11 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.intimacy import ChildLegitimacy, LegitimacyPath, RestraintVow
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OathKind
-from aerona.engine.economy.purse import points_of, shift_points
+from aerona.engine.economy.purse import points_of
 from aerona.engine.intimacy.legitimacy import legitimacy_of, rule_for
+from aerona.engine.intimacy.recognition import recognise, recognition_cost
 from aerona.engine.mortal.kin import parents_of
 from aerona.engine.polity.oaths import oaths_of, swear
-from aerona.engine.primitives.numbers import round_half_up
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
@@ -53,17 +50,11 @@ async def seek_recognition(call: MortalCall, args: SeekRecognitionInput) -> str:
         fail(MortalResult.UNIONS_REFUSED, why="your people know no way to change this child's standing")
     if args.path is not rule.path:
         fail(MortalResult.UNIONS_REFUSED, why=f"your people change a child's standing only by {spoken(rule.path)}")
-    cost = round_half_up(rule.cost * PATH_COST_PCT[args.path] / PERCENT) + (
-        call.rules.unions_and_birth.recognition_cost if args.path is LegitimacyPath.PAYMENT else 0
-    )
+    cost = recognition_cost(call.rules, rule)
     if await points_of(call.session, call.me) < cost:
         fail(MortalResult.UNIONS_REFUSED, why=f"it costs {cost} of wealth and you have less")
-    await shift_points(call.session, call.me, -cost)
-    call.session.add(ChildRecognitionRow(child_node_id=child.id, path=args.path, sponsor_node_id=call.me.id, recognized_epoch=call.epoch, locked=[]))
+    await recognise(call.tick, call.me, child, rule)
     call.target(child.id)
-    await call.record(
-        "birth.recognition", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: child.id}, facts={"path": args.path}, place=call.me.location_id
-    )
     return result(MortalResult.CHILD_RECOGNISED, name=child.name, path=spoken(args.path), cost=cost)
 
 

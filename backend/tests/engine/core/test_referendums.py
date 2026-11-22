@@ -16,7 +16,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.polity.laws import enact
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.referendums.book import ReferendumTally
-from aerona.engine.referendums.voting import call_vote, hold, petitions
+from aerona.engine.referendums.voting import assembly_questions, call_vote, hold, petitions
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
 
 
@@ -121,3 +121,16 @@ async def test_a_movement_for_independence_with_support_petitions_a_vote(ctx: Ti
     assert tally.called == 1 and row is not None and row.caller is ReferendumCaller.PETITION and not row.binding and row.target_node_id == other.id
     await petitions(ctx, tally)
     assert tally.called == 1
+
+
+async def test_an_assembly_puts_its_newest_law_to_the_people_and_never_the_same_law_twice(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "assembly", tuned_rules(referendums={"assembly_call_pct": 100}))
+    realm, _capital, _other = await voting_realm(session, world)
+    law = await enact(ctx, realm, LawKind.TAX_RATE, {})
+    tally = ReferendumTally()
+    await assembly_questions(ctx, tally)
+    row = await session.scalar(select(ReferendumRow).where(ReferendumRow.holder_node_id == realm.id))
+    assert row is not None and row.subject is ReferendumSubject.LAW and row.target_node_id == law.id and row.caller is ReferendumCaller.ASSEMBLY
+    await assembly_questions(ctx, ReferendumTally())
+    rows = list(await session.scalars(select(ReferendumRow).where(ReferendumRow.holder_node_id == realm.id)))
+    assert len(rows) == 1

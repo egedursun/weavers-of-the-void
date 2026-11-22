@@ -8,6 +8,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import BeliefStance, CreatureDeed, MagicSiteKind
 from aerona.domain.enums.entity import ProphecyReading
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.intervention import Miracle
 from aerona.domain.enums.mind import Emotion
 from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.mythic import CosmicOffice
@@ -128,6 +129,32 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
         chronicle_kind=K.ASCENSION,
+    ),
+    IncidentKindSpec(
+        "divine.old_god_miracle",
+        G.GODS,
+        "{actor} worked a miracle of {miracle} for {target}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET)),
+        facts=(FactSpec("miracle", FactValue.ENUM, enum=Miracle), FactSpec("witnesses", FactValue.NUMBER, unit=FactUnit.COUNT)),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.PHASE,
+    ),
+    IncidentKindSpec(
+        "divine.old_god_creature",
+        G.GODS,
+        "{actor} raised {subject} to dwell in {place}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT), RoleSpec(R.PLACE)),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.PHASE,
+    ),
+    IncidentKindSpec(
+        "divine.creature_taught",
+        G.GODS,
+        "{patron} rewarded {actor} for its deed: {deed}.",
+        roles=(RoleSpec(R.PATRON), RoleSpec(R.ACTOR)),
+        facts=(FactSpec("deed", FactValue.ENUM, enum=CreatureDeed),),
+        place=PlaceRule.NONE,
+        clock=ProcessClock.PHASE,
     ),
     IncidentKindSpec(
         "divine.avatar_converts",

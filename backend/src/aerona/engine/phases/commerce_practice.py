@@ -16,6 +16,7 @@ from aerona.engine.phase import Phase
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.holder_techniques",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.leases",
@@ -73,6 +74,7 @@ async def commerce_practice(ctx: TickContext) -> None:
     ctx.count("commerce_rent_paid", tally.rent_paid)
     ctx.count("commerce_defaulted", tally.defaulted)
     ctx.count("commerce_leases_ended", tally.leases_ended)
+    ctx.count("commerce_leased", tally.leased)
 
 
 PHASES = (Phase("commerce_practice", commerce_practice),)

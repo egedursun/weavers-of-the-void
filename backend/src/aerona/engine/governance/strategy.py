@@ -10,8 +10,9 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.governance import OPEN_MERGER_STAGES, MergerKind, OrgStrategy
 from aerona.engine.context import TickContext
 from aerona.engine.factions.companies import realm_of
+from aerona.engine.governance.heads import STRATEGY_LOCK, set_strategy
 from aerona.engine.governance.mergers import open_bid, worth
-from aerona.engine.governance.research import research_for_strategy
+from aerona.engine.governance.research import reachable, research_for_strategy
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 
 BIDDING = frozenset({OrgStrategy.EXPAND_ABROAD, OrgStrategy.INTEGRATE_UP, OrgStrategy.INTEGRATE_DOWN})
@@ -64,3 +65,33 @@ async def follow_strategy(ctx: TickContext, row: OrgGovernanceRow, org: EntityRo
             await open_bid(ctx, org.id, target, kind, None)
             return "bid"
     return None
+
+
+STEADY = (OrgStrategy.HOLD, OrgStrategy.GROW, OrgStrategy.SPECIALISE, OrgStrategy.DIVERSIFY)
+
+
+async def courses_open(ctx: TickContext, org: EntityRow, profile: FactionProfileRow) -> list[OrgStrategy]:
+    table = ctx.rules.governance
+    found = list(STEADY)
+    if profile.treasury >= table.research_budget:
+        found.extend((OrgStrategy.EXPAND_ABROAD, OrgStrategy.INTEGRATE_UP, OrgStrategy.INTEGRATE_DOWN))
+        if await reachable(ctx, org):
+            found.append(OrgStrategy.RESEARCH)
+    if await realm_of(ctx, profile.home_entity_id or org.location_id) is not None:
+        found.append(OrgStrategy.LOBBY)
+    if profile.treasury < table.research_cost_per_staff:
+        found.append(OrgStrategy.WITHDRAW)
+    return found
+
+
+async def set_course(ctx: TickContext, row: OrgGovernanceRow, org: EntityRow) -> bool:
+    profile = await ctx.session.get(FactionProfileRow, org.id)
+    if profile is None or row.head_node_id is None or STRATEGY_LOCK in (row.locked or []):
+        return False
+    if not ctx.rng(f"governance.course.{org.id}.{ctx.epoch}").chance(ctx.rules.governance.course_change_pct):
+        return False
+    options = [course for course in await courses_open(ctx, org, profile) if course is not row.strategy]
+    if not options:
+        return False
+    await set_strategy(ctx, row, ctx.rng(f"governance.course_pick.{org.id}.{ctx.epoch}").pick(options), row.head_node_id, "the head set a new course")
+    return True

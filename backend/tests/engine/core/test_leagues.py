@@ -18,7 +18,7 @@ from aerona.engine.leagues.book import LeagueTally, members_of, unions_of
 from aerona.engine.leagues.decisions import carry, propose, vote
 from aerona.engine.leagues.federation import federate, federating
 from aerona.engine.leagues.founding import found_league
-from aerona.engine.leagues.rise import apply_legacy
+from aerona.engine.leagues.rise import apply_legacy, maybe_found
 from aerona.engine.leagues.tend import tend_league
 from aerona.engine.polity.laws import enact
 from aerona.engine.primitives.manual import manual_context
@@ -158,3 +158,22 @@ async def test_a_coalition_of_three_becomes_a_league_with_its_treaty_as_charter(
     await apply_legacy(ctx, tally)
     profile = await session.scalar(select(PolityLeagueRow))
     assert tally.founded == 1 and profile is not None and profile.charter_treaty_id == treaty.id
+
+
+async def test_three_realms_whose_cores_each_signed_alliances_with_the_others_found_a_league_once(session: AsyncSession, world: CoreWorld) -> None:
+    realms = await three(session, world)
+    for index, (first, second) in enumerate(((0, 1), (1, 2), (0, 2))):
+        treaty = await entity(session, f"The Pact {index}", EntityType.TREATY, TreatyStats(), world_id=world.world.id)
+        session.add(TreatyProfileRow(treaty_entity_id=treaty.id, kind=TreatyKind.ALLIANCE_DEFENSIVE, signed_epoch=0))
+        cores = [await session.get(PolityProfileRow, realms[side].id) for side in (first, second)]
+        session.add_all(
+            [TreatyPartyRow(treaty_entity_id=treaty.id, party_node_id=core.core_entity_id) for core in cores if core is not None and core.core_entity_id]
+        )
+    await session.flush()
+    ctx = await manual_context(session, "blocs", tuned_rules(leagues={"found_chance_pct": 100}))
+    tally = LeagueTally()
+    await maybe_found(ctx, tally)
+    await maybe_found(ctx, tally)
+    profile = await session.scalar(select(PolityLeagueRow))
+    assert tally.founded == 1 and profile is not None and profile.aims == [LeagueAim.DEFENCE.value]
+    assert sorted(member.polity_entity_id for member in await members_of(session, profile.league_entity_id)) == sorted(realm.id for realm in realms)

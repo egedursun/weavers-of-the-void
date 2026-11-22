@@ -6,24 +6,27 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.climes import MonsoonSeasonRow
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import ForcedWeatherRow
+from aerona.db.tables.environment import ForcedWeatherRow, RegionEnvironmentRow
 from aerona.db.tables.folk_knowledge import FolkKnowledgeRow
 from aerona.db.tables.forecasting import ObservationMethodRow, WeatherWorkRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.folk_knowledge import FolkDomain
-from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim
+from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import take_coin
 from aerona.engine.forecasting.reading import sky_marks
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.knowledge import knows
 from aerona.engine.primitives.stats import shift_stat, stat_or
-from aerona.engine.recording.record import record
+from aerona.engine.recording.record import FactInput, record
 from aerona.engine.recording.terms import explaining_alone, term
 from aerona.engine.services.community_relations import change_relation
 from aerona.rules.registry import Rules
@@ -53,6 +56,17 @@ LEVELS: tuple[tuple[ObservationMethod, KnowledgeBranch, int], ...] = (
 )
 
 
+NEEDS: dict[WeatherWorkMethod, KnowledgeBranch] = {
+    WeatherWorkMethod.RITE: KnowledgeBranch.MAGIC,
+    WeatherWorkMethod.POWER: KnowledgeBranch.MAGIC,
+    WeatherWorkMethod.SEEDING: KnowledgeBranch.AGRICULTURE,
+    WeatherWorkMethod.DIVERSION: KnowledgeBranch.ARCHITECTURE,
+    WeatherWorkMethod.MADE_STRUCTURE: KnowledgeBranch.ARCHITECTURE,
+    WeatherWorkMethod.LIVING_CRAFT: KnowledgeBranch.BIOMANCY,
+}
+EPOCH_STRENGTH = 25
+
+
 @dataclass
 class ForecastTally:
     methods: int = 0
@@ -62,6 +76,7 @@ class ForecastTally:
     worked: int = 0
     side_effects: int = 0
     banned: int = 0
+    raised: int = 0
 
 
 def accuracy_of(rules: Rules, method: ObservationMethod) -> int:
@@ -184,6 +199,63 @@ async def work(ctx: TickContext, row: WeatherWorkRow, atlas: RegionAtlas, tally:
             return
 
 
+async def town_pays(ctx: TickContext, town: EntityRow, cost: int) -> bool:
+    profile = await ctx.session.get(SettlementProfileRow, town.id)
+    if profile is not None and "treasury" not in (profile.locked or []) and profile.treasury >= cost:
+        profile.treasury -= cost
+        return True
+    return await take_coin(ctx.session, ctx.rules, town, cost)
+
+
+async def method_known(ctx: TickContext, holder_id: int) -> WeatherWorkMethod | None:
+    for method, branch in NEEDS.items():
+        if await knows(ctx.session, holder_id, branch):
+            return method
+    return None
+
+
+def aim_for(ctx: TickContext, shift: int, parched: bool) -> WeatherAim | None:
+    limit = ctx.rules.forecasting.weather_work_shift
+    if parched or shift <= -limit:
+        return WeatherAim.RAIN
+    return WeatherAim.DRY if shift >= limit else None
+
+
+async def raise_works(ctx: TickContext, atlas: RegionAtlas, hard: set[int], tally: ForecastTally) -> None:
+    table = ctx.rules.forecasting
+    working = set(await ctx.session.scalars(select(WeatherWorkRow.region_entity_id).where(WeatherWorkRow.epochs_left > 0)))
+    towns = select(EntityRow).where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+    for town in list(await ctx.session.scalars(towns)):
+        region_id = atlas.top_region(town.id)
+        land = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
+        if region_id is None or land is None or region_id in working or held(town.id) or held(region_id):
+            continue
+        aim = aim_for(ctx, land.rainfall_shift, town.world_id in hard)
+        method = await method_known(ctx, town.id)
+        if aim is None or method is None or not await town_pays(ctx, town, table.weather_work_cost):
+            continue
+        strength = min(PERCENT, table.weather_work_strength)
+        downwind = next(iter(sorted(atlas.neighbours(region_id))), None)
+        ctx.session.add(
+            WeatherWorkRow(
+                holder_node_id=town.id,
+                region_entity_id=region_id,
+                downwind_region_id=downwind,
+                method=method,
+                aim=aim,
+                strength=strength,
+                cost=table.weather_work_cost,
+                epochs_left=1 + strength // EPOCH_STRENGTH,
+                since_epoch=ctx.epoch,
+                locked=[],
+            )
+        )
+        working.add(region_id)
+        facts: dict[str, FactInput] = {"aim": aim, "method": method, "strength": strength}
+        await record(ctx, "weather.work_raised", roles={IncidentRole.ACTOR: town.id, IncidentRole.PLACE: region_id}, facts=facts, place=region_id)
+        tally.raised += 1
+
+
 async def keep_forecasting(ctx: TickContext, tally: ForecastTally) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     hard = set(await ctx.session.scalars(select(MonsoonSeasonRow.world_id).where(MonsoonSeasonRow.epoch == ctx.epoch, MonsoonSeasonRow.failed.is_(True))))
@@ -201,6 +273,7 @@ async def keep_forecasting(ctx: TickContext, tally: ForecastTally) -> None:
                 if town is not None and town.entity_type is EntityType.SETTLEMENT
             ]
             await foresee(ctx, people, rows, towns, tally)
+    await raise_works(ctx, atlas, hard, tally)
     for row in list(await ctx.session.scalars(select(WeatherWorkRow).where(WeatherWorkRow.epochs_left > 0).order_by(WeatherWorkRow.id))):
         await work(ctx, row, atlas, tally)
     await ctx.session.flush()

@@ -24,6 +24,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.ethics import church_of
 from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.recording.moments import told_no_earlier
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 
@@ -163,11 +164,14 @@ async def reform(ctx: TickContext, holder: EntityRow, row: DatingSystemRow, year
         row.anchor_year = calendar.anchor_year if calendar is not None else year
         row.label_node_id = row.anchor_node_id = calendar.knowledge_entity_id if calendar is not None else holder.id
     tally.reforms += 1
+    told = await told_no_earlier(ctx.session, year, [holder.id, row.label_node_id])
+    if row.kind is D.EVENT and "anchor_year" not in row.locked:
+        row.anchor_year = told
     await record(
         ctx,
         "dating.reform",
         roles={IncidentRole.AUTHORITY: holder.id, IncidentRole.INSTRUMENT: row.label_node_id},
-        facts={"dating": row.kind, "anchor_year": row.anchor_year, "year": year},
+        facts={"dating": row.kind, "anchor_year": row.anchor_year, "year": told},
         steps=(StepDraft(StepAction.DECREE, actor=holder.id),),
     )
     if holder.entity_type is EntityType.PEOPLE:

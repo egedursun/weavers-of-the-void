@@ -6,11 +6,6 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from alembic import command
-from sqlalchemy import ColumnElement, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
-
 from aerona.db import tables
 from aerona.db.base import Base
 from aerona.db.migrations import build_config
@@ -74,6 +69,12 @@ from aerona.domain.enums.works import WorksStatus
 from aerona.engine.body.marks import marked
 from aerona.engine.pipeline import simulate
 from aerona.engine.primitives.stats import base_stat
+from aerona.rules.registry import Rules
+from aerona.rules.snapshot import apply_overrides
+from alembic import command
+from sqlalchemy import ColumnElement, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
 from tests.engine.integration.factories import seed_rich_cosmos
 
 assert tables
@@ -123,8 +124,11 @@ async def living(session: AsyncSession, kind: EntityType) -> int:
     )
 
 
+MIN_SAMPLE = 5
+
+
 def share(part: int, whole: int) -> float:
-    return 100 * part / max(1, whole)
+    return 100 * part / whole if whole >= MIN_SAMPLE else 0.0
 
 
 async def family_measures(session: AsyncSession, epochs: int) -> dict[str, float]:
@@ -281,7 +285,10 @@ async def order_measures(session: AsyncSession, epochs: int) -> dict[str, float]
             session,
             DivineConceptionRow,
             DivineConceptionRow.cult_entity_id.in_(
-                select(EntityRow.id).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON)
+                select(EntityRow.id).where(
+                    EntityRow.entity_type == EntityType.CULT,
+                    EntityRow.status == EntityStatus.CANON,
+                )
             ),
         )
         / max(1, faiths),
@@ -384,9 +391,16 @@ async def run(
                 cosmos = await session.get(CosmosRow, 1)
                 start_doom = cosmos.doom_clock if cosmos is not None else 0
             settled = epochs // 2
-            await simulate(database, settled)
+            rules = apply_overrides(
+                Rules(),
+                {
+                    tuple(name.split(".", 1)): value
+                    for name, value in (overrides or {}).items()
+                },
+            )
+            await simulate(database, settled, rules=rules)
             settled_communities = await community_count(database)
-            await simulate(database, epochs - settled)
+            await simulate(database, epochs - settled, rules=rules)
             return await measure(
                 database, epochs, start_doom, settled_communities, epochs - settled
             )

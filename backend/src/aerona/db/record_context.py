@@ -40,6 +40,7 @@ class TermsCollector:
     step: bool = False
     happening: bool = False
     view: object | None = None
+    told: set[tuple[str, float, int | None, int | None]] = field(default_factory=set)
 
     def add(self, term: Term) -> None:
         marker = (term.key, term.amount, term.source_node_id, term.source_incident_id)
@@ -54,6 +55,11 @@ class TermsCollector:
         if self.frozen is None:
             self.frozen = tuple(self.terms)
         return self.frozen
+
+    def untold(self) -> tuple[Term, ...]:
+        fresh = tuple(term for term in self.terms if (term.key, term.amount, term.source_node_id, term.source_incident_id) not in self.told)
+        self.told.update((term.key, term.amount, term.source_node_id, term.source_incident_id) for term in fresh)
+        return fresh
 
 
 @dataclass
@@ -133,6 +139,8 @@ def collecting() -> Iterator[TermsCollector]:
     outer = found if found is not None and not found.step and not found.happening else None
     keeper = found if found is not None and found.happening else None
     collector = TermsCollector(list(outer.terms) if outer is not None else [], set(outer.seen) if outer is not None else set())
+    if outer is not None:
+        collector.told = set(outer.told) | {(term.key, term.amount, term.source_node_id, term.source_incident_id) for term in outer.terms}
     token = TERMS.set(collector)
     try:
         yield collector
@@ -142,6 +150,7 @@ def collecting() -> Iterator[TermsCollector]:
             if gatherer is not None:
                 for term in collector.terms:
                     gatherer.add(term)
+                gatherer.told |= collector.told
 
 
 def add_term(key: str, amount: float, op: ModifierOp = ModifierOp.ADD, source_node_id: int | None = None, source_incident_id: int | None = None) -> None:
@@ -150,8 +159,9 @@ def add_term(key: str, amount: float, op: ModifierOp = ModifierOp.ADD, source_no
         collector.add(Term(key, float(amount), op, source_node_id, source_incident_id))
 
 
-def active_terms() -> tuple[Term, ...]:
-    return change_terms(TERMS.get())
+def untold_terms() -> tuple[Term, ...]:
+    collector = TERMS.get()
+    return collector.untold() if collector is not None and not collector.step and not collector.happening else ()
 
 
 def current_terms() -> TermsCollector | None:

@@ -87,7 +87,7 @@ from aerona.engine.cycles.bondage import BondageTally, bind_migrants, keep_marke
 from aerona.engine.cycles.breeding import born_sex, caste_for
 from aerona.engine.cycles.challenge import ChallengeTally, meet_challenges
 from aerona.engine.cycles.control import free_bound, new_plan, set_kinship, set_legacy, set_union
-from aerona.engine.cycles.gifts import GiftTally, balance, give, keep_offerings, return_gift, settle_due
+from aerona.engine.cycles.gifts import GiftTally, balance, give, keep_circuits, keep_offerings, return_gift, settle_due
 from aerona.engine.cycles.hospitality import circuit_partners, circuit_stops
 from aerona.engine.cycles.indenture import freed_stigma
 from aerona.engine.cycles.kinship import KinshipTally, keep_kinship
@@ -946,3 +946,17 @@ async def test_every_kind_of_legacy_refuses_a_key_that_names_nothing(session: As
     for kind in LegacyKind:
         with pytest.raises(ValidationFailedError):
             await set_legacy(ctx, world.people.id, kind, "999999", None)
+
+
+async def test_three_towns_that_return_each_others_gifts_begin_a_circuit_once(session: AsyncSession, world: CoreWorld) -> None:
+    towns = [await town_of(session, world, name, region) for region, name in enumerate(("Ashby", "Farside", "Thirdwell"))]
+    for giver, receiver in ((0, 1), (1, 2), (2, 0)):
+        session.add(GiftRow(giver_node_id=towns[giver].id, receiver_node_id=towns[receiver].id, value=10, state=GiftState.RETURNED, locked=[]))
+    await session.flush()
+    ctx = await context(session, ceremonial_circuits={"found_pct": 100})
+    tally = GiftTally()
+    await keep_circuits(ctx, tally)
+    await keep_circuits(ctx, tally)
+    circuits = list(await session.scalars(select(CircuitRow)))
+    assert tally.circuits == 1 and [sorted(row.stops) for row in circuits] == [sorted(town.id for town in towns)]
+    assert tally.passes >= 1

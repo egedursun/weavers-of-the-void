@@ -42,11 +42,15 @@ PROTECTION_MEASURE = total(
     ProtectionMeasure,
     {
         ProtectionMeasure.HUNTING_BAN: Defined(
-            "Hunting ban", checked_by=("engine.protected_nature.book.spared_species",), used_by=("engine.protected_nature.movement.AIMS",)
+            "Hunting ban",
+            checked_by=("engine.protected_nature.book.spared_species",),
+            used_by=("engine.protected_nature.movement.AIMS", "engine.protected_nature.movement.GUARDED"),
         ),
         ProtectionMeasure.TRADE_BAN: Defined("Trade ban", checked_by=(), used_by=()),
         ProtectionMeasure.BREEDING_PROGRAMME: Defined("Breeding programme", checked_by=("engine.protected_nature.species.tend_species",), used_by=()),
         ProtectionMeasure.REINTRODUCTION: Defined("Reintroduction", checked_by=("engine.protected_nature.species.tend_species",), used_by=()),
-        ProtectionMeasure.HABITAT_GUARD: Defined("Habitat guard", checked_by=("engine.protected_nature.species.tend_species",), used_by=()),
+        ProtectionMeasure.HABITAT_GUARD: Defined(
+            "Habitat guard", checked_by=("engine.protected_nature.species.tend_species",), used_by=("engine.protected_nature.movement.GUARDED",)
+        ),
     },
 )

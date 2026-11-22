@@ -21,6 +21,7 @@ from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.settlement import (
     ADMIN_MAX,
+    DistrictDesignRow,
     DistrictRow,
     SettlementHistoryRow,
     SettlementInfrastructureRow,
@@ -30,6 +31,7 @@ from aerona.db.tables.settlement import (
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import RebuildCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.culture import Technique
@@ -89,7 +91,7 @@ from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.renown.currencies import realm_of_community, ruler_of_realm
 from aerona.engine.settlement.book import Town, ledger, tier_for
 from aerona.engine.settlement.circuit import circuit_gates, circuit_towers
-from aerona.engine.settlement.districts import AdminParts, admin_parts, designs_for, unify_market, wound_district
+from aerona.engine.settlement.districts import AdminParts, admin_parts, base_parameters, designs_for, unify_market, wound_district
 from aerona.engine.settlement.storage import design_for, settlement_store, storage_index, store_kind
 from aerona.engine.urban.morphology import hauling_of, replan, spread_of
 from aerona.engine.urban.planning import seat
@@ -458,6 +460,42 @@ async def waterside_of(ctx: TickContext, town: Town, knowledge: KnowledgeMap, gr
     return Waterside(river=ground.river_class, irrigators=irrigators)
 
 
+PLANNED_KINDS = (DistrictKind.RESIDENTIAL,)
+
+
+async def town_plan(ctx: TickContext, town: Town, kind: DistrictKind, architecture: int) -> DistrictDesignRow | None:
+    table = ctx.rules.urban
+    crowded = (stat(town.entity, "population") or 0) > housing_of(ctx.rules, town)
+    if kind not in PLANNED_KINDS or town.entity.world_id is None or held(town.entity.id):
+        return None
+    name = f"the plan of {town.entity.name}"
+    query = select(DistrictDesignRow).where(
+        DistrictDesignRow.world_id == town.entity.world_id, DistrictDesignRow.name == name, DistrictDesignRow.base_kind == kind
+    )
+    found = await ctx.session.scalar(query.order_by(DistrictDesignRow.id).limit(1))
+    if found is not None or not crowded or architecture < table.planned_architecture:
+        return found
+    housing = round_half_up(base_parameters(ctx.rules, kind)["housing"] * (PERCENT + table.planned_housing_pct) / PERCENT)
+    plan = DistrictDesignRow(
+        world_id=town.entity.world_id,
+        name=name,
+        description=f"Drawn up by {town.entity.name} to house more people on the same ground.",
+        base_kind=kind,
+        created_epoch=ctx.epoch,
+        housing=housing,
+    )
+    ctx.session.add(plan)
+    await ctx.session.flush()
+    await record(
+        ctx,
+        "settlement.plan_drawn",
+        roles={IncidentRole.PLACE: town.entity.id},
+        facts={"plan": name, "district": kind, "housing": housing},
+        place=town.entity.id,
+    )
+    return plan
+
+
 async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war: bool, foreign: int, ground: RegionEnvironmentRow | None = None) -> int:
     table = ctx.rules.urban
     architecture = knowledge.level(town.entity.id, KnowledgeBranch.ARCHITECTURE)
@@ -482,7 +520,8 @@ async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war
             if used >= slots_of(ctx.rules, town) and not any(item.kind is district_kind and item.level < 5 for item in town.districts):
                 continue
             if spend(ctx, town, round_half_up(table.district_cost * priced), table.district_labour, f"{spoken(district_kind)} district"):
-                await add_district(ctx, town, district_kind, material=material, builder_id=town.entity.id)
+                plan = await town_plan(ctx, town, district_kind, architecture)
+                await add_district(ctx, town, district_kind, material=material, builder_id=town.entity.id, design_id=plan.id if plan is not None else None)
                 built += 1
             continue
         if spend(ctx, town, table.district_cost, table.district_labour, kind):

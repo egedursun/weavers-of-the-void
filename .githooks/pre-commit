@@ -76,6 +76,8 @@ run enum_values_read "$PYTHON" scripts/check_enum_values_read.py
 run fixed_harm "$PYTHON" scripts/check_fixed_harm.py
 run acts_as "$PYTHON" scripts/check_acts_as.py
 run war_foes "$PYTHON" scripts/check_war_foes.py
+run treaty_parties "$PYTHON" scripts/check_treaty_parties.py
+run head_returns "$PYTHON" scripts/check_head_returns.py
 run point_shares "$PYTHON" scripts/check_point_shares.py
 run held_ids "$PYTHON" scripts/check_held_ids.py
 run ended_war_sides "$PYTHON" scripts/check_ended_war_sides.py

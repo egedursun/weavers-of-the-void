@@ -65,6 +65,7 @@ class GenomeDesignRules(Spanned):
     bank_upkeep: int = rule(2, 0, 100, C, "Wealth points a gene bank costs its holder each epoch")
     bank_unpaid_limit_years: int = span(3, 1, 2500, C, "Years a bank goes unpaid before it loses a sample")
     raise_fidelity_pct: int = rule(80, 0, 100, C, "Share of a sample's quality a line raised from it keeps as stability (%)")
+    bank_sample_quality: int = rule(60, 0, 100, C, "Quality of the sample a kept bank takes each epoch of a living kind of its region")
     sapience_at: int = rule(60, 0, 100, C, "Strength of a designed nervous system at which a line's species rises to a people")
 
     @property

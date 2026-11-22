@@ -142,6 +142,7 @@ class PotlatchRules:
 @dataclass(frozen=True)
 class CircuitRules:
     pass_value: int = rule(20, 0, 100000, M, "Worth of the treasure each pass of a ceremonial circuit hands on")
+    found_pct: int = rule(30, 0, 100, M, "Chance each epoch that three communities who have each returned gifts to the others begin a circuit (%)")
     holder_prestige: int = rule(3, 0, 100, M, "Standing a stop gains while it holds the circuit's treasure")
     bond_regard: int = rule(4, 0, 100, M, "Regard each pass of a circuit builds between the two stops")
     hospitality_danger: int = rule(2, 0, 100, M, "Danger from outlaws each stop of a ceremonial circuit takes from its land, by its duty of hospitality")

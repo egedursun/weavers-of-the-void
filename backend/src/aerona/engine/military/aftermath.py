@@ -22,9 +22,9 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.battle import BattleResult, Side, target_class
 from aerona.engine.military.units import drill_fields
-from aerona.engine.primitives.levies import levies_from
+from aerona.engine.primitives.levies import add_heads, levies_from
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.primitives.strength import equipment
 from aerona.engine.primitives.transfers import move_amount
 
@@ -100,10 +100,7 @@ async def send_home_wounded(ctx: TickContext, side: Side, wounded: int) -> int:
         return 0
     if not levies_from(owner) or owner.status is not EntityStatus.CANON:
         return 0
-    before = headcount(owner)
-    with flowing(FlowCategory.CREATION):
-        after = put_stat(ctx.rules, owner, headcount_key(owner), before + wounded)
-    returned = (after or before) - before
+    returned = add_heads(ctx.rules, owner, wounded, FlowCategory.CREATION)
     if returned <= 0:
         return 0
     rows = await cohorts_of(ctx.session, owner.id)
