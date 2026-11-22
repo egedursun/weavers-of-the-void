@@ -15,7 +15,7 @@ import {
   pruneTree,
   sortList,
 } from './atlasModel'
-import { parseSelection, validateAtlasSearch } from './atlasSearch'
+import { validateAtlasSearch } from './atlasSearch'
 
 function entity(
   id: number,
@@ -265,8 +265,6 @@ describe('atlas tree', () => {
         select: 'entity:4',
       })
     ).toEqual({ q: 'salt', view: 'list', page: 2, select: 'entity:4' })
-    expect(parseSelection('son:11')).toEqual({ kind: 'son', id: 11 })
-    expect(parseSelection(null)).toBeNull()
   })
 
   it('keeps only the chosen world under the global world filter', () => {

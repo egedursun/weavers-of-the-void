@@ -12,6 +12,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { DRAWER_KIND_ICON, Medallion } from '@/components/domain'
 import { Label } from '@/components/typography'
+import { DrawerSections } from './DrawerSections'
 import {
   DRAWER_KIND_LABEL,
   type DrawerKind,
@@ -82,6 +83,7 @@ export function DrawerStack({ pages }: { pages: DrawerPages }) {
             </SheetDescription>
           </div>
           {depth > 1 && <Label>{`${depth} open`}</Label>}
+          {top && <DrawerSections key={serializeEntry(top)} body={bodyRef} />}
           <SheetClose asChild>
             <Button variant='ghost' size='icon' aria-label='Close'>
               <X />

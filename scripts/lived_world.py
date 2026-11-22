@@ -22,8 +22,9 @@ from aerona.agents.runtime import AgentRuntime
 from aerona.agents.son import prepare_prompts, son_toolkit, start_turn
 from aerona.agents.tool_ports import attach_toolkits
 from aerona.constants.paths import DATABASE_FILENAME
-from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.core.errors import AeronaError
 from aerona.db.migrations import upgrade_to_head_sync
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import GalaxyRow
@@ -36,17 +37,21 @@ from aerona.domain.enums.son import SonStatus
 from aerona.engine.pipeline import simulate
 from aerona.engine.primitives.manual import manual_context
 from aerona.main import create_app
+from aerona.rules.registry import Rules
+from aerona.services.player.catalog import ACTIONS, action, run_ledgered
+from aerona.services.player.scope import PlayerScope
 from aerona.settings import Settings
 from aerona.tools.toolkit import Toolkits, TurnToolkit
 from tests.agents.fakes import FakeModel
 from tests.api.test_every_endpoint import FIXED, GET_PATHS, NAMED_TABLES, PARAM, SECOND
-from tests.services.player.every_lever import kind_of, payload_for, pick
+from tests.services.player.every_lever import LEVERS, Lever, kind_of, payload_for, pick
 from tests.tools import factories
 from tests.tools import test_every_tool as proof
 from tests.tools.every_mortal_tool import MORTAL_CASES
 from tests.tools.every_son_tool import SON_CASES
 
 PROMPT_ROUNDS = 1
+UNDONE_VERBS = frozenset({"delete", "remove", "destroy", "kill", "unmake", "reset", "wipe", "revoke", "dissolve", "end", "slay"})
 TOOL_VARIANTS = 3
 TOOL_POINTS = 999
 ENDPOINT_SAMPLES = 6
@@ -292,9 +297,73 @@ def cases(path: Path, folder: Path, only: list[str]) -> int:
     return 1 if failed else 0
 
 
+class UndoneError(Exception):
+    pass
+
+
+async def staged(session: Any, lever: Lever) -> bool:
+    try:
+        async with session.begin_nested():
+            if lever.setup is not None:
+                await lever.setup(session)
+            for number, (step, values) in enumerate(lever.before):
+                await run_ledgered(PlayerScope(session, Rules()), step, await payload_for(session, action(step).input_model, values, 1000 + number))
+            if lever.then is not None:
+                await lever.then(session)
+    except Exception:
+        return False
+    return True
+
+
+async def pull(database: Database, action_id: str, lever: Lever, keep: bool) -> str:
+    try:
+        async with database.write() as session:
+            if not await staged(session, lever):
+                return "unstaged"
+            try:
+                payload = await payload_for(session, action(action_id).input_model, lever.values, 1)
+                action(action_id).input_model.model_validate(payload)
+            except Exception:
+                return "unfillable"
+            await run_ledgered(PlayerScope(session, Rules()), action_id, payload)
+            if not keep:
+                raise UndoneError
+    except UndoneError:
+        return "succeeded"
+    except AeronaError:
+        return "refused"
+    return "succeeded"
+
+
+async def god(path: Path, epochs: int) -> int:
+    database = opened(path)
+    levers = sorted(spec.id for spec in ACTIONS if spec.sync is not None)
+    broken: list[str] = []
+    for round_number in range(epochs):
+        tally: Counter[str] = Counter()
+        started = time.monotonic()
+        for action_id in levers:
+            keep = action_id.rsplit(":", 1)[-1] not in UNDONE_VERBS
+            try:
+                tally[await pull(database, action_id, LEVERS.get(action_id, Lever()), keep)] += 1
+            except Exception:
+                tally["crashed"] += 1
+                broken.append(f"round {round_number + 1} {action_id}: {traceback.format_exc(limit=8)}")
+        print(f"god round {round_number + 1}: {dict(tally)} in {time.monotonic() - started:.0f}s")
+        try:
+            await simulate(database, 1)
+        except Exception:
+            broken.append(f"epoch after round {round_number + 1} failed: {traceback.format_exc()}")
+            break
+    await database.dispose()
+    for item in broken:
+        print(item)
+    return 1 if broken else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check a copy of a lived world: prompts, engine epochs, read endpoints and every tool")
-    parser.add_argument("check", choices=("prompts", "engine", "endpoints", "tools", "cases", "all", "case"))
+    parser.add_argument("check", choices=("prompts", "engine", "endpoints", "tools", "cases", "god", "all", "case"))
     parser.add_argument("database", type=Path)
     parser.add_argument("extra", nargs="*")
     parser.add_argument("--epochs", type=int, default=3)
@@ -306,7 +375,7 @@ def main() -> int:
     try:
         world = snapshot(arguments.database, folder)
         asyncio.run(open_turns(world))
-        checks = ("prompts", "engine", "endpoints", "tools", "cases") if arguments.check == "all" else (arguments.check,)
+        checks = ("prompts", "engine", "endpoints", "tools", "cases", "god") if arguments.check == "all" else (arguments.check,)
         failed = 0
         for check in checks:
             copy = clone(world, folder / f"{check}.db")
@@ -318,6 +387,8 @@ def main() -> int:
                 failed += asyncio.run(endpoints(copy, folder / "endpoints"))
             elif check == "tools":
                 failed += asyncio.run(tools(copy))
+            elif check == "god":
+                failed += asyncio.run(god(copy, arguments.epochs))
             else:
                 failed += cases(world, folder, arguments.only)
         return 1 if failed else 0

@@ -59,12 +59,30 @@ async def test_reputation_from_structured_actions(session: AsyncSession, world: 
 
 async def test_unanswered_son_prayers_cut_love(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
     son = await make_son(session, "Velkar", world.world.id)
-    baseline = await compute_reputation(session, rules, son, 2, world.creator)
-    session.add(MessageRow(epoch=2, sender_node_id=son.id, recipient_node_id=world.creator.id, intent=MessageIntent.PRAYER, text="father"))
+    quiet = await compute_reputation(session, rules, son, 3, world.creator)
+    quiet_later = await compute_reputation(session, rules, son, 4, world.creator)
+    session.add(MessageRow(epoch=2, sender_node_id=son.id, recipient_node_id=world.creator.id, intent=MessageIntent.PRAYER, text="hear me"))
     await session.flush()
-    later = await compute_reputation(session, rules, son, 2, world.creator)
+    awaiting = await compute_reputation(session, rules, son, 3, world.creator)
+    assert awaiting.unanswered == 1
+    assert awaiting.love == quiet.love
+    later = await compute_reputation(session, rules, son, 4, world.creator)
     assert later.unanswered == 1
-    assert later.love == baseline.love - rules.reputation.love_per_unanswered_prayer
+    assert later.love < quiet_later.love
+
+
+async def test_a_son_prayer_answered_in_its_window_never_cuts_love(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
+    son = await make_son(session, "Velkar", world.world.id)
+    prayer = MessageRow(epoch=2, sender_node_id=son.id, recipient_node_id=world.creator.id, intent=MessageIntent.PRAYER, text="hear me")
+    session.add(prayer)
+    await session.flush()
+    awaiting = await compute_reputation(session, rules, son, 3, world.creator)
+    prayer.answered, prayer.answered_epoch = True, 3
+    await session.flush()
+    answered = await compute_reputation(session, rules, son, 3, world.creator)
+    assert awaiting.unanswered == 1 and answered.unanswered == 0
+    assert awaiting.love == answered.love
+    assert (await compute_reputation(session, rules, son, 4, world.creator)).unanswered == 0
 
 
 async def test_drift_and_label_chronicle(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:

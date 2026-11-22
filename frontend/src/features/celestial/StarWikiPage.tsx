@@ -255,7 +255,7 @@ export function StarWikiView({ starId }: { starId: number }) {
           )
         }
       />
-      <ThingSections nodeId={data.star.id} />
+      <ThingSections nodeId={data.star.id} kind='star' />
     </div>
   )
 }

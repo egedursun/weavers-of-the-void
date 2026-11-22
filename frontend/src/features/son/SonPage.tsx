@@ -122,7 +122,7 @@ export function SonPage({ id }: DrawerPageProps) {
       <MindSection nodeId={son.id} />
       <MemoriesSection nodeId={son.id} />
       <GodDivinitySection godId={son.id} />
-      <ThingSections nodeId={son.id} />
+      <ThingSections nodeId={son.id} kind='son' />
       <SonImages son={son} images={data.images} />
       <SonSiblings sonId={son.id} siblings={data.siblings} alive={!dead} />
       {!dead && <SonBirthChild son={son} siblings={data.siblings} />}

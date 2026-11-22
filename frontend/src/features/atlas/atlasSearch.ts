@@ -91,12 +91,3 @@ export function validateAtlasSearch(
   if (world) result.world = world
   return result
 }
-
-export function parseSelection(
-  selection: string | null
-): { kind: string; id: number | null } | null {
-  if (!selection) return null
-  const [kind, raw] = selection.split(':')
-  const id = raw ? Number(raw) : null
-  return { kind, id: id !== null && Number.isInteger(id) && id > 0 ? id : null }
-}

@@ -888,7 +888,7 @@ export function HistoryPanel({
 }) {
   return (
     <div
-      id='section-history'
+      id='section-collective-history'
       data-surface='HistoryPanel'
       className='flex min-w-0 flex-col gap-3'
     >

@@ -6,7 +6,6 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import {
   Baby,
   BookOpen,
@@ -42,8 +41,6 @@ import {
   Zap,
 } from 'lucide-react'
 import { postAction } from '@/api/actions'
-import { api } from '@/api/client'
-import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
@@ -94,12 +91,12 @@ import { Label, Muted, Text } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { loreKeys } from '../api/keys'
 import {
   RECORD_LEVERS,
   type RecordFamily,
   type RowLevers,
 } from './recordLevers'
+import { useRecordRows } from './recordRows'
 
 type TableView = components['schemas']['ThingRecordTableView']
 type ColumnView = components['schemas']['ThingRecordColumnView']
@@ -1073,16 +1070,7 @@ export function RecordRowsSection({
   const { reason } = useGodGate()
   const [query, setQuery] = useState('')
   const [opened, setOpened] = useState<string | null>(null)
-  const view = useQuery({
-    queryKey: [...loreKeys.entity(nodeId), 'record-rows'],
-    queryFn: () =>
-      unwrap(
-        api.GET('/api/records/{node_id}/rows', {
-          params: { path: { node_id: nodeId } },
-        })
-      ),
-    retry: false,
-  })
+  const view = useRecordRows(nodeId)
   const tables = useMemo(
     () =>
       (view.data?.tables ?? []).filter(

@@ -19,7 +19,7 @@ from aerona.engine.divine.activity import income, tend_domain_economy
 from aerona.engine.divine.avatars import avatar_cycles, manifest
 from aerona.engine.divine.goals import pursue_goals
 from aerona.engine.divine.lineage import inherited_domains, inherited_stats
-from aerona.engine.divine.standing import mean_neglect, tend_standing
+from aerona.engine.divine.standing import mean_neglect, tally_epoch, tend_standing
 from aerona.engine.divine.wounds import avatar_slain, heal_wounds, inflict, name_exposure, sanity_ceiling, strike, worst
 from aerona.engine.primitives.faith import has_unlocked_power
 from aerona.rules.registry import Rules
@@ -80,13 +80,28 @@ async def test_answered_prayers_kindle_love_and_silence_breeds_neglect(realm: Re
     sea.current_world_id = realm.far_region.world_id
     town = await settlement(realm, "Saltmouth")
     await worship(realm, town, sea.id)
-    realm.session.add(MessageRow(epoch=3, sender_node_id=town.id, recipient_node_id=sea.id, intent=MessageIntent.PRAYER, text="hear us", answered=True))
-    realm.session.add(MessageRow(epoch=3, sender_node_id=town.id, recipient_node_id=sea.id, intent=MessageIntent.PRAYER, text="hear us", answered=False))
+    realm.session.add(
+        MessageRow(epoch=2, sender_node_id=town.id, recipient_node_id=sea.id, intent=MessageIntent.PRAYER, text="hear us", answered=True, answered_epoch=3)
+    )
+    realm.session.add(MessageRow(epoch=2, sender_node_id=town.id, recipient_node_id=sea.id, intent=MessageIntent.PRAYER, text="hear us", answered=False))
     await realm.session.flush()
     await tend_standing(context(realm.session, epoch=3))
     row = await realm.session.get(DivineStandingRow, (town.id, sea.id))
     assert row is not None and row.love > 0 and row.neglect > 0
     assert await mean_neglect(context(realm.session), sea.id) == row.neglect
+
+
+async def test_a_prayer_answered_after_its_epoch_counts_as_answered_and_a_fresh_one_waits(realm: Realm) -> None:
+    sea = await god(realm, "Ondra", Domain.SEA, Domain.STORM)
+    town = await settlement(realm, "Saltmouth")
+    await worship(realm, town, sea.id)
+    realm.session.add(
+        MessageRow(epoch=2, sender_node_id=town.id, recipient_node_id=sea.id, intent=MessageIntent.PRAYER, text="hear us", answered=True, answered_epoch=3)
+    )
+    realm.session.add(MessageRow(epoch=3, sender_node_id=town.id, recipient_node_id=sea.id, intent=MessageIntent.PRAYER, text="hear us", answered=False))
+    await realm.session.flush()
+    tally = (await tally_epoch(context(realm.session, epoch=3), {sea.id})).tallies[(town.id, sea.id)]
+    assert (tally.answered, tally.unanswered) == (1, 0)
 
 
 async def test_a_beaten_god_may_be_wounded_and_its_wounds_bite(realm: Realm) -> None:

@@ -67,12 +67,21 @@ def test_actions_raise_interest_and_contentment(rules: Rules) -> None:
 
 async def test_unanswered_window_decays(session: AsyncSession, world: GodsWorld) -> None:
     mortal = await make_entity(session, "Ysra", EntityType.MORTAL, world_id=world.world.id)
-    for epoch in (1, 5, 10):
+    for epoch in (1, 5, 9, 10):
         session.add(MessageRow(epoch=epoch, sender_node_id=mortal.id, recipient_node_id=world.creator.id, intent=MessageIntent.PRAYER, text="hear me"))
     await session.flush()
     count, weight = await unanswered_prayer_weight(session, world.creator.id, 10, 8, 50)
     assert count == 2
-    assert weight == pytest.approx(1 + 0.5**5)
+    assert weight == pytest.approx(0.5 + 0.5**5)
+
+
+async def test_a_prayer_of_the_epoch_just_lived_weighs_nothing_until_the_creator_could_answer(session: AsyncSession, world: GodsWorld) -> None:
+    mortal = await make_entity(session, "Ysra", EntityType.MORTAL, world_id=world.world.id)
+    session.add(MessageRow(epoch=10, sender_node_id=mortal.id, recipient_node_id=world.creator.id, intent=MessageIntent.PRAYER, text="hear me"))
+    await session.flush()
+    assert await unanswered_prayer_weight(session, world.creator.id, 10, 8, 50) == (0, 0.0)
+    count, weight = await unanswered_prayer_weight(session, world.creator.id, 11, 8, 50)
+    assert count == 1 and weight == pytest.approx(0.5)
 
 
 async def test_cult_faith_and_effect(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:

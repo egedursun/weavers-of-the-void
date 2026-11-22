@@ -981,7 +981,7 @@ export function GalaxyView({ galaxyId }: { galaxyId: number }) {
         action='galaxy:delete'
         target={{ galaxy_id: galaxy.id }}
       />
-      <ThingSections nodeId={galaxy.id} />
+      <ThingSections nodeId={galaxy.id} kind='galaxy' />
     </div>
   )
 }

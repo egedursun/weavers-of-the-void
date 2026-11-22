@@ -3,7 +3,7 @@ import type { RecordFamily } from '@/features/entity/sections/recordLevers'
 
 export const KIN: RecordFamily = {
   id: 'kin',
-  section: 'section-kin',
+  section: 'section-kin-groups',
   title: 'Kin',
   description:
     'The duties a people binds between kin of each role, with their strength, and the kin groups beyond the household: their form, how members join, their head, council, exogamy and shared land and shrine. Peoples hold duties and kin groups; beings hold their memberships.',

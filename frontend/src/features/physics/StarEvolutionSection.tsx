@@ -83,7 +83,7 @@ export function StarEvolutionSection({ starId }: { starId: number }) {
   return (
     <QuerySection
       id='section-star-evolution'
-      title='Life of the star'
+      title='How the star ages'
       description='How its mass sets its light, the length of each stage and how it ends.'
       icon={Star}
       tone='gold'

@@ -4,6 +4,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.competition import CartelRow, MarketStructureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.competition import CartelAim, CompetitionClause, MarketForm
 from aerona.domain.enums.economy import CommodityKind
@@ -76,7 +77,9 @@ async def maybe_form(ctx: TickContext, structure: MarketStructureRow) -> CartelR
 
 async def break_cartel(ctx: TickContext, cartel: CartelRow, why: str) -> None:
     cartel.broken_epoch = ctx.epoch
-    await record(ctx, "market.cartel_broken", roles={IncidentRole.SUBJECT: cartel.members}, facts={"commodity": cartel.commodity, "why": why})
+    standing = [node for node in cartel.members or [] if await ctx.session.get(NodeRow, node) is not None]
+    roles = {IncidentRole.SUBJECT: standing} if standing else {}
+    await record(ctx, "market.cartel_broken", roles=roles, facts={"commodity": cartel.commodity, "why": why})
 
 
 async def expose(ctx: TickContext, cartel: CartelRow) -> None:

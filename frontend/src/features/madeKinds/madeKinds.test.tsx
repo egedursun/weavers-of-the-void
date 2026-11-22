@@ -282,7 +282,7 @@ describe('made kinds', () => {
 
   it('keeps the sections a made type cannot hold out of its entry and says why', async () => {
     const { screen } = await renderApp(
-      <ThingSections nodeId={900} scope='made' />
+      <ThingSections nodeId={900} kind='vehicle_type' scope='made' />
     )
     await expect
       .element(screen.getByText(/A made type is a design its makers/))

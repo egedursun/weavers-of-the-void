@@ -24,6 +24,7 @@ from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.domain.enums.world import Discovery
+from aerona.engine.divine.prayer_window import still_awaiting
 from aerona.engine.gods.behaviour_hints import SonHints, son_behaviour_lines
 from aerona.engine.gods.devotion import resurrection_state
 from aerona.engine.gods.mortality import kill_chance, kill_cost
@@ -509,7 +510,7 @@ async def creator_hints(session: AsyncSession, rules: Rules, epoch: int) -> Crea
     unanswered = 0
     if creator is not None:
         statement = select(func.count(MessageRow.id)).where(
-            MessageRow.recipient_node_id == creator.id, MessageRow.answered.is_(False), MessageRow.intent != MessageIntent.CHAT
+            MessageRow.recipient_node_id == creator.id, still_awaiting(), MessageRow.intent != MessageIntent.CHAT
         )
         unanswered = int(await session.scalar(statement) or 0)
     unclaimed = tuple(entity.name for entity in view.canon(*THINKING_TYPES) if view.patrons.get(entity.id) is None)

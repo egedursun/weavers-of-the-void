@@ -106,7 +106,7 @@ export function CreatorPage() {
         onSavePrompt={savePrompt}
       />
       <CreatorDivinityPanel creatorId={creator.id} />
-      <ThingSections nodeId={creator.id} />
+      <ThingSections nodeId={creator.id} kind='creator' />
     </div>
   )
 }

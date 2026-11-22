@@ -5,6 +5,7 @@ from aerona.db.tables.commerce import SupplyTierRow
 from aerona.db.tables.competition import MarketStructureRow, PriceWarRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.governance import OrgGovernanceRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.competition import MarketForm, PriceWarOutcome
 from aerona.domain.enums.economy import CommodityKind
@@ -111,10 +112,11 @@ async def tend_war(ctx: TickContext, war: PriceWarRow, tally: InsolvencyTally) -
     if not standing:
         await take_shares(ctx, war, beaten)
         await close_war(ctx, war, PriceWarOutcome.WON)
+        fought = [node for node in beaten if await ctx.session.get(NodeRow, node) is not None]
         await record(
             ctx,
             "market.price_war_won",
-            roles={IncidentRole.ACTOR: aggressor.id, IncidentRole.VICTIM: beaten or war.targets, IncidentRole.PLACE: war.market_entity_id},
+            roles={IncidentRole.ACTOR: aggressor.id, IncidentRole.PLACE: war.market_entity_id} | ({IncidentRole.VICTIM: fought} if fought else {}),
             facts={"commodity": war.commodity, "losses": war.losses},
             place=war.market_entity_id,
         )

@@ -329,7 +329,7 @@ export function TongueAtlas({ worldId }: { worldId: number | null }) {
         )}
       </Section>
       <Section
-        id='section-registers'
+        id='section-tongue-registers'
         title='Court, liturgy, market and hearth'
         description='Which tongue each realm, faith and town uses for rule, prayer, trade and home.'
         icon={Church}

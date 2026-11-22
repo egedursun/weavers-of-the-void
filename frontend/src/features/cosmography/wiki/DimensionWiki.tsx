@@ -599,7 +599,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
         action='dimension:delete'
         target={{ dimension_id: dimension.id }}
       />
-      <ThingSections nodeId={dimension.id} />
+      <ThingSections nodeId={dimension.id} kind='dimension' />
     </div>
   )
 }

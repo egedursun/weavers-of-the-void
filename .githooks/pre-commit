@@ -43,6 +43,7 @@ run partial_reads "$PYTHON" scripts/check_partial_reads.py
 run label_maps "$PYTHON" scripts/check_label_maps.py
 run unpaged_lists "$PYTHON" scripts/check_unpaged_lists.py
 run raw_ids "$PYTHON" scripts/check_raw_ids.py
+run section_ids "$PYTHON" scripts/check_section_ids.py
 run pane_grids "$PYTHON" scripts/check_pane_grids.py
 run shared_labels "$PYTHON" scripts/check_shared_labels.py
 run orphans "$PYTHON" scripts/check_orphans.py

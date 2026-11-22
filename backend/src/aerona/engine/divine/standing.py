@@ -17,6 +17,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import divine_of
+from aerona.engine.divine.prayer_window import judged_in_run
 from aerona.engine.gods.reputation import event_polarity
 from aerona.engine.gods.worship import creator_node_id
 from aerona.engine.primitives.numbers import clamp_int
@@ -50,7 +51,7 @@ async def community_of(ctx: TickContext, node_id: int) -> int | None:
 async def tally_epoch(ctx: TickContext, gods: set[int]) -> StandingBook:
     book = StandingBook()
     prayers = await ctx.session.scalars(
-        select(MessageRow).where(MessageRow.epoch == ctx.epoch, MessageRow.intent != MessageIntent.CHAT, MessageRow.recipient_node_id.in_(list(gods)))
+        select(MessageRow).where(judged_in_run(ctx.epoch), MessageRow.intent != MessageIntent.CHAT, MessageRow.recipient_node_id.in_(list(gods)))
     )
     for prayer in prayers:
         community = await community_of(ctx, prayer.sender_node_id)

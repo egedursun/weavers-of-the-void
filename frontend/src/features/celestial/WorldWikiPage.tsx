@@ -514,7 +514,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
         }
       />
       <WorldDivinityPanel worldId={data.world.id} />
-      <ThingSections nodeId={data.world.id} />
+      <ThingSections nodeId={data.world.id} kind='world' />
     </div>
   )
 }

@@ -95,6 +95,15 @@ async def test_a_compact_breaks_when_its_discipline_falls_under_the_gain_of_chea
     assert await tend_cartel(ctx, cartel) == "broken"
 
 
+async def test_a_compact_a_god_left_with_no_members_breaks_without_stopping_the_epoch(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "empty_compact")
+    cartel = CartelRow(name="Empty compact", members=[], markets=[], commodity=GRAIN, locked=[])
+    session.add(cartel)
+    await session.flush()
+    assert await tend_cartel(ctx, cartel) == "broken"
+    assert cartel.broken_epoch == ctx.epoch
+
+
 async def test_a_price_war_is_won_by_the_deeper_purse_and_the_beaten_go_before_the_court(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
     market, (strong, weak) = await market_with_sellers(session, world, 60, 40)
     set_stats(strong, wealth=100)

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
 import { navItem } from '@/config/navigation'
 import { BookOpen, ChevronsDownUp, ChevronsUpDown } from 'lucide-react'
@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, PageHeader } from '@/components/domain'
 import {
   type DrawerEntry,
+  sameEntry,
   parseDrawerStack,
   pushDrawerEntry,
   serializeDrawerStack,
@@ -175,6 +176,14 @@ export function AtlasScreen() {
   const selected = search.select ?? null
   const selectedNode = selected ? findNode(tree, selected) : null
   const selectedGroup = selectedNode?.kind === 'group' ? selectedNode : null
+  const selectedEntry = selectedNode ? drawerFor(selectedNode) : null
+  const openedFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (!selected || !selectedEntry || openedFor.current === selected) return
+    openedFor.current = selected
+    if (!drawers.entries.some((entry) => sameEntry(entry, selectedEntry)))
+      drawers.open(selectedEntry)
+  }, [selected, selectedEntry, drawers])
   const show = (key: string, entry: DrawerEntry | null) =>
     void navigate({
       search: (previous) => ({

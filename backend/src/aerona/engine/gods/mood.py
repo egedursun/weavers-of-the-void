@@ -17,6 +17,7 @@ from aerona.domain.enums.creator import CreatorMoodAxis, CreatorMoodLabel, Creat
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
+from aerona.engine.divine.prayer_window import overdue_in_run
 from aerona.engine.gods.worship import creator_node_id, creator_worshippers
 from aerona.engine.lore.research import mean_spread
 from aerona.engine.primitives.numbers import clamp_percent, decay_weight, saturating, scaled_cap
@@ -188,7 +189,7 @@ def compute_mood_update(rules: Rules, state: MoodState, inputs: MoodInputs) -> M
 async def unanswered_prayer_weight(session: AsyncSession, recipient_id: int, epoch: int, window: int, keep_pct: float) -> tuple[int, float]:
     statement = select(MessageRow.epoch).where(
         MessageRow.recipient_node_id == recipient_id,
-        MessageRow.answered.is_(False),
+        overdue_in_run(epoch),
         MessageRow.intent != MessageIntent.CHAT,
         MessageRow.epoch > epoch - window,
     )

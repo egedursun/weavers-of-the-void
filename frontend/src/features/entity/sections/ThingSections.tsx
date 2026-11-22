@@ -123,19 +123,26 @@ import { StatecraftSection } from './StatecraftSection'
 import { TastesSection } from './TastesSection'
 import { TitlesSection } from './TitlesSection'
 import { WorksSection } from './WorksSection'
+import { useRecordRows } from './recordRows'
+import { type ThingKind, shows } from './sectionHomes'
 import { type ThingScope } from './thingScope'
 
 export function ThingSections({
   nodeId,
+  kind,
   statKeys = [],
   readOnlyReason = null,
   scope = 'every',
 }: {
   nodeId: number
+  kind: ThingKind
   statKeys?: string[]
   readOnlyReason?: string | null
   scope?: ThingScope
 }) {
+  const records = useRecordRows(nodeId)
+  const held = new Set((records.data?.tables ?? []).map((table) => table.table))
+  const show = (section: string) => shows(section, kind, held)
   if (scope === 'made')
     return (
       <>
@@ -164,134 +171,262 @@ export function ThingSections({
     )
   return (
     <>
-      <EntityMechanics
-        nodeId={nodeId}
-        statKeys={statKeys}
-        readOnlyReason={readOnlyReason}
-      />
-      <NameSection nodeId={nodeId} />
-      <MindSplitSection nodeId={nodeId} />
-      <MindSeatSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <AugmentsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <NetworkSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <MadeWorldSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <PowersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <SourcesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <MagicSystemsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <HiddenTruthsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <LivingSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <FortuneSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <TechnologySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <DivinePowersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <CreatorBondsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <PantheonSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <WaysOfLifeSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <TypedModelsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <SourceTrustSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <GodCouncilSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <FeelingsSection nodeId={nodeId} />
-      <TastesSection nodeId={nodeId} />
-      <EthicsSection nodeId={nodeId} />
-      <AspirationsSection nodeId={nodeId} />
-      <BondsSection nodeId={nodeId} />
-      <RenownSection nodeId={nodeId} />
-      <WorksSection nodeId={nodeId} />
-      <FinanceSection nodeId={nodeId} />
-      <LineageSection nodeId={nodeId} />
-      <HomeSection nodeId={nodeId} />
-      <IntrigueSection nodeId={nodeId} />
-      <CorrespondenceSection nodeId={nodeId} />
-      <TitlesSection nodeId={nodeId} />
-      <EstatesSection nodeId={nodeId} />
-      <JusticeSection nodeId={nodeId} />
-      <StatecraftSection nodeId={nodeId} />
-      <AffairsSection nodeId={nodeId} />
-      <GatheringsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <HistoriesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <HistorySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <DominionSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <ArcanaSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <MythicSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <TonguesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <EvolutionSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <UrbanSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <LawDepthSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <CollectiveSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <CyclesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <RegimeSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <AgrarianSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <OperationsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <SacredSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <PursuitsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <TalesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <FolkwaysSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <CustomsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <DailyLifeSection nodeId={nodeId} />
-      <KinSection nodeId={nodeId} />
-      <ChildhoodSection nodeId={nodeId} />
-      <UnionsSection nodeId={nodeId} />
-      <YouthSection nodeId={nodeId} />
-      <NumbersSection nodeId={nodeId} />
-      <CommerceSection nodeId={nodeId} />
-      <PublicWorksSection nodeId={nodeId} />
-      <MediaSection nodeId={nodeId} />
-      <GovernanceSection nodeId={nodeId} />
-      <MarketStructureSection nodeId={nodeId} />
-      <LabourSection nodeId={nodeId} />
-      <MoneyPolicySection nodeId={nodeId} />
-      <SecuritiesSection nodeId={nodeId} />
-      <LeaguesSection nodeId={nodeId} />
-      <DeparturesSection nodeId={nodeId} />
-      <ReferendumsSection nodeId={nodeId} />
-      <ReckoningSection nodeId={nodeId} />
-      <LeaderCultsSection nodeId={nodeId} />
-      <RestorationsSection nodeId={nodeId} />
-      <OccupationSection nodeId={nodeId} />
-      <ArsenalSection nodeId={nodeId} />
-      <InterworldSection nodeId={nodeId} />
-      <CityRulesSection nodeId={nodeId} />
-      <ProtectedNatureSection nodeId={nodeId} />
-      <FamilySection nodeId={nodeId} />
-      <MoodSection nodeId={nodeId} />
-      <InterpretationSection nodeId={nodeId} />
-      <GraveGoodsSection nodeId={nodeId} />
-      <ConditionKindsSection nodeId={nodeId} />
-      <FertilitySection nodeId={nodeId} />
-      <PersonHonoursSection nodeId={nodeId} />
-      <SeaWavesSection nodeId={nodeId} />
-      <CreatureGroupsSection nodeId={nodeId} />
-      <DivineConceptionsSection nodeId={nodeId} />
-      <SpeechSection nodeId={nodeId} />
-      <FolkKnowledgeSection nodeId={nodeId} />
-      <EndowmentsSection nodeId={nodeId} />
-      <TheDeadSection nodeId={nodeId} />
-      <PracticesSection nodeId={nodeId} />
-      <ProfessionsSection nodeId={nodeId} />
-      <ForecastingSection nodeId={nodeId} />
-      <PlantBodiesSection nodeId={nodeId} />
-      <BodySystemsSection nodeId={nodeId} />
-      <DiseaseAgentsSection nodeId={nodeId} />
-      <WaterIceSection nodeId={nodeId} />
-      <SpaceWeatherSection nodeId={nodeId} />
-      <CraftsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <ClimesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <BelongingSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <TechErasSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <NatureSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <MeansSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <OrdersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <HonoursSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <WorldViewSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <BiologySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <LifecycleSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <WorldEndSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <PrehistorySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <TransformSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <CouplingsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <FossilSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <GroundsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
-      <RecordRowsSection nodeId={nodeId} />
+      {show('EntityMechanics') && (
+        <EntityMechanics
+          nodeId={nodeId}
+          statKeys={statKeys}
+          readOnlyReason={readOnlyReason}
+        />
+      )}
+      {show('NameSection') && <NameSection nodeId={nodeId} />}
+      {show('MindSplitSection') && <MindSplitSection nodeId={nodeId} />}
+      {show('MindSeatSection') && (
+        <MindSeatSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('AugmentsSection') && (
+        <AugmentsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('NetworkSection') && (
+        <NetworkSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('MadeWorldSection') && (
+        <MadeWorldSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('PowersSection') && (
+        <PowersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('SourcesSection') && (
+        <SourcesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('MagicSystemsSection') && (
+        <MagicSystemsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('HiddenTruthsSection') && (
+        <HiddenTruthsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('LivingSection') && (
+        <LivingSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('FortuneSection') && (
+        <FortuneSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('TechnologySection') && (
+        <TechnologySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('DivinePowersSection') && (
+        <DivinePowersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('CreatorBondsSection') && (
+        <CreatorBondsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('PantheonSection') && (
+        <PantheonSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('WaysOfLifeSection') && (
+        <WaysOfLifeSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('TypedModelsSection') && (
+        <TypedModelsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('SourceTrustSection') && (
+        <SourceTrustSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('GodCouncilSection') && (
+        <GodCouncilSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('FeelingsSection') && <FeelingsSection nodeId={nodeId} />}
+      {show('TastesSection') && <TastesSection nodeId={nodeId} />}
+      {show('EthicsSection') && <EthicsSection nodeId={nodeId} />}
+      {show('AspirationsSection') && <AspirationsSection nodeId={nodeId} />}
+      {show('BondsSection') && <BondsSection nodeId={nodeId} />}
+      {show('RenownSection') && <RenownSection nodeId={nodeId} />}
+      {show('WorksSection') && <WorksSection nodeId={nodeId} />}
+      {show('FinanceSection') && <FinanceSection nodeId={nodeId} />}
+      {show('LineageSection') && <LineageSection nodeId={nodeId} />}
+      {show('HomeSection') && <HomeSection nodeId={nodeId} />}
+      {show('IntrigueSection') && <IntrigueSection nodeId={nodeId} />}
+      {show('CorrespondenceSection') && (
+        <CorrespondenceSection nodeId={nodeId} />
+      )}
+      {show('TitlesSection') && <TitlesSection nodeId={nodeId} />}
+      {show('EstatesSection') && <EstatesSection nodeId={nodeId} />}
+      {show('JusticeSection') && <JusticeSection nodeId={nodeId} />}
+      {show('StatecraftSection') && <StatecraftSection nodeId={nodeId} />}
+      {show('AffairsSection') && <AffairsSection nodeId={nodeId} />}
+      {show('GatheringsSection') && (
+        <GatheringsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('HistoriesSection') && (
+        <HistoriesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('HistorySection') && (
+        <HistorySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('DominionSection') && (
+        <DominionSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('ArcanaSection') && (
+        <ArcanaSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('MythicSection') && (
+        <MythicSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('TonguesSection') && (
+        <TonguesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('EvolutionSection') && (
+        <EvolutionSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('UrbanSection') && (
+        <UrbanSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('LawDepthSection') && (
+        <LawDepthSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('CollectiveSection') && (
+        <CollectiveSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('CyclesSection') && (
+        <CyclesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('RegimeSection') && (
+        <RegimeSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('AgrarianSection') && (
+        <AgrarianSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('OperationsSection') && (
+        <OperationsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('SacredSection') && (
+        <SacredSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('PursuitsSection') && (
+        <PursuitsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('TalesSection') && (
+        <TalesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('FolkwaysSection') && (
+        <FolkwaysSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('CustomsSection') && (
+        <CustomsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('DailyLifeSection') && <DailyLifeSection nodeId={nodeId} />}
+      {show('KinSection') && <KinSection nodeId={nodeId} />}
+      {show('ChildhoodSection') && <ChildhoodSection nodeId={nodeId} />}
+      {show('UnionsSection') && <UnionsSection nodeId={nodeId} />}
+      {show('YouthSection') && <YouthSection nodeId={nodeId} />}
+      {show('NumbersSection') && <NumbersSection nodeId={nodeId} />}
+      {show('CommerceSection') && <CommerceSection nodeId={nodeId} />}
+      {show('PublicWorksSection') && <PublicWorksSection nodeId={nodeId} />}
+      {show('MediaSection') && <MediaSection nodeId={nodeId} />}
+      {show('GovernanceSection') && <GovernanceSection nodeId={nodeId} />}
+      {show('MarketStructureSection') && (
+        <MarketStructureSection nodeId={nodeId} />
+      )}
+      {show('LabourSection') && <LabourSection nodeId={nodeId} />}
+      {show('MoneyPolicySection') && <MoneyPolicySection nodeId={nodeId} />}
+      {show('SecuritiesSection') && <SecuritiesSection nodeId={nodeId} />}
+      {show('LeaguesSection') && <LeaguesSection nodeId={nodeId} />}
+      {show('DeparturesSection') && <DeparturesSection nodeId={nodeId} />}
+      {show('ReferendumsSection') && <ReferendumsSection nodeId={nodeId} />}
+      {show('ReckoningSection') && <ReckoningSection nodeId={nodeId} />}
+      {show('LeaderCultsSection') && <LeaderCultsSection nodeId={nodeId} />}
+      {show('RestorationsSection') && <RestorationsSection nodeId={nodeId} />}
+      {show('OccupationSection') && <OccupationSection nodeId={nodeId} />}
+      {show('ArsenalSection') && <ArsenalSection nodeId={nodeId} />}
+      {show('InterworldSection') && <InterworldSection nodeId={nodeId} />}
+      {show('CityRulesSection') && <CityRulesSection nodeId={nodeId} />}
+      {show('ProtectedNatureSection') && (
+        <ProtectedNatureSection nodeId={nodeId} />
+      )}
+      {show('FamilySection') && <FamilySection nodeId={nodeId} />}
+      {show('MoodSection') && <MoodSection nodeId={nodeId} />}
+      {show('InterpretationSection') && (
+        <InterpretationSection nodeId={nodeId} />
+      )}
+      {show('GraveGoodsSection') && <GraveGoodsSection nodeId={nodeId} />}
+      {show('ConditionKindsSection') && (
+        <ConditionKindsSection nodeId={nodeId} />
+      )}
+      {show('FertilitySection') && <FertilitySection nodeId={nodeId} />}
+      {show('PersonHonoursSection') && <PersonHonoursSection nodeId={nodeId} />}
+      {show('SeaWavesSection') && <SeaWavesSection nodeId={nodeId} />}
+      {show('CreatureGroupsSection') && (
+        <CreatureGroupsSection nodeId={nodeId} />
+      )}
+      {show('DivineConceptionsSection') && (
+        <DivineConceptionsSection nodeId={nodeId} />
+      )}
+      {show('SpeechSection') && <SpeechSection nodeId={nodeId} />}
+      {show('FolkKnowledgeSection') && <FolkKnowledgeSection nodeId={nodeId} />}
+      {show('EndowmentsSection') && <EndowmentsSection nodeId={nodeId} />}
+      {show('TheDeadSection') && <TheDeadSection nodeId={nodeId} />}
+      {show('PracticesSection') && <PracticesSection nodeId={nodeId} />}
+      {show('ProfessionsSection') && <ProfessionsSection nodeId={nodeId} />}
+      {show('ForecastingSection') && <ForecastingSection nodeId={nodeId} />}
+      {show('PlantBodiesSection') && <PlantBodiesSection nodeId={nodeId} />}
+      {show('BodySystemsSection') && <BodySystemsSection nodeId={nodeId} />}
+      {show('DiseaseAgentsSection') && <DiseaseAgentsSection nodeId={nodeId} />}
+      {show('WaterIceSection') && <WaterIceSection nodeId={nodeId} />}
+      {show('SpaceWeatherSection') && <SpaceWeatherSection nodeId={nodeId} />}
+      {show('CraftsSection') && (
+        <CraftsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('ClimesSection') && (
+        <ClimesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('BelongingSection') && (
+        <BelongingSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('TechErasSection') && (
+        <TechErasSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('NatureSection') && (
+        <NatureSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('MeansSection') && (
+        <MeansSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('OrdersSection') && (
+        <OrdersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('HonoursSection') && (
+        <HonoursSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('WorldViewSection') && (
+        <WorldViewSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('BiologySection') && (
+        <BiologySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('LifecycleSection') && (
+        <LifecycleSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('WorldEndSection') && (
+        <WorldEndSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('PrehistorySection') && (
+        <PrehistorySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('TransformSection') && (
+        <TransformSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('CouplingsSection') && (
+        <CouplingsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('FossilSection') && (
+        <FossilSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('GroundsSection') && (
+        <GroundsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('MadeKindsSection') && (
+        <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      )}
+      {show('RecordRowsSection') && <RecordRowsSection nodeId={nodeId} />}
     </>
   )
 }

@@ -18,6 +18,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import ReputationLabel, SonStatus
 from aerona.engine.context import TickContext
+from aerona.engine.divine.prayer_window import last_run, overdue_in_run, still_awaiting
 from aerona.engine.gods.queries import creator_row
 from aerona.engine.primitives.numbers import clamp_float, clamp_percent, decay_weight, decayed_value
 from aerona.engine.primitives.queries import living_sons
@@ -153,15 +154,15 @@ async def compute_reputation(session: AsyncSession, rules: Rules, son: SonRow, e
 
 async def _son_prayers(session: AsyncSession, rules: Rules, son: SonRow, creator: CreatorRow, epoch: int) -> tuple[int, float]:
     table = rules.reputation
-    statement = select(MessageRow.epoch).where(
+    statement = select(MessageRow.epoch, overdue_in_run(last_run(epoch))).where(
         MessageRow.sender_node_id == son.id,
         MessageRow.recipient_node_id == creator.id,
-        MessageRow.answered.is_(False),
+        still_awaiting(),
         MessageRow.intent != MessageIntent.CHAT,
         MessageRow.epoch > epoch - table.window_epochs,
     )
-    epochs = list(await session.scalars(statement))
-    return len(epochs), sum(decay_weight(table.decay_keep_pct, epoch - sent) for sent in epochs)
+    rows = list(await session.execute(statement))
+    return len(rows), sum(decay_weight(table.decay_keep_pct, epoch - sent) for sent, overdue in rows if overdue)
 
 
 def store_reputation(son: SonRow, reputation: Reputation, epoch: int) -> None:

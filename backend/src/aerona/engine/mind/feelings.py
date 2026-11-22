@@ -19,6 +19,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, Emotion, MemoryKind, PreferenceKind, ThoughtKind, ValueHolder
 from aerona.domain.models.entity_stats import ArtworkStats
 from aerona.engine.context import TickContext
+from aerona.engine.divine.prayer_window import judged_epoch
 from aerona.engine.economy.stocks import holding
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.gods.queries import community_of
@@ -194,7 +195,7 @@ async def prayers(ctx: TickContext, mortal: EntityRow) -> int:
         if row.answered and row.answered_epoch is not None and row.answered_epoch >= ctx.epoch - 1:
             found = await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.PRAYED_ANSWERED, row.answered_epoch, subject_id=row.recipient_node_id)
             made += 1 if found else 0
-        elif not row.answered and row.epoch == ctx.epoch - wait:
+        elif not row.answered and row.epoch == judged_epoch(ctx.epoch, wait):
             made += 1 if await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.PRAYER_IGNORED, ctx.epoch, subject_id=row.recipient_node_id) else 0
     return made
 

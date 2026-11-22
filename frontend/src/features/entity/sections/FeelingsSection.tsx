@@ -135,10 +135,10 @@ function ThoughtRow({
           tone={item.valence < 0 ? 'danger' : 'success'}
         />
         <div className='flex min-w-0 flex-1 flex-col'>
-          <Text weight='semibold' truncate>
+          <Text weight='semibold' truncate={2}>
             {item.label}
           </Text>
-          <Muted variant='caption' truncate>
+          <Muted variant='caption' truncate={2}>
             {`${item.emotion_label} · epoch ${item.epoch} · fades ${item.decay_pct}% an epoch`}
           </Muted>
         </div>
@@ -149,10 +149,16 @@ function ThoughtRow({
         <Progress
           value={item.strength}
           size='sm'
+          className='min-w-16 flex-1'
           tone={item.valence < 0 ? 'destructive' : 'success'}
           aria-label={`${item.label} strength`}
         />
-        <Muted variant='caption'>{`${item.strength}/${item.intensity}`}</Muted>
+        <Muted
+          variant='caption'
+          className='shrink-0 whitespace-nowrap tabular-nums'
+        >{`${item.strength}/${item.intensity}`}</Muted>
+      </div>
+      <div className='flex min-w-0 flex-wrap items-center justify-end gap-1'>
         <Button
           size='icon-sm'
           variant='ghost'

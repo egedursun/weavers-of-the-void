@@ -6089,6 +6089,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | components/layout/about/AboutDialog | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/about/AboutVision | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/about/SectionHeading | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | components/layout/drawer/DrawerSections | check_section_ids.py; check_hidden_controls.py; check_frontend_orphans.py | none |
 | screen | components/layout/drawer/DrawerStack | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/typography/Label | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/typography/Muted | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |

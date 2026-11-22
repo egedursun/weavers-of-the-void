@@ -192,7 +192,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/incident_kinds/nature_kinds.py` | 127 | 2026-11-22 | `9dcc5941c6d8fbc1` |
 | `backend/src/aerona/catalog/incident_kinds/registry.py` | 2 | 2026-11-17 | `5eafe1acaacca61a` |
 | `backend/src/aerona/catalog/incident_kinds/tellings.py` | 5 | 2026-11-17 | `6319f7aed2dddd67` |
-| `backend/src/aerona/catalog/incident_kinds/w51_orders.py` | 188 | 2026-11-22 | `d178a575d2c032d8` |
+| `backend/src/aerona/catalog/incident_kinds/w51_orders.py` | 188 | 2026-11-22 | `ec79f3a2e8ca1588` |
 | `backend/src/aerona/catalog/interventions.py` | 18 | 2026-11-16 | `5a8f9b083be397b6` |
 | `backend/src/aerona/catalog/intrigue.py` | 80 | 2026-11-20 | `0d2ecf7d3c6a8de7` |
 | `backend/src/aerona/catalog/invariants.py` | 249 | 2026-11-21 | `bac55439dd45803e` |
@@ -1600,6 +1600,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/tools/son/world_works.py` | 2 | 2026-11-16 | `a4bdf0a05c51f5ba` |
 | `backend/src/aerona/tools/toolkit.py` | 2 | 2026-11-16 | `81693616e37466bd` |
 | `frontend/src/components/domain/ToolList.tsx` | 1 | 2026-11-16 | `a21492ecd415e33b` |
+| `frontend/src/components/layout/drawer/DrawerSections.tsx` | 1 | 2026-11-22 | `e0b799f6ffbe0d8f` |
 | `frontend/src/features/atlas/AtlasFilters.tsx` | 1 | 2026-11-16 | `71f7209d9f2d397a` |
 | `frontend/src/features/backups/SecondaryTargetForm.tsx` | 1 | 2026-11-16 | `b8333653e9c60285` |
 | `frontend/src/features/belonging/IdentityPanel.tsx` | 1 | 2026-11-16 | `c7f937836f5d82d5` |

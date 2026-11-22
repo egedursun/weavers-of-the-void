@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { BookOpen, SearchX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { OrnateFrame } from '@/components/ui/ornate'
@@ -132,6 +132,7 @@ import {
   TreasurySection,
 } from './society/SettlementPlan'
 import { PeopleStructuresSection, StructureSection } from './society/Structures'
+import { useMountedSections } from './useMountedSections'
 import {
   BeastSection,
   FoodWebSection,
@@ -264,29 +265,36 @@ const SECTION_LINKS = [
 ]
 
 function SectionNav({ present }: { present: Set<string> }) {
-  const links = SECTION_LINKS.filter((link) => present.has(link.id))
-  if (links.length < 4) return null
+  const anchor = useRef<HTMLDivElement>(null)
+  const mounted = useMountedSections(anchor)
+  const links = SECTION_LINKS.filter(
+    (link) => present.has(link.id) && (mounted === null || mounted.has(link.id))
+  )
   return (
-    <PagedList
-      items={links}
-      initial={12}
-      noun={['entry', 'entries']}
-      as='nav'
-      className='flex min-w-0 flex-wrap gap-1'
-      listProps={{ 'aria-label': 'Sections' }}
-      itemKey={(link) => link.id}
-    >
-      {(link) => (
-        <Button
-          key={link.id}
-          variant='ghost'
-          size='sm'
-          onClick={() => scrollToSection(link.id)}
+    <div ref={anchor} className='min-w-0'>
+      {links.length >= 4 && (
+        <PagedList
+          items={links}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='nav'
+          className='flex min-w-0 flex-wrap gap-1'
+          listProps={{ 'aria-label': 'Sections' }}
+          itemKey={(link) => link.id}
         >
-          {link.label}
-        </Button>
+          {(link) => (
+            <Button
+              key={link.id}
+              variant='ghost'
+              size='sm'
+              onClick={() => scrollToSection(link.id)}
+            >
+              {link.label}
+            </Button>
+          )}
+        </PagedList>
       )}
-    </PagedList>
+    </div>
   )
 }
 
@@ -807,6 +815,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         <BiographySection nodeId={entity.id} readOnlyReason={readOnly} />
         <ThingSections
           nodeId={entity.id}
+          kind={entity.entity_type}
           statKeys={Object.keys(entity.stats).filter((key) => key !== 'kind')}
           readOnlyReason={readOnly}
           scope={made ? 'made' : 'every'}

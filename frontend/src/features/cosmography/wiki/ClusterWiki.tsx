@@ -452,7 +452,7 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
         action='cluster:delete'
         target={{ cluster_id: cluster.id }}
       />
-      <ThingSections nodeId={cluster.id} />
+      <ThingSections nodeId={cluster.id} kind='cluster' />
     </div>
   )
 }

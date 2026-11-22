@@ -219,7 +219,7 @@ export function WorldPlacementSection({ world }: { world: WorldRecord }) {
       : null
   return (
     <Section
-      id='section-world-life'
+      id='section-world-heavens'
       title='The world in the heavens'
       description='Where the world lies on the scale of the cosmos, what that place does to it, and its own life as a body.'
       icon={Globe2}

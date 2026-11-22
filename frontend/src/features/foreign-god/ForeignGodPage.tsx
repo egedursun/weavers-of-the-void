@@ -74,7 +74,7 @@ export function ForeignGodPage({ id }: DrawerPageProps) {
         godId={god.id}
         godName={god.name}
       />
-      <ThingSections nodeId={god.id} />
+      <ThingSections nodeId={god.id} kind='foreign_god' />
       <ForeignGodDepth god={god} />
       <ForeignGodRelations detail={data} />
       <RecordGallery

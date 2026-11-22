@@ -174,8 +174,8 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "market.cartel_broken",
         G.EXCHANGE,
-        "The compact of {subject} over {commodity} broke: {why}.",
-        roles=(RoleSpec(R.SUBJECT, many=True),),
+        "A compact over {commodity} broke: {why}.",
+        roles=(RoleSpec(R.SUBJECT, many=True, required=False),),
         facts=(FactSpec("commodity", FactValue.ENUM, enum=CommodityKind), FactSpec("why", FactValue.NAME)),
         place=PlaceRule.NONE,
         clock=C.SEASON,
@@ -201,8 +201,8 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "market.price_war_won",
         G.EXCHANGE,
-        "{actor} outlasted {victim} in the {commodity} market of {place}, having spent {losses} coin.",
-        roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM, many=True), RoleSpec(R.PLACE)),
+        "{actor} outlasted the sellers it fought in the {commodity} market of {place}, having spent {losses} coin.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM, many=True, required=False), RoleSpec(R.PLACE)),
         facts=(FactSpec("commodity", FactValue.ENUM, enum=CommodityKind), FactSpec("losses", FactValue.NUMBER, FactUnit.COIN)),
         place=PlaceRule.WHEN_KNOWN,
         clock=C.SEASON,
