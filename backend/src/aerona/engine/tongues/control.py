@@ -25,6 +25,7 @@ from aerona.domain.enums.tongues import (
     LanguageModality,
     LanguagePolicy,
     LanguageStage,
+    NumeralBase,
     ScriptChangeCause,
     SoundChangeCause,
     SoundChangeKind,
@@ -45,7 +46,7 @@ from aerona.engine.tongues.policy import HOLDER_TYPES, set_policy
 from aerona.engine.tongues.scripts import record_script
 from aerona.engine.tongues.sounds import Change, add_change, changes_of, rederive
 
-PROFILE_FIELDS = ("modality", "stage")
+PROFILE_FIELDS = ("modality", "stage", "numeral_base", "parent_language_id")
 
 
 async def language(ctx: TickContext, language_id: int) -> EntityRow:
@@ -112,8 +113,14 @@ async def edit_profile(ctx: TickContext, language_id: int, values: Values) -> La
     for key, value in allowed(values, PROFILE_FIELDS, "tongue").items():
         if key == "modality":
             profile.modality = LanguageModality(str(value))
+        elif key == "numeral_base":
+            profile.numeral_base = NumeralBase(str(value))
+        elif key == "parent_language_id":
+            profile.parent_language_id = None if value is None else (await language(ctx, int(str(value)))).id
         else:
             profile.stage = LanguageStage(str(value))
+    if profile.stage is LanguageStage.REVIVED and profile.parent_language_id is None:
+        raise ValidationFailedError("A revived tongue names the dead tongue it came back from.")
     await ctx.session.flush()
     return profile
 

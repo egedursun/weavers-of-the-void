@@ -74,6 +74,9 @@ class SetPollution(Command):
     air: int | None = Field(default=None, ge=0, le=SPAN)
     water: int | None = Field(default=None, ge=0, le=SPAN)
     soil: int | None = Field(default=None, ge=0, le=SPAN)
+    radiation: int | None = Field(default=None, ge=0, le=SPAN)
+    noise: int | None = Field(default=None, ge=0, le=SPAN)
+    light: int | None = Field(default=None, ge=0, le=SPAN)
     hold: bool = True
 
 

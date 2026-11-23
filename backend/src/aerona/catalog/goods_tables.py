@@ -34,6 +34,9 @@ ORIGIN_SOURCE: Mapping[MaterialOrigin, MaterialSource] = total(
         MaterialOrigin.RIFT: MaterialSource.RIFT,
         MaterialOrigin.RESEARCH: MaterialSource.MAKERS,
         MaterialOrigin.GOD_GIFT: MaterialSource.GOD,
+        MaterialOrigin.FOSSIL: MaterialSource.WORLD,
+        MaterialOrigin.LIVING_LINE: MaterialSource.CREATURE,
+        MaterialOrigin.SALVAGE: MaterialSource.MAKERS,
     },
 )
 
@@ -60,6 +63,10 @@ RECIPES = {
     ChemicalProduct.MEDICINE: Recipe((Technique.HERBALISM,), CommodityKind.HERBS, CommodityKind.MEDICINE),
     ChemicalProduct.INCENDIARY: Recipe((Technique.ALCHEMY,), CommodityKind.FUEL, CommodityKind.SIEGE_MATERIEL),
     ChemicalProduct.EXPLOSIVE: Recipe((Technique.ALCHEMY, Technique.SIEGECRAFT), CommodityKind.COAL, CommodityKind.SIEGE_MATERIEL),
+    ChemicalProduct.INK: Recipe((Technique.ALPHABET,), CommodityKind.DYE, None),
+    ChemicalProduct.GLAZE: Recipe((Technique.ALCHEMY,), CommodityKind.STONE, None),
+    ChemicalProduct.PRESERVATIVE: Recipe((Technique.HERBALISM,), CommodityKind.HALITE, None),
+    ChemicalProduct.ACID: Recipe((Technique.ALCHEMY,), CommodityKind.ORE, None),
 }
 
 TROPHY_CLASSES = {
@@ -80,14 +87,21 @@ ORIGIN_WORDS = total(
         MaterialOrigin.RIFT: "a rift",
         MaterialOrigin.RESEARCH: "a material its makers found through their work",
         MaterialOrigin.GOD_GIFT: "a gift of a god",
+        MaterialOrigin.FOSSIL: "a bed of what lived long ago",
+        MaterialOrigin.LIVING_LINE: "a living line its makers grow",
+        MaterialOrigin.SALVAGE: "a relic or wreck its finders took apart",
     },
 )
 
+SOURCED_ORIGINS = tuple(origin for origin in MaterialOrigin if origin not in (MaterialOrigin.CATALOG, MaterialOrigin.GOD_GIFT))
 ORIGIN_BASE: dict[MaterialOrigin, MaterialKind] = {
     MaterialOrigin.DEAD_GOD: MaterialKind.DIVINE_TISSUE,
     MaterialOrigin.STAR: MaterialKind.STAR_METAL,
     MaterialOrigin.BEAST: MaterialKind.GREAT_BEAST_TISSUE,
     MaterialOrigin.RIFT: MaterialKind.VOID_GLASS,
+    MaterialOrigin.FOSSIL: MaterialKind.CALCIFIED_TISSUE,
+    MaterialOrigin.LIVING_LINE: MaterialKind.LIVING_WOOD,
+    MaterialOrigin.SALVAGE: MaterialKind.COMPOSITE,
     MaterialOrigin.RESEARCH: MaterialKind.STEEL,
 }
 

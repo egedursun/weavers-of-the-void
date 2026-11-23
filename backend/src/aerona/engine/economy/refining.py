@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from aerona.catalog.eras import TECHNIQUE_ERAS
 from aerona.catalog.goods_tables import MATERIAL_TECHNIQUES, PREFERENCE, UPGRADES
-from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT
+from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT, METAL_PROCESSES, STEP_PROCESS, method_labour, method_output, workshop_capacity
 from aerona.catalog.production import CHAIN_STEPS, RECIPES, SHIP_HULLS, ChainStep
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import ProductionRunRow, WorkshopDesignRow, WorkshopRow
@@ -12,10 +12,12 @@ from aerona.domain.enums.demography import Job
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.eras import EraChannel
+from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.works import etched, glazed, inked
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.materials import alloy_inputs, workable
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
@@ -135,14 +137,18 @@ def lead_recipe(book: EconomyBook, community_id: int, steps: tuple[ChainStep, ..
 
 def crew_of(ctx: TickContext, book: EconomyBook, community_id: int, step: ChainStep) -> int:
     method = step_method(book, community_id, step.key)
-    return max(1, round_half_up(ctx.rules.refining.workers_per_batch * (method.labour_pct if method is not None else PERCENT) / PERCENT))
+    return max(1, round_half_up(ctx.rules.refining.workers_per_batch * (method_labour(ctx.rules, method) if method is not None else PERCENT) / PERCENT))
 
 
 def capacity(ctx: TickContext, step: ChainStep, workshop: WorkshopRow | None, design: WorkshopDesignRow | None = None) -> int:
     table = ctx.rules.refining
     if step.workshop is None:
         return round_half_up(table.batches_per_level * table.household_batches_pct / PERCENT)
-    return round_half_up(workshop.level * table.batches_per_level * capacity_scale(design)) if workshop is not None else 0
+    return (
+        round_half_up(workshop.level * table.batches_per_level * capacity_scale(design) * workshop_capacity(ctx.rules, workshop.kind) / PERCENT)
+        if workshop is not None
+        else 0
+    )
 
 
 async def best_input(ctx: TickContext, book: EconomyBook, community: EntityRow, step: ChainStep) -> tuple[MaterialKind | None, int | None]:
@@ -261,6 +267,15 @@ async def note_bottleneck(ctx: TickContext, community: EntityRow, step: ChainSte
     )
 
 
+async def chemical_lift(ctx: TickContext, community_id: int, step: ChainStep) -> float:
+    process = STEP_PROCESS.get(step.key)
+    if process is ProcessKind.COPYING:
+        return await inked(ctx.session, ctx.rules, community_id)
+    if process in METAL_PROCESSES:
+        return await etched(ctx.session, ctx.rules, community_id)
+    return 1.0
+
+
 async def run_step(
     ctx: TickContext, book: EconomyBook, community: EntityRow, step: ChainStep, *, artisans: int, tally: RefiningTally, need: int | None = None
 ) -> StepRun:
@@ -301,6 +316,7 @@ async def run_step(
         round_half_up(input_quality * table.material_quality_pct / PERCENT)
         + skill * table.skill_quality_per_level
         + step.quality_gain
+        + (await glazed(ctx.session, ctx.rules, community.id) if STEP_PROCESS.get(step.key) is ProcessKind.FIRING else 0)
         + quality_bonus(design)
         + (method.quality_bonus if method is not None else 0)
         + await guild_standard(ctx, community.id)
@@ -308,8 +324,8 @@ async def run_step(
         0,
         PERCENT,
     )
-    made = round_half_up(batches * step.output_qty * output_scale(design) * (method.output_pct / PERCENT if method is not None else 1.0))
-    made = round_half_up(made * await war_output(ctx, community.id, step.output))
+    made = round_half_up(batches * step.output_qty * output_scale(design) * (method_output(ctx.rules, method) / PERCENT if method is not None else 1.0))
+    made = round_half_up(made * await war_output(ctx, community.id, step.output) * await chemical_lift(ctx, community.id, step))
     out_material = material if step.keeps_material is not None else step.material
     await goods_of(ctx.session, ctx.epoch).add(
         community.id, step.output, made, GoodsFlow.PRODUCTION, material=out_material, world_material_id=world_material, quality=quality

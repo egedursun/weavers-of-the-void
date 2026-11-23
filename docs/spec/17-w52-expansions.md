@@ -7364,7 +7364,7 @@ Batches 29–31 use F70 and F71: every enum below has a `total()` catalogue, and
 
 **Behaviour.** `rescued` polities keep paying under the rescuer's terms, lose sovereignty over budgets and owe the rescuer standing; `repudiated` debts stop at once, lenders lose them, the polity is shut out of credit for `credit.repudiation_epochs` and its creditors' polities may take it as a casus belli.
 
-**Rules.** Namespace `credit`: `repudiation_epochs` 5 [0–50], `rescue_sovereignty_cut` 20 [0–100].
+**Rules.** Namespace `credit`: `repudiation_years` 30 [0–500], `rescue_sovereignty_cut` 20 [0–100].
 
 **Incidents.** `credit.rescued`, `credit.repudiated`.
 
@@ -7671,7 +7671,7 @@ Couplings: C167 Repudiation → war and credit. C168 Crop insurance → long sea
 
 **Behaviour.** `stranded` convoys wait out a closed route or a storm season, eating stores; `quarantined` convoys wait at a port under plague response (52.76), and may carry disease if released early.
 
-**Rules.** Namespace `convoys`: `stranded_upkeep` 5 [0–100], `quarantine_epochs` 1 [0–10].
+**Rules.** Namespace `convoys`: `stranded_upkeep` 5 [0–100], `quarantine_years` 1 [0–50].
 
 **Incidents.** `convoy.stranded`, `convoy.quarantined`.
 
@@ -8433,7 +8433,7 @@ Batches 35–38 use F70: every enum below has a `total()` catalogue, and the gua
 
 **Behaviour.** `wilds` sanctuary hides fugitives in forest, mountain and marsh by terrain (52.12) and draws them into bands; `free_city` frees a runaway who stays a year and a day (or the city's term) in a city whose charter says so; `embassy` shelters under a foreign polity's protection, risking a crisis if violated.
 
-**Rules.** Namespace `sanctuary`: `wilds_hide_pct` 30 [0–100], `free_city_term_epochs` 1 [0–10].
+**Rules.** Namespace `sanctuary`: `wilds_hide_pct` 30 [0–100], `free_city_term_years` 1 [0–50].
 
 **Incidents.** `sanctuary.sought` with the kind as a fact.
 

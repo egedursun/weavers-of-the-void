@@ -48,6 +48,7 @@ from aerona.engine.demography.basket import (
 )
 from aerona.engine.demography.control import follow_shares
 from aerona.engine.demography.prices import local_prices
+from aerona.engine.demography.shortfalls import kept_shortfalls, outer_wants
 from aerona.engine.demography.wealth import settle_wealth
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.household import Meal, eat, enforce_storage, gather_commons, harvest_goods, warmed, wear
@@ -566,7 +567,8 @@ async def consume(ctx: TickContext, entity: EntityRow, society: Society, world: 
     await save_basket(ctx, entity, basket, found)
     basket = held_needs(await standing_of(ctx.session, entity.id), basket)
     region = world.economy.ground.region_of(entity.id)
-    await apply_shortfalls(ctx, entity, basket, region.temperature_band if region is not None else None)
+    effects = await kept_shortfalls(ctx, entity, {**basket.effects, **await outer_wants(ctx, entity, region)})
+    await apply_shortfalls(ctx, entity, effects, region.temperature_band if region is not None else None)
     return meal, basket
 
 
@@ -647,6 +649,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
 
 
 @reads(
+    "item.protection",
     "law.justice",
     "mortal.age",
     "mortal.agility",
@@ -689,6 +692,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.community_labour",
     "table.community_methods",
     "table.community_needs",
+    "table.community_shortfalls",
     "table.community_societies",
     "table.community_stocks",
     "table.conditions",
@@ -708,6 +712,8 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
+    "table.entity_tags",
+    "table.event_footprints",
     "table.faction_profiles",
     "table.ferment_cultures",
     "table.folk_knowledge",
@@ -728,6 +734,8 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.incubating_ideas",
     "table.indentures",
     "table.injuries",
+    "table.insurance_policies",
+    "table.insurers",
     "table.irregular_seasons",
     "table.item_profiles",
     "table.kind_holdings",
@@ -751,6 +759,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.plant_profiles",
     "table.polity_members",
     "table.polity_profiles",
+    "table.polity_territories",
     "table.preferences",
     "table.prostheses",
     "table.region_crops",
@@ -764,6 +773,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.shops",
+    "table.sieges",
     "table.signal_links",
     "table.skills",
     "table.sky_events",
@@ -774,6 +784,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.supply_tiers",
     "table.treaty_parties",
     "table.tributes",
+    "table.vassalages",
     "table.war_production",
     "table.workshop_designs",
     "table.workshops",
@@ -805,6 +816,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.community_dishes",
     "table.community_industry",
     "table.community_needs",
+    "table.community_shortfalls",
     "table.community_societies",
     "table.community_stocks",
     "table.entities",

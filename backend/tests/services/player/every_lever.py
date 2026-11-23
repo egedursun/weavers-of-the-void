@@ -1756,6 +1756,11 @@ LEVERS: dict[str, Lever] = {
         region_id=Computed(route_region),
     ),
     "treaty:sign": given(kind="alliance_defensive", parties=[{"party_id": Pick(TOWN)}, {"party_id": Pick(TOWN, 1)}]),
+    "treaty:break": after(
+        ("treaty:sign", {"kind": "peace", "parties": [{"party_id": Pick(TOWN)}, {"party_id": Pick(TOWN, 1)}]}),
+        treaty_id=Newest(EntityType.TREATY),
+        breaker_id=Pick(TOWN),
+    ),
     "treaty:party_remove": after(("treaty:party_add", {"treaty_id": Pick(EntityType.TREATY), "party_id": Pick(TOWN, 2)}), party_id=Pick(TOWN, 2)),
     "tribute:impose": given(payer_id=Pick(TOWN), receiver_id=Pick(TOWN, 1)),
     "tribute:forgive": after(
@@ -2622,7 +2627,7 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "item_charge:edit": {"charges": 2, "capacity": 4},
     "sound_change:edit": {"target": "o"},
     "grammar:edit": {"cases": 3, "word_order": "svo"},
-    "tongue:edit": {"modality": "sign"},
+    "tongue:edit": {"modality": "sign", "numeral_base": "sexagesimal"},
     "meaning_shift:edit": {"new_meaning": "a newer sense"},
     "script:edit": {"signs": 30},
     "decipherment:edit": {"progress": 40},
@@ -4374,6 +4379,7 @@ SANCTUARY_UP = (
     },
 )
 LAW_UP = ("sanctuary_law:set", {"polity_id": Pick(REALM), "restricted": True, "fee_pct": 10})
+FUGITIVE_UP = ("fugitive:create", {"mortal_entity_id": Pick(MORTAL), "kind": "runaway", "pursuer_entity_id": Pick(REALM)})
 SATIRE_UP = ("satire:create", {"satirist_entity_id": Pick(MORTAL), "target_entity_id": Pick(MORTAL, 1), "polity_entity_id": Pick(REALM), "bite": 30})
 BELONGING_EDITS: Mapping[str, Mapping[str, Any]] = {
     "held_identity:edit": {"value_node_id": Pick(PEOPLE), "value_label": None, "strength": 70, "salience": 40, "driver": "rhetoric"},
@@ -4397,6 +4403,7 @@ BELONGING_EDITS: Mapping[str, Mapping[str, Any]] = {
         "siege_epochs": 1,
     },
     "sanctuary_law:edit": {"restricted": False, "fee_pct": 20},
+    "fugitive:edit": {"kind": "deserter", "pursuer_entity_id": Pick(REALM), "caught_epoch": 2, "freed_epoch": None},
     "satire:edit": {
         "satirist_entity_id": Pick(MORTAL),
         "target_entity_id": Pick(MORTAL, 1),
@@ -4421,6 +4428,8 @@ LEVERS.update(
         "sanctuary:create": given(**SANCTUARY_UP[1]),
         **{name: after(SANCTUARY_UP, record_id=Newest("sanctuary")) for name in ("sanctuary:edit", "sanctuary:delete")},
         "sanctuary_law:set": given(**LAW_UP[1]),
+        "fugitive:create": given(**FUGITIVE_UP[1]),
+        **{name: after(FUGITIVE_UP, record_id=Newest("fugitive")) for name in ("fugitive:edit", "fugitive:delete")},
         **{name: after(LAW_UP, polity_id=Pick(REALM)) for name in ("sanctuary_law:edit", "sanctuary_law:delete")},
         "satire:create": given(**SATIRE_UP[1]),
         **{name: after(SATIRE_UP, record_id=Newest("satire")) for name in ("satire:edit", "satire:delete")},
@@ -5198,7 +5207,7 @@ SECOND_IDEOLOGY = ("lore:create", {"entity_type": "ideology", "name": "The Long 
 FOLLOWED = ("creed:adherent", {"ideology_id": Newest(EntityType.IDEOLOGY), "community_id": Pick(TOWN), "strength": 60})
 PART_UP = ("relation_component:set", {"first_id": Pick(TOWN), "second_id": Pick(TOWN, 1), "component": "trade", "value": 20})
 CHARTER_UP = ("constitution:write", {"polity_id": Pick(REALM)})
-ENCOUNTER_UP = ("journey_encounter:create", {"environment": "land", "effect": "attack", "weight": 40, "loss_pct": 12})
+ENCOUNTER_UP = ("journey_encounter:create", {"environment": "road", "effect": "attack", "weight": 40, "loss_pct": 12})
 EDITS = {
     **EDITS,
     "relation_component:edit": {"value": -30},

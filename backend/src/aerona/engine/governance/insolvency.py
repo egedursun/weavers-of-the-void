@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.finance import OWED_LOANS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
@@ -43,7 +44,7 @@ class InsolvencyTally:
 
 async def open_loans(ctx: TickContext, debtor_id: int) -> list[LoanRow]:
     rows = await ctx.session.scalars(
-        select(LoanRow).where(LoanRow.borrower_entity_id == debtor_id, LoanRow.status == LoanStatus.OPEN, LoanRow.held.is_(False)).order_by(LoanRow.id)
+        select(LoanRow).where(LoanRow.borrower_entity_id == debtor_id, LoanRow.status.in_(OWED_LOANS), LoanRow.held.is_(False)).order_by(LoanRow.id)
     )
     return list(rows)
 

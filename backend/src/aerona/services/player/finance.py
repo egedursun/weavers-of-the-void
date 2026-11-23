@@ -16,7 +16,7 @@ from aerona.engine.economy.stocks import goods_of
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 SPAN = 100
-CREDIT_FIELDS = ("rating", "state", "interest_pct", "reserves", "defaults", "restructured_until")
+CREDIT_FIELDS = ("rating", "state", "interest_pct", "reserves", "defaults", "restructured_until", "rescuer_node_id", "rescue_terms", "repudiated_until")
 SPECULATION_FIELDS = ("units", "price", "status", "gain")
 INDICATOR_FIELDS = ("output", "price_index", "trade_balance", "treasury", "debt_ratio", "unemployment", "market_access", "black_market")
 
@@ -43,6 +43,9 @@ class SetCredit(Command):
     reserves: int | None = Field(default=None, ge=0)
     defaults: int | None = Field(default=None, ge=0)
     restructured_until: int | None = Field(default=None, ge=0)
+    rescuer_node_id: int | None = None
+    rescue_terms: int | None = Field(default=None, ge=0, le=SPAN)
+    repudiated_until: int | None = Field(default=None, ge=0)
     hold: bool = True
 
 

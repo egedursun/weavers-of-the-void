@@ -36,7 +36,7 @@ from aerona.api.schemas.means import (
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
-from aerona.catalog.means import BUILDING, CONTAINERS, LIFTS, WATER_WORKS
+from aerona.catalog.means import BUILDING, CONTAINERS, LIFTS, WATER_WORKS, aid_cut, container_capacity
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
@@ -44,7 +44,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import CurrencyRow, NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow, VeteranGrantRow
+from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow, VeteranGrantRow, VeteranPolicyRow
 from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.means import ContainerStockRow, NavigationKitRow, SecurityRow, WaterLiftRow, WritingCustomRow, WrittenWorkRow
 from aerona.db.tables.military import ArmyUnitRow
@@ -165,8 +165,7 @@ async def node_means(services: ServicesDep, node_id: NodeId) -> MeansNodeView:
         stocks = list(await session.scalars(select(ContainerStockRow).where(ContainerStockRow.community_entity_id == town_id).order_by(ContainerStockRow.kind)))
         world = await session.get(WorldRow, town.world_id) if town is not None else None
         error = compass_error_of(await session.get(WorldFieldRow, world.id)) if world is not None else 0
-        table = rules.navigation_instruments
-        accuracy = min(PERCENT, sum(row.quality * table.aid_pct // PERCENT for row in kits if aid_works(rules, row, world, error)))
+        accuracy = min(PERCENT, sum(row.quality * aid_cut(rules, row.aid) // PERCENT for row in kits if aid_works(rules, row, world, error)))
         building = await building_of(session, rules, entity) if entity is not None and entity.entity_type is EntityType.STRUCTURE else None
         named = {
             node_id,
@@ -222,7 +221,7 @@ async def node_means(services: ServicesDep, node_id: NodeId) -> MeansNodeView:
                 kind=row.kind,
                 count=row.count,
                 broken=row.broken,
-                capacity=row.count * CONTAINERS[row.kind].capacity * rules.containers.per_capacity,
+                capacity=row.count * container_capacity(rules, row.kind) * rules.containers.per_capacity,
                 sealed=CONTAINERS[row.kind].sealed,
                 locked=row.locked,
             )
@@ -505,7 +504,10 @@ async def node_honours(services: ServicesDep, node_id: NodeId) -> HonoursNodeVie
         known |= {item for row in named for item in (row.owner_entity_id, row.raised_from_entity_id) if item is not None}
         known |= {item for row in grants for item in (row.polity_entity_id, row.settlement_entity_id, row.war_entity_id) if item is not None}
         refs = await node_refs(session, sorted(known))
+        policy = await session.get(VeteranPolicyRow, realm) if realm is not None else None
     return HonoursNodeView(
+        policy=policy.grant if policy is not None else None,
+        policy_locked=policy is not None and "grant" in policy.locked,
         node=ref(refs, node_id),
         realm=maybe(refs, realm),
         units=[

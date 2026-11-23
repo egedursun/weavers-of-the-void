@@ -2,7 +2,7 @@ from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import ANATOMIES
-from aerona.catalog.tongues import MODALITY_NEEDS, MODALITY_ORDER, TEXTURE_MODALITY, WRITABLE
+from aerona.catalog.tongues import BASE_SENSES, FIELD_MODALITIES, MODALITY_NEEDS, MODALITY_ORDER, MODALITY_SENSE, TEXTURE_MODALITY, WRITABLE
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
@@ -14,10 +14,12 @@ from aerona.domain.enums.body import BodyFunction
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.minds import MindSeat
+from aerona.domain.enums.nature import SenseKind
 from aerona.domain.enums.tongues import LanguageModality
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import community_of
+from aerona.engine.nature.senses import senses_of
 from aerona.engine.primitives.queries import canon, spoken_language
 from aerona.rules.registry import Rules
 
@@ -46,11 +48,33 @@ async def unwritten_factor(session: AsyncSession, rules: Rules, language_id: int
     return 1.0 if await writable(session, language_id) else rules.modality.unwritten_literacy_pct / PERCENT
 
 
-def suited(functions: frozenset[BodyFunction]) -> LanguageModality:
+def perceivable(modality: LanguageModality, senses: frozenset[SenseKind]) -> bool:
+    sense = MODALITY_SENSE[modality]
+    return sense is None or sense in senses
+
+
+def suited(functions: frozenset[BodyFunction], senses: frozenset[SenseKind] = BASE_SENSES) -> LanguageModality:
+    for modality in FIELD_MODALITIES:
+        if MODALITY_NEEDS[modality] <= functions and MODALITY_SENSE[modality] in senses:
+            return modality
     for modality in MODALITY_ORDER:
-        if MODALITY_NEEDS[modality] <= functions:
+        if MODALITY_NEEDS[modality] <= functions and perceivable(modality, senses):
             return modality
     return LanguageModality.TELEPATHIC
+
+
+async def perceiving(session: AsyncSession, people_id: int, functions: frozenset[BodyFunction]) -> frozenset[SenseKind]:
+    held_senses = frozenset(sense for sense, acuity in (await senses_of(session, people_id)).items() if acuity > 0)
+    found = held_senses or BASE_SENSES
+    if BodyFunction.SIGHT not in functions:
+        found -= {SenseKind.SIGHT}
+    if BodyFunction.HEARING not in functions:
+        found -= {SenseKind.HEARING}
+    return found
+
+
+def fits(modality: LanguageModality, functions: frozenset[BodyFunction], senses: frozenset[SenseKind]) -> bool:
+    return MODALITY_NEEDS[modality] <= functions and perceivable(modality, senses)
 
 
 async def body_functions(session: AsyncSession, people_id: int) -> frozenset[BodyFunction] | None:
@@ -80,8 +104,9 @@ async def settle_modalities(ctx: TickContext) -> int:
         if profile is None or held(language.id) or profile.modality is not LanguageModality.VOCAL:
             continue
         peoples = list(await ctx.session.scalars(select(EntityRow).where(EntityRow.id.in_(speaking(language.id)))))
-        bodies = [await body_functions(ctx.session, row.id) for row in peoples if row.entity_type is EntityType.PEOPLE]
-        known = [body for body in bodies if body is not None]
+        folk = [row for row in peoples if row.entity_type is EntityType.PEOPLE]
+        bodies = [(row.id, await body_functions(ctx.session, row.id)) for row in folk]
+        known = [(people_id, body) for people_id, body in bodies if body is not None]
         made = [await made_people(ctx.session, row) for row in peoples]
         textured = await texture_modality(ctx.session) if language.birth_epoch <= ctx.rules.sound_changes.texture_epochs else None
         if made and all(made):
@@ -90,10 +115,19 @@ async def settle_modalities(ctx: TickContext) -> int:
         elif textured is not None:
             profile.modality = textured
             settled += 1
-        elif known and all(BodyFunction.SPEECH not in body for body in known):
-            profile.modality = suited(known[0])
+        elif known and all(BodyFunction.SPEECH not in body for _, body in known):
+            first, functions = known[0]
+            profile.modality = suited(functions, await perceiving(ctx.session, first, functions))
+            settled += 1
+        elif known and not any([await hears(ctx.session, people_id, body) for people_id, body in known]):
+            first, functions = known[0]
+            profile.modality = suited(functions - {BodyFunction.SPEECH}, await perceiving(ctx.session, first, functions))
             settled += 1
     return settled
+
+
+async def hears(session: AsyncSession, people_id: int, functions: frozenset[BodyFunction]) -> bool:
+    return SenseKind.HEARING in await perceiving(session, people_id, functions)
 
 
 async def own_tongue(session: AsyncSession, entity: EntityRow) -> EntityRow | None:

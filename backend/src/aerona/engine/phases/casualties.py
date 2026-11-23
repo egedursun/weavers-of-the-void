@@ -27,6 +27,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
+from aerona.engine.military.w52_war import resolve_missing, scatter_named
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import DISASTER_KINDS
@@ -67,6 +68,7 @@ class Clash:
     loser_id: int
     siege: bool
     decisive: bool
+    battle_id: int
 
 
 @dataclass(frozen=True)
@@ -97,7 +99,7 @@ async def clashes_of(ctx: TickContext) -> list[Clash]:
             continue
         entry = await ctx.session.get(EntityRow, battle.record_entity_id) if battle.record_entity_id is not None else None
         event = entry or await war_event(ctx.session, war)
-        found.append(Clash(event, war.id, battle.winner_entity_id, battle.loser_entity_id, battle.siege_id is not None, entry is not None))
+        found.append(Clash(event, war.id, battle.winner_entity_id, battle.loser_entity_id, battle.siege_id is not None, entry is not None, battle.id))
     return found
 
 
@@ -226,9 +228,16 @@ async def _side_losses(ctx: TickContext, clash: Clash, sides: SideIndex, side_id
                 count.dead += 1
             elif outcome is WoundOutcome.WOUNDED:
                 count.wounded += 1
-        elif fighter and victor:
-            await add_renown(ctx.session, mortal.id, ctx.rules.standing.glory_renown, ctx.epoch, rules=ctx.rules)
+        elif fighter:
+            await spared(ctx, clash, mortal, side_id, victor=victor)
     return fallen
+
+
+async def spared(ctx: TickContext, clash: Clash, mortal: EntityRow, side_id: int, *, victor: bool) -> None:
+    if victor:
+        await add_renown(ctx.session, mortal.id, ctx.rules.standing.glory_renown, ctx.epoch, rules=ctx.rules)
+    elif clash.decisive and not held(mortal.id):
+        await scatter_named(ctx, clash.battle_id, mortal, side_id, rout_pct=100)
 
 
 async def decapitation(ctx: TickContext, war_id: int, enemy_id: int) -> bool:
@@ -397,6 +406,7 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.augment_effects",
     "table.augments",
     "table.avatars",
+    "table.battle_casualties",
     "table.battles",
     "table.bodies",
     "table.body_customs",
@@ -422,6 +432,8 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.galaxy_clusters",
     "table.geasa",
     "table.genomes",
+    "table.gifts",
+    "table.grave_goods",
     "table.griefs",
     "table.holder_levels",
     "table.house_members",
@@ -429,6 +441,8 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.incidents",
     "table.incubating_ideas",
     "table.injuries",
+    "table.insurance_policies",
+    "table.insurers",
     "table.item_profiles",
     "table.language_profiles",
     "table.lexemes",
@@ -447,6 +461,7 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.people_biology",
     "table.people_culture",
     "table.personality_values",
+    "table.professions_of_value",
     "table.prostheses",
     "table.routes",
     "table.skills",
@@ -476,6 +491,7 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.griefs",
     "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.injuries",
     "table.memories",
@@ -491,6 +507,7 @@ async def war_casualties(ctx: TickContext) -> None:
     clashes = await clashes_of(ctx)
     ctx.count("duel_dead", await mark_duel_dead(ctx, clashes))
     count = await war_dead(ctx, clashes)
+    ctx.count("missing_resolved", await resolve_missing(ctx))
     ctx.count("clashes", len(clashes))
     ctx.count("dead", count.dead)
     ctx.count("wounded", count.wounded)
@@ -548,6 +565,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.galaxies",
     "table.galaxy_clusters",
     "table.geasa",
+    "table.gifts",
     "table.grave_goods",
     "table.griefs",
     "table.holder_levels",

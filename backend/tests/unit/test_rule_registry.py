@@ -39,18 +39,19 @@ def consumer_source() -> str:
     return "\n".join(backend + frontend)
 
 
-def is_read(key: str, words: set[str], quoted: set[str]) -> bool:
+def is_read(key: str, words: set[str], quoted: set[str], keyed: set[str]) -> bool:
     if key in words:
         return True
     cuts = [index + 1 for index, char in enumerate(key) if char == "_"]
-    return any(key[:cut] in quoted and key[cut:] in quoted for cut in cuts)
+    return any(key[:cut] in quoted and key[cut:] in quoted for cut in cuts) or any(key[: cut - 1] in quoted and key[cut:] in keyed for cut in cuts)
 
 
 def test_every_rule_key_is_read_by_a_consumer_outside_the_registry() -> None:
     source = consumer_source()
     words = set(re.findall(r"\w+", source))
     quoted = set(re.findall(r'"(\w+)"', source))
-    assert [descriptor.path for descriptor in DESCRIPTORS if not is_read(descriptor.key, words, quoted)] == []
+    keyed = set(re.findall(r'keyed\([^,]+, [^,]+, "(\w+)"\)', source))
+    assert [descriptor.path for descriptor in DESCRIPTORS if not is_read(descriptor.key, words, quoted, keyed)] == []
 
 
 def test_every_rule_belongs_to_a_declared_group() -> None:

@@ -118,6 +118,8 @@ def modern_parameters(rules: Rules, kind: DistrictKind) -> dict[str, int]:
         DistrictKind.ENTERTAINMENT: {"order": table.entertainment_order, "tension_relief_pct": table.entertainment_tension_pct},
         DistrictKind.SUBURB: {"sanitation": table.suburb_sanitation},
         DistrictKind.ARCOLOGY: {"sanitation": table.arcology_sanitation, "food_store": rules.urban.granary_per_level},
+        DistrictKind.CAMP: {"sanitation": -table.camp_sanitation, "order": -table.camp_disorder},
+        DistrictKind.LAZARETTO: {"sanitation": table.lazaretto_sanitation},
     }.get(kind, {})
 
 

@@ -16,10 +16,12 @@ MADE_MINDS_LAW = total(
     MadeMindsLaw,
     {
         MadeMindsLaw.NO_WILL: Defined(
-            "No will at all", checked_by=("engine.made.genesis.made_minds", "engine.minds.profiles.will_allowed"), used_by=("engine.made.genesis.law_for",)
+            "No will at all",
+            checked_by=("engine.made.genesis.made_minds", "engine.minds.profiles.will_allowed"),
+            used_by=("catalog.pacts.WILLLESS_LAWS", "engine.made.genesis.law_for"),
         ),
         MadeMindsLaw.INSTRUCTED_ONLY: Defined(
-            "Instructed only", checked_by=("engine.minds.profiles.will_allowed",), used_by=("engine.minds.profiles.ORIGIN_LAW",)
+            "Instructed only", checked_by=("engine.minds.profiles.will_allowed",), used_by=("catalog.pacts.WILLLESS_LAWS", "engine.minds.profiles.ORIGIN_LAW")
         ),
         MadeMindsLaw.WILL_MAY_EMERGE: Defined(
             "Will may emerge",

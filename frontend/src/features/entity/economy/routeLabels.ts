@@ -15,8 +15,14 @@ import {
   Swords,
   Waves,
   type LucideIcon,
+  Landmark,
+  Apple,
+  HandCoins,
+  CalendarX,
+  Truck,
 } from 'lucide-react'
 import { type KpiTone } from '@/components/domain'
+import { TRANSPORTS } from '@/features/operations/labels'
 import {
   MODE,
   ROUTE_STATUS,
@@ -24,7 +30,14 @@ import {
   type TradeRouteStatus,
 } from './labels'
 
-export type DangerKey = 'bandits' | 'beasts' | 'weather' | 'sea'
+export type DangerKey =
+  | 'bandits'
+  | 'beasts'
+  | 'weather'
+  | 'sea'
+  | 'officials'
+  | 'spoilage'
+  | 'pilferage'
 
 export const DANGERS: Record<
   DangerKey,
@@ -54,6 +67,24 @@ export const DANGERS: Record<
     tone: 'verdigris',
     hint: 'Open water and storms at sea; losses here sink ships',
   },
+  officials: {
+    label: 'Officials',
+    icon: Landmark,
+    tone: 'gold',
+    hint: 'Tolls, bribes and extortion by the realms at either end, by their corruption',
+  },
+  spoilage: {
+    label: 'Spoilage',
+    icon: Apple,
+    tone: 'warning',
+    hint: 'Goods that spoil on a long way where nothing keeps them',
+  },
+  pilferage: {
+    label: 'Pilferage',
+    icon: HandCoins,
+    tone: 'danger',
+    hint: 'Guards and crews helping themselves where no patrol watches the way',
+  },
 }
 
 export const DANGER_KEYS: readonly DangerKey[] = [
@@ -61,6 +92,9 @@ export const DANGER_KEYS: readonly DangerKey[] = [
   'beasts',
   'weather',
   'sea',
+  'officials',
+  'spoilage',
+  'pilferage',
 ]
 
 export const DANGER_FIELD: Record<DangerKey, string> = {
@@ -68,6 +102,9 @@ export const DANGER_FIELD: Record<DangerKey, string> = {
   beasts: 'danger_beasts',
   weather: 'danger_weather',
   sea: 'danger_sea',
+  officials: 'danger_officials',
+  spoilage: 'danger_spoilage',
+  pilferage: 'danger_pilferage',
 }
 
 export const ROUTE_FIELD: Record<string, { label: string; icon: LucideIcon }> =
@@ -82,6 +119,11 @@ export const ROUTE_FIELD: Record<string, { label: string; icon: LucideIcon }> =
     danger_beasts: { label: 'Beast danger', icon: PawPrint },
     danger_weather: { label: 'Weather danger', icon: CloudLightning },
     danger_sea: { label: 'Sea danger', icon: Waves },
+    danger_officials: { label: 'Officials danger', icon: Landmark },
+    danger_spoilage: { label: 'Spoilage danger', icon: Apple },
+    danger_pilferage: { label: 'Pilferage danger', icon: HandCoins },
+    closed_season: { label: 'Closed season', icon: CalendarX },
+    carrier: { label: 'Carried by', icon: Truck },
     season_pct: { label: 'Worst season', icon: CalendarRange },
     length: { label: 'Length', icon: MapIcon },
     renown: { label: 'Renown', icon: Sparkles },
@@ -119,4 +161,20 @@ export function seasonWord(pct: number): string {
   if (pct >= 70) return 'A hard season slows it'
   if (pct >= 50) return 'Half shut in its worst season'
   return 'Nearly shut in its worst season'
+}
+
+export const NO_CARRIER = 'none'
+export const OPEN_ALL_YEAR = 'open'
+
+export const CARRIER_CHOICES: Record<string, string> = {
+  [NO_CARRIER]: 'The way of travel decides',
+  ...Object.fromEntries(
+    Object.entries(TRANSPORTS).map(([key, spec]) => [key, spec.label])
+  ),
+}
+
+export function seasonChoices(
+  seasons: Record<string, string>
+): Record<string, string> {
+  return { [OPEN_ALL_YEAR]: 'Open all year', ...seasons }
 }

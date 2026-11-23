@@ -6,12 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.carriers import CARRIER_OF, CARRIERS
 from aerona.catalog.kinds.trade_modes import TRADE_MODES
-from aerona.catalog.life.economy import OPEN
+from aerona.catalog.life.economy import OPEN, SHUTTING_RESPONSES
+from aerona.catalog.life_traits import CARRYING_ROUTES
 from aerona.catalog.preservation import PRESERVATION, WATER_DEFAULT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.discovery import ArtFormPractitionerRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
+from aerona.db.tables.evolution import PlagueResponseRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyProfileRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow
 from aerona.db.tables.urban import ConvoyRow, FleetRow
@@ -268,6 +271,42 @@ async def arrive(ctx: TickContext, convoy: ConvoyRow, profile: TradeRouteProfile
             break
 
 
+async def held_back_by(ctx: TickContext, convoy: ConvoyRow, profile: TradeRouteProfileRow) -> ConvoyStatus | None:
+    destination = profile.second_market_id
+    shut = await ctx.session.scalar(
+        select(PlagueResponseRow.disease_entity_id)
+        .where(PlagueResponseRow.community_entity_id == destination, PlagueResponseRow.response.in_(SHUTTING_RESPONSES))
+        .limit(1)
+    )
+    if shut is not None and convoy.departed_epoch >= ctx.epoch - ctx.rules.convoys.epochs(ctx.rules.convoys.quarantine_years):
+        return ConvoyStatus.QUARANTINED
+    if (
+        profile.status is TradeRouteStatus.SEASONAL
+        and profile.closed_season is not None
+        and ctx.rng(f"convoy.stranded.{convoy.id}.{ctx.epoch}").chance(ctx.rules.convoys.stranded_pct)
+    ):
+        return ConvoyStatus.STRANDED
+    return None
+
+
+async def season_name(ctx: TickContext, route_id: int, position: int | None) -> str:
+    route = await ctx.session.get(EntityRow, route_id)
+    if route is None or route.world_id is None or position is None:
+        return "its closed season"
+    name = await ctx.session.scalar(select(WorldSeasonRow.name).where(WorldSeasonRow.world_id == route.world_id, WorldSeasonRow.position == position))
+    return name or "its closed season"
+
+
+async def wait_out(ctx: TickContext, convoy: ConvoyRow, profile: TradeRouteProfileRow, state: ConvoyStatus, tally: ConvoyTally) -> None:
+    if state is ConvoyStatus.STRANDED:
+        convoy.cargo = {key: max(0, value - value * ctx.rules.convoys.stranded_upkeep // PERCENT) for key, value in convoy.cargo.items()}
+        season = await season_name(ctx, convoy.route_entity_id, profile.closed_season)
+        await record(ctx, "convoy.stranded", roles={IncidentRole.SUBJECT: convoy.route_entity_id}, facts={"season": season})
+    else:
+        await record(ctx, "convoy.quarantined", roles={IncidentRole.SUBJECT: convoy.route_entity_id, IncidentRole.PLACE: profile.second_market_id})
+    tally.delayed += 1
+
+
 async def resolve(ctx: TickContext, convoy: ConvoyRow, tally: ConvoyTally, book: DiseaseBook, atlas: RegionAtlas) -> None:
     profile = await ctx.session.get(TradeRouteProfileRow, convoy.route_entity_id)
     if profile is None or "status" in convoy.locked:
@@ -285,6 +324,11 @@ async def resolve(ctx: TickContext, convoy: ConvoyRow, tally: ConvoyTally, book:
         war=war,
         escorted=await escorted_by_treaty(ctx.session, mine, theirs),
     )
+    held_back = await held_back_by(ctx, convoy, profile)
+    if held_back is not None:
+        convoy.status = held_back
+        await wait_out(ctx, convoy, profile, held_back, tally)
+        return
     convoy.status = status
     if status is ConvoyStatus.ARRIVED:
         convoy.arrived_epoch = ctx.epoch
@@ -340,7 +384,7 @@ async def run_convoys(ctx: TickContext, tally: ConvoyTally) -> None:
     routes = await ctx.session.execute(
         select(EntityRow, TradeRouteProfileRow)
         .join(TradeRouteProfileRow, TradeRouteProfileRow.route_entity_id == EntityRow.id)
-        .where(EntityRow.status == EntityStatus.CANON, TradeRouteProfileRow.status == TradeRouteStatus.OPEN)
+        .where(EntityRow.status == EntityStatus.CANON, TradeRouteProfileRow.status.in_(CARRYING_ROUTES))
         .order_by(EntityRow.id)
     )
     most = ctx.rules.convoys.per_epoch(ctx.rules.convoys.per_route)

@@ -189,6 +189,10 @@ def spread_factor(
     factor *= tolerance_fit(profile, ground)
     factor *= answered(book.rules, book.responses.get((target.id, disease_id), set()))
     factor *= 1 - book.shunning.get(target.id, 0) * book.rules.purity.avoidance_pct / PERCENT / PERCENT
+    if book.camps.get(target.id, 0) > 0:
+        factor *= 1 + book.rules.districts.camp_disease_pct / PERCENT
+    if book.lazarettos.get(target.id, 0) > 0:
+        factor *= 1 - book.rules.districts.lazaretto_spread_cut_pct / PERCENT
     if path in (SpreadPath.ROUTE, SpreadPath.JOURNEY) and PlagueResponse.CLOSE_BORDERS in book.responses.get((target.id, disease_id), set()):
         factor *= 1 - book.rules.plague_responses.border_trade_pct / PERCENT
     factor *= 1 - immune * table.immunity_strength_pct / PERCENT

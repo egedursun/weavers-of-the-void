@@ -199,6 +199,9 @@ CAPTIVE_STATUS_TRAIT = total(
         CaptiveStatusTrait.RESCUE_STATUSES: Defined(
             "Rescue statuses", checked_by=(), used_by=("catalog.life_traits.CAPTIVE_STATUS_TRAITS", "engine.services.war.RESCUE_STATUSES")
         ),
+        CaptiveStatusTrait.AFTER_CAPTIVITY: Defined(
+            "After captivity", checked_by=(), used_by=("agents.context.operations_lines.AFTER_CAPTIVITY", "catalog.life_traits.CAPTIVE_STATUS_TRAITS")
+        ),
     },
 )
 
@@ -304,6 +307,10 @@ DUEL_CONTEXT_TRAIT = total(
         DuelContextTrait.DUEL_CONTEXTS: Defined(
             "Duel contexts", checked_by=(), used_by=("catalog.life_traits.DUEL_CONTEXT_TRAITS", "services.player.military_depth.DUEL_CONTEXTS")
         ),
+        DuelContextTrait.CUSTOMARY: Defined(
+            "Customary", checked_by=(), used_by=("catalog.life_traits.DUEL_CONTEXT_TRAITS", "engine.phases.warfare.CUSTOMARY_CONTEXTS")
+        ),
+        DuelContextTrait.AT_WAR: Defined("At war", checked_by=(), used_by=("catalog.life_traits.DUEL_CONTEXT_TRAITS", "tools.mortal.w52_agent_f.AT_WAR")),
     },
 )
 
@@ -700,7 +707,9 @@ OFFICE_KIND_TRAIT = total(
             "Many seats", checked_by=(), used_by=("catalog.life_traits.OFFICE_KIND_TRAITS", "engine.polity.offices.MANY_SEATS")
         ),
         OfficeKindTrait.SEATS_KEPT: Defined(
-            "Seats kept", checked_by=(), used_by=("catalog.life_traits.OFFICE_KIND_TRAITS", "engine.regime.patronage.SEATS_KEPT")
+            "Seats kept",
+            checked_by=(),
+            used_by=("catalog.life_traits.OFFICE_KIND_TRAITS", "engine.polity.offices.KEPT_OFFICES", "engine.regime.patronage.SEATS_KEPT"),
         ),
     },
 )
@@ -1032,13 +1041,20 @@ TRADE_ROUTE_STATUS_TRAIT = total(
         TradeRouteStatusTrait.LIVE_STATUSES: Defined(
             "Live statuses", checked_by=(), used_by=("catalog.life_traits.TRADE_ROUTE_STATUS_TRAITS", "engine.economy.routes.LIVE_STATUSES")
         ),
+        TradeRouteStatusTrait.CARRYING: Defined(
+            "Carrying", checked_by=("catalog.life_traits.CARRYING_ROUTES",), used_by=("catalog.life_traits.TRADE_ROUTE_STATUS_TRAITS",)
+        ),
     },
 )
 
 TREATY_KIND_TRAIT = total(
     TreatyKindTrait,
     {
-        TreatyKindTrait.ALLIANCES: Defined("Alliances", checked_by=(), used_by=("catalog.life_traits.TREATY_KIND_TRAITS", "engine.phases.diplomacy.ALLIANCES")),
+        TreatyKindTrait.ALLIANCES: Defined(
+            "Alliances",
+            checked_by=(),
+            used_by=("catalog.life_traits.TREATY_KIND_TRAITS", "engine.phases.diplomacy.ALLIANCES", "engine.polity.mediation.ALLIANCE_KINDS"),
+        ),
         TreatyKindTrait.DEFENSIVE: Defined("Defensive", checked_by=(), used_by=("catalog.life_traits.TREATY_KIND_TRAITS", "engine.polity.treaties.DEFENSIVE")),
         TreatyKindTrait.KEPT_KINDS: Defined("Kept kinds", checked_by=(), used_by=("catalog.life_traits.TREATY_KIND_TRAITS", "engine.polity.regard.KEPT_KINDS")),
         TreatyKindTrait.MUTUAL: Defined("Mutual", checked_by=(), used_by=("catalog.life_traits.TREATY_KIND_TRAITS", "engine.polity.accords.MUTUAL")),

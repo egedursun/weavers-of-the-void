@@ -195,6 +195,9 @@ class ConvoyRules(Spanned):
     escort_relief: int = rule(10, 0, 100, M, "Raid chance a trade treaty's escort takes away (%)")
     art_pct: int = rule(20, 0, 100, M, "Chance an arriving convoy brings one of its home's art forms (%)")
     news_confidence: int = rule(50, 0, 100, M, "Confidence of the news of its home's wealth and defences a convoy brings")
+    stranded_upkeep: int = rule(5, 0, 100, M, "Share of its cargo a stranded convoy eats each epoch it waits")
+    quarantine_years: int = span(1, 0, 50, M, "Years a convoy waits in quarantine at a port under plague response")
+    stranded_pct: int = rule(25, 0, 100, M, "Chance a convoy on a seasonal road is caught by its closed season and waits it out (%)")
 
 
 @dataclass(frozen=True)

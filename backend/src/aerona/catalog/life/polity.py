@@ -20,6 +20,7 @@ from aerona.domain.enums.polity import (
     TreatyKind,
     TreatyStatus,
 )
+from aerona.domain.enums.regime import ClientRole
 from aerona.domain.enums.statecraft import CouncilTask, CourtPosition, CrisisDemand, TaxKind
 from aerona.domain.enums.titles import TitleTier
 from aerona.domain.enums.war import WarCause
@@ -96,6 +97,10 @@ TASKS: dict[OfficeKind, CouncilTask] = {
     OfficeKind.GENERAL: CouncilTask.TRAIN_TROOPS,
     OfficeKind.ADMIRAL: CouncilTask.TRAIN_TROOPS,
     OfficeKind.SPEAKER: CouncilTask.PURGE_CORRUPTION,
+    OfficeKind.GOVERNOR: CouncilTask.OVERSEE_WORKS,
+    OfficeKind.AMBASSADOR: CouncilTask.PROMOTE_TRADE,
+    OfficeKind.COURT_SCHOLAR: CouncilTask.ADVANCE_LEARNING,
+    OfficeKind.CHIEF_SCIENTIST: CouncilTask.ADVANCE_LEARNING,
 }
 
 
@@ -106,6 +111,8 @@ POSITION_STATS: dict[CourtPosition, str] = {
     CourtPosition.TUTOR: "intellect",
     CourtPosition.CHRONICLER: "creativity",
     CourtPosition.MASTER_OF_REVELS: "charisma",
+    CourtPosition.JESTER: "creativity",
+    CourtPosition.SEER: "wisdom",
 }
 
 
@@ -113,6 +120,10 @@ CRISIS_CAUSES: dict[WarCause, CrisisDemand] = {
     WarCause.CLAIM: CrisisDemand.CEDE_REGION,
     WarCause.HOLY_WAR: CrisisDemand.CONVERT,
     WarCause.DEBT: CrisisDemand.PAY,
+    WarCause.TRADE_ROUTE: CrisisDemand.OPEN_TRADE,
+    WarCause.ESPIONAGE: CrisisDemand.HAND_OVER,
+    WarCause.VENDETTA: CrisisDemand.HAND_OVER,
+    WarCause.RIVALRY: CrisisDemand.DISARM,
 }
 
 
@@ -130,6 +141,9 @@ AREA_LOBBIES: Mapping[LawArea, frozenset[FactionKind]] = total(
         LawArea.PUBLIC_HEALTH: frozenset({FactionKind.SCHOLARS_ACADEMY, FactionKind.ENGINEERS_SOCIETY, FactionKind.WORKERS_UNION}),
         LawArea.MAGIC: frozenset({FactionKind.MAGE_ORDER, FactionKind.SECRET_SOCIETY, FactionKind.PRIESTHOOD}),
         LawArea.CONSTITUTIONAL: frozenset({FactionKind.PARTY, FactionKind.MOVEMENT, FactionKind.REBELS, FactionKind.NOBLE_COUNCIL}),
+        LawArea.COMMERCE: frozenset({FactionKind.MERCHANT_GUILD, FactionKind.CRAFT_GUILD, FactionKind.FINANCIERS, FactionKind.CHARTERED_COMPANY}),
+        LawArea.FAITH: frozenset({FactionKind.PRIESTHOOD, FactionKind.HOLY_ORDER, FactionKind.MOVEMENT}),
+        LawArea.LABOUR: frozenset({FactionKind.WORKERS_UNION, FactionKind.PEASANT_LEAGUE, FactionKind.CRAFT_GUILD}),
     },
 )
 
@@ -146,6 +160,9 @@ AREA_ORDER: Mapping[LawArea, int] = total(
         LawArea.PUBLIC_HEALTH: 90,
         LawArea.MAGIC: 100,
         LawArea.CONSTITUTIONAL: 70,
+        LawArea.COMMERCE: 100,
+        LawArea.FAITH: 90,
+        LawArea.LABOUR: 100,
     },
 )
 
@@ -311,6 +328,9 @@ AREA_SECRETS: Mapping[LawArea, frozenset[IntrigueSecret]] = total(
         LawArea.PUBLIC_HEALTH: frozenset({IntrigueSecret.HIDDEN_CONDITION, IntrigueSecret.CRIME}),
         LawArea.MAGIC: frozenset({IntrigueSecret.DEAL_WITH_OUTER_BEING, IntrigueSecret.SECRET_CULT_MEMBERSHIP}),
         LawArea.CONSTITUTIONAL: frozenset({IntrigueSecret.CRIME, IntrigueSecret.BROKEN_OATH}),
+        LawArea.COMMERCE: frozenset({IntrigueSecret.CRIME, IntrigueSecret.DEBT}),
+        LawArea.FAITH: frozenset({IntrigueSecret.SECRET_CULT_MEMBERSHIP, IntrigueSecret.CRIME}),
+        LawArea.LABOUR: frozenset({IntrigueSecret.CRIME, IntrigueSecret.DEBT}),
     },
 )
 
@@ -340,3 +360,39 @@ HOSTILITIES_TREATY_KINDS = frozenset({TreatyKind.PEACE, TreatyKind.TRUCE, Treaty
 KEEP_CLAUSES_TREATY_KINDS = frozenset({TreatyKind.TRUCE, TreatyKind.TRIBUTE})
 KEEP_CLAUSES_TREATY_KINDS_2 = frozenset({TreatyKind.TRIBUTE, TreatyKind.TRUCE})
 TO_SECRECY_FACTION_KINDS = (FactionKind.SECRET_SOCIETY, FactionKind.ASSASSINS)
+
+
+CLAIM_STRENGTHS: Mapping[ClaimBasis, str] = total(
+    ClaimBasis,
+    {
+        ClaimBasis.INHERITANCE: "inheritance_strength",
+        ClaimBasis.MARRIAGE: "marriage_strength",
+        ClaimBasis.CONQUEST: "conquest_strength",
+        ClaimBasis.DIVINE: "divine_strength",
+        ClaimBasis.FABRICATED: "fabricated_strength",
+        ClaimBasis.DE_JURE: "de_jure_strength",
+        ClaimBasis.ELECTION: "election_strength",
+        ClaimBasis.ADOPTION: "adoption_strength",
+    },
+)
+
+
+AREA_CLASH: Mapping[LawArea, str] = total(
+    LawArea,
+    {
+        LawArea.SUCCESSION: "succession_clash_weight",
+        LawArea.PROPERTY: "property_clash_weight",
+        LawArea.FISCAL: "fiscal_clash_weight",
+        LawArea.PENAL: "penal_clash_weight",
+        LawArea.MILITARY: "military_clash_weight",
+        LawArea.SOCIAL: "social_clash_weight",
+        LawArea.PUBLIC_HEALTH: "public_health_clash_weight",
+        LawArea.MAGIC: "magic_clash_weight",
+        LawArea.CONSTITUTIONAL: "constitutional_clash_weight",
+        LawArea.COMMERCE: "commerce_clash_weight",
+        LawArea.FAITH: "faith_clash_weight",
+        LawArea.LABOUR: "labour_clash_weight",
+    },
+)
+
+SERVING_CLIENTS = (ClientRole.BROKER, ClientRole.ARTIST)

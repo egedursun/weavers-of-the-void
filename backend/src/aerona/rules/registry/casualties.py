@@ -28,6 +28,13 @@ class CasualtiesRules(Spanned):
     disaster_event_cap: int = rule(80, 0, 100, H, "Most named dead of one disaster (% of the named of the struck communities, at least one)")
     fate_cost: int = rule(10, 0, 1000, RuleGroup.INTERVENTION, "Essence cost of the god writing a mortal's fate")
     veteran_share_pct: int = rule(50, 0, 100, W, "Share of the best experience of a community's disbanded armies a new army inherits (%)")
+    missing_return_pct: int = rule(50, 0, 100, W, "Chance a named soldier missing after a rout returns over the following season (%)")
+    deserted_bandit_pct: int = rule(20, 0, 100, W, "Chance a named deserter, or a missing soldier who does not return, takes to banditry (%)")
+    loser_missing_pct: int = rule(12, 0, 100, W, "Chance a named fighter of a fully routed side is scattered and goes missing (%)")
+    loser_deserted_pct: int = rule(8, 0, 100, W, "Chance a named fighter of a fully routed side deserts in the battle (%)")
+    wild_cover: int = rule(
+        60, 0, 100, W, "Forest cover of a battlefield's land from which a missing soldier who does not return turns bandit rather than being found dead"
+    )
     veteran_years: int = span(30, 0, 25000, W, "Years the veterans of a disbanded army carry its experience")
     commander_min_intellect: int = rule(60, 0, 100, W, "Least intellect of a commander who adds experience to the army")
     commander_experience: int = rule(4, 0, 100, W, "Experience a clever commander adds to the army in every clash")

@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.tongues import SOCIOLECTS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.collective import AccountRow
@@ -48,7 +49,7 @@ from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.engine.context import TickContext
 from aerona.engine.couplings.deep import SealLinks, missing_link, seal_deep
 from aerona.engine.couplings.field import agree
-from aerona.engine.couplings.registers import SPEECH_PRESTIGE, make_sign_language
+from aerona.engine.couplings.registers import make_sign_language
 from aerona.engine.couplings.teachers import BEAST_LESSONS, lesson
 from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import allowed
@@ -113,7 +114,7 @@ async def create_sociolect(ctx: TickContext, holder_id: int, kind: SociolectKind
         language_entity_id=language.id,
         holder_entity_id=holder.id,
         kind=kind,
-        prestige=SPEECH_PRESTIGE[kind],
+        prestige=SOCIOLECTS[kind].prestige,
         secret=kind is SociolectKind.CANT,
         salience=ctx.rules.couplings.sociolect_start,
         since_epoch=ctx.epoch,

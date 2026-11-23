@@ -11,6 +11,7 @@ class MuseumPieceView(ApiModel):
     fossil_bed_id: int | None
     acquired_epoch: int
     looted_from: NodeRef | None
+    polity: NodeRef | None
     returned_epoch: int | None
     returned_by: NodeRef | None
     locked: list[str]

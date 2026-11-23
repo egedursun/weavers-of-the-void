@@ -31,6 +31,7 @@ class ClassStandingView(ApiModel):
 class EffectView(ApiModel):
     effect: ShortfallEffect
     short_pct: int
+    held: bool = False
 
 
 class LabourReasonView(ApiModel):

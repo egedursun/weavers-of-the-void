@@ -2,7 +2,9 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.tongues import DRIFTS, SHIFTS
 from aerona.constants.schema import LEXEME_TEXT_MAX_LENGTH, LEXEME_WORD_MAX_LENGTH, NAME_MAX_LENGTH
+from aerona.core.random import SeededRandom
 from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.discovery import NameExonymRow
 from aerona.db.tables.entities import EntityRow
@@ -10,6 +12,7 @@ from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.tongues import MeaningShiftRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
@@ -24,11 +27,14 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import canon, spoken_language
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record as record_incident
+from aerona.engine.tongues.drift import drift_scale
 from aerona.engine.tongues.grammar import compounds, head_first
 
 ALSO = "; also "
-DRIFTS = (SenseShift.BROADENED, SenseShift.NARROWED, SenseShift.PEJORATIVE, SenseShift.AMELIORATIVE, SenseShift.RESTORED)
+LIKENESS = "; by likeness, "
+NEARNESS = "; and those of "
 PAIR = 2
+NAMED = (PartOfSpeech.PLACE_NAME, PartOfSpeech.PROPER_NAME)
 
 
 @dataclass
@@ -61,37 +67,84 @@ def record(ctx: TickContext, lexeme: LexemeRow, shift: SenseShift, old: str, cau
     return row
 
 
+Moved = tuple[LexemeRow, str, LexemeRow | None]
+
+
+def by_likeness(rng: SeededRandom, words: list[LexemeRow], word: LexemeRow) -> Moved | None:
+    others = [item for item in words if item.id != word.id and item.part_of_speech != word.part_of_speech and LIKENESS not in item.meaning]
+    if not others or LIKENESS in word.meaning:
+        return None
+    other, old = rng.pick(others), word.meaning
+    word.meaning = clipped(f"{word.meaning}{LIKENESS}{other.meaning.split(ALSO)[0]}", LEXEME_TEXT_MAX_LENGTH)
+    return word, old, other
+
+
+def by_nearness(rng: SeededRandom, words: list[LexemeRow]) -> Moved | None:
+    named = [item for item in words if item.part_of_speech in NAMED and NEARNESS not in item.meaning]
+    if not named:
+        return None
+    word = rng.pick(named)
+    old = word.meaning
+    word.meaning = clipped(f"{word.meaning}{NEARNESS}{word.meaning.split(ALSO)[0]}", LEXEME_TEXT_MAX_LENGTH)
+    return word, old, None
+
+
+def broadened(rng: SeededRandom, words: list[LexemeRow], word: LexemeRow) -> Moved | None:
+    others = [item for item in words if item.id != word.id and item.part_of_speech == word.part_of_speech and ALSO not in item.meaning]
+    if not others or ALSO in word.meaning:
+        return None
+    other, old = rng.pick(others), word.meaning
+    word.meaning = clipped(f"{word.meaning}{ALSO}{other.meaning}", LEXEME_TEXT_MAX_LENGTH)
+    other.register = WordRegister.ARCHAIC
+    return word, old, other
+
+
+def narrowed(word: LexemeRow) -> Moved | None:
+    if ALSO not in word.meaning:
+        return None
+    old = word.meaning
+    word.meaning = word.meaning.split(ALSO)[0]
+    return word, old, None
+
+
+async def restored(ctx: TickContext, rng: SeededRandom, language_id: int) -> Moved | None:
+    archaic = list(
+        await ctx.session.scalars(
+            select(LexemeRow).where(LexemeRow.language_entity_id == language_id, LexemeRow.register == WordRegister.ARCHAIC).order_by(LexemeRow.id)
+        )
+    )
+    if not archaic:
+        return None
+    word = rng.pick(archaic)
+    word.register = WordRegister.COMMON
+    return word, word.meaning, None
+
+
+async def moved(ctx: TickContext, rng: SeededRandom, language_id: int, words: list[LexemeRow], *, word: LexemeRow, shift: SenseShift) -> Moved | None:
+    if shift is SenseShift.EXTENDED:
+        return by_likeness(rng, words, word)
+    if shift is SenseShift.ASSOCIATED:
+        return by_nearness(rng, words)
+    if shift is SenseShift.BROADENED:
+        return broadened(rng, words, word)
+    if shift is SenseShift.NARROWED:
+        return narrowed(word)
+    if shift is SenseShift.RESTORED:
+        return await restored(ctx, rng, language_id)
+    return word, word.meaning, None
+
+
 async def shift_word(ctx: TickContext, language: EntityRow, tally: DriftTally, attempt: int = 0) -> MeaningShiftRow | None:
     words = await common_words(ctx, language.id)
     rng = ctx.rng(f"drift.{language.id}.{ctx.epoch}" + (f".{attempt}" if attempt else ""))
     if not words or not rng.chance(ctx.rules.semantic_drift.drift_pct):
         return None
     word = rng.pick(words)
-    shift = rng.pick(list(DRIFTS))
-    old = word.meaning
-    other: LexemeRow | None = None
-    if shift is SenseShift.BROADENED:
-        others = [item for item in words if item.id != word.id and item.part_of_speech == word.part_of_speech and ALSO not in item.meaning]
-        if not others or ALSO in word.meaning:
-            return None
-        other = rng.pick(others)
-        word.meaning = clipped(f"{word.meaning}{ALSO}{other.meaning}", LEXEME_TEXT_MAX_LENGTH)
-        other.register = WordRegister.ARCHAIC
-    elif shift is SenseShift.NARROWED:
-        if ALSO not in word.meaning:
-            return None
-        word.meaning = word.meaning.split(ALSO)[0]
-    elif shift is SenseShift.RESTORED:
-        archaic = list(
-            await ctx.session.scalars(
-                select(LexemeRow).where(LexemeRow.language_entity_id == language.id, LexemeRow.register == WordRegister.ARCHAIC).order_by(LexemeRow.id)
-            )
-        )
-        if not archaic:
-            return None
-        word = rng.pick(archaic)
-        old = word.meaning
-        word.register = WordRegister.COMMON
+    shift = rng.weighted(DRIFTS, [float(getattr(ctx.rules.tongues, str(SHIFTS[item].rule))) for item in DRIFTS])
+    found = await moved(ctx, rng, language.id, words, word=word, shift=shift)
+    if found is None:
+        return None
+    word, old, other = found
     tally.shifted += 1
     row = record(ctx, word, shift, old)
     if other is not None:
@@ -136,11 +189,11 @@ async def veil(ctx: TickContext, language: EntityRow, node_id: int, name: str) -
         LexemeRow(
             language_entity_id=language.id,
             word=clipped(name, LEXEME_WORD_MAX_LENGTH),
-            meaning=clipped(f"the old name of {name}, kept in sacred speech", LEXEME_TEXT_MAX_LENGTH),
+            meaning=clipped(f"the name of {name}, not to be said", LEXEME_TEXT_MAX_LENGTH),
             added_by_kind=ActorKind.ENGINE,
             added_by_node_id=None,
             epoch=ctx.epoch,
-            register=WordRegister.SACRED,
+            register=WordRegister.TABOO,
         ),
     )
     await ctx.session.flush()
@@ -196,7 +249,8 @@ async def drift_meanings(ctx: TickContext, tally: DriftTally) -> None:
     for language in await canon(ctx.session, [EntityType.LANGUAGE]):
         if held(language.id):
             continue
-        for attempt in range(ctx.rules.semantic_drift.per_epoch):
+        tries = round(ctx.rules.semantic_drift.per_epoch * await drift_scale(ctx, language.id))
+        for attempt in range(tries):
             if await shift_word(ctx, language, tally, attempt) is None:
                 break
     await lift_names(ctx, tally)

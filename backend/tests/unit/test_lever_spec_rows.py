@@ -4,7 +4,7 @@ from aerona.services.player.catalog import ACTIONS_BY_ID
 GENERIC_KIND_LEVERS = frozenset(
     {"authored_kind:create", "authored_kind:edit", "authored_kind:hold", "authored_kind:spread", "authored_kind:retire", "authored_kind:delete"}
 )
-SHARED_LEVERS = frozenset({"record_row:create", "record_row:edit", "record_row:delete", "profile:set", "lever:pin", *GENERIC_KIND_LEVERS})
+SHARED_LEVERS = frozenset({"record_row:create", "record_row:edit", "record_row:delete", "profile:set", "profile:release", "lever:pin", *GENERIC_KIND_LEVERS})
 
 
 def section_of(item: str) -> str:

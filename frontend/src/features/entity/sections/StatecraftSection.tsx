@@ -66,6 +66,7 @@ const ENDINGS: Record<
 > = {
   backed_down: 'The demander backs down',
   conceded: 'The target concedes',
+  mediated: 'A third power settles it',
   war: 'It comes to war',
 }
 type Ctx = { view: Statecraft; blocked: string | null; hold: boolean }

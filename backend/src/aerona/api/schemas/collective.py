@@ -114,6 +114,7 @@ class AccountView(ApiModel):
     medium: AccountMedium
     collection_id: int | None
     collection_name: str | None
+    happening: str | None
     subject: NodeRef | None
     structure: NodeRef | None
     artwork: NodeRef | None

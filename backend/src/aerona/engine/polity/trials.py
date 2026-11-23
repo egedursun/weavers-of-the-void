@@ -116,8 +116,8 @@ async def testimony_of(ctx: TickContext, case: CrimeCaseRow, witness: EntityRow,
     if await is_outlaw(ctx, witness.id):
         return Deposition.SILENT, 0
     hook = await hook_on(ctx, culprit_id, witness.id)
-    if hook is not None and await use_hook(ctx, hook, HookDemand.SUPPORT):
-        return Deposition.SHIELDS, table.witness_reliability // 2
+    if hook is not None and await use_hook(ctx, hook, HookDemand.SILENCE):
+        return Deposition.SILENT, 0
     view = await relation(ctx.session, witness.id, culprit_id)
     friendship = view.friendship if view is not None else 0
     reliability = clamp_int(table.witness_reliability - abs(friendship) // 2, 0, PERCENT)

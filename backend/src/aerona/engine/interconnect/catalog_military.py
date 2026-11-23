@@ -12,7 +12,7 @@ from aerona.db.tables.military import (
 )
 from aerona.db.tables.warfare import BattleRow, SiegeRow, WarSideRow
 from aerona.domain.enums.military import UnitKind, WarAimKind
-from aerona.engine.interconnect.registry import Coupling, EdgeKind, Mechanic, Subsystem, Surface
+from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
 ARMY_SECTION = "section-military"
 WAR_ROOM = "WarRoom"
@@ -64,6 +64,8 @@ MILITARY_MECHANICS = (
             *UNITS,
         ),
         tables=(ArmyUnitRow.__tablename__, ArmyProfileRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("set_army_stance",),
         targets=(A, W, *COMMUNITIES),
         couplings=(
             Coupling(Subsystem.CULTURE, "a people fights in its own way of war", EdgeKind.MODIFIER, "military_units.style_share_pct"),
@@ -189,12 +191,20 @@ MILITARY_MECHANICS = (
         phases=(*CAMPAIGN, "vendetta_cycles", "polity_cycles"),
         surface=Surface(drawer=BATTLE_REPORT),
         backfill="none: duels are fought from the next epoch",
-        templates=("duel.honour",),
+        templates=("duel.honour", "duel.fought"),
         fields=("exchanges", "duel_end", "stamina", "reach", "spared"),
+        exposure=Exposure.TOOL,
+        tools=("challenge_to_duel",),
+        levers=("war:ordeal", "ethics:honour"),
         targets=(M, W, "polity"),
         couplings=(
             Coupling(Subsystem.MIND, "honour cultures call duels over grievances", EdgeKind.TRIGGER, "duels.honour_grievance"),
             Coupling(Subsystem.BODY, "a beaten fighter is crippled or killed", EdgeKind.FLOW, "duels.hit_hp"),
+            Coupling(Subsystem.CULTURE, "a town that keeps a duel custom marks a passage with a ritual duel", EdgeKind.TRIGGER, "duels.ritual_pct"),
+            Coupling(Subsystem.BODY, "a ritual duel is rarely to the death", EdgeKind.MODIFIER, "duels.ritual_death_pct"),
+            Coupling(Subsystem.MIND, "each fighter of a ritual duel gains renown for the passage", EdgeKind.FLOW, "duels.ritual_renown"),
+            Coupling(Subsystem.MIND, "a killing in a ritual duel shames the killer before its people", EdgeKind.FLOW, "duels.ritual_shame"),
+            Coupling(Subsystem.BODY, "a duel fought to bounds ends when a fighter loses footing", EdgeKind.MODIFIER, "duels.ring_footing"),
         ),
     ),
     Mechanic(
@@ -208,6 +218,8 @@ MILITARY_MECHANICS = (
         templates=("captives.fates", "prisoner.ward_home"),
         fields=("captives", "fate", "origin", "captor", "wards"),
         tables=(CaptiveCohortRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("decide_captives",),
         targets=(W, M, *COMMUNITIES),
         couplings=(
             Coupling(Subsystem.DEMOGRAPHY, "captives settle as bound or free folk", EdgeKind.FLOW, "captivity.labour_pct"),
@@ -292,6 +304,8 @@ MILITARY_MECHANICS = (
         templates=("espionage.",),
         fields=("agents", "depth", "exposure", "cover", "spymaster", "intel", "last_operation"),
         tables=(SpyNetworkRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("run_operation",),
         targets=("faction", *COMMUNITIES, W, "polity"),
         couplings=(
             Coupling(Subsystem.POLITY, "the spymaster's skill deepens the network and hunts the enemy's", EdgeKind.MODIFIER, "espionage.counter_intel_pct"),

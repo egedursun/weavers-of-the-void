@@ -27,6 +27,7 @@ from aerona.catalog.powers import POWERS, power_unlock_levels
 from aerona.catalog.rarities import RARITY_LABELS, entity_rarity
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.stats import PASSIONS, STATS
+from aerona.catalog.tongues import BASES
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.core.grammar import several, spoken
 from aerona.db.repositories.chronicle import kept_lines, told_kind
@@ -1077,6 +1078,7 @@ def settings_facts(settings: GenesisSettings) -> list[Labelled]:
         Labelled("Made minds", chosen(settings.made_minds, "/100")),
         Labelled("Reach of information", chosen(settings.information_reach, "/100")),
         Labelled("Texture of the language", TEXTURE_LABELS[settings.language_texture]),
+        Labelled("Counting of the first tongues", BASES[settings.numeral_base].label if settings.numeral_base is not None else SEED_CHOOSES),
         Labelled("First peoples", str(settings.peoples)),
         Labelled("Cosmos size", COSMOS_LABELS[settings.cosmos_size]),
         Labelled("Shape of the cosmos", SHAPE_LABELS[settings.cosmos_shape]),

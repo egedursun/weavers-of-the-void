@@ -3,10 +3,11 @@ from sqlalchemy import select
 from aerona.agents.context.cycle_lines import named as name_of
 from aerona.agents.context.scope import Scope
 from aerona.catalog.means import AIDS, CONTAINERS, LIFTS, MEDIA
+from aerona.catalog.war_w52 import VETERAN_GRANTS
 from aerona.core.grammar import plural, several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.governance import OrgGovernanceRow
-from aerona.db.tables.honours import HonourHeldRow, HonourKindRow, NamedUnitRow, VeteranGrantRow
+from aerona.db.tables.honours import HonourHeldRow, HonourKindRow, NamedUnitRow, VeteranGrantRow, VeteranPolicyRow
 from aerona.db.tables.households import HouseholdMemberRow
 from aerona.db.tables.means import ContainerStockRow, NavigationKitRow, WaterLiftRow, WritingCustomRow
 from aerona.db.tables.military import ArmyUnitRow
@@ -121,7 +122,10 @@ async def mortal_honours_lines(scope: Scope, me: EntityRow) -> list[str]:
     for grant in await session.scalars(
         select(VeteranGrantRow).where(VeteranGrantRow.polity_entity_id == realm).order_by(VeteranGrantRow.epoch.desc()).limit(LIST_LINES)
     ):
-        found.append(f"your realm granted {several(grant.veterans, 'veteran', 'veterans')} {spoken(grant.kind)} in epoch {grant.epoch}")
+        found.append(f"your realm granted {several(grant.veterans, 'veteran', 'veterans')} {VETERAN_GRANTS[grant.kind].label.lower()} in epoch {grant.epoch}")
+    policy = await session.get(VeteranPolicyRow, realm)
+    if policy is not None:
+        found.append(f"your realm's grant to veterans is {VETERAN_GRANTS[policy.grant].label.lower()}")
     return found
 
 

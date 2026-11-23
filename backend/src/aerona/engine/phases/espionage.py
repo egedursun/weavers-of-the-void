@@ -36,6 +36,7 @@ from aerona.engine.lore.research import steal_technique
 from aerona.engine.military.feuds import house_feud
 from aerona.engine.military.forensics import choose_method, examine
 from aerona.engine.military.sabotage import WIDER_SABOTAGE, wider_choices
+from aerona.engine.military.spies_w52 import disinform, exfiltrate, feed_false, infiltrate, inside, succeeds, watch_agents
 from aerona.engine.military.spy_depth import topology_pct
 from aerona.engine.military.spycraft import (
     agents_of,
@@ -275,7 +276,7 @@ async def incite_uprising_quietly(ctx: TickContext, community: EntityRow) -> boo
 async def gather(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     privacy = await law_param(ctx.session, target.id, LawKind.DATA_PRIVACY, "strictness")
     shield = 1 - (int(privacy) if isinstance(privacy, int) else 0) * ctx.rules.espionage.privacy_pct / PERCENT / PERCENT
-    gain = cover_access(network, ctx.rules.espionage.intel_gain) * await ctx.hook_factor(spymaster.id, DomainHook.SPY_DEPTH) * shield
+    gain = inside(ctx, network, cover_access(network, ctx.rules.espionage.intel_gain)) * await ctx.hook_factor(spymaster.id, DomainHook.SPY_DEPTH) * shield
     network.intel = clamp_int(network.intel + round_half_up(gain), 0, PERCENT)
     aims = await reveal_aims(ctx, network, target)
     return await told(ctx, "espionage.intel", spymaster, target, facts={"intel": network.intel, "aims": len(aims)})
@@ -305,9 +306,14 @@ async def counterfeit(ctx: TickContext, spymaster: EntityRow, target: EntityRow,
     return await told(ctx, "espionage.counterfeit", spymaster, target, facts={"currency": coin.name, "trust_lost": ctx.rules.espionage.counterfeit_trust})
 
 
+OPERATIONS.on(SpyOperation.INFILTRATE)(infiltrate)
+OPERATIONS.on(SpyOperation.EXFILTRATE)(exfiltrate)
+OPERATIONS.on(SpyOperation.DISINFORM)(disinform)
+
+
 async def perform_operation(ctx: TickContext, spymaster: EntityRow, target: EntityRow, operation: SpyOperation) -> str:
     network = await network_for(ctx, spymaster, target, None)
-    text = await OPERATIONS[operation](ctx, spymaster, target, network)
+    text = await OPERATIONS[operation](ctx, spymaster, target, network) if await succeeds(ctx, network, operation) else None
     if text is None and operation is not SpyOperation.INTEL:
         text = await gather(ctx, spymaster, target, network)
     found = 1 + await sensed(ctx.session, ctx.rules, target.id, AGENTS, ctx.rules.senses.agents_pct)
@@ -376,12 +382,14 @@ async def deepen(ctx: TickContext, network: SpyNetworkRow) -> None:
     skill = await skill_level(ctx.session, network.spymaster_entity_id, SkillKind.INTRIGUE) if network.spymaster_entity_id is not None else 0
     if "depth" not in network.locked:
         gain = round_half_up(rules.depth_gain * (1 + skill / PERCENT) * await topology_pct(ctx, network) / PERCENT)
-        network.depth = clamp_int(network.depth + cover_access(network, gain), 0, PERCENT)
+        network.depth = clamp_int(network.depth + round_half_up(inside(ctx, network, cover_access(network, gain))), 0, PERCENT)
     ctx.count("agents_retired", await retire_agents(ctx, network))
     if "agents" not in network.locked and await recruit(ctx, network) is not None:
         network.agents += 1
     network.intel = clamp_int(network.intel + round_half_up(rules.intel_gain * network.depth / PERCENT), 0, PERCENT)
     network.exposure = clamp_int(network.exposure - rules.exposure_decay, 0, PERCENT)
+    ctx.count("agents_watched", await watch_agents(ctx, network))
+    ctx.count("false_reports_fed", await feed_false(ctx, network))
 
 
 async def caught_chance(ctx: TickContext, network: SpyNetworkRow, target: EntityRow) -> float:

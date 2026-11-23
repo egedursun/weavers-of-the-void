@@ -95,6 +95,7 @@ ENTITY_FLAG = total(
             checked_by=("engine.phases.settlements.ruins_in", "services.wiki.event_markers"),
             used_by=(
                 "catalog.gatherings.EXCAVATION_FLAGS",
+                "engine.agrarian.rebuilding_ways.leave_ruin",
                 "engine.cosmos.world_ends.lives_end",
                 "engine.environment.places.KindClues.load",
                 "engine.folkways.purity.DEFILED_PLACES",
@@ -112,6 +113,8 @@ ENTITY_FLAG = total(
                 "engine.structures.backfill.backfill_structures",
                 "engine.structures.construction.abandon",
                 "engine.structures.damage.harm",
+                "engine.structures.leftovers.abandon_work",
+                "engine.structures.leftovers.dismantle",
                 "engine.structures.upkeep.fall_to_ruin",
                 "services.player.assignments.ASSIGNABLE_FLAGS",
                 "services.wiki.event_markers",

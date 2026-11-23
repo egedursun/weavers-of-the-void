@@ -1,18 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.travel import RouteEnvironment, TravelMechanism, TravelMedium
-
-ROUTE_ENVIRONMENT = total(
-    RouteEnvironment,
-    {
-        RouteEnvironment.SEA: Defined("Sea", checked_by=(), used_by=("engine.cosmos.encounters.ENVIRONMENTS",)),
-        RouteEnvironment.LAND: Defined("Land", checked_by=(), used_by=("engine.cosmos.encounters.ENVIRONMENTS",)),
-        RouteEnvironment.AIR: Defined("Air", checked_by=(), used_by=("engine.cosmos.encounters.ENVIRONMENTS",)),
-        RouteEnvironment.SPACE: Defined("Space", checked_by=(), used_by=("engine.cosmos.encounters.ENVIRONMENTS",)),
-        RouteEnvironment.RIFT: Defined("Rift", checked_by=(), used_by=("engine.cosmos.encounters.ENVIRONMENTS",)),
-        RouteEnvironment.NETWORK: Defined("Network", checked_by=(), used_by=("engine.cosmos.encounters.ENVIRONMENTS",)),
-    },
-)
+from aerona.domain.enums.travel import TravelMechanism, TravelMedium
 
 TRAVEL_MECHANISM = total(
     TravelMechanism,

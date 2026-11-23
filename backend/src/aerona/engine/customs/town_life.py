@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.life.customs import PURPOSE_FOR_COOP_PURPOSES
+from aerona.catalog.life.customs import COOP_GAINS, PURPOSE_FOR_COOP_PURPOSES
 from aerona.catalog.life_traits import COOP_PURPOSE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -15,7 +15,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.customs import CoopPurpose
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.life_traits import CoopPurposeTrait
 from aerona.domain.enums.mind import PressureKind
@@ -26,6 +26,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.customs.relief import RELIEVING
 from aerona.engine.economy.purse import give_coin, take_coin
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mortal.standing import add_renown
@@ -39,6 +40,9 @@ TAVERN_KINDS = frozenset({StructureKind.TAVERN, StructureKind.INN})
 WELFARE_KINDS = frozenset({StructureKind.ALMSHOUSE, StructureKind.ORPHANAGE, StructureKind.HOSPITAL})
 WORKING = having(COOP_PURPOSE_TRAITS, CoopPurposeTrait.WORKING)
 THOUSAND = 1000
+
+
+TEN = 10
 
 
 @dataclass
@@ -160,6 +164,10 @@ async def purpose_for(ctx: TickContext, town: EntityRow) -> CoopPurpose:
             await ctx.session.execute(select(CommunityStockRow.commodity, CommunityStockRow.quantity).where(CommunityStockRow.community_entity_id == town.id))
         ).all()
     )
+    if (await pressures_of(ctx.session, town.id)).get(PressureKind.HUNGER, 0) >= ctx.rules.cooperatives.found_from:
+        return CoopPurpose.GRANARY
+    if stocks.get(CommodityKind.LIVESTOCK, 0):
+        return CoopPurpose.HERDING
     if stocks.get(CommodityKind.FISH, 0):
         return CoopPurpose.BOATS
     if stocks.get(CommodityKind.GRAIN, 0):
@@ -245,13 +253,31 @@ async def keep_cooperatives(ctx: TickContext, tally: TownLifeTally) -> None:
             row.members = members
         if "pool" not in row.locked:
             paying = await members_of(ctx, faction)
+            gain = getattr(ctx.rules.coops, COOP_GAINS[row.purpose])
             if row.purpose in RELIEVING:
-                row.pool -= await pay_out(ctx, paying, row.pool, table.payout)
+                row.pool -= await pay_out(ctx, paying, row.pool, table.payout * gain // TEN)
             row.pool += await collect_dues(ctx, paying, table.dues)
         home = await ctx.session.get(EntityRow, faction.location_id) if faction.location_id is not None else None
+        gain = getattr(ctx.rules.coops, COOP_GAINS[row.purpose])
         if home is not None and row.purpose in WORKING and row.members > 0 and not held(home.id):
-            shift_stat(home, "prosperity", table.relief / 10, low=0, high=PERCENT)
+            shift_stat(home, "prosperity", table.relief / TEN * gain / TEN, low=0, high=PERCENT)
+        if home is not None and row.members > 0 and not held(home.id):
+            await keep_stores(ctx, row, home, gain)
         tally.cooperatives += 1
+
+
+async def keep_stores(ctx: TickContext, row: CooperativeRow, home: EntityRow, gain: int) -> None:
+    stocks = goods_of(ctx.session, ctx.epoch)
+    if row.purpose is CoopPurpose.HERDING:
+        await stocks.add(home.id, CommodityKind.LIVESTOCK, row.members * gain // TEN, GoodsFlow.HARVEST)
+        return
+    if row.purpose is not CoopPurpose.GRANARY or (await pressures_of(ctx.session, home.id)).get(PressureKind.HUNGER, 0) <= 0:
+        return
+    given = min(row.pool, row.members * gain // TEN) if "pool" not in row.locked else row.members * gain // TEN
+    if given > 0:
+        await stocks.add(home.id, CommodityKind.GRAIN, given, GoodsFlow.AID)
+        if "pool" not in row.locked:
+            row.pool -= given
 
 
 async def keep_town_life(ctx: TickContext, tally: TownLifeTally) -> None:

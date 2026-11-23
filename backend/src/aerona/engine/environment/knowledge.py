@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life_traits import CARRYING_ROUTES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderTechniqueRow, ItemProfileRow
@@ -14,7 +15,6 @@ from aerona.db.tables.region import PolityMapKnowledgeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass, Technique
-from aerona.domain.enums.economy import TradeRouteStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
@@ -120,7 +120,7 @@ async def _floors(session: AsyncSession, rules: Rules, atlas: RegionAtlas) -> tu
 
 async def _trade_roads(session: AsyncSession, rules: Rules, atlas: RegionAtlas, floors: Floors) -> None:
     routes = await session.execute(
-        select(TradeRouteProfileRow.first_market_id, TradeRouteProfileRow.second_market_id).where(TradeRouteProfileRow.status == TradeRouteStatus.OPEN)
+        select(TradeRouteProfileRow.first_market_id, TradeRouteProfileRow.second_market_id).where(TradeRouteProfileRow.status.in_(CARRYING_ROUTES))
     )
     for first, second in routes.all():
         path = atlas.region_path(atlas.top_region(first), atlas.top_region(second)) or []

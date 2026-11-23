@@ -986,6 +986,8 @@ export const STATE_SPEC: Record<ConstructionState, Spec> = {
   complete: { label: 'Standing', icon: Building, tone: 'success' },
   damaged: { label: 'Damaged', icon: Wrench, tone: 'warning' },
   ruined: { label: 'Ruined', icon: Skull, tone: 'danger' },
+  abandoned: { label: 'Left unfinished', icon: Construction, tone: 'warning' },
+  dismantled: { label: 'Taken apart', icon: Hammer, tone: 'muted' },
 }
 
 export const BUILDER_SPEC: Record<BuilderKind, Spec> = {

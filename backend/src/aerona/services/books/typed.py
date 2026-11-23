@@ -7,20 +7,24 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, Select, inspect, select
+from sqlalchemy import JSON, Boolean, Date, DateTime, Select, Table, inspect, select
 from sqlalchemy import column as loose_column
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapper
 from sqlalchemy.sql.elements import ColumnElement, KeyedColumnElement
 
 from aerona.cartography.biomes import Biome
+from aerona.catalog.season_positions import SEASON_POSITIONS, SeasonPosition
 from aerona.core.grammar import singular, spoken
 from aerona.db.base import Base
 from aerona.db.profile_guard import LOCK_COLUMN, shape_of_table, table_name
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.ledger import LedgerChangeRow
 from aerona.db.tables.lore import MessageRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.climes import DIRECTIONS
+from aerona.domain.enums.environment import SeasonDating, WorldLink
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.services.books.genome_text import genome_text
 from aerona.services.books.kind_tables import KIND_TABLES
@@ -318,9 +322,16 @@ def _rows(mapper: Mapper[Any], table: str) -> Select[Any]:
     return statement.where(found) if found is not None else statement
 
 
+SEASON_COLUMNS: dict[tuple[str, str], SeasonPosition] = {
+    (position.table, position.column): position for position in SEASON_POSITIONS if position.dating is SeasonDating.POSITION
+}
+
+
 class TypedIndex:
     def __init__(self, names: dict[int, str]) -> None:
         self.names = names
+        self.seasons: dict[int, dict[int, str]] = defaultdict(dict)
+        self.worlds_of: dict[int, int] = {}
         self.sections: dict[int, list[TypedSection]] = defaultdict(list)
         self.records: list[RecordTable] = []
         self.references: dict[str, dict[int, str]] = {}
@@ -343,6 +354,18 @@ class TypedIndex:
                 continue
             self.references[table] = {row.id: label(row, self.names) for row in await session.scalars(select(mapper.class_))}
 
+    async def load_seasons(self, session: AsyncSession) -> None:
+        for season in await session.scalars(select(WorldSeasonRow).order_by(WorldSeasonRow.world_id, WorldSeasonRow.position)):
+            self.seasons[season.world_id][season.position] = season.name
+        rows = await session.execute(select(EntityRow.id, EntityRow.world_id).where(EntityRow.world_id.is_not(None)))
+        self.worlds_of = {entity_id: world_id for entity_id, world_id in rows.all() if world_id is not None}
+
+    def season_name(self, position: SeasonPosition, row: Any, value: int) -> str:
+        through = getattr(row, position.through, None)
+        world = through if position.link is WorldLink.WORLD else self.worlds_of.get(through) if isinstance(through, int) else None
+        named = self.seasons.get(world, {}).get(value) if isinstance(world, int) else None
+        return named or f"season {value + 1}"
+
     def reference(self, column: KeyedColumnElement[Any], value: int) -> str:
         target = next((foreign.column.table.name for foreign in column.foreign_keys), None)
         if target is None or target in NAMED_TABLES:
@@ -353,6 +376,7 @@ class TypedIndex:
     async def load(cls, session: AsyncSession, names: dict[int, str]) -> "TypedIndex":
         index = cls(names)
         await index.load_references(session)
+        await index.load_seasons(session)
         for mapper in sorted(Base.registry.mappers, key=table_name):
             table = table_name(mapper)
             if table in SKIPPED_TABLES or table in KIND_TABLES:
@@ -385,7 +409,7 @@ class TypedIndex:
         columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS or column.primary_key]
         table = RecordTable(title_of(table_name(mapper)), [words(column.key) for column in columns])
         for row in rows:
-            table.rows.append([self.value(column, attribute_of(row, column)) for column in columns])
+            table.rows.append([self.value(column, attribute_of(row, column), row) for column in columns])
         filled = [index for index in range(len(columns)) if any(row[index] for row in table.rows)]
         if table.rows and filled:
             table.headers = [table.headers[index] for index in filled]
@@ -395,17 +419,20 @@ class TypedIndex:
     def _section(self, table: str, columns: list[KeyedColumnElement[Any]], rows: list[Any], single: bool) -> TypedSection:
         section = TypedSection(title_of(table))
         if single and len(rows) == 1:
-            section.facts = [TypedFact(words(column.key), text) for column in columns if (text := self.value(column, attribute_of(rows[0], column)))]
+            section.facts = [TypedFact(words(column.key), text) for column in columns if (text := self.value(column, attribute_of(rows[0], column), rows[0]))]
             return section
         for row in rows:
-            parts = [f"{words(column.key)}: {text}" for column in columns if (text := self.value(column, attribute_of(row, column)))]
+            parts = [f"{words(column.key)}: {text}" for column in columns if (text := self.value(column, attribute_of(row, column), row))]
             if parts:
                 section.rows.append(" · ".join(parts))
         return section
 
-    def value(self, column: KeyedColumnElement[Any], value: Any) -> str:
+    def value(self, column: KeyedColumnElement[Any], value: Any, row: Any = None) -> str:
         if value is None:
             return ""
+        season = SEASON_COLUMNS.get((column.table.name, column.key)) if isinstance(column.table, Table) else None
+        if season is not None and row is not None and isinstance(value, int) and not isinstance(value, bool):
+            return self.season_name(season, row, value)
         if isinstance(value, int) and not isinstance(value, bool) and (column.foreign_keys or column.key.endswith(NODE_SUFFIXES)):
             return self.reference(column, value)
         named = NAMED_NUMBERS.get(column.key)

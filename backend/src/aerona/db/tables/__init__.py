@@ -56,6 +56,7 @@ from aerona.db.tables.arts import (
 )
 from aerona.db.tables.belief_depth import SourceTrustRow
 from aerona.db.tables.belonging import (
+    FugitiveRow,
     HeldIdentityRow,
     PeerGroupRow,
     PeerMemberRow,
@@ -738,6 +739,7 @@ from aerona.db.tables.society import (
 from aerona.db.tables.society_depth import (
     ClassStandingRow,
     CommunityNeedRow,
+    CommunityShortfallRow,
     CorveeRow,
     DriftCauseRow,
     DriftImpositionRow,
@@ -910,6 +912,7 @@ __all__ = [
     "CommunityMethodRow",
     "CommunityNeedRow",
     "CommunityRelationRow",
+    "CommunityShortfallRow",
     "CommunitySocietyRow",
     "CommunityStockRow",
     "CommuteRow",
@@ -1110,6 +1113,7 @@ __all__ = [
     "FortuneSourceRow",
     "FossilBedRow",
     "FoundingMythRow",
+    "FugitiveRow",
     "FurnishingKindRow",
     "GalacticEventRow",
     "GalacticStructureRow",

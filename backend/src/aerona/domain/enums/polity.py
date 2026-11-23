@@ -74,6 +74,7 @@ class RegionalStanding(StrEnum):
     GREAT_POWER = "great_power"
     MINOR_POWER = "minor_power"
     CLIENT = "client"
+    NEUTRAL = "neutral"
 
 
 class RevoltKind(StrEnum):
@@ -103,6 +104,7 @@ class SuccessionRule(StrEnum):
     BY_COMBAT = "by_combat"
     DIVINE_CHOICE = "divine_choice"
     ULTIMOGENITURE = "ultimogeniture"
+    DESIGNATION = "designation"
 
 
 class SexRule(StrEnum):
@@ -123,6 +125,9 @@ class LawArea(StrEnum):
     PUBLIC_HEALTH = "public_health"
     MAGIC = "magic"
     CONSTITUTIONAL = "constitutional"
+    COMMERCE = "commerce"
+    FAITH = "faith"
+    LABOUR = "labour"
 
 
 class LawKind(StrEnum):
@@ -214,6 +219,8 @@ class ClaimBasis(StrEnum):
     DIVINE = "divine"
     FABRICATED = "fabricated"
     DE_JURE = "de_jure"
+    ELECTION = "election"
+    ADOPTION = "adoption"
 
 
 class HouseTrait(StrEnum):
@@ -244,6 +251,7 @@ class OathKind(StrEnum):
     NONVIOLENCE = "nonviolence"
     FIDELITY = "fidelity"
     SECRECY = "secrecy"
+    TESTIMONY = "testimony"
 
 
 class OathStatus(StrEnum):
@@ -284,6 +292,7 @@ class TreatyStatus(StrEnum):
     EXPIRED = "expired"
     PROPOSED = "proposed"
     REJECTED = "rejected"
+    SUSPENDED = "suspended"
 
 
 class ClauseKind(StrEnum):
@@ -321,6 +330,7 @@ class PartyRole(StrEnum):
     OVERLORD = "overlord"
     VASSAL = "vassal"
     GUARANTOR = "guarantor"
+    MEDIATOR = "mediator"
 
 
 CLOSURES = frozenset({LawKind.CLOSED_SEASON, LawKind.PROTECTED_WATERS, LawKind.CATCH_QUOTA, LawKind.GEAR_BAN})
@@ -345,6 +355,7 @@ class OathBreach(StrEnum):
     LOVER_TAKEN = "a_lover_was_taken"
     THRONE_SEIZED = "the_throne_was_seized"
     MEMBER_BROKE_AWAY = "a_member_broke_away"
+    FALSE_WITNESS = "false_witness_was_borne"
     TOWN_REVOLTED = "a_town_rose_in_revolt"
     SECRETS_TOLD = "secrets_were_told"
     SECRETS_WRUNG = "secrets_were_wrung_out"

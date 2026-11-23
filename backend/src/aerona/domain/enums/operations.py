@@ -63,6 +63,14 @@ class CrewStation(StrEnum):
     MARINES = "marines"
     OFFICERS = "officers"
     ROWERS = "rowers"
+    PILOTS = "pilots"
+    ENGINEERS = "engineers"
+    SENSOR_OPERATORS = "sensor_operators"
+    MEDICS = "medics"
+    HANDLERS = "handlers"
+    LINK_OPERATORS = "link_operators"
+    CASTERS = "casters"
+    NAVIGATORS = "navigators"
 
 
 class ExpeditionRole(StrEnum):

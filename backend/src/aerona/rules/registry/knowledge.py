@@ -6,6 +6,9 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class KnowledgeRules:
+    exchange_fairness_pct: int = rule(
+        80, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Worth a holding of knowledge offered in exchange must reach against the one sought (%)"
+    )
     song_value: int = rule(100, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a song against ordinary knowledge (%)")
     art_form_value: int = rule(100, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing an art form against ordinary knowledge (%)")
     rite_value: int = rule(100, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a rite against ordinary knowledge (%)")

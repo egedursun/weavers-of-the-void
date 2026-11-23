@@ -57,7 +57,7 @@ line-length = 160
 target-version = "py313"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "ASYNC", "PL", "N"]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "ASYNC", "PL", "N", "PIE794"]
 ignore = ["PLR0913", "PLR2004"]
 
 [tool.mypy]

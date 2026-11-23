@@ -2861,6 +2861,13 @@ ECONOMY_ACTIONS = (
         ("S4.1", "S4.9"),
     ),
     _sync(Meta("labour:set", "Hold or release the workers of a trade", G.SOCIETY), society_depth.set_labour, society_depth.SetLabour, free, ("S4.1", "S4.9")),
+    _sync(
+        Meta("shortfall:set", "Hold or release a community's want of a need", G.SOCIETY),
+        society_depth.hold_shortfall,
+        society_depth.HoldShortfall,
+        free,
+        ("52.216",),
+    ),
     _sync(Meta("labour:corvee", "Impose or lift a corvee", G.SOCIETY), society_depth.set_corvee, society_depth.SetCorvee, free, ("S4.9",)),
     _sync(
         Meta("loyalty:edit", "Set a member's grievances, benefits and loyalty", G.SOCIETY),
@@ -4121,6 +4128,9 @@ BELONGING_ACTIONS = (
     _sync(
         Meta("peer_member:delete", "Strike a member of a peer group", G.SOCIETY), belonging.peer_member_delete, belonging.PeerMemberTarget, free, ("S3.1/RP6",)
     ),
+    _sync(Meta("fugitive:create", "Set a mortal to flight", G.SOCIETY), belonging.fugitive_create, belonging.FugitiveDraft, free, ("52.240",)),
+    _sync(Meta("fugitive:edit", "Edit a fugitive", G.SOCIETY), belonging.fugitive_edit, belonging.FugitiveEdit, free, ("52.240",)),
+    _sync(Meta("fugitive:delete", "End a flight", G.SOCIETY), belonging.fugitive_delete, belonging.FugitiveTarget, free, ("52.240",)),
     _sync(Meta("sanctuary:create", "Make a sanctuary", G.SOCIETY), belonging.sanctuary_create, belonging.SanctuaryDraft, free, ("S4.4/RP6",)),
     _sync(Meta("sanctuary:edit", "Edit a sanctuary", G.SOCIETY), belonging.sanctuary_edit, belonging.SanctuaryEdit, free, ("S4.4/RP6",)),
     _sync(Meta("sanctuary:delete", "Strike a sanctuary", G.SOCIETY), belonging.sanctuary_delete, belonging.SanctuaryTarget, free, ("S4.4/RP6",)),

@@ -4,12 +4,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.identity import POINTED_LAYERS
 from aerona.catalog.lore import slot_fit
 from aerona.catalog.marks import MARKS
+from aerona.catalog.pacts import LORE_PRICES, THIRD_PARTY_STATES
 from aerona.catalog.revivals import REVIVAL_WAYS
 from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.customs import BodyMarkRow, RevivalRow
 from aerona.db.tables.made import AugmentRow
 from aerona.db.tables.node import NodeRow
+from aerona.db.tables.renown import DeedClaimRow, LoreTradeRow
+from aerona.db.tables.statecraft import CrisisRow
+from aerona.domain.enums.renown import ClaimStatus, ServiceTask
+from aerona.domain.enums.statecraft import CrisisState
 
 POINTED = POINTED_LAYERS
 
@@ -70,3 +75,41 @@ async def slot_tradition(session: AsyncSession, key: int) -> None:
     row = await session.get(TraditionProfileRow, key)
     if row is not None and "calendar_slot" not in row.locked:
         row.calendar_slot = slot_fit(row.kind, row.stage)
+
+
+async def unnamed_mediations(session: AsyncSession) -> list[int]:
+    rows = await session.scalars(
+        select(CrisisRow.id).where(CrisisRow.state.in_(list(THIRD_PARTY_STATES)), CrisisRow.mediator_entity_id.is_(None)).order_by(CrisisRow.id)
+    )
+    return list(rows)
+
+
+async def reopen_unnamed_mediation(session: AsyncSession, key: int) -> None:
+    row = await session.get(CrisisRow, key)
+    if row is not None and "state" not in row.locked:
+        row.state, row.resolved_epoch = CrisisState.ESCALATING, None
+
+
+async def lone_disputes(session: AsyncSession) -> list[int]:
+    rows = await session.scalars(
+        select(DeedClaimRow.id).where(DeedClaimRow.status == ClaimStatus.DISPUTED, DeedClaimRow.contested_by_node_id.is_(None)).order_by(DeedClaimRow.id)
+    )
+    return list(rows)
+
+
+async def settle_lone_dispute(session: AsyncSession, key: int) -> None:
+    row = await session.get(DeedClaimRow, key)
+    if row is not None and "status" not in row.locked:
+        row.status = ClaimStatus.STANDING
+
+
+async def taskless_services(session: AsyncSession) -> list[int]:
+    deferred = [price for price, spec in LORE_PRICES.items() if spec.deferred]
+    rows = await session.scalars(select(LoreTradeRow.id).where(LoreTradeRow.price.in_(deferred), LoreTradeRow.task.is_(None)).order_by(LoreTradeRow.id))
+    return list(rows)
+
+
+async def name_service_task(session: AsyncSession, key: int) -> None:
+    row = await session.get(LoreTradeRow, key)
+    if row is not None:
+        row.task = next(iter(ServiceTask))

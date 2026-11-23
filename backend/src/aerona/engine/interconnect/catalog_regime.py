@@ -93,7 +93,11 @@ REGIME_MECHANICS = (
         backfill="patronage: ties are read from favours owed and appointments on the first epoch after the upgrade",
         tables=(PatronageTieRow.__tablename__, RegimeRow.__tablename__),
         exposure=Exposure.TOOL,
-        tools=("seek_patron",),
+        tools=(
+            "seek_patron",
+            "take_client",
+            "designate_heir",
+        ),
         targets=("mortal", "house", "polity"),
         couplings=(
             Coupling(S.POLITY, "clients of the appointer are favoured where institutions are weak", E.MODIFIER, "clientelism.client_bonus"),

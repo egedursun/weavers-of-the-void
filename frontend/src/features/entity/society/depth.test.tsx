@@ -71,8 +71,9 @@ const DEPTH = {
     },
   ],
   effects: [
-    { effect: 'hunger', short_pct: 14 },
-    { effect: 'sickness', short_pct: 80 },
+    { effect: 'hunger', short_pct: 14, held: false },
+    { effect: 'sickness', short_pct: 80, held: false },
+    { effect: 'thirst', short_pct: 60, held: true },
   ],
   labour_reasons: [
     {
@@ -87,6 +88,22 @@ const DEPTH = {
       job: 'mining',
       reason: 'no_structure',
       workers: -50,
+      commodity: null,
+      workshop: null,
+      price_pct: 100,
+    },
+    {
+      job: 'farming',
+      reason: 'law',
+      workers: 400,
+      commodity: null,
+      workshop: null,
+      price_pct: 100,
+    },
+    {
+      job: 'mining',
+      reason: 'skill',
+      workers: 25,
       commodity: null,
       workshop: null,
       price_pct: 100,
@@ -282,6 +299,30 @@ describe('society depth sections', () => {
       social_class: 'farmer',
       commodity: 'medicine',
       held_pct: 100,
+    })
+  })
+
+  it('tags workers kept by law and drawn by skill', async () => {
+    serve()
+    const { screen } = await renderApp(<LabourDepth communityId={30} />)
+    await expect.element(screen.getByText('By law +400')).toBeVisible()
+    await expect.element(screen.getByText('By skill +25')).toBeVisible()
+  })
+
+  it('shows thirst as held and holds a want of shelter', async () => {
+    serve()
+    onApi('POST', '/api/actions/shortfall:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<NeedsSection communityId={30} />)
+    await expect.element(screen.getByText('Thirst (held)')).toBeVisible()
+    await screen.getByRole('button', { name: 'Adjust' }).click()
+    await screen.getByRole('button', { name: 'Hold this want' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/shortfall:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/shortfall:set')[0].body).toEqual({
+      community_id: 30,
+      effect: 'thirst',
+      short_pct: 0,
     })
   })
 

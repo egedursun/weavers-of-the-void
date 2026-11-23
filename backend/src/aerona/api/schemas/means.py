@@ -294,3 +294,5 @@ class HonoursNodeView(ApiModel):
     units: list[NamedUnitView]
     choices: list[ArmyUnitChoice]
     grants: list[VeteranGrantView]
+    policy: VeteranGrant | None = None
+    policy_locked: bool = False

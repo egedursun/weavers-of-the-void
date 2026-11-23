@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.conditions import AIDED_CONDITIONS
-from aerona.catalog.life.crafts import FROM_SKILL
+from aerona.catalog.life.crafts import AID_NEEDS, FROM_SKILL
 from aerona.catalog.life_traits import ASSISTIVE_AID_TRAITS, having
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.crafts import AssistiveAidRow
@@ -57,7 +57,7 @@ async def fit(ctx: TickContext, tally: AidTally) -> None:
         if mortal is None or mortal.entity_type is not EntityType.MORTAL or mortal.status is not EntityStatus.CANON or mortal.location_id is None:
             continue
         town = await ctx.session.get(EntityRow, mortal.location_id)
-        if town is None or (kind in GROUND_LENS and not await knows(ctx, town, LENSES)):
+        if town is None or (kind in GROUND_LENS and not await knows(ctx, town, LENSES)) or not await knows(ctx, town, AID_NEEDS[kind]):
             continue
         if not ctx.rng(seed_of("aid", holder_id, kind.value, ctx.epoch)).chance(table.fit_chance):
             continue

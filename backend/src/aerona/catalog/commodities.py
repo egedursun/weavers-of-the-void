@@ -8,6 +8,7 @@ from aerona.domain.enums.economy import CommodityFamily, CommodityKind
 from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity
+from aerona.rules.model import keyed
 from aerona.rules.registry import Rules
 
 C = CommodityKind
@@ -167,6 +168,31 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 consumption=lambda rules: rules.consumption.magical_reagents_per_1000,
                 strategic=True,
             ),
+            CommoditySpec(C.OIL, "Oil", F.SUBSISTENCE, Commodity.FOOD, 120, 6, materials=(M.RESIN,), consumption=lambda rules: rules.consumption.oil_per_1000),
+            CommoditySpec(C.SUGAR, "Sugar", F.LUXURY, Commodity.FOOD, 160, 5, materials=(), consumption=lambda rules: rules.consumption.sugar_per_1000),
+            CommoditySpec(C.SPICE, "Spice", F.LUXURY, Commodity.GOODS, 280, materials=(), consumption=lambda rules: rules.consumption.spice_per_1000),
+            CommoditySpec(
+                C.HALITE,
+                "Halite",
+                F.STRATEGIC,
+                Commodity.GOODS,
+                110,
+                materials=(M.HALITE,),
+                consumption=lambda rules: rules.consumption.halite_per_1000,
+                strategic=True,
+            ),
+            CommoditySpec(C.HONEY, "Honey", F.LUXURY, Commodity.FOOD, 150, 6, materials=(), consumption=lambda rules: rules.consumption.honey_per_1000),
+            CommoditySpec(C.WAX, "Wax", F.INDUSTRIAL, Commodity.GOODS, 120, materials=(), consumption=lambda rules: rules.consumption.wax_per_1000),
+            CommoditySpec(
+                C.POTTERY,
+                "Pottery",
+                F.SUBSISTENCE,
+                Commodity.GOODS,
+                70,
+                materials=(M.CERAMIC, M.CLAY),
+                consumption=lambda rules: rules.consumption.pottery_per_1000,
+            ),
+            CommoditySpec(C.BOOKS, "Books", F.LUXURY, Commodity.GOODS, 240, materials=(), consumption=lambda rules: rules.consumption.books_per_1000),
         )
     }
 )
@@ -184,3 +210,7 @@ BACKFILL_SPLITS: MappingProxyType[Commodity, tuple[tuple[CommodityKind, int], ..
 
 def commodity_label(kind: CommodityKind) -> str:
     return COMMODITIES[kind].label
+
+
+def base_price(rules: Rules, kind: CommodityKind) -> int:
+    return keyed(rules.goods, kind.value, "base_price")

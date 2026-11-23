@@ -49,6 +49,7 @@ from aerona.engine.settlement.life import (
     warded,
     wear,
 )
+from aerona.engine.settlement.quarters import backfill_camps, keep_quarters
 from aerona.engine.structures.own_effects import act_own_effects
 from aerona.engine.structures.settlement import serve_town
 
@@ -102,6 +103,7 @@ JUSTICE_FULL = 100
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.gardens",
     "table.holder_custom_techniques",
     "table.holder_levels",
     "table.holder_techniques",
@@ -127,6 +129,7 @@ JUSTICE_FULL = 100
     "table.outlaws",
     "table.people_culture",
     "table.place_environment",
+    "table.plague_responses",
     "table.polity_members",
     "table.polity_profiles",
     "table.poor_relief",
@@ -168,6 +171,7 @@ JUSTICE_FULL = 100
     "settlement.population",
     "settlement.prosperity",
     "settlement.wealth",
+    "table.applied_fixups",
     "table.army_profiles",
     "table.bonds",
     "table.case_witnesses",
@@ -208,6 +212,7 @@ async def settlement_life(ctx: TickContext) -> None:
     community = await CommunityBook.load(ctx.session)
     statutes = await LawBook.load(ctx.session)
     weather = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch, atlas)
+    ctx.count("camps_backfilled", await backfill_camps(ctx))
     for settlement in unheld(await canon(ctx.session, [EntityType.SETTLEMENT])):
         town = await town_of(ctx, settlement, knowledge)
         region = atlas.top_region(settlement.id)
@@ -226,6 +231,7 @@ async def settlement_life(ctx: TickContext) -> None:
         await wear(ctx, town)
         foreign = await foreigners(ctx, town)
         ctx.count("built", await build(ctx, town, knowledge, at_war=at_war, foreign=foreign, ground=ground))
+        ctx.count("quarters", await keep_quarters(ctx, town))
         justice = max(community.justice_values(settlement.id), default=0) / JUSTICE_FULL
         bands = await bandits_near(ctx, atlas, town)
         pressure = band_pressure(ctx.rules, atlas, town, bands)

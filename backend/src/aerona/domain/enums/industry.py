@@ -27,6 +27,9 @@ class Pollutant(StrEnum):
     AIR = "air"
     WATER = "water"
     SOIL = "soil"
+    RADIATION = "radiation"
+    NOISE = "noise"
+    LIGHT = "light"
 
 
 class QualityTier(StrEnum):
@@ -60,6 +63,12 @@ class ProcessKind(StrEnum):
     MILKING = "milking"
     SHEARING = "shearing"
     EGG_LAYING = "egg_laying"
+    SMITHING = "smithing"
+    CARPENTRY = "carpentry"
+    FIRING = "firing"
+    DYEING = "dyeing"
+    COPYING = "copying"
+    EVAPORATING = "evaporating"
 
 
 class MethodKind(StrEnum):
@@ -157,6 +166,26 @@ class MethodKind(StrEnum):
     POWER_SHEARS = "power_shears"
     INCUBATORS = "incubators"
     OIL_REFINING = "oil_refining"
+    HAND_FORGE = "hand_forge"
+    TRIP_HAMMER = "trip_hammer"
+    STEAM_HAMMER = "steam_hammer"
+    HAND_JOINERY = "hand_joinery"
+    POLE_LATHE = "pole_lathe"
+    POWER_PLANER = "power_planer"
+    PIT_FIRING = "pit_firing"
+    UPDRAFT_KILN = "updraft_kiln"
+    GLASSBLOWING = "glassblowing"
+    TUNNEL_KILN = "tunnel_kiln"
+    VAT_DYEING = "vat_dyeing"
+    MORDANT_DYEING = "mordant_dyeing"
+    SYNTHETIC_DYEING = "synthetic_dyeing"
+    HAND_COPYING = "hand_copying"
+    SCRIPTORIUM = "scriptorium"
+    COPYING_PRESS = "copying_press"
+    ROTARY_PRESS = "rotary_press"
+    SOLAR_PANS = "solar_pans"
+    BOILING_PANS = "boiling_pans"
+    VACUUM_PANS = "vacuum_pans"
 
 
 class OwnerClass(StrEnum):

@@ -2,6 +2,7 @@ from collections import Counter, defaultdict
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.domain import GONE_STATES
 from aerona.catalog.life.phases import EXPLORER_SKILLS, SEER_SKILLS
 from aerona.catalog.place_terrain import BATTLEFIELD_FROM, DEBRIS_FROM, MEGA_RUIN_FROM, WRECK_FROM, kind_spec
 from aerona.catalog.stats import PERCENT
@@ -18,7 +19,6 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.place import DiscoveryMode, PlaceKind, SecretKind, SecretOrigin
-from aerona.domain.enums.structure import ConstructionState
 from aerona.engine.context import TickContext
 from aerona.engine.environment.place_traits import bathe, collapse_sinkhole, trap_beasts
 from aerona.engine.environment.places import (
@@ -66,7 +66,7 @@ async def fallen_megastructures(ctx: TickContext) -> set[int]:
     atlas = await RegionAtlas.load(ctx.session)
     hosts = await ctx.session.scalars(
         select(StructureProfileRow.host_entity_id).where(
-            StructureProfileRow.kind.in_(list(MEGASTRUCTURES)), StructureProfileRow.construction_state == ConstructionState.RUINED
+            StructureProfileRow.kind.in_(list(MEGASTRUCTURES)), StructureProfileRow.construction_state.in_(list(GONE_STATES))
         )
     )
     return {region for host in hosts if host is not None and (region := atlas.top_region(int(host))) is not None}
@@ -121,6 +121,7 @@ async def send_pilgrims(ctx: TickContext, atlas: RegionAtlas, place: EntityRow, 
     "settlement.population",
     "settlement.prosperity",
     "table.battles",
+    "table.disease_profiles",
     "table.entities",
     "table.entity_flags",
     "table.nodes",

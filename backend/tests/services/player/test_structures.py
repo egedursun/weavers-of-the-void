@@ -124,7 +124,7 @@ async def test_staff_damage_repair_and_abandonment(scope: PlayerScope, session: 
     assert other.target_node_id is not None
     await structures.abandon(scope, structures.Abandon(structure_id=other.target_node_id))
     abandoned = await session.get(StructureProfileRow, other.target_node_id)
-    assert abandoned is not None and abandoned.construction_state is ConstructionState.RUINED
+    assert abandoned is not None and abandoned.construction_state is ConstructionState.ABANDONED
 
 
 async def test_designs_are_created_edited_held_and_retired(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:

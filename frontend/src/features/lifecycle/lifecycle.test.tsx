@@ -153,6 +153,19 @@ describe('lifecycle ends', () => {
               fossil_bed_id: null,
               acquired_epoch: 5,
               looted_from: RIVAL,
+              polity: null,
+              returned_epoch: null,
+              returned_by: null,
+              locked: [],
+            },
+            {
+              id: 6,
+              kind: 'regalia',
+              item: CROWN,
+              fossil_bed_id: null,
+              acquired_epoch: 6,
+              looted_from: null,
+              polity: RIVAL,
               returned_epoch: null,
               returned_by: null,
               locked: [],
@@ -162,6 +175,18 @@ describe('lifecycle ends', () => {
         },
       ],
       gardens: [
+        {
+          id: 8,
+          town: TOWN,
+          structure: null,
+          kind: 'menagerie',
+          species: [FERN],
+          upkeep: 10,
+          condition: 70,
+          unpaid_epochs: 0,
+          founded_epoch: 4,
+          locked: [],
+        },
         {
           id: 7,
           town: TOWN,
@@ -180,10 +205,12 @@ describe('lifecycle ends', () => {
     onApi('POST', '/api/actions/museum_piece:restitute', ACCEPTED_ACTION)
     const { screen } = await renderApp(<GroundsSection nodeId={40} />)
     await expect.element(screen.getByText('Taken from Hollin')).toBeVisible()
+    await expect.element(screen.getByText('Regalia of Hollin')).toBeVisible()
+    await expect.element(screen.getByText('Menagerie').first()).toBeVisible()
     await expect
       .element(screen.getByText('Physic garden').first())
       .toBeVisible()
-    await screen.getByRole('button', { name: 'Give it back' }).click()
+    await screen.getByRole('button', { name: 'Give it back' }).first().click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/museum_piece:restitute'))
       .toHaveLength(1)

@@ -47,6 +47,7 @@ class CrisisRow(Base):
     amount: Mapped[int] = mapped_column(default=0)
     escalation: Mapped[int] = mapped_column(default=0)
     state: Mapped[CrisisState] = mapped_column(enum_type(CrisisState, "state"), default=CrisisState.ESCALATING)
+    mediator_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     opened_epoch: Mapped[int] = mapped_column(default=0)
     resolved_epoch: Mapped[int | None]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

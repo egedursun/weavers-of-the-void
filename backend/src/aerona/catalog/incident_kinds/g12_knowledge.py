@@ -1530,7 +1530,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "writing.lost",
         G.KNOWLEDGE,
-        "{subject} crumbled away with its {medium}; {copies:copy|copies} were left.",
+        "{subject} was lost with its {medium}; {copies:copy|copies} were left.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("medium", FactValue.ENUM, enum=WritingMedium), FactSpec("copies", FactValue.NUMBER, FactUnit.COUNT)),
         clock=ProcessClock.YEAR,

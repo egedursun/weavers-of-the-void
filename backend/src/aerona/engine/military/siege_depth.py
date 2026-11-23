@@ -1,8 +1,8 @@
 from sqlalchemy import select
 
 from aerona.catalog.kinds.siege import STARVATION
-from aerona.catalog.life.military import ACTION_WORKS
 from aerona.catalog.soils import soft
+from aerona.catalog.war_w52 import ENCIRCLING_WORKS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
@@ -15,7 +15,8 @@ from aerona.domain.enums.couplings import FieldAgreementState
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.military import CaptiveFate, CommanderTrait, DefenderAction, SackChoice, SiegeAction, SiegeWork, Stance
+from aerona.domain.enums.honours import UnitHonourKind
+from aerona.domain.enums.military import CaptiveFate, CommanderTrait, DefenderAction, SackChoice, SiegeWork, Stance
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import BuildMaterial, WaterSupply
@@ -26,7 +27,11 @@ from aerona.engine.context import TickContext
 from aerona.engine.couplings.field import break_terms, under_terms
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.faith.book import faith_tenets
+from aerona.engine.honours.units import HonourTally
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.military.captivity import slavery_lawful
+from aerona.engine.military.siege_w52 import breach_from_works, fall_choice, ordered, pace, undo_mines
+from aerona.engine.military.w52_war import honour_army
 from aerona.engine.mind.book import values_for
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -65,23 +70,12 @@ def mining_factor(ctx: TickContext, region: RegionEnvironmentRow | None) -> floa
     return (table.soil_mine_pct if soft(ctx.rules, region.soil) else table.rock_mine_pct) / PERCENT
 
 
-def build_works(ctx: TickContext, siege: SiegeRow, action: SiegeAction) -> list[SiegeWork]:
-    works = dict(siege.works)
-    done: list[SiegeWork] = []
-    for work in ACTION_WORKS.get(action, ()):
-        before = int(works.get(work.value, 0))
-        works[work.value] = min(PERCENT, before + ctx.rules.siege_depth.work_progress)
-        if before < PERCENT <= works[work.value]:
-            done.append(work)
-    siege.works = works
-    return done
-
-
 def countermine(ctx: TickContext, siege: SiegeRow) -> bool:
     works = dict(siege.works)
     if int(works.get(SiegeWork.MINES.value, 0)) <= 0:
         return False
-    works[SiegeWork.COUNTERMINES.value] = min(PERCENT, int(works.get(SiegeWork.COUNTERMINES.value, 0)) + ctx.rules.siege_depth.work_progress)
+    works[SiegeWork.COUNTERMINES.value] = min(PERCENT, int(works.get(SiegeWork.COUNTERMINES.value, 0)) + pace(ctx, SiegeWork.COUNTERMINES))
+    undo_mines(ctx, works)
     if int(works[SiegeWork.COUNTERMINES.value]) >= PERCENT:
         works[SiegeWork.MINES.value] = 0
     siege.works = works
@@ -93,11 +87,11 @@ def finished_works(siege: SiegeRow) -> list[SiegeWork]:
 
 
 def works_breach(ctx: TickContext, siege: SiegeRow) -> float:
-    return len(finished_works(siege)) * ctx.rules.siege_depth.work_breach_pct / PERCENT
+    return len(finished_works(siege)) * ctx.rules.siege_depth.work_breach_pct / PERCENT + breach_from_works(ctx, siege)
 
 
 def encircled(siege: SiegeRow) -> bool:
-    return int(siege.works.get(SiegeWork.CIRCUMVALLATION.value, 0)) >= PERCENT
+    return any(int(siege.works.get(work.value, 0)) >= PERCENT for work in ENCIRCLING_WORKS)
 
 
 async def taboo_holds(ctx: TickContext, besieged: EntityRow) -> bool:
@@ -198,6 +192,7 @@ async def relief_arrived(ctx: TickContext, siege: SiegeRow, besieged: EntityRow,
     if (stat(army, "size") or 0) * 5 < (stat(besiegers, "size") or 0) * 3:
         return False
     siege.status, siege.ended_epoch = SiegeStatus.LIFTED, ctx.epoch
+    await honour_army(ctx, army.id, UnitHonourKind.RELIEF, besieged.name, HonourTally())
     await record(
         ctx,
         "war.siege.relieved",
@@ -209,7 +204,7 @@ async def relief_arrived(ctx: TickContext, siege: SiegeRow, besieged: EntityRow,
 
 
 async def sack_choice(ctx: TickContext, siege: SiegeRow, victor: EntityRow, commander_id: int | None) -> SackChoice:
-    if siege.choice is not None and "choice" in siege.locked:
+    if siege.choice is not None and ("choice" in siege.locked or ordered(ctx, siege)):
         return siege.choice
     table = ctx.rules.siege_depth
     mercy = (await values_for(ctx.session, victor.id)).get(ValueAxis.MERCY, 0)
@@ -229,6 +224,7 @@ async def sack_choice(ctx: TickContext, siege: SiegeRow, victor: EntityRow, comm
             await break_terms(ctx, terms, commander_id or victor.id)
         else:
             choice = SackChoice.MERCY
+    choice = await fall_choice(ctx, siege, victor, choice, bondage=await slavery_lawful(ctx, victor))
     siege.choice = choice
     return choice
 

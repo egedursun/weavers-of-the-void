@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.crafts import ChemicalProduct
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -27,6 +28,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import record
+from aerona.rules.model import keyed
 
 
 @dataclass
@@ -67,7 +69,7 @@ async def run_works(ctx: TickContext, town: EntityRow, row: ChemicalWorksRow, at
     taken = await ledger.take_units(town.id, recipe.raw, wanted, GoodsFlow.INPUT)
     if "output" not in row.locked:
         row.output = clamp_int(row.output + (table.output_gain if taken >= wanted else -table.output_gain), 0, PERCENT)
-    made = row.output // table.yield_per_output
+    made = row.output * keyed(table, row.product.value, "yield") // PERCENT // table.yield_per_output
     if recipe.made is not None and made > 0:
         await ledger.add(town.id, recipe.made, made, GoodsFlow.PRODUCTION)
         tally.made += made
@@ -96,7 +98,13 @@ async def run_works(ctx: TickContext, town: EntityRow, row: ChemicalWorksRow, at
         return
     hurt = rng.pick(workers)
     await apply_hits(
-        ctx, hurt, Harm(damage=table.accident_harm, cause=HarmCause.ACCIDENT, death_cause=f"died in an accident at the works for {spoken(row.product)}")
+        ctx,
+        hurt,
+        Harm(
+            damage=table.accident_harm + (table.acid_harm if row.product is ChemicalProduct.ACID else 0),
+            cause=HarmCause.ACCIDENT,
+            death_cause=f"died in an accident at the works for {spoken(row.product)}",
+        ),
     )
     if "accidents" not in row.locked:
         row.accidents += 1

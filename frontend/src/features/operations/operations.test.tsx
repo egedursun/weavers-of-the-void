@@ -30,6 +30,7 @@ const EMPTY = {
   admiralty: null,
   ship: null,
   crews: [],
+  crew_stations: [],
   quirks: [],
   expeditions: [],
 }
@@ -46,6 +47,7 @@ function serveBase() {
     { kind: 'entity', id: 40, name: 'Varo', type: 'polity', world_id: 1 },
     { kind: 'entity', id: 20, name: 'Long Vale', type: 'region', world_id: 1 },
     { kind: 'entity', id: 60, name: 'Ilse', type: 'mortal', world_id: 1 },
+    { kind: 'entity', id: 70, name: 'Kite', type: 'vessel', world_id: 1 },
   ])
 }
 
@@ -226,5 +228,46 @@ describe('command, supply, ships and expeditions', () => {
       kind: 'hardy',
       source_id: null,
     })
+  })
+  it('mans only the stations a vessel’s sections call for and names each crew', async () => {
+    serveBase()
+    onApi('GET', '/api/operations/of/70', {
+      ...EMPTY,
+      node: { id: 70, kind: 'entity', name: 'Kite' },
+      crews: [{ station: 'pilots', count: 4, skill: 70, locked: [] }],
+      crew_stations: ['navigators', 'pilots', 'gunners'],
+    })
+    onApi('POST', '/api/actions/ship_crew:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<OperationsSection nodeId={70} />)
+    await expect.element(screen.getByText('Pilots').first()).toBeVisible()
+    await expect.element(screen.getByText('4 at the station')).toBeVisible()
+    await screen
+      .getByRole('button', { name: 'Man the station', exact: true })
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/ship_crew:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/ship_crew:set')[0].body).toEqual({
+      vessel_id: 70,
+      station: 'navigators',
+      count: 20,
+      skill: 40,
+    })
+  })
+
+  it('keeps the station control with its reason when no section calls for a crew', async () => {
+    serveBase()
+    onApi('GET', '/api/operations/of/70', {
+      ...EMPTY,
+      node: { id: 70, kind: 'entity', name: 'Kite' },
+    })
+    const { screen } = await renderApp(<OperationsSection nodeId={70} />)
+    await expect
+      .element(
+        screen.getByRole('button', { name: 'Man the station', exact: true })
+      )
+      .toHaveAccessibleDescription(
+        'No section of this vessel calls for that station'
+      )
   })
 })

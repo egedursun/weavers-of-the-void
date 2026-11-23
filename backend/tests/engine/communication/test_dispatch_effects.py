@@ -19,7 +19,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.services.community_relations import change_relation, relation
 from tests.engine.society.factories import Realm, context, make, mortal, settlement, tuned
 
-HOSTILE = tuned(communication={"envoy_harm_pct": 100})
+HOSTILE = tuned(communication={"envoy_harm_pct": 100}, dispatches={"misread_pct": 100})
 
 
 async def deliver_now(realm: Realm, row: MessageRow | None) -> DispatchTally:
@@ -50,7 +50,7 @@ async def test_a_hostile_court_mistreats_envoys_and_each_fate_has_its_consequenc
         row = await send(ctx, sender.id, court.id, DispatchContent.PLEA, Medium.ENVOY, envoy_id=envoy.id)
         tally = await deliver_now(realm, row)
         assert row is not None and row.state is DispatchState.DELIVERED and tally.envoys_harmed == 1
-        assert row.envoy_fate in {EnvoyFate.INSULTED, EnvoyFate.IMPRISONED, EnvoyFate.KILLED}
+        assert row.envoy_fate in {EnvoyFate.INSULTED, EnvoyFate.IMPRISONED, EnvoyFate.KILLED, EnvoyFate.EXPELLED}
         fates[row.envoy_fate] = envoy.id
         if row.envoy_fate is EnvoyFate.IMPRISONED:
             assert await realm.session.scalar(select(CaptiveRow).where(CaptiveRow.captive_entity_id == envoy.id)) is not None

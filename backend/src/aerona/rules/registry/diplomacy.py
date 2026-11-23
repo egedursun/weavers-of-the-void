@@ -6,6 +6,17 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class DiplomacyRules:
+    neutral_trade_pct: int = rule(
+        10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Tenths of prosperity a neutral realm's seat gains for each realm of its world at war, trading with all sides"
+    )
+    neutral_declare_pct: int = rule(
+        10,
+        0,
+        100,
+        RuleGroup.WAR_AND_DIPLOMACY,
+        "Chance each epoch a minor realm with no alliance declares itself neutral while two or more realms of its world are at war (%)",
+    )
+    neutral_breach_alarm: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Alarm every realm of a world feels at one that makes war on a neutral realm")
     grudge_threshold: int = rule(-60, -100, 0, RuleGroup.WAR_AND_DIPLOMACY, "Neighbours below this relation may declare war")
     peace_threshold: int = rule(-15, -100, 100, RuleGroup.WAR_AND_DIPLOMACY, "Enemies above this relation may make peace")
     alliance_threshold: int = rule(55, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Neighbours above this relation may become allies")

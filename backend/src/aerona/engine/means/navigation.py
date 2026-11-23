@@ -2,7 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.means import AIDS
+from aerona.catalog.kinds.trade_modes import NAVIGATED_MODES
+from aerona.catalog.means import AIDS, BEACON_WORKS, aid_cut
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import TradeRouteProfileRow
@@ -10,15 +11,18 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.means import NavigationKitRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.space_weather import WorldFieldRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.economy import TradeMode
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.means import NavigationAid
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import InstrumentKind, StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.forecasting.reading import observation_bonus
+from aerona.engine.means.media import powered
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import StepDraft, record
@@ -35,8 +39,8 @@ class NavigationTally:
 async def ports(ctx: TickContext) -> list[EntityRow]:
     ends = (
         select(TradeRouteProfileRow.first_market_id)
-        .where(TradeRouteProfileRow.mode == TradeMode.SEA)
-        .union(select(TradeRouteProfileRow.second_market_id).where(TradeRouteProfileRow.mode == TradeMode.SEA))
+        .where(TradeRouteProfileRow.mode.in_(NAVIGATED_MODES))
+        .union(select(TradeRouteProfileRow.second_market_id).where(TradeRouteProfileRow.mode.in_(NAVIGATED_MODES)))
     )
     found = await ctx.session.scalars(
         select(EntityRow)
@@ -46,14 +50,33 @@ async def ports(ctx: TickContext) -> list[EntityRow]:
     return list(found)
 
 
+async def beacons_at(ctx: TickContext, town: EntityRow) -> int:
+    rows = await ctx.session.scalars(
+        select(StructureProfileRow.structure_entity_id).where(StructureProfileRow.host_entity_id == town.id, StructureProfileRow.kind.in_(BEACON_WORKS))
+    )
+    return len(list(rows))
+
+
+async def aid_open(ctx: TickContext, town: EntityRow, aid: NavigationAid, known: set[Technique]) -> bool:
+    spec = AIDS[aid]
+    table = ctx.rules.navigation_instruments
+    if spec.needs is not None and spec.needs not in known:
+        return False
+    if spec.skilled and await best_navigator(ctx, town) < table.refine_skill:
+        return False
+    if spec.shore_works and await beacons_at(ctx, town) < table.beacon_works:
+        return False
+    return not spec.networked or await powered(ctx, town)
+
+
 async def equip_ports(ctx: TickContext, tally: NavigationTally) -> None:
     table = ctx.rules.navigation_instruments
     for town in await ports(ctx):
         if held(town.id):
             continue
         known = await era_techniques(ctx.session, town.id)
-        for aid, spec in AIDS.items():
-            if spec.needs not in known or await ctx.session.get(NavigationKitRow, (town.id, aid)) is not None:
+        for aid in AIDS:
+            if await ctx.session.get(NavigationKitRow, (town.id, aid)) is not None or not await aid_open(ctx, town, aid, set(known)):
                 continue
             ctx.session.add(NavigationKitRow(holder_entity_id=town.id, aid=aid, quality=table.seed_quality, since_epoch=ctx.epoch, locked=[]))
             tally.equipped += 1
@@ -103,7 +126,12 @@ async def accuracy_of(ctx: TickContext, town_id: int) -> int:
     world = await ctx.session.get(WorldRow, town.world_id)
     kits = await ctx.session.scalars(select(NavigationKitRow).where(NavigationKitRow.holder_entity_id == town_id))
     error = compass_error_of(await ctx.session.get(WorldFieldRow, town.world_id)) if town.world_id is not None else 0
-    instruments = sum(kit.quality * table.aid_pct // PERCENT for kit in kits if aid_works(ctx.rules, kit, world, error))
+    linked = await powered(ctx, town)
+    instruments = sum(
+        kit.quality * aid_cut(ctx.rules, kit.aid) // PERCENT
+        for kit in kits
+        if aid_works(ctx.rules, kit, world, error) and (linked or not AIDS[kit.aid].networked)
+    )
     return clamp_int(instruments + await best_navigator(ctx, town) * table.skill_pct + await observation_bonus(ctx.session, ctx.rules, town), 0, PERCENT)
 
 

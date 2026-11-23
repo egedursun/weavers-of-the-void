@@ -13,6 +13,7 @@ PEER_GROUP_FIELDS = ("settlement_entity_id", "social_class", "play", "children",
 PEER_MEMBER_FIELDS = ("deprived_epochs",)
 SANCTUARY_FIELDS = ("host_entity_id", "kind", "fugitive_kind", "pursuer_entity_id", "state", "fee", "siege_epochs")
 SANCTUARY_LAW_FIELDS = ("restricted", "fee_pct")
+FUGITIVE_FIELDS = ("kind", "pursuer_entity_id", "caught_epoch", "freed_epoch")
 SATIRE_FIELDS = ("satirist_entity_id", "target_entity_id", "polity_entity_id", "work_entity_id", "source", "bite", "tolerated", "punished", "judged")
 
 
@@ -65,6 +66,20 @@ class PeerMemberRow(Base):
     mortal_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True, index=True)
     joined_epoch: Mapped[int] = mapped_column(default=0)
     deprived_epochs: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class FugitiveRow(Base):
+    __tablename__ = "fugitives"
+    __table_args__ = (at_least("fled_epoch", 0), Index("ix_fugitives_pursuer", "pursuer_entity_id"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    mortal_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), unique=True)
+    kind: Mapped[FugitiveKind] = mapped_column(enum_type(FugitiveKind, "kind"))
+    pursuer_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    fled_epoch: Mapped[int] = mapped_column(default=0)
+    caught_epoch: Mapped[int | None]
+    freed_epoch: Mapped[int | None]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

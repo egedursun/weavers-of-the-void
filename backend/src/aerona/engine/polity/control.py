@@ -5,6 +5,7 @@ from sqlalchemy import delete, select
 
 from aerona.catalog.law_areas import LAW_AREAS
 from aerona.catalog.life.polity import DEFAULT_POWERS
+from aerona.catalog.pacts import BREAKABLE_STATES, PRINCIPAL_ROLES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.economy import LoanRow
@@ -417,7 +418,7 @@ async def sign_treaty(
 
 async def break_treaty(ctx: TickContext, treaty_id: int, breaker_id: int) -> None:
     profile = await ctx.session.get(TreatyProfileRow, treaty_id)
-    if profile is None or profile.status is not TreatyStatus.IN_FORCE:
+    if profile is None or profile.status not in BREAKABLE_STATES:
         raise NotFoundError("No treaty in force.")
     await breach(ctx, profile, breaker_id, clause=None, reason=TreatyBreach.GOD_COMMANDED)
 
@@ -533,7 +534,7 @@ async def remove_party(ctx: TickContext, treaty_id: int, party_id: int) -> None:
     if row is None:
         raise NotFoundError("That party is not bound by the treaty.")
     left = await ctx.session.scalars(select(TreatyPartyRow).where(TreatyPartyRow.treaty_entity_id == treaty_id))
-    if len([item for item in left if item.role is not PartyRole.GUARANTOR and item.party_node_id != party_id]) < 2 and row.role is not PartyRole.GUARANTOR:
+    if len([item for item in left if item.role in PRINCIPAL_ROLES and item.party_node_id != party_id]) < 2 and row.role in PRINCIPAL_ROLES:
         raise ValidationFailedError("A treaty needs at least two parties bound by it.")
     await ctx.session.delete(row)
     await ctx.session.flush()

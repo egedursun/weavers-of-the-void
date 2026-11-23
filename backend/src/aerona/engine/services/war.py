@@ -46,6 +46,7 @@ from aerona.engine.military.units import muster, resize
 from aerona.engine.mind.hooks import freed, taken_captive
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.crises import crisis_instead
+from aerona.engine.polity.mediation import breach_neutrality
 from aerona.engine.polity.regard import on_war
 from aerona.engine.polity.subjects import forbidden_war
 from aerona.engine.primitives.folk import towns_of_people
@@ -410,6 +411,7 @@ async def declare_war(
     ctx.count("hostilities_declared")
     await herald_war(ctx, first_id, second_id, reason)
     await on_war(ctx, first_id, cause)
+    await breach_neutrality(ctx, first_id, second_id)
     if world_cap:
         counters[DECLARATIONS_COUNTER] += 1
     return True

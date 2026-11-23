@@ -272,7 +272,7 @@ async def engineering(ctx: TickContext, site_id: int, profile: StructureProfileR
         architect = int(row or 0)
     level = knowledge.level(site_id, KnowledgeBranch.ARCHITECTURE)
     plain = 1 + level * table.engineering_pct_per_level / PERCENT + architect * table.architect_pct_per_level / PERCENT
-    return plain * await reckoned(ctx.session, site_id, ctx.rules.numeracy.build_pct)
+    return plain * await reckoned(ctx.session, ctx.rules, site_id, ctx.rules.numeracy.build_pct)
 
 
 async def advance(ctx: TickContext, construction: ConstructionRow, *, active: int, knowledge: KnowledgeMap) -> int:
@@ -413,7 +413,7 @@ async def abandon(ctx: TickContext, construction: ConstructionRow, cause: Abando
     if work is None:
         return
     if profile is not None:
-        profile.construction_state = ConstructionState.RUINED
+        profile.construction_state = ConstructionState.ABANDONED
         profile.effect_pct = 0
     await add_flag(ctx.session, work.id, EntityFlag.RUIN, ctx.epoch)
     resolved = resolve(construction.kind)
@@ -466,3 +466,21 @@ async def construction_of(ctx: TickContext, structure_id: int) -> ConstructionRo
     if row is None:
         raise ValidationFailedError("That structure is not under construction.")
     return row
+
+
+async def hasten(ctx: TickContext, site_id: int, share_pct: float) -> int:
+    raised = 0
+    for construction in await active_at(ctx, site_id):
+        if "progress" in construction.locked or held(construction.site_entity_id, construction.structure_entity_id):
+            continue
+        added = round_half_up(construction.cost * share_pct / PERCENT)
+        if added <= 0:
+            continue
+        construction.progress = min(construction.cost, construction.progress + added)
+        profile = await ctx.session.get(StructureProfileRow, construction.structure_entity_id)
+        if profile is not None:
+            profile.progress = clamp_int(construction.progress * PERCENT / construction.cost, 0, PERCENT)
+        raised += added
+        if construction.progress >= construction.cost:
+            await finish(ctx, construction)
+    return raised

@@ -41,6 +41,8 @@ class ClientRole(StrEnum):
     RETAINER = "retainer"
     OFFICIAL = "official"
     COMMANDER = "commander"
+    BROKER = "broker"
+    ARTIST = "artist"
 
 
 class PowerStance(StrEnum):

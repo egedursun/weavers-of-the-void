@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.crafts import LONGITUDE_CLOCKS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import PublicClockRow
 from aerona.rules.registry import Rules
@@ -18,6 +19,13 @@ async def clock_muster(session: AsyncSession, rules: Rules, town_id: int) -> flo
     return 1 + await precision_of(session, town_id) * rules.clocks.command_pct / PERCENT / PERCENT
 
 
+async def keeps_longitude(session: AsyncSession, town_id: int | None) -> bool:
+    row = await session.get(PublicClockRow, town_id) if town_id is not None else None
+    return row is not None and row.kind in LONGITUDE_CLOCKS
+
+
 async def clock_navigation(session: AsyncSession, rules: Rules, ends: tuple[int, int]) -> float:
     best = max([await precision_of(session, end) for end in ends])
-    return 1 - best * rules.clocks.navigation_pct / PERCENT / PERCENT
+    longitude = any([await keeps_longitude(session, end) for end in ends])
+    cut = 1 - rules.clocks.chronometer_loss_cut_pct / PERCENT if longitude else 1.0
+    return (1 - best * rules.clocks.navigation_pct / PERCENT / PERCENT) * cut

@@ -67,6 +67,8 @@ STATE_OPACITY: dict[ConstructionState, float] = {
     ConstructionState.COMPLETE: 1.0,
     ConstructionState.DAMAGED: 0.7,
     ConstructionState.RUINED: 0.3,
+    ConstructionState.ABANDONED: 0.25,
+    ConstructionState.DISMANTLED: 0.1,
 }
 
 
@@ -74,7 +76,7 @@ BUILDING_STATES = (
     frozenset({ConstructionState.COMPLETE}),
     frozenset({ConstructionState.PLANNED, ConstructionState.BUILDING}),
     frozenset({ConstructionState.DAMAGED}),
-    frozenset({ConstructionState.RUINED}),
+    frozenset({ConstructionState.RUINED, ConstructionState.ABANDONED, ConstructionState.DISMANTLED}),
 )
 
 

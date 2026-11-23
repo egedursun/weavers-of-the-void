@@ -65,6 +65,62 @@ class EspionageRules(Spanned):
     privacy_pct: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of the intel spies gather that a privacy law at full strictness denies them (%)")
     spy_role_skill: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Skill a trained spy brings to a network that recruits them")
 
+    steal_knowledge_difficulty: int = rule(
+        30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of tries at stealing knowledge that fail for a network of no depth and a spymaster of no skill (%)"
+    )
+    sabotage_difficulty: int = rule(
+        35, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of tries at sabotage that fail for a network of no depth and a spymaster of no skill (%)"
+    )
+    assassinate_difficulty: int = rule(
+        60, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of tries at an assassination that fail for a network of no depth and a spymaster of no skill (%)"
+    )
+    incite_difficulty: int = rule(
+        30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of tries at inciting unrest that fail for a network of no depth and a spymaster of no skill (%)"
+    )
+    intel_difficulty: int = rule(
+        10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of tries at gathering intelligence that fail for a network of no depth and a spymaster of no skill (%)"
+    )
+    blackmail_difficulty: int = rule(
+        40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of tries at blackmail that fail for a network of no depth and a spymaster of no skill (%)"
+    )
+    counterfeit_difficulty: int = rule(
+        35, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of tries at counterfeiting coin that fail for a network of no depth and a spymaster of no skill (%)"
+    )
+    infiltrate_difficulty: int = rule(
+        45,
+        0,
+        100,
+        RuleGroup.WAR_AND_DIPLOMACY,
+        "Share of tries at placing an agent inside an institution that fail for a network of no depth and a spymaster of no skill (%)",
+    )
+    exfiltrate_difficulty: int = rule(
+        50,
+        0,
+        100,
+        RuleGroup.WAR_AND_DIPLOMACY,
+        "Share of tries at bringing an agent or defector out that fail for a network of no depth and a spymaster of no skill (%)",
+    )
+    disinform_difficulty: int = rule(
+        40,
+        0,
+        100,
+        RuleGroup.WAR_AND_DIPLOMACY,
+        "Share of tries at feeding false beliefs to a rival that fail for a network of no depth and a spymaster of no skill (%)",
+    )
+    infiltrate_access_pct: int = rule(
+        30, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Extra access later operations of a network gain from an agent placed inside an institution (%)"
+    )
+    exfiltrate_capture_pct: int = rule(
+        25, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Chance an agent or defector brought out across a border is caught on the way (%)"
+    )
+    disinform_confidence: int = rule(
+        60, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Confidence a false belief fed by a network of full depth carries in its rival's mind"
+    )
+    exposed_feed_pct: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of an exposed agent's reports the enemy turns into false reports (%)")
+    missing_pct: int = rule(5, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Chance each epoch an agent at high exposure drops out of contact and goes missing (%)")
+    found_pct: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Chance each epoch a missing agent is found again by its network (%)")
+    exposed_at: int = rule(70, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Exposure from which an agent the enemy has not caught is known to it and watched")
+
     @property
     def sabotage_outage_epochs(self) -> int:
         return self.epochs(self.sabotage_outage_years)

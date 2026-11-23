@@ -60,7 +60,14 @@ import {
 const SPAN = 100
 const WORKING = 'Working on it.'
 const PURIFY = 30
-const POLLUTION = ['air', 'water', 'soil'] as const
+const POLLUTION = [
+  'air',
+  'water',
+  'soil',
+  'radiation',
+  'noise',
+  'light',
+] as const
 
 type Props = { view: Works; blocked: string | null; hold: boolean }
 
@@ -755,9 +762,9 @@ function LandRow({
 function LandCard({ view, blocked, hold }: Props) {
   return (
     <MindCard
-      title='Air, water and soil'
+      title='Air, water, soil, rays, noise and light'
       icon={LAND_ICON}
-      hint='Works and crowds foul the land: fouled air and water breed sickness, fouled water thins the catch, fouled soil yields less and at the worst blights. Forests, sanitation and rites cleanse it.'
+      hint='Works and crowds foul the land: fouled air and water breed sickness, fouled water thins the catch, fouled soil yields less and at the worst blights; radiation sickens and poisons the ground, noise wears on minds, and light hides the faint sky and drives off night creatures. Forests, sanitation and rites cleanse it.'
       wide
     >
       {view.pollution.length === 0 ? (

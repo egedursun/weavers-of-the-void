@@ -77,6 +77,10 @@ import {
   Wind,
   Wrench,
   Zap,
+  GitBranch,
+  Music,
+  CloudRain,
+  Laugh,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -184,6 +188,8 @@ export const ACCOUNT_KINDS: Record<Schema['AccountKind'], Named> = {
     icon: Landmark,
     tone: 'gold',
   },
+  genealogy: { label: 'Genealogy', icon: GitBranch, tone: 'gold' },
+  song: { label: 'Song', icon: Music, tone: 'verdigris' },
 }
 
 export const STANCES: Record<Schema['AccountStance'], Named> = {
@@ -191,6 +197,9 @@ export const STANCES: Record<Schema['AccountStance'], Named> = {
   vilify: { label: 'Vilifies', icon: HeartCrack, tone: 'danger' },
   omit: { label: 'Leaves out', icon: EyeOff, tone: 'muted' },
   neutral: { label: 'Tells plainly', icon: Scale, tone: 'info' },
+  justify: { label: 'Admits and justifies', icon: Gavel, tone: 'warning' },
+  lament: { label: 'Laments', icon: CloudRain, tone: 'info' },
+  mock: { label: 'Mocks', icon: Laugh, tone: 'danger' },
 }
 
 export const MEDIA: Record<Schema['AccountMedium'], Named> = {

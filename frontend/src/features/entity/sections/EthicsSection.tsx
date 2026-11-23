@@ -1,5 +1,6 @@
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import type { components } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import {
   EmptyState,
@@ -26,6 +27,9 @@ import { named } from '../mind/labels'
 import { ControlPanel, MindCard, MindPicker } from '../mind/parts'
 
 const WORKING = 'Working on it.'
+const BY_MODEL = 'by_model'
+
+type DuelEnd = components['schemas']['DuelEnd']
 
 function EthicRow({
   item,
@@ -77,12 +81,13 @@ function Ladder({ view }: { view: CultureMind }) {
       ),
   })
   const honour = useGodAction({
-    run: (model: HonourModel) =>
+    run: ({ model, ending }: { model: HonourModel; ending: DuelEnd | null }) =>
       unwrap(
         api.POST('/api/actions/ethics:honour', {
           body: {
             holder_id: view.ethics_holder?.id ?? view.node_id,
             model,
+            duel_end: ending,
             hold: true,
           },
         })
@@ -100,6 +105,13 @@ function Ladder({ view }: { view: CultureMind }) {
   )
   const models = Object.fromEntries(
     view.honour_models.map((item) => [item.key, item.label])
+  )
+  const endings: Record<string, string> = {
+    [BY_MODEL]: 'As the honour model has it',
+    ...Object.fromEntries(view.duel_ends.map((item) => [item.key, item.label])),
+  }
+  const inForce = view.duel_ends.find(
+    (item) => item.key === view.duel_end_in_force
   )
   return (
     <>
@@ -134,12 +146,36 @@ function Ladder({ view }: { view: CultureMind }) {
               value={view.honour_model}
               table={models}
               blocked={blocked}
-              onPick={(value) => honour.mutate(value as HonourModel)}
+              onPick={(value) =>
+                honour.mutate({
+                  model: value as HonourModel,
+                  ending: view.duel_end,
+                })
+              }
             />
             <div className='flex min-w-0 flex-col justify-end gap-1'>
               <Label>Now</Label>
               <Text>{view.honour_label}</Text>
               {view.honour_held && <Muted variant='caption'>Held by you</Muted>}
+            </div>
+            <MindPicker
+              label='Duels end'
+              value={view.duel_end ?? BY_MODEL}
+              table={endings}
+              blocked={blocked}
+              onPick={(value) =>
+                honour.mutate({
+                  model: view.honour_model ?? 'dignity',
+                  ending: value === BY_MODEL ? null : (value as DuelEnd),
+                })
+              }
+            />
+            <div className='flex min-w-0 flex-col justify-end gap-1'>
+              <Label>A duel of honour or a ritual duel ends</Label>
+              <Text>{inForce?.label ?? 'As the honour model has it'}</Text>
+              {view.duel_end_held && (
+                <Muted variant='caption'>Held by you</Muted>
+              )}
             </div>
           </div>
         </ControlPanel>

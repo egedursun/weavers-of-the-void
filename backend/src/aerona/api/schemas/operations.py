@@ -253,5 +253,6 @@ class OperationsNodeView(ApiModel):
     admiralty: AdmiraltyView | None
     ship: ShipView | None
     crews: list[CrewView]
+    crew_stations: list[CrewStation]
     quirks: list[QuirkView]
     expeditions: list[ExpeditionView]

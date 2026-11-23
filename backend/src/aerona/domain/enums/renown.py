@@ -26,15 +26,26 @@ class ClaimKind(StrEnum):
     TRUE = "true"
     SHARED = "shared"
     FALSE = "false"
+    INFLATED = "inflated"
 
 
 class ClaimStatus(StrEnum):
     STANDING = "standing"
     VERIFIED = "verified"
     EXPOSED = "exposed"
+    DISPUTED = "disputed"
 
 
 class LorePrice(StrEnum):
     WEALTH = "wealth"
     FAVOUR = "favour"
     RENOWN = "renown"
+    EXCHANGE = "exchange"
+    SERVICE = "service"
+
+
+class ServiceTask(StrEnum):
+    QUEST = "quest"
+    THEFT = "theft"
+    KILLING = "killing"
+    RITE = "rite"

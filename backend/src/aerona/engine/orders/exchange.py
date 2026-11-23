@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.finance import OWED_LOANS
+from aerona.catalog.life_traits import CARRYING_ROUTES
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.record_context import Term
 from aerona.db.tables.economy import CurrencyRow, GoodsFlowRow, LoanRow, TradeRouteProfileRow
@@ -11,7 +13,7 @@ from aerona.db.tables.orders import BillOfExchangeRow, ExchangeRateRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.economy import GoodsFlow, LoanStatus, TradeRouteStatus
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -89,7 +91,7 @@ async def shock_debtors(ctx: TickContext, base: CurrencyRow, quote: CurrencyRow,
     hit = 0
     for loan in list(
         await ctx.session.scalars(
-            select(LoanRow).where(LoanRow.currency_id == base.id, LoanRow.status == LoanStatus.OPEN, LoanRow.borrower_entity_id.in_(users)).order_by(LoanRow.id)
+            select(LoanRow).where(LoanRow.currency_id == base.id, LoanRow.status.in_(OWED_LOANS), LoanRow.borrower_entity_id.in_(users)).order_by(LoanRow.id)
         )
     ):
         if held(loan.borrower_entity_id):
@@ -167,7 +169,7 @@ async def banking_between(ctx: TickContext, first_id: int, second_id: int) -> bo
 async def draw_bills(ctx: TickContext, tally: ExchangeTally) -> None:
     table = ctx.rules.exchange_rates
     routes = await ctx.session.scalars(
-        select(TradeRouteProfileRow).where(TradeRouteProfileRow.status == TradeRouteStatus.OPEN, TradeRouteProfileRow.last_traffic_epoch == ctx.epoch - 1)
+        select(TradeRouteProfileRow).where(TradeRouteProfileRow.status.in_(CARRYING_ROUTES), TradeRouteProfileRow.last_traffic_epoch == ctx.epoch - 1)
     )
     for route in list(routes):
         first, second = route.first_market_id, route.second_market_id
@@ -224,7 +226,7 @@ async def billed_between(ctx: TickContext, ends: tuple[int, int]) -> float:
 async def keep_exchange(ctx: TickContext, tally: ExchangeTally) -> None:
     for route in list(
         await ctx.session.scalars(
-            select(TradeRouteProfileRow).where(TradeRouteProfileRow.status == TradeRouteStatus.OPEN).order_by(TradeRouteProfileRow.route_entity_id)
+            select(TradeRouteProfileRow).where(TradeRouteProfileRow.status.in_(CARRYING_ROUTES)).order_by(TradeRouteProfileRow.route_entity_id)
         )
     ):
         await settle_rate(ctx, route, tally)

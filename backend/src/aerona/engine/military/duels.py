@@ -333,6 +333,7 @@ class Duel:
     first: Fighter
     second: Fighter
     context: DuelContext
+    ending: DuelEnd | None = None
     steps: list[Exchange] = field(default_factory=list)
 
     def add(self, step: Exchange) -> int:
@@ -558,8 +559,25 @@ class Duel:
         self.strike(attacker, defender, round_no)
         return far
 
+    def bounded(self, winner: Fighter, loser: Fighter, round_no: int) -> Bout | None:
+        table = self.rules.duels
+        if self.ending is DuelEnd.FIRST_WOUND and loser.harm > 0 and loser.harm < loser.hp and loser.conscious:
+            self.add(
+                Exchange(
+                    StepAction.YIELD, loser.entity.id, winner.entity.id, round_no, outcome=StepOutcome.ACCEPTED, states=((loser.entity.id, StepState.YIELDED),)
+                )
+            )
+            return Bout(winner, loser, DuelEnd.FIRST_WOUND, self.context, round_no, steps=self.steps)
+        if self.ending is DuelEnd.RING_OUT and loser.conscious and (loser.prone or loser.footing <= table.ring_footing):
+            self.add(Exchange(StepAction.FLEE, loser.entity.id, None, round_no, outcome=StepOutcome.SUCCESS, states=((loser.entity.id, StepState.FLEEING),)))
+            return Bout(winner, loser, DuelEnd.RING_OUT, self.context, round_no, steps=self.steps)
+        return None
+
     def ended(self, winner: Fighter, loser: Fighter, round_no: int) -> Bout | None:
         table = self.rules.duels
+        marked = self.bounded(winner, loser, round_no)
+        if marked is not None:
+            return marked
         if loser.harm >= loser.hp or not loser.conscious:
             end, killed, spared = self.downed(winner, loser)
             if killed:
@@ -589,15 +607,16 @@ class Duel:
         beaten = DuelEnd.UNCONSCIOUS if not loser.conscious else DuelEnd.CRIPPLED
         if winner.mercy >= rules.duels.mercy_spare and self.context is not DuelContext.TRIAL:
             return beaten, False, True
-        if self.rng.chance(rules.campaigns.duel_death_chance) or self.context is DuelContext.TRIAL:
+        death = rules.duels.ritual_death_pct if self.context is DuelContext.RITUAL else rules.campaigns.duel_death_chance
+        if self.rng.chance(death) or self.context is DuelContext.TRIAL:
             return DuelEnd.DEATH, True, False
         return beaten, False, False
 
 
-def bout(rules: Rules, rng: SeededRandom, first: Fighter, second: Fighter, context: DuelContext) -> Bout:
+def bout(rules: Rules, rng: SeededRandom, first: Fighter, second: Fighter, context: DuelContext, *, ending: DuelEnd | None = None) -> Bout:
     table = rules.duels
     count = table.exchanges_min + rng.below(max(1, table.exchanges_max - table.exchanges_min + 1))
-    duel = Duel(rules, rng, first, second, context)
+    duel = Duel(rules, rng, first, second, context, ending)
     far = first.reach != second.reach
     for index in range(count):
         round_no = index + 1

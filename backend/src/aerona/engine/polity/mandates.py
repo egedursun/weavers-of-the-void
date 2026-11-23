@@ -40,6 +40,7 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_wars
 from aerona.engine.settlement.book import town_of
+from aerona.engine.structures.construction import active_at, hasten
 from aerona.engine.urban.housing import clear_slums
 
 GRAIN = CommodityKind.GRAIN
@@ -108,8 +109,29 @@ async def issue(
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await record(
+        ctx,
+        "mandate.issued",
+        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.SUBJECT: settlement_id, IncidentRole.ACTOR: realm.ruler_id},
+        facts={"mandate": kind, "until": row.until_epoch},
+        place=settlement_id,
+    )
     await begin(ctx, realm, row)
     return row
+
+
+async def ration_share(ctx: TickContext, community_id: int) -> float:
+    return 1 - ctx.rules.mandates.ration_death_cut_pct / PERCENT if await rationed(ctx.session, community_id) else 1.0
+
+
+@memoized(MandateRow)
+async def rationed(session: AsyncSession, community_id: int) -> bool:
+    found = await session.scalar(
+        select(MandateRow.id)
+        .where(MandateRow.settlement_entity_id == community_id, MandateRow.kind == MandateKind.RATION, MandateRow.state == MandateState.ACTIVE)
+        .limit(1)
+    )
+    return found is not None
 
 
 async def begin(ctx: TickContext, realm: Realm, row: MandateRow) -> None:
@@ -141,7 +163,10 @@ async def plan(ctx: TickContext, book: RealmBook, realm: Realm, tally: MandateTa
         town = await ctx.session.get(SettlementProfileRow, member.id)
         hunger = (await pressures_of(ctx.session, member.id)).get(PressureKind.HUNGER, 0)
         issued: MandateRow | None = None
-        if hunger >= table.famine_hunger and capital is not None and member.id != capital:
+        stores = await units_of(ctx, capital, GRAIN) if capital is not None else 0
+        if hunger >= table.famine_hunger and (capital is None or member.id == capital or stores <= 0):
+            issued = await issue(ctx, realm, MandateKind.RATION, settlement_id=member.id, commodity=GRAIN)
+        elif hunger >= table.famine_hunger and capital is not None and member.id != capital:
             amount = round_half_up(table.relief_food * stat_or(member, "population", 0) / PER_MILLE)
             issued = await issue(ctx, realm, MandateKind.FAMINE_RELIEF, settlement_id=member.id, commodity=GRAIN, amount=amount)
         elif town is not None and town.unrest >= table.curfew_unrest:
@@ -155,6 +180,8 @@ async def plan(ctx: TickContext, book: RealmBook, realm: Realm, tally: MandateTa
             issued = await issue(ctx, realm, MandateKind.BUILD, settlement_id=member.id, district=DistrictKind.CITADEL)
         elif town is not None and await unready(ctx.session, ctx.rules, book.atlas, member.id, ctx.epoch):
             issued = await issue(ctx, realm, MandateKind.PREPARE, settlement_id=member.id)
+        elif town is not None and town.unrest < table.curfew_unrest // 2 and await active_at(ctx, member.id):
+            issued = await issue(ctx, realm, MandateKind.CORVEE, settlement_id=member.id)
         tally.issued += issued is not None
     seat = await ctx.session.get(EntityRow, capital) if capital is not None else None
     if capital is not None and await units_of(ctx, capital, GRAIN) < table.ban_below * (stat_or(seat, "population", 0) if seat is not None else 0) // PER_MILLE:
@@ -178,6 +205,23 @@ async def keep_curfew(ctx: TickContext, row: MandateRow) -> None:
             setattr(society, key, clamp_int(getattr(society, key) - table.curfew_mood, 0, PERCENT))
 
 
+async def keep_ration(ctx: TickContext, realm: Realm, row: MandateRow) -> None:
+    town = await ctx.session.get(SettlementProfileRow, row.settlement_entity_id or -1)
+    if town is None or "unrest" in (town.locked or []):
+        return
+    unfair = realm.profile.corruption / PERCENT * ctx.rules.mandates.ration_grievance_pct / PERCENT
+    town.unrest = clamp_int(town.unrest + round_half_up(ctx.rules.urban.ration_unrest * unfair), 0, PERCENT)
+
+
+async def keep_corvee(ctx: TickContext, row: MandateRow) -> None:
+    if row.settlement_entity_id is None:
+        return
+    await hasten(ctx, row.settlement_entity_id, ctx.rules.mandates.corvee_progress_pct)
+    town = await ctx.session.get(SettlementProfileRow, row.settlement_entity_id)
+    if town is not None and "unrest" not in (town.locked or []):
+        town.unrest = clamp_int(town.unrest + ctx.rules.mandates.corvee_grievance, 0, PERCENT)
+
+
 async def met(ctx: TickContext, row: MandateRow) -> bool:
     if row.kind is MandateKind.PRODUCE and row.settlement_entity_id is not None and row.commodity is not None:
         return await units_of(ctx, row.settlement_entity_id, row.commodity) >= row.amount
@@ -190,6 +234,12 @@ async def met(ctx: TickContext, row: MandateRow) -> bool:
             PreparednessRow.settlement_entity_id == row.settlement_entity_id, PreparednessRow.built_epoch >= row.issued_epoch
         )
         return await ctx.session.scalar(raised.limit(1)) is not None
+    return await met_on_land(ctx, row)
+
+
+async def met_on_land(ctx: TickContext, row: MandateRow) -> bool:
+    if row.kind is MandateKind.CORVEE and row.settlement_entity_id is not None:
+        return not await active_at(ctx, row.settlement_entity_id)
     if row.kind is MandateKind.ENCLOSURE and row.settlement_entity_id is not None:
         closed = select(CommonsRow.id).where(CommonsRow.steward_entity_id == row.settlement_entity_id, CommonsRow.rule == CommonsRule.ENCLOSED)
         return await ctx.session.scalar(closed.limit(1)) is not None
@@ -214,6 +264,10 @@ async def lift_ban(ctx: TickContext, realm: Realm, row: MandateRow) -> None:
 async def judge(ctx: TickContext, realm: Realm, row: MandateRow, tally: MandateTally) -> None:
     if row.kind is MandateKind.CURFEW:
         await keep_curfew(ctx, row)
+    if row.kind is MandateKind.RATION:
+        await keep_ration(ctx, realm, row)
+    if row.kind is MandateKind.CORVEE:
+        await keep_corvee(ctx, row)
     if ctx.epoch < row.until_epoch or STATE in row.locked:
         return
     done = await met(ctx, row)

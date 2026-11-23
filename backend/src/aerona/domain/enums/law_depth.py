@@ -15,13 +15,16 @@ class CourtLevel(StrEnum):
     PROVINCIAL = "provincial"
     HIGH = "high"
     RELIGIOUS = "religious"
+    GUILD = "guild"
+    MILITARY = "military"
+    CONSULAR = "consular"
 
 
 class RegistryKind(StrEnum):
     LAND_TITLE = "land_title"
     DEBT = "debt"
     SALE = "sale"
-    UNION_PORTION = "union_portion"
+    UNION_PAYMENT = "union_payment"
     INDENTURE = "indenture"
     PATENT = "patent"
     PATTERN = "pattern"
@@ -44,6 +47,8 @@ class RecruitMotive(StrEnum):
     IDEOLOGY = "ideology"
     COMPROMISE = "compromise"
     EGO = "ego"
+    LOVE = "love"
+    REVENGE = "revenge"
 
 
 class MoleHuntOutcome(StrEnum):

@@ -4,18 +4,27 @@ from sqlalchemy import or_, select
 
 from aerona.catalog.life.polity import CRISIS_CAUSES
 from aerona.catalog.life_traits import REGIONAL_STANDING_TRAITS, having
+from aerona.catalog.statecraft import DEMANDS, PERSON_DEMANDS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, PolityRegardRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import HookDemand
 from aerona.domain.enums.life_traits import RegionalStandingTrait
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.leverage import leaned_on
 from aerona.engine.polity.book import Realm, RealmBook
+from aerona.engine.polity.mediation import find_mediator
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.strength import MilitaryStrength
@@ -34,12 +43,14 @@ class CrisisTally:
     backed_down: int = 0
     conceded: int = 0
     wars: int = 0
+    mediated: int = 0
 
 
 @dataclass(frozen=True)
 class Verdict:
     crisis: CrisisRow
     state: CrisisState
+    mediator_id: int | None = None
 
 
 async def open_between(ctx: TickContext, first: int, second: int) -> CrisisRow | None:
@@ -96,6 +107,42 @@ async def open_crisis(ctx: TickContext, demander: Realm, target: Realm, demand: 
     return row
 
 
+async def wanted_person(ctx: TickContext, demander: Realm, target: Realm) -> int | None:
+    members = list(target.members)
+    if not members:
+        return None
+    grudge = await ctx.session.scalar(
+        select(MemoryRow.holder_node_id)
+        .join(EntityRow, EntityRow.id == MemoryRow.holder_node_id)
+        .where(
+            MemoryRow.subject_node_id == demander.ruler_id,
+            MemoryRow.kind == MemoryKind.ILL_WILL,
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            await present_among(ctx.session, members),
+        )
+        .order_by(MemoryRow.magnitude, MemoryRow.holder_node_id)
+        .limit(1)
+    )
+    if grudge is not None:
+        return grudge
+    return await ctx.session.scalar(
+        select(OfficeRow.holder_entity_id)
+        .where(OfficeRow.polity_entity_id == target.entity.id, OfficeRow.kind == OfficeKind.SPYMASTER, OfficeRow.holder_entity_id.is_not(None))
+        .limit(1)
+    )
+
+
+async def subject_for(ctx: TickContext, book: RealmBook, demander: Realm, target: Realm, demand: CrisisDemand) -> int | None:
+    if demand is CrisisDemand.CEDE_REGION:
+        return nearest_land(book, demander, target)
+    if demand is CrisisDemand.CONVERT:
+        return demander.profile.state_religion_id
+    if demand is CrisisDemand.HAND_OVER:
+        return await wanted_person(ctx, demander, target)
+    return None
+
+
 async def crisis_instead(ctx: TickContext, first_id: int, second_id: int, cause: WarCause) -> bool:
     demand = CRISIS_CAUSES.get(cause)
     if demand is None:
@@ -106,15 +153,12 @@ async def crisis_instead(ctx: TickContext, first_id: int, second_id: int, cause:
         return False
     if await open_between(ctx, demander.entity.id, target.entity.id) is not None:
         return True
-    if not ctx.rng(f"statecraft.crisis.{demander.entity.id}.{target.entity.id}.{ctx.epoch}").chance(ctx.rules.statecraft.crisis_pct):
+    weight = getattr(ctx.rules.crisis, DEMANDS[demand].weight) / PERCENT
+    if not ctx.rng(f"statecraft.crisis.{demander.entity.id}.{target.entity.id}.{ctx.epoch}").chance(ctx.rules.statecraft.crisis_pct * weight):
         return False
-    subject = (
-        nearest_land(book, demander, target)
-        if demand is CrisisDemand.CEDE_REGION
-        else demander.profile.state_religion_id
-        if demand is CrisisDemand.CONVERT
-        else None
-    )
+    subject = await subject_for(ctx, book, demander, target, demand)
+    if demand in PERSON_DEMANDS and subject is None:
+        return False
     amount = round_half_up(target.profile.treasury * ctx.rules.statecraft.pay_share_pct / PERCENT) if demand is CrisisDemand.PAY else 0
     return await open_crisis(ctx, demander, target, demand, subject_id=subject, amount=amount) is not None
 
@@ -187,6 +231,9 @@ async def weigh(ctx: TickContext, book: RealmBook, crisis: CrisisRow, tally: Cri
         return Verdict(crisis, CrisisState.BACKED_DOWN)
     if resisting < demanding * ratio:
         return Verdict(crisis, CrisisState.CONCEDED)
+    mediator = await find_mediator(ctx, book, crisis)
+    if mediator is not None and ctx.rng(f"crisis.mediated.{crisis.id}.{ctx.epoch}").chance(ctx.rules.crisis.mediation_chance_pct):
+        return Verdict(crisis, CrisisState.MEDIATED, mediator)
     if crisis.escalation + 1 >= table.crisis_steps:
         return Verdict(crisis, CrisisState.WAR)
     if ESCALATION not in crisis.locked:

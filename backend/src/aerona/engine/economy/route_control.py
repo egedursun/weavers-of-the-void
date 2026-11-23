@@ -1,11 +1,18 @@
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 
+from sqlalchemy import func, select
+
+from aerona.catalog.carriers import CARRIERS
+from aerona.catalog.kinds.trade_modes import TRADE_MODES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.economy import ROUTE_DANGER_COLUMNS, TradeRouteProfileRow, TradeRouteTollRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.domain.enums.economy import TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.operations import CarrierKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.routes import Route, found_route, length_of, load_routes, spoken_capacity, write_path
@@ -17,7 +24,18 @@ from aerona.engine.primitives.stats import set_stats
 Value = int | str | bool | list[int] | None
 STAT_KEYS = ("capacity", "danger", "renown", "culture")
 PERCENT_KEYS = (*ROUTE_DANGER_COLUMNS, "season_pct", "danger", "renown", "culture")
-PROFILE_KEYS = (*ROUTE_DANGER_COLUMNS, "season_pct", "length", "mode", "status", "controller_entity_id", "blockaded_by_entity_id", "chokepoint")
+PROFILE_KEYS = (
+    *ROUTE_DANGER_COLUMNS,
+    "season_pct",
+    "length",
+    "mode",
+    "status",
+    "controller_entity_id",
+    "blockaded_by_entity_id",
+    "chokepoint",
+    "closed_season",
+    "carrier",
+)
 EDITABLE = frozenset({*STAT_KEYS, *PROFILE_KEYS, "path"})
 UNTOLLED = "untolled."
 CONTROLLER_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.POLITY, EntityType.MORTAL})
@@ -117,6 +135,27 @@ async def set_length(ctx: TickContext, route: Route, value: Value) -> None:
     route.profile.length = whole("length", value, low=1)
 
 
+async def set_closed_season(ctx: TickContext, route: Route, value: Value) -> None:
+    if value is None:
+        route.profile.closed_season = None
+        return
+    count = await ctx.session.scalar(select(func.count()).select_from(WorldSeasonRow).where(WorldSeasonRow.world_id == route.entity.world_id))
+    route.profile.closed_season = whole("closed_season", value, high=max(0, int(count or 0) - 1))
+
+
+async def set_carrier(ctx: TickContext, route: Route, value: Value) -> None:
+    if value is None:
+        route.profile.carrier = None
+        return
+    try:
+        carrier = CarrierKind(str(value))
+    except ValueError as error:
+        raise ValidationFailedError(f"{value} is not a way of carrying goods.") from error
+    if route.profile.mode not in CARRIERS[carrier].modes:
+        raise ValidationFailedError(f"{CARRIERS[carrier].label} cannot travel {an(TRADE_MODES[route.profile.mode].words.lower())}.")
+    route.profile.carrier = carrier
+
+
 SETTERS: dict[str, Callable[[TickContext, Route, Value], Awaitable[None]]] = {
     "path": set_path,
     "mode": set_mode,
@@ -125,6 +164,8 @@ SETTERS: dict[str, Callable[[TickContext, Route, Value], Awaitable[None]]] = {
     "blockaded_by_entity_id": set_blockade,
     "chokepoint": set_chokepoint,
     "length": set_length,
+    "closed_season": set_closed_season,
+    "carrier": set_carrier,
 }
 
 

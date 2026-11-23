@@ -21,6 +21,7 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.favours import hook_on
 from aerona.engine.intrigue.secrets import learn
+from aerona.engine.military.spies_w52 import keep_motive, motive_by_heart
 from aerona.engine.mind.book import traits_of, values_for
 from aerona.engine.mortal.standing import add_infamy, add_renown
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -78,6 +79,9 @@ async def motive_for(ctx: TickContext, network: SpyNetworkRow, mortal: EntityRow
     recruiter = network.spymaster_entity_id or network.owner_entity_id
     if await hook_on(ctx, recruiter, mortal.id) is not None:
         return RecruitMotive.COMPROMISE
+    heart = await motive_by_heart(ctx, network, mortal)
+    if heart is not None:
+        return heart
     if await values_close(ctx, network.owner_entity_id, mortal.id):
         return RecruitMotive.IDEOLOGY
     traits = await traits_of(ctx.session, mortal.id)
@@ -225,7 +229,8 @@ async def cross_sides(ctx: TickContext, network: SpyNetworkRow, tally: CellTally
         mortal = await living_entity(ctx.session, agent.mortal_entity_id) if agent.mortal_entity_id is not None else None
         if mortal is None or held(mortal.id) or STATUS in agent.locked:
             continue
-        if not ctx.rng(f"espionage.cross.{agent.id}.{ctx.epoch}").chance(round_half_up(table.double_cross_pct * (PERCENT - agent.loyalty) / PERCENT)):
+        risk = await keep_motive(ctx, network, agent)
+        if not ctx.rng(f"espionage.cross.{agent.id}.{ctx.epoch}").chance(round_half_up(table.double_cross_pct * risk * (PERCENT - agent.loyalty) / PERCENT)):
             continue
         agent.status, agent.ended_epoch = AgentStatus.TURNED, ctx.epoch
         if "exposure" not in network.locked:

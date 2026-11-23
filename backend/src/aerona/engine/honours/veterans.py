@@ -2,10 +2,11 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.war_w52 import VETERAN_GRANTS, VETERAN_ROLES
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
-from aerona.db.tables.honours import VeteranGrantRow
+from aerona.db.tables.honours import VeteranGrantRow, VeteranPolicyRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.warfare import WarRow
@@ -20,11 +21,12 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.demography.events import ennobled
 from aerona.engine.economy.purse import coin_of, take_coin
 from aerona.engine.mind.book import stored_values
 from aerona.engine.phases.births import homeland_rule
 from aerona.engine.phases.factions import found_faction
-from aerona.engine.primitives.folk import towns_of_people
+from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect
@@ -112,7 +114,12 @@ async def grant(ctx: TickContext, war: WarRow, realm: EntityRow, tally: VeteranT
     region = await frontier_of(ctx, war, realm.id) if martial >= table.land_martial_from and veterans >= table.colony_veterans else None
     colony = await found_colony(ctx, realm, region, veterans) if region is not None else None
     afford = await coin_of(ctx.session, ctx.rules, realm) >= veterans * table.pension_cost
-    kind = VeteranGrant.LAND if colony is not None else VeteranGrant.PENSION if afford else VeteranGrant.NONE
+    kind = await policy_grant(ctx, realm, colony is not None, afford) or (
+        VeteranGrant.LAND if colony is not None else VeteranGrant.PENSION if afford else VeteranGrant.NONE
+    )
+    if await ctx.session.get(VeteranPolicyRow, realm.id) is None:
+        await set_policy(ctx, realm.id, kind)
+    await honour_grant(ctx, realm, kind, veterans, towns)
     ctx.session.add(
         VeteranGrantRow(
             polity_entity_id=realm.id,
@@ -211,3 +218,58 @@ async def keep_veterans(ctx: TickContext, tally: VeteranTally) -> None:
     await bitter_veterans(ctx, tally)
     await band_veterans(ctx, tally)
     await ctx.session.flush()
+
+
+async def policy_grant(ctx: TickContext, realm: EntityRow, colony: bool, afford: bool) -> VeteranGrant | None:
+    policy = await ctx.session.get(VeteranPolicyRow, realm.id)
+    if policy is None:
+        return None
+    if policy.grant is VeteranGrant.LAND and not colony:
+        return None
+    if policy.grant is VeteranGrant.PENSION and not afford:
+        return None
+    return policy.grant
+
+
+async def honour_grant(ctx: TickContext, realm: EntityRow, kind: VeteranGrant, veterans: int, towns: list[int]) -> None:
+    spec = VETERAN_GRANTS[kind]
+    table = ctx.rules.veterans
+    cost = int(getattr(table, spec.cost_rule)) * (1 if kind is VeteranGrant.TITLE else veterans)
+    if cost > 0:
+        await take_coin(ctx.session, ctx.rules, realm, cost)
+    loyalty = int(getattr(table, spec.loyalty_rule))
+    if loyalty > 0:
+        for town_id in towns:
+            if not held(town_id):
+                await change_relation(ctx, town_id, realm.id, loyalty, MemoryKind.GOODWILL, note=f"granted its veterans {spec.label.lower()}")
+    if kind is VeteranGrant.TITLE:
+        await raise_veteran(ctx, realm, towns)
+
+
+async def raise_veteran(ctx: TickContext, realm: EntityRow, towns: list[int]) -> EntityRow | None:
+    veteran = await ctx.session.scalar(
+        select(EntityRow)
+        .where(
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.mortal_role.in_(list(VETERAN_ROLES)),
+            await present_among(ctx.session, set(towns)),
+        )
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    if veteran is None or held(veteran.id):
+        return None
+    return await ennobled(ctx, veteran, realm)
+
+
+async def set_policy(ctx: TickContext, realm_id: int, grant: VeteranGrant) -> VeteranPolicyRow:
+    row = await ctx.session.get(VeteranPolicyRow, realm_id)
+    if row is None:
+        row = VeteranPolicyRow(polity_entity_id=realm_id, grant=grant, set_epoch=ctx.epoch, locked=[])
+        ctx.session.add(row)
+    elif "grant" not in row.locked:
+        row.grant, row.set_epoch = grant, ctx.epoch
+    await ctx.session.flush()
+    await record(ctx, "veteran.policy_set", roles={IncidentRole.ACTOR: realm_id}, facts={"grant": row.grant})
+    return row

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.finance import OWED_LOANS
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -20,7 +21,7 @@ from aerona.db.tables.economy import (
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MaterialFamily, MaterialOrigin, TradeRouteStatus, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialFamily, MaterialOrigin, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -323,7 +324,7 @@ async def use_currency(ctx: TickContext, community_id: int, currency_id: int | N
 
 async def forgive(ctx: TickContext, loan_id: int) -> LoanRow:
     loan = await ctx.session.get(LoanRow, loan_id)
-    if loan is None or loan.status is not LoanStatus.OPEN:
+    if loan is None or loan.status not in OWED_LOANS:
         raise ValidationFailedError("No open loan was found.")
     await forgive_loan(ctx, loan)
     await ctx.session.flush()

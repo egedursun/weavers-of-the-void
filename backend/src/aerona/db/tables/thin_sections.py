@@ -4,10 +4,11 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import between, enum_type
+from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import RelationComponent
 from aerona.domain.enums.regime import SelectorateKind
-from aerona.domain.enums.travel import EncounterEffect, RouteEnvironment
+from aerona.domain.enums.travel import EncounterEffect
 
 COMPONENT_FIELDS = ("value",)
 CONSTITUTION_FIELDS = ("ideology_entity_id", "selectorate", "offices", "rights")
@@ -53,7 +54,7 @@ class JourneyEncounterRow(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"), index=True)
-    environment: Mapped[RouteEnvironment] = mapped_column(enum_type(RouteEnvironment, "environment"))
+    environment: Mapped[TradeMode] = mapped_column(enum_type(TradeMode, "environment"))
     effect: Mapped[EncounterEffect] = mapped_column(enum_type(EncounterEffect, "effect"))
     name: Mapped[str | None] = mapped_column(String(NAME_MAX_LENGTH))
     weight: Mapped[int] = mapped_column(default=50)

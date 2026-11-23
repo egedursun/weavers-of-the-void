@@ -7,7 +7,7 @@ from aerona.core.grammar import an, several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.life_traits import DuelContextTrait
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.military import DuelContext, PeaceTermKind, WarAimKind
+from aerona.domain.enums.military import DuelContext, DuelEnd, PeaceTermKind, WarAimKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.war import WarCause
 from aerona.engine.military import orders, records
@@ -129,6 +129,7 @@ class Ordeal(Command):
     first_id: int
     second_id: int
     context: DuelContext = DuelContext.HONOUR
+    ending: DuelEnd | None = None
     war_id: int | None = None
 
 
@@ -255,5 +256,5 @@ async def ordeal(scope: PlayerScope, command: Ordeal) -> Effect:
     if first is None or second is None or command.context not in DUEL_CONTEXTS:
         return Effect("A duel needs two living fighters.", command.first_id)
     theatre = await Theatre.load(ctx)
-    fought_out = await duel(ctx, theatre, first, second, war=None, anchor_id=None, context=command.context)
+    fought_out = await duel(ctx, theatre, first, second, war=None, anchor_id=None, context=command.context, ending=command.ending)
     return Effect(fought_out.text, first.id)

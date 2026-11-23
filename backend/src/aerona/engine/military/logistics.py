@@ -30,7 +30,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import unfit_for_land_war, view_of
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.environment.book import EnvironmentBook, add_scar
-from aerona.engine.environment.perils import Wandering, danger_toll, navigate
+from aerona.engine.environment.perils import Peril, Wandering, danger_toll, navigate
 from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import has_technique
@@ -60,6 +60,7 @@ from aerona.engine.military.command import Areas, area_factor, command_areas, th
 from aerona.engine.military.engineering import engineer, engineers, leave_earthworks, sappers, supply_limit
 from aerona.engine.military.finance import war_credit
 from aerona.engine.military.units import rearm, stacks_of, sync, take
+from aerona.engine.military.w52_war import escorted_chance, honour_crossing, keep_staff, refine_stance, scouted, winter_cut
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -290,7 +291,7 @@ def raid_line(ctx: TickContext, march: March, line: list[int], log: Season) -> N
     table = ctx.rules.logistics
     if len(line) - 1 < table.raid_line_length:
         return
-    if ctx.rng(f"supply_raid.{march.army.id}.{ctx.epoch}.{len(line)}").chance(table.raid_line_chance):
+    if ctx.rng(f"supply_raid.{march.army.id}.{ctx.epoch}.{len(line)}").chance(escorted_chance(ctx, march.profile, table.raid_line_chance)):
         march.profile.supply_days //= 2
         log.raided = True
 
@@ -396,14 +397,25 @@ async def hardship(ctx: TickContext, march: March, rows: list[ArmyUnitRow], log:
     return dead
 
 
-async def plan_stance(ctx: TickContext, march: March, enemy: March | None) -> None:
+async def plan_stance(ctx: TickContext, march: March, enemy: March | None, season_row: WorldSeasonRow | None = None) -> None:
     profile = march.profile
     row = await ctx.session.get(ArmyRow, march.army.id)
     if "stance" in profile.locked or row is None:
         return
+    before = profile.stance
     at_goal = march.goal is not None and profile.region_entity_id == march.goal
     outnumbered = enemy is not None and size_of(enemy.army) * 2 > size_of(march.army) * 3
     profile.stance = await choose_stance(ctx, march.owner, row, profile, attacking=march.attacking, at_goal=at_goal, outnumbered=outnumbered)
+    await refine_stance(
+        ctx,
+        march.army,
+        profile,
+        attacking=march.attacking,
+        enemy_profile=enemy.profile if enemy is not None else None,
+        enemy_army=enemy.army if enemy is not None else None,
+        season=season_row,
+        before=before,
+    )
 
 
 async def advance(
@@ -423,7 +435,7 @@ async def advance(
     origin = profile.region_entity_id
     charted = await holds_map(ctx, march.owner.id)
     supplied = await has_technique(ctx.session, march.owner.id, Technique.LOGISTICS)
-    await plan_stance(ctx, march, enemy)
+    await plan_stance(ctx, march, enemy, season_row)
     if profile.stance is Stance.RETREAT:
         log.works = engineer(ctx.rules, profile, rows, left) if left is not None and not held(left.entity_id) else None
         log.moved = retreat(ctx.rules, atlas, march.owner, profile)
@@ -480,6 +492,9 @@ async def campaign_season(
     areas = await command_areas(ctx.session, command.commander_entity_id if command is not None else None)
     left = ground.regions.get(origin) if origin is not None else None
     wandering = await advance(ctx, atlas, ground, march, rows=rows, log=log, left=left, weather=weather, season_row=season_row, enemy=enemy)
+    await honour_crossing(
+        ctx, march.army, ground.regions.get(profile.region_entity_id or 0), moved=bool(log.moved), contested=enemy is not None and march.attacking
+    )
     tire(ctx.rules, rows, profile)
     log.rejoined = regroup(ctx.rules, rows, profile)
     await restock(ctx, march.owner, profile, rows)
@@ -499,6 +514,7 @@ async def campaign_season(
     sanitation = await sanitation_of(ctx, march.owner)
     fever = summer(season_row, ground.seasons_of(march.owner.world_id))
     peril = await danger_toll(ctx, march.army, rows, profile.region_entity_id)
+    peril = Peril(await scouted(ctx, march.army.id, peril.dead), peril.ambushed)
     dead = feed(ctx, march, region, home, log, season=season_row, saving=thrift(ctx.rules, areas)) + camp_sickness(
         ctx, march, region, sanitation=sanitation, fever=fever
     )
@@ -512,7 +528,8 @@ async def campaign_season(
     log.unfed_mounts = not feed_mounts(ctx.rules, profile, rows, log.foraged)
     await rearm(ctx, march.army, march.owner, rows)
     dead += await hardship(ctx, march, rows, log)
-    log.dead = take(rows, dead)
+    await keep_staff(ctx, march, rows, first=season == 0)
+    log.dead = take(rows, winter_cut(ctx, profile, dead))
     sync(march.army, rows, ctx.rules)
     carry(ctx.rules, profile, stat(march.army, "size") or 0)
     army_row = await ctx.session.get(ArmyRow, march.army.id)

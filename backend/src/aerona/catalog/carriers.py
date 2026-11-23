@@ -24,7 +24,7 @@ class CarrierSpec:
     exposure: int
 
 
-LAND = frozenset({M.ROAD, M.CARAVAN})
+LAND = frozenset({M.ROAD})
 WATER = frozenset({M.RIVER, M.SEA})
 EVERY = frozenset(TradeMode)
 CARRIERS: Mapping[CarrierKind, CarrierSpec] = total(
@@ -39,12 +39,12 @@ CARRIERS: Mapping[CarrierKind, CarrierSpec] = total(
         K.SEA: CarrierSpec("Sea ships", 60, 4, 3, T.SAILING, frozenset({M.SEA}), None, 35),
         K.AIR: CarrierSpec("Aircraft", 20, 9, 9, T.AVIATION, EVERY, "fuel", 15),
         K.PIPELINE: CarrierSpec("Pipelines", 100, 7, 2, T.INDUSTRIAL_CHEMISTRY, LAND, None, 25),
-        K.ORBITAL_LIFT: CarrierSpec("Orbital lifts", 120, 8, 6, T.ROCKETRY, frozenset({M.SKY}), "fuel", 10),
-        K.SPACE: CarrierSpec("Space freighters", 150, 9, 8, T.ROCKETRY, frozenset({M.SKY}), "fuel", 20),
+        K.ORBITAL_LIFT: CarrierSpec("Orbital lifts", 120, 8, 6, T.ROCKETRY, frozenset({M.SKY, M.SPACE}), "fuel", 10),
+        K.SPACE: CarrierSpec("Space freighters", 150, 9, 8, T.ROCKETRY, frozenset({M.SKY, M.SPACE}), "fuel", 20),
         K.TELEPORT: CarrierSpec("Teleport", 50, 10, 10, T.ARTIFICIAL_MINDS, EVERY, None, 5),
         K.LIVING: CarrierSpec("Living carriers", 35, 4, 3, T.GENETIC_ENGINEERING, LAND | WATER, "feed", 30),
         K.RITE: CarrierSpec("Bound conveyance", 15, 8, 7, T.SUMMONING, EVERY, None, 10),
-        K.NETWORK: CarrierSpec("Networks", 0, 10, 1, T.COMPUTATION, EVERY, None, 15),
+        K.NETWORK: CarrierSpec("Networks", 0, 10, 1, T.COMPUTATION, frozenset({M.NETWORK}), None, 15),
     },
 )
 CARRIER_OF: Mapping[TransportKind, CarrierKind] = total(TransportKind, {kind: CarrierKind(kind.value) for kind in TransportKind})

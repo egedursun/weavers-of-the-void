@@ -6,12 +6,14 @@ from aerona.db.tables.happenings import RiverShiftRow
 from aerona.db.tables.polity import PolityTerritoryRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.agrarian import RebuildCause
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.happening import RiverShiftCause
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
+from aerona.engine.agrarian.ruin import ruin_towns_in
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar
 from aerona.engine.environment.geomorph import shift_river
@@ -97,6 +99,7 @@ async def slide_dam(ctx: TickContext, land: RegionEnvironmentRow) -> bool:
     if shift is None:
         return False
     await record(ctx, "river.dammed_by_slide", roles={IncidentRole.PLACE: land.entity_id}, facts={"river": shift.river_class}, place=land.entity_id)
+    await ruin_towns_in(ctx, land.entity_id, RebuildCause.LANDSLIDE)
     return True
 
 

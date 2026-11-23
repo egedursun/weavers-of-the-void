@@ -18,6 +18,7 @@ import {
   Droplets,
   Expand,
   Eye,
+  EyeOff,
   FileWarning,
   Flame,
   FlaskConical,
@@ -45,6 +46,7 @@ import {
   Rocket,
   Sailboat,
   Scale,
+  ScrollText,
   Ship,
   Shrub,
   Snowflake,
@@ -60,14 +62,17 @@ import {
   TrendingDown,
   TrendingUp,
   Truck,
-  UserX,
+  type LucideIcon,
   Users,
+  UserX,
   Warehouse,
   Waves,
   Wheat,
   Wine,
   Zap,
-  type LucideIcon,
+  MessageSquareWarning,
+  CalendarX,
+  ShieldPlus,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -147,6 +152,8 @@ export const RACKETS: Record<Schema['RacketKind'], Named> = {
 export const STANCES: Record<Schema['CrimeStance'], Named> = {
   suppress: { label: 'Suppressed', icon: Scale, tone: 'danger' },
   co_opt: { label: 'Co-opted', icon: HandCoins, tone: 'gold' },
+  tolerate: { label: 'Look away for bribes', icon: EyeOff, tone: 'warning' },
+  license: { label: 'License the trade', icon: ScrollText, tone: 'gold' },
 }
 
 export const ORDER_LAWS: Record<Schema['OrderLaw'], Named> = {
@@ -186,6 +193,16 @@ export const CONVOY_STATUS: Record<Schema['ConvoyStatus'], Named> = {
   arrived: { label: 'Arrived', icon: Store, tone: 'success' },
   raided: { label: 'Raided', icon: UserX, tone: 'danger' },
   lost: { label: 'Lost', icon: Waves, tone: 'danger' },
+  stranded: {
+    label: 'Stranded by the season',
+    icon: CalendarX,
+    tone: 'warning',
+  },
+  quarantined: {
+    label: 'Held in quarantine',
+    icon: ShieldPlus,
+    tone: 'danger',
+  },
 }
 
 export const PRESERVATION: Record<Schema['PreservationMethod'], Named> = {
@@ -229,4 +246,9 @@ export const TRANSPORT: Record<Schema['TransportKind'], Named> = {
 export const PLAYS: Record<Schema['MarketPlay'], Named> = {
   corner: { label: 'Cornered', icon: TrendingUp, tone: 'danger' },
   dump: { label: 'Flooded', icon: TrendingDown, tone: 'warning' },
+  rumour: {
+    label: 'Moved by a false report',
+    icon: MessageSquareWarning,
+    tone: 'gold',
+  },
 }

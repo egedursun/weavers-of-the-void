@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.life.domain import STANDING_STATES, UNFINISHED_STATES
+from aerona.catalog.life.domain import GONE_STATES, STANDING_STATES, UNFINISHED_STATES
 from aerona.core.grammar import agree, several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
@@ -20,8 +20,9 @@ async def summary(session: AsyncSession, work: EntityRow, profile: StructureProf
     label = resolved.label.lower()
     if profile.construction_state in UNFINISHED_STATES:
         return f"{work.name} ({label}, being raised, {profile.progress}% done)"
-    if profile.construction_state is ConstructionState.RUINED:
-        return f"{work.name} ({label}, a ruin)"
+    if profile.construction_state in GONE_STATES:
+        gone = "a ruin" if profile.construction_state is ConstructionState.RUINED else spoken(profile.construction_state)
+        return f"{work.name} ({label}, {gone})"
     state = "damaged, " if profile.construction_state is ConstructionState.DAMAGED else ""
     return f"{work.name} ({label} level {profile.level}, {state}working at {profile.effect_pct}%)"
 

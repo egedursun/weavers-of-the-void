@@ -1,14 +1,19 @@
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleSpec
 from aerona.domain.enums.belonging import IdentityLayer, SalienceDriver
 from aerona.domain.enums.collective import CrowdFeeling
+from aerona.domain.enums.communication import DispatchContent, SignalKind
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.customs import MarkKind, MarkMeaning, RevivalGoal, RevivalWay
 from aerona.domain.enums.entity import EntityType as E
 from aerona.domain.enums.faction import MovementCause
+from aerona.domain.enums.intrigue import FavourOrigin, HookDemand, IdentityReason
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule, StepAction
 from aerona.domain.enums.records import ProcessClock as C
 from aerona.domain.enums.records import ProcessGroup as G
+from aerona.domain.enums.renown import ClaimKind, LorePrice, ServiceTask
+from aerona.domain.enums.statecraft import CrisisDemand, ResolutionKind
 
 KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
@@ -155,5 +160,196 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         facts=(FactSpec("name", FactValue.NAME), FactSpec("living", FactValue.NAME), FactSpec("taboo", FactValue.NUMBER, FactUnit.COUNT)),
         place=PlaceRule.WHEN_KNOWN,
         clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "treaty.mediated",
+        G.LAW,
+        "{mediator} stood as mediator of {subject}.",
+        roles=(RoleSpec(R.MEDIATOR), RoleSpec(R.SUBJECT), RoleSpec(R.ACCUSED, required=False)),
+        facts=(FactSpec("standing", FactValue.NUMBER, FactUnit.COUNT),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "treaty.suspended",
+        G.LAW,
+        "{actor} suspended {subject} without breaking it, and the other parties trusted it {trust_lost} less.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT)),
+        facts=(FactSpec("trust_lost", FactValue.NUMBER, FactUnit.COUNT),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "crisis.mediated",
+        G.LAW,
+        "{mediator} settled the crisis between {accuser} and {target} over the demand to {demand}.",
+        roles=(RoleSpec(R.MEDIATOR), RoleSpec(R.ACCUSER), RoleSpec(R.TARGET)),
+        facts=(FactSpec("demand", FactValue.ENUM, enum=CrisisDemand), FactSpec("escalation", FactValue.NUMBER, FactUnit.COUNT)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "polity.declared_neutral",
+        G.LAW,
+        "{subject} declared itself neutral and left {alliances_left:alliance|alliances}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.POLITY})),),
+        facts=(FactSpec("alliances_left", FactValue.NUMBER, FactUnit.COUNT),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "dispatch.forged",
+        G.SOCIAL,
+        "{receiver} received {content:an} that seemed to come from {origin} but was forged.",
+        roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.ORIGIN), RoleSpec(R.RECEIVER)),
+        facts=(FactSpec("content", FactValue.ENUM, enum=DispatchContent),),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "dispatch.misread",
+        G.SOCIAL,
+        "{receiver} misread {content:an} from {origin}.",
+        roles=(RoleSpec(R.ORIGIN), RoleSpec(R.RECEIVER)),
+        facts=(FactSpec("content", FactValue.ENUM, enum=DispatchContent),),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "dispatch.order_obeyed",
+        G.SOCIAL,
+        "{actor} obeyed {content:an} in the name of {authority} and moved {subject} to {place}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.AUTHORITY), RoleSpec(R.SUBJECT), RoleSpec(R.PLACE)),
+        facts=(FactSpec("content", FactValue.ENUM, enum=DispatchContent),),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "envoy.defected",
+        G.SOCIAL,
+        "{envoy} stayed with {host} and carried the secrets of {victim} with them.",
+        roles=(RoleSpec(R.ENVOY), RoleSpec(R.HOST), RoleSpec(R.VICTIM)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "envoy.expelled",
+        G.SOCIAL,
+        "{host} sent {envoy} home to {receiver}.",
+        roles=(RoleSpec(R.ENVOY), RoleSpec(R.HOST), RoleSpec(R.RECEIVER)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "signal.jammed",
+        G.SOCIAL,
+        "{actor} jammed the {station} of {owner} at {place}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.OWNER), RoleSpec(R.PLACE)),
+        facts=(FactSpec("station", FactValue.ENUM, enum=SignalKind),),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "knowledge.sold",
+        G.SOCIAL,
+        "{seller} gave {lore} to {buyer}, worth {worth}, for {price}.",
+        roles=(RoleSpec(R.SELLER), RoleSpec(R.BUYER)),
+        facts=(
+            FactSpec("lore", FactValue.ENUM, enum=KnowledgeKind),
+            FactSpec("price", FactValue.ENUM, enum=LorePrice),
+            FactSpec("worth", FactValue.NUMBER, FactUnit.COUNT),
+        ),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "knowledge.service_done",
+        G.SOCIAL,
+        "{buyer} did {task:an} for {seller} and was given the {lore} it had bought.",
+        roles=(RoleSpec(R.BUYER), RoleSpec(R.SELLER)),
+        facts=(FactSpec("task", FactValue.ENUM, enum=ServiceTask), FactSpec("lore", FactValue.ENUM, enum=KnowledgeKind)),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "renown.claimed",
+        G.SOCIAL,
+        "{actor} laid {claim:an} claim to a deed of {victim}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM)),
+        facts=(FactSpec("claim", FactValue.ENUM, enum=ClaimKind),),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "renown.disputed",
+        G.SOCIAL,
+        "{actor} disputed the {claim} claim of {opponent}, and the renown of the deed was split until it is settled.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.OPPONENT)),
+        facts=(FactSpec("claim", FactValue.ENUM, enum=ClaimKind),),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "identity.exposed",
+        G.SOCIAL,
+        "{subject} was found out living as {false_name}: {reason:an}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("reason", FactValue.ENUM, enum=IdentityReason), FactSpec("false_name", FactValue.NAME)),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "favour.owed",
+        G.SOCIAL,
+        "{actor} came to owe {beneficiary} a favour of {size} for {origin:an}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.BENEFICIARY)),
+        facts=(FactSpec("origin", FactValue.ENUM, enum=FavourOrigin), FactSpec("size", FactValue.NUMBER, FactUnit.COUNT)),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "hook.used",
+        G.SOCIAL,
+        "{actor} pressed {target} to {demand}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET)),
+        facts=(FactSpec("demand", FactValue.ENUM, enum=HookDemand),),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.mediate",
+        G.LAW,
+        "{actor} offered its realm as mediator of {subject}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.SUBJECT)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.suspend_treaty",
+        G.LAW,
+        "{actor} suspended {subject} for a time.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.SUBJECT)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.declare_neutral",
+        G.LAW,
+        "{actor} declared {subject} neutral.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.SUBJECT, frozenset({E.POLITY}))),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.propose_resolution",
+        G.LAW,
+        "{actor} put a resolution to {authority}: {kind}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY), RoleSpec(R.TARGET, required=False)),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=ResolutionKind),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.expel_envoy",
+        G.SOCIAL,
+        "{actor} had {envoy} sent home.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.ENVOY)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.jam_signal",
+        G.SOCIAL,
+        "{actor} set out to jam a signal station of {owner}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.OWNER)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.claim_deed",
+        G.SOCIAL,
+        "{actor} spoke up about a deed of {victim}: {claim}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.VICTIM)),
+        facts=(FactSpec("claim", FactValue.ENUM, enum=ClaimKind),),
+        clock=C.INSTANT,
     ),
 )

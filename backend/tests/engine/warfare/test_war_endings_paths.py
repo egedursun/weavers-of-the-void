@@ -45,7 +45,7 @@ async def test_a_starved_city_opens_its_gates_and_is_sacked(session: AsyncSessio
     guard, guard_row = await raise_army(ctx, strength, await SideIndex.load(session, await Neighbourhood.load(session, ctx.rules)), city, war)
     armies = {march.owner.id: (march.army, army_row), city.id: (guard, guard_row)}
     await _surrender(ctx, OngoingWar(war, march.owner.id, city.id), (march.owner, city), step, marches=[march], armies=armies)
-    assert step.siege.status is SiegeStatus.BREACHED and "war.siege.surrender" in await keys(session)
+    assert step.siege.status is SiegeStatus.SURRENDERED and "war.siege.surrender" in await keys(session)
     assert (await session.get(WarRow, war.id)) is not None
 
 

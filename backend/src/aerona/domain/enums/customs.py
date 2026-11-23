@@ -117,6 +117,8 @@ class EvidenceKind(StrEnum):
     CONFESSION = "confession"
     DIVINATION = "divination"
     MAGIC = "magic"
+    EXPERT = "expert"
+    HEARSAY = "hearsay"
 
 
 class Membership(StrEnum):
@@ -132,6 +134,10 @@ class MemberRight(StrEnum):
     MARRIAGE = "marriage"
     ARMS = "arms"
     COURTS = "courts"
+    PROPERTY = "property"
+    MOVEMENT = "movement"
+    VOTE = "vote"
+    WORSHIP = "worship"
 
 
 class Naturalisation(StrEnum):
@@ -142,6 +148,7 @@ class Naturalisation(StrEnum):
     SERVICE = "service"
     PURCHASE = "purchase"
     GRANT = "grant"
+    UNION = "union"
 
 
 class ReliefKind(StrEnum):
@@ -149,6 +156,9 @@ class ReliefKind(StrEnum):
     ALMS = "alms"
     WORKHOUSE = "workhouse"
     PARISH = "parish"
+    FOSTER_CARE = "foster_care"
+    SICK_HOUSE = "sick_house"
+    PENSION = "pension"
 
 
 class CoopPurpose(StrEnum):
@@ -158,3 +168,5 @@ class CoopPurpose(StrEnum):
     INSURANCE = "insurance"
     BURIAL = "burial"
     CREDIT = "credit"
+    GRANARY = "granary"
+    HERDING = "herding"

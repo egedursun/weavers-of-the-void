@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.core.total import total
@@ -14,7 +15,8 @@ J = Job
 W = WorkshopKind
 AVERAGE = 100
 
-SHORTFALL_EFFECTS: Mapping[CommodityKind, ShortfallEffect] = MappingProxyType(
+SHORTFALL_EFFECTS: Mapping[CommodityKind, ShortfallEffect] = total(
+    CommodityKind,
     {
         C.GRAIN: E.HUNGER,
         C.LIVESTOCK: E.HUNGER,
@@ -51,7 +53,15 @@ SHORTFALL_EFFECTS: Mapping[CommodityKind, ShortfallEffect] = MappingProxyType(
         C.HERBS: E.SICKNESS,
         C.BREW_BASE: E.STATUS,
         C.POISON: E.INSECURITY,
-    }
+        C.HALITE: E.HUNGER,
+        C.OIL: E.HUNGER,
+        C.SUGAR: E.HUNGER,
+        C.HONEY: E.HUNGER,
+        C.SPICE: E.STATUS,
+        C.WAX: E.STATUS,
+        C.POTTERY: E.TOIL,
+        C.BOOKS: E.STATUS,
+    },
 )
 
 
@@ -188,8 +198,36 @@ EFFECT_BASKET: Mapping[ShortfallEffect, Mapping[SocialClass, int]] = MappingProx
                 S.UNEMPLOYED: 0,
             }
         ),
+        E.THIRST: MappingProxyType({}),
+        E.SHELTER: MappingProxyType({}),
     }
 )
+
+
+@dataclass(frozen=True)
+class ShortfallSpec:
+    label: str
+    want: str
+    from_goods: bool
+
+
+SHORTFALLS: Mapping[ShortfallEffect, ShortfallSpec] = total(
+    ShortfallEffect,
+    {
+        E.HUNGER: ShortfallSpec("Hunger", "food", True),
+        E.HERDS: ShortfallSpec("Starving herds", "fodder", True),
+        E.COLD: ShortfallSpec("Cold", "fuel, timber or cloth", True),
+        E.SICKNESS: ShortfallSpec("Sickness", "medicine", True),
+        E.IMPIETY: ShortfallSpec("Impiety", "incense or sacred goods", True),
+        E.STATUS: ShortfallSpec("Lost status", "luxuries", True),
+        E.TOIL: ShortfallSpec("Toil", "tools, ore or stone", True),
+        E.INSECURITY: ShortfallSpec("Insecurity", "weapons, armour or mounts", True),
+        E.ARCANE: ShortfallSpec("Arcane want", "magical reagents", True),
+        E.THIRST: ShortfallSpec("Thirst", "water", False),
+        E.SHELTER: ShortfallSpec("Shelter", "a roof", False),
+    },
+)
+OUTER_SHORTFALLS: frozenset[ShortfallEffect] = frozenset(effect for effect, spec in SHORTFALLS.items() if not spec.from_goods)
 
 SERVE_ORDER: tuple[SocialClass, ...] = (
     S.NOBLE,
@@ -233,21 +271,21 @@ CLASS_INCOME: Mapping[SocialClass, int] = total(
 JOB_GOODS: Mapping[Job, tuple[CommodityKind, ...]] = total(
     Job,
     {
-        J.FARMING: (C.GRAIN, C.BREAD, C.FRUIT, C.TUBERS, C.FIBRE, C.DYE, C.HERBS, C.BREW_BASE, C.POISON),
+        J.FARMING: (C.GRAIN, C.BREAD, C.FRUIT, C.TUBERS, C.FIBRE, C.DYE, C.HERBS, C.BREW_BASE, C.POISON, C.HONEY, C.WAX, C.SUGAR, C.SPICE, C.OIL),
         J.HERDING: (C.LIVESTOCK, C.FODDER, C.MOUNTS, C.MEAT, C.MILK, C.CHEESE, C.DUNG, C.EGGS, C.WOOL),
         J.FISHING: (C.FISH,),
-        J.MINING: (C.ORE, C.STONE, C.COAL, C.PEAT),
-        J.CRAFTING: (C.TOOLS, C.CLOTH, C.WEAPONS, C.ARMOUR, C.FUEL, C.MEDICINE),
+        J.MINING: (C.ORE, C.STONE, C.COAL, C.PEAT, C.HALITE),
+        J.CRAFTING: (C.TOOLS, C.CLOTH, C.WEAPONS, C.ARMOUR, C.FUEL, C.MEDICINE, C.POTTERY, C.OIL),
         J.TRADE: (C.LUXURIES,),
         J.CLERGY: (C.INCENSE, C.SACRED_GOODS),
-        J.SCHOLARSHIP: (C.MAGICAL_REAGENTS,),
+        J.SCHOLARSHIP: (C.MAGICAL_REAGENTS, C.BOOKS),
         J.BUILDING: (C.TIMBER, C.SIEGE_MATERIEL),
         J.SOLDIERING: (),
         J.SERVICE: (),
         J.IDLE: (),
         J.TRANSPORT: (),
         J.ADMINISTRATION: (),
-        J.GATHERING: (C.HERBS, C.FRUIT, C.TIMBER),
+        J.GATHERING: (C.HERBS, C.FRUIT, C.TIMBER, C.HONEY, C.WAX, C.SPICE),
         J.INDUSTRY: (C.TOOLS, C.CLOTH, C.FUEL),
         J.ARTS: (C.LUXURIES,),
     },
@@ -255,7 +293,8 @@ JOB_GOODS: Mapping[Job, tuple[CommodityKind, ...]] = total(
 
 MOVABLE_JOBS: frozenset[Job] = frozenset({J.FARMING, J.HERDING, J.FISHING, J.MINING, J.CRAFTING, J.TRADE, J.BUILDING})
 
-WORKSHOP_JOBS: Mapping[WorkshopKind, Job] = MappingProxyType(
+WORKSHOP_JOBS: Mapping[WorkshopKind, Job] = total(
+    WorkshopKind,
     {
         W.MARKET: J.TRADE,
         W.GRANARY: J.TRADE,
@@ -276,7 +315,12 @@ WORKSHOP_JOBS: Mapping[WorkshopKind, Job] = MappingProxyType(
         W.ALCHEMIST: J.SCHOLARSHIP,
         W.SHRINE_WORKSHOP: J.CLERGY,
         W.MINT: J.TRADE,
-    }
+        W.POTTERY: J.CRAFTING,
+        W.GLASSWORKS: J.CRAFTING,
+        W.DYEWORKS: J.CRAFTING,
+        W.SCRIPTORIUM: J.SCHOLARSHIP,
+        W.EVAPORATION_WORKS: J.MINING,
+    },
 )
 
 GATED_JOBS: Mapping[Job, tuple[Job, frozenset[WorkshopKind]]] = MappingProxyType(

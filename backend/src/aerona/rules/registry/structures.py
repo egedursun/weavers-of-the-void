@@ -9,6 +9,9 @@ G = RuleGroup.SETTLEMENTS
 @dataclass(frozen=True)
 class ConstructionRules(Spanned):
     active_per_site: int = rule(2, 1, 50, G, "Most works a settlement keeps under construction at once")
+    dismantle_yield_pct: int = rule(40, 0, 100, G, "Share of a work's cost its stone and timber give to new building when it is taken apart (%)")
+    abandoned_legend_pct: int = rule(10, 0, 100, G, "Chance in an epoch that an unfinished work left standing gathers a legend and its treasure-seekers (%)")
+    salvage_pct: int = rule(10, 0, 100, G, "Chance in an epoch that a living town takes apart an unfinished work in it for its stone (%)")
     slots_base: int = rule(6, 0, 1000, G, "Structure slots of a hamlet")
     slots_per_tier: int = rule(6, 0, 1000, G, "Structure slots gained per size tier above hamlet")
     people_per_slot: int = rule(250, 1, 10000000, G, "People per extra structure slot a settlement gains")

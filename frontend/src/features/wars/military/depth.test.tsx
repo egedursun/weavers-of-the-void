@@ -7,6 +7,7 @@ import {
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { UnitDesigns } from './Designs'
+import { NamedPrisoners } from './Retinue'
 import { Vendettas } from './Vendettas'
 import { VesselCard } from './VesselCard'
 import { WarMap } from './WarMap'
@@ -236,5 +237,49 @@ describe('military depth surfaces', () => {
     await expect
       .element(screen.getByRole('link', { name: 'World map' }))
       .toBeVisible()
+  })
+  it('names a captive freed on parole and one married into the captors', async () => {
+    serve()
+    const captive = (
+      id: number,
+      name: string,
+      status: string,
+      extra: object
+    ) => ({
+      id,
+      values: {
+        id,
+        status,
+        taken_epoch: 9,
+        loyalty: 10,
+        ransom_paid: null,
+        ...extra,
+      },
+      locked: [],
+      refs: { captive_entity_id: { id: id + 100, kind: 'entity', name } },
+    })
+    onApi('GET', '/api/military/records/captive', {
+      kind: 'captive',
+      label: 'Captive',
+      creatable: false,
+      deletable: true,
+      scope: 'captor_entity_id',
+      columns: [],
+      rows: [
+        captive(1, 'Captain Ilse', 'paroled', { oath_id: 5 }),
+        captive(2, 'Tove', 'married_in', { oath_id: null }),
+      ],
+    })
+    const { screen } = await renderApp(
+      <NamedPrisoners captorId={3} blocked={null} />
+    )
+    await expect.element(screen.getByText('Freed on parole')).toBeVisible()
+    await expect
+      .element(screen.getByText('Sworn not to fight again'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Married into the captors'))
+      .toBeVisible()
+    expect(screen.container.textContent).not.toContain('married_in')
   })
 })

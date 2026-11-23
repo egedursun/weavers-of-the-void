@@ -14,8 +14,9 @@ from aerona.db.tables.thin_sections import (
 )
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.culture import IdeologyTenet
+from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.mind import RelationComponent
-from aerona.domain.enums.travel import EncounterEffect, RouteEnvironment
+from aerona.domain.enums.travel import EncounterEffect
 from aerona.engine.lore.creed_change import merge_creeds, split_creed, write_constitution
 from aerona.engine.powers.control import edit_fields
 from aerona.engine.services.community_relations import pair_key
@@ -59,7 +60,7 @@ class CharterKey(Command):
 
 
 class EncounterMake(Command):
-    environment: RouteEnvironment
+    environment: TradeMode
     effect: EncounterEffect
     world_id: int | None = None
     name: str | None = Field(default=None, max_length=NAME_MAX_LENGTH)

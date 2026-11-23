@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.life.military import SETTLE_COHORT_CAPTIVE_FATES, SETTLE_COHORT_CAPTIVE_FATES_2
 from aerona.catalog.units import UNITS
+from aerona.catalog.war_w52 import CAPTIVE_FATES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
@@ -16,9 +17,13 @@ from aerona.domain.enums.military import (
     ArmourType,
     CaptiveFate,
     CommanderTrait,
+    DefenderAction,
     Formation,
     MoraleState,
+    SackChoice,
     ShieldType,
+    SiegeAction,
+    SiegeWork,
     SpyCover,
     Stance,
     StarvationStage,
@@ -27,7 +32,7 @@ from aerona.domain.enums.military import (
 )
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
-from aerona.engine.military.captivity import settle_into
+from aerona.engine.military.captivity import execute, press_into_army, settle_into
 from aerona.engine.military.support import new_side
 from aerona.engine.military.terms import separate_peace
 from aerona.engine.military.units import drill_fields, profile_of, stacks_of, sync
@@ -57,7 +62,14 @@ STACK_CHOICES: dict[str, Callable[[str], Any]] = {
 }
 SIEGE_PERCENT = frozenset({"disease_inside", "disease_outside"})
 SIEGE_POSITIVE = frozenset({"supplies", "water", "breaches", "sallies", "rounds"})
-SIEGE_CHOICES: dict[str, Callable[[str], Any]] = {"starvation": StarvationStage, "status": SiegeStatus}
+SIEGE_CHOICES: dict[str, Callable[[str], Any]] = {
+    "starvation": StarvationStage,
+    "status": SiegeStatus,
+    "last_action": SiegeAction,
+    "last_defence": DefenderAction,
+    "choice": SackChoice,
+}
+WORK_PREFIX = "work:"
 NETWORK_PERCENT = frozenset({"depth", "exposure", "intel"})
 
 
@@ -194,7 +206,10 @@ async def edit_siege(ctx: TickContext, siege_id: int, values: Values) -> SiegeRo
         elif key == "walls_level":
             row.walls_level = min(5, positive(key, value))
         elif key in SIEGE_CHOICES:
-            setattr(row, key, choice(key, SIEGE_CHOICES[key], value))
+            setattr(row, key, None if value is None else choice(key, SIEGE_CHOICES[key], value))
+        elif key.startswith(WORK_PREFIX):
+            work = choice("siege work", SiegeWork, key.removeprefix(WORK_PREFIX))
+            row.works = {**(row.works or {}), work.value: percent(key, value)}
         else:
             raise ValidationFailedError(f"Unknown siege field: {key}.")
     if row.status is not SiegeStatus.ONGOING and row.ended_epoch is None:
@@ -350,6 +365,8 @@ async def settle_cohort(ctx: TickContext, cohort_id: int, fate: CaptiveFate, cou
             settle_into(ctx, home, row.count)
         elif fate in SETTLE_COHORT_CAPTIVE_FATES_2:
             settle_into(ctx, captor, row.count)
+        elif captor is not None:
+            await harsh_end(ctx, row, captor, home, fate)
         row.fate, row.settled_epoch = fate, ctx.epoch
     await ctx.session.flush()
     return row
@@ -385,7 +402,25 @@ async def edit_network(ctx: TickContext, network_id: int, values: Values, *, dis
             row.cover = choice(key, SpyCover, value)
         elif key == "spymaster_id":
             row.spymaster_entity_id = int(value) if isinstance(value, int) and not isinstance(value, bool) else None
+        elif key == "institution_id":
+            row.institution_entity_id = await institution(ctx, row, value)
         else:
             raise ValidationFailedError(f"Unknown network field: {key}.")
     await ctx.session.flush()
     return row
+
+
+async def harsh_end(ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow, home: EntityRow | None, fate: CaptiveFate) -> None:
+    if CAPTIVE_FATES[fate].serves_captor:
+        await press_into_army(ctx, row, captor, True, forced=True)
+    elif CAPTIVE_FATES[fate].killed and fate is not CaptiveFate.SACRIFICED:
+        await execute(ctx, row, captor, home)
+
+
+async def institution(ctx: TickContext, row: SpyNetworkRow, value: object) -> int | None:
+    if value is None:
+        return None
+    place = await living_entity(ctx.session, int(value)) if isinstance(value, int) and not isinstance(value, bool) else None
+    if place is None or row.target_entity_id not in {place.id, place.location_id}:
+        raise ValidationFailedError("An agent can be placed only in the target itself or an institution inside it.")
+    return place.id

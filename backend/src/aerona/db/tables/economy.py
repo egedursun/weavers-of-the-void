@@ -23,9 +23,10 @@ from aerona.domain.enums.economy import (
 from aerona.domain.enums.industry import MethodKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.operations import CarrierKind
 from aerona.domain.enums.society import KnowledgeBranch
 
-ROUTE_DANGER_COLUMNS = ("danger_bandits", "danger_beasts", "danger_weather", "danger_sea")
+ROUTE_DANGER_COLUMNS = ("danger_bandits", "danger_beasts", "danger_weather", "danger_sea", "danger_officials", "danger_spoilage", "danger_pilferage")
 PHYSICS_COLUMNS = (
     "melting_point",
     "ignition_point",
@@ -284,6 +285,7 @@ class TradeRouteProfileRow(Base):
     first_market_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     second_market_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     mode: Mapped[TradeMode] = mapped_column(enum_type(TradeMode, "mode"))
+    carrier: Mapped[CarrierKind | None] = mapped_column(enum_type(CarrierKind, "carrier"))
     status: Mapped[TradeRouteStatus] = mapped_column(enum_type(TradeRouteStatus, "status"))
     length: Mapped[int]
     controller_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
@@ -296,6 +298,10 @@ class TradeRouteProfileRow(Base):
     danger_beasts: Mapped[int] = mapped_column(default=0)
     danger_weather: Mapped[int] = mapped_column(default=0)
     danger_sea: Mapped[int] = mapped_column(default=0)
+    danger_officials: Mapped[int] = mapped_column(default=0, server_default="0")
+    danger_spoilage: Mapped[int] = mapped_column(default=0, server_default="0")
+    danger_pilferage: Mapped[int] = mapped_column(default=0, server_default="0")
+    closed_season: Mapped[int | None]
     season_pct: Mapped[int] = mapped_column(default=100)
     chokepoint: Mapped[bool] = mapped_column(default=False)
     closed_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
@@ -403,6 +409,7 @@ class LoanRow(Base):
     issued_epoch: Mapped[int]
     due_epoch: Mapped[int]
     status: Mapped[LoanStatus] = mapped_column(enum_type(LoanStatus, "status"))
+    collateral_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     purpose: Mapped[str] = mapped_column(Text)
     war_id: Mapped[int | None] = mapped_column(ForeignKey("wars.id", ondelete="SET NULL"))
     held: Mapped[bool] = mapped_column(default=False)

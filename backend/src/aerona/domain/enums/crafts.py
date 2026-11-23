@@ -47,12 +47,19 @@ class ChemicalProduct(StrEnum):
     MEDICINE = "medicine"
     INCENDIARY = "incendiary"
     EXPLOSIVE = "explosive"
+    INK = "ink"
+    GLAZE = "glaze"
+    PRESERVATIVE = "preservative"
+    ACID = "acid"
 
 
 class InsuranceCover(StrEnum):
     CARGO = "cargo"
     HOUSE = "house"
     LIFE = "life"
+    CROP = "crop"
+    VESSEL = "vessel"
+    LIVESTOCK = "livestock"
 
 
 class RightKind(StrEnum):
@@ -86,6 +93,7 @@ class AssistiveAid(StrEnum):
     TELESCOPE = "telescope"
     HEARING_HORN = "hearing_horn"
     CANE = "cane"
+    MICROSCOPE = "microscope"
 
 
 class ClockKind(StrEnum):
@@ -95,6 +103,8 @@ class ClockKind(StrEnum):
     CANDLE_CLOCK = "candle_clock"
     MECHANICAL = "mechanical"
     ASTRONOMICAL = "astronomical"
+    CHRONOMETER = "chronometer"
+    ELECTRONIC = "electronic"
 
 
 class Notation(StrEnum):

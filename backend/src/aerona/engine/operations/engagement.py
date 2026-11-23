@@ -30,9 +30,10 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.battle import stack_material
+from aerona.engine.operations.crews import fitted_stations, lives_saved
 from aerona.engine.operations.fields import keep
 from aerona.engine.operations.sail import Broadside, SailTally, crews_of, modern_shot, rate_of_fire, ship_state, shot_for, speed_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import StepDraft
 from aerona.engine.technology.profiles import family_level
@@ -181,6 +182,7 @@ async def lose_crew(fight: Fight, side: Party, pct: int, parent: int, round_inde
     if pct <= 0 or held(side.vessel.id):
         return 0
     crews = await crews_of(fight.ctx, side.vessel.id, side.row)
+    pct = round_half_up(pct * (1 - lives_saved(fight.ctx.rules, side.row, crews, await fitted_stations(fight.ctx.session, side.vessel.id, side.row))))
     for station in CrewStation:
         crew = crews.get(station)
         if crew is None or crew.count <= 0 or "count" in crew.locked:

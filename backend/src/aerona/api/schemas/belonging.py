@@ -50,6 +50,17 @@ class SanctuaryView(ApiModel):
     locked: list[str]
 
 
+class FugitiveView(ApiModel):
+    id: int
+    mortal: NodeRef
+    kind: FugitiveKind
+    pursuer: NodeRef | None
+    fled_epoch: int
+    caught_epoch: int | None
+    freed_epoch: int | None
+    locked: list[str]
+
+
 class SanctuaryLawView(ApiModel):
     restricted: bool
     fee_pct: int
@@ -79,6 +90,7 @@ class BelongingNodeView(ApiModel):
     fault_layer: IdentityLayer | None
     peer_groups: list[PeerGroupView]
     sanctuaries: list[SanctuaryView]
+    fugitives: list[FugitiveView]
     sanctuary_law: SanctuaryLawView | None
     satires: list[SatireView]
     jester: NodeRef | None

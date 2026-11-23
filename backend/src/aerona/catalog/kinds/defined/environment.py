@@ -64,7 +64,7 @@ PLACE_COVER = total(
 SEASON_DATING = total(
     SeasonDating,
     {
-        SeasonDating.POSITION: Defined("Position", checked_by=(), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
+        SeasonDating.POSITION: Defined("Position", checked_by=("services.books.typed.SEASON_COLUMNS",), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
         SeasonDating.DAY: Defined(
             "Day",
             checked_by=("engine.environment.season_remap.Move.of", "engine.environment.season_remap.remap_positions"),
@@ -81,6 +81,7 @@ TERRAIN_TRAIT = total(
             checked_by=(),
             used_by=(
                 "catalog.terrain.TERRAIN",
+                "engine.belonging.sanctuary.HIDING",
                 "engine.demography.peoples.COVERED",
                 "engine.industry.fuels.COAL_TERRAINS_BLOCKED",
                 "engine.military.battle.SHELTER",
@@ -117,6 +118,7 @@ TERRAIN_TRAIT = total(
             checked_by=(),
             used_by=(
                 "catalog.terrain.TERRAIN",
+                "engine.belonging.sanctuary.HIDING",
                 "engine.demography.peoples.COVERED",
                 "engine.demography.peoples.HIGHLAND",
                 "engine.economy.route_dangers.PASS_TERRAIN",
@@ -138,6 +140,7 @@ TERRAIN_TRAIT = total(
             checked_by=(),
             used_by=(
                 "catalog.terrain.TERRAIN",
+                "engine.belonging.sanctuary.HIDING",
                 "engine.demography.peoples.COVERED",
                 "engine.ecology.profiles.WATER",
                 "engine.economy.extraction.WETLANDS",
@@ -394,7 +397,11 @@ WEATHER_TRAIT = total(
 WORLD_LINK = total(
     WorldLink,
     {
-        WorldLink.WORLD: Defined("World", checked_by=("engine.environment.season_remap.of_world",), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
+        WorldLink.WORLD: Defined(
+            "World",
+            checked_by=("engine.environment.season_remap.of_world", "services.books.typed.TypedIndex.season_name"),
+            used_by=("catalog.season_positions.SEASON_POSITIONS",),
+        ),
         WorldLink.ENTITY: Defined("Entity", checked_by=("engine.environment.season_remap.of_world",), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
         WorldLink.INCIDENT: Defined("Incident", checked_by=(), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
     },

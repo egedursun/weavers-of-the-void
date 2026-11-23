@@ -68,6 +68,9 @@ class SanctuaryRules(Spanned):
     law_chance: int = rule(30, 0, 100, P, "Chance each epoch that a realm whose own refuges shelter those it hunts lays down a law of sanctuary (%)")
     restrict_from: int = rule(60, 0, 100, P, "Regard for law of a ruler from which its realm bars sanctuary rather than taxing it")
     levy_pct: int = rule(30, 0, 100, P, "Share of a refuge's fees a realm takes once it taxes sanctuary (%)")
+    wilds_hide_pct: int = rule(30, 0, 100, P, "Share of the pursuits after a fugitive that forest, mountain and marsh turn aside (%)")
+    free_city_term_years: int = span(1, 0, 50, P, "Years a runaway must stay in a city whose charter frees it before it is free")
+    embassy_crisis: int = rule(30, 0, 100, P, "Relation a realm loses with the power whose embassy it breaks to seize a fugitive")
 
     @property
     def surrender_epochs(self) -> int:

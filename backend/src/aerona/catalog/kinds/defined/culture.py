@@ -56,7 +56,9 @@ RUMOUR_CHANNEL = total(
 SPEAKER_KIND = total(
     SpeakerKind,
     {
-        SpeakerKind.NATIVE: Defined("Native", checked_by=(), used_by=("engine.climes.crossings.speak_lingua", "engine.phases.lore.cohorts")),
+        SpeakerKind.NATIVE: Defined(
+            "Native", checked_by=(), used_by=("engine.climes.crossings.speak_lingua", "engine.phases.lore.cohorts", "engine.tongues.policy.shield")
+        ),
         SpeakerKind.SECOND: Defined(
             "Second",
             checked_by=("engine.phases.language_death.living_speakers", "engine.phases.lore.cohorts", "engine.tongues.pidgins.creolise"),

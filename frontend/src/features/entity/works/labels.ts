@@ -40,6 +40,12 @@ import {
   Wheat,
   Wind,
   Wine,
+  Radiation,
+  Volume2,
+  Lightbulb,
+  Axe,
+  Palette,
+  BookCopy,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
@@ -100,12 +106,21 @@ export const PROCESSES: Record<string, Named> = {
   milking: { label: 'Milking', icon: Milk, tone: 'info' },
   shearing: { label: 'Shearing', icon: Scissors, tone: 'verdigris' },
   egg_laying: { label: 'Keeping laying birds', icon: Egg, tone: 'gold' },
+  smithing: { label: 'Smithing', icon: Hammer, tone: 'warning' },
+  carpentry: { label: 'Carpentry', icon: Axe, tone: 'success' },
+  firing: { label: 'Firing clay and glass', icon: Flame, tone: 'danger' },
+  dyeing: { label: 'Dyeing', icon: Palette, tone: 'verdigris' },
+  copying: { label: 'Copying writings', icon: BookCopy, tone: 'info' },
+  evaporating: { label: 'Making salt', icon: Waves, tone: 'muted' },
 }
 
 export const POLLUTANTS: Record<string, Named> = {
   air: { label: 'Air', icon: Cloud, tone: 'muted' },
   water: { label: 'Water', icon: Droplets, tone: 'info' },
   soil: { label: 'Soil', icon: Mountain, tone: 'warning' },
+  radiation: { label: 'Radiation', icon: Radiation, tone: 'danger' },
+  noise: { label: 'Noise', icon: Volume2, tone: 'warning' },
+  light: { label: 'Light at night', icon: Lightbulb, tone: 'gold' },
 }
 
 export const TIER_TONE: Record<string, Named['tone']> = {

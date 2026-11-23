@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.finance import SAVING_FORMS
 from aerona.catalog.life.domain import LENDER_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.faction_kinds import of_kinds
@@ -16,12 +17,15 @@ from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.orders import HoardState, SavingForm
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
+from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.eras.effects import era_techniques
+from aerona.engine.finance.speculation import hunger_at
 from aerona.engine.mind.split import MIDPOINT, attributes_of
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.society import class_shares
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import ongoing_wars
 
@@ -72,11 +76,20 @@ async def share_for(ctx: TickContext, household: HouseholdRow) -> int:
 
 
 async def form_for(ctx: TickContext, household: HouseholdRow) -> SavingForm:
-    if await insecurity_of(ctx, household.settlement_node_id) >= ctx.rules.saving.insecure_from:
+    town = household.settlement_node_id
+    if await insecurity_of(ctx, town) >= ctx.rules.saving.insecure_from:
         return SavingForm.HOARD
-    if await bank_in(ctx, household.settlement_node_id) is not None:
+    if await bank_in(ctx, town) is not None:
         return SavingForm.DEPOSIT
+    if town is not None and await hunger_at(ctx, town) >= ctx.rules.speculation.famine_hunger // 2:
+        return SavingForm.GOODS
+    if town is not None and await farmer_share(ctx, town) >= ctx.rules.saving.rural_from:
+        return SavingForm.LAND
     return SavingForm.INVESTMENT
+
+
+async def farmer_share(ctx: TickContext, town_id: int) -> float:
+    return (await class_shares(ctx.session, ctx.rules, town_id))[SocialClass.FARMER]
 
 
 async def saving_of(ctx: TickContext, household: HouseholdRow) -> SavingRow:
@@ -112,7 +125,11 @@ async def put_by(ctx: TickContext, household: HouseholdRow, row: SavingRow, tall
     form = row.form if "form" in row.locked else await form_for(ctx, household)
     row.form = form
     household.wealth -= amount
-    if form is SavingForm.HOARD:
+    kept = SAVING_FORMS[form].kept_in
+    if kept is not None:
+        setattr(row, kept, int(getattr(row, kept)) + amount)
+        tally.invested += amount
+    elif form is SavingForm.HOARD:
         await bury(ctx, household, amount)
         tally.hoarded += amount
     elif form is SavingForm.DEPOSIT and (bank := await bank_in(ctx, household.settlement_node_id)) is not None:
@@ -176,6 +193,22 @@ async def dig_for_hoards(ctx: TickContext, tally: SavingTally) -> None:
             tally.found += await unearth_hoards(ctx, [town.id], town)
 
 
+async def tend_held(ctx: TickContext, household: HouseholdRow, row: SavingRow) -> None:
+    table = ctx.rules.saving
+    if WEALTH in (household.locked or []):
+        return
+    town = household.settlement_node_id
+    if row.land > 0 and "land" not in row.locked:
+        household.wealth += row.land * table.land_rent_pct // PERCENT
+        if town is not None and await ongoing_wars(ctx.session, town):
+            row.land -= row.land * table.land_war_loss_pct // PERCENT
+    if row.goods > 0 and "goods" not in row.locked:
+        row.goods -= row.goods * table.goods_spoil_pct // PERCENT
+        if town is not None and await hunger_at(ctx, town) >= ctx.rules.speculation.famine_hunger:
+            household.wealth += row.goods * (PERCENT + table.dearth_gain_pct) // PERCENT
+            row.goods = 0
+
+
 async def keep_savings(ctx: TickContext, tally: SavingTally) -> None:
     for household in list(await ctx.session.scalars(select(HouseholdRow).order_by(HouseholdRow.id))):
         if household.head_node_id is not None and held(household.head_node_id):
@@ -184,6 +217,7 @@ async def keep_savings(ctx: TickContext, tally: SavingTally) -> None:
         if "share_pct" not in row.locked:
             row.share_pct = await share_for(ctx, household)
         await put_by(ctx, household, row, tally)
+        await tend_held(ctx, household, row)
     await keep_hoards(ctx, tally)
     await dig_for_hoards(ctx, tally)
     await ctx.session.flush()

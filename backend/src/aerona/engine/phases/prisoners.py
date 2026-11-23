@@ -11,6 +11,7 @@ from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OathBreach, OathKind
@@ -22,9 +23,11 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import receive_coin, wealth_points
 from aerona.engine.gods.worship import creator_node_id
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.intrigue.favours import owe
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.taboos import forbidden
 from aerona.engine.military.captivity import announce, cohort_fates, ransom_lawful, rich, wring_intel
+from aerona.engine.military.parole import ParoleTally, join_captors, keep_paroles, married_in_wars, offer_parole
 from aerona.engine.military.ransom import grow_ward, marry_captive, named_ransom, pay_from_treasury, release_by_opinion, ward_returns
 from aerona.engine.military.terms import terror, war_between
 from aerona.engine.mind.book import stored_values, values_for, write_values
@@ -79,6 +82,7 @@ async def pay_ransom(ctx: TickContext, row: CaptiveRow, captive: EntityRow, capt
     await change_relation(ctx, home.id, captor.id, ctx.rules.campaigns.ransom_relation, MemoryKind.FREED_US, note="ransom")
     await judged(ctx, captor.id, home.id, ActKind.RANSOM, note=captive.name)
     await release_captive(ctx, row, CaptiveStatus.RANSOMED, cost)
+    await owe(ctx, captive.id, home.id, FavourOrigin.RANSOM, ctx.rules.favours.ransom_favour)
     await _told(
         ctx,
         "prisoner.ransomed",
@@ -165,14 +169,26 @@ async def foster(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: 
     return True
 
 
+async def bound_fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow, home: EntityRow | None) -> bool:
+    if await marry_captive(ctx, row, captive, captor) is not None:
+        await _told(ctx, "prisoner.married", captor.id, captive.id)
+        return True
+    if await join_captors(ctx, row, captive, captor, home):
+        ctx.count("married_in")
+        return True
+    if await offer_parole(ctx, row, captive, captor, home):
+        ctx.count("paroled")
+        return True
+    return False
+
+
 async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow) -> None:
     campaigns = ctx.rules.campaigns
     rng = ctx.rng("captivity")
     home = await home_of(ctx, captive, row)
     if await foster(ctx, row, captive, captor):
         return
-    if await marry_captive(ctx, row, captive, captor) is not None:
-        await _told(ctx, "prisoner.married", captor.id, captive.id)
+    if await bound_fate(ctx, row, captive, captor, home):
         return
     if await release_by_opinion(ctx, captor, home):
         await release_captive(ctx, row, CaptiveStatus.RELEASED)
@@ -330,6 +346,11 @@ async def prisoners(ctx: TickContext) -> None:
             continue
         await _fate(ctx, row, captive, captor)
     ctx.count("prisoners_held", len(rows))
+    paroles = ParoleTally()
+    await keep_paroles(ctx, paroles)
+    await married_in_wars(ctx, paroles)
+    for key, value in vars(paroles).items():
+        ctx.count(f"parole_{key}", value)
     fates = await cohort_fates(ctx)
     for (_, _, fate), count in fates.items():
         ctx.count(f"captive_cohorts_{fate.value}", count)

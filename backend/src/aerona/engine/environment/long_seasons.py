@@ -13,7 +13,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import LongSeasonReach, SeasonCause, SeasonSpell, SeasonSpellShape
-from aerona.domain.enums.crafts import AssistiveAid
+from aerona.domain.enums.crafts import AssistiveAid, InsuranceCover
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
@@ -23,7 +23,8 @@ from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.crafts.aiding import aid_quality
-from aerona.engine.crafts.reckoning import numeracy_of
+from aerona.engine.crafts.cover import insured_loss
+from aerona.engine.crafts.reckoning import fine_division, numeracy_of
 from aerona.engine.environment.spells import SpellPull, SpellSources, begin_spell, pull_of, spells_of
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -177,7 +178,11 @@ async def forecast(ctx: TickContext, world: WorldRow, row: IrregularSeasonRow, t
         rng = ctx.rng(f"season.forecast.{people.id}.{row.id}.{ctx.epoch}")
         sharpened = (
             1
-            - await numeracy_of(ctx.session, people.id) * ctx.rules.numeracy.forecast_pct / PERCENT / PERCENT
+            - await numeracy_of(ctx.session, ctx.rules, people.id)
+            * ctx.rules.numeracy.forecast_pct
+            / PERCENT
+            / PERCENT
+            * await fine_division(ctx.session, ctx.rules, people.id)
             - await aid_quality(ctx.session, scholar.id, AssistiveAid.TELESCOPE) * ctx.rules.aids.telescope_forecast_pct / PERCENT / PERCENT
         )
         if await watched_source(ctx, row, people.id):
@@ -254,6 +259,7 @@ async def bite(ctx: TickContext, world: WorldRow, rows: list[IrregularSeasonRow]
         loss = round_half_up(food * loss_pct / PERCENT)
         if loss > 0 and await shift_stock(ctx.session, ctx.rules, town.id, Commodity.FOOD, -loss, epoch=ctx.epoch, flow=GoodsFlow.LOSS):
             tally.starved += 1
+            await insured_loss(ctx, town.id, InsuranceCover.CROP, loss * ctx.rules.insurance.crop_payout_pct // PERCENT)
 
 
 async def summer_drought(ctx: TickContext, world: WorldRow, rows: list[IrregularSeasonRow]) -> None:

@@ -35,6 +35,7 @@ from aerona.engine.phase import Phase
     "table.holder_levels",
     "table.injuries",
     "table.item_profiles",
+    "table.mind_facets",
     "table.mind_profiles",
     "table.mortal_profiles",
     "table.node_births",
@@ -57,6 +58,8 @@ from aerona.engine.phase import Phase
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.memories",
+    "table.mind_facets",
     "table.mortal_profiles",
     "table.thoughts",
 )

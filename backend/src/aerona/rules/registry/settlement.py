@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import Spanned, rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.SETTLEMENTS
 
@@ -138,7 +138,7 @@ class SanitationRules:
 
 
 @dataclass(frozen=True)
-class DistrictRules:
+class DistrictRules(Spanned):
     stone_wall_pct: int = rule(140, 0, 500, G, "Siege defence of stone walls compared with neutral walls (%)")
     timber_wall_pct: int = rule(70, 0, 500, G, "Siege defence of timber palisades compared with neutral walls (%)")
     tower_defence_pct: int = rule(2, 0, 100, G, "Siege defence each wall tower adds to the garrison (%)")
@@ -166,6 +166,15 @@ class DistrictRules:
     necropolis_sanitation: int = rule(4, 0, 100, G, "Sanitation a necropolis district level adds by keeping the dead outside the streets")
     necropolis_piety_floor: int = rule(4, 0, 100, G, "Piety a necropolis district level keeps alive through the cult of ancestors")
     temple_quarter_piety_floor: int = rule(8, 0, 100, G, "Piety a temple-quarter district level keeps alive")
+    camp_growth: int = rule(10, 0, 100, G, "Chance in an epoch that a camp of the displaced grows by a level while more arrive than it shelters (%)")
+    camp_disease_pct: int = rule(20, 0, 100, G, "Faster spread of sickness in a town with a camp of the displaced (%)")
+    camp_sanitation: int = rule(5, 0, 100, G, "Sanitation a camp district level takes from its town, having no services")
+    camp_disorder: int = rule(3, 0, 100, G, "Public order a camp district level takes from its town")
+    camp_fire_risk: int = rule(3, 0, 100, G, "Fire risk a camp district level adds to its town each epoch")
+    camp_settle_years: int = span(20, 1, 500, G, "Years after which a camp that lasts settles into slums, or into homes once the displaced are gone")
+    lazaretto_spread_cut_pct: int = rule(60, 0, 100, G, "Spread of sickness a lazaretto cuts in its town by holding the sick and arrivals apart (%)")
+    lazaretto_sanitation: int = rule(2, 0, 100, G, "Sanitation a lazaretto district level adds by keeping the sick out of the streets")
+    lazaretto_dread: int = rule(2, 0, 100, G, "Prestige a lazaretto district level costs its town each epoch through dread and stigma")
     foreign_quarter_investment_pct: int = rule(15, 0, 300, G, "Extra investment a foreign-quarter district level draws from foreign merchants (%)")
     foreign_quarter_tension_pct: int = rule(20, 0, 100, G, "Tension between a city and its countryside relieved per foreign-quarter level (%)")
     prestige_investment_pct: int = rule(20, 0, 300, G, "Extra investment a settlement of full prestige draws (%)")

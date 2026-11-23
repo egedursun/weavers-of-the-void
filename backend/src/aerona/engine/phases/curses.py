@@ -125,26 +125,49 @@ async def curse_decay(ctx: TickContext) -> None:
 
 
 @reads(
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.endurance",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "mortal.willpower",
     "table.bonds",
     "table.conditions",
     "table.creator",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.entity_tags",
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
     "table.holder_levels",
     "table.incident_participants",
     "table.incidents",
+    "table.injuries",
+    "table.item_profiles",
     "table.node_births",
     "table.nodes",
     "table.polity_profiles",
+    "table.prostheses",
     "table.sons",
     "table.stars",
     "table.worlds",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents")
+@writes(
+    "table.bodies",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.conditions",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
+)
 async def lift_curses(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine
     rng = ctx.rng()

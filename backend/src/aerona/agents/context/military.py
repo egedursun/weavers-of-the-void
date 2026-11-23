@@ -4,15 +4,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.made_lines import kit_line
 from aerona.catalog.command import AREAS
 from aerona.catalog.war_terms import CASUS_BELLI_LABELS
+from aerona.catalog.war_w52 import ARMY_ROLES, DEFENCES, FALL_CHOICES, OPERATIONS, SIEGE_ACTION_SPECS, SIEGE_WORKS, STAFF_ROLES, STANCES
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, FeudRow, MercenaryContractRow, SpyNetworkRow
+from aerona.db.tables.military import ArmyOfficerRow, ArmyProfileRow, ArmyUnitRow, FeudRow, MercenaryContractRow, SpyNetworkRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CasusBelliRow, SiegeRow, WarProductionRow, WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.environment import ScarKind
-from aerona.domain.enums.military import ContractStatus, FeudStatus, MoraleState, VesselStatus
+from aerona.domain.enums.military import ContractStatus, FeudStatus, MoraleState, SpyOperation, VesselStatus
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.military.campaign import on_road
 from aerona.engine.military.command import best_area, command_areas
@@ -25,9 +26,7 @@ from aerona.rules.registry import Rules
 
 TOP_STACKS = 3
 
-
-def words(value: str) -> str:
-    return value.replace("_", " ")
+OPERATION_KEYS = frozenset(operation.value for operation in SpyOperation)
 
 
 async def army_sheet(session: AsyncSession, rules: Rules, army_id: int) -> str:
@@ -45,9 +44,21 @@ async def army_sheet(session: AsyncSession, rules: Rules, army_id: int) -> str:
     tail = "; sworn for pay" if hired is not None else ""
     return (
         f"{army.name}: {several(stat(army, 'size') or 0, 'soldier', 'soldiers')} ({makeup}), morale {stat(army, 'morale') or 0}, cohesion {profile.cohesion}, "
-        f"{several(profile.supply_days, 'day', 'days')} of food, stance {spoken(profile.stance)}{order_line(stacks)}{tail}"
-        f"{await works_line(session, rules, army_id, profile, stacks)}{await kit_line(session, army_id)}"
+        f"{several(profile.supply_days, 'day', 'days')} of food, stance {STANCES[profile.stance].label.lower()}{order_line(stacks)}{tail}"
+        f"{await works_line(session, rules, army_id, profile, stacks)}{await kit_line(session, army_id)}{await staff_line(session, army_id)}"
     )
+
+
+async def staff_line(session: AsyncSession, army_id: int) -> str:
+    officers = await session.scalars(
+        select(ArmyOfficerRow).where(ArmyOfficerRow.army_entity_id == army_id, ArmyOfficerRow.until_epoch.is_(None)).order_by(ArmyOfficerRow.id)
+    )
+    shown = []
+    for officer in officers:
+        mortal = await session.get(EntityRow, officer.mortal_entity_id)
+        if mortal is not None and officer.role in STAFF_ROLES:
+            shown.append(f"{ARMY_ROLES[officer.role].label.lower()} {mortal.name}")
+    return f"; staff: {', '.join(shown)}" if shown else ""
 
 
 async def works_line(session: AsyncSession, rules: Rules, army_id: int, profile: ArmyProfileRow, stacks: list[ArmyUnitRow]) -> str:
@@ -102,11 +113,14 @@ async def war_sheet(session: AsyncSession, rules: Rules, war: WarRow, side_id: i
             lines.append(sheet)
     for siege in await session.scalars(select(SiegeRow).where(SiegeRow.war_id == war.id, SiegeRow.status == SiegeStatus.ONGOING)):
         besieged = await session.get(EntityRow, siege.besieged_entity_id)
-        works = ", ".join(words(key) for key, value in siege.works.items() if key != "famine" and int(value) >= 100)
+        works = ", ".join(
+            f"{SIEGE_WORKS[work].label.lower()} {int(siege.works.get(work.value, 0))}" for work in SIEGE_WORKS if int(siege.works.get(work.value, 0)) > 0
+        )
         relief = " relief is coming" if siege.relief_army_id is not None else ""
+        moves = siege_moves(siege)
         lines.append(
             f"siege of {besieged.name if besieged else 'a city'}: {several(siege.supplies, 'day', 'days')} of food, {spoken(siege.starvation)}, "
-            f"{several(siege.breaches, 'breach', 'breaches')}{', works: ' + works if works else ''}{relief}"
+            f"{several(siege.breaches, 'breach', 'breaches')}{', works: ' + works if works else ''}{moves}{relief}"
         )
     last = await session.scalar(select(BattleRow).where(BattleRow.war_id == war.id).order_by(BattleRow.id.desc()).limit(1))
     if last is not None:
@@ -145,7 +159,10 @@ async def intrigue_sheet(session: AsyncSession, community_id: int) -> list[str]:
     for network in await session.scalars(owned):
         target = await session.get(EntityRow, network.target_entity_id)
         revealed = f", {several(len(network.revealed_aims), 'enemy aim', 'enemy aims')} known" if network.revealed_aims else ""
-        lines.append(f"spies in {target.name if target else 'a rival'} (depth {network.depth}, intel {network.intel}{revealed})")
+        inside = await session.get(EntityRow, network.institution_entity_id) if network.institution_entity_id is not None else None
+        placed = f", an agent placed inside {inside.name}" if inside is not None else ""
+        last = f", last operation: {OPERATIONS[SpyOperation(network.last_operation)].label.lower()}" if network.last_operation in OPERATION_KEYS else ""
+        lines.append(f"spies in {target.name if target else 'a rival'} (depth {network.depth}, intel {network.intel}{revealed}{placed}{last})")
     for feud in await session.scalars(
         select(FeudRow).where(or_(FeudRow.first_entity_id == community_id, FeudRow.second_entity_id == community_id), FeudRow.status == FeudStatus.ACTIVE)
     ):
@@ -168,3 +185,14 @@ async def fleet_sheet(session: AsyncSession, community_id: int) -> list[str]:
             + (f", strange ({stat(vessel, 'strangeness')})" if (stat(vessel, "strangeness") or 0) > 0 else "")
         )
     return lines
+
+
+def siege_moves(siege: SiegeRow) -> str:
+    parts = []
+    if siege.last_action is not None:
+        parts.append(f"besiegers last chose to {SIEGE_ACTION_SPECS[siege.last_action].label.lower()}")
+    if siege.last_defence is not None:
+        parts.append(f"defenders last chose to {DEFENCES[siege.last_defence].label.lower()}")
+    if siege.choice is not None:
+        parts.append(f"if it falls: {FALL_CHOICES[siege.choice].label.lower()}")
+    return f"; {'; '.join(parts)}" if parts else ""

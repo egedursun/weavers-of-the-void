@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.catalog.mobility import MOBILITY_EVENTS
+from aerona.catalog.needs import SHORTFALLS
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
@@ -10,7 +11,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.society_depth import DriftCause, MobilityEvent
+from aerona.domain.enums.society_depth import DriftCause, MobilityEvent, ShortfallEffect
 from aerona.engine.demography import society_control as control
 from aerona.engine.demography.events import moved_class
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -21,6 +22,12 @@ class HoldNeed(Command):
     social_class: SocialClass
     commodity: CommodityKind
     held_pct: int | None = Field(default=None, ge=0, le=100)
+
+
+class HoldShortfall(Command):
+    community_id: int
+    effect: ShortfallEffect
+    short_pct: int | None = Field(default=None, ge=0, le=100)
 
 
 class EditStanding(Command):
@@ -98,6 +105,15 @@ async def hold_need(scope: PlayerScope, command: HoldNeed) -> Effect:
     if row.held_pct is None:
         return Effect(f"The {label} is met as the stores allow again.", command.community_id)
     return Effect(f"The {label} is held at {row.held_pct}% met.", command.community_id, values={"held_pct": row.held_pct})
+
+
+@player_action("shortfall:set", ActionKind.EDIT_RECORD)
+async def hold_shortfall(scope: PlayerScope, command: HoldShortfall) -> Effect:
+    row = await control.hold_shortfall(await scope.context("shortfall_set"), command.community_id, command.effect, command.short_pct)
+    label = SHORTFALLS[command.effect].label.lower()
+    if command.short_pct is None:
+        return Effect(f"{label.capitalize()} follows the world again.", command.community_id)
+    return Effect(f"{label.capitalize()} is held at {row.short_pct}% short.", command.community_id, values={"short_pct": row.short_pct})
 
 
 @player_action("class:standing", ActionKind.EDIT_RECORD)

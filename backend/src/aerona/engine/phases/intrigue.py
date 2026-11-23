@@ -12,6 +12,7 @@ from aerona.engine.intrigue.names import confide_names, renew_names, research_na
 from aerona.engine.intrigue.schemes import OPEN, SchemeTally, plotters, tend_scheme
 from aerona.engine.intrigue.sources import (
     SourceTally,
+    backfill_power_secrets,
     hidden_conditions,
     hidden_memberships,
     likeness_noticed,
@@ -33,19 +34,23 @@ from aerona.engine.primitives.naming import Namer
     "table.entity_flags",
     "table.faction_memberships",
     "table.foreign_gods",
+    "table.fugitives",
     "table.households",
     "table.identities",
     "table.language_profiles",
     "table.lexemes",
+    "table.mind_laws",
+    "table.mind_profiles",
     "table.name_registry",
     "table.nodes",
+    "table.outlaws",
     "table.secrets",
     "table.sons",
     "table.spy_agents",
     "table.spy_networks",
     "table.true_names",
 )
-@writes("table.identities", "table.language_profiles", "table.secrets", "table.true_names")
+@writes("table.applied_fixups", "table.identities", "table.language_profiles", "table.secrets", "table.true_names")
 async def intrigue_survey(ctx: TickContext) -> None:
     namer = Namer(ctx.session, ctx.rules)
     tally = SourceTally()
@@ -53,6 +58,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
     await hidden_conditions(ctx, tally)
     await noble_debts(ctx, tally)
     await hidden_memberships(ctx, tally)
+    ctx.count("power_secrets_backfilled", await backfill_power_secrets(ctx))
     await masked_lives(ctx, namer, tally)
     ctx.count("secrets_kept", tally.secrets)
     ctx.count("identities_assumed", tally.identities)

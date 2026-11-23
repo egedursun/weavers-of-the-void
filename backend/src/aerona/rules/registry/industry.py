@@ -43,7 +43,7 @@ class EnergyRules:
     fuel_engine: int = rule(3, 0, 50, G, "Energy one unit of fuel gives an engine")
     electric_per_level: int = rule(5000, 0, 1000000, G, "Electric energy each level of a power plant, dam or star collector of a place gives each epoch")
     electric_per_1000: int = rule(
-        250,
+        450,
         0,
         100000,
         G,
@@ -94,6 +94,19 @@ class PollutionRules:
     opinion_shift: int = rule(-4, -50, 0, G, "How much they turn against each polluter each epoch")
     blight_at: int = rule(80, 0, 100, G, "Soil pollution at which the land is blighted")
     blight_depth: int = rule(10, 0, 100, G, "Blight extreme soil pollution scars into the land each epoch")
+    recover_radiation: int = rule(1, 0, 50, G, "Radiation that fades from a land each epoch")
+    recover_noise: int = rule(25, 0, 100, G, "Noise that falls silent in a land each epoch")
+    recover_light: int = rule(25, 0, 100, G, "Light that fades from a land's night each epoch")
+    crowd_noise_per_10000: int = rule(4, 0, 50, G, "Noise ten thousand people crowded together add each epoch")
+    crowd_light_per_10000: int = rule(5, 0, 50, G, "Light ten thousand people of a lit town add to the night each epoch")
+    air_harm: int = rule(10, 0, 100, G, "Strength with which air pollution harms the land's people")
+    water_harm: int = rule(10, 0, 100, G, "Strength with which water pollution harms the land's people")
+    soil_harm: int = rule(10, 0, 100, G, "Strength with which soil pollution harms the land's people")
+    radiation_harm: int = rule(30, 0, 100, G, "Chance a mortal of a land at full radiation falls ill of it each epoch (%)")
+    noise_harm: int = rule(10, 0, 100, G, "Stress a mortal of a land at full noise gains each epoch")
+    light_harm: int = rule(30, 0, 100, G, "Share of the faint sky a land at full light loses to its watchers, and of its night creatures (%)")
+    radiation_scar: int = rule(5, 0, 100, G, "Poison radiation past the blight level scars into the land each epoch")
+    rose_at: int = rule(50, 0, 100, G, "Level at which a pollutant rising in a land is told")
     rite_clean: int = rule(10, 0, 100, G, "Pollution a purification rite clears from the land")
     void_rite: int = rule(8, 0, 100, G, "Air and soil pollution a rite of the void leaves on the land")
     law_cut_pct: int = rule(60, 0, 100, G, "Share of the pollution of works an environment law at full strictness prevents (%)")

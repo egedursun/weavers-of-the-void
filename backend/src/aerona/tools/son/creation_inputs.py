@@ -48,6 +48,7 @@ from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.structure import STRUCTURE_LEVEL_MAX, StructureKind
+from aerona.domain.enums.tongues import NumeralBase
 from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.world import SkyEventKind
@@ -151,7 +152,7 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "home_port_id": (int | None, None),
             "captain_id": (int | None, None),
         },
-        EntityType.LANGUAGE: {"words": (Annotated[list[WordInput], Field(min_length=1)], ...)},
+        EntityType.LANGUAGE: {"words": (Annotated[list[WordInput], Field(min_length=1)], ...), "numeral_base": (NumeralBase | None, None)},
         EntityType.MORTAL: {
             "title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None),
             "sex": (SexKind | None, None),

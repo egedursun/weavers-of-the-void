@@ -1,8 +1,9 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.mind import RelationComponent
 from aerona.domain.enums.regime import SelectorateKind
-from aerona.domain.enums.travel import EncounterEffect, RouteEnvironment
+from aerona.domain.enums.travel import EncounterEffect
 
 
 class RelationPartView(ApiModel):
@@ -33,7 +34,7 @@ class ConstitutionOfView(ApiModel):
 class JourneyEncounterView(ApiModel):
     id: int
     world: NodeRef | None
-    environment: RouteEnvironment
+    environment: TradeMode
     effect: EncounterEffect
     name: str | None
     weight: int

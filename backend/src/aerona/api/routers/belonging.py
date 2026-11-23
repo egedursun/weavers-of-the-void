@@ -9,6 +9,7 @@ from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.routers.foundations import current_epoch
 from aerona.api.schemas.belonging import (
     BelongingNodeView,
+    FugitiveView,
     HeldIdentityView,
     PeerGroupView,
     PeerMemberView,
@@ -19,7 +20,7 @@ from aerona.api.schemas.belonging import (
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.core.errors import NotFoundError
-from aerona.db.tables.belonging import HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryLawRow, SanctuaryRow, SatireRow
+from aerona.db.tables.belonging import FugitiveRow, HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryLawRow, SanctuaryRow, SatireRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.polity import OfficeKind
@@ -70,6 +71,13 @@ async def node_belonging(services: ServicesDep, node_id: NodeId) -> BelongingNod
                 .order_by(SanctuaryRow.id.desc())
             )
         )
+        fled = list(
+            await session.scalars(
+                select(FugitiveRow)
+                .where(or_(FugitiveRow.mortal_entity_id == node_id, FugitiveRow.pursuer_entity_id == node_id))
+                .order_by(FugitiveRow.id.desc())
+            )
+        )
         law = await session.get(SanctuaryLawRow, node_id) if is_realm else None
         satires = list(
             await session.scalars(
@@ -93,6 +101,7 @@ async def node_belonging(services: ServicesDep, node_id: NodeId) -> BelongingNod
                 *(row.settlement_entity_id for row in groups),
                 *(row.mortal_entity_id for row in group_members),
                 *(item for row in sanctuaries for item in (row.fugitive_entity_id, row.host_entity_id, row.pursuer_entity_id)),
+                *(item for row in fled for item in (row.mortal_entity_id, row.pursuer_entity_id)),
                 *(item for row in satires for item in (row.satirist_entity_id, row.target_entity_id, row.polity_entity_id, row.work_entity_id)),
             ],
         )
@@ -154,6 +163,19 @@ async def node_belonging(services: ServicesDep, node_id: NodeId) -> BelongingNod
                 locked=row.locked,
             )
             for row in sanctuaries
+        ],
+        fugitives=[
+            FugitiveView(
+                id=row.id,
+                mortal=ref(refs, row.mortal_entity_id),
+                kind=row.kind,
+                pursuer=at(refs, row.pursuer_entity_id),
+                fled_epoch=row.fled_epoch,
+                caught_epoch=row.caught_epoch,
+                freed_epoch=row.freed_epoch,
+                locked=row.locked,
+            )
+            for row in fled
         ],
         sanctuary_law=SanctuaryLawView(restricted=law.restricted, fee_pct=law.fee_pct, locked=law.locked) if law is not None else None,
         satires=[

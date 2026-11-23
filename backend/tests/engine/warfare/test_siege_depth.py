@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.war_w52 import SIEGE_ACTION_SPECS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import CaptiveCohortRow
@@ -19,7 +20,6 @@ from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.military.siege_depth import (
     WATER_DAYS,
     bombard_factor,
-    build_works,
     burn_districts,
     countermine,
     defender_choice,
@@ -38,6 +38,7 @@ from aerona.engine.military.siege_depth import (
     water_days,
     works_breach,
 )
+from aerona.engine.military.siege_w52 import progress
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.war import open_war
 from aerona.rules.registry import Rules
@@ -63,18 +64,18 @@ async def test_works_rise_with_each_season_and_finish_into_a_breach(session: Asy
     _, _, siege = await besieged(ctx, world_id)
     done: list[SiegeWork] = []
     for _ in range(3):
-        done += build_works(ctx, siege, SiegeAction.BLOCKADE)
-    assert done == [SiegeWork.CIRCUMVALLATION] and encircled(siege)
-    assert finished_works(siege) == [SiegeWork.CIRCUMVALLATION]
-    assert works_breach(ctx, siege) == ctx.rules.siege_depth.work_breach_pct / 100
-    assert build_works(ctx, siege, SiegeAction.NEGOTIATE) == []
+        done += progress(ctx, siege, list(SIEGE_ACTION_SPECS[SiegeAction.BLOCKADE].works))
+    assert done == [SiegeWork.CIRCUMVALLATION, SiegeWork.BLOCKADE_LINES] and encircled(siege)
+    assert finished_works(siege) == [SiegeWork.CIRCUMVALLATION, SiegeWork.BLOCKADE_LINES]
+    assert works_breach(ctx, siege) == 2 * ctx.rules.siege_depth.work_breach_pct / 100
+    assert progress(ctx, siege, list(SIEGE_ACTION_SPECS[SiegeAction.NEGOTIATE].works)) == []
 
 
 async def test_countermines_undo_the_mines(session: AsyncSession, world_id: int) -> None:
     ctx = make_ctx(session)
     _, _, siege = await besieged(ctx, world_id)
     assert not countermine(ctx, siege)
-    build_works(ctx, siege, SiegeAction.MINE)
+    progress(ctx, siege, list(SIEGE_ACTION_SPECS[SiegeAction.MINE].works))
     for _ in range(3):
         assert countermine(ctx, siege)
     assert siege.works[SiegeWork.MINES.value] == 0

@@ -110,6 +110,7 @@ async def regimes(ctx: TickContext) -> None:
     "people.population",
     "settlement.population",
     "table.armies",
+    "table.artwork_profiles",
     "table.bonds",
     "table.coalition_members",
     "table.cosmos",
@@ -118,6 +119,8 @@ async def regimes(ctx: TickContext) -> None:
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
+    "table.estate_privileges",
+    "table.estate_profiles",
     "table.favours",
     "table.galactic_structures",
     "table.galaxies",
@@ -180,6 +183,7 @@ async def patronage(ctx: TickContext) -> None:
 
 @reads(
     "mortal.age",
+    "table.bonds",
     "table.breeding_plans",
     "table.claims",
     "table.entities",

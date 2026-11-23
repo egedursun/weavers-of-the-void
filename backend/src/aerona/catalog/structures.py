@@ -2,7 +2,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
-from aerona.core.total import total
+from aerona.catalog.production import OPEN_GROUND_WORKSHOPS
+from aerona.core.total import partial, total
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EngineKind
 from aerona.domain.enums.settlement import SizeTier
@@ -152,15 +153,22 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = total(
             spec((K.CUSTOMS_HOUSE, G.COMMERCE, "Customs house"), (S.SCRIBE, W.FEW), U.LOADS, (B.MINOR, C.CLOTH, T.TOWN)),
             spec((K.TOLL_GATE, G.COMMERCE, "Toll gate"), (S.WARRIOR, W.FEW), U.LOADS, (B.MINOR, C.TIMBER, T.HAMLET)),
             spec((K.COURTHOUSE, G.CIVIC, "Courthouse"), (S.SCRIBE, W.SOME), U.SEATS, (B.MAJOR, C.CLOTH, T.TOWN)),
-            spec((K.ARCHIVE, G.KNOWLEDGE, "Archive"), (S.SCRIBE, W.FEW), U.VOLUMES, (B.MAJOR, C.CLOTH, T.TOWN), branch=KnowledgeBranch.WRITING),
+            spec(
+                (K.ARCHIVE, G.KNOWLEDGE, "Archive"),
+                (S.SCRIBE, W.FEW),
+                U.VOLUMES,
+                (B.MAJOR, C.CLOTH, T.TOWN),
+                branch=KnowledgeBranch.WRITING,
+                workshop=WorkshopKind.SCRIPTORIUM,
+            ),
             spec((K.PRINTING_HOUSE, G.KNOWLEDGE, "Printing house"), (S.ARTISAN, W.SOME), U.VOLUMES, (B.MAJOR, C.CLOTH, T.TOWN), branch=KnowledgeBranch.WRITING),
             spec((K.LABORATORY, G.KNOWLEDGE, "Laboratory"), (S.SCRIBE, W.FEW), U.HANDS, (B.MAJOR, C.TOOLS, T.TOWN), branch=KnowledgeBranch.MEDICINE),
             spec((K.FOUNDRY, G.PRODUCTION, "Foundry"), (S.ARTISAN, W.SOME), U.HANDS, (B.MAJOR, C.COAL, T.TOWN), branch=KnowledgeBranch.METALLURGY),
             spec((K.SMELTER, G.PRODUCTION, "Smelter"), (S.ARTISAN, W.SOME), U.HANDS, (B.MAJOR, C.FUEL, T.VILLAGE), branch=KnowledgeBranch.METALLURGY),
-            spec((K.KILN, G.PRODUCTION, "Kiln"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.HAMLET)),
-            spec((K.GLASSWORKS, G.PRODUCTION, "Glassworks"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.VILLAGE)),
+            spec((K.KILN, G.PRODUCTION, "Kiln"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.HAMLET), workshop=WorkshopKind.POTTERY),
+            spec((K.GLASSWORKS, G.PRODUCTION, "Glassworks"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.VILLAGE), workshop=WorkshopKind.GLASSWORKS),
             spec((K.TEXTILE_MILL, G.PRODUCTION, "Textile mill"), (S.ARTISAN, W.SOME), U.HANDS, (B.MAJOR, C.FIBRE, T.TOWN)),
-            spec((K.DYE_WORKS, G.PRODUCTION, "Dye works"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.DYE, T.VILLAGE)),
+            spec((K.DYE_WORKS, G.PRODUCTION, "Dye works"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.DYE, T.VILLAGE), workshop=WorkshopKind.DYEWORKS),
             spec((K.PAPER_MILL, G.PRODUCTION, "Paper mill"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.TIMBER, T.TOWN), branch=KnowledgeBranch.WRITING),
             spec((K.BAKERY, G.PRODUCTION, "Bakery"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.HAMLET)),
             spec((K.DAIRY, G.PRODUCTION, "Dairy"), (S.FARMER, W.FEW), U.HANDS, (B.MINOR, C.FODDER, T.HAMLET)),
@@ -296,8 +304,8 @@ ENGINE_KIND_STRUCTURES: MappingProxyType[EngineKind, StructureKind] = MappingPro
     }
 )
 STRUCTURE_ENGINE_KINDS: MappingProxyType[StructureKind, EngineKind] = MappingProxyType({kind: engine for engine, kind in ENGINE_KIND_STRUCTURES.items()})
-WORKSHOP_STRUCTURES: MappingProxyType[WorkshopKind, StructureKind] = MappingProxyType(
-    {item.workshop: item.kind for item in STRUCTURES.values() if item.workshop is not None}
+WORKSHOP_STRUCTURES: MappingProxyType[WorkshopKind, StructureKind] = partial(
+    WorkshopKind, {item.workshop: item.kind for item in STRUCTURES.values() if item.workshop is not None}, without=OPEN_GROUND_WORKSHOPS
 )
 BASE_KNOWLEDGE_KEEPERS = frozenset({K.LIBRARY, K.SCHOOL, K.OBSERVATORY, K.ACADEMY, K.MONASTERY, K.COSMIC_ARCHIVE})
 BASE_BOOK_HOUSES = frozenset({K.LIBRARY, K.SCHOOL, K.ACADEMY, K.MONASTERY})

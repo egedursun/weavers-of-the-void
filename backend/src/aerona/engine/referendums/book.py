@@ -13,6 +13,7 @@ from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.referendums import Franchise, ReferendumResult, ReferendumSubject
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.customs.rights import voteless_share
 from aerona.engine.polity.elections import VOTERS
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.society import class_shares
@@ -84,7 +85,8 @@ async def enfranchised_pct(ctx: TickContext, holder: EntityRow, franchise: Franc
         shares = await class_shares(ctx.session, ctx.rules, town.id)
         people += weight
         allowed += weight * sum(share for social_class, share in shares.items() if social_class in voters) / PERCENT
-    return round(allowed * PERCENT / people) if people else 0
+    barred = await voteless_share(ctx.session, await realm_of_holder(ctx.session, holder))
+    return round(allowed * (1 - barred) * PERCENT / people) if people else 0
 
 
 async def pending(session: AsyncSession) -> list[ReferendumRow]:

@@ -4,6 +4,7 @@ from aerona.engine.finance.credit import CreditTally, tend_credit
 from aerona.engine.finance.indicators import IndicatorTally, record_indicators
 from aerona.engine.finance.policy import PolicyBook, PolicyTally, tend_policies
 from aerona.engine.finance.speculation import SpeculationTally, tend_speculation
+from aerona.engine.finance.w52_credit import DebtTally, keep_debts
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 
@@ -70,6 +71,8 @@ async def trade_policy(ctx: TickContext) -> None:
 
 
 @reads(
+    "faction.wealth",
+    "table.bonds",
     "table.community_societies",
     "table.community_stocks",
     "table.credit_profiles",
@@ -78,14 +81,32 @@ async def trade_policy(ctx: TickContext) -> None:
     "table.faction_profiles",
     "table.issued_securities",
     "table.loans",
+    "table.node_births",
     "table.polity_members",
     "table.polity_profiles",
 )
-@writes("table.credit_profiles", "table.currencies", "table.war_sides", "table.wars")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.credit_profiles",
+    "table.currencies",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.loans",
+    "table.war_sides",
+    "table.wars",
+)
 async def credit_ratings(ctx: TickContext) -> None:
     tally = CreditTally()
     await tend_credit(ctx, tally)
+    debts = DebtTally()
+    await keep_debts(ctx, debts)
     await ctx.session.flush()
+    ctx.count("rescued", debts.rescued)
+    ctx.count("repudiated", debts.repudiated)
+    ctx.count("rescheduled", debts.rescheduled)
+    ctx.count("loans_sold", debts.sold)
     ctx.count("rated", tally.rated)
     ctx.count("strained", tally.strained)
     ctx.count("restructuring", tally.restructured)

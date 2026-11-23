@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.agrarian import AidKind, KeystoneUse, NutrientKind, RebuildPlan
+from aerona.domain.enums.agrarian import AidKind, KeystoneUse, NutrientKind
 
 AID_KIND = total(
     AidKind,
@@ -60,20 +60,6 @@ NUTRIENT_KIND = total(
                 "tools.mortal.w52_agent_a.improve_soil",
             ),
             used_by=("engine.agrarian.book.readout",),
-        ),
-    },
-)
-
-REBUILD_PLAN = total(
-    RebuildPlan,
-    {
-        RebuildPlan.PLANNED: Defined(
-            "Planned anew",
-            checked_by=("engine.agrarian.resilience.finish", "engine.agrarian.resilience.plan_rebuild", "engine.agrarian.resilience.rebuild"),
-            used_by=("engine.agrarian.resilience.plan_rebuild", "services.player.agrarian.RebuildDraft", "tools.mortal.agrarian.plan_rebuilding"),
-        ),
-        RebuildPlan.OPPORTUNISTIC: Defined(
-            "Hasty, as before", checked_by=("engine.agrarian.resilience.rebuild",), used_by=("db.tables.agrarian.ReconstructionRow",)
         ),
     },
 )

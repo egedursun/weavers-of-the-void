@@ -19,7 +19,7 @@ from aerona.domain.enums.orders import (
     TransitionStage,
 )
 
-SAVING_FIELDS = ("share_pct", "form", "saved")
+SAVING_FIELDS = ("share_pct", "form", "saved", "land", "goods")
 HOARD_FIELDS = ("holder_node_id", "place_entity_id", "amount", "state", "found_by_node_id", "hidden_epoch", "found_epoch")
 RATE_FIELDS = ("rate", "spread_pct", "changer_node_id", "convertible", "volume")
 BILL_FIELDS = ("drawer_node_id", "payee_node_id", "from_entity_id", "to_entity_id", "amount", "settled")
@@ -40,6 +40,8 @@ class SavingRow(Base):
     share_pct: Mapped[int] = mapped_column(default=10)
     form: Mapped[SavingForm] = mapped_column(enum_type(SavingForm, "form"), default=SavingForm.HOARD)
     saved: Mapped[int] = mapped_column(default=0)
+    land: Mapped[int] = mapped_column(default=0, server_default="0")
+    goods: Mapped[int] = mapped_column(default=0, server_default="0")
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

@@ -26,14 +26,14 @@ const PACT = 4301
 
 const VIEW = {
   route_id: ROUTE,
-  name: 'Caravan Way of Brennhold and Ashwick',
+  name: 'Dust Road of Brennhold and Ashwick',
   world_id: 1,
   first_id: FIRST,
   first_name: 'Brennhold',
   second_id: SECOND,
   second_name: 'Ashwick',
-  mode: 'caravan',
-  status: 'open',
+  mode: 'road',
+  status: 'seasonal',
   length: 2,
   capacity: 900,
   danger: 47,
@@ -61,8 +61,19 @@ const VIEW = {
   closed_by_player: false,
   closed_by_son_id: 5,
   closed_by_son_name: 'Ithren',
-  dangers: { bandits: 20, beasts: 15, weather: 12, sea: 0 },
+  dangers: {
+    bandits: 20,
+    beasts: 15,
+    weather: 12,
+    sea: 0,
+    officials: 9,
+    spoilage: 4,
+    pilferage: 6,
+  },
   season_pct: 62,
+  closed_season: 1,
+  seasons: { '0': 'Thaw', '1': 'Deep Cold' },
+  carrier: 'pack_animals',
   chokepoint: true,
   locked: ['mode'],
   untolled: [23],
@@ -162,6 +173,44 @@ describe('trade route command', () => {
     expect(callsTo('POST', '/api/actions/trade_route:edit')[2]?.body).toEqual({
       route_id: ROUTE,
       release: ['untolled.23'],
+    })
+  })
+
+  it('shows the closed season, the carrier and the three new losses', async () => {
+    serve()
+    const { screen } = await renderApp(<TradeRouteSection routeId={ROUTE} />)
+    await expect.element(screen.getByText('Shut in Deep Cold')).toBeVisible()
+    await expect
+      .element(screen.getByText('Carried by pack animals'))
+      .toBeVisible()
+    await expect.element(screen.getByText('Officials')).toBeVisible()
+    await expect.element(screen.getByText('Spoilage')).toBeVisible()
+    await expect.element(screen.getByText('Pilferage')).toBeVisible()
+  })
+
+  it('holds a closed season and a carrier', async () => {
+    serve()
+    const { screen } = await renderApp(<TradeRouteSection routeId={ROUTE} />)
+    await screen.getByRole('button', { name: 'Adjust the route' }).click()
+    await screen.getByRole('combobox', { name: 'Closed season' }).click()
+    await screen.getByRole('option', { name: 'Open all year' }).click()
+    await screen.getByRole('button', { name: 'Hold the closed season' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/trade_route:edit').length)
+      .toBe(1)
+    expect(callsTo('POST', '/api/actions/trade_route:edit')[0]?.body).toEqual({
+      route_id: ROUTE,
+      values: { closed_season: null },
+    })
+    await screen.getByRole('combobox', { name: 'Carried by' }).click()
+    await screen.getByRole('option', { name: 'Porters' }).click()
+    await screen.getByRole('button', { name: 'Hold the carrier' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/trade_route:edit').length)
+      .toBe(2)
+    expect(callsTo('POST', '/api/actions/trade_route:edit')[1]?.body).toEqual({
+      route_id: ROUTE,
+      values: { carrier: 'porters' },
     })
   })
 

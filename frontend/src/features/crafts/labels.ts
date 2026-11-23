@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Anchor,
   Ban,
   Bird,
@@ -11,7 +10,9 @@ import {
   Clover,
   Cog,
   Coins,
+  Compass,
   CookingPot,
+  Cpu,
   Crosshair,
   Crown,
   Droplet,
@@ -33,6 +34,7 @@ import {
   Layers,
   Leaf,
   Link,
+  Microscope,
   Music,
   Orbit,
   PawPrint,
@@ -53,9 +55,16 @@ import {
   Telescope,
   TriangleAlert,
   Trophy,
+  type LucideIcon,
   Waves,
   Wrench,
   Zap,
+  Sparkle,
+  Package,
+  TestTube,
+  Wheat,
+  Sailboat,
+  Rabbit,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -117,12 +126,19 @@ export const PRODUCTS: Record<Schema['ChemicalProduct'], Named> = {
   medicine: { label: 'Medicine', icon: Pill, tone: 'info' },
   incendiary: { label: 'Incendiary', icon: Flame, tone: 'danger' },
   explosive: { label: 'Explosive', icon: Zap, tone: 'danger' },
+  ink: { label: 'Ink', icon: PenTool, tone: 'muted' },
+  glaze: { label: 'Glaze', icon: Sparkle, tone: 'gold' },
+  preservative: { label: 'Preservative', icon: Package, tone: 'success' },
+  acid: { label: 'Acid', icon: TestTube, tone: 'warning' },
 }
 
 export const COVERS: Record<Schema['InsuranceCover'], Named> = {
   cargo: { label: 'Cargo', icon: Ship, tone: 'info' },
   house: { label: 'House', icon: Building2, tone: 'gold' },
   life: { label: 'Life', icon: HeartPulse, tone: 'danger' },
+  crop: { label: 'Crop', icon: Wheat, tone: 'gold' },
+  vessel: { label: 'Vessel', icon: Sailboat, tone: 'info' },
+  livestock: { label: 'Livestock', icon: Rabbit, tone: 'verdigris' },
 }
 
 export const RIGHT_KINDS: Record<Schema['RightKind'], Named> = {
@@ -156,6 +172,7 @@ export const AIDS: Record<Schema['AssistiveAid'], Named> = {
   telescope: { label: 'Telescope', icon: Telescope, tone: 'gold' },
   hearing_horn: { label: 'Hearing horn', icon: Ear, tone: 'warning' },
   cane: { label: 'Cane', icon: Footprints, tone: 'muted' },
+  microscope: { label: 'Microscope', icon: Microscope, tone: 'info' },
 }
 
 export const CLOCKS: Record<Schema['ClockKind'], Named> = {
@@ -165,6 +182,8 @@ export const CLOCKS: Record<Schema['ClockKind'], Named> = {
   candle_clock: { label: 'Candle clock', icon: Flame, tone: 'warning' },
   mechanical: { label: 'Mechanical clock', icon: Clock, tone: 'verdigris' },
   astronomical: { label: 'Astronomical clock', icon: Orbit, tone: 'gold' },
+  chronometer: { label: 'Chronometer', icon: Compass, tone: 'info' },
+  electronic: { label: 'Electronic clock', icon: Cpu, tone: 'verdigris' },
 }
 
 export const NOTATIONS: Record<Schema['Notation'], Named> = {

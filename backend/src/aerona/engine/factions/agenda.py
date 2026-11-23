@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.estates import PRIVILEGE_WISHES
 from aerona.catalog.life.domain import GUILD_KINDS, ROBBER_KINDS, SECRET_KINDS
 from aerona.catalog.life.factions import (
     CHOICES,
@@ -10,6 +11,7 @@ from aerona.catalog.life.factions import (
     CLASS_OF_KIND,
     GOAL_PLANS,
     GOAL_TARGET_FACTION_GOAL_KINDS,
+    GOAL_WEIGHTS,
     LAW_GRIEVANCES,
     LAW_WISHES,
     MONOPOLY_GOODS,
@@ -21,7 +23,9 @@ from aerona.catalog.life_traits import FACTION_ACTION_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.record_context import Term
+from aerona.db.tables.communication import APPROVAL_MAX, APPROVAL_MIN, PublicOpinionRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.estates import EstateProfileRow
 from aerona.db.tables.factions import FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.polity import ClaimRow, PolityMemberRow
 from aerona.db.tables.relations import SocialCircleRow
@@ -31,7 +35,7 @@ from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionActionKind, FactionGoalKind, FactionKind, FactionRank, FactionScale
+from aerona.domain.enums.faction import EstatePrivilege, FactionActionKind, FactionGoalKind, FactionKind, FactionRank, FactionScale
 from aerona.domain.enums.life_traits import FactionActionKindTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -40,6 +44,7 @@ from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.factions.book import FactionBook, log
+from aerona.engine.factions.estates import grant
 from aerona.engine.factions.offshoots import found_offshoot
 from aerona.engine.faith.book import patron_node
 from aerona.engine.finance.contraband import smuggle_books
@@ -49,7 +54,7 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import consider
 from aerona.engine.polity.laws import LawBook
-from aerona.engine.polity.offices import seize_throne
+from aerona.engine.polity.offices import KEPT_OFFICES, appoint, seize_throne
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import living_entity
@@ -102,7 +107,7 @@ async def plan_goals(ctx: TickContext, factions: FactionBook, realms: RealmBook)
                 kind=kind,
                 target_node_id=target,
                 target_key=key,
-                priority=PERCENT - len(factions.goals[faction_id]) * 20,
+                priority=clamp_int(getattr(table, GOAL_WEIGHTS[kind]) - len(factions.goals[faction_id]) * 20, 0, PERCENT),
                 progress=0,
                 since_epoch=ctx.epoch,
                 set_by_player=False,
@@ -130,11 +135,41 @@ async def goal_target(ctx: TickContext, realms: RealmBook, profile: FactionProfi
     elif kind is G.ABOLISH_LAW:
         grievance = LAW_GRIEVANCES.get(profile.kind)
         found = ((realm.entity.id if realm is not None else None), grievance.value) if grievance is not None else (None, None)
+    elif kind is G.RUIN_RIVAL:
+        found = (await rival_of(ctx, profile), None)
+    elif kind is G.GAIN_PRIVILEGE and realm is not None:
+        privilege = privilege_wish(profile)
+        found = (realm.entity.id, privilege) if privilege is not None else (None, None)
+    elif kind is G.WIN_OFFICE and realm is not None:
+        office = next((row for row in realm.offices if row.kind not in KEPT_OFFICES and row.holder_entity_id is not None), None)
+        found = (realm.entity.id, office.kind.value) if office is not None else (None, None)
     elif realm is not None:
         found = await realm_goal(ctx, realm, profile, kind)
     elif kind is G.LOOT and home is not None:
         found = home, None
     return found
+
+
+async def rival_of(ctx: TickContext, profile: FactionProfileRow) -> int | None:
+    if profile.home_entity_id is None:
+        return None
+    return await ctx.session.scalar(
+        select(FactionProfileRow.faction_entity_id)
+        .join(EntityRow, EntityRow.id == FactionProfileRow.faction_entity_id)
+        .where(
+            FactionProfileRow.home_entity_id == profile.home_entity_id,
+            FactionProfileRow.faction_entity_id != profile.faction_entity_id,
+            EntityRow.status == EntityStatus.CANON,
+        )
+        .order_by((FactionProfileRow.kind == profile.kind).desc(), FactionProfileRow.faction_entity_id)
+        .limit(1)
+    )
+
+
+def privilege_wish(profile: FactionProfileRow) -> str | None:
+    social_class = CLASS_OF_KIND.get(profile.kind)
+    wishes = PRIVILEGE_WISHES[social_class] if social_class is not None else ()
+    return wishes[0].value if wishes else None
 
 
 async def realm_goal(ctx: TickContext, realm: Realm, profile: FactionProfileRow, kind: FactionGoalKind) -> tuple[int | None, str | None]:
@@ -176,6 +211,10 @@ def choose(profile: FactionProfileRow, goal: FactionGoalRow, faction: EntityRow)
         action = A.PETITION
     elif kind is G.MONOPOLY_ON:
         action = A.BRIBE if profile.treasury >= THIN_PURSE else A.PETITION
+    elif kind is G.RUIN_RIVAL and profile.kind in ROBBER_KINDS and strength >= ROBBER_STRENGTH:
+        action = A.RAID
+    elif kind is G.GAIN_PRIVILEGE and goal.progress >= HALF:
+        action = A.PROPAGANDA
     return action
 
 
@@ -230,11 +269,19 @@ async def pursue(ctx: TickContext, factions: FactionBook, realms: RealmBook, law
         if action in DEFIANT and not ctx.rng(f"faction_dare.{faction_id}.{ctx.epoch}").chance(PERCENT * suppress):
             continue
         success = await act(Move(ctx, factions, realms, laws, profile, goal), action)
+        if success:
+            await record_incident(
+                ctx,
+                "faction.acted",
+                roles={IncidentRole.ACTOR: faction_id, IncidentRole.TARGET: goal.target_node_id},
+                facts={"action": action, "goal": goal.kind},
+            )
         if success and "progress" not in goal.locked:
             goal.progress = clamp_int(goal.progress + table.progress_step, 0, PERCENT)
-            if goal.progress >= PERCENT:
+            if goal.progress >= PERCENT and goal.achieved_epoch is None:
                 goal.achieved_epoch = ctx.epoch
                 profile.cohesion = clamp_int(profile.cohesion + table.progress_step, 0, PERCENT)
+                await goal_met(Move(ctx, factions, realms, laws, profile, goal))
         acts += 1
     return acts
 
@@ -252,8 +299,67 @@ async def act(move: Move, action: FactionActionKind) -> bool:
         A.RAID: raid,
         A.FUND_WAR: fund_war,
         A.RECRUIT: recruit,
+        A.PROPAGANDA: propaganda,
+        A.BOYCOTT: boycott,
     }
     return await handlers[action](move)
+
+
+async def propaganda(move: Move) -> bool:
+    ctx, profile, goal = move.ctx, move.profile, move.goal
+    realm = await realm_for(move.realms, profile)
+    shift = ctx.rules.factions.propaganda_shift
+    if realm is None or goal.target_node_id is None:
+        log(ctx, profile.faction_entity_id, A.PROPAGANDA, goal=goal, success=False, note="no one to sway")
+        return False
+    gain_influence(profile, realm.entity.id, shift)
+    rows = await ctx.session.scalars(
+        select(PublicOpinionRow).where(PublicOpinionRow.community_node_id.in_(list(realm.members)), PublicOpinionRow.subject_node_id == goal.target_node_id)
+    )
+    for row in list(rows):
+        if "approval" not in (row.locked or []) and not frozen(row.community_node_id):
+            row.approval = clamp_int(row.approval + shift, APPROVAL_MIN, APPROVAL_MAX)
+    log(ctx, profile.faction_entity_id, A.PROPAGANDA, target=goal.target_node_id, goal=goal, amount=shift)
+    return True
+
+
+async def boycott(move: Move) -> bool:
+    ctx, profile, goal = move.ctx, move.profile, move.goal
+    target = await living_entity(ctx.session, goal.target_node_id) if goal.target_node_id is not None else None
+    if target is None or frozen(target.id):
+        log(ctx, profile.faction_entity_id, A.BOYCOTT, goal=goal, success=False, note="no one to shun")
+        return False
+    cut = ctx.rules.collective.boycott_income_cut_pct
+    shift_stat(target, "wealth", -(stat(target, "wealth") or 0) * cut / PERCENT)
+    rival = await ctx.session.get(FactionProfileRow, target.id)
+    if rival is not None and "cohesion" not in rival.locked:
+        rival.cohesion = clamp_int(rival.cohesion - ctx.rules.factions.ruin_cohesion, 0, PERCENT)
+    log(ctx, profile.faction_entity_id, A.BOYCOTT, target=target.id, goal=goal, amount=cut)
+    return True
+
+
+async def goal_met(move: Move) -> None:
+    ctx, profile, goal = move.ctx, move.profile, move.goal
+    realm = await realm_for(move.realms, profile)
+    if goal.kind is G.GAIN_PRIVILEGE and realm is not None and goal.target_key is not None:
+        estate = await ctx.session.scalar(
+            select(EstateProfileRow).where(
+                EstateProfileRow.polity_entity_id == realm.entity.id, EstateProfileRow.social_class == CLASS_OF_KIND.get(profile.kind)
+            )
+        )
+        if estate is not None and not frozen(estate.faction_entity_id):
+            await grant(ctx, estate, EstatePrivilege(goal.target_key))
+    elif goal.kind is G.WIN_OFFICE and realm is not None and goal.target_key is not None and profile.leader_entity_id is not None:
+        office = realm.office(OfficeKind(goal.target_key))
+        leader = await living_entity(ctx.session, profile.leader_entity_id)
+        if office is not None and leader is not None and not frozen(leader.id) and office.holder_entity_id != leader.id:
+            await appoint(ctx, realm, office, leader, by_id=realm.ruler_id, reason="won by a faction")
+    await record_incident(
+        ctx,
+        "faction.goal_met",
+        roles={IncidentRole.ACTOR: profile.faction_entity_id, IncidentRole.TARGET: goal.target_node_id},
+        facts={"goal": goal.kind},
+    )
 
 
 async def holder_of(realm: Realm | None, *kinds: OfficeKind) -> int | None:

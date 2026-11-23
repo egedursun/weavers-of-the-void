@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.life.communication import CARRIER_MEDIUM, MEDIUM_RANK, SPEED_RULES, TEXTS
 from aerona.catalog.life_traits import MEDIUM_TRAITS, having
+from aerona.catalog.pacts import CARRYING_STATES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.communication import CipherRow, SignalLinkRow
 from aerona.db.tables.entities import EntityRow
@@ -12,7 +13,7 @@ from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agent import MessageIntent
-from aerona.domain.enums.communication import DispatchContent, DispatchState, Medium, SignalState
+from aerona.domain.enums.communication import DispatchContent, DispatchState, Medium
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.ecology import AnimalRole
 from aerona.domain.enums.eras import EraChannel
@@ -60,7 +61,7 @@ async def seasons_in_epoch(ctx: TickContext, world_id: int | None) -> int:
 
 async def signalled(ctx: TickContext, owner_id: int) -> bool:
     found = await ctx.session.scalar(
-        select(SignalLinkRow.id).where(SignalLinkRow.owner_node_id == owner_id, SignalLinkRow.state == SignalState.ACTIVE).limit(1)
+        select(SignalLinkRow.id).where(SignalLinkRow.owner_node_id == owner_id, SignalLinkRow.state.in_(list(CARRYING_STATES))).limit(1)
     )
     return found is not None
 

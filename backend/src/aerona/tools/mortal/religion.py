@@ -15,6 +15,7 @@ from aerona.domain.enums.agent import AgentKind, MessageIntent, PrayerRequest, T
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MIN
 from aerona.domain.enums.mind import SkillKind, ValueAxis
@@ -24,6 +25,7 @@ from aerona.domain.enums.relations import AppealKind, PersuasionAim
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.book import factor
+from aerona.engine.customs.rights import has_right
 from aerona.engine.dominion.worship import prayer_tone
 from aerona.engine.gods import devotion
 from aerona.engine.gods.devotion import RiteKind as EngineRite
@@ -63,6 +65,8 @@ def _lower_stance(god: ForeignGodRow | None, amount: int) -> None:
 async def worship(call: MortalCall, args: WorshipInput) -> str:
     tools = call.rules.mortal_tools
     await call.within_limit(TurnCounter.WORSHIP_CHANGES, tools.worship_per_epoch, "mortal_tools.worship_per_epoch", MortalResult.WORSHIP_LIMIT)
+    if not await has_right(call.session, call.me.id, MemberRight.WORSHIP):
+        fail(MortalResult.RIGHT_BARRED, why="those of your standing may not keep open rites")
     if args.son_id == CREATOR_ID:
         creator = await CosmosRepository(call.session).require_creator()
         if not await worship_creator(call.session, call.me, call.epoch, args.offering):

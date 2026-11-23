@@ -53,6 +53,10 @@ class ScriptRules:
     knots_pct: int = rule(40, 0, 300, C, "Literacy growth with knots or notches (%)")
     scribe_satisfaction: int = rule(8, 0, 100, C, "Satisfaction a scribe caste gains from a hard script")
     alphabet_tension: int = rule(5, 0, 100, C, "Unrest when an alphabet breaks the scribes' monopoly")
+    imposition_grievance: int = rule(15, 0, 100, C, "Unrest the speakers of a tongue gain when a ruler replaces their script by law")
+    imposition_identity: int = rule(10, 0, 100, C, "Salience of language identity speakers gain when their script is replaced by law")
+    imposition_pct: int = rule(5, 0, 100, C, "Chance each epoch a realm with an official tongue imposes its script on a subject tongue (%)")
+    revelation_pct: int = rule(10, 0, 100, C, "Chance each epoch a god's unwritten tongue is given a script through a prophet (%)")
 
 
 @dataclass(frozen=True)

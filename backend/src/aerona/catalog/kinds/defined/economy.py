@@ -45,6 +45,7 @@ GOODS_FLOW = total(
             "Harvest",
             checked_by=("engine.divine.activity.harvests",),
             used_by=(
+                "engine.customs.town_life.keep_stores",
                 "engine.ecology.beast_ways.habitat_ways",
                 "engine.economy.household.gather_commons",
                 "engine.economy.household.harvest_goods",
@@ -123,6 +124,7 @@ GOODS_FLOW = total(
                 "engine.economy.routes.haul",
                 "engine.finance.policy.smuggle",
                 "engine.finance.speculation.open_hoard",
+                "engine.finance.speculation.seize_hoard",
                 "engine.finance.speculation.settle_hoards",
                 "engine.orders.putting_out.draw_chain",
             ),
@@ -136,6 +138,7 @@ GOODS_FLOW = total(
             used_by=(
                 "engine.agrarian.resilience.send_grain",
                 "engine.collective.storylets.apply_effect",
+                "engine.customs.town_life.keep_stores",
                 "engine.divine.grammar.on_commodity",
                 "engine.orders.economy.give_out",
                 "engine.phases.mind.famine_aid",
@@ -216,7 +219,11 @@ GOODS_FLOW = total(
         GoodsFlow.TOOL: Defined(
             "Tool", checked_by=(), used_by=("engine.industry.stores.wear_tools", "tools.mortal.cosmos.build_ship", "tools.mortal.materials.chosen_material")
         ),
-        GoodsFlow.SEED: Defined("Seed", checked_by=(), used_by=("engine.economy.survey.seed_communities", "engine.phases.society_economy.seed_stocks")),
+        GoodsFlow.SEED: Defined(
+            "Seed",
+            checked_by=(),
+            used_by=("engine.economy.survey.seed_communities", "engine.economy.w52_goods.seed_new_goods", "engine.phases.society_economy.seed_stocks"),
+        ),
         GoodsFlow.OFFERING: Defined(
             "Offering",
             checked_by=(),

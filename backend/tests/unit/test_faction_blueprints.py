@@ -3,5 +3,6 @@ from aerona.engine.phases.factions import BLUEPRINTS
 
 
 def test_every_foundable_organisation_kind_has_a_blueprint() -> None:
-    drawn = {item.kind for item in BLUEPRINTS}
+    drawn = set(BLUEPRINTS)
+    assert all(BLUEPRINTS[kind].kind is kind for kind in drawn)
     assert [kind for kind, body in BUILT_IN_ORGANISATIONS.items() if body.foundable and kind not in drawn] == []

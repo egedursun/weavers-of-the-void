@@ -1,6 +1,9 @@
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from aerona.catalog.carriers import CARRIERS
+from aerona.core.total import total
 from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.operations import (
     CarrierKind,
@@ -14,6 +17,7 @@ from aerona.domain.enums.operations import (
     ShotKind,
 )
 from aerona.domain.enums.vehicles import VehicleSection
+from aerona.rules.registry import Rules
 
 Q = QuirkKind
 V = VehicleSection
@@ -76,13 +80,42 @@ SHOT_WEIGHT: dict[ShotKind, int] = {
 
 RAKED_SECTIONS: tuple[VehicleSection, ...] = (V.BOW, V.STERN, V.RUDDER, V.STEERING, V.GUN_DECK)
 
-STATION_SHARES: dict[CrewStation, int] = {
-    CrewStation.GUNNERS: 40,
-    CrewStation.RIGGERS: 25,
-    CrewStation.MARINES: 20,
-    CrewStation.OFFICERS: 5,
-    CrewStation.ROWERS: 10,
-}
+
+@dataclass(frozen=True)
+class StationSpec:
+    label: str
+    share: int
+    sections: frozenset[VehicleSection]
+    fights: bool
+    effect: Callable[[Rules], int]
+    storm_care: bool = False
+
+
+C = CrewStation
+CREW_STATIONS: Mapping[CrewStation, StationSpec] = total(
+    CrewStation,
+    {
+        C.GUNNERS: StationSpec("Gunners", 40, frozenset(), True, lambda rules: rules.crews.gunners_effect),
+        C.RIGGERS: StationSpec("Riggers", 25, frozenset({V.MAST, V.RIGGING, V.SAILS}), False, lambda rules: rules.crews.riggers_effect, storm_care=True),
+        C.MARINES: StationSpec("Marines", 20, frozenset(), True, lambda rules: rules.crews.marines_effect),
+        C.OFFICERS: StationSpec("Officers", 5, frozenset(), True, lambda rules: rules.crews.officers_effect),
+        C.ROWERS: StationSpec("Rowers", 10, frozenset({V.OARS}), True, lambda rules: rules.crews.rowers_effect),
+        C.PILOTS: StationSpec("Pilots", 6, frozenset({V.COCKPIT, V.WINGS, V.ROTOR, V.ENVELOPE}), True, lambda rules: rules.crews.pilots_effect),
+        C.ENGINEERS: StationSpec("Engineers", 10, frozenset({V.ENGINE, V.BOILER, V.POWER_CORE, V.DRIVE}), True, lambda rules: rules.crews.engineers_effect),
+        C.SENSOR_OPERATORS: StationSpec("Sensor operators", 4, frozenset({V.SENSORS}), True, lambda rules: rules.crews.sensor_operators_effect),
+        C.MEDICS: StationSpec("Medics", 4, frozenset({V.CREW_QUARTERS, V.LIFE_SUPPORT}), False, lambda rules: rules.crews.medics_effect),
+        C.HANDLERS: StationSpec(
+            "Handlers", 6, frozenset({V.MOUNT_BODY, V.DRAFT_TEAM, V.HARNESS, V.SADDLE}), False, lambda rules: rules.crews.handlers_effect, storm_care=True
+        ),
+        C.LINK_OPERATORS: StationSpec("Link operators", 3, frozenset({V.CORE}), True, lambda rules: rules.crews.link_operators_effect),
+        C.CASTERS: StationSpec("Casters", 4, frozenset({V.WARD}), True, lambda rules: rules.crews.casters_effect),
+        C.NAVIGATORS: StationSpec("Navigators", 4, frozenset({V.NAVIGATION, V.BRIDGE}), False, lambda rules: rules.crews.navigators_effect),
+    },
+)
+STATION_SHARES: Mapping[CrewStation, int] = MappingProxyType({station: spec.share for station, spec in CREW_STATIONS.items()})
+CLASSIC_STATIONS = frozenset(station for station, spec in CREW_STATIONS.items() if not spec.sections) | {CrewStation.RIGGERS, CrewStation.ROWERS}
+STORM_CARE = frozenset(station for station, spec in CREW_STATIONS.items() if spec.storm_care)
+FIGHTING_STATIONS = frozenset(station for station, spec in CREW_STATIONS.items() if spec.fights)
 
 GROUND_LABELS: dict[ExpeditionGround, str] = {
     ExpeditionGround.SITE: "a site",

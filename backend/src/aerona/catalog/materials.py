@@ -113,6 +113,12 @@ PHYSICS: MappingProxyType[MaterialKind, tuple[int, ...]] = MappingProxyType(
         M.HYDRAULIC_CONCRETE: (85, 100, 100, 70, 50, 45, 40, 45, 0, 30, 70, 0),
         M.THATCH: (100, 10, 100, 5, 5, 20, 3, 15, 30, 5, 5, 0),
         M.TILE: (85, 100, 100, 40, 30, 15, 25, 15, 0, 25, 40, 0),
+        M.CERAMIC: (90, 100, 100, 45, 30, 15, 25, 15, 0, 20, 45, 20),
+        M.SILK: (40, 30, 100, 5, 20, 70, 15, 60, 40, 5, 10, 0),
+        M.RESIN: (20, 25, 60, 20, 10, 15, 10, 15, 10, 10, 20, 0),
+        M.SHELL: (80, 100, 100, 50, 30, 20, 30, 20, 0, 20, 50, 30),
+        M.POLYMER: (35, 35, 70, 25, 50, 70, 45, 65, 50, 10, 25, 30),
+        M.COMPOSITE: (75, 80, 100, 30, 85, 90, 80, 85, 30, 20, 30, 60),
     }
 )
 
@@ -164,6 +170,12 @@ MATERIALS: MappingProxyType[MaterialKind, MaterialSpec] = MappingProxyType(
             worked(spec((M.HYDRAULIC_CONCRETE, "Hydraulic concrete", F.STONE), (55, 35, 70, 0), (10, 5, 0), (20, 15, 1)), B.ARCHITECTURE, 3),
             spec((M.THATCH, "Thatch", F.ORGANIC), (2, 15, 5, 0), (10, 5, 0), (2, 1, 50)),
             worked(spec((M.TILE, "Tile", F.STONE), (35, 10, 40, 0), (10, 5, 0), (8, 6, 6)), B.ARCHITECTURE, 1),
+            worked(spec((M.CERAMIC, "Fired pottery", F.STONE), (45, 10, 35, 20), (15, 10, 0), (8, 12, 3)), B.ARCHITECTURE, 1),
+            spec((M.SILK, "Silk", F.PRECIOUS), (5, 60, 3, 0), (30, 20, 0), (60, 65, 35)),
+            spec((M.RESIN, "Resin", F.ORGANIC), (12, 15, 15, 0), (30, 35, 0), (25, 25, 15)),
+            spec((M.SHELL, "Shell and nacre", F.PRECIOUS), (40, 20, 20, 25), (40, 35, 0), (40, 50, 4)),
+            worked(spec((M.POLYMER, "Polymer", F.EXOTIC), (40, 70, 15, 30), (5, 0, 10), (30, 35, 2)), B.METALLURGY, 7),
+            worked(spec((M.COMPOSITE, "Composite", F.EXOTIC), (80, 90, 20, 60), (20, 0, 5), (60, 70, 1)), B.METALLURGY, 8),
         )
     }
 )

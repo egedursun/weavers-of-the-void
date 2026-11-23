@@ -16,6 +16,7 @@ from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.culture import TraditionFunction
+from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
@@ -27,9 +28,11 @@ from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
+from aerona.engine.customs.rights import has_right, realm_of
 from aerona.engine.economy.materials import armour_protection, curse_bonus, decay_loss, enchantment_cap, sanctity_splendour, set_node_material, weapon_damage
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.environment.ley_works import ley_row
+from aerona.engine.factions.privileges import landed_class
 from aerona.engine.lore import legends, traditions
 from aerona.engine.polity.laws import attach_profile, validate
 from aerona.engine.primitives.mechanics import assign_mechanics
@@ -360,6 +363,8 @@ async def discover_resource(call: MortalCall, args: DiscoverInput) -> str:
         TurnCounter.DISCOVERIES, tools.discover_resource_per_epoch, "mortal_tools.discover_resource_per_epoch", MortalResult.DISCOVERY_LIMIT
     )
     await name_free(call, args.name)
+    if not await has_right(call.session, call.me.id, MemberRight.MOVEMENT):
+        fail(MortalResult.RIGHT_BARRED, why="those of your standing may not move and settle freely")
     location = await require_canon(call.session, args.location_id)
     if location.entity_type not in LAND or not await same_region(call, location):
         await fail_with_candidates(call, MortalResult.DISCOVER_OWN_REGION, LAND, local=True)
@@ -416,6 +421,12 @@ async def _seizure_holds(call: MortalCall, resource: EntityRow, owners: list[Ent
 async def claim_resource(call: MortalCall, args: ClaimInput) -> str:
     tools = call.rules.mortal_tools
     await call.within_limit(TurnCounter.CLAIMS, tools.claim_per_epoch, "mortal_tools.claim_per_epoch", MortalResult.CLAIM_LIMIT)
+    if not await has_right(call.session, call.me.id, MemberRight.PROPERTY):
+        fail(MortalResult.RIGHT_BARRED, why="those of your standing may not hold property")
+    realm = await realm_of(call.session, call.me.location_id) if call.me.location_id is not None else None
+    landed = await landed_class(call.session, realm) if realm is not None else None
+    if landed is not None and call.me.social_class is not landed:
+        fail(MortalResult.RIGHT_BARRED, why="only one estate of your realm may hold land")
     resource = await require_canon(call.session, args.resource_id)
     if resource.entity_type is not EntityType.RESOURCE:
         await fail_with_candidates(call, MortalResult.NOT_A_RESOURCE, [EntityType.RESOURCE], local=True)

@@ -42,6 +42,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.customs import (
     AgeGrade,
     CoopPurpose,
+    EvidenceKind,
     GradeDuty,
     Intoxicant,
     IntoxicantUse,
@@ -264,7 +265,7 @@ async def test_evidence_weighs_a_case_and_fades_as_it_waits(session: AsyncSessio
     await keep_civics(await at(session, 3), CivicsTally())
     rows = list(await session.scalars(select(EvidenceRow).where(EvidenceRow.case_id == case.id)))
     first = case.evidence
-    assert len(rows) == 2 and first > 0
+    assert EvidenceKind.WITNESS in {row.kind for row in rows} and len(rows) >= 2 and first > 0
     await keep_civics(await at(session, 4), CivicsTally())
     assert case.evidence < first
 

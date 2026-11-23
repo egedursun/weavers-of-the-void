@@ -121,15 +121,6 @@ class RouteState(StrEnum):
     WORN = "worn"
 
 
-class RouteEnvironment(StrEnum):
-    SEA = "sea"
-    LAND = "land"
-    AIR = "air"
-    SPACE = "space"
-    RIFT = "rift"
-    NETWORK = "network"
-
-
 class EncounterEffect(StrEnum):
     ATTACK = "attack"
     HAZARD = "hazard"

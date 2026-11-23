@@ -3,14 +3,17 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.labour import REASONS
+from aerona.catalog.needs import OUTER_SHORTFALLS, SHORTFALLS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.db.tables.society_depth import CorveeRow, PolityLoyaltyRow
+from aerona.db.tables.society_depth import CommunityShortfallRow, CorveeRow, LabourReasonRow, PolityLoyaltyRow
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society_depth import LabourReason
 from aerona.engine.demography.basket import held_got, needs_of, standing_of
 from aerona.engine.demography.wealth import per_head
 
@@ -34,6 +37,17 @@ async def need_lines(session: AsyncSession, home: EntityRow, social: SocialClass
         if got < row.wanted:
             lines.append(f"{spoken(commodity)} {round(got * PERCENT / row.wanted)}% met")
     return lines
+
+
+async def want_lines(session: AsyncSession, home: EntityRow) -> list[str]:
+    rows = await session.scalars(
+        select(CommunityShortfallRow)
+        .where(CommunityShortfallRow.community_entity_id == home.id, CommunityShortfallRow.short_pct > 0)
+        .order_by(CommunityShortfallRow.effect)
+    )
+    return [
+        f"{SHORTFALLS[row.effect].label.lower()}: {row.short_pct}% short of {SHORTFALLS[row.effect].want}" for row in rows if row.effect in OUTER_SHORTFALLS
+    ]
 
 
 async def wealth_line(session: AsyncSession, home: EntityRow, social: SocialClass | None) -> str:
@@ -62,6 +76,13 @@ async def labour_lines(session: AsyncSession, home: EntityRow) -> list[str]:
     lines = [
         f"{row.workers} at {spoken(row.job)}{' (held)' if row.held else ''}" for row in sorted(rows, key=lambda item: -item.workers) if row.job is not Job.IDLE
     ]
+    moved: dict[LabourReason, int] = {}
+    for reason_row in await session.scalars(
+        select(LabourReasonRow).where(LabourReasonRow.community_entity_id == home.id, LabourReasonRow.workers > 0).order_by(LabourReasonRow.job)
+    ):
+        moved[reason_row.reason] = moved.get(reason_row.reason, 0) + reason_row.workers
+    shown = sorted((item for item in moved.items() if item[0] is not LabourReason.CLASS), key=lambda item: item[0].value)
+    lines += [f"{several(count, 'worker', 'workers')} {REASONS[reason].phrase}" for reason, count in shown]
     corvee = await session.get(CorveeRow, home.id)
     if corvee is not None:
         lines.append(f"a corvee takes {corvee.share_pct}% of the workers for great works")
@@ -70,7 +91,7 @@ async def labour_lines(session: AsyncSession, home: EntityRow) -> list[str]:
 
 async def depth_lines(session: AsyncSession, home: EntityRow, social: SocialClass | None) -> DepthLines:
     return DepthLines(
-        needs=await need_lines(session, home, social),
+        needs=await need_lines(session, home, social) + await want_lines(session, home),
         wealth=await wealth_line(session, home, social),
         loyalty=await loyalty_line(session, home),
         labour=await labour_lines(session, home),

@@ -43,6 +43,7 @@ import {
 import { Label, Muted, Text } from '@/components/typography'
 import { ImageStylePicker } from '@/features/images/ImageStylePicker'
 import { romanNumeral } from '@/features/pantheon/labels'
+import { BASES } from '@/features/tongues/labels'
 import { Counter } from './Counter'
 import { TechnologyFamilyFields } from './TechnologyFamilyFields'
 import { CosmosFields, FirstWorldFields, MindsFields } from './WorldShapeFields'
@@ -397,6 +398,8 @@ export function LandStep({ draft, update, options, peoplesMax }: StepProps) {
   )
 }
 
+const SEED_COUNTS = 'seed'
+
 export function PeoplesStep({ draft, update, options, peoplesMax }: StepProps) {
   const technology: Choice<TechnologyEra>[] = Object.entries(
     options.technology
@@ -414,6 +417,19 @@ export function PeoplesStep({ draft, update, options, peoplesMax }: StepProps) {
     hint: LANGUAGE_HINT[key as LanguageTexture],
     icon: LANGUAGE_ICON[key as LanguageTexture] ?? Sparkles,
   }))
+  const counting: Choice<string>[] = [
+    {
+      value: SEED_COUNTS,
+      label: 'The seed decides',
+      hint: 'Each first tongue counts as its world suggests.',
+      icon: Sparkles,
+    },
+    ...Object.entries(options.numeral_bases).map(([key, label]) => ({
+      value: key,
+      label,
+      icon: BASES[key as keyof typeof BASES].icon,
+    })),
+  ]
   return (
     <div className='flex min-w-0 flex-col gap-5'>
       <Counter
@@ -457,6 +473,22 @@ export function PeoplesStep({ draft, update, options, peoplesMax }: StepProps) {
           value={draft.language}
           options={language}
           onChange={(value) => update({ language: value })}
+        />
+      </SettingGroup>
+      <SettingGroup
+        label='Counting of the first tongues'
+        description='The base the first tongues count in; contact and prestige can change it later.'
+      >
+        <ChoiceTiles
+          label='Counting of the first tongues'
+          value={draft.numeralBase ?? SEED_COUNTS}
+          options={counting}
+          onChange={(value) =>
+            update({
+              numeralBase:
+                value === SEED_COUNTS ? null : (value as keyof typeof BASES),
+            })
+          }
         />
       </SettingGroup>
     </div>

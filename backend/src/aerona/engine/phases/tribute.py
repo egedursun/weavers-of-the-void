@@ -85,6 +85,7 @@ async def told(ctx: TickContext, key: str, payer: EntityRow, receiver: EntityRow
     "table.ruler_currencies",
     "table.signal_links",
     "table.sons",
+    "table.speaker_cohorts",
     "table.stars",
     "table.tradition_profiles",
     "table.traits",

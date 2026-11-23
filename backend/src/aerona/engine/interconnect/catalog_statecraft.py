@@ -18,6 +18,7 @@ STATECRAFT_MECHANICS: tuple[Mechanic, ...] = (
         templates=("statecraft.coalition",),
         fields=("threat", "trust", "capacity", "relations", "strain"),
         tables=(PolityRegardRow.__tablename__, DiplomacyProfileRow.__tablename__),
+        tools=("declare_neutral",),
         exposure=Exposure.CONTEXT,
         targets=("polity",),
         couplings=(

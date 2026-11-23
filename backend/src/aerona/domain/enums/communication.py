@@ -24,6 +24,8 @@ class DispatchContent(StrEnum):
     REPORT = "report"
     PLEA = "plea"
     INTELLIGENCE = "intelligence"
+    ORDER = "order"
+    WARNING = "warning"
 
 
 class DispatchState(StrEnum):
@@ -31,6 +33,9 @@ class DispatchState(StrEnum):
     DELIVERED = "delivered"
     INTERCEPTED = "intercepted"
     LOST = "lost"
+    DELAYED = "delayed"
+    FORGED = "forged"
+    MISREAD = "misread"
 
 
 class EnvoyFate(StrEnum):
@@ -38,6 +43,8 @@ class EnvoyFate(StrEnum):
     INSULTED = "insulted"
     IMPRISONED = "imprisoned"
     KILLED = "killed"
+    EXPELLED = "expelled"
+    DEFECTED = "defected"
 
 
 class OpinionSubject(StrEnum):
@@ -46,6 +53,8 @@ class OpinionSubject(StrEnum):
     WAR = "war"
     GOD = "god"
     IDEOLOGY = "ideology"
+    FACTION = "faction"
+    FOREIGN_POWER = "foreign_power"
 
 
 class SignalKind(StrEnum):
@@ -63,3 +72,5 @@ class SignalState(StrEnum):
     ACTIVE = "active"
     CAPTURED = "captured"
     BURNED = "burned"
+    DISUSED = "disused"
+    JAMMED = "jammed"

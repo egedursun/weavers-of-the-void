@@ -100,26 +100,38 @@ async def ensure_built_ins(session: AsyncSession) -> int:
             )
             added += 1
     if not await session.scalar(select(func.count()).select_from(OrganisationKindRow).where(OrganisationKindRow.built_in.is_(True))):
-        for kind, body in BUILT_IN_ORGANISATIONS.items():
-            session.add(
-                OrganisationKindRow(
-                    name=ORGANISATION_BASE_LABELS[kind.value],
-                    built_in=True,
-                    category=body.category,
-                    base=kind,
-                    ownership=body.ownership,
-                    membership=body.membership,
-                    scale=body.scale,
-                    legal_form=body.legal_form,
-                    governance=body.governance,
-                    prestige=body.prestige,
-                    cohesion=body.cohesion,
-                    secrecy=body.secrecy,
-                    foundable=body.foundable,
-                    locked=[],
-                )
+        added += await add_organisations(session, tuple(BUILT_IN_ORGANISATIONS))
+    if added:
+        await session.flush()
+    return added
+
+
+async def add_organisations(session: AsyncSession, kinds: tuple[FactionKind, ...]) -> int:
+    present = set(await session.scalars(select(OrganisationKindRow.base).where(OrganisationKindRow.built_in.is_(True))))
+    added = 0
+    for kind in kinds:
+        body = BUILT_IN_ORGANISATIONS[kind]
+        if kind in present:
+            continue
+        session.add(
+            OrganisationKindRow(
+                name=ORGANISATION_BASE_LABELS[kind.value],
+                built_in=True,
+                category=body.category,
+                base=kind,
+                ownership=body.ownership,
+                membership=body.membership,
+                scale=body.scale,
+                legal_form=body.legal_form,
+                governance=body.governance,
+                prestige=body.prestige,
+                cohesion=body.cohesion,
+                secrecy=body.secrecy,
+                foundable=body.foundable,
+                locked=[],
             )
-            added += 1
+        )
+        added += 1
     if added:
         await session.flush()
     return added

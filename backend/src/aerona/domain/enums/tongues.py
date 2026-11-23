@@ -55,6 +55,15 @@ class NumberSystem(StrEnum):
     PAUCAL = "paucal"
 
 
+class NumeralBase(StrEnum):
+    DECIMAL = "decimal"
+    VIGESIMAL = "vigesimal"
+    DUODECIMAL = "duodecimal"
+    SEXAGESIMAL = "sexagesimal"
+    OCTAL = "octal"
+    BODY_TALLY = "body_tally"
+
+
 class SenseShift(StrEnum):
     BROADENED = "broadened"
     NARROWED = "narrowed"
@@ -62,6 +71,8 @@ class SenseShift(StrEnum):
     AMELIORATIVE = "ameliorative"
     EUPHEMISM = "euphemism"
     RESTORED = "restored"
+    EXTENDED = "extended"
+    ASSOCIATED = "associated"
 
 
 class WordRegister(StrEnum):
@@ -69,6 +80,9 @@ class WordRegister(StrEnum):
     SACRED = "sacred"
     POETIC = "poetic"
     ARCHAIC = "archaic"
+    TABOO = "taboo"
+    TECHNICAL = "technical"
+    HONORIFIC = "honorific"
 
 
 class ScriptChangeCause(StrEnum):
@@ -76,6 +90,8 @@ class ScriptChangeCause(StrEnum):
     REFORM = "reform"
     SIMPLIFICATION = "simplification"
     BORROWING = "borrowing"
+    IMPOSITION = "imposition"
+    REVELATION = "revelation"
 
 
 class LanguageModality(StrEnum):
@@ -86,6 +102,9 @@ class LanguageModality(StrEnum):
     TELEPATHIC = "telepathic"
     DATA = "data"
     CHEMICAL = "chemical"
+    TACTILE = "tactile"
+    VIBRATION = "vibration"
+    ELECTRIC = "electric"
 
 
 class LanguageStage(StrEnum):
@@ -93,6 +112,8 @@ class LanguageStage(StrEnum):
     PIDGIN = "pidgin"
     CREOLE = "creole"
     DIVINE = "divine"
+    CONSTRUCTED = "constructed"
+    REVIVED = "revived"
 
 
 class LanguagePolicy(StrEnum):
@@ -100,6 +121,8 @@ class LanguagePolicy(StrEnum):
     LITURGICAL = "liturgical"
     SUPPRESSED = "suppressed"
     REVIVAL = "revival"
+    PROTECTED = "protected"
+    STANDARDISED = "standardised"
 
 
 class ScriptFate(StrEnum):

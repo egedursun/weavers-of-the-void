@@ -34,7 +34,7 @@ from aerona.db.tables.tongues import (
 )
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import SkillKind
-from aerona.domain.enums.tongues import LanguageModality, LanguageStage
+from aerona.domain.enums.tongues import LanguageModality, LanguageStage, NumeralBase
 
 router = APIRouter(tags=["tongues"])
 NodeId = Annotated[int, Path(ge=1)]
@@ -140,9 +140,12 @@ async def mechanics_of(session: AsyncSession, language_id: int) -> TongueMechani
     policies = list(await session.scalars(select(LanguagePolicyRow).where(LanguagePolicyRow.language_entity_id == language_id)))
     lineage = await script_views(session, await lineage_of(session, profile.script_id if profile is not None else None))
     scholar = await refs_for(session, [work.scholar_entity_id if work is not None else None])
+    ancestors = await refs_for(session, [profile.parent_language_id if profile is not None else None])
     return TongueMechanicsView(
         modality=profile.modality if profile is not None else LanguageModality.VOCAL,
         stage=profile.stage if profile is not None else LanguageStage.NATURAL,
+        numeral_base=profile.numeral_base if profile is not None else NumeralBase.DECIMAL,
+        ancestor=at(ancestors, profile.parent_language_id if profile is not None else None),
         writing_system=profile.writing_system if profile is not None else None,
         script=lineage[0] if lineage else None,
         lineage=lineage,

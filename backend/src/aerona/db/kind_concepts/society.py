@@ -176,6 +176,8 @@ BUILT_IN_ORGANISATIONS: MappingProxyType[FactionKind, BuiltInOrganisation] = tot
         FactionKind.FINANCIERS: BuiltInOrganisation(OP.TRADE, OW.SHAREHOLDERS, OM.BY_PURCHASE, FS.COMPANY, OL.CHARTERED, OG.COUNCIL, 55, 45, 30),
         FactionKind.VETERANS: BuiltInOrganisation(OP.MUTUAL_AID, OW.MEMBERS, OM.BY_TRADE, FS.NETWORK, OL.CUSTOMARY, OG.COUNCIL, 35, 60, 5),
         FactionKind.WORKER_BODY: BuiltInOrganisation(OP.MUTUAL_AID, OW.MEMBERS, OM.BY_TRADE, FS.ORGANISATION, OL.LICENSED, OG.ASSEMBLY, 30, 65, 10),
+        FactionKind.STREET_GANG: BuiltInOrganisation(OP.CRIME, OW.NONE, OM.BY_POWER, FS.BAND, OL.OUTLAWED, OG.LEADER, 5, 55, 30),
+        FactionKind.TRAFFICKING_RING: BuiltInOrganisation(OP.CRIME, OW.FOUNDER, OM.BY_INVITATION, FS.NETWORK, OL.SECRET, OG.LEADER, 10, 60, 80),
     },
 )
 
@@ -310,6 +312,8 @@ ORGANISATION_BASE_LABELS: dict[str, str] = {
     "financiers": "Financiers",
     "veterans": "Veterans",
     "worker_body": "Worker body",
+    "street_gang": "Street gang",
+    "trafficking_ring": "Trafficking ring",
 }
 
 PROFESSION_SPEC = ConceptSpec(

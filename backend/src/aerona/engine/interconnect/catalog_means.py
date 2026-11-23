@@ -1,5 +1,5 @@
 from aerona.db.tables.biology import BiologyRow
-from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow, VeteranGrantRow
+from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow, VeteranGrantRow, VeteranPolicyRow
 from aerona.db.tables.means import ContainerStockRow, NavigationKitRow, SecurityRow, WaterLiftRow, WritingCustomRow, WrittenWorkRow
 from aerona.db.tables.orders import (
     BillOfExchangeRow,
@@ -113,7 +113,11 @@ MEANS_MECHANICS = (
             Coupling(S.ECONOMY, "instruments first come at this quality", E.FLOW, "navigation_instruments.seed_quality"),
             Coupling(S.KNOWLEDGE, "a navigator of this skill refines a port's instruments", E.TRIGGER, "navigation_instruments.refine_skill"),
             Coupling(S.KNOWLEDGE, "a skilled navigator refines the instruments of its port", E.FLOW, "navigation_instruments.refine_gain"),
-            Coupling(S.ECONOMY, "each instrument adds to a port's accuracy", E.MODIFIER, "navigation_instruments.aid_pct"),
+            Coupling(S.ECONOMY, "each instrument adds its own share to a port's accuracy", E.MODIFIER, "navigation_instruments.compass_loss_cut_pct"),
+            Coupling(S.ECONOMY, "a sounding line finds the shallows", E.MODIFIER, "navigation_instruments.sounding_line_loss_cut_pct"),
+            Coupling(S.KNOWLEDGE, "skilled navigators keep wayfinding lore without instruments", E.MODIFIER, "navigation_instruments.wayfinding_loss_cut_pct"),
+            Coupling(S.ECONOMY, "lighthouses and beacons on a shore guide ships home", E.MODIFIER, "navigation_instruments.beacons_loss_cut_pct"),
+            Coupling(S.KNOWLEDGE, "a running network fixes a ship's place", E.MODIFIER, "navigation_instruments.positioning_loss_cut_pct"),
             Coupling(S.KNOWLEDGE, "the best navigator adds to a port's accuracy", E.MODIFIER, "navigation_instruments.skill_pct"),
             Coupling(S.ECONOMY, "accuracy spares sea roads their danger", E.MODIFIER, "navigation_instruments.danger_pct"),
             Coupling(S.ECONOMY, "a sea road this long leaves sight of shore", E.TRIGGER, "navigation_instruments.shore_hops"),
@@ -335,7 +339,9 @@ HONOURS_MECHANICS = (
         phases=("veterans", "factions"),
         surface=Surface(drawer=HONOURS, chart="chart-veterans"),
         backfill="veterans: wars that end from the next epoch bring grants",
-        tables=(VeteranGrantRow.__tablename__,),
+        tables=(VeteranGrantRow.__tablename__, VeteranPolicyRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("grant_veterans",),
         targets=("polity", "settlement", "faction"),
         couplings=(
             Coupling(S.CULTURE, "a martial people grants its veterans land", E.RULE_SWITCH, "veterans.land_martial_from"),

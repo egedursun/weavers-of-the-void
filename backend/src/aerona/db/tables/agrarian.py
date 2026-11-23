@@ -31,7 +31,7 @@ FAMINE_FIELDS = ("memory", "famine_foods", "storage")
 PREPAREDNESS_FIELDS = ("level", "condition", "averted")
 PREPAREDNESS_LEVEL_MAX = 1000
 AID_FIELDS = ("kind", "amount", "god_node_id", "refused")
-REBUILD_FIELDS = ("cause", "plan", "cost", "paid", "progress", "planner_entity_id", "seized_by_node_id", "seized")
+REBUILD_FIELDS = ("cause", "plan", "cost", "paid", "progress", "planner_entity_id", "seized_by_node_id", "seized", "site_entity_id")
 KEYSTONE_FIELDS = (
     "name",
     "producer_entity_id",
@@ -243,6 +243,7 @@ class ReconstructionRow(Base):
     planner_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     seized_by_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     seized: Mapped[int] = mapped_column(default=0)
+    site_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     started_epoch: Mapped[int] = mapped_column(default=0)
     finished_epoch: Mapped[int | None]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

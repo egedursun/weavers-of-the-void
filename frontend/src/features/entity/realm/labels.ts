@@ -1,15 +1,13 @@
 import {
-  Brain,
-  Biohazard,
-  Server,
-  Boxes,
-  Copy,
-  Bot,
   Anchor,
   Baby,
   BadgeCheck,
   Ban,
+  Biohazard,
   Bird,
+  Bot,
+  Boxes,
+  Brain,
   BrickWall,
   Briefcase,
   Building2,
@@ -17,6 +15,7 @@ import {
   Church,
   CircleCheck,
   Coins,
+  Copy,
   Cpu,
   Crown,
   DoorOpen,
@@ -45,6 +44,7 @@ import {
   Hourglass,
   House,
   Landmark,
+  Leaf,
   Lock,
   Map,
   Map as MapIcon,
@@ -54,8 +54,10 @@ import {
   Network,
   PartyPopper,
   PenLine,
+  Radiation,
   Scale,
   ScrollText,
+  Server,
   Shield,
   ShieldCheck,
   ShieldOff,
@@ -68,11 +70,11 @@ import {
   Swords,
   TrendingUp,
   Trophy,
+  UserPlus,
   Users,
   VolumeX,
   Vote,
   WandSparkles,
-  Radiation,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -132,11 +134,15 @@ export const RULES: Record<string, Named & { hint: string }> = {
   },
 }
 
-export const STANDINGS: Record<string, Named> = {
+export const STANDINGS: Record<
+  components['schemas']['RegionalStanding'],
+  Named
+> = {
   hegemon: { label: 'Hegemon', icon: Trophy, tone: 'gold' },
   great_power: { label: 'Great power', icon: Medal, tone: 'info' },
   minor_power: { label: 'Minor power', icon: Shield, tone: 'muted' },
   client: { label: 'Client state', icon: Lock, tone: 'warning' },
+  neutral: { label: 'Neutral', icon: Scale, tone: 'info' },
 }
 
 export const OFFICES: Record<string, Named> = {
@@ -190,6 +196,9 @@ export const LAW_AREAS: Record<string, Named> = {
     icon: ScrollText,
     tone: 'gold',
   },
+  commerce: { label: 'Trade and contracts', icon: Coins, tone: 'gold' },
+  faith: { label: 'Faith and rites', icon: Sparkles, tone: 'verdigris' },
+  labour: { label: 'Work and wages', icon: Hammer, tone: 'info' },
 }
 
 export const LAW_KINDS: Record<string, string> = {
@@ -322,6 +331,7 @@ export const LAW_PARAMS: Record<string, string> = {
   machine_seizure: 'Seizing a made thing',
   manslaughter: 'Manslaughter',
   max_hours: 'Most hours of work a week',
+  hereditary_trades: 'Trades pass from parent to child',
   merchant_luxury: 'Merchant luxury',
   merger_review: 'Review of mergers',
   merging: 'Merged species',
@@ -363,6 +373,7 @@ export const LAW_PARAMS: Record<string, string> = {
   status: 'Status',
   strength: 'Strength',
   strictness: 'Strictness',
+  pollutant: 'Pollution it aims at',
   sumptuary_breach: 'Sumptuary breach',
   synthesis: 'Synthesis of life',
   taboo_breach: 'Breaking a taboo',
@@ -410,6 +421,8 @@ export const CLAIM_BASES: Record<string, Named> = {
   divine: { label: 'By divine right', icon: Sparkles, tone: 'verdigris' },
   fabricated: { label: 'Forged', icon: Feather, tone: 'warning' },
   de_jure: { label: 'By right of the land', icon: Map, tone: 'info' },
+  election: { label: 'By election', icon: Vote, tone: 'verdigris' },
+  adoption: { label: 'By adoption', icon: UserPlus, tone: 'gold' },
 }
 
 export const TREATY_KINDS: Record<string, Named & { plural: string }> = {
@@ -506,6 +519,7 @@ export const TREATY_STATUSES: Record<
   broken: { label: 'Broken', icon: HeartCrack, tone: 'danger' },
   proposed: { label: 'Proposed', icon: PenLine, tone: 'gold' },
   rejected: { label: 'Rejected', icon: Ban, tone: 'muted' },
+  suspended: { label: 'Suspended', icon: Hourglass, tone: 'warning' },
 }
 
 export const PARTY_ROLES: Record<string, Named> = {
@@ -513,6 +527,7 @@ export const PARTY_ROLES: Record<string, Named> = {
   overlord: { label: 'Overlord', icon: Crown, tone: 'gold' },
   vassal: { label: 'Vassal', icon: Shield, tone: 'muted' },
   guarantor: { label: 'Guarantor', icon: ShieldCheck, tone: 'info' },
+  mediator: { label: 'Mediator', icon: Scale, tone: 'verdigris' },
 }
 
 export const CLAUSES: Record<string, Named> = {
@@ -617,6 +632,12 @@ export const OATHS: Record<string, Named> = {
     icon: Droplet,
     tone: 'danger',
   },
+  service: { label: 'Service', icon: Handshake, tone: 'info' },
+  poverty: { label: 'Poverty', icon: Coins, tone: 'muted' },
+  nonviolence: { label: 'Nonviolence', icon: Leaf, tone: 'success' },
+  fidelity: { label: 'Fidelity', icon: Heart, tone: 'verdigris' },
+  secrecy: { label: 'Secrecy', icon: Lock, tone: 'muted' },
+  testimony: { label: 'Testimony', icon: Gavel, tone: 'gold' },
 }
 
 export const OATH_STATUSES: Record<string, Named> = {

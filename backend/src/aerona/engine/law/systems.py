@@ -77,7 +77,7 @@ async def courts_of(session: AsyncSession, polity_id: int | None) -> list[CourtL
 async def court_above(session: AsyncSession, case: CrimeCaseRow) -> CourtLevel | None:
     chain = await courts_of(session, case.polity_entity_id)
     if case.court not in chain:
-        return None
+        return CourtLevel.HIGH if CourtLevel.HIGH in chain else None
     index = chain.index(case.court)
     return chain[index + 1] if index + 1 < len(chain) else None
 

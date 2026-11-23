@@ -2,9 +2,11 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.life.polity import SERVING_CLIENTS
 from aerona.catalog.life_traits import OFFICE_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
@@ -14,7 +16,7 @@ from aerona.db.tables.regime import CoalitionMemberRow, PatronageTieRow, PowerBa
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.life_traits import OfficeKindTrait
 from aerona.domain.enums.mind import ActKind, TraitKind
@@ -33,6 +35,7 @@ from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mortal.kin import children_of, siblings_of, spouses_of
 from aerona.engine.mortal.kinship import marry
+from aerona.engine.mortal.standing import add_renown
 from aerona.engine.operations.limits import TEN_THOUSAND, realm_people
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
@@ -48,6 +51,7 @@ from aerona.engine.regime.book import HALF, clients_of
 
 SEATS_KEPT = having(OFFICE_KIND_TRAITS, OfficeKindTrait.SEATS_KEPT)
 TROOP_UNIT = 100
+TEN = 10
 
 
 @dataclass
@@ -76,6 +80,7 @@ async def tie(ctx: TickContext, patron_id: int, client_id: int, *, role: ClientR
         row = PatronageTieRow(patron_node_id=patron_id, client_entity_id=client_id, role=role, strength=0, since_epoch=ctx.epoch, locked=[])
         ctx.session.add(row)
         tally.ties += 1
+        await record(ctx, "patronage.bound", roles={IncidentRole.PATRON: patron_id, IncidentRole.MEMBER: client_id}, facts={"role": role})
     if "strength" not in row.locked:
         row.strength = clamp_int(max(row.strength, strength), 0, PERCENT)
     return row
@@ -106,7 +111,38 @@ async def bind_clients(ctx: TickContext, book: RealmBook, tally: PatronageTally)
                 continue
             role = ClientRole.COMMANDER if OfficePower.COMMAND in powers_of(office) else ClientRole.OFFICIAL
             await tie(ctx, office.appointed_by_entity_id, office.holder_entity_id, role=role, strength=table.office_strength, tally=tally)
+    patrons = await ctx.session.execute(
+        select(ArtworkProfileRow.patron_entity_id, ArtworkProfileRow.author_entity_id)
+        .join(EntityRow, EntityRow.id == ArtworkProfileRow.author_entity_id)
+        .where(ArtworkProfileRow.patron_entity_id.is_not(None), EntityRow.status == EntityStatus.CANON, EntityRow.entity_type == EntityType.MORTAL)
+        .order_by(ArtworkProfileRow.artwork_entity_id)
+    )
+    for patron, author in patrons.all():
+        if patron is not None and author is not None:
+            await tie(ctx, patron, author, role=ClientRole.ARTIST, strength=table.office_strength, tally=tally)
     await ctx.session.flush()
+    await name_brokers(ctx)
+
+
+async def name_brokers(ctx: TickContext) -> None:
+    patrons = set(await ctx.session.scalars(select(PatronageTieRow.patron_node_id)))
+    for row in list(await ctx.session.scalars(select(PatronageTieRow).where(PatronageTieRow.client_entity_id.in_(list(patrons))).order_by(PatronageTieRow.id))):
+        if "role" not in row.locked and row.role is not ClientRole.BROKER and not held(row.client_entity_id):
+            row.role = ClientRole.BROKER
+
+
+async def serve_patrons(ctx: TickContext) -> None:
+    table = ctx.rules.patronage
+    rows = list(await ctx.session.scalars(select(PatronageTieRow).where(PatronageTieRow.role.in_(list(SERVING_CLIENTS))).order_by(PatronageTieRow.id)))
+    for row in rows:
+        if row.role is ClientRole.ARTIST:
+            patron = await living_entity(ctx.session, row.patron_node_id)
+            if patron is not None and patron.entity_type is EntityType.MORTAL and not held(patron.id):
+                await add_renown(ctx.session, patron.id, table.artist_renown * row.strength / PERCENT, ctx.epoch, rules=ctx.rules)
+            continue
+        below = list(await ctx.session.scalars(select(PatronageTieRow.strength).where(PatronageTieRow.patron_node_id == row.client_entity_id)))
+        if below and not held(row.client_entity_id):
+            await add_renown(ctx.session, row.client_entity_id, sum(below) * table.broker_share_pct / PERCENT / TEN, ctx.epoch, rules=ctx.rules)
 
 
 async def loosen_ties(ctx: TickContext, tally: PatronageTally) -> None:
@@ -507,6 +543,7 @@ async def keep_patronage(ctx: TickContext, tally: PatronageTally) -> None:
     book = await RealmBook.load(ctx.session)
     laws = await LawBook.load(ctx.session)
     await bind_clients(ctx, book, tally)
+    await serve_patrons(ctx)
     await loosen_ties(ctx, tally)
     for realm in sorted(book.realms.values(), key=lambda item: item.entity.id):
         row = await ctx.session.get(RegimeRow, realm.entity.id)

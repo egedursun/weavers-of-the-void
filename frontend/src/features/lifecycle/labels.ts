@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Archive,
   Bone,
   BookOpen,
@@ -27,6 +26,7 @@ import {
   RefreshCcw,
   RotateCcw,
   Scroll,
+  ScrollText,
   ShieldOff,
   Shovel,
   Skull,
@@ -37,6 +37,8 @@ import {
   Sun,
   Swords,
   Trees,
+  Trophy,
+  type LucideIcon,
   Undo2,
   Zap,
 } from 'lucide-react'
@@ -154,6 +156,7 @@ export const HOARD_KINDS: Record<Schema['HoardKind'], Named> = {
   temple_treasury: { label: 'Temple treasury', icon: Cross, tone: 'verdigris' },
   royal_collection: { label: 'Royal collection', icon: Crown, tone: 'gold' },
   museum: { label: 'Museum', icon: Landmark, tone: 'success' },
+  trophy_hall: { label: 'Trophy hall', icon: Trophy, tone: 'danger' },
 }
 
 export const PIECE_KINDS: Record<Schema['PieceKind'], Named> = {
@@ -162,6 +165,9 @@ export const PIECE_KINDS: Record<Schema['PieceKind'], Named> = {
   fossil: { label: 'Fossil', icon: Bone, tone: 'muted' },
   art: { label: 'Work of art', icon: Palette, tone: 'info' },
   specimen: { label: 'Specimen', icon: Leaf, tone: 'success' },
+  manuscript: { label: 'Manuscript', icon: ScrollText, tone: 'info' },
+  trophy: { label: 'Trophy of war', icon: Swords, tone: 'danger' },
+  regalia: { label: 'Regalia', icon: Crown, tone: 'gold' },
 }
 
 export const GARDEN_KINDS: Record<Schema['GardenKind'], Named> = {
@@ -172,6 +178,8 @@ export const GARDEN_KINDS: Record<Schema['GardenKind'], Named> = {
   hunting_park: { label: 'Hunting park', icon: PawPrint, tone: 'warning' },
   sacred_grove: { label: 'Sacred grove', icon: Trees, tone: 'verdigris' },
   cemetery: { label: 'Cemetery', icon: Skull, tone: 'muted' },
+  botanic: { label: 'Botanic garden', icon: Sprout, tone: 'success' },
+  menagerie: { label: 'Menagerie', icon: PawPrint, tone: 'gold' },
 }
 
 export const WORLD_KINDS: Record<string, Named> = Object.fromEntries(

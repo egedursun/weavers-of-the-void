@@ -8,6 +8,7 @@ from aerona.engine.economy.money import MoneyTally, collect, lend
 from aerona.engine.economy.realm_credit import collect_from_realms, lend_to_realms
 from aerona.engine.economy.route_backfill import route_backfill
 from aerona.engine.economy.route_dangers import Lairs
+from aerona.engine.economy.route_states import mark_seasonal, take_officials, weigh_contest
 from aerona.engine.economy.routes import (
     RouteTally,
     assess,
@@ -203,6 +204,7 @@ async def markets(ctx: TickContext) -> None:
     "table.measure_standards",
     "table.name_registry",
     "table.navigation_kits",
+    "table.network_profiles",
     "table.node_births",
     "table.nodes",
     "table.number_systems",
@@ -224,11 +226,13 @@ async def markets(ctx: TickContext) -> None:
     "table.region_dangers",
     "table.region_environment",
     "table.region_pollution",
+    "table.region_winds",
     "table.resource_profiles",
     "table.resource_workers",
     "table.sense_profiles",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
+    "table.sign_origins",
     "table.signal_links",
     "table.skills",
     "table.sky_events",
@@ -274,6 +278,7 @@ async def markets(ctx: TickContext) -> None:
     "people.wealth",
     "settlement.population",
     "settlement.prosperity",
+    "settlement.wealth",
     "table.applied_fixups",
     "table.beast_profiles",
     "table.bonds",
@@ -289,6 +294,8 @@ async def markets(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incident_steps",
     "table.incidents",
+    "table.insurance_policies",
+    "table.insurers",
     "table.market_prices",
     "table.messages",
     "table.name_registry",
@@ -331,11 +338,14 @@ async def trade_flow(ctx: TickContext) -> None:
     grants = await route_grants(ctx.session)
     enemies = await enemies_of(ctx)
     lairs = await Lairs.load(ctx, book)
+    ctx.count("routes_seasonal", await mark_seasonal(ctx, book, routes))
     for route in routes:
         if orphaned(book, route):
             await close_orphan(ctx, route, tally)
             continue
         tally.dangers[route.entity.id] = assess(ctx, book, route, lairs, await ice_open_pct(ctx, route.profile.mode, route.path))
+        await take_officials(ctx, route, tally.dangers[route.entity.id])
+        await weigh_contest(ctx, route, enemies)
         await set_tolls(ctx, book, route, masters, realms=realms, grants=grants)
         await carry(ctx, book, route, quotes, tally, policies=policies)
         await upkeep(ctx, book, route, works=works, enemies=enemies, tally=tally)

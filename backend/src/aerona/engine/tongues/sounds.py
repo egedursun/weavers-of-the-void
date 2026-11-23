@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.tongues import KIND_WEIGHTS, LENITION, TEXTURE_LEAN, TEXTURE_LEAN_WEIGHT
+from aerona.catalog.tongues import KIND_WEIGHTS, LENITION, REGISTERS, TEXTURE_LEAN, TEXTURE_LEAN_WEIGHT
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -33,8 +33,9 @@ from aerona.engine.networks.book import networked_with
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.queries import canon, has_flag
 from aerona.engine.recording.record import record as record_incident
+from aerona.engine.tongues.drift import drift_scale
 
-FIXED_REGISTERS = frozenset({WordRegister.ARCHAIC, WordRegister.SACRED, WordRegister.POETIC})
+FIXED_REGISTERS = frozenset(register for register, spec in REGISTERS.items() if not spec.drifts and register is not WordRegister.COMMON)
 SHORTEST = 2
 PAIR = 2
 GLIDE = "y"
@@ -253,7 +254,7 @@ async def acquire(ctx: TickContext, language: EntityRow, tally: SoundTally, atte
     contacts = await contacts_of(ctx, language.id)
     moved = await migrated(ctx, language.id)
     rng = ctx.rng(f"sound.acquire.{language.id}.{ctx.epoch}" + (f".{attempt}" if attempt else ""))
-    chance = table.base_pct + table.contact_pct * len(contacts) + (table.migration_pct if moved else 0)
+    chance = (table.base_pct + table.contact_pct * len(contacts) + (table.migration_pct if moved else 0)) * await drift_scale(ctx, language.id)
     if not rng.chance(chance):
         return None
     lender = await prestigious(ctx, language, contacts)

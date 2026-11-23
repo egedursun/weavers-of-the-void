@@ -1790,6 +1790,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             (CrisisState.BACKED_DOWN, "{{accuser}} backed down from its demand that {{target}} {demand}."),
             (CrisisState.CONCEDED, "{{target}} gave way and agreed to {demand} for {{accuser}}."),
             (CrisisState.WAR, "Neither {{accuser}} nor {{target}} gave way over the demand to {demand}, and the crisis became a war."),
+            (CrisisState.MEDIATED, "A third power settled the demand that {{target}} {demand}, raised by {{accuser}}."),
         )
     ),
     *(

@@ -136,6 +136,9 @@ async def finance_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Fina
                 reserves=credit.reserves,
                 defaults=credit.defaults,
                 restructured_until=credit.restructured_until,
+                rescuer=await node_ref(session, credit.rescuer_node_id) if credit.rescuer_node_id is not None else None,
+                rescue_terms=credit.rescue_terms,
+                repudiated_until=credit.repudiated_until,
                 epoch=credit.epoch,
                 held=list(credit.locked or []),
             )

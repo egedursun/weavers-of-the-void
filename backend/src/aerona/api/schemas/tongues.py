@@ -7,6 +7,7 @@ from aerona.domain.enums.tongues import (
     LanguageStage,
     MorphologyType,
     NumberSystem,
+    NumeralBase,
     ScriptChangeCause,
     SenseShift,
     SoundChangeCause,
@@ -94,6 +95,8 @@ class DivineTongueView(ApiModel):
 class TongueMechanicsView(ApiModel):
     modality: LanguageModality
     stage: LanguageStage
+    numeral_base: NumeralBase
+    ancestor: NodeRef | None
     writing_system: WritingSystem | None
     script: ScriptView | None
     lineage: list[ScriptView]

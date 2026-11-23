@@ -31,6 +31,7 @@ from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import headcount, set_stats, stat, stat_or
 from aerona.engine.recording.record import RoleValue
 from aerona.engine.recording.record import record as record_incident
+from aerona.engine.tongues.counting import backfill_bases, base_contact
 from aerona.engine.tongues.grammar import loan_factor, simplify
 from aerona.engine.tongues.loans import adapted
 from aerona.language.lexicon import LexiconEntry
@@ -359,10 +360,13 @@ async def language_stats(ctx: TickContext) -> int:
     "table.entities",
     "table.holder_levels",
     "table.language_profiles",
+    "table.language_standing",
     "table.lexemes",
     "table.name_registry",
+    "table.network_nodes",
     "table.nodes",
     "table.polity_profiles",
+    "table.speaker_cohorts",
     "table.trade_flows",
     "table.trade_route_profiles",
     "table.trade_route_regions",
@@ -373,6 +377,7 @@ async def language_stats(ctx: TickContext) -> int:
     "language.complexity",
     "language.sacredness",
     "language.spread",
+    "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -396,6 +401,8 @@ async def language_contact(ctx: TickContext) -> None:
     await trade_contact(ctx, tally)
     await plague_contact(ctx, tally)
     await creole_round(ctx, tally)
+    ctx.count("bases_derived", await backfill_bases(ctx))
+    ctx.count("bases_changed", await base_contact(ctx))
     ctx.count("events", tally.events)
     ctx.count("borrowed", tally.borrowed)
     ctx.count("creoles", tally.creoles)

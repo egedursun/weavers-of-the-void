@@ -17,12 +17,14 @@ from aerona.engine.tongues.sounds import SoundTally, shift_sounds
     "table.bonds",
     "table.entities",
     "table.entity_flags",
+    "table.language_policies",
     "table.language_profiles",
     "table.language_standing",
     "table.lexemes",
     "table.name_meanings",
     "table.network_nodes",
     "table.nodes",
+    "table.sociolects",
     "table.sound_changes",
 )
 @writes("table.lexemes", "table.sound_changes")
@@ -42,6 +44,7 @@ async def sound_changes(ctx: TickContext) -> None:
     "table.nodes",
     "table.people_biology",
     "table.people_substrates",
+    "table.sense_profiles",
     "table.speaker_cohorts",
 )
 @writes("table.language_grammar")
@@ -64,11 +67,13 @@ async def grammar(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.language_grammar",
+    "table.language_policies",
     "table.lexemes",
     "table.meaning_shifts",
     "table.name_exonyms",
     "table.node_births",
     "table.nodes",
+    "table.sociolects",
     "table.sons",
     "table.stars",
     "table.tradition_profiles",
@@ -93,11 +98,25 @@ async def semantic_drift(ctx: TickContext) -> None:
 @reads(
     "table.bonds",
     "table.community_societies",
+    "table.divine_tongues",
     "table.entities",
     "table.entity_flags",
+    "table.language_policies",
     "table.language_profiles",
     "table.language_standing",
+    "table.node_births",
     "table.nodes",
+    "table.polity_members",
+    "table.scripts",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_profiles",
+    "table.language_standing",
     "table.scripts",
 )
 async def script_evolution(ctx: TickContext) -> None:
@@ -143,11 +162,21 @@ async def pidgins(ctx: TickContext) -> None:
     "table.nodes",
     "table.polity_members",
     "table.polity_memberstable.creator",
+    "table.settlement_profiles",
     "table.sons",
     "table.stars",
     "table.worlds",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents", "table.language_policies", "table.speaker_cohorts")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_policies",
+    "table.settlement_profiles",
+    "table.speaker_cohorts",
+)
 async def language_policy(ctx: TickContext) -> None:
     tally = PolicyTally()
     await keep_policies(ctx, tally)

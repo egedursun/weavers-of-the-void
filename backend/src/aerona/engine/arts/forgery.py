@@ -10,6 +10,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import RelicRow
+from aerona.db.tables.intrigue import SecretRow
 from aerona.db.tables.mind import SKILL_MAX, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import ClaimRow
@@ -18,6 +19,7 @@ from aerona.domain.enums.arts import ArtMarketRole, ForgeryKind, ForgeryStatus
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.intrigue import IntrigueSecret
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClaimBasis
 from aerona.domain.enums.records import StepAction
@@ -25,6 +27,7 @@ from aerona.domain.models.entity_stats import ArtworkStats, ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.money import issued_by
 from aerona.engine.economy.purse import receive_coin, take_coin
+from aerona.engine.intrigue.secrets import keep_secret
 from aerona.engine.lore.items import profile_of
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -199,6 +202,7 @@ async def forge(ctx: TickContext, original: EntityRow, forger: EntityRow, *, bra
             brand.counterfeits += 1
     await ctx.session.flush()
     await connect(ctx.session, forger.id, item.id, BondKind.OWNS, ctx.epoch, description="forged")
+    await keep_secret(ctx, forger.id, IntrigueSecret.FORGERY, about_id=item.id, source="forgery")
     row = ForgeryRow(
         item_entity_id=item.id,
         kind=kind,
@@ -367,8 +371,20 @@ async def expose(ctx: TickContext, row: ForgeryRow, expert_id: int | None) -> No
         await report_crime(ctx, town.id, culprit.id, FORGERIES[row.kind].crime)
 
 
+async def told_forgeries(ctx: TickContext, tally: ForgeryTally) -> None:
+    told = select(SecretRow).where(SecretRow.kind == IntrigueSecret.FORGERY, SecretRow.exposed_epoch.is_not(None), SecretRow.about_node_id.is_not(None))
+    for secret in list(await ctx.session.scalars(told.order_by(SecretRow.id))):
+        row = await ctx.session.scalar(
+            select(ForgeryRow).where(ForgeryRow.item_entity_id == secret.about_node_id, ForgeryRow.status == ForgeryStatus.HIDDEN).limit(1)
+        )
+        if row is not None and "status" not in row.locked and not held(row.item_entity_id):
+            await expose(ctx, row, secret.holder_node_id)
+            tally.exposed += 1
+
+
 async def examine(ctx: TickContext, tally: ForgeryTally) -> None:
     table = ctx.rules.forgery
+    await told_forgeries(ctx, tally)
     for row in list(await ctx.session.scalars(select(ForgeryRow).where(ForgeryRow.status == ForgeryStatus.HIDDEN).order_by(ForgeryRow.id))):
         item = await living_entity(ctx.session, row.item_entity_id)
         if item is None or held(item.id) or "status" in row.locked:

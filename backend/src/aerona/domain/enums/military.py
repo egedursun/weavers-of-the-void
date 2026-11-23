@@ -100,6 +100,9 @@ class Stance(StrEnum):
     GARRISON = "garrison"
     RAID = "raid"
     RETREAT = "retreat"
+    WINTER_QUARTERS = "winter_quarters"
+    PURSUE = "pursue"
+    ESCORT = "escort"
 
 
 class Tactic(StrEnum):
@@ -195,6 +198,7 @@ class SiegeAction(StrEnum):
     MINE = "mine"
     ASSAULT = "assault"
     NEGOTIATE = "negotiate"
+    SUBORN = "suborn"
 
 
 class DefenderAction(StrEnum):
@@ -202,6 +206,9 @@ class DefenderAction(StrEnum):
     REPAIR = "repair"
     RATION = "ration"
     SEEK_RELIEF = "seek_relief"
+    FLOOD_APPROACHES = "flood_approaches"
+    SCORCHED_EARTH = "scorched_earth"
+    EXPEL_MOUTHS = "expel_mouths"
 
 
 class StarvationStage(StrEnum):
@@ -237,6 +244,8 @@ class CaptiveFate(StrEnum):
     LABOUR = "labour"
     EXCHANGED = "exchanged"
     RELEASED = "released"
+    EXECUTED = "executed"
+    RECRUITED = "recruited"
 
 
 class DuelContext(StrEnum):
@@ -245,6 +254,7 @@ class DuelContext(StrEnum):
     TRIAL = "trial"
     CHAMPION = "champion"
     GOD = "god"
+    RITUAL = "ritual"
 
 
 class DuelEnd(StrEnum):
@@ -254,6 +264,8 @@ class DuelEnd(StrEnum):
     DEATH = "death"
     EXHAUSTION = "exhaustion"
     UNCONSCIOUS = "unconscious"
+    FIRST_WOUND = "first_wound"
+    RING_OUT = "ring_out"
 
 
 class SpyOperation(StrEnum):
@@ -264,6 +276,9 @@ class SpyOperation(StrEnum):
     INTEL = "intel"
     BLACKMAIL = "blackmail"
     COUNTERFEIT = "counterfeit"
+    INFILTRATE = "infiltrate"
+    EXFILTRATE = "exfiltrate"
+    DISINFORM = "disinform"
 
 
 class SabotageKind(StrEnum):
@@ -313,6 +328,9 @@ class ArmyRole(StrEnum):
     QUARTERMASTER = "quartermaster"
     STANDARD_BEARER = "standard_bearer"
     SURGEON = "surgeon"
+    CHAPLAIN = "chaplain"
+    PAYMASTER = "paymaster"
+    SCOUT_MASTER = "scout_master"
 
 
 class ContractStatus(StrEnum):
@@ -326,6 +344,8 @@ class SackChoice(StrEnum):
     MERCY = "mercy"
     SACK = "sack"
     RAZE = "raze"
+    RANSOM_CITY = "ransom_city"
+    DEPORT = "deport"
 
 
 class SiegeWork(StrEnum):
@@ -335,6 +355,13 @@ class SiegeWork(StrEnum):
     MINES = "mines"
     COUNTERMINES = "countermines"
     LADDERS = "ladders"
+    BOMBARDMENT = "bombardment"
+    SAPPING = "sapping"
+    BLOCKADE_LINES = "blockade_lines"
+    AIR_ASSAULT = "air_assault"
+    NETWORK_ATTACK = "network_attack"
+    RITE_BREACH = "rite_breach"
+    RAMP = "ramp"
 
 
 class PeaceTermKind(StrEnum):
@@ -361,6 +388,8 @@ class CasualtyFate(StrEnum):
     WOUNDED = "wounded"
     MAIMED = "maimed"
     CAPTURED = "captured"
+    MISSING = "missing"
+    DESERTED = "deserted"
 
 
 class SpyOwnerKind(StrEnum):
@@ -378,6 +407,8 @@ class AgentStatus(StrEnum):
     TURNED = "turned"
     DEAD = "dead"
     RETIRED = "retired"
+    MISSING = "missing"
+    EXPOSED = "exposed"
 
 
 class FeudParty(StrEnum):

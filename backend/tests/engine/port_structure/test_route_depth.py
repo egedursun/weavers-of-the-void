@@ -153,7 +153,7 @@ def test_every_way_of_travel_has_its_own_hard_season() -> None:
     assert season_loss(rules, TradeMode.RIVER, [region()], winter) == table.river_ice_pct
     assert season_loss(rules, TradeMode.RIVER, [region()], season(rain_shift=40)) == table.river_flood_pct
     summer = season(temperature_shift=40)
-    assert season_loss(rules, TradeMode.CARAVAN, [region(dominant_terrain=TerrainKind.DESERT)], summer) == table.caravan_heat_pct
+    assert season_loss(rules, TradeMode.ROAD, [region(dominant_terrain=TerrainKind.DESERT)], summer) == table.caravan_heat_pct
     assert season_loss(rules, TradeMode.SKY, [region()], muddy) == table.sky_season_pct / 2
     assert season_loss(rules, TradeMode.SEA, [region()], muddy) == rules.trade_routes.sea_season_pct / 2
 
@@ -266,8 +266,8 @@ async def test_toll_stops_can_be_raised_held_and_forbidden(session: AsyncSession
     first, second = await markets(session, world, rules)
     keeper = await settlement(session, "Bridgeward", world, world.regions[1])
     ctx = await manual_context(session, "test", rules)
-    route = await found_by_hand(ctx, first.id, second.id, mode=TradeMode.CARAVAN, controller_id=keeper.id, toll_pct=12)
-    assert route.profile.mode is TradeMode.CARAVAN and route.profile.controller_entity_id == keeper.id
+    route = await found_by_hand(ctx, first.id, second.id, mode=TradeMode.ROAD, controller_id=keeper.id, toll_pct=12)
+    assert route.profile.mode is TradeMode.ROAD and route.profile.controller_entity_id == keeper.id
     toll = await session.get(TradeRouteTollRow, (route.entity.id, world.regions[1].id))
     assert toll is not None and toll.rate_pct == 12 and toll.set_by_player and toll.controller_held
     await remove_toll(ctx, route.entity.id, world.regions[1].id)

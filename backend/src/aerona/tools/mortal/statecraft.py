@@ -3,9 +3,11 @@ from typing import Any
 from aerona.catalog.life.tools import ISSUE_DEMAND_CRISIS_DEMANDS
 from aerona.catalog.statecraft import DEMAND_TEXT
 from aerona.core.grammar import spoken
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
 from aerona.engine.polity.book import RealmBook
@@ -45,6 +47,10 @@ async def issue_demand(call: MortalCall, args: DemandInput) -> str:
             fail(MortalResult.DEMAND_REFUSED, why="that realm holds no such vassal")
     elif args.demand is CrisisDemand.CONVERT:
         subject = realm.profile.state_religion_id
+    elif args.demand is CrisisDemand.HAND_OVER:
+        person = await call.session.get(EntityRow, subject) if subject is not None else None
+        if person is None or person.entity_type is not EntityType.MORTAL:
+            fail(MortalResult.DEMAND_REFUSED, why="name the person to be handed over")
     if args.demand in ISSUE_DEMAND_CRISIS_DEMANDS and subject is None:
         fail(MortalResult.DEMAND_REFUSED, why="there is nothing of that kind to demand")
     amount = target.profile.treasury * call.rules.statecraft.pay_share_pct // 100 if args.demand is CrisisDemand.PAY else 0

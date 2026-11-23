@@ -4,7 +4,10 @@ from collections.abc import Iterable
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.carriers import CARRIERS
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.life.economy import CONVOY_WORDS, OPEN
+from aerona.catalog.means import AIDS
 from aerona.catalog.reproduction import SEX_KINDS
 from aerona.core.grammar import several, spoken
 from aerona.db.repositories.nodes import NodeRepository
@@ -22,9 +25,12 @@ from aerona.db.tables.economy import (
     TradeRouteTollRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
+from aerona.db.tables.means import NavigationKitRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.urban import ConvoyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import CommodityKind
@@ -183,6 +189,29 @@ async def debt_lines(session: AsyncSession, node_id: int, names: Names) -> list[
     ]
 
 
+async def closed_season_name(session: AsyncSession, entity: EntityRow, profile: TradeRouteProfileRow) -> str:
+    if profile.closed_season is None or entity.world_id is None:
+        return ""
+    name = await session.scalar(select(WorldSeasonRow.name).where(WorldSeasonRow.world_id == entity.world_id, WorldSeasonRow.position == profile.closed_season))
+    return name or ""
+
+
+async def route_aids(session: AsyncSession, profile: TradeRouteProfileRow) -> list[str]:
+    kits = await session.scalars(
+        select(NavigationKitRow)
+        .where(NavigationKitRow.holder_entity_id.in_((profile.first_market_id, profile.second_market_id)))
+        .order_by(NavigationKitRow.holder_entity_id, NavigationKitRow.aid)
+    )
+    return sorted({f"{AIDS[kit.aid].label.lower()} (quality {kit.quality})" for kit in kits})
+
+
+async def convoy_states(session: AsyncSession, route_id: int) -> list[str]:
+    rows = await session.execute(
+        select(ConvoyRow.status, func.count()).where(ConvoyRow.route_entity_id == route_id, ConvoyRow.status.in_(OPEN)).group_by(ConvoyRow.status)
+    )
+    return [f"{several(count, 'convoy', 'convoys')} {CONVOY_WORDS[status]}" for status, count in rows.all()]
+
+
 async def route_line(session: AsyncSession, profile: TradeRouteProfileRow, names: Names, *, viewpoint: int | None) -> RouteLine | None:
     entity = await session.get(EntityRow, profile.route_entity_id)
     if entity is None:
@@ -222,7 +251,14 @@ async def route_line(session: AsyncSession, profile: TradeRouteProfileRow, names
         beasts=profile.danger_beasts,
         weather=profile.danger_weather,
         sea=profile.danger_sea,
+        officials=profile.danger_officials,
+        spoilage=profile.danger_spoilage,
+        pilferage=profile.danger_pilferage,
         season_pct=profile.season_pct,
+        closed_season=await closed_season_name(session, entity, profile),
+        carrier=CARRIERS[profile.carrier].label.lower() if profile.carrier is not None else "",
+        aids=await route_aids(session, profile),
+        convoys=await convoy_states(session, entity.id),
         length=profile.length,
         renown=stat(entity, "renown") or 0,
         controller=names.of(profile.controller_entity_id),

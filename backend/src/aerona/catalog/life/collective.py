@@ -1,9 +1,10 @@
 from collections.abc import Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.catalog.collective import ACTS
 from aerona.core.total import total
-from aerona.domain.enums.collective import AccountMedium, CollectiveActKind, CrowdFeeling, RoleKind
+from aerona.domain.enums.collective import AccountKind, AccountMedium, AccountStance, CollectiveActKind, CrowdFeeling, RoleKind
 from aerona.domain.enums.mind import Facet, ValueAxis
 from aerona.domain.enums.mortal import CareerPath
 from aerona.domain.enums.relations import InteractionKind
@@ -57,3 +58,58 @@ CAREER_ROLES: MappingProxyType[CareerPath, RoleKind] = MappingProxyType(
 )
 
 DEEPER_BEHAVIOUR_INTERACTION_KINDS = (InteractionKind.TEACH, InteractionKind.GOSSIP)
+
+
+@dataclass(frozen=True)
+class AccountKindSpec:
+    label: str
+    decay: int
+    remembers: bool
+    backs_claims: bool = False
+    sung: bool = False
+
+
+K = AccountKind
+ACCOUNT_KINDS = total(
+    AccountKind,
+    {
+        K.OFFICIAL_CHRONICLE: AccountKindSpec("Official chronicle", 100, False),
+        K.FOLK_MEMORY: AccountKindSpec("Folk memory", 120, True),
+        K.FOREIGN_ACCOUNT: AccountKindSpec("Foreign account", 100, True),
+        K.GOSPEL: AccountKindSpec("Gospel", 60, False),
+        K.EPIC: AccountKindSpec("Epic", 80, True),
+        K.INSCRIPTION: AccountKindSpec("Inscription", 30, False),
+        K.FOUNDING_MYTH: AccountKindSpec("Founding myth", 50, False),
+        K.ELDER_MEMORY: AccountKindSpec("Elder memory", 140, False),
+        K.RECORD: AccountKindSpec("Record", 20, False),
+        K.TESTIMONY: AccountKindSpec("Testimony", 110, False),
+        K.GENEALOGY: AccountKindSpec("Genealogy", 40, False, backs_claims=True),
+        K.SONG: AccountKindSpec("Song", 30, True, sung=True),
+    },
+)
+
+
+@dataclass(frozen=True)
+class AccountStanceSpec:
+    label: str
+    slant: int
+    standing_rule: str
+    praises: bool = False
+    hides: bool = False
+    grieves: bool = False
+
+
+S_ = AccountStance
+ACCOUNT_STANCES = total(
+    AccountStance,
+    {
+        S_.GLORIFY: AccountStanceSpec("Glorifies", 8, "glorify_standing_effect", praises=True),
+        S_.VILIFY: AccountStanceSpec("Vilifies", 8, "vilify_standing_effect"),
+        S_.OMIT: AccountStanceSpec("Leaves out", 15, "omit_standing_effect", hides=True),
+        S_.NEUTRAL: AccountStanceSpec("Tells plainly", 0, "neutral_standing_effect"),
+        S_.JUSTIFY: AccountStanceSpec("Admits and justifies", 5, "justify_standing_effect"),
+        S_.LAMENT: AccountStanceSpec("Laments", 4, "lament_standing_effect", grieves=True),
+        S_.MOCK: AccountStanceSpec("Mocks", 10, "mock_standing_effect"),
+    },
+)
+REMEMBERING_KINDS = tuple(kind for kind, spec in ACCOUNT_KINDS.items() if spec.remembers)

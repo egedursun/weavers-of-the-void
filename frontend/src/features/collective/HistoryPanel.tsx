@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   BookOpen,
   Eye,
@@ -21,6 +21,7 @@ import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
 import { Ref } from '@/features/gatherings/parts'
 import { AUTHENTICITIES } from '@/features/minds/labels'
+import { useNodeHistory } from '@/features/records/api'
 import {
   type AccountView,
   type CollectiveView,
@@ -29,6 +30,9 @@ import {
 import { ACCOUNT_KINDS, MEDIA, STANCES } from './labels'
 import { clamp, SPAN, useRemove, useRow } from './model'
 import { EventPicker, Held, Listed } from './parts'
+
+const HAPPENINGS_SHOWN = 50
+const NO_HAPPENING = 'none'
 
 type Strike = CollectiveView['strikes'][number]
 type Myth = NonNullable<CollectiveView['myth']>
@@ -156,6 +160,23 @@ function AccountCard({
     (_: void) => ({ account_id: row.id }),
     'The older account comes to light'
   )
+  const told = useNodeHistory(row.holder.id, {
+    role: null,
+    kind: null,
+    limit: HAPPENINGS_SHOWN,
+  })
+  const happenings = useMemo(
+    () => ({
+      [NO_HAPPENING]: 'No single happening',
+      ...Object.fromEntries(
+        (told.data?.incidents ?? []).map((item) => [
+          String(item.incident_id),
+          item.line ?? item.kind.replaceAll('.', ' '),
+        ])
+      ),
+    }),
+    [told.data]
+  )
   const kind = ACCOUNT_KINDS[row.kind]
   const medium = MEDIA[row.medium]
   const busy = why(action.busy, revising.isPending, exposing.isPending)
@@ -211,6 +232,12 @@ function AccountCard({
           kind: 'node',
           types: ['mortal'],
           kinds: ['son', 'foreign_god'],
+        },
+        {
+          key: 'incident_id',
+          label: 'Happening it tells',
+          kind: 'pick',
+          table: happenings,
         },
         {
           key: 'subject_node_id',
@@ -293,6 +320,7 @@ function AccountCard({
             <Ref key='artwork' node={row.artwork} empty='no work of art' />,
           ],
           ['Event', row.collection_name ?? 'none'],
+          ['Happening', row.happening ?? 'none named'],
         ]}
       />
       <Label variant='overline'>{`How it speaks of each (${row.stances.length})`}</Label>

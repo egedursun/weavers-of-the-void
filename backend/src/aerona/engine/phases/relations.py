@@ -82,6 +82,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
+    "table.lexemes",
     "table.made_realm_profiles",
     "table.made_realms",
     "table.memories",
@@ -219,6 +220,7 @@ async def relations_social(ctx: TickContext) -> None:
     "table.worlds",
 )
 @writes(
+    "table.artwork_profiles",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -310,6 +312,7 @@ async def relations_passions(ctx: TickContext) -> None:
     "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
+    "table.lexemes",
     "table.made_realm_profiles",
     "table.memories",
     "table.mind_attributes",

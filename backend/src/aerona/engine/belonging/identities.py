@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.catalog.identity import IDENTITY_LAYERS, NEW_LAYERS, SALIENCE_DRIVERS, VOTE_LAYERS
 from aerona.catalog.kinds.war_causes import WAR_CAUSES
 from aerona.catalog.life.belonging import CROSSING_PUSHES_IDENTITY_LAYERS, GUILD_PUSHES_IDENTITY_LAYERS
+from aerona.catalog.tongues import POLICIES
 from aerona.db.fast_session import rows_by_prefix
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.arts import MatchRow
@@ -13,7 +14,7 @@ from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import CommemorationRow, MovementRow
 from aerona.db.tables.cosmos import AppliedFixupRow
-from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.environment import NotableYearRow
 from aerona.db.tables.estates import MovementSupportRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -24,7 +25,7 @@ from aerona.db.tables.mortal import MarriageRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.referendums import ReferendumRow
 from aerona.db.tables.settlement import DistrictRow
-from aerona.db.tables.tongues import LanguagePolicyRow
+from aerona.db.tables.tongues import LanguagePolicyRow, ScriptRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.belonging import IdentityLayer, SalienceDriver
@@ -36,7 +37,7 @@ from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import DistrictKind
-from aerona.domain.enums.tongues import LanguagePolicy
+from aerona.domain.enums.tongues import LanguageStage, ScriptChangeCause
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.belonging.effects import approach
 from aerona.engine.belonging.values import GUILDS, Value, values_of
@@ -175,22 +176,27 @@ async def guild_pushes(ctx: TickContext, atlas: RegionAtlas, pushes: Pushes, tal
 
 async def tongue_pushes(ctx: TickContext, communities: list[EntityRow], pushes: Pushes) -> None:
     table = ctx.rules.identity
+    moving = [policy for policy, spec in POLICIES.items() if spec.identity]
     policies = await ctx.session.scalars(
-        select(LanguagePolicyRow)
-        .where(LanguagePolicyRow.policy.in_([LanguagePolicy.SUPPRESSED, LanguagePolicy.REVIVAL]))
-        .order_by(LanguagePolicyRow.holder_entity_id, LanguagePolicyRow.language_entity_id)
+        select(LanguagePolicyRow).where(LanguagePolicyRow.policy.in_(moving)).order_by(LanguagePolicyRow.holder_entity_id, LanguagePolicyRow.language_entity_id)
     )
     pressed = {(row.holder_entity_id, row.language_entity_id): row.policy for row in policies}
-    if not pressed:
-        return
+    imposed_since = ctx.epoch - 1
     for community in communities:
         tongue = await spoken_language(ctx.session, community.id)
+        if tongue is None:
+            continue
+        profile = await ctx.session.get(LanguageProfileRow, tongue.id)
+        if profile is not None and profile.stage is LanguageStage.REVIVED:
+            push(pushes, community.id, IdentityLayer.LANGUAGE, ctx.rules.tongues.revived_identity, SalienceDriver.COMMEMORATION)
+        script = await ctx.session.get(ScriptRow, profile.script_id) if profile is not None and profile.script_id is not None else None
+        if script is not None and script.cause is ScriptChangeCause.IMPOSITION and script.epoch >= imposed_since:
+            push(pushes, community.id, IdentityLayer.LANGUAGE, ctx.rules.script.imposition_identity, SalienceDriver.PERSECUTION)
         realm = await realm_of(ctx.session, community.id)
-        policy = pressed.get((realm, tongue.id)) if realm is not None and tongue is not None else None
-        if policy is LanguagePolicy.SUPPRESSED:
-            push(pushes, community.id, IdentityLayer.LANGUAGE, table.language_suppression_rise, SalienceDriver.PERSECUTION)
-        elif policy is LanguagePolicy.REVIVAL:
-            push(pushes, community.id, IdentityLayer.LANGUAGE, table.language_suppression_rise, SalienceDriver.RHETORIC)
+        policy = pressed.get((realm, tongue.id)) if realm is not None else None
+        if policy is not None:
+            spec = POLICIES[policy]
+            push(pushes, community.id, IdentityLayer.LANGUAGE, spec.identity * table.language_suppression_rise, spec.driver)
 
 
 async def kind_pushes(ctx: TickContext, communities: list[EntityRow], laws: LawBook, pushes: Pushes) -> None:

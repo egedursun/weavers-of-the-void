@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.communication import CONTENT_LABELS, STATE_LABELS, SUBJECT_LABELS
 from aerona.catalog.intrigue import FAVOUR_LABELS, IDENTITY_LABELS, PHASE_LABELS, SCHEMES, SECRETS, belief_label
 from aerona.catalog.life.agents import ESTATE_LINES_FACTION_KINDS
+from aerona.catalog.pacts import ARRIVED_STATES
 from aerona.catalog.titles import RANK_WORDS
 from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.communication import PublicOpinionRow
@@ -18,7 +19,6 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import ClaimRow, OfficeRow
 from aerona.db.tables.titles import TitleProfileRow
 from aerona.domain.enums.agent import MessageIntent
-from aerona.domain.enums.communication import DispatchState
 from aerona.domain.enums.faction import FactionRank
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.intrigue.schemes import OPEN
@@ -120,7 +120,7 @@ async def letter_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> tu
         state = STATE_LABELS[row.state].lower() if row.state is not None else "sent"
         if row.sender_node_id == me.id:
             letters.append(f"{label} you sent to {await name_of(session, row.recipient_node_id)} is {state}")
-        elif row.state is DispatchState.DELIVERED:
+        elif row.state in ARRIVED_STATES:
             letters.append(f"{label} came to you from {await name_of(session, row.sender_node_id)}{' (it may be misread)' if row.misread else ''}")
     opinions: list[str] = []
     home = me.location_id

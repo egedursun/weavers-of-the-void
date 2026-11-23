@@ -37,6 +37,7 @@ from aerona.engine.lore import art, items, legends, prophecy, traditions
 from aerona.engine.military.shipyard import Commission, commission
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.polity.laws import attach_profile
+from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.stats import set_stats
 from aerona.engine.structures.profiles import ensure_profile
@@ -304,6 +305,15 @@ async def polity_extras(call: SonCall, args: CreationInput, created: EntityRow) 
     return notes
 
 
+async def language_extras(call: SonCall, args: CreationInput, created: EntityRow) -> None:
+    words = args.option("words")
+    if words:
+        await add_words(call.session, created, words[: call.rules.son_tools.coin_word_max_words], actor=(ActorKind.SON, call.son.id), epoch=call.epoch)
+    base = args.option("numeral_base")
+    if base is not None:
+        (await language_profile(call.session, created)).numeral_base = base
+
+
 async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
     notes: list[str] = []
     await seed_lore_kinds(call, args, created)
@@ -316,9 +326,8 @@ async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) 
     kind = args.option("structure_kind")
     if created.entity_type is EntityType.STRUCTURE and kind is not None:
         notes.append(await raise_divine_structure(call, args, created, kind))
-    words = args.option("words")
-    if created.entity_type is EntityType.LANGUAGE and words:
-        await add_words(call.session, created, words[: call.rules.son_tools.coin_word_max_words], actor=(ActorKind.SON, call.son.id), epoch=call.epoch)
+    if created.entity_type is EntityType.LANGUAGE:
+        await language_extras(call, args, created)
     place_kind = args.option("place_kind")
     if created.entity_type is EntityType.PLACE and place_kind is not None:
         await write_kind(call.session, call.rules, created.id, place_kind)

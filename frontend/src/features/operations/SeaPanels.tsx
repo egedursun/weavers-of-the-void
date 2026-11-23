@@ -366,7 +366,7 @@ function CrewCard({
       caption={`${row.count} at the station`}
       removeLabel='Man the station anew'
       editTitle='Set the station'
-      note='Gunners set the rate of fire by their skill and how many still serve the guns; officers keep the guns loading under fire; riggers work the sails and the pumps; marines board; rowers drive a galley against the wind.'
+      note='Gunners set the rate of fire by their skill and how many still serve the guns; officers keep the guns loading under fire; riggers work the sails and the pumps; marines board; rowers drive a galley against the wind. Pilots, engineers, sensor operators, link operators and casters each add to the vessel in a fight; medics save the crew in storms and fights; handlers spare a living body or team the storm; navigators, with the sure instruments of the home port, spare the vessel storm and loss.'
       fields={[
         {
           key: 'count',
@@ -390,16 +390,23 @@ function CrewCard({
 function ShipForge({
   nodeId,
   kind,
+  stations,
   blocked,
 }: {
   nodeId: number
   kind: string | null
+  stations: readonly (keyof typeof STATIONS)[]
   blocked: string | null
 }) {
   const gate = kind === 'vessel' ? blocked : NOT_VESSEL
+  const fitted = Object.fromEntries(
+    stations.map((key) => [key, STATIONS[key]])
+  ) as Record<string, (typeof STATIONS)[keyof typeof STATIONS]>
   const [shot, setShot] = useState<keyof typeof SHOTS>('round')
   const [point, setPoint] = useState<keyof typeof POINTS_OF_SAIL>('reaching')
-  const [station, setStation] = useState<keyof typeof STATIONS>('gunners')
+  const [station, setStation] = useState<keyof typeof STATIONS>(
+    stations[0] ?? 'gunners'
+  )
   const [count, setCount] = useState('20')
   const [skill, setSkill] = useState('40')
   const sailing = useOperationsAction(
@@ -418,7 +425,13 @@ function ShipForge({
     'The station is manned'
   )
   const sailBusy = why(gate, sailing.isPending)
-  const crewBusy = why(gate, manning.isPending)
+  const crewBusy = why(
+    gate ??
+      (stations.includes(station)
+        ? null
+        : 'No section of this vessel calls for that station'),
+    manning.isPending
+  )
   return (
     <ForgeCard
       icon={Compass}
@@ -465,9 +478,9 @@ function ShipForge({
         onPick={(value) => setPoint(value as keyof typeof POINTS_OF_SAIL)}
       />
       <MindPicker
-        label='Station'
+        label='Station its sections call for'
         value={station}
-        table={table(STATIONS)}
+        table={table(fitted)}
         blocked={gate}
         onPick={(value) => setStation(value as keyof typeof STATIONS)}
       />
@@ -522,7 +535,12 @@ export function ShipPanel({
       >
         {(item) => <CrewCard row={item} vesselId={nodeId} blocked={blocked} />}
       </Listed>
-      <ShipForge nodeId={nodeId} kind={kind} blocked={blocked} />
+      <ShipForge
+        nodeId={nodeId}
+        kind={kind}
+        stations={data.crew_stations}
+        blocked={blocked}
+      />
     </div>
   )
 }

@@ -36,6 +36,7 @@ import {
   CheckCheck,
   XCircle,
   Megaphone,
+  Package,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -134,6 +135,8 @@ export const SAVING_FORMS: Record<Schema['SavingForm'], Named> = {
   hoard: { label: 'Buried hoard', icon: Shovel, tone: 'warning' },
   deposit: { label: 'Bank deposit', icon: Vault, tone: 'info' },
   investment: { label: 'Investment', icon: Cog, tone: 'success' },
+  land: { label: 'Land that earns rent', icon: Map, tone: 'gold' },
+  goods: { label: 'Stored goods and herds', icon: Package, tone: 'verdigris' },
 }
 
 export const HOARD_STATES: Record<Schema['HoardState'], Named> = {

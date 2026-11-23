@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.finance import COVERS, TOWN_COVERS
 from aerona.catalog.life_traits import COOP_PURPOSE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -78,7 +79,7 @@ async def found_insurers(ctx: TickContext, tally: InsuranceTally) -> None:
 async def candidates(ctx: TickContext, insurer: EntityRow) -> list[tuple[int, InsuranceCover]]:
     found: list[tuple[int, InsuranceCover]] = []
     if insurer.location_id is not None:
-        found += [(insurer.location_id, InsuranceCover.CARGO), (insurer.location_id, InsuranceCover.HOUSE)]
+        found += [(insurer.location_id, cover) for cover in TOWN_COVERS]
     members = await ctx.session.scalars(
         select(BondRow.source_node_id)
         .where(BondRow.target_node_id == insurer.id, BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE)
@@ -104,7 +105,7 @@ async def write_policies(ctx: TickContext, row: InsurerRow, tally: InsuranceTall
     for holder_id, cover in await candidates(ctx, insurer):
         if written >= table.per_epoch(table.policies_per_epoch) or (holder_id, cover) in covered or held(holder_id):
             continue
-        premium = max(1, round(table.sum_insured * row.premium_pct / PERCENT))
+        premium = max(1, round(table.sum_insured * row.premium_pct / PERCENT * int(getattr(table, COVERS[cover].premium_rule)) / PERCENT))
         ctx.session.add(
             InsurancePolicyRow(
                 insurer_entity_id=row.insurer_entity_id,

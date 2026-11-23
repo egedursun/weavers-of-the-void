@@ -37,6 +37,8 @@ class DistrictKind(StrEnum):
     ENTERTAINMENT = "entertainment"
     SUBURB = "suburb"
     ARCOLOGY = "arcology"
+    CAMP = "camp"
+    LAZARETTO = "lazaretto"
 
 
 class DistrictHarm(StrEnum):

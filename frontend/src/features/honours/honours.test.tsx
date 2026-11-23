@@ -109,4 +109,54 @@ describe('standards and veterans', () => {
       .element(screen.getByText('Pensions for 60 veterans'))
       .toBeVisible()
   })
+  it('keeps a standing grant to veterans and sets it, freedom from taxes included', async () => {
+    serveBase()
+    onApi('GET', '/api/honours/of/30', {
+      node: REALM,
+      realm: REALM,
+      units: [],
+      choices: [],
+      grants: [
+        {
+          id: 3,
+          polity: REALM,
+          kind: 'tax_exemption',
+          veterans: 25,
+          settlement: null,
+          war: null,
+          epoch: 5,
+          locked: [],
+        },
+      ],
+      policy: 'tax_exemption',
+      policy_locked: true,
+    })
+    onApi('POST', '/api/actions/profile:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<HonoursSection nodeId={30} />)
+    await expect
+      .element(screen.getByText('What the realm grants its veterans'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText(/Now: freedom from taxes \(held\)/))
+      .toBeVisible()
+    await screen.getByRole('button', { name: 'Set and hold' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/profile:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/profile:set')[0].body).toEqual({
+      node_id: 30,
+      table: 'veteran_policies',
+      column: 'grant',
+      value: 'tax_exemption',
+      hold: true,
+    })
+  })
+
+  it('names every new standard honour and grant', async () => {
+    const { HONOURS, GRANTS } = await import('./labels')
+    expect(HONOURS.relief.label).toBe('A siege relieved')
+    expect(HONOURS.crossing.label).toBe('A crossing under arms')
+    expect(GRANTS.title.label).toBe('A lesser title')
+    expect(GRANTS.membership.label).toBe('Full membership')
+  })
 })

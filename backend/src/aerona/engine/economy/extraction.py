@@ -7,6 +7,7 @@ from aerona.catalog.goods_traits import commodities_with
 from aerona.catalog.life.economy import BRANCH_OF, CRAFT_FACTOR_EXTRACTION_KINDS, HAZARD_HARM, HAZARD_MAIMS, HAZARD_RULES, KIND_JOBS, ROLL_HAZARDS_HAZARD_KINDS
 from aerona.catalog.life_traits import EXTRACTION_KIND_TRAITS, HAZARD_KIND_TRAITS, WORLD_TYPE_TRAITS, having
 from aerona.catalog.materials import MATERIALS
+from aerona.catalog.methods import method_output
 from aerona.catalog.production import EXTRACTION, EXTRACTION_OF
 from aerona.catalog.terrain import terrains
 from aerona.constants.units import PERCENT
@@ -249,7 +250,7 @@ async def method_factor(ctx: TickContext, book: EconomyBook, community_id: int, 
     spec = method_for(book, community_id, process)
     crews = round_half_up(workers * ctx.rules.energy.extraction_per_100_workers / PERCENT)
     powered = scale_by_energy(book, community_id, spec.energy, spec.energy_need * crews)
-    return spec.output_pct / PERCENT * powered * await feed(ctx, community_id, spec, crews) * outdated(book, ctx.rules, community_id, process)
+    return method_output(ctx.rules, spec) / PERCENT * powered * await feed(ctx, community_id, spec, crews) * outdated(book, ctx.rules, community_id, process)
 
 
 def knowledge_gate(rules: Rules, book: EconomyBook, profile: ResourceProfileRow, community_id: int) -> float:
@@ -410,7 +411,7 @@ async def roll_hazards(
     ctx: TickContext, book: EconomyBook, resource: EntityRow, profile: ResourceProfileRow, community: EntityRow, *, workers: int
 ) -> HazardKind | None:
     spec = EXTRACTION[extraction_kind(profile)]
-    if spec.hazard is None or workers <= 0:
+    if spec.hazard is None or workers <= 0 or held(resource.id, community.id):
         return None
     hazard = spec.hazard
     region = book.ground.region_of(resource.id)
@@ -476,7 +477,7 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
     for owner_id in book.owners.get(resource.id, []):
         owner = book.entities.get(owner_id)
         community = book.community_of(owner_id)
-        if owner is None or community is None or profile.reserve <= 0:
+        if owner is None or community is None or profile.reserve <= 0 or held(community.id):
             continue
         workers = round_half_up(labour_pool(ctx.rules, book, community, kind) / worked_by(book, community.id, kind))
         row = book.workers.get(resource.id, {}).get(community.id)

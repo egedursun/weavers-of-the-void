@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.commodities import base_price as rule_price
 from aerona.catalog.finance import LUXURIES as LUXURY_GOODS
 from aerona.catalog.finance import STAPLES
 from aerona.constants.units import PERCENT
@@ -94,7 +95,7 @@ def income_of(ctx: TickContext, market: EntityRow, commodity: CommodityKind) -> 
 
 def price_of(ctx: TickContext, commodity: CommodityKind, supply: int, demand: int, factor: float, *, markup: float = 1.0, base_price: int | None = None) -> int:
     table = ctx.rules.markets
-    base = (base_price if base_price is not None else COMMODITIES[commodity].base_price) * markup
+    base = (base_price if base_price is not None else rule_price(ctx.rules, commodity)) * markup
     pressure = (max(1, demand) / max(1, supply)) ** (table.elasticity_pct / PERCENT * elasticity_of(ctx, commodity))
     low = base * table.price_floor_pct / PERCENT
     high = base * table.price_cap_pct / PERCENT

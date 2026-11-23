@@ -2,8 +2,9 @@ from sqlalchemy import func, select
 
 from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
+from aerona.catalog.fugitives import FUGITIVES
 from aerona.core.grammar import agree, several, spoken
-from aerona.db.tables.belonging import HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryRow, SatireRow
+from aerona.db.tables.belonging import FugitiveRow, HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryRow, SatireRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.sons import SonRow
@@ -48,6 +49,12 @@ async def mortal_belonging_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.append(
             f"you play {spoken(group.play).lower()} with the children of your town ({playmates}){'; there is no time to play' if group.deprived else ''}"
         )
+    fled = await session.scalar(
+        select(FugitiveRow).where(FugitiveRow.mortal_entity_id == me.id, FugitiveRow.caught_epoch.is_(None), FugitiveRow.freed_epoch.is_(None))
+    )
+    if fled is not None:
+        hunter = await named(scope, fled.pursuer_entity_id) if fled.pursuer_entity_id is not None else "no one named"
+        found.append(f"you flee as {FUGITIVES[fled.kind].label.lower()}, hunted by {hunter}")
     refuge = await refuge_of(session, me.id)
     if refuge is not None:
         found.append(f"you shelter in {await named(scope, refuge.host_entity_id)} ({spoken(refuge.state).lower()})")

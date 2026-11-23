@@ -49,6 +49,10 @@ class Spanned:
         return round(float(yearly) * self.years_per_epoch)
 
 
+def keyed(namespace: object, prefix: str, suffix: str) -> int:
+    return int(getattr(namespace, f"{prefix}_{suffix}"))
+
+
 def rule_meta(definition: Field[Any]) -> RuleMeta:
     meta: RuleMeta = definition.metadata[RULE_METADATA_KEY]
     return meta

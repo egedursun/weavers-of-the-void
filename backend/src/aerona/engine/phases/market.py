@@ -295,6 +295,7 @@ async def resource_market(ctx: TickContext) -> None:
     "table.galaxy_clusters",
     "table.held_identities",
     "table.holder_levels",
+    "table.incident_participants",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.minds",

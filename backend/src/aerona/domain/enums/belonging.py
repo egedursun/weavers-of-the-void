@@ -45,12 +45,18 @@ class SanctuaryKind(StrEnum):
     TEMPLE = "temple"
     HOSPITALITY = "hospitality"
     ASYLUM = "asylum"
+    WILDS = "wilds"
+    FREE_CITY = "free_city"
+    EMBASSY = "embassy"
 
 
 class FugitiveKind(StrEnum):
     OUTLAW = "outlaw"
     ACCUSED = "accused"
     DEFECTOR = "defector"
+    RUNAWAY = "runaway"
+    DESERTER = "deserter"
+    HERETIC = "heretic"
 
 
 class SanctuaryState(StrEnum):

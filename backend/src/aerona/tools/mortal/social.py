@@ -19,6 +19,7 @@ from aerona.domain.enums.justice import CaseStage
 from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.relations import AppealKind, ContestEnd, ContestKind, ContestStake, InteractionKind, PersuasionAim
+from aerona.domain.enums.renown import LorePrice
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.mortal.kin import children_of, sworn_kin_of
 from aerona.engine.mortal.kinship import foster
@@ -169,6 +170,7 @@ class LoreInput(ToolInput):
     kind: KnowledgeKind
     key: str
     subject_id: int | None = None
+    price: LorePrice | None = None
 
 
 async def sell_lore(call: MortalCall, args: LoreInput) -> str:
@@ -176,7 +178,7 @@ async def sell_lore(call: MortalCall, args: LoreInput) -> str:
     item = (args.kind, args.key, args.subject_id)
     if (args.key, args.subject_id) not in await holdings(call.session, call.me.id, args.kind):
         fail(MortalResult.LORE_REFUSED, name=buyer.name)
-    row = await trade(call.tick, call.me, buyer, item, value=await value_of(call.tick, item))
+    row = await trade(call.tick, call.me, buyer, item, value=await value_of(call.tick, item), price=args.price)
     if row is None:
         fail(MortalResult.LORE_REFUSED, name=buyer.name)
     call.target(buyer.id)

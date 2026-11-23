@@ -212,7 +212,10 @@ LIFECYCLE_MECHANICS = (
         surface=Surface(drawer=GROUNDS, chart="chart-grounds"),
         backfill="none: gardens are laid out from the next epoch",
         tables=(GardenRow.__tablename__,),
-        tools=("lay_out_garden",),
+        tools=(
+            "lay_out_garden",
+            "found_garden",
+        ),
         targets=("settlement",),
         couplings=(
             Coupling(S.ECONOMY, "a garden costs its town upkeep", E.FLOW, "gardens.upkeep"),

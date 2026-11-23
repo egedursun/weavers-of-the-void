@@ -42,6 +42,8 @@ TEXTS = {
     DispatchContent.REPORT: "a report",
     DispatchContent.PLEA: "a plea",
     DispatchContent.INTELLIGENCE: "intelligence",
+    DispatchContent.ORDER: "an order",
+    DispatchContent.WARNING: "a warning",
 }
 
 

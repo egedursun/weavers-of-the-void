@@ -1,6 +1,4 @@
 import {
-  ScrollText,
-  MapPin,
   Anchor,
   Ban,
   CheckCircle2,
@@ -13,13 +11,18 @@ import {
   Landmark,
   Link,
   Map as MapIcon,
+  MapPin,
   Orbit,
   Scale,
+  ScrollText,
   Shield,
   ShieldAlert,
+  ShieldOff,
+  Ship,
   Swords,
   TriangleAlert,
   Unlink,
+  UserX,
   Users,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
@@ -37,6 +40,9 @@ export const DEMANDS: Record<string, Named> = {
   release_vassal: { label: 'Release a vassal', icon: Unlink, tone: 'info' },
   convert: { label: 'Take up a faith', icon: Landmark, tone: 'verdigris' },
   pay: { label: 'Pay what is owed', icon: Coins, tone: 'gold' },
+  hand_over: { label: 'Hand over a person', icon: UserX, tone: 'danger' },
+  disarm: { label: 'Cut its forces', icon: ShieldOff, tone: 'warning' },
+  open_trade: { label: 'Open its roads to trade', icon: Ship, tone: 'info' },
 }
 
 export const CRISIS_STATES: Record<string, Named> = {
@@ -44,6 +50,11 @@ export const CRISIS_STATES: Record<string, Named> = {
   backed_down: { label: 'The demander backed down', icon: Ban, tone: 'muted' },
   conceded: { label: 'Conceded', icon: CheckCircle2, tone: 'success' },
   war: { label: 'Came to war', icon: Swords, tone: 'danger' },
+  mediated: {
+    label: 'Settled by a mediator',
+    icon: Handshake,
+    tone: 'success',
+  },
 }
 
 export const SIDES: Record<string, Named> = {
@@ -73,6 +84,7 @@ export const STANDINGS: Record<string, Named> = {
   great_power: { label: 'Great power', icon: Landmark, tone: 'gold' },
   minor_power: { label: 'Minor power', icon: Scale, tone: 'muted' },
   client: { label: 'Client', icon: Orbit, tone: 'info' },
+  neutral: { label: 'Neutral', icon: Flag, tone: 'verdigris' },
 }
 
 export function labelTable(

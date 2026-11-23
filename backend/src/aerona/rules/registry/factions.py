@@ -36,6 +36,13 @@ class FactionsRules:
     revolt_disband_min_age: int = rule(2, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Age of an uprising before it can disband (epochs)")
     revolt_disband_note_cap: int = rule(2, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Maximum disbanded uprisings written to the chronicle per epoch")
     faction_min_population: int = rule(1000, 0, 100000000, RuleGroup.WAR_AND_DIPLOMACY, "Minimum population of a community able to spawn a faction")
+    faction_room_people: int = rule(
+        3000,
+        1,
+        100000000,
+        RuleGroup.CIVILIZATION,
+        "People a community needs for each faction it holds; it founds new factions less often as its factions fill that room",
+    )
     faction_power_share_pct: int = rule(70, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Faction power level: share of its community's (%)")
     faction_max_power: int = rule(6, 1, 12, RuleGroup.WAR_AND_DIPLOMACY, "Maximum power level of an engine-founded faction")
     faction_stat_die: int = rule(25, 1, 100, RuleGroup.WAR_AND_DIPLOMACY, "Die added to the stats of a new faction")
@@ -86,6 +93,22 @@ class FactionsRules:
     mercenary_min_warrior_pct: int = rule(16, 0, 100, RuleGroup.CIVILIZATION, "Warrior share of a community at peace that founds a free company (%)")
     found_renown: int = rule(10, 0, 100, RuleGroup.CIVILIZATION, "Renown a mortal needs to found a faction in their town")
     found_cost: int = rule(5, 0, 100, RuleGroup.CIVILIZATION, "Wealth a mortal spends to found a faction")
+    lower_taxes_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts lower taxes among its goals (%)")
+    monopoly_on_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts a monopoly among its goals (%)")
+    install_claimant_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts putting a claimant on the throne among its goals (%)")
+    abolish_law_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts the end of a law it hates among its goals (%)")
+    enact_law_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts a law it wants among its goals (%)")
+    war_on_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts a war among its goals (%)")
+    peace_with_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts a peace among its goals (%)")
+    protect_craft_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts protecting its craft among its goals (%)")
+    convert_realm_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts turning the realm to its faith among its goals (%)")
+    independence_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts breaking away among its goals (%)")
+    loot_weight: int = rule(100, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts plunder among its goals (%)")
+    gain_privilege_weight: int = rule(90, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts a privilege for its estate among its goals (%)")
+    win_office_weight: int = rule(90, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts a seat in an office for one of its own among its goals (%)")
+    ruin_rival_weight: int = rule(70, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts the ruin of a rival faction among its goals (%)")
+    propaganda_shift: int = rule(5, 0, 50, RuleGroup.CIVILIZATION, "Approval a faction's tracts and criers move on the subject it presses")
+    ruin_cohesion: int = rule(10, 0, 100, RuleGroup.CIVILIZATION, "Cohesion a faction loses each time a rival works to ruin it")
 
 
 @dataclass(frozen=True)

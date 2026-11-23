@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.life.polity import DEFAULT_CLAUSES, HOSTILITIES_TREATY_KINDS, KEEP_CLAUSES_TREATY_KINDS, KEEP_CLAUSES_TREATY_KINDS_2
 from aerona.catalog.life_traits import CLAUSE_KIND_TRAITS, TREATY_KIND_TRAITS, having
+from aerona.catalog.pacts import PARTY_ROLES, PRINCIPAL_ROLES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
@@ -38,6 +39,7 @@ from aerona.engine.operations.limits import over_limit
 from aerona.engine.polity.accords import Clause, accept, clause_pairs, end_treaty, parties_of, reject, sign, sworn_by, treaty_between
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.loyalty import vassal_loyalty
+from aerona.engine.polity.mediation import settle_dispute, tend_suspended
 from aerona.engine.polity.oaths import break_oath
 from aerona.engine.polity.regard import on_breach
 from aerona.engine.polity.repute import shift_honour, shift_infamy
@@ -173,7 +175,7 @@ async def broken_treaty(
     victims = [
         party.party_node_id
         for party in await parties_of(ctx.session, profile.treaty_entity_id)
-        if party.party_node_id != breaker_id and party.role is not PartyRole.GUARANTOR
+        if party.party_node_id != breaker_id and party.role in PRINCIPAL_ROLES
     ]
     for victim in victims:
         other = await living_entity(ctx.session, victim)
@@ -185,7 +187,7 @@ async def broken_treaty(
 async def call_guarantors(ctx: TickContext, profile: TreatyProfileRow, breaker: EntityRow) -> int:
     joined = 0
     for party in await parties_of(ctx.session, profile.treaty_entity_id):
-        if party.role is not PartyRole.GUARANTOR:
+        if not PARTY_ROLES[party.role].defends:
             continue
         guarantor = await living_entity(ctx.session, party.party_node_id)
         if guarantor is None or not ctx.rng(f"guarantor.{profile.treaty_entity_id}.{guarantor.id}").chance(ctx.rules.treaties.guarantor_chance):
@@ -265,6 +267,7 @@ async def answer_call(ctx: TickContext, ally_id: int, party_id: int) -> bool:
 async def keep_clauses(ctx: TickContext, book: RealmBook) -> dict[str, int]:
     table = ctx.rules.treaties
     counts = {"expired": 0, "renewed": 0, "broken": 0, "kept": 0, "guarded": 0}
+    counts.update(await tend_suspended(ctx, book))
     strength = await MilitaryStrength.load(ctx.session, ctx.rules)
     treaties = await in_force(ctx)
     terms = await clauses_by_treaty(ctx, [profile.treaty_entity_id for profile in treaties])
@@ -321,6 +324,9 @@ async def misread_breach(ctx: TickContext, profile: TreatyProfileRow, clause: Tr
             place=obligor.location_id,
         )
     ctx.count("treaty_clause_misread_breach")
+    if await settle_dispute(ctx, profile, obligor.id):
+        ctx.count("treaty_dispute_mediated")
+        return False
     await breach(ctx, profile, obligor.id, clause=clause, reason=TreatyBreach.CLAUSE_MISREAD)
     return True
 
@@ -469,8 +475,8 @@ async def tolls_kept(ctx: TickContext, profile: TreatyProfileRow, clause: Treaty
 
 async def guard(ctx: TickContext, profile: TreatyProfileRow) -> int:
     roles = await parties_of(ctx.session, profile.treaty_entity_id)
-    guarantors = [row.party_node_id for row in roles if row.role is PartyRole.GUARANTOR]
-    wards = [row.party_node_id for row in roles if row.role is not PartyRole.GUARANTOR]
+    guarantors = [row.party_node_id for row in roles if PARTY_ROLES[row.role].defends]
+    wards = [row.party_node_id for row in roles if row.role in PRINCIPAL_ROLES]
     joined = 0
     for ward in wards:
         attacks = await ctx.session.scalars(

@@ -264,6 +264,7 @@ ASSISTIVE_AID_TRAITS: Mapping[AssistiveAid, frozenset[AssistiveAidTrait]] = tota
         AssistiveAid.TELESCOPE: frozenset({AssistiveAidTrait.GROUND_LENS}),
         AssistiveAid.HEARING_HORN: frozenset(),
         AssistiveAid.CANE: frozenset(),
+        AssistiveAid.MICROSCOPE: frozenset({AssistiveAidTrait.GROUND_LENS}),
     },
 )
 
@@ -361,6 +362,8 @@ CAPTIVE_FATE_TRAITS: Mapping[CaptiveFate, frozenset[CaptiveFateTrait]] = total(
         CaptiveFate.LABOUR: frozenset({CaptiveFateTrait.BOUND}),
         CaptiveFate.EXCHANGED: frozenset(),
         CaptiveFate.RELEASED: frozenset(),
+        CaptiveFate.EXECUTED: frozenset(),
+        CaptiveFate.RECRUITED: frozenset({CaptiveFateTrait.BOUND}),
     },
 )
 
@@ -376,6 +379,8 @@ CAPTIVE_STATUS_TRAITS: Mapping[CaptiveStatus, frozenset[CaptiveStatusTrait]] = t
         CaptiveStatus.RESCUED: frozenset({CaptiveStatusTrait.FREEING_STATUSES, CaptiveStatusTrait.RESCUE_STATUSES}),
         CaptiveStatus.RELEASED: frozenset({CaptiveStatusTrait.FREEING_STATUSES}),
         CaptiveStatus.WARD: frozenset(),
+        CaptiveStatus.PAROLED: frozenset({CaptiveStatusTrait.FREEING_STATUSES, CaptiveStatusTrait.RESCUE_STATUSES, CaptiveStatusTrait.AFTER_CAPTIVITY}),
+        CaptiveStatus.MARRIED_IN: frozenset({CaptiveStatusTrait.AFTER_CAPTIVITY}),
     },
 )
 
@@ -481,6 +486,8 @@ CONSTRUCTION_STATE_TRAITS: Mapping[ConstructionState, frozenset[ConstructionStat
         ConstructionState.COMPLETE: frozenset({ConstructionStateTrait.COUNTED_STATES}),
         ConstructionState.DAMAGED: frozenset({ConstructionStateTrait.COUNTED_STATES}),
         ConstructionState.RUINED: frozenset(),
+        ConstructionState.ABANDONED: frozenset(),
+        ConstructionState.DISMANTLED: frozenset(),
     },
 )
 
@@ -510,6 +517,8 @@ COOP_PURPOSE_TRAITS: Mapping[CoopPurpose, frozenset[CoopPurposeTrait]] = total(
         CoopPurpose.INSURANCE: frozenset({CoopPurposeTrait.POOLING, CoopPurposeTrait.RELIEVING}),
         CoopPurpose.BURIAL: frozenset({CoopPurposeTrait.POOLING, CoopPurposeTrait.RELIEVING}),
         CoopPurpose.CREDIT: frozenset({CoopPurposeTrait.RELIEVING}),
+        CoopPurpose.GRANARY: frozenset({CoopPurposeTrait.POOLING}),
+        CoopPurpose.HERDING: frozenset({CoopPurposeTrait.WORKING}),
     },
 )
 
@@ -579,11 +588,12 @@ DEATH_ROLE_TRAITS: Mapping[DeathRole, frozenset[DeathRoleTrait]] = total(
 DUEL_CONTEXT_TRAITS: Mapping[DuelContext, frozenset[DuelContextTrait]] = total(
     DuelContext,
     {
-        DuelContext.WAR: frozenset({DuelContextTrait.DUEL_CONTEXTS}),
-        DuelContext.HONOUR: frozenset({DuelContextTrait.DUEL_CONTEXTS}),
+        DuelContext.WAR: frozenset({DuelContextTrait.DUEL_CONTEXTS, DuelContextTrait.AT_WAR}),
+        DuelContext.HONOUR: frozenset({DuelContextTrait.DUEL_CONTEXTS, DuelContextTrait.CUSTOMARY}),
         DuelContext.TRIAL: frozenset({DuelContextTrait.DUEL_CONTEXTS}),
-        DuelContext.CHAMPION: frozenset({DuelContextTrait.DUEL_CONTEXTS}),
-        DuelContext.GOD: frozenset({DuelContextTrait.DUEL_CONTEXTS}),
+        DuelContext.CHAMPION: frozenset({DuelContextTrait.DUEL_CONTEXTS, DuelContextTrait.AT_WAR}),
+        DuelContext.GOD: frozenset({DuelContextTrait.DUEL_CONTEXTS, DuelContextTrait.AT_WAR}),
+        DuelContext.RITUAL: frozenset({DuelContextTrait.DUEL_CONTEXTS, DuelContextTrait.CUSTOMARY}),
     },
 )
 
@@ -677,6 +687,8 @@ FACTION_ACTION_KIND_TRAITS: Mapping[FactionActionKind, frozenset[FactionActionKi
         FactionActionKind.SUPPRESSED: frozenset(),
         FactionActionKind.HIRED: frozenset(),
         FactionActionKind.DEFECTED: frozenset(),
+        FactionActionKind.PROPAGANDA: frozenset(),
+        FactionActionKind.BOYCOTT: frozenset({FactionActionKindTrait.DEFIANT}),
     },
 )
 
@@ -729,6 +741,8 @@ FACTION_KIND_TRAITS: Mapping[FactionKind, frozenset[FactionKindTrait]] = total(
         FactionKind.FINANCIERS: frozenset({}),
         FactionKind.VETERANS: frozenset(),
         FactionKind.WORKER_BODY: frozenset({FactionKindTrait.BODY_KINDS}),
+        FactionKind.STREET_GANG: frozenset({FactionKindTrait.GANGS}),
+        FactionKind.TRAFFICKING_RING: frozenset({FactionKindTrait.GANGS}),
     },
 )
 
@@ -1276,6 +1290,7 @@ OATH_KIND_TRAITS: Mapping[OathKind, frozenset[OathKindTrait]] = total(
         OathKind.NONVIOLENCE: frozenset(),
         OathKind.FIDELITY: frozenset(),
         OathKind.SECRECY: frozenset(),
+        OathKind.TESTIMONY: frozenset(),
     },
 )
 
@@ -1526,6 +1541,9 @@ REBUILD_CAUSE_TRAITS: Mapping[RebuildCause, frozenset[RebuildCauseTrait]] = tota
         RebuildCause.QUAKE: frozenset(),
         RebuildCause.STORM: frozenset(),
         RebuildCause.SACK: frozenset({RebuildCauseTrait.SEIZING}),
+        RebuildCause.ERUPTION: frozenset(),
+        RebuildCause.SEA_WAVE: frozenset(),
+        RebuildCause.LANDSLIDE: frozenset(),
     },
 )
 
@@ -1554,6 +1572,7 @@ REGIONAL_STANDING_TRAITS: Mapping[RegionalStanding, frozenset[RegionalStandingTr
         RegionalStanding.GREAT_POWER: frozenset({RegionalStandingTrait.GREAT}),
         RegionalStanding.MINOR_POWER: frozenset(),
         RegionalStanding.CLIENT: frozenset(),
+        RegionalStanding.NEUTRAL: frozenset(),
     },
 )
 
@@ -1828,6 +1847,9 @@ STANCE_TRAITS: Mapping[Stance, frozenset[StanceTrait]] = total(
         Stance.GARRISON: frozenset({StanceTrait.LAYING, StanceTrait.PATROLS}),
         Stance.RAID: frozenset(),
         Stance.RETREAT: frozenset(),
+        Stance.WINTER_QUARTERS: frozenset({StanceTrait.LAYING, StanceTrait.PATROLS}),
+        Stance.PURSUE: frozenset(),
+        Stance.ESCORT: frozenset({StanceTrait.PATROLS}),
     },
 )
 
@@ -2216,8 +2238,10 @@ TRADE_MODE_TRAITS: Mapping[TradeMode, frozenset[TradeModeTrait]] = total(
         TradeMode.ROAD: frozenset({TradeModeTrait.ICE_MODES, TradeModeTrait.LAND_MODES}),
         TradeMode.RIVER: frozenset({TradeModeTrait.ICE_MODES, TradeModeTrait.WATER_MODES}),
         TradeMode.SEA: frozenset({TradeModeTrait.WATER_MODES}),
-        TradeMode.CARAVAN: frozenset({TradeModeTrait.ICE_MODES, TradeModeTrait.LAND_MODES}),
         TradeMode.SKY: frozenset(),
+        TradeMode.SPACE: frozenset(),
+        TradeMode.RIFT: frozenset(),
+        TradeMode.NETWORK: frozenset(),
     },
 )
 
@@ -2242,7 +2266,9 @@ TRADE_ROUTE_STATUS_TRAITS: Mapping[TradeRouteStatus, frozenset[TradeRouteStatusT
     TradeRouteStatus,
     {
         TradeRouteStatus.FORMING: frozenset({TradeRouteStatusTrait.LIVE_STATUSES}),
-        TradeRouteStatus.OPEN: frozenset({TradeRouteStatusTrait.LIVE_STATUSES}),
+        TradeRouteStatus.OPEN: frozenset({TradeRouteStatusTrait.LIVE_STATUSES, TradeRouteStatusTrait.CARRYING}),
+        TradeRouteStatus.CONTESTED: frozenset({TradeRouteStatusTrait.LIVE_STATUSES, TradeRouteStatusTrait.CARRYING}),
+        TradeRouteStatus.SEASONAL: frozenset({TradeRouteStatusTrait.LIVE_STATUSES, TradeRouteStatusTrait.CARRYING}),
         TradeRouteStatus.BLOCKADED: frozenset({TradeRouteStatusTrait.LIVE_STATUSES}),
         TradeRouteStatus.CLOSED: frozenset(),
         TradeRouteStatus.DECAYED: frozenset(),
@@ -2281,6 +2307,8 @@ UNIT_HONOUR_KIND_TRAITS: Mapping[UnitHonourKind, frozenset[UnitHonourKindTrait]]
         UnitHonourKind.SIEGE: frozenset({UnitHonourKindTrait.GLORIOUS}),
         UnitHonourKind.SURVIVAL: frozenset(),
         UnitHonourKind.MASSACRE: frozenset(),
+        UnitHonourKind.RELIEF: frozenset({UnitHonourKindTrait.GLORIOUS}),
+        UnitHonourKind.CROSSING: frozenset({UnitHonourKindTrait.GLORIOUS}),
     },
 )
 
@@ -2500,3 +2528,5 @@ YOUTH_PURPOSE_TRAITS: Mapping[YouthPurpose, frozenset[YouthPurposeTrait]] = tota
         YouthPurpose.POLITICS: frozenset({YouthPurposeTrait.UNRULY}),
     },
 )
+
+CARRYING_ROUTES = tuple(status for status, traits in TRADE_ROUTE_STATUS_TRAITS.items() if TradeRouteStatusTrait.CARRYING in traits)

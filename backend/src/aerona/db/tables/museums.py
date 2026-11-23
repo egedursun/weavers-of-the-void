@@ -6,7 +6,7 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.museum import HoardKind, PieceKind
 
 HOARD_FIELDS = ("kind", "prestige")
-PIECE_FIELDS = ("kind",)
+PIECE_FIELDS = ("kind", "polity_entity_id")
 
 
 class MuseumCollectionRow(Base):
@@ -33,6 +33,7 @@ class MuseumPieceRow(Base):
     fossil_bed_id: Mapped[int | None] = mapped_column(ForeignKey("fossil_beds.id", ondelete="SET NULL"), unique=True)
     acquired_epoch: Mapped[int] = mapped_column(default=0)
     looted_from_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    polity_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     returned_epoch: Mapped[int | None]
     returned_by_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

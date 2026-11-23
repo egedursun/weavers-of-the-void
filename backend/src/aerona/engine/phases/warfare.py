@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.phases import DUEL_ENDINGS, DUEL_FATES, END_WAR_BY_DECREE_WAR_ENDINGS, SACKED_SACK_CHOICES
 from aerona.catalog.life.services import ENDING_LABELS
-from aerona.catalog.life_traits import STARVATION_STAGE_TRAITS, having
+from aerona.catalog.life_traits import DUEL_CONTEXT_TRAITS, STARVATION_STAGE_TRAITS, having
 from aerona.catalog.mind import COMMAND_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import BATTLE_NAME_TEMPLATE, SIEGE_NAME_TEMPLATE
@@ -35,7 +35,7 @@ from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, Ent
 from aerona.domain.enums.environment import MovementMode, RiverClass, ScarKind
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faction import FactionKind
-from aerona.domain.enums.life_traits import StarvationStageTrait
+from aerona.domain.enums.life_traits import DuelContextTrait, StarvationStageTrait
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.military import BattlePhase, CasualtyFate, CommandArea, DuelContext, DuelEnd, OutcomeClass, SackChoice, Stance
 from aerona.domain.enums.mind import ActKind, MemoryKind, ThoughtKind, ValueAxis
@@ -87,7 +87,6 @@ from aerona.engine.military.aftermath import (
     morale_sheet,
     note_casualty,
     raise_the_dead,
-    record_stacks,
     recover_wounded,
     send_home_wounded,
     street_toll,
@@ -101,7 +100,7 @@ from aerona.engine.military.campaign import bridged, home_news
 from aerona.engine.military.causes import raiders
 from aerona.engine.military.clash import captives_taken, cautious, clash, earn_traits, learn_tactic, log_phases
 from aerona.engine.military.command import command_areas
-from aerona.engine.military.duels import bout, crippling, fighter, set_footing, settle_bout
+from aerona.engine.military.duels import Bout, bout, crippling, fighter, set_footing, settle_bout
 from aerona.engine.military.engineering import earthworks_of
 from aerona.engine.military.feuds import house_feud
 from aerona.engine.military.finance import pay_contracts
@@ -118,10 +117,14 @@ from aerona.engine.military.trials import settle_trial, trial_claims
 from aerona.engine.military.units import muster, profile_of, reconcile_sizes, resize, retire_stacks
 from aerona.engine.military.upkeep import drill_armies, hire_mercenaries, lost_trade, occupation_levies, occupation_revolts, war_taxes
 from aerona.engine.military.vessels import muster_fleet
+from aerona.engine.military.w52_war import after_battle
 from aerona.engine.military.war_lines import keep_war_lines
 from aerona.engine.mind.book import best_effective, values_for
+from aerona.engine.mind.ethics import culture_of, custom_end, spread_shame
 from aerona.engine.mind.hooks import duelled, fought, judged
+from aerona.engine.mind.memories import remember
 from aerona.engine.mind.thoughts import think
+from aerona.engine.mortal.standing import add_renown
 from aerona.engine.operations.command import CommandTally, issue_orders
 from aerona.engine.operations.supply import Network, SupplyTally, culminate, network, operation_of, supply_season
 from aerona.engine.phase import Phase
@@ -817,6 +820,7 @@ async def duel(
     war: WarRow | None,
     anchor_id: int | None,
     context: DuelContext = DuelContext.WAR,
+    ending: DuelEnd | None = None,
     ground: BattleGround | None = None,
     battle_id: int | None = None,
     cause: int | None = None,
@@ -835,7 +839,9 @@ async def duel(
     weather = ground.weather.kind if ground is not None and ground.weather is not None else None
     for one in fighters:
         set_footing(ctx.rules, one, terrain, weather, await injuries_of(ctx, one.entity.id))
-    result = bout(ctx.rules, ctx.rng(f"duel.{first.id}.{second.id}.{ctx.epoch}"), *fighters, context)
+    if ending is None and context in CUSTOMARY_CONTEXTS:
+        ending = await custom_end(ctx.session, first.id)
+    result = bout(ctx.rules, ctx.rng(f"duel.{first.id}.{second.id}.{ctx.epoch}"), *fighters, context, ending=ending)
     await duelled(ctx, first)
     await duelled(ctx, second)
     await wear_in_duel(ctx, first.id, result.exchanges)
@@ -849,6 +855,8 @@ async def duel(
     if stat(loser, "hp") is None:
         set_stats(loser, hp=campaigns.hero_default_hp)
     bout_id = await settle_bout(ctx, result, style=style, terrain=terrain, weather=weather, cause=cause, place_id=first.location_id)
+    if context is DuelContext.RITUAL:
+        await ritual_marks(ctx, result, bout_id)
     fate = CasualtyFate.KILLED if result.killed else DUEL_FATES[result.end]
     harmed = sum(hit for target_id, hit in result.hits if target_id == loser.id)
     side = theatre.sides.side_of(loser)
@@ -872,10 +880,44 @@ async def duel(
         )
     if result.end is DuelEnd.CRIPPLED and loser.status is EntityStatus.CANON:
         await apply_hits(ctx, loser, crippling(ctx.rules, result, style), lethal=False)
-    ending = DUEL_ENDINGS[result.end].format(winner=winner.name, loser=loser.name)
+    told = DUEL_ENDINGS[result.end].format(winner=winner.name, loser=loser.name)
     mercy = f" {winner.name} spared the fallen." if result.spared else ""
     return Duelled(
-        bout_id, winner.id, loser.id, f"{winner.name} and {loser.name} dueled for {several(result.exchanges, 'exchange', 'exchanges')}; {ending}.{mercy}"
+        bout_id, winner.id, loser.id, f"{winner.name} and {loser.name} dueled for {several(result.exchanges, 'exchange', 'exchanges')}; {told}.{mercy}"
+    )
+
+
+CUSTOMARY_CONTEXTS = having(DUEL_CONTEXT_TRAITS, DuelContextTrait.CUSTOMARY)
+
+
+async def ritual_marks(ctx: TickContext, result: Bout, bout_id: int) -> None:
+    table = ctx.rules.duels
+    winner, loser = result.winner.entity, result.loser.entity
+    for one in (winner, loser):
+        if one.status is EntityStatus.CANON:
+            await add_renown(ctx.session, one.id, table.ritual_renown, ctx.epoch, rules=ctx.rules)
+    if result.killed:
+        await think(ctx.session, ctx.rules, winner.id, ThoughtKind.WAS_SHAMED, ctx.epoch, subject_id=loser.id)
+        await spread_shame(ctx, winner)
+        people = await culture_of(ctx.session, winner.id)
+        if people is not None:
+            await remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=people.id,
+                subject_id=winner.id,
+                kind=MemoryKind.HUMILIATED_ME,
+                magnitude=-table.ritual_shame,
+                epoch=ctx.epoch,
+                note="killed in a ritual duel",
+            )
+    await record(
+        ctx,
+        "duel.fought",
+        roles={IncidentRole.ACTOR: winner.id, IncidentRole.OPPONENT: loser.id},
+        facts={"context": result.context, "end": result.end},
+        place=winner.location_id,
+        cause=bout_id,
     )
 
 
@@ -1321,7 +1363,7 @@ async def fight_battle(
     row = _battle_row(ctx, report, result, place=place, siege=siege, ground=ground)
     await ctx.session.flush()
     log_phases(ctx, row.id, result)
-    record_stacks(ctx, row, result)
+    await after_battle(ctx, row, result, armies[winner.id][0].id)
     taken = await _spoils(ctx, theatre, report, result, column=column, armies=armies, besieged=besieged)
     await _mark_ground(ctx, ground, gap, outcome)
     await _ground_toll(ctx, theatre, ground, column=column, place=place, sides=(attacker, defender))
@@ -1594,7 +1636,7 @@ async def _surrender(
     attacker, defender = sides
     campaigns = ctx.rules.campaigns
     siege, war = step.siege, item.war
-    siege.status, siege.ended_epoch = SiegeStatus.BREACHED, ctx.epoch
+    siege.status, siege.ended_epoch = SiegeStatus.SURRENDERED, ctx.epoch
     shift_stat(defender, "defense", -campaigns.breach_defense_loss)
     war.score += campaigns.breach_war_score
     choice = await sack_choice(ctx, siege, attacker, armies[attacker.id][1].commander_entity_id)
@@ -1763,6 +1805,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.creator",
     "table.creator_taboos",
     "table.creature_anatomy",
+    "table.cuisines",
     "table.cult_tenets",
     "table.culture_ethics",
     "table.culture_values",
@@ -1780,9 +1823,11 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.dimensional_events",
     "table.dimensions",
     "table.disease_profiles",
+    "table.dishes",
     "table.districts",
     "table.divine_standing",
     "table.divine_wounds",
+    "table.drink_kinds",
     "table.echelons",
     "table.entities",
     "table.entity_flags",
@@ -1839,6 +1884,8 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.minds",
     "table.mortal_equipment",
     "table.mortal_profiles",
+    "table.museum_collections",
+    "table.museum_pieces",
     "table.name_registry",
     "table.named_units",
     "table.natural_law_profiles",
@@ -1891,6 +1938,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.spy_agents",
     "table.spy_networks",
     "table.stars",
+    "table.structure_designs",
     "table.structure_profiles",
     "table.theatres",
     "table.thoughts",
@@ -1954,6 +2002,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.campaign_fronts",
     "table.captive_cohorts",
     "table.captives",
+    "table.casus_belli",
     "table.chronicle",
     "table.chronicle_entities",
     "table.claims",

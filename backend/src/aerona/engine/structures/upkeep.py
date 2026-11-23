@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from aerona.catalog.life.domain import STANDING_STATES
+from aerona.catalog.life.domain import GONE_STATES, STANDING_STATES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
@@ -126,7 +126,7 @@ async def upkeep_all(ctx: TickContext) -> int:
     rows = await ctx.session.execute(
         select(EntityRow, StructureProfileRow)
         .join(StructureProfileRow, StructureProfileRow.structure_entity_id == EntityRow.id)
-        .where(EntityRow.status == EntityStatus.CANON, StructureProfileRow.construction_state != ConstructionState.RUINED)
+        .where(EntityRow.status == EntityStatus.CANON, StructureProfileRow.construction_state.not_in(list(GONE_STATES)))
         .order_by(EntityRow.id)
     )
     kept = 0

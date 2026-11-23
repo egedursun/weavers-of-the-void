@@ -234,7 +234,14 @@ LIFE_MECHANICS = (
         templates=("works.", "enterprise."),
         tables=(PublicWorksRow.__tablename__, PublicWorkStageRow.__tablename__, StateEnterpriseRow.__tablename__),
         exposure=Exposure.TOOL,
-        tools=("begin_works", "fund_works", "found_enterprise", "bless_works"),
+        tools=(
+            "begin_works",
+            "fund_works",
+            "found_enterprise",
+            "bless_works",
+            "abandon_work",
+            "dismantle_work",
+        ),
         levers=("public_works:create", "state_enterprise:create"),
         targets=("polity", "settlement", "region", "route"),
         couplings=(

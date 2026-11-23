@@ -64,6 +64,20 @@ class PeerMemberEdit(Edited):
     mortal_id: int
 
 
+class FugitiveDraft(Command):
+    mortal_entity_id: int
+    kind: FugitiveKind = FugitiveKind.OUTLAW
+    pursuer_entity_id: int | None = None
+
+
+class FugitiveTarget(Command):
+    record_id: int
+
+
+class FugitiveEdit(Edited):
+    record_id: int
+
+
 class SanctuaryDraft(Command):
     fugitive_entity_id: int
     host_entity_id: int
@@ -196,6 +210,30 @@ async def peer_member_edit(scope: PlayerScope, command: PeerMemberEdit) -> Effec
 async def peer_member_delete(scope: PlayerScope, command: PeerMemberTarget) -> Effect:
     await control.delete_record(await scope.context("peer_member_delete"), "peer_member", (command.group_id, command.mortal_id))
     return Effect("The child leaves the group.")
+
+
+@player_action("fugitive:create", ActionKind.EDIT_RECORD)
+async def fugitive_create(scope: PlayerScope, command: FugitiveDraft) -> Effect:
+    ctx = await scope.context("fugitive_create")
+    row = await control.set_record(
+        ctx,
+        "fugitive",
+        {},
+        {"mortal_entity_id": command.mortal_entity_id, "kind": command.kind, "pursuer_entity_id": command.pursuer_entity_id, "fled_epoch": ctx.epoch},
+    )
+    return Effect("The mortal flees.", values={"record_id": getattr(row, "id", 0)})
+
+
+@player_action("fugitive:edit", ActionKind.EDIT_RECORD)
+async def fugitive_edit(scope: PlayerScope, command: FugitiveEdit) -> Effect:
+    await control.edit_record(await scope.context("fugitive_edit"), "fugitive", command.record_id, command.values, command.release)
+    return Effect("The flight is set so.")
+
+
+@player_action("fugitive:delete", ActionKind.EDIT_RECORD)
+async def fugitive_delete(scope: PlayerScope, command: FugitiveTarget) -> Effect:
+    await control.delete_record(await scope.context("fugitive_delete"), "fugitive", command.record_id)
+    return Effect("No one hunts them any more.")
 
 
 @player_action("sanctuary:create", ActionKind.EDIT_RECORD)

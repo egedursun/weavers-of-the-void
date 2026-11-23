@@ -76,6 +76,8 @@ export const SOCIOLECT_KINDS: Record<Schema['SociolectKind'], Named> = {
   court: { label: 'Speech of the court', icon: Crown, tone: 'gold' },
   cant: { label: 'Secret cant', icon: EyeOff, tone: 'danger' },
   sailors: { label: 'Speech of sailors', icon: Anchor, tone: 'verdigris' },
+  youth: { label: 'Speech of the young', icon: Sprout, tone: 'success' },
+  soldiers: { label: 'Speech of soldiers', icon: Swords, tone: 'warning' },
 }
 
 export const SIGN_CAUSES: Record<Schema['SignCause'], Named> = {
@@ -87,6 +89,7 @@ export const SIGN_CAUSES: Record<Schema['SignCause'], Named> = {
     tone: 'verdigris',
   },
   mutilation: { label: 'Many who cannot speak', icon: Skull, tone: 'danger' },
+  trade: { label: 'Trade between many tongues', icon: Handshake, tone: 'gold' },
 }
 
 export const TEACHING_KINDS: Record<Schema['KnowledgeKind'], Named> = {

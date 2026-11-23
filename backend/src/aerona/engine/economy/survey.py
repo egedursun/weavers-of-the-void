@@ -12,6 +12,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import CurrencyRow, NodeMaterialRow, ResourceProfileRow, WorkshopRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -20,6 +21,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityType
 from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.goods_traits import CommodityTrait, MaterialTrait, WorkshopTrait
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -34,6 +36,7 @@ from aerona.engine.environment.control import world_seam_id
 from aerona.engine.environment.works import works_by_region
 from aerona.engine.monetary.authorities import establish
 from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.recording.record import record
 
 BACKFILL_FIXUP = "economy.w4_backfill"
 DEPTH_FIXUP = "economy.depth_backfill"
@@ -98,6 +101,17 @@ async def seed_communities(ctx: TickContext, book: EconomyBook) -> int:
     return seeded
 
 
+def craft_workshops(book: EconomyBook, community: EntityRow, region: RegionEnvironmentRow | None) -> set[WorkshopKind]:
+    found: set[WorkshopKind] = set()
+    if book.level(community.id, KnowledgeBranch.WRITING) >= 1:
+        found.add(WorkshopKind.SCRIPTORIUM)
+    if book.level(community.id, KnowledgeBranch.AGRICULTURE) >= 2:
+        found.add(WorkshopKind.DYEWORKS)
+    if region is not None and region.coast_kind is not CoastKind.NONE:
+        found.add(WorkshopKind.EVAPORATION_WORKS)
+    return found
+
+
 def wanted_workshops(book: EconomyBook, community: EntityRow, structures: list[EntityRow], owned: list[ResourceProfileRow]) -> set[WorkshopKind]:
     wanted: set[WorkshopKind] = set()
     for structure in structures:
@@ -122,6 +136,7 @@ def wanted_workshops(book: EconomyBook, community: EntityRow, structures: list[E
         wanted |= set(workshops_with(WorkshopTrait.TRADING))
     wanted.add(WorkshopKind.WEAVERY)
     wanted.add(WorkshopKind.TANNERY)
+    wanted |= craft_workshops(book, community, region)
     for profile in owned:
         site = EXTRACTION[extraction_kind(profile)].workshop
         if site is not None:
@@ -158,6 +173,8 @@ async def backfill_workshops(ctx: TickContext, book: EconomyBook) -> int:
             ctx.session.add(row)
             book.workshops.setdefault(community.id, {})[kind] = row
             made += 1
+            if ctx.epoch > 1:
+                await record(ctx, "workshop.founded", roles={IncidentRole.MAKER: community.id}, facts={"workshop": kind}, place=community.id)
     await ctx.session.flush()
     return made
 

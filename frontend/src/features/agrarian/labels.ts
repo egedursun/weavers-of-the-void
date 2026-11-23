@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Anchor,
   Apple,
   Axe,
@@ -8,6 +7,7 @@ import {
   BookOpen,
   Castle,
   Coins,
+  DoorOpen,
   Drill,
   Droplets,
   Eye,
@@ -26,6 +26,8 @@ import {
   Leaf,
   Map as MapIcon,
   Mountain,
+  MountainSnow,
+  MoveRight,
   Orbit,
   Package,
   Pickaxe,
@@ -47,6 +49,7 @@ import {
   TreeDeciduous,
   TreePine,
   Trees,
+  type LucideIcon,
   Users,
   Waves,
   Wheat,
@@ -155,14 +158,23 @@ export const AID_KINDS: Record<Schema['AidKind'], Named> = {
 export const PLANS: Record<Schema['RebuildPlan'], Named> = {
   planned: { label: 'Planned anew', icon: Ruler, tone: 'success' },
   opportunistic: { label: 'Hasty, as before', icon: Axe, tone: 'warning' },
+  relocated: {
+    label: 'Rebuilt on a safer site',
+    icon: MoveRight,
+    tone: 'info',
+  },
+  abandoned: { label: 'Left to ruin', icon: DoorOpen, tone: 'danger' },
 }
 
 export const CAUSES: Record<Schema['RebuildCause'], Named> = {
-  fire: { label: 'Fire', icon: Flame, tone: 'danger' },
-  flood: { label: 'Flood', icon: Waves, tone: 'info' },
-  quake: { label: 'Quake', icon: Mountain, tone: 'warning' },
-  storm: { label: 'Storm', icon: Wind, tone: 'verdigris' },
-  sack: { label: 'Sack', icon: Castle, tone: 'danger' },
+  fire: { label: 'A fire', icon: Flame, tone: 'danger' },
+  flood: { label: 'A flood', icon: Waves, tone: 'info' },
+  quake: { label: 'An earthquake', icon: Mountain, tone: 'warning' },
+  storm: { label: 'A storm', icon: Wind, tone: 'verdigris' },
+  sack: { label: 'A sack', icon: Castle, tone: 'danger' },
+  eruption: { label: 'An eruption', icon: MountainSnow, tone: 'danger' },
+  sea_wave: { label: 'A sea wave', icon: Waves, tone: 'warning' },
+  landslide: { label: 'A landslide', icon: Mountain, tone: 'danger' },
 }
 
 export const USES: Record<Schema['KeystoneUse'], Named> = {

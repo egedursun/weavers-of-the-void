@@ -57,6 +57,7 @@ from aerona.db.tables.collective import (
 )
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.gatherings import CollectionRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.collective import (
     AccountKind,
@@ -210,13 +211,27 @@ async def write_account(
     subject_id: int | None,
     fidelity: int,
     credence: int,
+    incident_id: int | None = None,
 ) -> AccountRow:
     holder = await of_type(ctx, holder_id, HISTORY_HOLDERS, "a realm, people, cult, town or mortal")
-    if collection_id is None and subject_id is None:
-        raise ValidationFailedError("An account must tell of an event or a figure.")
+    if collection_id is None and subject_id is None and incident_id is None:
+        raise ValidationFailedError("An account must tell of an event, a happening or a figure.")
     if collection_id is not None:
         await found(ctx, CollectionRow, collection_id, "event")
-    row = await record(ctx, holder, kind, fidelity=fidelity, stances={}, collection_id=collection_id, subject_id=subject_id, medium=medium, credence=credence)
+    if incident_id is not None:
+        await found(ctx, IncidentRow, incident_id, "happening")
+    row = await record(
+        ctx,
+        holder,
+        kind,
+        fidelity=fidelity,
+        stances={},
+        collection_id=collection_id,
+        subject_id=subject_id,
+        incident_id=incident_id,
+        medium=medium,
+        credence=credence,
+    )
     if row is None:
         raise ConflictError(f"{holder.name} is held against change.")
     return row

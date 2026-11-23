@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Baby,
   Ban,
   BookOpen,
@@ -12,6 +11,7 @@ import {
   Fingerprint,
   Flag,
   Flame,
+  Footprints,
   Gamepad2,
   Gavel,
   Hammer,
@@ -34,7 +34,10 @@ import {
   Swords,
   Target,
   Tent,
+  Trees,
   Trophy,
+  type LucideIcon,
+  Unlink,
   UserRound,
   Users,
   Vote,
@@ -106,12 +109,18 @@ export const SANCTUARY_KINDS: Record<Schema['SanctuaryKind'], Named> = {
   temple: { label: 'Temple sanctuary', icon: Church, tone: 'gold' },
   hospitality: { label: 'Guest right', icon: Tent, tone: 'verdigris' },
   asylum: { label: 'Asylum in a realm', icon: Castle, tone: 'info' },
+  wilds: { label: 'The wilds', icon: Trees, tone: 'success' },
+  free_city: { label: 'Free city', icon: Landmark, tone: 'gold' },
+  embassy: { label: 'Embassy', icon: Flag, tone: 'info' },
 }
 
 export const FUGITIVES: Record<Schema['FugitiveKind'], Named> = {
   outlaw: { label: 'Outlaw', icon: Flame, tone: 'danger' },
   accused: { label: 'Accused', icon: Gavel, tone: 'warning' },
   defector: { label: 'Defector', icon: Scale, tone: 'info' },
+  runaway: { label: 'Runaway from bondage', icon: Unlink, tone: 'warning' },
+  deserter: { label: 'Deserter', icon: Footprints, tone: 'danger' },
+  heretic: { label: 'Fled persecution', icon: Church, tone: 'verdigris' },
 }
 
 export const STATES: Record<Schema['SanctuaryState'], Named> = {

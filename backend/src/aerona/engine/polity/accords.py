@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.polity import DEFAULT_CLAUSES, DERIVED, END_TREATY_TREATY_STATUSS, TREATY_WORDS
 from aerona.catalog.life_traits import TREATY_KIND_TRAITS, having
+from aerona.catalog.pacts import PARTY_ROLES, PRINCIPAL_ROLES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
@@ -31,7 +32,7 @@ from aerona.engine.interpretation.work import PARAM_FACTOR, interpret
 from aerona.engine.lore.language import register_barrier, register_tongues
 from aerona.engine.mind.memories import remember
 from aerona.engine.polity.oaths import oath_god, swear
-from aerona.engine.polity.regard import on_kept, on_marriage
+from aerona.engine.polity.regard import on_kept, on_marriage, realm_ids, shift_regard
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.tongues.grammar import misread_factor
@@ -109,7 +110,7 @@ async def sworn_by(ctx: TickContext, party: EntityRow) -> EntityRow | None:
 
 
 def bond_ends(kind: TreatyKind, parties: Sequence[tuple[int, PartyRole]], clauses: Sequence[Clause]) -> tuple[int, int] | None:
-    principals = [party for party, role in parties if role is not PartyRole.GUARANTOR]
+    principals = [party for party, role in parties if role in PRINCIPAL_ROLES]
     if len(principals) < 2:
         return None
     if DERIVED.get(kind) is BondKind.PAYS_TRIBUTE:
@@ -236,6 +237,21 @@ async def parties_of(session: AsyncSession, treaty_id: int) -> list[TreatyPartyR
     return list(await party_rows(session, treaty_id))
 
 
+async def judge_mediators(ctx: TickContext, profile: TreatyProfileRow, *, kept: bool, broken: bool) -> int:
+    if not kept and not broken:
+        return 0
+    rows = await parties_of(ctx.session, profile.treaty_entity_id)
+    standing = ctx.rules.treaties.mediator_standing * (1 if kept else -1)
+    judged = 0
+    for mediator in [row.party_node_id for row in rows if PARTY_ROLES[row.role].settles]:
+        for party in [row.party_node_id for row in rows if row.role in PRINCIPAL_ROLES]:
+            holder, subject = await realm_ids(ctx, party), await realm_ids(ctx, mediator)
+            if holder is not None and subject is not None and holder != subject:
+                await shift_regard(ctx, holder, subject, trust=standing)
+                judged += 1
+    return judged
+
+
 async def end_treaty(ctx: TickContext, profile: TreatyProfileRow, status: TreatyStatus, reason: str) -> None:
     profile.status = status
     profile.ended_epoch = ctx.epoch
@@ -246,6 +262,7 @@ async def end_treaty(ctx: TickContext, profile: TreatyProfileRow, status: Treaty
     if treaty is not None:
         treaty.end_epoch = ctx.epoch
         treaty.fate_note = f"Epoch {ctx.epoch}: {reason}."
+    await judge_mediators(ctx, profile, kept=status in END_TREATY_TREATY_STATUSS, broken=status is TreatyStatus.BROKEN)
     if status in END_TREATY_TREATY_STATUSS:
         await remember_kept(ctx, profile, treaty)
         parties = list(await ctx.session.scalars(select(TreatyPartyRow.party_node_id).where(TreatyPartyRow.treaty_entity_id == profile.treaty_entity_id)))
@@ -254,7 +271,7 @@ async def end_treaty(ctx: TickContext, profile: TreatyProfileRow, status: Treaty
 
 async def remember_kept(ctx: TickContext, profile: TreatyProfileRow, treaty: EntityRow | None) -> None:
     table = ctx.rules.treaties
-    parties = [row.party_node_id for row in await parties_of(ctx.session, profile.treaty_entity_id) if row.role is not PartyRole.GUARANTOR]
+    parties = [row.party_node_id for row in await parties_of(ctx.session, profile.treaty_entity_id) if row.role in PRINCIPAL_ROLES]
     years = max(1, ctx.epoch - profile.signed_epoch)
     weight = min(PERCENT, table.kept_memory * years)
     for holder in parties:

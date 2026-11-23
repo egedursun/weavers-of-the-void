@@ -6,6 +6,8 @@ from aerona.rules.model import rule
 C = RuleGroup.CIVILIZATION
 M = RuleGroup.MIND
 S = RuleGroup.SETTLEMENTS
+W = RuleGroup.WAR_AND_DIPLOMACY
+R = RuleGroup.REPUTATION
 
 
 @dataclass(frozen=True)
@@ -96,3 +98,91 @@ class IdentityLayerRules:
     commemoration_rise: int = rule(15, 0, 100, M, "Weight a community gains in the layer whose past it remembers at a commemoration")
     election_rise: int = rule(15, 0, 100, M, "Weight a community gains in the layers a vote of its realm divides by")
     contest_rise: int = rule(10, 0, 100, M, "Locality and circle weight a community gains when it meets another in a match")
+
+
+@dataclass(frozen=True)
+class CouncilOfWorldsRules:
+    route_security_effect: int = rule(100, 0, 100, W, "Strength with which a council's guard on the routes between its worlds is kept (%)")
+    embargo_effect: int = rule(100, 0, 100, W, "Strength with which a council's embargo on a realm is kept (%)")
+    void_ban_effect: int = rule(100, 0, 100, W, "Strength with which a council's ban on rites of the void is kept (%)")
+    sanction_effect: int = rule(100, 0, 100, W, "Strength with which a council's sanction on the world of a god is kept (%)")
+    quarantine_effect: int = rule(60, 0, 100, W, "Share of the outbreaks a council's quarantine keeps from crossing to its other worlds (%)")
+    arbitration_effect: int = rule(30, 0, 100, W, "Relation two members at odds regain when a council settles their dispute by vote")
+    aid_effect: int = rule(15, 0, 100, W, "Prosperity each town of a stricken member world regains from a council's pooled relief")
+
+
+@dataclass(frozen=True)
+class DispatchRules:
+    order_obedience_pct: int = rule(80, 0, 100, W, "Chance a commander who receives an order in their ruler's name obeys it (%)")
+    warning_prepare_pct: int = rule(30, 0, 100, W, "Defence a town gains from a warning of danger that reaches it in time (%)")
+    misread_pct: int = rule(10, 0, 100, W, "Share of the misreadings of a delivered message that the recipient acts on as if meant (%)")
+
+
+@dataclass(frozen=True)
+class EnvoyRules:
+    defect_pct: int = rule(3, 0, 100, W, "Chance a received envoy stays to serve the host and carries the sender's secrets (%)")
+
+
+@dataclass(frozen=True)
+class SignalRules:
+    disused_decay: int = rule(5, 0, 50, W, "Condition a signal station left unused loses each epoch")
+
+
+@dataclass(frozen=True)
+class OpinionSubjectRules:
+    ruler_weight: int = rule(100, 0, 100, M, "How strongly a town's view of its ruler drifts toward what it lives through (%)")
+    law_weight: int = rule(100, 0, 100, M, "How strongly a town's view of a law drifts toward its values (%)")
+    war_weight: int = rule(100, 0, 100, M, "How strongly a town's view of a war drifts toward its weariness and martial values (%)")
+    god_weight: int = rule(100, 0, 100, M, "How strongly a town's view of its god drifts toward its piety (%)")
+    ideology_weight: int = rule(100, 0, 100, M, "How strongly a town's view of a creed drifts toward its devotion (%)")
+    faction_weight: int = rule(60, 0, 100, M, "How strongly a town's view of a faction among it sets the faction's recruits and the backlash against it (%)")
+    foreign_power_weight: int = rule(50, 0, 100, M, "How strongly a town's view of a foreign power moves its trade, alliance support and will for war (%)")
+
+
+@dataclass(frozen=True)
+class SecretKindRules:
+    affair_severity: int = rule(45, 0, 100, R, "Weight of a kept affair when it comes to light")
+    illegitimate_child_severity: int = rule(40, 0, 100, R, "Weight of a child born outside a marriage when it comes to light")
+    murder_severity: int = rule(85, 0, 100, R, "Weight of a hidden murder when it comes to light")
+    heresy_severity: int = rule(50, 0, 100, R, "Weight of a hidden heresy when it comes to light")
+    secret_cult_membership_severity: int = rule(45, 0, 100, R, "Weight of membership of a hidden cult when it comes to light")
+    debt_severity: int = rule(25, 0, 100, R, "Weight of a hidden debt when it comes to light")
+    crime_severity: int = rule(55, 0, 100, R, "Weight of a hidden crime when it comes to light")
+    cowardice_in_battle_severity: int = rule(50, 0, 100, R, "Weight of cowardice in battle when it comes to light")
+    hidden_condition_severity: int = rule(35, 0, 100, R, "Weight of a hidden illness or madness when it comes to light")
+    false_identity_severity: int = rule(60, 0, 100, R, "Weight of a false identity when it comes to light")
+    deal_with_outer_being_severity: int = rule(75, 0, 100, R, "Weight of a deal with an outer being when it comes to light")
+    true_parentage_severity: int = rule(55, 0, 100, R, "Weight of a true parentage when it comes to light")
+    broken_oath_severity: int = rule(50, 0, 100, R, "Weight of a broken oath when it comes to light")
+    ecosabotage_severity: int = rule(70, 0, 100, R, "Weight of a sabotage of the land when it comes to light")
+    broken_cipher_severity: int = rule(65, 0, 100, R, "Weight of a broken cipher when it comes to light")
+    true_history_severity: int = rule(55, 0, 100, R, "Weight of the true history behind an official account when it comes to light")
+    hidden_power_severity: int = rule(60, 0, 100, R, "Weight of a concealed innate power when it comes to light")
+    forgery_severity: int = rule(60, 0, 100, R, "Weight of a forgery its holder made or used when it comes to light")
+
+
+@dataclass(frozen=True)
+class HookDemandRules:
+    marriage_cost: int = rule(100, 0, 100, R, "Chance pressing a marriage wears a strong hook down to a weak one (%)")
+    step_down_cost: int = rule(100, 0, 100, R, "Chance pressing someone to step down wears a strong hook down to a weak one (%)")
+    support_cost: int = rule(40, 0, 100, R, "Chance pressing for support wears a strong hook down to a weak one (%)")
+    vote_cost: int = rule(30, 0, 100, R, "Chance pressing a vote wears a strong hook down to a weak one (%)")
+    law_cost: int = rule(50, 0, 100, R, "Chance pressing a ruler to back laws wears a strong hook down to a weak one (%)")
+    appointment_cost: int = rule(60, 0, 100, R, "Chance pressing an appointment wears a strong hook down to a weak one (%)")
+    silence_cost: int = rule(30, 0, 100, R, "Chance pressing a witness to silence wears a strong hook down to a weak one (%)")
+    payment_cost: int = rule(50, 0, 100, R, "Chance extorting a payment wears a strong hook down to a weak one (%)")
+
+
+@dataclass(frozen=True)
+class FavourOriginRules:
+    gift_weight: int = rule(100, 0, 100, R, "Share of its size a favour owed for a gift keeps (%)")
+    rescue_weight: int = rule(100, 0, 100, R, "Share of its size a favour owed for a rescue keeps (%)")
+    war_support_weight: int = rule(100, 0, 100, R, "Share of its size a favour owed for support in a war keeps (%)")
+    succession_support_weight: int = rule(100, 0, 100, R, "Share of its size a favour owed for support in a succession keeps (%)")
+    scheme_aid_weight: int = rule(100, 0, 100, R, "Share of its size a favour owed for aid in a scheme keeps (%)")
+    vote_weight: int = rule(100, 0, 100, R, "Share of its size a favour owed for a vote that carried a law keeps (%)")
+    relief_weight: int = rule(100, 0, 100, R, "Share of its size a favour owed for aid in a stricken hour keeps (%)")
+    hospitality_weight: int = rule(80, 0, 100, R, "Share of its size a favour owed for shelter given keeps (%)")
+    ransom_weight: int = rule(100, 0, 100, R, "Share of its size a favour owed for a ransom paid keeps (%)")
+    hospitality_favour: int = rule(25, 0, 100, R, "Size of the favour a sheltered fugitive owes its host")
+    ransom_favour: int = rule(40, 0, 100, R, "Size of the favour a freed captive owes those who paid the ransom")

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field, replace
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.labour import JOB_BRANCH
 from aerona.catalog.life.demography import (
     AGE_WORK,
     ALLOCATE_COHORT_CONDITIONS,
@@ -28,6 +29,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import CorveeRow, LabourReasonRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.demography import CohortCondition, Job, SexKind
 from aerona.domain.enums.disease import DiseaseTarget
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
@@ -36,7 +38,7 @@ from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.life_traits import JobTrait
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.society_depth import LabourReason
 from aerona.engine.belonging.effects import identity_levy
 from aerona.engine.body.customs import culture_of, people_of
@@ -44,15 +46,17 @@ from aerona.engine.collective.demography import levy_factor
 from aerona.engine.collective.roles import combat_sexes
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import solidarity
-from aerona.engine.cycles.breeding import soldier_factor
+from aerona.engine.cycles.breeding import reproduction_at, soldier_factor
 from aerona.engine.demography.biology import job_factors, profiles_of
 from aerona.engine.demography.cohorts import cohorts_of, seed
 from aerona.engine.demography.prices import cheapest, dearest, local_prices
 from aerona.engine.disease.harm import community_targets, sick_levy, sick_work
 from aerona.engine.economy.extraction import extraction_kind
+from aerona.engine.factions.book import monopolies_at
 from aerona.engine.labour.stoppage import stoppage
 from aerona.engine.polity.law_effects import feudal_levy
 from aerona.engine.polity.laws import LawBook, law_param
+from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat, stat_or
@@ -128,6 +132,7 @@ class Move:
 class Plan:
     workers: Counter[Job] = field(default_factory=Counter)
     reasons: dict[tuple[Job, LabourReason], Move] = field(default_factory=dict)
+    floors: Counter[Job] = field(default_factory=Counter)
 
     def move(
         self,
@@ -139,8 +144,10 @@ class Plan:
         commodity: CommodityKind | None = None,
         workshop: WorkshopKind | None = None,
         price: int = PERCENT,
+        forced: bool = False,
     ) -> int:
-        moved = max(0, min(count, self.workers[source]))
+        free = self.workers[source] if forced else self.workers[source] - self.floors[source]
+        moved = max(0, min(count, free))
         if moved <= 0 or source is target:
             return 0
         self.workers[source] -= moved
@@ -210,7 +217,7 @@ def gate(plan: Plan, grounds: Grounds) -> None:
         built = any(kind in grounds.workshops for kind in structures)
         if resourced or built or (job is J.FISHING and grounds.coastal):
             continue
-        plan.move(job, fallback, plan.workers[job], LabourReason.NO_STRUCTURE)
+        plan.move(job, fallback, plan.workers[job], LabourReason.NO_STRUCTURE, forced=True)
 
 
 def draw(rules: Rules, plan: Plan, grounds: Grounds) -> None:
@@ -250,6 +257,48 @@ def price_pull(rules: Rules, plan: Plan, prices: Mapping[CommodityKind, int]) ->
                 plan.reasons[(source, LabourReason.PRICE)] = replace(plan.reasons[(source, LabourReason.PRICE)], commodity=low, price=prices.get(low, PERCENT))
 
 
+async def pinned_jobs(session: AsyncSession, community: EntityRow) -> frozenset[Job]:
+    working = frozenset(job for job in Job if job is not J.IDLE)
+    if await law_param(session, community.id, LawKind.LABOUR_LAW, "hereditary_trades") is True:
+        return working
+    caste = await reproduction_at(session, community.id)
+    if caste is not None and caste.system is ReproductiveSystem.CASTE:
+        return working
+    rights = await monopolies_at(session, community.id)
+    return frozenset(job for job in working if any(kind.value in rights for kind in JOB_GOODS[job]))
+
+
+def law_pin(rules: Rules, plan: Plan, pinned: frozenset[Job]) -> int:
+    kept = 0
+    for job in sorted(pinned, key=lambda item: item.value):
+        count = round_half_up(plan.workers[job] * rules.labour.law_pin_pct / PERCENT)
+        if count <= 0:
+            continue
+        plan.floors[job] += count
+        plan.note(job, LabourReason.CLASS, -count)
+        plan.note(job, LabourReason.LAW, count)
+        kept += count
+    return kept
+
+
+def skill_pull(rules: Rules, plan: Plan, levels: Mapping[KnowledgeBranch, int]) -> int:
+    share = rules.labour.skill_pull_pct / PERCENT
+    known = {job: levels.get(branch, 0) for job in sorted(MOVABLE_JOBS, key=lambda item: item.value) if (branch := JOB_BRANCH[job]) is not None}
+    best = max(known.values(), default=0)
+    if share <= 0 or best <= 0:
+        return 0
+    moved = 0
+    for source, level in known.items():
+        fitter = {target: other - level for target, other in known.items() if other > level}
+        whole = sum(fitter.values())
+        leaving = round_half_up((plan.workers[source] - plan.floors[source]) * share * (best - level) / best)
+        if whole <= 0 or leaving <= 0:
+            continue
+        for target, gap in fitter.items():
+            moved += plan.move(source, target, round_half_up(leaving * gap / whole), LabourReason.SKILL)
+    return moved
+
+
 def corvee(plan: Plan, share_pct: int) -> int:
     if share_pct <= 0:
         return 0
@@ -267,9 +316,9 @@ def hold(plan: Plan, found: Mapping[Job, LabourRow]) -> None:
             for source in sorted(MOVABLE_JOBS | {J.IDLE}, key=lambda item: (-plan.workers[item], item.value)):
                 if source is job or source in held or gap <= 0:
                     continue
-                gap -= plan.move(source, job, gap, LabourReason.HELD)
+                gap -= plan.move(source, job, gap, LabourReason.HELD, forced=True)
         elif gap < 0:
-            plan.move(job, J.FARMING if job is not J.FARMING else J.IDLE, -gap, LabourReason.HELD)
+            plan.move(job, J.FARMING if job is not J.FARMING else J.IDLE, -gap, LabourReason.HELD, forced=True)
 
 
 async def corvee_unrest(ctx: TickContext, community: EntityRow, share_pct: int) -> None:
@@ -297,6 +346,16 @@ async def save_reasons(ctx: TickContext, community: EntityRow, plan: Plan) -> No
         row.workshop = move.workshop
         row.price_pct = max(0, move.price)
         row.epoch = ctx.epoch
+
+
+async def steer(ctx: TickContext, plan: Plan, community: EntityRow, region: RegionEnvironmentRow | None) -> None:
+    rules = ctx.rules
+    law_pin(rules, plan, await pinned_jobs(ctx.session, community))
+    grounds = await grounds_of(ctx.session, community, region)
+    gate(plan, grounds)
+    draw(rules, plan, grounds)
+    price_pull(rules, plan, await local_prices(ctx.session, rules, community.id, stat(community, "population") or 0))
+    skill_pull(rules, plan, (await known_levels(ctx.session, [community.id])).get(community.id, {}))
 
 
 async def allocate(
@@ -328,10 +387,7 @@ async def allocate(
     for job, count in sorted(plan.workers.items(), key=lambda item: item[0].value):
         if count:
             plan.note(job, LabourReason.CLASS, count)
-    grounds = await grounds_of(ctx.session, community, region)
-    gate(plan, grounds)
-    draw(rules, plan, grounds)
-    price_pull(rules, plan, await local_prices(ctx.session, rules, community.id, stat(community, "population") or 0))
+    await steer(ctx, plan, community, region)
     levy = await ctx.session.get(CorveeRow, community.id)
     share = levy.share_pct if levy is not None else 0
     corvee(plan, share)

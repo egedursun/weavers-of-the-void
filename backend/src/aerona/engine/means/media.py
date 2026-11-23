@@ -10,11 +10,14 @@ from aerona.db.tables.culture import ArtworkProfileRow, BookContentRow, ItemProf
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.made import IntrusionRow
 from aerona.db.tables.means import WritingCustomRow, WrittenWorkRow
+from aerona.db.tables.networks import NetworkNodeRow, NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.made import IntrusionAim
 from aerona.domain.enums.means import WritingMedium
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
@@ -22,6 +25,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.lore.printing import printed
+from aerona.engine.networks.book import running
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.knowledge import branch_level
@@ -44,7 +48,10 @@ class MediaTally:
 async def medium_for(ctx: TickContext, people: EntityRow) -> WritingMedium:
     if await branch_level(ctx.session, people.id, KnowledgeBranch.WRITING) <= 0:
         return WritingMedium.KNOTTED_CORD
-    if Technique.PAPER in await era_techniques(ctx.session, people.id):
+    known = await era_techniques(ctx.session, people.id)
+    if Technique.COMPUTATION in known:
+        return WritingMedium.ELECTRONIC
+    if Technique.PAPER in known:
         return WritingMedium.PAPER
     towns = await towns_of_people(ctx.session, people.id)
     herds = await ctx.session.scalar(
@@ -127,14 +134,50 @@ async def wear_works(ctx: TickContext, tally: MediaTally) -> None:
             tally.copied += 1
         if "condition" not in row.locked:
             shield = 1 / (1 + max(0, row.copies - 1) * table.copy_shield_pct / PERCENT)
-            rot = round_half_up(spec.rot * await damp_of(ctx, atlas, work) / PERCENT * table.rot_pct / PERCENT * shield)
+            rot = round_half_up(rot_of(ctx, row.medium) * await damp_of(ctx, atlas, work) / PERCENT * table.rot_pct / PERCENT * shield)
+            if spec.networked:
+                rot = rot if await powered(ctx, work) else rot + table.outage_loss
+                await altered(ctx, work, row)
             row.condition = clamp_int(row.condition - rot, 0, PERCENT)
             tally.worn += rot > 0
         if row.condition <= 0:
-            await retire_in(ctx, work, f"its {spec.label.lower()} crumbled away", EntityStatus.DESTROYED)
+            await retire_in(ctx, work, f"its {spec.label.lower()} was lost", EntityStatus.DESTROYED)
             tally.lost += 1
             await record_incident(ctx, "writing.lost", roles={IncidentRole.SUBJECT: work.id}, facts={"medium": row.medium, "copies": row.copies})
     await ctx.session.flush()
+
+
+DECAY_STEP = 10
+
+
+def rot_of(ctx: TickContext, medium: WritingMedium) -> int:
+    return (PERCENT - int(getattr(ctx.rules.writing_media, MEDIA[medium].durability_rule))) // DECAY_STEP
+
+
+async def powered(ctx: TickContext, work: EntityRow) -> bool:
+    places = [place for place in (work.id, work.location_id) if place is not None]
+    joined = select(NetworkNodeRow.network_entity_id).where(NetworkNodeRow.member_node_id.in_(places))
+    networks = list(
+        await ctx.session.scalars(
+            select(NetworkProfileRow).where(NetworkProfileRow.network_entity_id.in_(joined)).order_by(NetworkProfileRow.network_entity_id)
+        )
+    )
+    return any(running(network, ctx.epoch) for network in networks)
+
+
+async def altered(ctx: TickContext, work: EntityRow, row: WrittenWorkRow) -> bool:
+    places = [place for place in (work.id, work.location_id) if place is not None]
+    joined = select(NetworkNodeRow.network_entity_id).where(NetworkNodeRow.member_node_id.in_(places))
+    breach = await ctx.session.scalar(
+        select(IntrusionRow.id)
+        .where(IntrusionRow.epoch >= ctx.epoch - 1, IntrusionRow.aim == IntrusionAim.ALTER, IntrusionRow.target_node_id.in_(joined))
+        .limit(1)
+    )
+    if breach is None or not ctx.rng(f"writing.altered.{work.id}.{ctx.epoch}").chance(ctx.rules.writing_media.intrusion_alter_pct):
+        return False
+    row.condition = clamp_int(row.condition - ctx.rules.writing_media.outage_loss, 0, PERCENT)
+    await record_incident(ctx, "writing.altered", roles={IncidentRole.SUBJECT: work.id}, facts={"medium": row.medium})
+    return True
 
 
 async def burn_works(ctx: TickContext, town: EntityRow) -> int:

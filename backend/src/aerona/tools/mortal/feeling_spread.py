@@ -40,7 +40,7 @@ async def stir_feeling_tool(call: MortalCall, args: StirFeelingInput) -> str:
     if household is None and (place is None or call.me.location_id != place.id):
         fail(MortalResult.MOOD_REFUSED, why="you stir the feeling of the place you stand in or of your own household")
     if place is not None and held(place.id):
-        fail(MortalResult.MOOD_REFUSED, why="a god holds that place as it is")
+        fail(MortalResult.MOOD_REFUSED, why="that place is held as it is")
     row = await mood_of(call.tick, settlement=place.id if place is not None else None, household=household)
     if "feelings" in (row.locked or []):
         fail(MortalResult.MOOD_REFUSED, why="a god holds that mood as it is")

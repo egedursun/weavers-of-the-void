@@ -2,18 +2,24 @@ from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleS
 from aerona.domain.enums.affliction import ChangeSign, CharmKind, CureKind, PackageKind
 from aerona.domain.enums.agrarian import NutrientKind
 from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.customs import CoopPurpose, EvidenceKind, MemberRight, Membership, Naturalisation
 from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.entity import EntityType as E
 from aerona.domain.enums.environment import MovementMode, SoilKind, TerrainKind
 from aerona.domain.enums.evolution import SuccessionStage
+from aerona.domain.enums.faction import FactionActionKind, FactionGoalKind
 from aerona.domain.enums.fortune import FortuneSourceKind
+from aerona.domain.enums.law_depth import CourtLevel
 from aerona.domain.enums.mind import Emotion, GriefStage
 from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.mortal import CareerPath
+from aerona.domain.enums.polity import ClaimBasis, OathKind, OfficeKind
 from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule
 from aerona.domain.enums.records import ProcessClock as C
 from aerona.domain.enums.records import ProcessGroup as G
 from aerona.domain.enums.records import StepAction as A
+from aerona.domain.enums.regime import ClientRole
+from aerona.domain.enums.statecraft import CouncilTask, CourtPosition, MandateKind
 
 CAREERS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
@@ -240,4 +246,175 @@ TRAVEL: tuple[IncidentKindSpec, ...] = (
     ),
 )
 
-KINDS: tuple[IncidentKindSpec, ...] = (*CAREERS, *DEATHS, *PACKAGES, *MINDS, *TOOLS, *LAND, *TRAVEL)
+
+STATECRAFT: tuple[IncidentKindSpec, ...] = (
+    IncidentKindSpec(
+        "council.task",
+        G.LAW,
+        "{actor} took up the work of the {office} of {authority}: to {task}.",
+        roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR, frozenset({E.MORTAL}))),
+        facts=(FactSpec("office", FactValue.ENUM, enum=OfficeKind), FactSpec("task", FactValue.ENUM, enum=CouncilTask)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "mandate.issued",
+        G.LAW,
+        "{authority} laid {mandate:an} mandate on {subject}, to stand until epoch {until}.",
+        roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.SUBJECT, required=False), RoleSpec(R.ACTOR, required=False)),
+        facts=(FactSpec("mandate", FactValue.ENUM, enum=MandateKind), FactSpec("until", FactValue.NUMBER, FactUnit.COUNT)),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "court.jest",
+        G.SOCIAL,
+        "{actor} mocked {target} before the court of {authority}, and the mockery was let stand; the seat grew calmer by {calm}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.TARGET), RoleSpec(R.AUTHORITY)),
+        facts=(FactSpec("calm", FactValue.NUMBER, FactUnit.PERCENT),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "court.jest_silenced",
+        G.SOCIAL,
+        "{actor} mocked {target} before the court of {authority} and was silenced; the seat grew angrier by {calm}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.TARGET), RoleSpec(R.AUTHORITY)),
+        facts=(FactSpec("calm", FactValue.NUMBER, FactUnit.PERCENT),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "court.foretold",
+        G.FAITH,
+        "{actor} read the signs for the court of {authority}, and the realm's standing moved by {sway}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY)),
+        facts=(FactSpec("sway", FactValue.NUMBER, FactUnit.PERCENT),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "court.jurisdiction_disputed",
+        G.LAW,
+        "Both {first} and {second} claimed the case of {accused} in {authority}, and it went before the high court.",
+        roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACCUSED)),
+        facts=(FactSpec("first", FactValue.ENUM, enum=CourtLevel), FactSpec("second", FactValue.ENUM, enum=CourtLevel)),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "patronage.bound",
+        G.SOCIAL,
+        "{member} became the {role} client of {patron}.",
+        roles=(RoleSpec(R.PATRON), RoleSpec(R.MEMBER, frozenset({E.MORTAL}))),
+        facts=(FactSpec("role", FactValue.ENUM, enum=ClientRole),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "membership.gained",
+        G.LAW,
+        "{subject} became a citizen of {authority} by {way}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY), RoleSpec(R.SPOUSE, required=False)),
+        facts=(FactSpec("way", FactValue.ENUM, enum=Naturalisation),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "claim.made",
+        G.LAW,
+        "{actor} came to hold a claim of strength {strength} to rule {authority}, by {basis}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY), RoleSpec(R.PATRON, required=False)),
+        facts=(FactSpec("basis", FactValue.ENUM, enum=ClaimBasis), FactSpec("strength", FactValue.NUMBER, FactUnit.PERCENT)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "succession.designated",
+        G.LAW,
+        "{actor} named {successor} heir to {authority}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.SUCCESSOR, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "oath.broken",
+        G.LAW,
+        "{actor} broke the {oath} oath before the courts of {authority} in the case of {accused}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY, required=False), RoleSpec(R.ACCUSED, required=False)),
+        facts=(FactSpec("oath", FactValue.ENUM, enum=OathKind),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "faction.acted",
+        G.SOCIAL,
+        "{actor} turned to {action} toward {target}, pressing for {goal}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
+        facts=(FactSpec("action", FactValue.ENUM, enum=FactionActionKind), FactSpec("goal", FactValue.ENUM, enum=FactionGoalKind)),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "faction.goal_met",
+        G.SOCIAL,
+        "{actor} won what it pressed for: {goal}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
+        facts=(FactSpec("goal", FactValue.ENUM, enum=FactionGoalKind),),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "law.right_changed",
+        G.LAW,
+        "{authority} changed whether those of {category} standing hold the right of {right}.",
+        roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR, required=False)),
+        facts=(
+            FactSpec("category", FactValue.ENUM, enum=Membership),
+            FactSpec("right", FactValue.ENUM, enum=MemberRight),
+        ),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.appoint_court",
+        G.LAW,
+        "{actor} made {target} the {position} of the court of {authority}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.TARGET, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY)),
+        facts=(FactSpec("position", FactValue.ENUM, enum=CourtPosition),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.take_client",
+        G.SOCIAL,
+        "{patron} took {member} as a client, as {role}.",
+        roles=(RoleSpec(R.PATRON, frozenset({E.MORTAL})), RoleSpec(R.MEMBER, frozenset({E.MORTAL}))),
+        facts=(FactSpec("role", FactValue.ENUM, enum=ClientRole),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.press_claim",
+        G.LAW,
+        "{actor} pressed a claim by {basis} to rule {authority}; it now stands at {strength}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY)),
+        facts=(FactSpec("basis", FactValue.ENUM, enum=ClaimBasis), FactSpec("strength", FactValue.NUMBER, FactUnit.PERCENT)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.found_coop",
+        G.SOCIAL,
+        "{actor} led {product} to pool its members' means as a cooperative for {purpose}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.PRODUCT)),
+        facts=(FactSpec("purpose", FactValue.ENUM, enum=CoopPurpose),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.testify",
+        G.LAW,
+        "{actor} gave {evidence} evidence in the case against {accused}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.ACCUSED, required=False)),
+        facts=(FactSpec("evidence", FactValue.ENUM, enum=EvidenceKind),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.set_faction_goal",
+        G.SOCIAL,
+        "{actor} set their faction to press for {goal}, aimed at {target}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.TARGET, required=False)),
+        facts=(FactSpec("goal", FactValue.ENUM, enum=FactionGoalKind),),
+        clock=C.INSTANT,
+    ),
+)
+
+KINDS: tuple[IncidentKindSpec, ...] = (*CAREERS, *DEATHS, *PACKAGES, *MINDS, *TOOLS, *LAND, *TRAVEL, *STATECRAFT)

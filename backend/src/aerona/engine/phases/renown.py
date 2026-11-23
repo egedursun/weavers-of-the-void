@@ -17,7 +17,7 @@ from aerona.engine.renown.book import aggregate
 from aerona.engine.renown.claims import tend_claims
 from aerona.engine.renown.currencies import CurrencyTally, tend_currencies
 from aerona.engine.renown.deeds import DeedTally, hearsay
-from aerona.engine.renown.lore import LoreTally, market
+from aerona.engine.renown.lore import LoreTally, market, perform_services
 
 
 def count(ctx: TickContext, prefix: str, tally: object) -> None:
@@ -89,7 +89,7 @@ async def renown_hearsay(ctx: TickContext) -> None:
     count(ctx, "deed", tally)
 
 
-@reads("table.deed_claims", "table.deeds", "table.incident_participants")
+@reads("table.deed_claims", "table.deeds", "table.incident_participants", "table.mind_facets", "table.skills")
 @writes("table.deed_claims")
 async def renown_claims(ctx: TickContext) -> None:
     tally = DeedTally()
@@ -135,16 +135,31 @@ async def ruler_currencies(ctx: TickContext) -> None:
     "table.entities",
     "table.faction_profiles",
     "table.holder_techniques",
+    "table.lore_trades",
+    "table.node_births",
     "table.nodes",
     "table.polity_map_knowledge",
     "table.prophecy_conditions",
     "table.reputations",
     "table.world_maps",
 )
-@writes("table.blueprints", "table.bonds", "table.faction_profiles", "table.holder_techniques", "table.lore_trades", "table.reputations")
+@writes(
+    "table.blueprints",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.faction_profiles",
+    "table.holder_techniques",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.lore_trades",
+    "table.reputations",
+)
 async def lore_market(ctx: TickContext) -> None:
     tally = LoreTally()
     await market(ctx, tally)
+    ctx.count("lore_services_done", await perform_services(ctx))
     count(ctx, "lore", tally)
 
 

@@ -29,10 +29,10 @@ PLANT_PRODUCTS: MappingProxyType[PlantYield, PlantProduct] = MappingProxyType(
     {
         item.product: item
         for item in (
-            PlantProduct(Y.OIL, "Oil", C.FUEL, None, 1, False, lambda rules: rules.plant_products.oil_value),
-            PlantProduct(Y.SUGAR, "Sugar", C.BREW_BASE, None, 1, True, lambda rules: rules.plant_products.sugar_value),
-            PlantProduct(Y.SPICE, "Spice", C.LUXURIES, None, 1, False, lambda rules: rules.plant_products.spice_value),
-            PlantProduct(Y.RESIN, "Resin", C.INCENSE, None, 1, False, lambda rules: rules.plant_products.resin_value),
+            PlantProduct(Y.OIL, "Oil", C.OIL, None, 1, False, lambda rules: rules.plant_products.oil_value),
+            PlantProduct(Y.SUGAR, "Sugar", C.SUGAR, None, 1, True, lambda rules: rules.plant_products.sugar_value),
+            PlantProduct(Y.SPICE, "Spice", C.SPICE, None, 1, False, lambda rules: rules.plant_products.spice_value),
+            PlantProduct(Y.RESIN, "Resin", C.INCENSE, MaterialKind.RESIN, 1, False, lambda rules: rules.plant_products.resin_value),
             PlantProduct(Y.STIMULANT, "Stimulant", C.HERBS, None, 1, False, lambda rules: rules.plant_products.stimulant_value),
             PlantProduct(Y.FODDER, "Fodder", C.FODDER, None, 2, False, lambda rules: rules.plant_products.fodder_value),
             PlantProduct(Y.GRAIN, "Grain", C.GRAIN, None, 2, True, lambda rules: rules.plant_products.grain_value),

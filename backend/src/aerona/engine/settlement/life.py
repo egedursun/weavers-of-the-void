@@ -94,6 +94,7 @@ from aerona.engine.renown.currencies import realm_of_community, ruler_of_realm
 from aerona.engine.settlement.book import Town, ledger, tier_for
 from aerona.engine.settlement.circuit import circuit_gates, circuit_towers
 from aerona.engine.settlement.districts import AdminParts, admin_parts, base_parameters, designs_for, unify_market, wound_district
+from aerona.engine.settlement.prestige_parts import drawn_prestige
 from aerona.engine.settlement.storage import design_for, settlement_store, storage_index, store_kind
 from aerona.engine.urban.morphology import hauling_of, replan, spread_of
 from aerona.engine.urban.planning import seat
@@ -1008,6 +1009,7 @@ async def prestige(ctx: TickContext, town: Town) -> None:
     artists = await labour(ctx, town, Job.ARTS) / max(1, stat_or(town.entity, "population", 0))
     value = splendour / PERCENT * table.prestige_per_splendor + artworks * table.prestige_per_artwork + renowned * table.prestige_per_renown
     value += artists * ctx.rules.labour.artist_prestige
+    value += await drawn_prestige(ctx.session, ctx.rules, town.entity.id)
     town.profile.prestige = clamp_int(value, 0, PERCENT)
 
 

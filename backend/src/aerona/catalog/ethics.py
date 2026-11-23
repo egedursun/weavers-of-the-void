@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.core.total import total
+from aerona.domain.enums.military import DuelEnd
 from aerona.domain.enums.mind import ActKind, EthicalStance, HonourModel
 from aerona.domain.enums.mortal import CrimeKind
 
@@ -120,11 +121,12 @@ class HonourSpec:
     message_sting_pct: int = 100
     herald_sting_pct: int = 100
     affairs_end_in_duels: bool = False
+    duel_end: DuelEnd = DuelEnd.YIELD
 
 
 HONOUR_MODELS: MappingProxyType[HonourModel, HonourSpec] = MappingProxyType(
     {
-        HonourModel.DIGNITY: HonourSpec("Dignity: law over insult", 50, 0, 100, 100, 150, 60),
+        HonourModel.DIGNITY: HonourSpec("Dignity: law over insult", 50, 0, 100, 100, 150, 60, duel_end=DuelEnd.FIRST_WOUND),
         HonourModel.HONOUR: HonourSpec(
             "Honour: a shame to one is a shame to the house",
             150,
@@ -151,7 +153,23 @@ HONOUR_MODELS: MappingProxyType[HonourModel, HonourSpec] = MappingProxyType(
             grievance_kept_pct=0,
             message_sting_pct=50,
             herald_sting_pct=200,
+            duel_end=DuelEnd.RING_OUT,
         ),
         HonourModel.NONE: HonourSpec("None: neither word nor standing is weighed beyond the act", 0, 0, 0, 100, 150, 0),
     }
+)
+
+
+DUEL_END_LABELS: Mapping[DuelEnd, str] = total(
+    DuelEnd,
+    {
+        DuelEnd.YIELD: "When one yields",
+        DuelEnd.DISARM: "When one is disarmed",
+        DuelEnd.CRIPPLED: "When one is crippled",
+        DuelEnd.DEATH: "To the death",
+        DuelEnd.EXHAUSTION: "When both are spent",
+        DuelEnd.UNCONSCIOUS: "When one falls senseless",
+        DuelEnd.FIRST_WOUND: "At the first wound",
+        DuelEnd.RING_OUT: "When one is driven out of the bounds",
+    },
 )

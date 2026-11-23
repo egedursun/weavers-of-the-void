@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import MEMORIES
+from aerona.catalog.pacts import DECLARED_STANDINGS
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, MaimedCohortRow
@@ -428,7 +429,7 @@ def rank(book: RealmBook) -> None:
     for realms in by_world.values():
         ordered = sorted(realms, key=lambda item: (-(stat(item.entity, "subjects") or 0) * item.profile.legitimacy, item.entity.id))
         for index, realm in enumerate(ordered):
-            if "standing" in realm.profile.locked:
+            if "standing" in realm.profile.locked or realm.profile.standing in DECLARED_STANDINGS:
                 continue
             if realm.entity.id in book.vassals:
                 realm.profile.standing = RegionalStanding.CLIENT

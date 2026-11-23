@@ -15,6 +15,7 @@ from aerona.domain.enums.war import CaptiveStatus, WarEnding
 from aerona.engine.context import TickContext
 from aerona.engine.military.captivity import settle_into
 from aerona.engine.mind.book import values_for
+from aerona.engine.museums.hoards import return_trophies
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.services.war import release_captive
@@ -88,7 +89,8 @@ async def clause_for(ctx: TickContext, war: WarRow, term: PeaceTerm, victor: Ent
     match term.kind:
         case K.CAPTIVE_RELEASE:
             freed = await release_all(ctx, war)
-            found = f"both sides sent home their captives ({freed})", None
+            returned = await return_trophies(ctx, victor.id, loser.id)
+            found = f"both sides sent home their captives ({freed}) and {returned} trophies of war", None
         case K.TRADE_CONCESSION:
             found = f"{loser.name} opened its markets to {victor.name}", Clause(ClauseKind.TRADE_RIGHTS, loser.id, victor.id, dict(term.params))
         case K.MARRIAGE:

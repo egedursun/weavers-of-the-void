@@ -3,6 +3,7 @@ import re
 from sqlalchemy import select
 
 from aerona.catalog.backfill_words import STRUCTURE_WORDS
+from aerona.catalog.life.domain import GONE_STATES
 from aerona.catalog.structures import ENGINE_KIND_STRUCTURES, WORKSHOP_STRUCTURES
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -89,7 +90,7 @@ async def link_workshops(ctx: TickContext, profiles: list[StructureProfileRow]) 
         if workshop.kind not in WORKSHOP_STRUCTURES:
             continue
         profile = by_host.get((workshop.community_entity_id, workshop.kind))
-        if profile is not None and profile.construction_state is not ConstructionState.RUINED:
+        if profile is not None and profile.construction_state not in GONE_STATES:
             workshop.structure_entity_id = profile.structure_entity_id
             linked += 1
     return linked

@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.life_traits import UNIT_HONOUR_KIND_TRAITS, having
 from aerona.catalog.units import UNITS
+from aerona.catalog.war_w52 import UNIT_HONOURS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.culture import ItemProfileRow
@@ -96,14 +97,8 @@ def honour_for(ctx: TickContext, side: Side, won: bool, lost_share: int, alive: 
 
 
 def esprit_shift(ctx: TickContext, kind: UnitHonourKind) -> int:
-    table = ctx.rules.unit_honours
-    return {
-        UnitHonourKind.VICTORY: table.honour_esprit,
-        UnitHonourKind.STAND: table.honour_esprit,
-        UnitHonourKind.SIEGE: table.honour_esprit,
-        UnitHonourKind.SURVIVAL: table.survival_esprit,
-        UnitHonourKind.MASSACRE: -table.massacre_esprit,
-    }[kind]
+    spec = UNIT_HONOURS[kind]
+    return spec.sign * int(getattr(ctx.rules.unit_honours, spec.esprit_rule))
 
 
 GLORIOUS = having(UNIT_HONOUR_KIND_TRAITS, UnitHonourKindTrait.GLORIOUS)

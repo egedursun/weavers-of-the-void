@@ -22,18 +22,25 @@ CONTENT_LABELS: dict[DispatchContent, str] = {
     DispatchContent.REPORT: "A report",
     DispatchContent.PLEA: "A plea",
     DispatchContent.INTELLIGENCE: "Intelligence",
+    DispatchContent.ORDER: "An order",
+    DispatchContent.WARNING: "A warning",
 }
 STATE_LABELS: dict[DispatchState, str] = {
     DispatchState.UNDER_WAY: "On its way",
     DispatchState.DELIVERED: "Delivered",
     DispatchState.INTERCEPTED: "Intercepted",
     DispatchState.LOST: "Lost on the road",
+    DispatchState.DELAYED: "Held up on the road",
+    DispatchState.FORGED: "Delivered as a forgery",
+    DispatchState.MISREAD: "Delivered and misread",
 }
 ENVOY_LABELS: dict[EnvoyFate, str] = {
     EnvoyFate.RECEIVED: "Received with courtesy",
     EnvoyFate.INSULTED: "Insulted",
     EnvoyFate.IMPRISONED: "Thrown in chains",
     EnvoyFate.KILLED: "Slain",
+    EnvoyFate.EXPELLED: "Sent home",
+    EnvoyFate.DEFECTED: "Stayed to serve the host",
 }
 SUBJECT_LABELS: dict[OpinionSubject, str] = {
     OpinionSubject.RULER: "Ruler",
@@ -41,6 +48,8 @@ SUBJECT_LABELS: dict[OpinionSubject, str] = {
     OpinionSubject.WAR: "War",
     OpinionSubject.GOD: "God",
     OpinionSubject.IDEOLOGY: "Creed",
+    OpinionSubject.FACTION: "Faction",
+    OpinionSubject.FOREIGN_POWER: "Foreign power",
 }
 SIGNAL_LABELS: dict[SignalKind, str] = {
     SignalKind.BEACON_CHAIN: "Beacon chains",
@@ -56,5 +65,7 @@ SIGNAL_STATE_LABELS: dict[SignalState, str] = {
     SignalState.ACTIVE: "Standing",
     SignalState.CAPTURED: "Captured",
     SignalState.BURNED: "Burned",
+    SignalState.DISUSED: "Left unused",
+    SignalState.JAMMED: "Jammed",
 }
 MORTAL_MEDIA = frozenset({Medium.ENVOY, Medium.LETTER, Medium.HERALD, Medium.BIRD, Medium.SIGNAL_FIRE, Medium.NETWORK})

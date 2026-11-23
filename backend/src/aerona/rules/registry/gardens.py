@@ -20,4 +20,8 @@ class GardenRules:
     refuge_floor: int = rule(10, 0, 100, S, "Abundance below which a kind of life planted in a garden of its land does not fall")
     grove_standing: int = rule(3, 0, 100, S, "Love a sacred grove of a town gives each god of growing and wild things each epoch")
     prestige_pct: int = rule(50, 0, 100, S, "Share of the condition of a garden that its realm counts as grandeur (%)")
+    botanic_knowledge: int = rule(5, 0, 50, S, "Spread a botanic garden in good condition adds each epoch to its town's knowledge of growing things")
+    menagerie_prestige: int = rule(5, 0, 50, S, "Prestige a kept menagerie draws to its town through its visitors")
+    botanic_from: int = rule(3, 0, 10, S, "Knowledge of growing things from which a prosperous town keeps a botanic garden for study")
+    menagerie_escape_pct: int = rule(5, 0, 100, S, "Chance in an epoch that a neglected menagerie lets its beasts loose into its land (%)")
     son_cost: int = rule(30, 0, 1000, S, "Essence a son spends to lay out a garden in a town")

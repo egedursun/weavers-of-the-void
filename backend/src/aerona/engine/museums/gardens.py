@@ -2,37 +2,44 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.life.museums import PLANTING_SPECIES_CLASSS
+from aerona.catalog.life.museums import GARDEN_LIFE, GARDEN_WILD, GATHERING_GARDENS, PLANTING_SPECIES_CLASSS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import GameReserveRow
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.ecology import SpeciesClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.garden import GardenKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.place import PlaceKind
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import domains_of, faithful_communities, living_gods
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.knowledge import branch_level
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.stats import stat_or
+from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import record
 
 LAID_OUT = {
     StructureKind.PARK: GardenKind.PARK,
     StructureKind.BOTANICAL_GARDEN: GardenKind.PHYSIC,
     StructureKind.CEMETERY: GardenKind.CEMETERY,
     StructureKind.MONASTERY: GardenKind.MONASTERY,
+    StructureKind.MENAGERIE: GardenKind.MENAGERIE,
 }
 GROWING = frozenset({Domain.PLANTS, Domain.LIFE, Domain.HARVEST, Domain.HUNT})
-PLANTED = {GardenKind.HUNTING_PARK: (SpeciesClass.ANIMAL,)}
+PLANTED = GARDEN_LIFE
+ESCAPED_ABUNDANCE = 5
 
 
 @dataclass
@@ -61,6 +68,7 @@ async def lay_out(ctx: TickContext, town_id: int, kind: GardenKind, structure_id
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await record(ctx, "garden.founded", roles={IncidentRole.PLACE: town_id}, facts={"kind": kind}, place=town_id)
     return row
 
 
@@ -69,14 +77,15 @@ async def planting(ctx: TickContext, atlas: RegionAtlas, town_id: int, kind: Gar
     if region is None:
         return []
     classes = PLANTED.get(kind, PLANTING_SPECIES_CLASSS)
+    lands = [region, *atlas.neighbours(region)] if kind in GATHERING_GARDENS else [region]
     found = await ctx.session.scalars(
         select(SpeciesRangeRow.species_entity_id)
         .join(SpeciesProfileRow, SpeciesProfileRow.species_entity_id == SpeciesRangeRow.species_entity_id)
-        .where(SpeciesRangeRow.region_entity_id == region, SpeciesRangeRow.abundance > 0, SpeciesProfileRow.species_class.in_(list(classes)))
+        .where(SpeciesRangeRow.region_entity_id.in_(lands), SpeciesRangeRow.abundance > 0, SpeciesProfileRow.species_class.in_(list(classes)))
         .order_by(SpeciesRangeRow.abundance.desc(), SpeciesRangeRow.species_entity_id)
-        .limit(ctx.rules.gardens.planted)
+        .limit(ctx.rules.gardens.planted * (2 if kind in GATHERING_GARDENS else 1))
     )
-    return [int(item) for item in found]
+    return list(dict.fromkeys(int(item) for item in found))
 
 
 async def towns_in(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> list[EntityRow]:
@@ -112,6 +121,8 @@ async def found_gardens(ctx: TickContext, atlas: RegionAtlas, tally: GardenTally
     ):
         if stat_or(town, "prosperity", 0) >= ctx.rules.gardens.pleasure_from:
             wanted.append((town.id, GardenKind.PLEASURE, None))
+            if await branch_level(ctx.session, town.id, KnowledgeBranch.AGRICULTURE) >= ctx.rules.gardens.botanic_from:
+                wanted.append((town.id, GardenKind.BOTANIC, None))
     for town_id, garden_kind, hall_id in wanted:
         if (town_id, garden_kind) in known or held(town_id):
             continue
@@ -151,6 +162,43 @@ async def love_groves(ctx: TickContext, tally: GardenTally) -> None:
                 tally.loved += 1
 
 
+async def study(ctx: TickContext, garden: GardenRow) -> None:
+    lore = await ctx.session.scalar(
+        select(EntityRow)
+        .join(BondRow, BondRow.target_node_id == EntityRow.id)
+        .where(
+            BondRow.source_node_id == garden.settlement_entity_id,
+            BondRow.kind == BondKind.KNOWS,
+            BondRow.state == BondState.ACTIVE,
+            EntityRow.knowledge_branch == KnowledgeBranch.AGRICULTURE,
+        )
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    if lore is not None and not held(lore.id):
+        shift_stat(lore, "spread", ctx.rules.gardens.botanic_knowledge * garden.condition // PERCENT)
+
+
+async def let_loose(ctx: TickContext, atlas: RegionAtlas, garden: GardenRow) -> int:
+    region = atlas.top_region(garden.settlement_entity_id)
+    if region is None or garden.unpaid_epochs <= 0 or held(region):
+        return 0
+    if not ctx.rng(f"menagerie.{garden.id}.{ctx.epoch}").chance(ctx.rules.gardens.menagerie_escape_pct):
+        return 0
+    loosed = 0
+    for species_id in garden.species:
+        if await ctx.session.get(SpeciesRangeRow, (species_id, region)) is None:
+            ctx.session.add(
+                SpeciesRangeRow(species_entity_id=species_id, region_entity_id=region, abundance=ESCAPED_ABUNDANCE, since_epoch=ctx.epoch, locked=[])
+            )
+            loosed += 1
+    if loosed:
+        await record(
+            ctx, "garden.beasts_loosed", roles={IncidentRole.PLACE: garden.settlement_entity_id}, facts={"kinds": loosed}, place=garden.settlement_entity_id
+        )
+    return loosed
+
+
 async def keep_gardens(ctx: TickContext, tally: GardenTally) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     await found_gardens(ctx, atlas, tally)
@@ -158,5 +206,9 @@ async def keep_gardens(ctx: TickContext, tally: GardenTally) -> None:
         if held(garden.settlement_entity_id):
             continue
         await tend(ctx, garden, tally)
+        if garden.kind in GATHERING_GARDENS and garden.condition > 0 and not GARDEN_WILD[garden.kind]:
+            await study(ctx, garden)
+        elif GARDEN_WILD[garden.kind]:
+            await let_loose(ctx, atlas, garden)
     await love_groves(ctx, tally)
     await ctx.session.flush()

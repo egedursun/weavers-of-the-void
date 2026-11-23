@@ -18,6 +18,7 @@ from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.vehicles import DesignMountRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind, WeatherTrait
@@ -31,12 +32,15 @@ from aerona.domain.enums.vehicles import VehicleDomain, VehicleFrame
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.collective.designs import DesignTally, arm_mounts, design_power, fit_design, mend, wear_leg
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.cover import insured_loss
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.means.navigation import accuracy_of
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mortal.standing import add_renown
+from aerona.engine.operations.crews import backfill_crews, crew_power, fitted_stations, lives_saved, storm_care
 from aerona.engine.operations.engagement import SAILED, Engagement, Weapon, domain_of, engage, weapons_of
-from aerona.engine.operations.sail import SailTally, set_sail, ship_state, take_prize
+from aerona.engine.operations.sail import SailTally, crews_of, set_sail, ship_state, take_prize
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -71,6 +75,7 @@ class SeaTally:
     failures: int = 0
     mended: int = 0
     prize_money: int = 0
+    crews_added: int = 0
     sail: SailTally = field(default_factory=SailTally)
 
 
@@ -215,6 +220,7 @@ async def wreck(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, weat
     tally.wrecks += 1
     await retire_in(ctx, vessel, f"wrecked by the {spoken(weather)}", close_bonds=False)
     await record(ctx, "seafaring.wreck", roles={IncidentRole.SUBJECT: vessel.id}, facts={"weather": weather}, place=row.region_entity_id)
+    await insured_loss(ctx, row.home_port_entity_id, InsuranceCover.VESSEL, ctx.rules.insurance.vessel_payout)
 
 
 def icing(rules: Rules, damage: int, *, stormy: bool, icy: bool) -> int:
@@ -230,13 +236,17 @@ async def weather_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow
     if weather is None or not (stormy or icy) or domain_of(row) not in WEATHERED:
         return
     tally.storms += 1
+    crews, fitted = await crews_of(ctx, vessel.id, row), await fitted_stations(ctx.session, vessel.id, row)
+    accuracy = await accuracy_of(ctx, row.home_port_entity_id) if row.home_port_entity_id is not None else 0
     with explaining() as found:
-        damage = icing(ctx.rules, storm_damage(ctx.rules, row), stormy=stormy, icy=icy)
+        care = 1 - storm_care(ctx.rules, row, crews, fitted, accuracy)
+        damage = round_half_up(icing(ctx.rules, storm_damage(ctx.rules, row), stormy=stormy, icy=icy) * care)
     terms = found.snapshot()
     if "condition" not in row.locked:
         row.condition = clamp_int(row.condition - damage, 0, PERCENT)
     await battered(ctx, vessel, row, max(0, damage // ctx.rules.vehicles.section_hit), "storm")
-    lost = round_half_up(row.crew * table.storm_crew_pct / PERCENT * (1 - row.seaworthiness / PERCENT))
+    spared = 1 - lives_saved(ctx.rules, row, crews, fitted)
+    lost = round_half_up(row.crew * table.storm_crew_pct / PERCENT * (1 - row.seaworthiness / PERCENT) * spared)
     if "crew" not in row.locked:
         row.crew = max(0, row.crew - lost)
     if row.condition <= table.wreck_condition:
@@ -362,9 +372,10 @@ async def sea_fight(
     rng = ctx.rng(f"vessel_fight.{first[0].id}.{second[0].id}.{ctx.epoch}")
     with explaining() as found:
         powers = []
-        for _, row in (first, second):
+        for vessel, row in (first, second):
             weapons = await weapons_of(ctx, row)
-            powers.append(vessel_power(ctx.rules, row, weather, weapons) * await design_power(ctx.session, row) * (0.8 + rng.below(40) / PERCENT))
+            manning = crew_power(ctx.rules, row, await crews_of(ctx, vessel.id, row), await fitted_stations(ctx.session, vessel.id, row))
+            powers.append(vessel_power(ctx.rules, row, weather, weapons) * await design_power(ctx.session, row) * manning * (0.8 + rng.below(40) / PERCENT))
     terms = found.snapshot()
     fight = await engage(ctx, first, second, (powers[0], powers[1]), tally.sail)
     winner, loser = (first, second) if fight.winner.id == first[0].id else (second, first)
@@ -444,6 +455,7 @@ async def seas(ctx: TickContext) -> SeaTally:
     designs = DesignTally()
     await backfill_vessels(ctx)
     await arm_unarmed(ctx)
+    tally.crews_added = await backfill_crews(ctx.session)
     ground = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
     atlas = await RegionAtlas.load(ctx.session)
     knowledge = await KnowledgeMap.load(ctx.session)

@@ -185,6 +185,7 @@ class EditLoan(Command):
     interest_pct: int | None = Field(default=None, ge=0, le=100)
     due_epoch: int | None = Field(default=None, ge=0)
     repaid: int | None = Field(default=None, ge=0)
+    collateral_node_id: int | None = None
     status: LoanStatus | None = None
     hold: bool | None = None
 
@@ -480,7 +481,13 @@ async def grant_loan(scope: PlayerScope, command: GrantLoan) -> Effect:
 
 @player_action("loan:edit", ActionKind.EDIT_RECORD)
 async def edit_loan(scope: PlayerScope, command: EditLoan) -> Effect:
-    values = {"principal": command.principal, "interest_pct": command.interest_pct, "due_epoch": command.due_epoch, "repaid": command.repaid}
+    values = {
+        "principal": command.principal,
+        "interest_pct": command.interest_pct,
+        "due_epoch": command.due_epoch,
+        "repaid": command.repaid,
+        "collateral_node_id": command.collateral_node_id,
+    }
     loan = await control_depth.edit_loan(await scope.context("loan_edit"), command.loan_id, values, command.status, command.hold)
     held = ", held" if loan.held else ""
     return Effect(f"The loan stands at {loan.principal} and {loan.interest_pct}%, due Epoch {loan.due_epoch}{held}.", loan.borrower_entity_id)

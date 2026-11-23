@@ -74,6 +74,7 @@ class SiegeStatus(StrEnum):
     BREACHED = "breached"
     REPULSED = "repulsed"
     LIFTED = "lifted"
+    SURRENDERED = "surrendered"
 
 
 class BattleOutcome(StrEnum):
@@ -94,6 +95,8 @@ class CaptiveStatus(StrEnum):
     RESCUED = "rescued"
     RELEASED = "released"
     WARD = "ward"
+    PAROLED = "paroled"
+    MARRIED_IN = "married_in"
 
 
 class TributeStatus(StrEnum):

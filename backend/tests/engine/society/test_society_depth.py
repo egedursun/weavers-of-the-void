@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import select
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
-from aerona.catalog.needs import JOB_GOODS, SERVE_ORDER, SHORTFALL_EFFECTS, WORKSHOP_JOBS
+from aerona.catalog.needs import JOB_GOODS, OUTER_SHORTFALLS, SERVE_ORDER, SHORTFALL_EFFECTS, WORKSHOP_JOBS
 from aerona.db.repositories.cosmos import rules_from_snapshot, snapshot_differences
 from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyProfileRow
 from aerona.db.tables.demography import LabourRow, PeopleCultureRow
@@ -77,7 +77,7 @@ STOCKS = {Commodity.FOOD: 120, Commodity.ORE: 120, Commodity.GOODS: 120}
 
 def test_every_commodity_has_a_typed_shortfall_and_a_trade() -> None:
     assert set(SHORTFALL_EFFECTS) == set(CommodityKind)
-    assert set(SHORTFALL_EFFECTS.values()) == set(ShortfallEffect)
+    assert set(SHORTFALL_EFFECTS.values()) == set(ShortfallEffect) - OUTER_SHORTFALLS
     made = {kind for goods in JOB_GOODS.values() for kind in goods}
     assert made == set(CommodityKind)
     assert set(WORKSHOP_JOBS) == set(WorkshopKind)
@@ -259,7 +259,7 @@ async def test_each_shortfall_has_its_mechanical_effect(realm: Realm) -> None:
     await goods_of(realm.session, ctx.epoch).add(town.id, CommodityKind.LIVESTOCK, 1000, GoodsFlow.SEED)
     before = {key: stat(town, key) or 0 for key in ("population", "piety", "prosperity", "defense")}
     shortfalls = {effect: 100 for effect in ShortfallEffect}
-    done = await apply_shortfalls(ctx, town, Basket({}, {}, shortfalls), TemperatureBand.COLD)
+    done = await apply_shortfalls(ctx, town, shortfalls, TemperatureBand.COLD)
     assert set(done) == set(ShortfallEffect)
     assert (stat(town, "population") or 0) < before["population"]
     assert (stat(town, "piety") or 0) < before["piety"]

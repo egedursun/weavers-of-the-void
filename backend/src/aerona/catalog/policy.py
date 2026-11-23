@@ -145,5 +145,7 @@ MANDATE_POLICY: MappingProxyType[MandateKind, Shift] = MappingProxyType(
         MandateKind.SLUM_CLEARANCE: {C.OUTCAST: -5, C.MERCHANT: 2, C.NOBLE: 2},
         MandateKind.PREPARE: {C.ARTISAN: 1, C.FARMER: 1},
         MandateKind.ENCLOSURE: {C.FARMER: -6, C.SERF_OR_SLAVE: -4, C.NOBLE: 4, C.MERCHANT: 2},
+        MandateKind.RATION: {C.MERCHANT: -3, C.NOBLE: -2, C.WORKER: 2, C.FARMER: 1},
+        MandateKind.CORVEE: {C.FARMER: -5, C.WORKER: -4, C.SERF_OR_SLAVE: -3, C.NOBLE: 2},
     }
 )

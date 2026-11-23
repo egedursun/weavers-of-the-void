@@ -28,6 +28,10 @@ class CityPlanRules:
     harbour_housing_pct: int = rule(70, 0, 400, S, "Homes a harbour quarter holds against a district of its level that is only homes (%)")
     citadel_housing_pct: int = rule(50, 0, 400, S, "Homes a citadel holds against a district of its level that is only homes (%)")
     slums_housing_pct: int = rule(150, 0, 400, S, "Homes the slums hold against a district of its level that is only homes (%)")
+    camp_housing_pct: int = rule(180, 0, 400, S, "Shelters a camp of the displaced crowds in against a district of its level that is only homes (%)")
+    lazaretto_housing_pct: int = rule(
+        60, 0, 400, S, "Beds a lazaretto holds for the sick and those held apart against a district of its level that is only homes (%)"
+    )
     palace_housing_pct: int = rule(40, 0, 400, S, "Homes a palace quarter holds against a district of its level that is only homes (%)")
     foreign_quarter_housing_pct: int = rule(110, 0, 400, S, "Homes a foreign quarter holds against a district of its level that is only homes (%)")
     necropolis_housing_pct: int = rule(0, 0, 400, S, "Homes a necropolis holds against a district of its level that is only homes (%)")

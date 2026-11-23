@@ -8,7 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
-from aerona.db.tables.economy import TradeRouteProfileRow
+from aerona.db.tables.economy import ROUTE_DANGER_COLUMNS, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.integrity import MegastructureRow
 from aerona.db.tables.routes import RouteRow
@@ -29,7 +29,6 @@ from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.integrity import integrity_share
 
 K = StructureKind
-ROUTE_DANGERS = ("danger_bandits", "danger_beasts", "danger_weather", "danger_sea")
 
 
 @dataclass
@@ -101,7 +100,7 @@ async def beacon(ctx: TickContext, profile: StructureProfileRow, strength: float
     ):
         if held(route.route_entity_id):
             continue
-        for column in ROUTE_DANGERS:
+        for column in ROUTE_DANGER_COLUMNS:
             if column not in (route.locked or []):
                 setattr(route, column, max(0, getattr(route, column) - relief))
         eased += 1

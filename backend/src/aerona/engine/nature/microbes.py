@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.nature import CULTURED, FOUNDED
+from aerona.catalog.life_traits import CARRYING_ROUTES
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.agrarian import SoilNutrientRow
@@ -19,7 +20,6 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import NutrientKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.disease import OutbreakStatus
-from aerona.domain.enums.economy import TradeRouteStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.nature import FermentKind
 from aerona.engine.context import TickContext
@@ -180,7 +180,7 @@ async def tend_cultures(ctx: TickContext, tally: MicrobeTally) -> None:
 async def trade_cultures(ctx: TickContext, tally: MicrobeTally) -> None:
     table = ctx.rules.fermentation
     routes = await ctx.session.scalars(
-        select(TradeRouteProfileRow).where(TradeRouteProfileRow.status == TradeRouteStatus.OPEN).order_by(TradeRouteProfileRow.route_entity_id)
+        select(TradeRouteProfileRow).where(TradeRouteProfileRow.status.in_(CARRYING_ROUTES)).order_by(TradeRouteProfileRow.route_entity_id)
     )
     for route in list(routes):
         for giver, taker in ((route.first_market_id, route.second_market_id), (route.second_market_id, route.first_market_id)):

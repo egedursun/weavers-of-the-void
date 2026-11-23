@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.kinds.siege import STARVATION
 from aerona.catalog.life.military import BATTER_SIEGE_ACTIONS, DEFENCE_ACTIONS, SIEGE_ACTIONS
+from aerona.catalog.war_w52 import DEFENCES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow
@@ -45,7 +46,6 @@ from aerona.engine.lore.blueprints import design_factor
 from aerona.engine.military.logistics import March, desert, dishearten
 from aerona.engine.military.siege_depth import (
     bombard_factor,
-    build_works,
     burn_districts,
     countermine,
     defender_choice,
@@ -65,6 +65,7 @@ from aerona.engine.military.siege_depth import (
     water_days,
     works_breach,
 )
+from aerona.engine.military.siege_w52 import can_suborn, defend, deport, harsh_defence, hunger_from_works, ordered, raise_works, ransom_city, sapped, suborn
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.museums.hoards import loot
 from aerona.engine.powers.war import breach_by_power
@@ -156,7 +157,7 @@ async def starve(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, rationi
         return
     days = ctx.rules.logistics.season_days
     eaten = round_half_up(days * table.ration_use_pct / PERCENT) if rationing else days
-    eaten = round_half_up(eaten * await ctx.hook_factor(siege.besieger_entity_id, DomainHook.SIEGE_STARVING))
+    eaten = hunger_from_works(ctx, siege, round_half_up(eaten * await ctx.hook_factor(siege.besieger_entity_id, DomainHook.SIEGE_STARVING)))
     if "supplies" not in siege.locked:
         siege.supplies = max(0, siege.supplies - eaten)
     if "water" not in siege.locked:
@@ -165,7 +166,8 @@ async def starve(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, rationi
     if not hungry:
         siege.starvation = StarvationStage.RATIONING if rationing else StarvationStage.NONE
         return
-    famine = int(siege.works.get("famine", 0)) + 1
+    parched = siege.water <= table.famine_days
+    famine = int(siege.works.get("famine", 0)) + (ctx.rules.shortfall.thirst_siege_seasons if parched else 1)
     siege.works = {**siege.works, "famine": famine}
     broke = famine > table.taboo_seasons and not await taboo_holds(ctx, besieged)
     siege.starvation = StarvationStage.TABOO_BROKEN if broke else StarvationStage.FAMINE
@@ -173,13 +175,14 @@ async def starve(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, rationi
 
 async def action_for(ctx: TickContext, siege: SiegeRow, march: March, engines: float) -> SiegeAction:
     table = ctx.rules.siegecraft
-    if siege.last_action is not None and "last_action" in siege.locked:
+    if siege.last_action is not None and ("last_action" in siege.locked or ordered(ctx, siege)):
         return siege.last_action
     rows = await stacks_of(ctx.session, march.army.id)
     sappers = any(row.kind is UnitKind.SAPPERS and row.count > 0 for row in rows)
     choices = (
         (siege.breaches >= table.assault_breaches > 0, SiegeAction.ASSAULT),
         (STARVATION[siege.starvation].starving, SiegeAction.NEGOTIATE),
+        (await can_suborn(ctx, siege), SiegeAction.SUBORN),
         (sappers, SiegeAction.MINE),
         (engines > 0, SiegeAction.BOMBARD),
         (siege.starvation is StarvationStage.RATIONING, SiegeAction.NEGOTIATE),
@@ -243,7 +246,7 @@ def mend(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow |
 
 async def sally(ctx: TickContext, siege: SiegeRow, march: March) -> int:
     rows = await stacks_of(ctx.session, march.army.id)
-    lost = take(rows, round_half_up((stat(march.army, "size") or 0) * ctx.rules.siegecraft.sally_losses_pct / PERCENT))
+    lost = take(rows, sapped(ctx, siege, round_half_up((stat(march.army, "size") or 0) * ctx.rules.siegecraft.sally_losses_pct / PERCENT)))
     sync(march.army, rows, ctx.rules)
     siege.sallies += 1
     return lost
@@ -308,13 +311,14 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
         ctx.session, ctx.rules, march.owner.id, BlueprintKind.SIEGE_ENGINE, UnitKind.SIEGE_CREW.value
     )
     engines *= await siege_power(ctx.session, march.army.id)
-    defence = defender_choice(ctx, siege, garrison, stat(march.army, "size") or 0, walls)
+    defence = await harsh_defence(ctx, siege, march, walls) or defender_choice(ctx, siege, garrison, stat(march.army, "size") or 0, walls)
     walls_before = walls.walls_condition if walls is not None else 0
     breaches_before, works_before = siege.breaches, dict(siege.works or {})
-    await starve(ctx, siege, besieged, defence is DefenderAction.RATION or siege.starvation is not StarvationStage.NONE)
+    await starve(ctx, siege, besieged, DEFENCES[defence].rations or siege.starvation is not StarvationStage.NONE)
     action = await action_for(ctx, siege, march, engines)
-    build_works(ctx, siege, action)
+    await raise_works(ctx, siege, action, march, engines)
     await batter(ctx, siege, walls, action, engines)
+    await press_siege(ctx, siege, besieged, march, (action, defence), walls=walls)
     found = SiegeSeason(siege, action, defence)
     if defence is DefenderAction.SALLY:
         found.sally_dead = await sally(ctx, siege, march)
@@ -517,6 +521,8 @@ async def sack_city(
             await change_relation(ctx, besieged.id, victor.id, depth.infamy, MemoryKind.GOODWILL, note="spared the city")
         ctx.count("cities_spared")
         return report
+    if await spared_otherwise(ctx, report, besieged, victor, siege):
+        return report
     wealth = riches_of(besieged)
     taken = min(wealth, table.sack_loot)
     for key in ("wealth", "prosperity"):
@@ -562,3 +568,32 @@ async def sack_city(
             place=besieged.id,
         )
     return report
+
+
+async def press_siege(
+    ctx: TickContext,
+    siege: SiegeRow,
+    besieged: EntityRow,
+    march: March,
+    moves: tuple[SiegeAction, DefenderAction],
+    *,
+    walls: SettlementInfrastructureRow | None,
+) -> None:
+    action, defence = moves
+    if action is SiegeAction.SUBORN:
+        await suborn(ctx, siege, walls)
+    await defend(ctx, siege, besieged, march, defence)
+
+
+async def spared_otherwise(ctx: TickContext, report: SackReport, besieged: EntityRow, victor: EntityRow | None, siege: SiegeRow | None) -> bool:
+    if victor is None:
+        return False
+    if report.choice is SackChoice.RANSOM_CITY:
+        report.coin = await ransom_city(ctx, besieged, victor)
+        ctx.count("cities_ransomed")
+        return True
+    if report.choice is SackChoice.DEPORT:
+        report.captives = await deport(ctx, besieged, victor, siege.war_id if siege is not None else 0)
+        ctx.count("cities_deported")
+        return True
+    return False

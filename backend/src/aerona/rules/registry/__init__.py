@@ -718,11 +718,57 @@ from aerona.rules.registry.urban_depth import (
     TradingPostRules,
     TurfRules,
 )
-from aerona.rules.registry.w52_agent_a import BreakRules, DeathReadingRules, EmotionRules, FuneralRules, PackageRules
-from aerona.rules.registry.w52_agent_b import InteractionRules, IntoxicantRules, RelationRules
-from aerona.rules.registry.w52_agent_c import DwellingRules, InheritanceRules, RenownAxisRules
-from aerona.rules.registry.w52_agent_d import CrowdRules, IdentityLayerRules, RevivalWayRules
-from aerona.rules.registry.w52_agent_e import ArtMarketRoleRules, ClubRules, CulturalRightsRules, GiftExchangeRules
+from aerona.rules.registry.w52_agent_a import (
+    BreakRules,
+    CoopRules,
+    CourtLevelRules,
+    CourtRules,
+    CrisisRules,
+    DeathReadingRules,
+    EmotionRules,
+    FuneralRules,
+    LawAreaRules,
+    MandatesRules,
+    MembershipRules,
+    PackageRules,
+    PatronageRules,
+)
+from aerona.rules.registry.w52_agent_b import InteractionRules, IntoxicantRules, ProductionRules, RelationRules, TongueRules, WorkshopRules
+from aerona.rules.registry.w52_agent_c import (
+    DwellingRules,
+    FugitiveRules,
+    InheritanceRules,
+    LockRules,
+    RebuildingRules,
+    RenownAxisRules,
+    ShortfallRules,
+    UnderworldRules,
+    WaterLiftRules,
+)
+from aerona.rules.registry.w52_agent_d import (
+    CouncilOfWorldsRules,
+    CrowdRules,
+    DispatchRules,
+    EnvoyRules,
+    FavourOriginRules,
+    HookDemandRules,
+    IdentityLayerRules,
+    OpinionSubjectRules,
+    RevivalWayRules,
+    SecretKindRules,
+    SignalRules,
+)
+from aerona.rules.registry.w52_agent_e import (
+    ArmyStaffRules,
+    ArtMarketRoleRules,
+    CampaignRules,
+    ClubRules,
+    CulturalRightsRules,
+    GiftExchangeRules,
+    SackRules,
+    SiegeRules,
+)
+from aerona.rules.registry.w52_agent_f import CaptivesRules, CrewsRules
 from aerona.rules.registry.war_conduct import WarConductRules
 from aerona.rules.registry.war_depth import (
     BattleMagicRules,
@@ -779,6 +825,14 @@ class Rules:
     succession_stages: StageAdvanceRules = field(default_factory=StageAdvanceRules)
     land_memory: LandMemoryRules = field(default_factory=LandMemoryRules)
     secrets: SecretsRules = field(default_factory=SecretsRules)
+    council_of_worlds: CouncilOfWorldsRules = field(default_factory=CouncilOfWorldsRules)
+    dispatches: DispatchRules = field(default_factory=DispatchRules)
+    envoys: EnvoyRules = field(default_factory=EnvoyRules)
+    signals: SignalRules = field(default_factory=SignalRules)
+    opinion_subjects: OpinionSubjectRules = field(default_factory=OpinionSubjectRules)
+    secret_kinds: SecretKindRules = field(default_factory=SecretKindRules)
+    hooks: HookDemandRules = field(default_factory=HookDemandRules)
+    favours: FavourOriginRules = field(default_factory=FavourOriginRules)
     rocks: RocksRules = field(default_factory=RocksRules)
     underground: UndergroundRules = field(default_factory=UndergroundRules)
     rivers: RiversRules = field(default_factory=RiversRules)
@@ -903,6 +957,9 @@ class Rules:
     social: SocialRules = field(default_factory=SocialRules)
     relations: RelationRules = field(default_factory=RelationRules)
     interactions: InteractionRules = field(default_factory=InteractionRules)
+    tongues: TongueRules = field(default_factory=TongueRules)
+    production: ProductionRules = field(default_factory=ProductionRules)
+    workshops: WorkshopRules = field(default_factory=WorkshopRules)
     circles: CircleRules = field(default_factory=CircleRules)
     passions: PassionRules = field(default_factory=PassionRules)
     persuasion: PersuasionRules = field(default_factory=PersuasionRules)
@@ -1165,6 +1222,12 @@ class Rules:
     renown: RenownAxisRules = field(default_factory=RenownAxisRules)
     inheritance: InheritanceRules = field(default_factory=InheritanceRules)
     dwellings: DwellingRules = field(default_factory=DwellingRules)
+    shortfall: ShortfallRules = field(default_factory=ShortfallRules)
+    rebuilding: RebuildingRules = field(default_factory=RebuildingRules)
+    water_lift: WaterLiftRules = field(default_factory=WaterLiftRules)
+    locks: LockRules = field(default_factory=LockRules)
+    underworld: UnderworldRules = field(default_factory=UnderworldRules)
+    fugitives: FugitiveRules = field(default_factory=FugitiveRules)
     currencies: CurrencyRules = field(default_factory=CurrencyRules)
     lore_trade: LoreTradeRules = field(default_factory=LoreTradeRules)
     claims: ClaimRules = field(default_factory=ClaimRules)
@@ -1294,6 +1357,14 @@ class Rules:
     cosmic_horror: CosmicHorrorRules = field(default_factory=CosmicHorrorRules)
     costs: CostsRules = field(default_factory=CostsRules)
     council: CouncilRules = field(default_factory=CouncilRules)
+    mandates: MandatesRules = field(default_factory=MandatesRules)
+    crisis: CrisisRules = field(default_factory=CrisisRules)
+    court: CourtRules = field(default_factory=CourtRules)
+    patronage: PatronageRules = field(default_factory=PatronageRules)
+    membership: MembershipRules = field(default_factory=MembershipRules)
+    law: LawAreaRules = field(default_factory=LawAreaRules)
+    courts: CourtLevelRules = field(default_factory=CourtLevelRules)
+    coops: CoopRules = field(default_factory=CoopRules)
     creation_base_cost: CreationBaseCostRules = field(default_factory=CreationBaseCostRules)
     creator: CreatorRules = field(default_factory=CreatorRules)
     creatures: CreaturesRules = field(default_factory=CreaturesRules)
@@ -1405,9 +1476,15 @@ class Rules:
     kin_dynamics: KinDynamicsRules = field(default_factory=KinDynamicsRules)
     feeling_spread: FeelingSpreadRules = field(default_factory=FeelingSpreadRules)
     gifts: GiftExchangeRules = field(default_factory=GiftExchangeRules)
+    crews: CrewsRules = field(default_factory=CrewsRules)
+    captives: CaptivesRules = field(default_factory=CaptivesRules)
     art_market: ArtMarketRoleRules = field(default_factory=ArtMarketRoleRules)
     rights: CulturalRightsRules = field(default_factory=CulturalRightsRules)
     clubs: ClubRules = field(default_factory=ClubRules)
+    campaign: CampaignRules = field(default_factory=CampaignRules)
+    armies: ArmyStaffRules = field(default_factory=ArmyStaffRules)
+    siege: SiegeRules = field(default_factory=SiegeRules)
+    sack: SackRules = field(default_factory=SackRules)
     grave_goods: GraveGoodsRules = field(default_factory=GraveGoodsRules)
     agentless_conditions: AgentlessConditionsRules = field(default_factory=AgentlessConditionsRules)
     fertility_means: FertilityMeansRules = field(default_factory=FertilityMeansRules)

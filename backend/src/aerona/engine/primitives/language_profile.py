@@ -7,8 +7,10 @@ from aerona.constants.engine import (
     DEFAULT_PROFILE_SYLLABLES,
     DEFAULT_PROFILE_VOWELS,
 )
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
+from aerona.domain.enums.tongues import NumeralBase
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.primitives.naming import seed_of
 
@@ -29,9 +31,16 @@ async def language_profile(session: AsyncSession, language: EntityRow, parent_id
     world = await session.get(WorldRow, language.world_id)
     phonology = parent.phonology if parent is not None else (world.phonology if world is not None and world.phonology is not None else DEFAULT_PHONOLOGY)
     profile = LanguageProfileRow(entity_id=language.id, phonology=phonology, seed=seed_of("language", language.id), parent_language_id=parent_id)
+    profile.numeral_base = parent.numeral_base if parent is not None else await genesis_base(session)
     session.add(profile)
     await session.flush()
     return profile
+
+
+async def genesis_base(session: AsyncSession) -> NumeralBase:
+    cosmos = await CosmosRepository(session).get()
+    settings = cosmos.genesis_settings if cosmos is not None else None
+    return settings.numeral_base if settings is not None and settings.numeral_base is not None else NumeralBase.DECIMAL
 
 
 async def has_script(session: AsyncSession, language_id: int) -> bool:

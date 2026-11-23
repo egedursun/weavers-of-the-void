@@ -7,14 +7,16 @@ CARRIERS: MappingProxyType[TradeMode, tuple[frozenset[VehicleDomain], frozenset[
     {
         TradeMode.ROAD: (
             frozenset({VehicleDomain.LAND}),
-            frozenset({VehicleFamily.CART, VehicleFamily.WAGON, VehicleFamily.MOTOR, VehicleFamily.RAIL, VehicleFamily.CONSTRUCT}),
+            frozenset({VehicleFamily.MOUNT, VehicleFamily.CART, VehicleFamily.WAGON, VehicleFamily.MOTOR, VehicleFamily.RAIL, VehicleFamily.CONSTRUCT}),
         ),
-        TradeMode.CARAVAN: (frozenset({VehicleDomain.LAND}), frozenset({VehicleFamily.MOUNT, VehicleFamily.CART, VehicleFamily.WAGON})),
         TradeMode.RIVER: (frozenset({VehicleDomain.WATER}), frozenset({VehicleFamily.BOAT, VehicleFamily.GALLEY, VehicleFamily.STEAM_SHIP})),
         TradeMode.SEA: (
             frozenset({VehicleDomain.WATER}),
             frozenset({VehicleFamily.SAILING_SHIP, VehicleFamily.STEAM_SHIP, VehicleFamily.GALLEY, VehicleFamily.BOAT, VehicleFamily.LIVING}),
         ),
         TradeMode.SKY: (frozenset({VehicleDomain.AIR}), frozenset({VehicleFamily.AIRSHIP, VehicleFamily.BALLOON, VehicleFamily.AIRCRAFT})),
+        TradeMode.SPACE: (frozenset({VehicleDomain.SPACE}), frozenset()),
+        TradeMode.RIFT: (frozenset({VehicleDomain.PLANAR}), frozenset()),
+        TradeMode.NETWORK: (frozenset(), frozenset()),
     }
 )

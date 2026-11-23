@@ -93,7 +93,44 @@ async def turf(ctx: TickContext) -> None:
     count(ctx, "turf", tally)
 
 
-@reads("table.crime_stances", "table.entities", "table.faction_profiles", "table.nodes")
+@reads(
+    "faction.wealth",
+    "table.bonds",
+    "table.crime_payroll",
+    "table.crime_stances",
+    "table.districts",
+    "table.entities",
+    "table.faction_memberships",
+    "table.faction_profiles",
+    "table.hooks",
+    "table.name_registry",
+    "table.node_births",
+    "table.nodes",
+    "table.offices",
+    "table.organisation_kinds",
+    "table.polity_members",
+    "table.rackets",
+    "table.settlement_profiles",
+    "table.turf",
+    "table.youth_groups",
+)
+@writes(
+    "table.applied_fixups",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.crime_payroll",
+    "table.entities",
+    "table.faction_profiles",
+    "table.hooks",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.mortal_profiles",
+    "table.name_registry",
+    "table.node_births",
+    "table.organisation_kinds",
+)
 async def crime_orgs(ctx: TickContext) -> None:
     tally = CrimeTally()
     await run_underworld(ctx, tally)
@@ -114,6 +151,7 @@ async def crime_orgs(ctx: TickContext) -> None:
     "table.nodes",
     "table.polity_members",
     "table.polity_profiles",
+    "table.region_geology",
     "table.resource_profiles",
     "table.secrets",
     "table.skills",
@@ -168,6 +206,7 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.disease_cures",
     "table.disease_profiles",
     "table.disease_routes",
+    "table.districts",
     "table.drink_kinds",
     "table.endemic_diseases",
     "table.entities",

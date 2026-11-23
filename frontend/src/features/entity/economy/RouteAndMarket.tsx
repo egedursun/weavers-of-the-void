@@ -23,6 +23,7 @@ import {
   TriangleAlert,
   Undo2,
   Utensils,
+  CalendarX,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -47,6 +48,7 @@ import {
 import { LineChart } from '@/components/domain/LineChart'
 import { Muted, Stat, Text } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
+import { TRANSPORTS } from '@/features/operations/labels'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import {
@@ -690,6 +692,22 @@ export function RouteBanner({ route }: { route: RouteView }) {
           value={`${route.season_pct}% in the worst season`}
           tone={seasonTone(route.season_pct)}
         />
+        {route.closed_season !== null && (
+          <IconStat
+            icon={CalendarX}
+            label='Season the route closes each year'
+            value={`Shut in ${route.seasons[route.closed_season] ?? 'its closed season'}`}
+            tone='warning'
+          />
+        )}
+        {route.carrier !== null && (
+          <IconStat
+            icon={TRANSPORTS[route.carrier].icon}
+            label='What carries the goods'
+            value={`Carried by ${TRANSPORTS[route.carrier].label.toLowerCase()}`}
+            tone={TRANSPORTS[route.carrier].tone}
+          />
+        )}
         {route.chokepoint && (
           <Badge variant='warning'>
             <Mountain />

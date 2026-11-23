@@ -1,38 +1,41 @@
 import {
-  Wine,
-  Factory,
   BadgeCheck,
-  Package,
-  Wallet,
-  Fence,
-  ShieldCheck,
-  Shovel,
   Ban,
-  Globe2,
-  GraduationCap,
-  HeartPulse,
-  PartyPopper,
-  ScrollText,
+  BookOpen,
   Briefcase,
   Building2,
   Church,
   Coins,
   Crown,
+  Drama,
   Eye,
+  Factory,
+  Fence,
   Gem,
+  Globe2,
+  GraduationCap,
   Hammer,
   HandCoins,
   Handshake,
+  HeartPulse,
   Home,
   Landmark,
   Medal,
   Moon,
+  Package,
+  PartyPopper,
+  Pickaxe,
   Scale,
+  ScrollText,
   Search,
   Shield,
+  ShieldCheck,
+  Shovel,
   Swords,
-  Wheat,
   Vote,
+  Wallet,
+  Wheat,
+  Wine,
 } from 'lucide-react'
 import {
   bondRoleValues,
@@ -83,6 +86,13 @@ export const TASKS: Record<string, Named> = {
     icon: Search,
     tone: 'success',
   },
+  oversee_works: { label: 'Oversee the works', icon: Hammer, tone: 'info' },
+  promote_trade: { label: 'Promote trade', icon: Coins, tone: 'gold' },
+  advance_learning: {
+    label: 'Advance learning',
+    icon: BookOpen,
+    tone: 'verdigris',
+  },
 }
 
 export const TAX_KINDS: Record<components['schemas']['TaxKind'], Named> = {
@@ -113,6 +123,8 @@ export const MANDATE_KINDS: Record<string, Named> = {
   slum_clearance: { label: 'Slum clearance', icon: Shovel, tone: 'warning' },
   prepare: { label: 'Works against disaster', icon: ShieldCheck, tone: 'info' },
   enclosure: { label: 'Enclosure of the commons', icon: Fence, tone: 'danger' },
+  ration: { label: 'Rationing by rule', icon: Scale, tone: 'warning' },
+  corvee: { label: 'Called-out labour', icon: Pickaxe, tone: 'danger' },
 }
 
 export const MANDATE_STATES: Record<string, Named> = {
@@ -156,6 +168,8 @@ export const POSITIONS: Record<string, Named> = {
     icon: PartyPopper,
     tone: 'gold',
   },
+  jester: { label: 'Jester', icon: Drama, tone: 'warning' },
+  seer: { label: 'Seer', icon: Eye, tone: 'verdigris' },
 }
 
 export function labelTable(

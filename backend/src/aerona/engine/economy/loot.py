@@ -30,7 +30,7 @@ async def temple_hoard(ctx: TickContext, temple: EntityRow, book: MaterialBook) 
     table = ctx.rules.money
     node = await node_material(ctx.session, temple.id, MaterialSlot.BODY)
     props = book.props(temple.world_id, node.material, node.world_material_id) if node is not None else None
-    lift = (worth(props) - MIDDLE) / PERCENT * table.temple_worth_pct / PERCENT if props is not None else 0.0
+    lift = (worth(ctx.rules, props) - MIDDLE) / PERCENT * table.temple_worth_pct / PERCENT if props is not None else 0.0
     units = max(1, round_half_up(table.temple_hoard_units * (1 + lift)))
     metal = node.material if node is not None and node.material in LUXURY_MATERIALS else MaterialKind.GOLD
     return units, metal

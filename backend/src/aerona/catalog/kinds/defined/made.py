@@ -84,7 +84,9 @@ RELIC_USE = total(
             checked_by=("engine.made.relics.keep_relic",),
             used_by=("db.tables.made.MadeRelicRow", "engine.made.control.mark_relic", "engine.made.relics.mark_collapse"),
         ),
-        RelicUse.REPURPOSED: Defined("Studied and repurposed", checked_by=("engine.made.relics.keep_relic",), used_by=("tools.mortal.minds.study_relic",)),
+        RelicUse.REPURPOSED: Defined(
+            "Studied and repurposed", checked_by=("engine.made.relics.keep_relic",), used_by=("catalog.life.made.STANCE_USE", "tools.mortal.minds.study_relic")
+        ),
         RelicUse.REVERED: Defined("Revered", checked_by=(), used_by=("catalog.life.made.STANCE_USE",)),
         RelicUse.DISPLAYED: Defined("Displayed", checked_by=(), used_by=("catalog.life.made.STANCE_USE",)),
         RelicUse.FEARED: Defined("Feared", checked_by=(), used_by=("catalog.life.made.STANCE_USE",)),

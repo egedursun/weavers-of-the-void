@@ -39,7 +39,12 @@ async def node_grounds(services: ServicesDep, node_id: NodeId) -> GroundsNodeVie
         gardens = list(await session.scalars(select(GardenRow).where(GardenRow.settlement_entity_id == keeper.id).order_by(GardenRow.id)))
         ids = {keeper.id}
         ids |= {item for hoard in hoards for item in (hoard.structure_entity_id,) if item}
-        ids |= {item for piece in pieces for item in (piece.item_entity_id, piece.looted_from_entity_id, piece.returned_by_entity_id) if item}
+        ids |= {
+            item
+            for piece in pieces
+            for item in (piece.item_entity_id, piece.looted_from_entity_id, piece.returned_by_entity_id, piece.polity_entity_id)
+            if item
+        }
         ids |= {item for garden in gardens for item in (garden.structure_entity_id, *garden.species) if item}
         refs = await node_refs(session, sorted(ids))
         return GroundsNodeView(
@@ -61,6 +66,7 @@ async def node_grounds(services: ServicesDep, node_id: NodeId) -> GroundsNodeVie
                             fossil_bed_id=piece.fossil_bed_id,
                             acquired_epoch=piece.acquired_epoch,
                             looted_from=refs.get(piece.looted_from_entity_id) if piece.looted_from_entity_id else None,
+                            polity=refs.get(piece.polity_entity_id) if piece.polity_entity_id else None,
                             returned_epoch=piece.returned_epoch,
                             returned_by=refs.get(piece.returned_by_entity_id) if piece.returned_by_entity_id else None,
                             locked=list(piece.locked),

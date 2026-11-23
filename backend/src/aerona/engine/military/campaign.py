@@ -6,6 +6,7 @@ from aerona.catalog.life_traits import COMMANDER_TRAIT_TRAITS, having
 from aerona.catalog.mind_split import BOLD_FACETS
 from aerona.catalog.movement import FOOT, best_passage
 from aerona.catalog.units import UNITS
+from aerona.catalog.war_w52 import FALLEN_STATES
 from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
@@ -27,7 +28,6 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.records import StepAction
-from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.agrarian.book import fell_plantings
 from aerona.engine.body.hits import Harm
 from aerona.engine.body.variants import fear_of, fear_of_id
@@ -36,6 +36,7 @@ from aerona.engine.environment.book import add_scar
 from aerona.engine.folkways.biases import lean
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.clash import traits_of
+from aerona.engine.military.raids import escorted_take
 from aerona.engine.military.support import reluctance, support_of
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.mind.book import values_for
@@ -296,7 +297,7 @@ async def kin_of(ctx: TickContext, community_id: int) -> set[int]:
 
 async def stricken_homes(ctx: TickContext, atlas: RegionAtlas) -> set[int]:
     homes: set[int] = set()
-    for siege in await ctx.session.scalars(select(SiegeRow).where(SiegeRow.status == SiegeStatus.BREACHED, SiegeRow.ended_epoch >= ctx.epoch - 1)):
+    for siege in await ctx.session.scalars(select(SiegeRow).where(SiegeRow.status.in_(list(FALLEN_STATES)), SiegeRow.ended_epoch >= ctx.epoch - 1)):
         homes.add(siege.besieged_entity_id)
     for occupation in await ctx.session.scalars(select(OccupationRow)):
         homes.update(atlas.communities_in(occupation.region_entity_id))
@@ -388,6 +389,7 @@ def raid_supply(rules: Rules, raider: ArmyProfileRow, victim: ArmyProfileRow) ->
     if raider.stance is not Stance.RAID or "supply_days" in victim.locked:
         return 0
     taken = min(victim.supply_days, rules.campaign_depth.raid_supply_days)
+    taken = escorted_take(rules, victim, taken)
     victim.supply_days -= taken
     raider.supply_days += taken // 2
     return taken

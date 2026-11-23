@@ -85,6 +85,8 @@ class AidKind(StrEnum):
 class RebuildPlan(StrEnum):
     PLANNED = "planned"
     OPPORTUNISTIC = "opportunistic"
+    RELOCATED = "relocated"
+    ABANDONED = "abandoned"
 
 
 class RebuildCause(StrEnum):
@@ -93,6 +95,9 @@ class RebuildCause(StrEnum):
     QUAKE = "quake"
     STORM = "storm"
     SACK = "sack"
+    ERUPTION = "eruption"
+    SEA_WAVE = "sea_wave"
+    LANDSLIDE = "landslide"
 
 
 class KeystoneUse(StrEnum):

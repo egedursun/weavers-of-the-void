@@ -19,6 +19,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.life_traits import ActKindTrait, ThoughtKindTrait
+from aerona.domain.enums.military import DuelEnd
 from aerona.domain.enums.mind import ActKind, EthicalStance, HonourModel, MemoryKind, PressureKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
@@ -43,6 +44,7 @@ ETHICS_LOCK = "ethics"
 ETHICS_KEY = "ethics"
 STANCE_FIELD = "stance"
 MODEL_FIELD = "model"
+DUEL_END_FIELD = "duel_end"
 ACTIVE_WAR_STATUSES = (WarStatus.MOBILIZING, WarStatus.ONGOING)
 WAR_ACTS = having(ACT_KIND_TRAITS, ActKindTrait.WAR_ACTS)
 FAMINE_ACTS = having(ACT_KIND_TRAITS, ActKindTrait.FAMINE_ACTS)
@@ -247,6 +249,18 @@ async def conscience(ctx: TickContext, actor_id: int, act: ActKind, victim_id: i
 async def honour_of(session: AsyncSession, culture_id: int | None) -> HonourModel:
     row = await session.get(CultureHonourRow, culture_id) if culture_id is not None else None
     return row.model if row is not None else HonourModel.DIGNITY
+
+
+async def duel_end_of(session: AsyncSession, culture_id: int | None) -> DuelEnd:
+    row = await session.get(CultureHonourRow, culture_id) if culture_id is not None else None
+    if row is not None and row.duel_end is not None:
+        return row.duel_end
+    return HONOUR_MODELS[row.model if row is not None else HonourModel.DIGNITY].duel_end
+
+
+async def custom_end(session: AsyncSession, mortal_id: int) -> DuelEnd:
+    culture = await culture_of(session, mortal_id)
+    return await duel_end_of(session, culture.id if culture is not None else None)
 
 
 async def guilt_scale(session: AsyncSession, culture_id: int | None) -> int:

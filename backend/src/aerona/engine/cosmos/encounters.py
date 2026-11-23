@@ -13,25 +13,26 @@ from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.thin_sections import JourneyEncounterRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.travel import ArrivalOutcome, EncounterEffect, JourneyEventKind, RouteEnvironment, TravelMethod
+from aerona.domain.enums.economy import TradeMode
+from aerona.domain.enums.travel import ArrivalOutcome, EncounterEffect, JourneyEventKind, TravelMethod
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import add_event
 from aerona.engine.primitives.numbers import clamp_percent
 
-E = RouteEnvironment
+E = TradeMode
 M = TravelMethod
-ENVIRONMENTS: Mapping[TravelMethod, RouteEnvironment] = total(
+ENVIRONMENTS: Mapping[TravelMethod, TradeMode] = total(
     TravelMethod,
     {
-        M.ANCIENT_GATE: E.LAND,
+        M.ANCIENT_GATE: E.ROAD,
         M.SPACE_FOLD: E.SPACE,
         M.LIGHT_SAIL: E.SPACE,
-        M.CARRIER_MOUNT: E.AIR,
+        M.CARRIER_MOUNT: E.SKY,
         M.DREAM_JOURNEY: E.NETWORK,
         M.DEATH_CURRENT: E.SEA,
-        M.DIVINE_BRIDGE: E.AIR,
+        M.DIVINE_BRIDGE: E.SKY,
         M.SLINGSHOT_ORBIT: E.SPACE,
-        M.CARRIED_WITHIN: E.LAND,
+        M.CARRIED_WITHIN: E.ROAD,
         M.WORMHOLE: E.SPACE,
         M.VOID_ARK: E.SPACE,
         M.GALACTIC_GATE: E.SPACE,
@@ -75,7 +76,7 @@ class JourneyCounts:
 async def seed_encounters(ctx: TickContext) -> int:
     known = {(row.environment, row.effect) for row in await ctx.session.scalars(select(JourneyEncounterRow).where(JourneyEncounterRow.world_id.is_(None)))}
     added = 0
-    for environment in RouteEnvironment:
+    for environment in TradeMode:
         for effect in EncounterEffect:
             if (environment, effect) in known:
                 continue

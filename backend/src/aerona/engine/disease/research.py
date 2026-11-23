@@ -18,6 +18,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.aiding import lens_in
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.lore.truth import ruling_truths
@@ -111,6 +112,7 @@ async def study(ctx: TickContext, tally: ResearchTally) -> None:
         await ctx.session.flush()
         scholars = await scholars_of(ctx.session, institution.location_id, table.scholar_skill)
         theory = 1 + table.theory_pct / PERCENT if truths.get(institution.location_id, 0) >= ctx.rules.carriers.theory_truth else 1.0
+        theory *= 1 + ctx.rules.aids.microscope_research_pct / PERCENT if await lens_in(ctx.session, institution.location_id) else 1.0
         for row in list(await ctx.session.scalars(select(CureResearchRow).where(CureResearchRow.institution_entity_id == institution.id))):
             if row.cured_epoch is not None or held(row.disease_entity_id):
                 continue

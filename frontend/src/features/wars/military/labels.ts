@@ -110,6 +110,10 @@ import {
   Atom,
   ShieldEllipsis,
   Radar,
+  DoorOpen,
+  UserMinus,
+  MessageSquareWarning,
+  PackageOpen,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -135,6 +139,13 @@ export const STANCE: Record<string, Named> = {
   garrison: { label: 'In garrison', icon: Castle, tone: 'info' },
   raid: { label: 'Raiding', icon: Flame, tone: 'warning' },
   retreat: { label: 'Retreating', icon: Undo2, tone: 'muted' },
+  winter_quarters: {
+    label: 'In winter quarters',
+    icon: Snowflake,
+    tone: 'info',
+  },
+  pursue: { label: 'Pursuing', icon: Route, tone: 'danger' },
+  escort: { label: 'Escorting convoys', icon: ShieldPlus, tone: 'verdigris' },
 }
 
 export const DOCTRINE: Record<Schemas['MartialStyle'], Named> = {
@@ -198,6 +209,8 @@ export const FATE: Record<string, Named> = {
   labour: { label: 'Forced labour', icon: Pickaxe, tone: 'warning' },
   exchanged: { label: 'Exchanged', icon: ArrowRightLeft, tone: 'info' },
   released: { label: 'Released', icon: LockOpen, tone: 'success' },
+  executed: { label: 'Executed', icon: Skull, tone: 'danger' },
+  recruited: { label: 'Pressed into the army', icon: Swords, tone: 'warning' },
 }
 
 export const TRAIT: Record<Schemas['CommanderTrait'], Named> = {
@@ -402,6 +415,17 @@ export const OPERATION: Record<string, Named> = {
   intel: { label: 'Gathered intelligence', icon: Binoculars, tone: 'info' },
   blackmail: { label: 'Blackmail', icon: KeyRound, tone: 'warning' },
   counterfeit: { label: 'Counterfeit coin', icon: Banknote, tone: 'warning' },
+  infiltrate: { label: 'Placed an agent inside', icon: DoorOpen, tone: 'info' },
+  exfiltrate: {
+    label: 'Brought an agent out',
+    icon: PackageOpen,
+    tone: 'warning',
+  },
+  disinform: {
+    label: 'Fed false beliefs',
+    icon: MessageSquareWarning,
+    tone: 'danger',
+  },
 }
 
 export const SIEGE_STATUS: Record<string, Named> = {
@@ -409,6 +433,7 @@ export const SIEGE_STATUS: Record<string, Named> = {
   breached: { label: 'Walls breached', icon: BrickWall, tone: 'danger' },
   repulsed: { label: 'Siege repulsed', icon: ShieldCheck, tone: 'success' },
   lifted: { label: 'Siege lifted', icon: Flag, tone: 'muted' },
+  surrendered: { label: 'Surrendered on terms', icon: Handshake, tone: 'gold' },
 }
 
 export const STARVATION: Record<string, Named> = {
@@ -424,6 +449,7 @@ export const SIEGE_ACTION: Record<string, Named> = {
   mine: { label: 'Mining the walls', icon: Pickaxe, tone: 'warning' },
   assault: { label: 'Assault', icon: Swords, tone: 'danger' },
   negotiate: { label: 'Parley', icon: Handshake, tone: 'info' },
+  suborn: { label: 'Suborning the garrison', icon: Coins, tone: 'warning' },
 }
 
 export const DEFENCE: Record<string, Named> = {
@@ -431,6 +457,21 @@ export const DEFENCE: Record<string, Named> = {
   repair: { label: 'Repairing walls', icon: Hammer, tone: 'info' },
   ration: { label: 'Rationing', icon: Scale, tone: 'warning' },
   seek_relief: { label: 'Seeking relief', icon: Megaphone, tone: 'gold' },
+  flood_approaches: {
+    label: 'Flooding the approaches',
+    icon: Waves,
+    tone: 'info',
+  },
+  scorched_earth: {
+    label: 'Burning the land around',
+    icon: Flame,
+    tone: 'danger',
+  },
+  expel_mouths: {
+    label: 'Driving out those who cannot fight',
+    icon: UserMinus,
+    tone: 'warning',
+  },
 }
 
 export const WORKS: Record<string, Named> = {

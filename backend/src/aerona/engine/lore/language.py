@@ -76,7 +76,14 @@ async def compute(session: AsyncSession, rules: Rules, first: int, second: int) 
     if heard <= 0:
         return 0
     sounds = round_half_up(await phonology_similarity(session, first, second) * rules.interpreters.phonology_pct)
-    return clamp_int(heard + sounds, 0, PERCENT)
+    return clamp_int(round_half_up((heard + sounds) * await modality_gap(session, rules, first, second)), 0, PERCENT)
+
+
+async def modality_gap(session: AsyncSession, rules: Rules, first: int, second: int) -> float:
+    one, other = await session.get(LanguageProfileRow, first), await session.get(LanguageProfileRow, second)
+    if one is None or other is None or one.modality is other.modality:
+        return 1.0
+    return 1 - rules.tongues.interpreter_gap_pct / PERCENT
 
 
 def overlap(first: tuple[str, ...], second: tuple[str, ...]) -> float:

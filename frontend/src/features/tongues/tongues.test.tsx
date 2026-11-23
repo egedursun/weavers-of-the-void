@@ -8,6 +8,7 @@ import {
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TonguesSection } from './TonguesSection'
+import { BASES, MODALITIES, STAGES } from './labels'
 
 vi.mock('@/api/client', async () => {
   const { createFakeClient } = await import('@/test-utils/fakeApi')
@@ -58,6 +59,8 @@ describe('tongues', () => {
       language: {
         modality: 'vocal',
         stage: 'natural',
+        numeral_base: 'decimal',
+        ancestor: null,
         writing_system: 'logographic',
         script: SCRIPT,
         lineage: [
@@ -146,6 +149,61 @@ describe('tongues', () => {
     expect(callsTo('POST', '/api/actions/sound_change:delete')[0].body).toEqual(
       { change_id: 9 }
     )
+  })
+
+  it('shows a revived tongue’s ancestor and counting base and changes the base', async () => {
+    serveBase()
+    onApi('GET', '/api/tongues/of/30', {
+      ...EMPTY,
+      node: TONGUE,
+      language: {
+        modality: 'tactile',
+        stage: 'revived',
+        numeral_base: 'vigesimal',
+        ancestor: { id: 31, kind: 'entity', name: 'Old Velari' },
+        writing_system: null,
+        script: null,
+        lineage: [],
+        grammar: null,
+        changes: [],
+        decipher: null,
+        policies: [],
+        shifts: [],
+        sacred_to: null,
+      },
+    })
+    onApi('POST', '/api/actions/tongue:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<TonguesSection nodeId={30} />)
+    await expect
+      .element(
+        screen.getByText(
+          `${MODALITIES.tactile.label} · ${STAGES.revived.label}`
+        )
+      )
+      .toBeVisible()
+    await expect
+      .element(screen.getByText(`${BASES.vigesimal.label} · Unwritten`))
+      .toBeVisible()
+    await expect.element(screen.getByText('Old Velari')).toBeVisible()
+    await screen.getByRole('button', { name: 'Adjust' }).first().click()
+    await expect
+      .element(
+        screen.getByRole('button', { name: 'Hold these values' }).first()
+      )
+      .toBeDisabled()
+    await screen.getByRole('combobox', { name: 'Counting base' }).click()
+    await screen.getByRole('option', { name: BASES.duodecimal.label }).click()
+    await screen
+      .getByRole('button', { name: 'Hold these values' })
+      .first()
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/tongue:edit'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/tongue:edit')[0].body).toEqual({
+      language_id: 30,
+      values: { numeral_base: 'duodecimal' },
+    })
   })
 
   it('shows a god’s sacred tongue and takes it away', async () => {

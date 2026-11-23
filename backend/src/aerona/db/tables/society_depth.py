@@ -9,7 +9,7 @@ from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.society_depth import DriftCause, LabourReason, MobilityEvent
+from aerona.domain.enums.society_depth import DriftCause, LabourReason, MobilityEvent, ShortfallEffect
 
 WIDE_PCT = PERCENT_MAX * 10
 
@@ -30,6 +30,17 @@ class CommunityNeedRow(Base):
     got: Mapped[int] = mapped_column(default=0)
     held_pct: Mapped[int | None]
     epoch: Mapped[int] = mapped_column(default=0)
+
+
+class CommunityShortfallRow(Base):
+    __tablename__ = "community_shortfalls"
+    __table_args__ = (between("short_pct", PERCENT_MIN, PERCENT_MAX), Index("ix_community_shortfalls_community", "community_entity_id"))
+
+    community_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    effect: Mapped[ShortfallEffect] = mapped_column(enum_type(ShortfallEffect, "effect"), primary_key=True)
+    short_pct: Mapped[int] = mapped_column(default=0)
+    epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class ClassStandingRow(Base):

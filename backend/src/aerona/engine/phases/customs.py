@@ -14,6 +14,7 @@ from aerona.engine.phases.dominion import count
 
 
 @reads(
+    "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
@@ -45,6 +46,7 @@ from aerona.engine.phases.dominion import count
     "table.culture_values",
     "table.dimensions",
     "table.entities",
+    "table.entity_tags",
     "table.faction_memberships",
     "table.foreign_gods",
     "table.galaxies",
@@ -105,6 +107,7 @@ from aerona.engine.phases.dominion import count
     "table.settlement_profiles",
     "table.species_ranges",
     "table.time_budgets",
+    "table.traits",
     "table.true_names",
 )
 async def customs(ctx: TickContext) -> None:
@@ -181,32 +184,49 @@ async def town_life(ctx: TickContext) -> None:
     "table.bonds",
     "table.border_controls",
     "table.case_witnesses",
+    "table.community_cohorts",
+    "table.cosmos",
     "table.crime_cases",
+    "table.dimensional_events",
+    "table.dimensions",
     "table.entities",
     "table.evidence",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.measure_standards",
     "table.media_items",
     "table.media_outlets",
     "table.membership_categories",
     "table.memberships",
     "table.mortal_profiles",
+    "table.natural_law_profiles",
     "table.nodes",
+    "table.oaths",
     "table.offices",
     "table.polity_members",
     "table.polity_profiles",
     "table.poor_relief",
     "table.pressures",
+    "table.settlement_profiles",
+    "table.skills",
+    "table.sons",
+    "table.stars",
     "table.wars",
+    "table.worlds",
 )
 @writes(
+    "table.applied_fixups",
     "table.border_controls",
     "table.crime_cases",
     "table.evidence",
     "table.measure_standards",
     "table.membership_categories",
     "table.memberships",
+    "table.oaths",
     "table.polity_profiles",
     "table.poor_relief",
+    "table.settlement_profiles",
 )
 async def civics(ctx: TickContext) -> None:
     tally = CivicsTally()

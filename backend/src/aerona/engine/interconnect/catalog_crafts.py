@@ -73,7 +73,10 @@ CRAFTS_MECHANICS = (
         templates=("insurance.founded", "insurance.ruined", "rights.infringed"),
         tables=(InsurerRow.__tablename__, InsurancePolicyRow.__tablename__, IncorporealRightRow.__tablename__),
         exposure=Exposure.TOOL,
-        tools=("buy_insurance",),
+        tools=(
+            "buy_insurance",
+            "insure",
+        ),
         targets=("faction", "settlement", "mortal", "house", "artwork", "rite"),
         couplings=(
             Coupling(S.ECONOMY, "an insured cargo lost on the road is paid back", E.FLOW, "insurance.cargo_payout_pct"),

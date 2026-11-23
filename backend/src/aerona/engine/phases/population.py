@@ -23,6 +23,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.guards import absorb_flow
 from aerona.engine.nature.seasons import band_at
 from aerona.engine.phase import Phase
+from aerona.engine.polity.mandates import ration_share
 from aerona.engine.primitives.capacity import GROWING_TYPES, LAND_COMMUNITY_TYPES, CapacityModel, RegionLoad
 from aerona.engine.primitives.faith import faith_dominance, faith_shares, has_unlocked_power, living_patron
 from aerona.engine.primitives.knowledge import LawBook
@@ -130,7 +131,8 @@ async def grow_community(
         fertility=vigour,
         hunger=hunger_level(
             rules, biology, ground, await fed_index(ctx.session, community.id), magic, band=await band_at(ctx.session, rules, ctx.epoch, community.id)
-        ),
+        )
+        * await ration_share(ctx, community.id),
         crowding=max(0.0, load.population * footprint(rules, biology) / max(1.0, capacity)),
         disease=max(0.0, diseases.of(community) + disease_load(rules, fit) - rules.demography.endemic_baseline / PERCENT) * nature.factor("disease_pct"),
         stress=await stress_of(ctx, community),
@@ -167,6 +169,7 @@ async def grow_community(
     "table.class_standing",
     "table.community_cohorts",
     "table.community_needs",
+    "table.community_shortfalls",
     "table.community_societies",
     "table.cosmos",
     "table.demographic_transitions",
@@ -183,6 +186,7 @@ async def grow_community(
     "table.holder_levels",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.mandates",
     "table.natural_law_profiles",
     "table.nodes",
     "table.outbreaks",

@@ -654,6 +654,11 @@ export const DISTRICT_DRESS: Partial<Record<Schema['DistrictKind'], Look>> = {
   military_base: [{ model: prop('flag_red'), scale: 0.5 }],
   entertainment: [{ model: prop('flag_yellow'), scale: 0.5 }],
   suburb: [{ model: nature('tree_single_A'), scale: 0.6 }],
+  camp: [
+    { model: prop('tent'), scale: 0.4, offset: [0.15, 0.1] },
+    { model: prop('tent'), scale: 0.35, offset: [-0.15, -0.1] },
+  ],
+  lazaretto: [{ model: building('church', 'green'), scale: 0.45 }],
 }
 
 export const GROUND_TILE = hex('tiles/base/hex_grass')

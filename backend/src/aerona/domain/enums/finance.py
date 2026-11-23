@@ -18,9 +18,12 @@ class CreditState(StrEnum):
     STRAINED = "strained"
     DEFAULT = "default"
     RESTRUCTURING = "restructuring"
+    RESCUED = "rescued"
+    REPUDIATED = "repudiated"
 
 
 class SpeculationStatus(StrEnum):
     HOARDING = "hoarding"
     SOLD = "sold"
     BUST = "bust"
+    SEIZED = "seized"

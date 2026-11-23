@@ -5,6 +5,7 @@ import {
   Flag,
   Hammer,
   Landmark,
+  MapPinned,
   Megaphone,
   Shield,
   Users,
@@ -29,6 +30,16 @@ export const PRIVILEGE_ICONS: Record<string, Named> = {
     label: 'Immunity from the courts',
     icon: Flag,
     tone: 'verdigris',
+  },
+  reserved_offices: {
+    label: 'Offices kept for it',
+    icon: Landmark,
+    tone: 'gold',
+  },
+  land_holding: {
+    label: 'Sole right to hold land',
+    icon: MapPinned,
+    tone: 'warning',
   },
 }
 

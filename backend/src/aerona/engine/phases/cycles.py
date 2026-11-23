@@ -221,7 +221,19 @@ async def challenge_response(ctx: TickContext) -> None:
 
 
 @reads("table.house_profiles", "table.long_plans", "table.offices", "table.polity_profiles")
-@writes("table.bonds", "table.constructions", "table.entities", "table.house_profiles", "table.long_plans", "table.region_environment")
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.constructions",
+    "table.entities",
+    "table.house_profiles",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.long_plans",
+    "table.region_environment",
+)
 async def long_plans(ctx: TickContext) -> None:
     tally = PlanTally()
     await advance_plans(ctx, tally)
@@ -317,6 +329,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incident_steps",
     "table.incidents",
+    "table.incorporeal_rights",
     "table.memories",
     "table.mortal_profiles",
     "table.polity_profiles",
@@ -338,11 +351,15 @@ async def reciprocity(ctx: TickContext) -> None:
     "table.held_identities",
     "table.house_members",
     "table.house_profiles",
+    "table.kin_group_members",
+    "table.kin_groups",
     "table.kinship_systems",
     "table.marriage_alliances",
     "table.marriages",
+    "table.memberships",
     "table.memories",
     "table.minds",
+    "table.node_births",
     "table.nodes",
     "table.people_culture",
     "table.relation_components",
@@ -355,9 +372,14 @@ async def reciprocity(ctx: TickContext) -> None:
 )
 @writes(
     "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.community_relations",
     "table.entities",
     "table.house_profiles",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
     "table.marriage_alliances",
     "table.marriages",
     "table.memories",

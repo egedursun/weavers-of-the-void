@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.pacts import DECLARED_STANDINGS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.statecraft import SphereRow
 from aerona.db.write_guard import held
@@ -98,7 +99,7 @@ async def favour(ctx: TickContext, book: RealmBook, row: SphereRow) -> None:
     first, second = power.profile.core_entity_id, client.profile.core_entity_id
     if first is not None and second is not None and not held(second):
         await change_relation(ctx, second, first, gain, MemoryKind.TRADED_WITH, note="favoured in trade within a sphere")
-    if STANDING not in client.profile.locked:
+    if STANDING not in client.profile.locked and client.profile.standing not in DECLARED_STANDINGS:
         client.profile.standing = RegionalStanding.CLIENT
 
 

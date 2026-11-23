@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from aerona.catalog.operations import TRANSPORTS
+from aerona.catalog.operations import CREW_STATIONS, TRANSPORTS
 from aerona.core.errors import ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -44,6 +44,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.control import node_exists, put_values
 from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import Values, allowed, found
+from aerona.engine.operations.crews import fitted_stations
 from aerona.engine.operations.expeditions import ExpeditionTally, advance, grant_quirk, launch, party_of
 from aerona.engine.operations.sail import ship_state
 from aerona.engine.operations.supply import operation_of
@@ -152,6 +153,9 @@ async def set_ship(ctx: TickContext, vessel_id: int, values: Values) -> ShipStat
 
 async def set_crew(ctx: TickContext, vessel_id: int, station: CrewStation, values: Values) -> ShipCrewRow:
     await of_type(ctx, vessel_id, VESSELS, "a vessel")
+    vessel = await ctx.session.get(VesselProfileRow, vessel_id)
+    if vessel is not None and station not in await fitted_stations(ctx.session, vessel_id, vessel):
+        raise ValidationFailedError(f"No section of this vessel calls for {CREW_STATIONS[station].label.lower()}.")
     row = await ctx.session.get(ShipCrewRow, (vessel_id, station)) or await saved(ctx, ShipCrewRow(vessel_entity_id=vessel_id, station=station, locked=[]))
     row = await put_values(ctx, row, values, CREW_FIELDS, "crew station")
     await muster_crew(ctx, vessel_id)

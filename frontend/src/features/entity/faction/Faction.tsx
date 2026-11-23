@@ -18,6 +18,7 @@ import {
   HardHat,
   KeyRound,
   Landmark,
+  Link2,
   LockOpen,
   Medal,
   Megaphone,
@@ -150,6 +151,8 @@ const FACTION_KINDS: Record<string, Named> = {
   financiers: { label: 'Financiers', icon: Coins, tone: 'gold' },
   veterans: { label: "Veterans' association", icon: Medal, tone: 'warning' },
   worker_body: { label: 'Worker body', icon: HardHat, tone: 'warning' },
+  street_gang: { label: 'Street gang', icon: Swords, tone: 'danger' },
+  trafficking_ring: { label: 'Trafficking ring', icon: Link2, tone: 'danger' },
   club: { label: 'Club', icon: Trophy, tone: 'gold' },
   league: { label: 'League', icon: Medal, tone: 'info' },
 }
@@ -179,6 +182,9 @@ const FACTION_GOALS: Record<string, Named> = {
   },
   independence: { label: 'Independence', icon: Flag, tone: 'warning' },
   loot: { label: 'Loot', icon: Skull, tone: 'danger' },
+  gain_privilege: { label: 'Gain a privilege', icon: Crown, tone: 'gold' },
+  win_office: { label: 'Win an office', icon: Landmark, tone: 'info' },
+  ruin_rival: { label: 'Ruin a rival', icon: Swords, tone: 'danger' },
 }
 const FACTION_ACTIONS: Record<string, Named> = {
   lobby: { label: 'Lobbied', icon: Megaphone, tone: 'info' },
@@ -196,6 +202,8 @@ const FACTION_ACTIONS: Record<string, Named> = {
   suppressed: { label: 'Hunted', icon: ShieldCheck, tone: 'danger' },
   hired: { label: 'Hired', icon: Handshake, tone: 'success' },
   defected: { label: 'Defected', icon: Target, tone: 'danger' },
+  propaganda: { label: 'Propaganda', icon: Megaphone, tone: 'info' },
+  boycott: { label: 'Boycott', icon: Ban, tone: 'warning' },
 }
 const RANKS: Record<string, Named> = {
   leader: { label: 'Leader', icon: Crown, tone: 'gold' },

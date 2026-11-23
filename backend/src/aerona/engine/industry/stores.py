@@ -19,6 +19,7 @@ from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.industry import EnergyKind, ProcessKind, QualityTier
 from aerona.domain.enums.society import CreatureTrait, SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.works import preserved
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.good_kinds import good_book
 from aerona.engine.economy.stocks import goods_of, lots_of
@@ -125,6 +126,7 @@ async def spoil(ctx: TickContext, book: EconomyBook, community: EntityRow, row: 
     shelter = max(0.0, 1 - (granary.level if granary is not None else 0) * table.granary_pct / PERCENT)
     shelter *= await ctx.hook_easing(community.id, DomainHook.PRESERVATION)
     shelter *= await sealed_share(ctx, community.id, sum(lot.quantity for lot in await perishables(ctx, community.id)))
+    shelter *= await preserved(ctx.session, ctx.rules, community.id)
     ledger = goods_of(ctx.session, ctx.epoch)
     years = max(1, len(world_years(ctx.environment, community.world_id or 0, "stores")))
     lost_total = 0

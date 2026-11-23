@@ -1,16 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.military import CasualtyFate, FeudParty, OutcomeClass, SabotageKind, SiegeWork, SpyOperation, SpyOwnerKind, TargetClass
-
-CASUALTY_FATE = total(
-    CasualtyFate,
-    {
-        CasualtyFate.KILLED: Defined("Killed", checked_by=(), used_by=("catalog.life.phases.DUEL_FATES", "engine.phases.warfare.duel")),
-        CasualtyFate.WOUNDED: Defined("Wounded", checked_by=(), used_by=("catalog.life.phases.DUEL_FATES",)),
-        CasualtyFate.MAIMED: Defined("Maimed", checked_by=(), used_by=("catalog.life.phases.DUEL_FATES",)),
-        CasualtyFate.CAPTURED: Defined("Captured", checked_by=(), used_by=("engine.phases.warfare._heroics",)),
-    },
-)
+from aerona.domain.enums.military import FeudParty, OutcomeClass, SabotageKind, SpyOwnerKind, TargetClass
 
 FEUD_PARTY = total(
     FeudParty,
@@ -74,47 +64,6 @@ SABOTAGE_KIND = total(
         SabotageKind.RITE_DISRUPTION: Defined("Rite disruption", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
         SabotageKind.SOURCE_POISONING: Defined("Source poisoning", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
         SabotageKind.MACHINE_SEIZURE: Defined("Machine seizure", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
-    },
-)
-
-SIEGE_WORK = total(
-    SiegeWork,
-    {
-        SiegeWork.CIRCUMVALLATION: Defined(
-            "Circumvallation",
-            checked_by=(),
-            used_by=("catalog.life.military.ACTION_WORKS", "engine.military.siege.season_steps", "engine.military.siege_depth.encircled"),
-        ),
-        SiegeWork.TOWERS: Defined("Towers", checked_by=(), used_by=("catalog.life.military.ACTION_WORKS",)),
-        SiegeWork.RAMS: Defined("Rams", checked_by=(), used_by=("catalog.life.military.ACTION_WORKS",)),
-        SiegeWork.MINES: Defined("Mines", checked_by=(), used_by=("catalog.life.military.ACTION_WORKS", "engine.military.siege_depth.countermine")),
-        SiegeWork.COUNTERMINES: Defined(
-            "Countermines", checked_by=("engine.military.siege_depth.finished_works",), used_by=("engine.military.siege_depth.countermine",)
-        ),
-        SiegeWork.LADDERS: Defined("Ladders", checked_by=(), used_by=("catalog.life.military.ACTION_WORKS",)),
-    },
-)
-
-SPY_OPERATION = total(
-    SpyOperation,
-    {
-        SpyOperation.STEAL_KNOWLEDGE: Defined(
-            "Steal knowledge",
-            checked_by=(),
-            used_by=("catalog.life.phases.PEACE_OPERATIONS", "engine.phases.espionage.choose_operation", "engine.phases.espionage.steal"),
-        ),
-        SpyOperation.SABOTAGE: Defined("Sabotage", checked_by=(), used_by=("catalog.life.phases.WAR_OPERATIONS", "engine.phases.espionage.sabotage")),
-        SpyOperation.ASSASSINATE: Defined("Assassinate", checked_by=(), used_by=("catalog.life.phases.WAR_OPERATIONS", "engine.phases.espionage.assassinate")),
-        SpyOperation.INCITE: Defined("Incite", checked_by=(), used_by=("catalog.life.phases.PEACE_OPERATIONS", "engine.phases.espionage.incite")),
-        SpyOperation.INTEL: Defined(
-            "Intel",
-            checked_by=("engine.phases.espionage.perform_operation",),
-            used_by=("catalog.life.phases.PEACE_OPERATIONS", "catalog.life.phases.WAR_OPERATIONS", "engine.phases.espionage.gather"),
-        ),
-        SpyOperation.BLACKMAIL: Defined("Blackmail", checked_by=(), used_by=("catalog.life.phases.PEACE_OPERATIONS", "engine.phases.espionage.blackmail")),
-        SpyOperation.COUNTERFEIT: Defined(
-            "Counterfeit", checked_by=(), used_by=("catalog.life.phases.PEACE_OPERATIONS", "engine.phases.espionage.counterfeit")
-        ),
     },
 )
 

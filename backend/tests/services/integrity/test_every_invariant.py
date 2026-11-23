@@ -9,6 +9,7 @@ from aerona.catalog.death_causes import DEATH_CAUSES, LOOSE_CAUSES, death_cause_
 from aerona.catalog.invariants import TYPED, GenericCheck, InvariantSpec, Remedy
 from aerona.catalog.long_seasons import CAUSES
 from aerona.catalog.market_kinds import ANIMAL_CLUBS, CLUBS
+from aerona.catalog.methods import METHODS
 from aerona.catalog.plants import PARTS
 from aerona.catalog.revivals import REVIVAL_WAYS
 from aerona.db.record_context import RecordScope, scoped
@@ -17,33 +18,36 @@ from aerona.db.session import Database
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.agentless_conditions import AgentlessConditionRow
 from aerona.db.tables.ages import IrregularSeasonRow, WinterForecastRow
+from aerona.db.tables.agrarian import ReconstructionRow
 from aerona.db.tables.arts import ClubRow
-from aerona.db.tables.belonging import HeldIdentityRow
+from aerona.db.tables.belonging import HeldIdentityRow, SanctuaryRow
 from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow
 from aerona.db.tables.body_systems import BodySystemRow
 from aerona.db.tables.changes import StateChangeRow, StateCheckpointRow
 from aerona.db.tables.childhood import ChildStandingRow, SocializationRow
 from aerona.db.tables.city_rules import ConurbationRow, LandUseRuleRow
+from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.commerce import LeaseRow
 from aerona.db.tables.competition import CartelRow, MarketStructureRow, PriceWarRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.council_order import DivineSeatRow
-from aerona.db.tables.crafts import IncorporealRightRow, NumberSystemRow
+from aerona.db.tables.crafts import AssistiveAidRow, IncorporealRightRow, NumberSystemRow
 from aerona.db.tables.creator_bonds import CovenantRow
 from aerona.db.tables.creature_groups import CreatureGroupRow
 from aerona.db.tables.culture import HolderTechniqueRow, TraditionProfileRow
-from aerona.db.tables.customs import BodyMarkRow, IntoxicantCustomRow, RevivalRow, TimeBudgetRow
+from aerona.db.tables.customs import BodyMarkRow, IntoxicantCustomRow, MembershipRow, RevivalRow, TimeBudgetRow
 from aerona.db.tables.cycles import PeopleReproductionRow
-from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
+from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.departures import DepartureRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.divine_conceptions import GodReadingRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProductRow, SpeciesRangeRow
-from aerona.db.tables.economy import CurrencyRow, WorldMaterialRow
+from aerona.db.tables.economy import CurrencyRow, TradeRouteProfileRow, WorldMaterialRow
 from aerona.db.tables.endowments import EndowmentRow
-from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import WorldSeasonRow
+from aerona.db.tables.entities import EntityRow, LanguageProfileRow
+from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.estates import MovementProfileRow
 from aerona.db.tables.facets import FacetPracticeRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -53,8 +57,9 @@ from aerona.db.tables.folk_knowledge import FolkClassRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.governance import InsolvencyCaseRow, OrgGovernanceRow, OrgMergerRow, OrgSeatRow
 from aerona.db.tables.grave_goods import GraveGoodsRow
-from aerona.db.tables.honours import HonourHeldRow, HonourKindRow
+from aerona.db.tables.honours import HonourHeldRow, HonourKindRow, NamedUnitRow, UnitHonourRow
 from aerona.db.tables.households import DwellingRow, HouseholdRow
+from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.interpretation import InterpretationRow
 from aerona.db.tables.interworld import InterworldCampaignRow, InterworldMigrationRow
@@ -66,15 +71,18 @@ from aerona.db.tables.labour import LabourContractRow, LabourDisputeRow, WorkerB
 from aerona.db.tables.leader_cults import LeaderCultRow
 from aerona.db.tables.leagues import LeagueDecisionRow, LeagueMemberRow, PolityLeagueRow
 from aerona.db.tables.mass_weapons import DeterrencePostureRow, MassWeaponRow, WarRemnantRow
+from aerona.db.tables.means import NavigationKitRow, SecurityRow, WaterLiftRow, WrittenWorkRow
 from aerona.db.tables.media import MediaItemRow, MediaOutletRow
-from aerona.db.tables.military import OccupationRow
+from aerona.db.tables.military import OccupationRow, SpyNetworkRow
 from aerona.db.tables.monetary import MonetaryAuthorityRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.museums import MuseumCollectionRow, MuseumPieceRow
 from aerona.db.tables.occupation_regimes import CollaborationRow, OccupationMeasureRow, OccupationRegimeRow
+from aerona.db.tables.operations import ShipCrewRow
 from aerona.db.tables.orders import EconomicOrderRow, OrderTransitionRow
 from aerona.db.tables.pantheon import PantheonTieRow, SyncretismRow
 from aerona.db.tables.plants import PlantPartRow
-from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.polity import ClaimRow, OfficeRow
 from aerona.db.tables.population import PopulationInstrumentRow, PopulationPolicyRow
 from aerona.db.tables.protected_nature import ConservationMovementRow, ProtectedAreaRow, SpeciesProtectionRow
 from aerona.db.tables.reckoning import ReckoningCaseRow, ReckoningMeasureRow, ReckoningRow
@@ -82,30 +90,34 @@ from aerona.db.tables.record_keepers import RecordKeeperRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
 from aerona.db.tables.referendums import ReferendumRow
 from aerona.db.tables.relations import ContestRow
+from aerona.db.tables.renown import DeedClaimRow, DeedRow, LoreTradeRow
 from aerona.db.tables.restoration import RestorationRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sea_waves import SeaWaveCoastRow, SeaWaveRow
 from aerona.db.tables.securities import IssuedSecurityRow, SecurityHoldingRow, SecurityPriceRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.speech import SpeechRow
+from aerona.db.tables.statecraft import CrisisRow
 from aerona.db.tables.technology import TechnologyProfileRow
-from aerona.db.tables.warfare import CaptiveRow, WarRow
+from aerona.db.tables.warfare import CaptiveRow, SiegeRow, WarRow
 from aerona.db.tables.works import PublicWorksRow, PublicWorkStageRow
 from aerona.db.tables.youth import YouthGroupMemberRow, YouthGroupRow, YouthStandingRow
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.agentless_conditions import ConditionCause
 from aerona.domain.enums.ages import SeasonSpell, SeasonSpellShape
-from aerona.domain.enums.belonging import IdentityLayer
+from aerona.domain.enums.agrarian import RebuildCause, RebuildPlan
+from aerona.domain.enums.belonging import FugitiveKind, IdentityLayer, SanctuaryKind
 from aerona.domain.enums.biology import BiologyVariant
 from aerona.domain.enums.body import BodyPart, BodyPlan, ConditionKind, DamageType, HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.body_systems import BodySystem
 from aerona.domain.enums.bond import BondKind, BondRole
+from aerona.domain.enums.collective import AccountKind
 from aerona.domain.enums.constructs import OrderKind
-from aerona.domain.enums.crafts import RightKind
+from aerona.domain.enums.crafts import AssistiveAid, RightKind
 from aerona.domain.enums.creator import CovenantDuty, CreatorPromise
 from aerona.domain.enums.creature_groups import GroupForm
 from aerona.domain.enums.culture import Technique, TraditionFunction
-from aerona.domain.enums.customs import Intoxicant, MarkKind, MarkMeaning, RevivalGoal
+from aerona.domain.enums.customs import Intoxicant, MarkKind, MarkMeaning, Membership, Naturalisation, RevivalGoal
 from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.death_work import RemainsTreatment
 from aerona.domain.enums.demography import AgeBand, CohortCondition, FuneralCustom, InheritanceCustom, Job, MartialStyle, SexKind
@@ -113,63 +125,107 @@ from aerona.domain.enums.departures import DepartureKind
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.divine_conceptions import GodReading
 from aerona.domain.enums.ecology import YieldProduct
-from aerona.domain.enums.economy import CommodityKind, MaterialFamily, MaterialOrigin, MoneyForm
+from aerona.domain.enums.economy import CommodityKind, MaterialFamily, MaterialOrigin, MoneyForm, TradeMode, TradeRouteStatus
 from aerona.domain.enums.endowments import EndowmentState
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.facets import FacetKind
 from aerona.domain.enums.faction import FactionKind, MovementCause
 from aerona.domain.enums.fertility_means import FertilityMeans
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.governance import GoverningBody
+from aerona.domain.enums.honours import UnitHonourKind
+from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.interworld import CampaignStage
 from aerona.domain.enums.intimacy import RelationContext
 from aerona.domain.enums.kinds import GoodCategory, KindConcept
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.leagues import LeagueDecisionKind, LeagueOrgan
 from aerona.domain.enums.mass_weapons import MassHarm, MassReach
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.means import LockKind, NavigationAid, WaterLift, WritingMedium
 from aerona.domain.enums.meta import LedgerOperation
+from aerona.domain.enums.military import DefenderAction
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
+from aerona.domain.enums.museum import HoardKind, PieceKind
 from aerona.domain.enums.nature_kinds import ProductPart
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.occupation_regimes import CollaborationFate
+from aerona.domain.enums.operations import CarrierKind, CrewStation
 from aerona.domain.enums.orders import TransitionKind
-from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.domain.enums.population import PopulationInstrument
 from aerona.domain.enums.reckoning import ReckoningMeasure
 from aerona.domain.enums.record_keepers import RecordKeeperKind
 from aerona.domain.enums.records import FactUnit, StepAction, WitnessMode
 from aerona.domain.enums.referendums import Franchise, ReferendumResult, ReferendumSubject
 from aerona.domain.enums.relations import ContestEnd, ContestKind, ContestStake
+from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LorePrice, ReputationAxis
 from aerona.domain.enums.restoration import RestorationStage
 from aerona.domain.enums.sea_waves import WaveOrigin
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.speech import SpeechVenue
-from aerona.domain.enums.travel import TravelMethod
+from aerona.domain.enums.statecraft import CrisisDemand, CrisisState
+from aerona.domain.enums.tongues import LanguageModality, LanguageStage
+from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.domain.enums.war import CaptiveStatus, WarCause
 from aerona.domain.models.entity_stats import (
     ArmyStats,
+    ArtworkStats,
     BeastStats,
     CultStats,
     DiseaseStats,
     EventStats,
     FactionStats,
     HouseStats,
+    LanguageStats,
     LeagueStats,
     PeopleStats,
     PolityStats,
     SpeciesStats,
+    StructureStats,
+    TradeRouteStats,
     TraditionStats,
+    VesselStats,
 )
 from aerona.engine.households.dwelling_kinds import built_in_dwelling
+from aerona.engine.primitives.language_profile import DEFAULT_PHONOLOGY
 from aerona.engine.recording.checkpoints import take_checkpoint
 from aerona.services.integrity.invariants import CHECKS, findings, resolve, sweep
 from aerona.services.integrity.record_links import absent_witnesses
 from tests.conftest import OpenDatabase
 from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, seed_core_world, settlement
 from tests.engine.core.test_arcana_w15 import foreign_caster
+
+
+async def crisis_settled_by_no_one(session: AsyncSession, world: CoreWorld) -> None:
+    first = await entity(session, "Reed Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    second = await entity(session, "Fen Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add(
+        CrisisRow(demander_entity_id=first.id, target_entity_id=second.id, demand=CrisisDemand.PAY, state=CrisisState.MEDIATED, opened_epoch=1, locked=[])
+    )
+
+
+async def dispute_with_no_contender(session: AsyncSession, world: CoreWorld) -> None:
+    doer = await mortal(session, "Beast Slayer", world, world.regions[0].id)
+    boaster = await mortal(session, "Loud Boaster", world, world.regions[0].id)
+    deed = DeedRow(doer_node_id=doer.id, axis=ReputationAxis.HEROISM, magnitude=40, epoch=1, locked=[])
+    session.add(deed)
+    await session.flush()
+    session.add(DeedClaimRow(deed_id=deed.id, claimant_node_id=boaster.id, kind=ClaimKind.FALSE, status=ClaimStatus.DISPUTED, epoch=1, locked=[]))
+
+
+async def service_with_no_task(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Lorehold", world, world.regions[0])
+    session.add(
+        LoreTradeRow(
+            seller_node_id=town.id, buyer_node_id=world.people.id, kind=KnowledgeKind.TECHNIQUE, key="smelting", value=10, price=LorePrice.SERVICE, epoch=1
+        )
+    )
+
 
 Breaker = Callable[[AsyncSession, CoreWorld], Awaitable[None]]
 PHASE_KIND = "phase.statecraft"
@@ -1158,6 +1214,51 @@ async def promise_to_the_dead(session: AsyncSession, world: CoreWorld) -> None:
     gone.status, gone.end_epoch = EntityStatus.DEAD, 1
 
 
+async def war_between(session: AsyncSession, world: CoreWorld) -> tuple[int, EntityRow, EntityRow]:
+    first = await settlement(session, "Fordham", world, world.regions[0])
+    second = await settlement(session, "Weirby", world, world.regions[0])
+    event = await entity(session, "The Weir War", EntityType.EVENT, EventStats(), world_id=world.world.id)
+    war = WarRow(event_entity_id=event.id, world_id=world.world.id, cause=next(iter(WarCause)), started_epoch=1)
+    session.add(war)
+    await session.flush()
+    return war.id, first, second
+
+
+async def mole_placed_outside_the_target(session: AsyncSession, world: CoreWorld) -> None:
+    _, first, second = await war_between(session, world)
+    elsewhere = await settlement(session, "Farhold", world, world.regions[0])
+    session.add(
+        SpyNetworkRow(
+            owner_entity_id=first.id, target_entity_id=second.id, agent_ids=[], since_epoch=1, revealed_aims=[], institution_entity_id=elsewhere.id, locked=[]
+        )
+    )
+
+
+async def flood_with_no_water(session: AsyncSession, world: CoreWorld) -> None:
+    war_id, first, second = await war_between(session, world)
+    ground = await session.get(RegionEnvironmentRow, world.regions[0].id)
+    if ground is not None:
+        ground.river_class = None
+    session.add(
+        SiegeRow(
+            war_id=war_id,
+            besieged_entity_id=second.id,
+            besieger_entity_id=first.id,
+            started_epoch=1,
+            works={},
+            last_defence=DefenderAction.FLOOD_APPROACHES,
+            locked=[],
+        )
+    )
+
+
+async def honour_won_nowhere(session: AsyncSession, world: CoreWorld) -> None:
+    unit = NamedUnitRow(name="The Weir Guard", esprit=50, formed_epoch=1, locked=[])
+    session.add(unit)
+    await session.flush()
+    session.add(UnitHonourRow(named_unit_id=unit.id, kind=UnitHonourKind.CROSSING, note="", epoch=1, locked=[]))
+
+
 async def contest_for_land_staking_a_person(session: AsyncSession, world: CoreWorld) -> None:
     first = await mortal(session, "Claimant", world, world.regions[0].id)
     second = await mortal(session, "Holder Of Field", world, world.regions[0].id)
@@ -1171,6 +1272,37 @@ async def contest_for_land_staking_a_person(session: AsyncSession, world: CoreWo
             outcome=ContestEnd.DRAWN,
             epoch=1,
         )
+    )
+
+
+async def hand_over_of_no_one(session: AsyncSession, world: CoreWorld) -> None:
+    first = await mortal(session, "Demander Lord", world, world.regions[0].id)
+    second = await mortal(session, "Target Lord", world, world.regions[0].id)
+    session.add(
+        CrisisRow(
+            demander_entity_id=first.id,
+            target_entity_id=second.id,
+            demand=CrisisDemand.HAND_OVER,
+            subject_node_id=world.regions[0].id,
+            opened_epoch=1,
+            locked=[],
+        )
+    )
+
+
+async def union_with_no_spouse(session: AsyncSession, world: CoreWorld) -> None:
+    folk = await mortal(session, "Wed Stranger", world, world.regions[0].id)
+    lord = await mortal(session, "Realm Holder", world, world.regions[0].id)
+    session.add(
+        MembershipRow(mortal_entity_id=folk.id, polity_entity_id=lord.id, category=Membership.CITIZEN, path=Naturalisation.UNION, since_epoch=1, locked=[])
+    )
+
+
+async def adoption_by_no_one(session: AsyncSession, world: CoreWorld) -> None:
+    heir = await mortal(session, "Taken Heir", world, world.regions[0].id)
+    lord = await mortal(session, "Old Lord", world, world.regions[0].id)
+    session.add(
+        ClaimRow(claimant_entity_id=heir.id, polity_entity_id=lord.id, basis=ClaimBasis.ADOPTION, strength=50, backer_entity_id=None, since_epoch=1, locked=[])
     )
 
 
@@ -1204,6 +1336,26 @@ async def death_blamed_on_the_wrong_cause(session: AsyncSession, world: CoreWorl
             epoch=1,
         )
     )
+
+
+async def crew_at_a_station_no_section_calls_for(session: AsyncSession, world: CoreWorld) -> None:
+    hull = await entity(session, "Bare Hull", EntityType.VESSEL, VesselStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    session.add(VesselProfileRow(entity_id=hull.id, kind=VehicleKind.SHIP, crew=10, locked=[]))
+    session.add(ShipCrewRow(vessel_entity_id=hull.id, station=CrewStation.PILOTS, count=3, skill=40, locked=[]))
+
+
+async def captive(session: AsyncSession, world: CoreWorld, status: CaptiveStatus) -> None:
+    captor = await settlement(session, f"Hold of {status.value}", world, world.regions[0])
+    held_one = await mortal(session, f"Captive {status.value}", world, world.regions[0].id)
+    session.add(CaptiveRow(captive_entity_id=held_one.id, captor_entity_id=captor.id, status=status, taken_epoch=1, locked=[]))
+
+
+async def parole_with_no_oath(session: AsyncSession, world: CoreWorld) -> None:
+    await captive(session, world, CaptiveStatus.PAROLED)
+
+
+async def joining_with_no_spouse(session: AsyncSession, world: CoreWorld) -> None:
+    await captive(session, world, CaptiveStatus.MARRIED_IN)
 
 
 async def charm_with_no_object(session: AsyncSession, world: CoreWorld) -> None:
@@ -1272,7 +1424,155 @@ async def fixing_with_no_winner(session: AsyncSession, world: CoreWorld) -> None
     session.add(ClubRow(faction_entity_id=club.id, kind=plain, fixed_by_entity_id=fixer.id, fixed_winner_entity_id=None, locked=[]))
 
 
+async def relocation_with_no_site(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Moving Town", world, world.regions[0])
+    session.add(ReconstructionRow(settlement_entity_id=town.id, cause=next(iter(RebuildCause)), plan=RebuildPlan.RELOCATED, locked=[]))
+
+
+async def regalia_of_no_realm(session: AsyncSession, world: CoreWorld) -> None:
+    keeper = await settlement(session, "Treasury Town", world, world.regions[0])
+    hoard = MuseumCollectionRow(keeper_entity_id=keeper.id, kind=next(iter(HoardKind)), locked=[])
+    session.add(hoard)
+    await session.flush()
+    session.add(MuseumPieceRow(collection_id=hoard.id, kind=PieceKind.REGALIA, locked=[]))
+
+
+async def free_city_with_no_charter(session: AsyncSession, world: CoreWorld) -> None:
+    host = await settlement(session, "Open Gate", world, world.regions[0])
+    runner = await mortal(session, "Runner", world, host.id)
+    session.add(SanctuaryRow(fugitive_entity_id=runner.id, host_entity_id=host.id, kind=SanctuaryKind.FREE_CITY, fugitive_kind=FugitiveKind.RUNAWAY, locked=[]))
+
+
+async def lock_no_one_can_make(session: AsyncSession, world: CoreWorld) -> None:
+    vault = await entity(session, "Warded Vault", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    session.add(SecurityRow(holder_entity_id=vault.id, lock=LockKind.WORKED, lock_quality=60, locked=[]))
+
+
+async def lift_with_no_power(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Dry Wells", world, world.regions[0])
+    session.add(WaterLiftRow(settlement_entity_id=town.id, device=WaterLift.ELECTRIC_PUMP, locked=[]))
+
+
+async def aid_no_one_can_make(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Lensless", world, world.regions[0])
+    healer = await mortal(session, "Healer", world, town.id)
+    session.add(AssistiveAidRow(holder_node_id=healer.id, kind=AssistiveAid.MICROSCOPE, locked=[]))
+
+
+async def tongue(session: AsyncSession, world: CoreWorld, name: str) -> EntityRow:
+    return await entity(session, name, EntityType.LANGUAGE, LanguageStats(), world_id=world.world.id)
+
+
+async def revival_with_no_ancestor(session: AsyncSession, world: CoreWorld) -> None:
+    revived = await tongue(session, world, "Old Speech")
+    session.add(LanguageProfileRow(entity_id=revived.id, phonology=DEFAULT_PHONOLOGY, seed="Old Speech", stage=LanguageStage.REVIVED))
+
+
+async def tongue_its_speakers_cannot_use(session: AsyncSession, world: CoreWorld) -> None:
+    voiced = await tongue(session, world, "Loud Speech")
+    session.add(LanguageProfileRow(entity_id=voiced.id, phonology=DEFAULT_PHONOLOGY, seed="Loud Speech", modality=LanguageModality.VOCAL))
+    folk = await entity(session, "Mute Folk", EntityType.PEOPLE, PeopleStats(), world_id=world.world.id)
+    session.add(
+        PeopleBiologyRow(
+            people_entity_id=folk.id,
+            maturity_years=15,
+            adult_years=40,
+            elder_years=60,
+            fertility_pct=100,
+            acclimatised=TemperatureBand.TEMPERATE,
+            staple=CommodityKind.GRAIN,
+            body_plan=BodyPlan.COLONIAL,
+            traits=[],
+            locked=[],
+        )
+    )
+    await bond(session, folk.id, voiced.id, BondKind.SPEAKS)
+
+
+async def electronic_record_unknown(session: AsyncSession, world: CoreWorld) -> None:
+    work = await entity(session, "Lost Ledger", EntityType.ARTWORK, ArtworkStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    session.add(WrittenWorkRow(work_entity_id=work.id, medium=WritingMedium.ELECTRONIC, locked=[]))
+
+
+async def route(session: AsyncSession, world: CoreWorld, name: str, **values: object) -> int:
+    first = await settlement(session, f"{name} East", world, world.regions[0])
+    second = await settlement(session, f"{name} West", world, world.regions[1])
+    road = await entity(session, name, EntityType.TRADE_ROUTE, TradeRouteStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    base: dict[str, object] = {"mode": TradeMode.ROAD, "status": TradeRouteStatus.OPEN}
+    session.add(
+        TradeRouteProfileRow(
+            route_entity_id=road.id, first_market_id=first.id, second_market_id=second.id, length=2, founded_epoch=1, locked=[], **(base | values)
+        )
+    )
+    return road.id
+
+
+async def seasonal_route_with_no_season(session: AsyncSession, world: CoreWorld) -> None:
+    await route(session, world, "Snow Road", status=TradeRouteStatus.SEASONAL, closed_season=None)
+
+
+async def ships_on_a_road(session: AsyncSession, world: CoreWorld) -> None:
+    await route(session, world, "Dry Keel", carrier=CarrierKind.SEA)
+
+
+async def positioning_with_no_network(session: AsyncSession, world: CoreWorld) -> None:
+    hull = await entity(session, "Lone Hull", EntityType.VESSEL, VesselStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    session.add(NavigationKitRow(holder_entity_id=hull.id, aid=NavigationAid.POSITIONING, locked=[]))
+
+
+async def material_with_no_source(session: AsyncSession, world: CoreWorld) -> None:
+    session.add(
+        WorldMaterialRow(
+            world_id=world.world.id,
+            origin=MaterialOrigin.DEAD_GOD,
+            name="Unclaimed Bone",
+            family=next(iter(MaterialFamily)),
+            hardness=50,
+            toughness=50,
+            weight=50,
+            edge=50,
+            conductivity=50,
+            sanctity=50,
+            corruption=0,
+            rarity=50,
+            base_value=50,
+            decay=5,
+            created_epoch=0,
+        )
+    )
+
+
+async def method_under_another_process(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Mixed Works", world, world.regions[0])
+    method = next(iter(METHODS))
+    other = next(process for process in ProcessKind if process is not METHODS[method].process)
+    session.add(CommunityMethodRow(community_node_id=town.id, process=other, method=method, adopted_epoch=1, locked=[]))
+
+
+async def account_of_nothing(session: AsyncSession, world: CoreWorld) -> None:
+    teller = await mortal(session, "Teller", world, world.regions[0].id)
+    session.add(AccountRow(holder_entity_id=teller.id, kind=next(iter(AccountKind)), locked=[]))
+
+
 BREAKERS: dict[str, Breaker] = {
+    "relocation_names_site": relocation_with_no_site,
+    "regalia_names_polity": regalia_of_no_realm,
+    "free_city_has_charter": free_city_with_no_charter,
+    "lock_technique_known": lock_no_one_can_make,
+    "lift_energy_known": lift_with_no_power,
+    "aid_technique_known": aid_no_one_can_make,
+    "revived_tongue_ancestor": revival_with_no_ancestor,
+    "tongue_modality_heard": tongue_its_speakers_cannot_use,
+    "electronic_record_technique": electronic_record_unknown,
+    "seasonal_route_season": seasonal_route_with_no_season,
+    "route_carrier_medium": ships_on_a_road,
+    "positioning_needs_network": positioning_with_no_network,
+    "material_origin_source": material_with_no_source,
+    "method_in_its_process": method_under_another_process,
+    "account_tells_something": account_of_nothing,
+    "crisis_mediator_named": crisis_settled_by_no_one,
+    "disputed_claim_contender": dispute_with_no_contender,
+    "service_names_task": service_with_no_task,
     "season_shares": year_that_misses_a_hundred,
     "long_season_source": spell_of_a_shape_its_cause_forbids,
     "forecast_world": forecast_on_another_world,
@@ -1287,7 +1587,16 @@ BREAKERS: dict[str, Breaker] = {
     "outbreak_path_carrier": beast_borne_outbreak_of_no_beast,
     "wound_part_in_plan": wound_on_a_part_the_body_lacks,
     "betrothal_living": promise_to_the_dead,
+    "crew_station_fits": crew_at_a_station_no_section_calls_for,
+    "parole_names_oath": parole_with_no_oath,
+    "married_in_names_union": joining_with_no_spouse,
     "contest_stake_named": contest_for_land_staking_a_person,
+    "hand_over_names_person": hand_over_of_no_one,
+    "union_names_spouse": union_with_no_spouse,
+    "adoption_names_adopter": adoption_by_no_one,
+    "spy_institution_in_target": mole_placed_outside_the_target,
+    "siege_flood_has_water": flood_with_no_water,
+    "unit_honour_names_place": honour_won_nowhere,
     "intoxicant_source": made_intoxicant_of_an_unknowing_people,
     "symbiotic_partner": partnership_with_no_partner,
     "death_cause_last_wound": death_blamed_on_the_wrong_cause,

@@ -26,7 +26,7 @@ from aerona.domain.enums.entity import (
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic, SocialClass
-from aerona.domain.enums.tongues import LanguageModality, LanguageStage
+from aerona.domain.enums.tongues import LanguageModality, LanguageStage, NumeralBase
 from aerona.domain.models.entity_stats import EntityStats
 from aerona.domain.models.phonology import LanguageSignature, Phonology
 from aerona.domain.models.profiles import EntityDepth
@@ -153,6 +153,7 @@ class LanguageProfileRow(Base):
     script_id: Mapped[int | None] = mapped_column(ForeignKey("scripts.id", ondelete="SET NULL"))
     modality: Mapped[LanguageModality] = mapped_column(enum_type(LanguageModality, "modality"), default=LanguageModality.VOCAL, server_default="vocal")
     stage: Mapped[LanguageStage] = mapped_column(enum_type(LanguageStage, "stage"), default=LanguageStage.NATURAL, server_default="natural")
+    numeral_base: Mapped[NumeralBase] = mapped_column(enum_type(NumeralBase, "numeral_base"), default=NumeralBase.DECIMAL, server_default="decimal")
 
 
 class CreationVerdictRow(CreatedAtMixin, Base):

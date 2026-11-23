@@ -6,26 +6,31 @@ from sqlalchemy.orm.attributes import flag_modified, instance_state
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
 from aerona.catalog.life.demography import APPLY_SHORTFALLS_SHORTFALL_EFFECTS, GROWN_BANDS
-from aerona.catalog.needs import SERVE_ORDER, SHORTFALL_EFFECTS, basket_weight
+from aerona.catalog.needs import OUTER_SHORTFALLS, SERVE_ORDER, SHORTFALL_EFFECTS, basket_weight
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.db.tables.society_depth import ClassStandingRow, CommunityNeedRow
+from aerona.db.tables.society_depth import ClassStandingRow, CommunityNeedRow, CommunityShortfallRow
+from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.domain.enums.society_depth import ShortfallEffect
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.cover import insured_loss
 from aerona.engine.demography.biology import edible
 from aerona.engine.demography.cohorts import cohorts_of, row_for
 from aerona.engine.economy.household import Meal, Wear
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.industry.cold import frostbite
+from aerona.engine.industry.energy import available
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.primitives.kept import kept_rows
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -312,14 +317,15 @@ async def freeze(ctx: TickContext, community: EntityRow, short: int, band: Tempe
     return dead
 
 
-async def sicken(ctx: TickContext, community: EntityRow, short: int) -> int:
+async def sicken(ctx: TickContext, community: EntityRow, short: int, sick_pct: int | None = None) -> int:
+    rate = ctx.rules.consumption.sickness_pct if sick_pct is None else sick_pct
     rows = await cohorts_of(ctx.session, community.id)
     moved = 0
     for key in sorted(rows, key=lambda item: tuple(part.value for part in item)):
         band, sex, social_class, condition = key
         if band not in GROWN_BANDS or condition is not CohortCondition.NONE or rows[key].count <= 0:
             continue
-        count = round_half_up(rows[key].count * ctx.rules.consumption.sickness_pct / PERCENT * short / PERCENT)
+        count = round_half_up(rows[key].count * rate / PERCENT * short / PERCENT)
         if count <= 0:
             continue
         if move_amount(rows[key], row_for(ctx.session, rows, community.id, (band, sex, social_class, CohortCondition.SICK), ctx.epoch), "count", count):
@@ -337,16 +343,47 @@ async def starve_herds(ctx: TickContext, community: EntityRow, short: int) -> in
     taken = await goods_of(ctx.session, ctx.epoch).take_units(community.id, CommodityKind.LIVESTOCK, lost, GoodsFlow.CONSUMPTION)
     if taken > 0:
         await record(ctx, "consumption.herd_loss", roles={IncidentRole.VICTIM: community.id}, facts={"lost": taken, "short": short}, place=community.id)
+        await insured_loss(ctx, community.id, InsuranceCover.LIVESTOCK, taken * ctx.rules.insurance.livestock_payout_pct // PERCENT)
     return taken
 
 
-async def apply_shortfalls(ctx: TickContext, community: EntityRow, basket: Basket, band: TemperatureBand | None) -> dict[ShortfallEffect, int]:
+async def parch(ctx: TickContext, community: EntityRow, short: int) -> int:
+    population = stat(community, "population") or 0
+    dead = min(round_half_up(population * ctx.rules.shortfall.thirst_death_pct / PERCENT * short / PERCENT), max(0, population - 1))
+    if dead <= 0:
+        return 0
+    with flowing(FlowCategory.DEATH):
+        set_stats(community, population=population - dead)
+    await record(ctx, "consumption.thirst_deaths", roles={IncidentRole.VICTIM: community.id}, facts={"dead": dead, "short": short}, place=community.id)
+    return dead
+
+
+async def spare_warmth(ctx: TickContext, community_id: int) -> bool:
+    row = await ctx.session.get(CommunityIndustryRow, community_id)
+    return row is not None and (available(row, EnergyKind.ELECTRIC) > 0 or available(row, EnergyKind.HEAT) > 0)
+
+
+async def expose(ctx: TickContext, community: EntityRow, short: int, band: TemperatureBand | None) -> int:
+    table = ctx.rules.shortfall
+    sick = await sicken(ctx, community, short, table.shelter_sickness_pct)
+    warmed = await spare_warmth(ctx, community.id)
+    cold = 0 if warmed else await freeze(ctx, community, round_half_up(short * table.shelter_cold_pct / PERCENT), band)
+    return sick + cold
+
+
+async def apply_shortfalls(
+    ctx: TickContext, community: EntityRow, effects: Mapping[ShortfallEffect, int], band: TemperatureBand | None
+) -> dict[ShortfallEffect, int]:
     table = ctx.rules.consumption
     done: dict[ShortfallEffect, int] = {}
-    for effect, short in sorted(basket.effects.items(), key=lambda item: item[0].value):
+    for effect, short in sorted(effects.items(), key=lambda item: item[0].value):
         if short <= 0:
             continue
-        if effect is E.COLD:
+        if effect is E.THIRST:
+            done[effect] = await parch(ctx, community, short)
+        elif effect is E.SHELTER:
+            done[effect] = await expose(ctx, community, short, band)
+        elif effect is E.COLD:
             done[effect] = await freeze(ctx, community, short, band)
         elif effect is E.SICKNESS:
             done[effect] = await sicken(ctx, community, short)
@@ -378,12 +415,14 @@ async def effect_shortfalls(session: AsyncSession, community_id: int) -> dict[Sh
         totals[effect] = (before[0] + row.wanted, before[1] + min(row.wanted, got))
     standing = await standing_of(session, community_id)
     found: dict[ShortfallEffect, int] = {effect: short_pct(want, have) for effect, (want, have) in totals.items() if effect is not E.HUNGER}
+    kept = await kept_rows(session, CommunityShortfallRow, CommunityShortfallRow.community_entity_id, community_id)
+    outer = {row.effect: row.short_pct for row in kept if row.effect in OUTER_SHORTFALLS or "short_pct" in row.locked}
     society = await session.get(CommunitySocietyRow, community_id)
     weights = {social_class: society.share(social_class) if society is not None else 1.0 for social_class in standing}
     whole = sum(weights.values())
     fed = sum(row.fed_pct * weights[social_class] for social_class, row in standing.items())
     found[E.HUNGER] = clamp_int(PERCENT - round_half_up(fed / whole), 0, PERCENT) if whole > 0 else 0
-    return found
+    return {**found, **outer}
 
 
 async def fed_index(session: AsyncSession, community_id: int) -> int | None:

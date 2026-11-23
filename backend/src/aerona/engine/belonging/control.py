@@ -4,12 +4,14 @@ from dataclasses import dataclass
 from aerona.core.errors import ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.belonging import (
+    FUGITIVE_FIELDS,
     IDENTITY_FIELDS,
     PEER_GROUP_FIELDS,
     PEER_MEMBER_FIELDS,
     SANCTUARY_FIELDS,
     SANCTUARY_LAW_FIELDS,
     SATIRE_FIELDS,
+    FugitiveRow,
     HeldIdentityRow,
     PeerGroupRow,
     PeerMemberRow,
@@ -40,6 +42,7 @@ KINDS: Mapping[str, Kind] = {
     "held_identity": Kind(HeldIdentityRow, IDENTITY_FIELDS, "identity", ("holder_entity_id", "layer")),
     "peer_group": Kind(PeerGroupRow, PEER_GROUP_FIELDS, "peer group", ("id",)),
     "peer_member": Kind(PeerMemberRow, PEER_MEMBER_FIELDS, "member of a peer group", ("group_id", "mortal_entity_id")),
+    "fugitive": Kind(FugitiveRow, FUGITIVE_FIELDS, "fugitive", ("id",)),
     "sanctuary": Kind(SanctuaryRow, SANCTUARY_FIELDS, "sanctuary", ("id",)),
     "sanctuary_law": Kind(SanctuaryLawRow, SANCTUARY_LAW_FIELDS, "law of sanctuary", ("polity_entity_id",)),
     "satire": Kind(SatireRow, SATIRE_FIELDS, "satire", ("id",)),

@@ -3,25 +3,26 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.tongues import POLICIES
 from aerona.constants.units import PERCENT
-from aerona.db.tables.culture import SpeakerCohortRow
+from aerona.db.tables.culture import LanguageStandingRow, SpeakerCohortRow
 from aerona.db.tables.demography import PeopleCultureRow
-from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.tongues import LanguagePolicyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import SpeakerKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.tongues import LanguagePolicy
+from aerona.domain.enums.tongues import LanguagePolicy, LanguageStage
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import learn_second
 from aerona.engine.primitives.folk import homes_for
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import active_bonds, canon, connect, has_flag, spoken_language
+from aerona.engine.primitives.queries import canon, has_flag, spoken_language
 from aerona.engine.recording.record import record as record_incident
+from aerona.engine.tongues.stages import revived_tongue
 
 HOLDER_TYPES = frozenset({EntityType.POLITY, EntityType.CULT, EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION})
 
@@ -32,6 +33,8 @@ class PolicyTally:
     taught: int = 0
     suppressed: int = 0
     revived: int = 0
+    protected: int = 0
+    standardised: int = 0
 
 
 async def communities_under(ctx: TickContext, holder_id: int) -> list[EntityRow]:
@@ -74,14 +77,47 @@ async def choose_official(ctx: TickContext, polity: EntityRow, tally: PolicyTall
     return row
 
 
+async def teaching_gain(ctx: TickContext, row: LanguagePolicyRow) -> int:
+    profile = await ctx.session.get(LanguageProfileRow, row.language_entity_id)
+    if profile is not None and profile.stage is LanguageStage.CONSTRUCTED:
+        return ctx.rules.tongues.constructed_spread_pct
+    return ctx.rules.language_policy.official_gain
+
+
+async def shield(ctx: TickContext, community: EntityRow, row: LanguagePolicyRow, weight: float) -> None:
+    table = ctx.rules.tongues
+    native = await ctx.session.get(SpeakerCohortRow, (community.id, row.language_entity_id, SpeakerKind.NATIVE))
+    if native is not None and "share" not in native.locked and native.share < table.protected_floor:
+        native.share = table.protected_floor
+    town = await ctx.session.get(SettlementProfileRow, community.id)
+    if town is not None and "unrest" not in town.locked:
+        town.unrest = clamp_int(town.unrest - round_half_up(table.protected_grievance_cut * weight), 0, PERCENT)
+
+
+async def standardise(ctx: TickContext, row: LanguagePolicyRow, weight: float) -> None:
+    standing = await ctx.session.get(LanguageStandingRow, row.language_entity_id)
+    if standing is not None and "standardisation" not in standing.locked:
+        standing.standardisation = clamp_int(standing.standardisation + round_half_up(ctx.rules.tongues.standard_gain * weight), 0, PERCENT)
+
+
 async def press(ctx: TickContext, row: LanguagePolicyRow, tally: PolicyTally) -> None:
     table = ctx.rules.language_policy
     weight = row.strength / PERCENT
+    spec = POLICIES[row.policy]
+    if spec.standardises:
+        await standardise(ctx, row, weight)
+        tally.standardised += 1
     for community in await communities_under(ctx, row.holder_entity_id):
         native = await spoken_language(ctx.session, community.id)
         speaks_it = native is not None and native.id == row.language_entity_id
         if row.policy is LanguagePolicy.OFFICIAL and not speaks_it:
-            await learn_second(ctx, community.id, row.language_entity_id, round_half_up(table.official_gain * weight))
+            await learn_second(ctx, community.id, row.language_entity_id, round_half_up(await teaching_gain(ctx, row) * weight))
+            tally.taught += 1
+        elif spec.shields and speaks_it:
+            await shield(ctx, community, row, weight)
+            tally.protected += 1
+        elif spec.standardises and not speaks_it:
+            await learn_second(ctx, community.id, row.language_entity_id, round_half_up(await teaching_gain(ctx, row) * weight / 2))
             tally.taught += 1
         elif row.policy is LanguagePolicy.LITURGICAL:
             await liturgy(ctx, community.id, row.language_entity_id, round_half_up(table.official_gain * weight))
@@ -129,8 +165,11 @@ async def revive(ctx: TickContext, row: LanguagePolicyRow, tally: PolicyTally) -
     homes = await communities_under(ctx, row.holder_entity_id)
     if not homes:
         return False
-    if not await active_bonds(ctx.session, [BondKind.SPEAKS], sources=[homes[0].id], targets=[language.id]):
-        await connect(ctx.session, homes[0].id, language.id, BondKind.SPEAKS, ctx.epoch, description="revived")
+    restored = await revived_tongue(ctx, language, homes[0])
+    if "language_entity_id" not in row.locked:
+        await ctx.session.delete(row)
+        await ctx.session.flush()
+        await set_policy(ctx, row.holder_entity_id, restored.id, LanguagePolicy.REVIVAL, row.strength)
     tally.revived += 1
     await record_incident(
         ctx, "tongues.revived", roles={IncidentRole.SUBJECT: language.id, IncidentRole.LEARNER: homes[0].id, IncidentRole.AUTHORITY: row.holder_entity_id}
@@ -138,10 +177,64 @@ async def revive(ctx: TickContext, row: LanguagePolicyRow, tally: PolicyTally) -
     return True
 
 
+async def minorities_under(ctx: TickContext, polity: EntityRow) -> list[int]:
+    official = await ctx.session.scalar(
+        select(LanguagePolicyRow.language_entity_id)
+        .where(LanguagePolicyRow.holder_entity_id == polity.id, LanguagePolicyRow.policy == LanguagePolicy.OFFICIAL)
+        .limit(1)
+    )
+    found: set[int] = set()
+    for community in await communities_under(ctx, polity.id):
+        tongue = await spoken_language(ctx.session, community.id)
+        if tongue is not None and tongue.id != official:
+            found.add(tongue.id)
+    return sorted(found)
+
+
+async def choose_shield(ctx: TickContext, polity: EntityRow, tally: PolicyTally) -> None:
+    table = ctx.rules.tongues
+    for language_id in await minorities_under(ctx, polity):
+        if await ctx.session.get(LanguagePolicyRow, (polity.id, language_id, LanguagePolicy.PROTECTED)) is not None:
+            continue
+        if await ctx.session.get(LanguagePolicyRow, (polity.id, language_id, LanguagePolicy.SUPPRESSED)) is not None:
+            continue
+        if not ctx.rng(f"policy.protect.{polity.id}.{language_id}.{ctx.epoch}").chance(table.protect_pct):
+            continue
+        await set_policy(ctx, polity.id, language_id, LanguagePolicy.PROTECTED, PERCENT // 2)
+        tally.set += 1
+        await record_incident(
+            ctx, "language.policy_set", roles={IncidentRole.AUTHORITY: polity.id, IncidentRole.SUBJECT: language_id}, facts={"policy": LanguagePolicy.PROTECTED}
+        )
+        return
+
+
+async def choose_academy(ctx: TickContext, polity: EntityRow, tally: PolicyTally) -> None:
+    official = await ctx.session.scalar(
+        select(LanguagePolicyRow).where(LanguagePolicyRow.holder_entity_id == polity.id, LanguagePolicyRow.policy == LanguagePolicy.OFFICIAL).limit(1)
+    )
+    if official is None or await ctx.session.get(LanguagePolicyRow, (polity.id, official.language_entity_id, LanguagePolicy.STANDARDISED)) is not None:
+        return
+    standing = await ctx.session.get(LanguageStandingRow, official.language_entity_id)
+    if standing is None or standing.prestige < ctx.rules.script_evolution.reform_standard:
+        return
+    if not ctx.rng(f"policy.academy.{polity.id}.{ctx.epoch}").chance(ctx.rules.language_policy.official_pct):
+        return
+    await set_policy(ctx, polity.id, official.language_entity_id, LanguagePolicy.STANDARDISED, PERCENT // 2)
+    tally.set += 1
+    await record_incident(
+        ctx,
+        "language.policy_set",
+        roles={IncidentRole.AUTHORITY: polity.id, IncidentRole.SUBJECT: official.language_entity_id},
+        facts={"policy": LanguagePolicy.STANDARDISED},
+    )
+
+
 async def keep_policies(ctx: TickContext, tally: PolicyTally) -> None:
     for polity in await canon(ctx.session, [EntityType.POLITY]):
         if not held(polity.id):
             await choose_official(ctx, polity, tally)
+            await choose_shield(ctx, polity, tally)
+            await choose_academy(ctx, polity, tally)
     for row in list(await ctx.session.scalars(select(LanguagePolicyRow).order_by(LanguagePolicyRow.holder_entity_id, LanguagePolicyRow.language_entity_id))):
         holder = await ctx.session.get(EntityRow, row.holder_entity_id)
         if holder is None or held(holder.id):

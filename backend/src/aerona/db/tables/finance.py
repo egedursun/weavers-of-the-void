@@ -40,6 +40,9 @@ class CreditProfileRow(Base):
     reserves: Mapped[int] = mapped_column(default=0)
     defaults: Mapped[int] = mapped_column(default=0)
     restructured_until: Mapped[int | None]
+    rescuer_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    rescue_terms: Mapped[int] = mapped_column(default=0, server_default="0")
+    repudiated_until: Mapped[int | None]
     epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

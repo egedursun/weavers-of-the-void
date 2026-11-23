@@ -38,7 +38,7 @@ class CipherRow(Base):
 
 class SignalLinkRow(Base):
     __tablename__ = "signal_links"
-    __table_args__ = (at_least("since_epoch", 0), Index("ix_signal_links_owner", "owner_node_id"))
+    __table_args__ = (at_least("since_epoch", 0), between("condition", PERCENT_MIN, PERCENT_MAX), Index("ix_signal_links_owner", "owner_node_id"))
 
     id: Mapped[int] = mapped_column(primary_key=True)
     owner_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
@@ -47,5 +47,7 @@ class SignalLinkRow(Base):
     to_region_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     item_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     state: Mapped[SignalState] = mapped_column(enum_type(SignalState, "state"), default=SignalState.ACTIVE)
+    condition: Mapped[int] = mapped_column(default=100, server_default="100")
+    jammed_epoch: Mapped[int | None]
     since_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

@@ -2,6 +2,7 @@ from collections.abc import Mapping
 
 from sqlalchemy import select
 
+from aerona.catalog.life.domain import GONE_STATES
 from aerona.catalog.structures import MEGASTRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -117,7 +118,7 @@ async def free_slots(ctx: TickContext, site: EntityRow) -> int:
     rows = await ctx.session.scalars(
         select(StructureProfileRow.structure_entity_id).where(
             StructureProfileRow.host_entity_id == site.id,
-            StructureProfileRow.construction_state != ConstructionState.RUINED,
+            StructureProfileRow.construction_state.not_in(list(GONE_STATES)),
             StructureProfileRow.kind.not_in(sorted(GROWING)),
         )
     )

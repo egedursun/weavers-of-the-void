@@ -589,6 +589,7 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
 )
 @writes(
     "mortal.hp",
+    "table.afflictions",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -718,8 +719,10 @@ async def body_society(ctx: TickContext) -> None:
     "table.bodies",
     "table.body_customs",
     "table.bonds",
+    "table.charms",
     "table.conditions",
     "table.cult_tenets",
+    "table.culture_ethics",
     "table.culture_values",
     "table.deed_claims",
     "table.deeds",

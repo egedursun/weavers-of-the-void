@@ -1,10 +1,7 @@
 import {
-  Shapes,
-  GitBranch,
-  FileBadge,
-  BadgeCheck,
-  Baby,
   Anchor,
+  Baby,
+  BadgeCheck,
   BookMarked,
   BookOpen,
   Brain,
@@ -14,11 +11,13 @@ import {
   Crown,
   Eye,
   EyeOff,
+  FileBadge,
   FileSignature,
   Flame,
   Footprints,
   Gavel,
   Gem,
+  GitBranch,
   Globe,
   Hammer,
   HandCoins,
@@ -27,18 +26,20 @@ import {
   KeyRound,
   Landmark,
   Link2,
-  type LucideIcon,
   MapPinned,
   Scale,
   ScrollText,
+  Shapes,
   Shuffle,
   Skull,
   Sparkles,
   Sword,
+  Swords,
   UserCheck,
   UserX,
   Users,
   Wind,
+  type LucideIcon,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -62,14 +63,17 @@ export const COURTS: Record<Schema['CourtLevel'], Named> = {
   provincial: { label: 'Provincial court', icon: MapPinned, tone: 'info' },
   high: { label: 'High court', icon: Crown, tone: 'gold' },
   religious: { label: 'Court of the faith', icon: Church, tone: 'gold' },
+  guild: { label: 'Guild court', icon: Hammer, tone: 'info' },
+  military: { label: 'Military court', icon: Swords, tone: 'danger' },
+  consular: { label: 'Court of foreigners', icon: Globe, tone: 'verdigris' },
 }
 
 export const REGISTRY_KINDS: Record<Schema['RegistryKind'], Named> = {
   land_title: { label: 'Title to land', icon: MapPinned, tone: 'gold' },
   debt: { label: 'Debt', icon: Coins, tone: 'warning' },
   sale: { label: 'Sale', icon: HandCoins, tone: 'info' },
-  union_portion: {
-    label: 'Portion given at a union',
+  union_payment: {
+    label: 'Payment made at a union',
     icon: Heart,
     tone: 'verdigris',
   },
@@ -94,7 +98,9 @@ export const MOTIVES: Record<Schema['RecruitMotive'], Named> = {
   money: { label: 'For money', icon: Coins, tone: 'warning' },
   ideology: { label: 'For belief', icon: Brain, tone: 'success' },
   compromise: { label: 'Under a hook', icon: Link2, tone: 'danger' },
-  ego: { label: 'For pride or grievance', icon: Gem, tone: 'info' },
+  ego: { label: 'For pride', icon: Gem, tone: 'info' },
+  love: { label: 'For love of a handler', icon: Heart, tone: 'success' },
+  revenge: { label: 'For revenge', icon: Swords, tone: 'danger' },
 }
 
 export const HUNT_OUTCOMES: Record<Schema['MoleHuntOutcome'], Named> = {

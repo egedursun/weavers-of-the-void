@@ -47,6 +47,14 @@ COMMODITY_TRAITS: Mapping[CommodityKind, frozenset[CommodityTrait]] = total(
         C.POISON: frozenset(),
         C.EGGS: frozenset({CommodityTrait.FOOD_PROTEIN}),
         C.WOOL: frozenset(),
+        C.OIL: frozenset({CommodityTrait.CASH_CROP, CommodityTrait.FOOD_FAT, CommodityTrait.KEEPING}),
+        C.SUGAR: frozenset({CommodityTrait.CASH_CROP, CommodityTrait.FOOD_SPECIAL, CommodityTrait.KEEPING}),
+        C.SPICE: frozenset({CommodityTrait.CASH_CROP, CommodityTrait.FOOD_SPECIAL, CommodityTrait.KEEPING, CommodityTrait.HOARD}),
+        C.HALITE: frozenset({CommodityTrait.DUG, CommodityTrait.FOOD_MINERAL, CommodityTrait.KEEPING, CommodityTrait.RAW_MATERIAL}),
+        C.HONEY: frozenset({CommodityTrait.FOOD_SPECIAL, CommodityTrait.KEEPING, CommodityTrait.RENEWABLE}),
+        C.WAX: frozenset({CommodityTrait.RAW_MATERIAL, CommodityTrait.RENEWABLE}),
+        C.POTTERY: frozenset({CommodityTrait.CIVILIAN}),
+        C.BOOKS: frozenset({CommodityTrait.CIVILIAN, CommodityTrait.HOARD}),
     },
 )
 
@@ -104,6 +112,12 @@ MATERIAL_TRAITS: Mapping[MaterialKind, frozenset[MaterialTrait]] = total(
         M.HYDRAULIC_CONCRETE: frozenset(),
         M.THATCH: frozenset({MaterialTrait.COMMON}),
         M.TILE: frozenset(),
+        M.CERAMIC: frozenset({MaterialTrait.COMMON}),
+        M.SILK: frozenset({MaterialTrait.ORGANIC_CLOTH, MaterialTrait.PRECIOUS}),
+        M.RESIN: frozenset({MaterialTrait.COMMON}),
+        M.SHELL: frozenset({MaterialTrait.PRECIOUS}),
+        M.POLYMER: frozenset({MaterialTrait.CONSTRUCT_BODY}),
+        M.COMPOSITE: frozenset({MaterialTrait.CONSTRUCT_BODY, MaterialTrait.STRATEGIC}),
     },
 )
 
@@ -129,6 +143,11 @@ WORKSHOP_TRAITS: Mapping[WorkshopKind, frozenset[WorkshopTrait]] = total(
         W.ALCHEMIST: frozenset(),
         W.SHRINE_WORKSHOP: frozenset(),
         W.MINT: frozenset(),
+        W.POTTERY: frozenset({WorkshopTrait.SMELTING}),
+        W.GLASSWORKS: frozenset({WorkshopTrait.SMELTING}),
+        W.DYEWORKS: frozenset(),
+        W.SCRIPTORIUM: frozenset(),
+        W.EVAPORATION_WORKS: frozenset({WorkshopTrait.CELLAR}),
     },
 )
 

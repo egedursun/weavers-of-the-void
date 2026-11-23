@@ -5,7 +5,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
-from aerona.db.tables.society_depth import ClassStandingRow, CommunityNeedRow, CorveeRow, DriftImpositionRow, PolityLoyaltyRow
+from aerona.db.tables.society_depth import ClassStandingRow, CommunityNeedRow, CommunityShortfallRow, CorveeRow, DriftImpositionRow, PolityLoyaltyRow
 from aerona.domain.enums.cycles import ManumissionPath
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind
@@ -13,11 +13,12 @@ from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.society_depth import DriftCause
+from aerona.domain.enums.society_depth import DriftCause, ShortfallEffect
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.indenture import record_manumission
 from aerona.engine.demography.control import move_cohort
 from aerona.engine.demography.events import ennobled, enslaved, freed, ruined
+from aerona.engine.demography.shortfalls import HELD_SHORT
 from aerona.engine.demography.wealth import WEALTH_LOCK
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
@@ -56,6 +57,21 @@ async def hold_need(ctx: TickContext, community_id: int, social_class: SocialCla
         row = CommunityNeedRow(community_entity_id=entity.id, social_class=social_class, commodity=commodity, wanted=0, got=0, epoch=ctx.epoch)
         ctx.session.add(row)
     row.held_pct = checked("met share", held_pct, (0, PERCENT)) if held_pct is not None else None
+    await ctx.session.flush()
+    return row
+
+
+async def hold_shortfall(ctx: TickContext, community_id: int, effect: ShortfallEffect, short_pct: int | None) -> CommunityShortfallRow:
+    entity = await community(ctx, community_id)
+    row = await ctx.session.get(CommunityShortfallRow, (entity.id, effect))
+    if row is None:
+        row = CommunityShortfallRow(community_entity_id=entity.id, effect=effect, short_pct=0, epoch=ctx.epoch, locked=[])
+        ctx.session.add(row)
+    if short_pct is None:
+        row.locked = [key for key in row.locked if key != HELD_SHORT]
+    else:
+        row.short_pct = checked("want", short_pct, (0, PERCENT))
+        row.locked = sorted({*row.locked, HELD_SHORT})
     await ctx.session.flush()
     return row
 

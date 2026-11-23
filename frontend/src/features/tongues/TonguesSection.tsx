@@ -11,6 +11,7 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { plural } from '@/lib/units'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -57,6 +58,7 @@ import {
   useTongueAction,
 } from './api'
 import {
+  BASES,
   CAUSES,
   CHANGE_KINDS,
   ENVIRONMENTS,
@@ -97,20 +99,28 @@ function ProfileCard({
   const busy = why(blocked, edit.isPending)
   const modality = MODALITIES[data.modality]
   const stage = STAGES[data.stage]
+  const base = BASES[data.numeral_base]
   return (
     <RecordRow
       icon={modality.icon}
       tone={stage.tone}
       title={`${modality.label} · ${stage.label}`}
-      caption={
+      caption={`${base.label} · ${
         data.writing_system
           ? `Written in ${SYSTEMS[data.writing_system].label.toLowerCase()}`
           : 'Unwritten'
+      }`}
+      aside={
+        data.ancestor ? (
+          <Badge variant='secondary'>
+            From <Ref node={data.ancestor} empty='a lost tongue' />
+          </Badge>
+        ) : undefined
       }
     >
       <RecordEditor
         title='Reshape the tongue'
-        note='A tongue that is scented or thought cannot be written; thought crosses every barrier between those who think it.'
+        note='How a tongue is made decides who can hear it and whether it can be written; its counting base shapes how its speakers reckon; a revived tongue names the dead tongue it came back from.'
         fields={[
           {
             key: 'modality',
@@ -119,6 +129,18 @@ function ProfileCard({
             table: table(MODALITIES),
           },
           { key: 'stage', label: 'Stage', kind: 'pick', table: table(STAGES) },
+          {
+            key: 'numeral_base',
+            label: 'Counting base',
+            kind: 'pick',
+            table: table(BASES),
+          },
+          {
+            key: 'parent_language_id',
+            label: 'Ancestor tongue',
+            kind: 'node',
+            types: ['language'],
+          },
         ]}
         locked={[]}
         busy={busy}

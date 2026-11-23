@@ -16,6 +16,7 @@ from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.intrigue import FavourRow, HookRow, SchemeRow, TrueNameRow
+from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.operations import AdmiraltyRow
 from aerona.db.tables.polity import ClaimRow, OfficeRow, PolityMemberRow, PolityProfileRow
@@ -42,6 +43,7 @@ from aerona.domain.enums.tongues import LanguageModality
 from aerona.domain.enums.unions import UnionPurpose
 from aerona.domain.enums.war import CaptiveStatus, SiegeStatus
 from aerona.engine.arts.forgery import FORGEABLE, forge, work_of
+from aerona.engine.communication.dispatches import ARMY, REGION, commanders_of
 from aerona.engine.communication.post import FORGER, send
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import GoodsLedger
@@ -503,9 +505,29 @@ async def learn_true_name(ctx: TickContext, scheme: SchemeRow, owner: EntityRow,
     return f"{owner.name} learned the true name of {target.name}"
 
 
+async def forged_order(ctx: TickContext, owner: EntityRow, realm: int) -> str | None:
+    profile = await ctx.session.get(PolityProfileRow, realm)
+    seat = profile.capital_entity_id if profile is not None else None
+    for army in await commanders_of(ctx, realm):
+        place = await ctx.session.get(ArmyProfileRow, army.entity_id)
+        if seat is None or army.war_id is None or place is None or army.commander_entity_id is None:
+            continue
+        home = await ctx.session.get(EntityRow, seat)
+        region = home.location_id if home is not None else None
+        if region is None or region == place.region_entity_id:
+            continue
+        payload = {FORGER: owner.id, ARMY: army.entity_id, REGION: region}
+        if await send(ctx, seat, army.commander_entity_id, DispatchContent.ORDER, Medium.LETTER, payload=payload, forged=True) is not None:
+            return "a forged order went out to call an army home"
+    return None
+
+
 @STRIKES.on(PlotKind.FORGE_LETTER)
 async def forge_letter(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     realm = await realm_of(ctx, target.id) or target.id
+    ordered = await forged_order(ctx, owner, realm)
+    if ordered is not None:
+        return ordered
     rivals = (
         select(PolityProfileRow.polity_entity_id)
         .join(EntityRow, EntityRow.id == PolityProfileRow.polity_entity_id)

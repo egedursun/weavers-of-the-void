@@ -1,12 +1,13 @@
 from typing import Any
 
+from aerona.catalog.pacts import BREAKABLE_STATES
 from aerona.db.tables.polity import TreatyProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.polity import TreatyBreach, TreatyKind, TreatyStatus
+from aerona.domain.enums.polity import TreatyBreach, TreatyKind
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.treaties import breach
 from aerona.engine.services.community_relations import change_relation
@@ -63,7 +64,7 @@ async def seal_treaty(call: SonCall, args: SealTreatyInput) -> str:
 
 async def void_treaty(call: SonCall, args: VoidTreatyInput) -> str:
     profile = await call.session.get(TreatyProfileRow, args.treaty_id)
-    if profile is None or profile.status is not TreatyStatus.IN_FORCE:
+    if profile is None or profile.status not in BREAKABLE_STATES:
         fail(SonResult.NO_TREATY)
     breaker = await require_canon(call.session, args.breaker_id)
     await ensure_in_reach(call, breaker)

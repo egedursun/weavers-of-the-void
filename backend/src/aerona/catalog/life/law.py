@@ -17,6 +17,9 @@ CLASSES: Mapping[LawArea, frozenset[SocialClass] | None] = total(
         LawArea.PUBLIC_HEALTH: frozenset({SocialClass.MERCHANT, SocialClass.ARTISAN, SocialClass.FARMER, SocialClass.WORKER}),
         LawArea.MAGIC: frozenset({SocialClass.PRIEST, SocialClass.MONASTIC, SocialClass.SCRIBE, SocialClass.OUTCAST}),
         LawArea.CONSTITUTIONAL: frozenset({SocialClass.OFFICIAL, SocialClass.NOBLE, SocialClass.SCRIBE, SocialClass.PROFESSIONAL}),
+        LawArea.COMMERCE: frozenset({SocialClass.MERCHANT, SocialClass.ARTISAN, SocialClass.PROFESSIONAL}),
+        LawArea.FAITH: frozenset({SocialClass.PRIEST, SocialClass.MONASTIC}),
+        LawArea.LABOUR: frozenset({SocialClass.WORKER, SocialClass.FARMER, SocialClass.ARTISAN, SocialClass.SERF_OR_SLAVE}),
     },
 )
 

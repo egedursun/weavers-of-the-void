@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.domain import ENGINE_OF_KIND
 from aerona.catalog.life.phases import BASE_STATS_FACTION_KINDS, BASE_STATS_FACTION_KINDS_2
@@ -10,6 +11,7 @@ from aerona.constants.units import PERCENT
 from aerona.constants.warfare import FACTION_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.core.grammar import an
+from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -68,7 +70,7 @@ class FactionBlueprint:
 ENGINEERING = having(TECHNIQUE_TRAITS, TechniqueTrait.ENGINEERING)
 FINANCE = having(TECHNIQUE_TRAITS, TechniqueTrait.FINANCE)
 
-BLUEPRINTS = (
+BLUEPRINT_LIST = (
     FactionBlueprint(K.MERCHANT_GUILD, "trade association", "Guild", "merchants", "Trade Association"),
     FactionBlueprint(K.CRAFT_GUILD, "craft association", "Craft Guild", "artisans", "Craft Association"),
     FactionBlueprint(K.PRIESTHOOD, "priests' council", "Priests' Council", "priests"),
@@ -104,11 +106,14 @@ BLUEPRINTS = (
     FactionBlueprint(K.ART_MOVEMENT, "art movement", "School", "makers"),
     FactionBlueprint(K.CLUB, "club", "Club", "players"),
     FactionBlueprint(K.LEAGUE, "league", "League", "clubs"),
+    FactionBlueprint(K.STREET_GANG, "street gang", "Gang", "members"),
+    FactionBlueprint(K.TRAFFICKING_RING, "trafficking ring", "Ring", "traffickers"),
 )
+BLUEPRINTS: Mapping[FactionKind, FactionBlueprint] = total(FactionKind, {item.kind: item for item in BLUEPRINT_LIST})
 
 
 def blueprint(kind: FactionKind) -> FactionBlueprint:
-    return next(item for item in BLUEPRINTS if item.kind is kind)
+    return BLUEPRINTS[kind]
 
 
 def base_stats(rules: Rules, kind: FactionKind) -> tuple[int, int, int]:
@@ -283,21 +288,34 @@ async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKin
     return faction
 
 
+async def factions_by_home(session: AsyncSession) -> dict[int, int]:
+    statement = (
+        select(FactionProfileRow.home_entity_id, func.count())
+        .join(EntityRow, EntityRow.id == FactionProfileRow.faction_entity_id)
+        .where(EntityRow.status == EntityStatus.CANON, FactionProfileRow.home_entity_id.is_not(None))
+        .group_by(FactionProfileRow.home_entity_id)
+    )
+    return {int(home): int(count) for home, count in (await session.execute(statement)).all() if home is not None}
+
+
 async def found_factions(ctx: TickContext) -> int:
     rules = ctx.rules.factions
     rng = ctx.rng("founding")
     founded = 0
     communities = ctx.rng("founding.order").shuffled(unheld(await canon(ctx.session, SOCIETY_TYPES)))
     limit = scaled_cap(rules.faction_cap, rules.faction_cap_community_divisor, len(communities))
+    homes = await factions_by_home(ctx.session)
     for community in communities:
         if founded >= limit:
             break
-        if (stat(community, "population") or 0) < rules.faction_min_population:
+        population = stat(community, "population") or 0
+        room = 1 - homes.get(community.id, 0) / max(1, population // rules.faction_room_people)
+        if population < rules.faction_min_population or room <= 0:
             continue
         kinds = await eligible_kinds(ctx, community)
         discontent = await founding_factor(ctx.session, ctx.rules, community.id, kinds[0]) if kinds else 1.0
         stress = await stress_factor(ctx.session, community.id, ctx.rules.structural_demography.faction_lift)
-        if not rng.chance(rules.faction_chance * await faction_drive(ctx.session, ctx.rules, community.id) * discontent * stress):
+        if not rng.chance(rules.faction_chance * room * await faction_drive(ctx.session, ctx.rules, community.id) * discontent * stress):
             continue
         if kinds:
             await found_faction(ctx, community, kinds[0])
@@ -363,6 +381,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.polity_territories",
     "table.pressures",
     "table.professions_of_value",
+    "table.public_opinion",
     "table.reputations",
     "table.routes",
     "table.ruler_currencies",
@@ -380,6 +399,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.vassalages",
     "table.war_sides",
     "table.wars",
+    "table.worker_bodies",
     "table.world_maps",
     "table.worlds",
 )

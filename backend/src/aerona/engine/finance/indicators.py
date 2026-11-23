@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.finance import OWED_LOANS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.demography import LabourRow
@@ -14,7 +15,6 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.demography import Job
-from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -123,7 +123,7 @@ async def store(ctx: TickContext, subject_id: int, found: Figures) -> EconomicIn
 
 
 async def open_debt(ctx: TickContext, borrowers: set[int]) -> int:
-    loans = await ctx.session.scalars(select(LoanRow).where(LoanRow.status == LoanStatus.OPEN, LoanRow.borrower_entity_id.in_(borrowers)))
+    loans = await ctx.session.scalars(select(LoanRow).where(LoanRow.status.in_(OWED_LOANS), LoanRow.borrower_entity_id.in_(borrowers)))
     return sum(owed(loan) for loan in loans)
 
 

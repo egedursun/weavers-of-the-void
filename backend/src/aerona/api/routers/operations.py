@@ -49,6 +49,7 @@ from aerona.db.tables.operations import (
 from aerona.db.tables.vehicles import VesselSectionRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.node import NodeKind
+from aerona.engine.operations.crews import fitted_stations
 from aerona.engine.services.war import ongoing_wars
 
 router = APIRouter(tags=["operations"])
@@ -385,6 +386,7 @@ async def node_operations(services: ServicesDep, node_id: NodeId) -> OperationsN
             admiralty=admiralty_view(admiralty, refs) if admiralty is not None else None,
             ship=ship_view(ship, vessel, sections, refs) if ship is not None else None,
             crews=[CrewView(station=row.station, count=row.count, skill=row.skill, locked=row.locked) for row in crews],
+            crew_stations=await fitted_stations(session, node_id, vessel) if vessel is not None else [],
             quirks=[quirk_view(row, refs) for row in quirks],
             expeditions=[
                 expedition_view(row, [item for item in members if item.expedition_id == row.id], [item for item in logs if item.expedition_id == row.id], refs)

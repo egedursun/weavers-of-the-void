@@ -2,12 +2,275 @@ from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleS
 from aerona.domain.enums.arts import ClubKind, ForgeryKind
 from aerona.domain.enums.crafts import RightAcquired, RightKind
 from aerona.domain.enums.cycles import GiftOccasion
+from aerona.domain.enums.honours import UnitHonourKind, VeteranGrant
+from aerona.domain.enums.law_depth import RecruitMotive
+from aerona.domain.enums.military import ArmyRole, CaptiveFate, DefenderAction, SackChoice, SiegeWork, SpyOperation, Stance
 from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule, StepAction
 from aerona.domain.enums.records import ProcessClock as C
 from aerona.domain.enums.records import ProcessGroup as G
 
 GIFT_SIDES = (RoleSpec(R.GIVER), RoleSpec(R.RECEIVER))
+
+WAR_SIDES = (RoleSpec(R.ACTOR), RoleSpec(R.OPPONENT))
+SIEGE_SIDES = (RoleSpec(R.ACTOR), RoleSpec(R.TARGET))
+SPY_SIDES = (RoleSpec(R.ACTOR), RoleSpec(R.TARGET))
+B = G.BATTLES
+D = G.DIPLOMACY
+
+
+def number(key: str, unit: FactUnit) -> FactSpec:
+    return FactSpec(key, FactValue.NUMBER, unit=unit)
+
+
+WAR_KINDS: tuple[IncidentKindSpec, ...] = (
+    IncidentKindSpec(
+        "army.stance",
+        B,
+        "{subject} took the stance of {stance}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("stance", FactValue.ENUM, enum=Stance),),
+        steps=frozenset({StepAction.MANOEUVRE}),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "unit.honoured",
+        B,
+        "{unit} of {subject} was honoured for {honour} at {place}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("honour", FactValue.ENUM, enum=UnitHonourKind), FactSpec("unit", FactValue.NAME), FactSpec("place", FactValue.NAME)),
+        steps=frozenset({StepAction.HONOUR}),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "battle.casualties",
+        B,
+        "The battle between {actor} and {opponent} left {killed:soldier|soldiers} killed, {wounded:soldier|soldiers} wounded, "
+        "{captured:soldier|soldiers} captured, {missing:soldier|soldiers} missing and {deserted:soldier|soldiers} deserted.",
+        roles=WAR_SIDES,
+        facts=(
+            number("killed", FactUnit.PEOPLE),
+            number("wounded", FactUnit.PEOPLE),
+            number("captured", FactUnit.PEOPLE),
+            number("missing", FactUnit.PEOPLE),
+            number("deserted", FactUnit.PEOPLE),
+        ),
+        steps=frozenset({StepAction.ROUT}),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "battle.missing_returned",
+        B,
+        "{subject}, missing after a rout, came back.",
+        roles=(RoleSpec(R.SUBJECT),),
+        steps=frozenset({StepAction.RETURN}),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "battle.missing_turned_bandit",
+        B,
+        "{subject}, missing after a rout, took to banditry.",
+        roles=(RoleSpec(R.SUBJECT),),
+        steps=frozenset({StepAction.DEPART}),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "battle.missing_found_dead",
+        B,
+        "{subject}, missing after a rout, was found dead.",
+        roles=(RoleSpec(R.SUBJECT),),
+        steps=frozenset({StepAction.DISCOVER}),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "siege.work_built",
+        B,
+        "The besiegers of {actor} finished {work} before {target}.",
+        roles=SIEGE_SIDES,
+        facts=(FactSpec("work", FactValue.ENUM, enum=SiegeWork),),
+        steps=frozenset({StepAction.COMPLETE}),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "siege.gate_betrayed",
+        B,
+        "Some inside {target} were won over by {actor} and opened a gate; its walls now stand with {breaches:breach|breaches}.",
+        roles=SIEGE_SIDES,
+        facts=(number("breaches", FactUnit.COUNT),),
+        steps=frozenset({StepAction.BETRAY}),
+        clock=C.INSTANT,
+        magnitude=40,
+    ),
+    IncidentKindSpec(
+        "siege.plot_exposed",
+        B,
+        "A plot of {actor} to open a gate of {target} was found out, and the defence grew firmer by {hardened}.",
+        roles=SIEGE_SIDES,
+        facts=(number("hardened", FactUnit.PERCENT),),
+        steps=frozenset({StepAction.DISCOVER}),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "siege.defence",
+        B,
+        "{actor}, besieged by {opponent}, chose to {defence}; it came to {amount}.",
+        roles=WAR_SIDES,
+        facts=(FactSpec("defence", FactValue.ENUM, enum=DefenderAction), number("amount", FactUnit.COUNT)),
+        steps=frozenset({StepAction.HOLD}),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "war.sack.ransom_city",
+        B,
+        "{actor} spared {target} for a ransom of {paid}.",
+        roles=SIEGE_SIDES,
+        facts=(number("paid", FactUnit.COIN),),
+        steps=frozenset({StepAction.PAY}),
+        place=PlaceRule.REQUIRED,
+        clock=C.INSTANT,
+        magnitude=50,
+    ),
+    IncidentKindSpec(
+        "war.sack.deport",
+        B,
+        "{actor} took {moved:person|people} from {target} to its own lands.",
+        roles=SIEGE_SIDES,
+        facts=(number("moved", FactUnit.PEOPLE),),
+        steps=frozenset({StepAction.TAKE_CAPTIVES}),
+        place=PlaceRule.REQUIRED,
+        clock=C.INSTANT,
+        magnitude=60,
+    ),
+    IncidentKindSpec(
+        "spy.operation",
+        D,
+        "Agents of {actor} worked against {target}: {operation}.",
+        roles=(*SPY_SIDES, RoleSpec(R.PLACE, required=False), RoleSpec(R.SUBJECT, required=False)),
+        facts=(FactSpec("operation", FactValue.ENUM, enum=SpyOperation),),
+        steps=frozenset({StepAction.DECEIVE}),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "spy.exfiltrate_caught",
+        D,
+        "Agents of {actor} tried to bring {subject} out of {target}, and {subject} was caught on the way.",
+        roles=(*SPY_SIDES, RoleSpec(R.SUBJECT)),
+        steps=frozenset({StepAction.ESCAPE}),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "spy.missing",
+        D,
+        "{subject}, an agent of {actor} in {target}, went out of contact.",
+        roles=(*SPY_SIDES, RoleSpec(R.SUBJECT, required=False)),
+        steps=frozenset({StepAction.LEAVE}),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "spy.exposed",
+        D,
+        "{subject}, an agent of {actor} in {target}, became known to its enemies and is watched.",
+        roles=(*SPY_SIDES, RoleSpec(R.SUBJECT, required=False)),
+        steps=frozenset({StepAction.REVEAL}),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "spy.found",
+        D,
+        "{subject}, an agent of {actor} in {target}, was found again.",
+        roles=(*SPY_SIDES, RoleSpec(R.SUBJECT, required=False)),
+        steps=frozenset({StepAction.DISCOVER}),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "veteran.policy_set",
+        B,
+        "{actor} set its grant to veterans: {grant}.",
+        roles=(RoleSpec(R.ACTOR),),
+        facts=(FactSpec("grant", FactValue.ENUM, enum=VeteranGrant),),
+        steps=frozenset({StepAction.DECREE}),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+)
+
+
+def tool(key: str, template: str, roles: tuple[RoleSpec, ...], facts: tuple[FactSpec, ...], step: StepAction, *, group: G = G.BATTLES) -> IncidentKindSpec:
+    return IncidentKindSpec(f"tools.mortal.{key}", group, template, roles=roles, facts=facts, steps=frozenset({step}), place=PlaceRule.NONE, clock=C.INSTANT)
+
+
+ORDERED = (RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT))
+TOOL_KINDS: tuple[IncidentKindSpec, ...] = (
+    tool(
+        "set_army_stance", "{actor} set {subject} to the stance of {stance}.", ORDERED, (FactSpec("stance", FactValue.ENUM, enum=Stance),), StepAction.MANOEUVRE
+    ),
+    tool(
+        "assign_army_role",
+        "{actor} gave {leader} a place on the staff of {subject}: {role}.",
+        (*ORDERED, RoleSpec(R.LEADER)),
+        (FactSpec("role", FactValue.ENUM, enum=ArmyRole),),
+        StepAction.APPOINT,
+    ),
+    tool(
+        "decide_captives",
+        "{actor} decided the fate of {count:captive|captives}: {fate}.",
+        (RoleSpec(R.ACTOR),),
+        (FactSpec("fate", FactValue.ENUM, enum=CaptiveFate), number("count", FactUnit.PEOPLE)),
+        StepAction.JUDGE,
+    ),
+    tool(
+        "order_siege_work",
+        "{actor} set the besiegers of {target} to raise {work}; it stands {done} done.",
+        SIEGE_SIDES,
+        (FactSpec("work", FactValue.ENUM, enum=SiegeWork), number("done", FactUnit.PERCENT)),
+        StepAction.ASSEMBLE,
+    ),
+    tool(
+        "defend_siege",
+        "{actor} chose how {target} holds out: {defence}.",
+        SIEGE_SIDES,
+        (FactSpec("defence", FactValue.ENUM, enum=DefenderAction),),
+        StepAction.HOLD,
+    ),
+    tool(
+        "decide_fall",
+        "{actor} decided what becomes of {target} if it falls: {choice}.",
+        SIEGE_SIDES,
+        (FactSpec("choice", FactValue.ENUM, enum=SackChoice),),
+        StepAction.DECREE,
+    ),
+    tool("negotiate_surrender", "{actor} offered terms, and {target} yielded.", SIEGE_SIDES, (), StepAction.SURRENDER),
+    tool(
+        "run_operation",
+        "{actor} set a network on {target}: {operation}.",
+        SPY_SIDES,
+        (FactSpec("operation", FactValue.ENUM, enum=SpyOperation),),
+        StepAction.DECEIVE,
+        group=G.DIPLOMACY,
+    ),
+    tool(
+        "recruit_agent",
+        "{actor} won {subject} as an agent: {motive}.",
+        ORDERED,
+        (FactSpec("motive", FactValue.ENUM, enum=RecruitMotive),),
+        StepAction.PERSUADE,
+        group=G.DIPLOMACY,
+    ),
+    tool(
+        "grant_veterans",
+        "{actor} set what {subject} grants its veterans: {grant}.",
+        ORDERED,
+        (FactSpec("grant", FactValue.ENUM, enum=VeteranGrant),),
+        StepAction.DECREE,
+    ),
+)
 
 KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
@@ -168,4 +431,6 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         place=PlaceRule.WHEN_KNOWN,
         clock=C.INSTANT,
     ),
+    *WAR_KINDS,
+    *TOOL_KINDS,
 )

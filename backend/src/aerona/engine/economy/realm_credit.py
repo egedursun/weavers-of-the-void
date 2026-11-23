@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.finance import OWED_LOANS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.economy import LoanRow
@@ -20,6 +21,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
 from aerona.engine.economy.money import MoneyTally, banks, collapse, gain, owed, riches
 from aerona.engine.finance.credit import interest_for, on_default, refuses
+from aerona.engine.finance.w52_credit import seize_collateral
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.recording.record import StepDraft, record
@@ -86,7 +88,7 @@ async def lend_to_realms(ctx: TickContext, book: EconomyBook, tally: MoneyTally)
         at_war = await realm_at_war(ctx, realm)
         if profile.treasury >= table.polity_treasury_below or not (at_war or profile.debt > 0):
             continue
-        statement = select(LoanRow.id).where(LoanRow.borrower_entity_id == realm.entity.id, LoanRow.status == LoanStatus.OPEN)
+        statement = select(LoanRow.id).where(LoanRow.borrower_entity_id == realm.entity.id, LoanRow.status.in_(OWED_LOANS))
         open_loan = await ctx.session.scalar(statement.limit(1))
         if open_loan is not None or not ctx.rng(f"realm_loan.{realm.entity.id}.{ctx.epoch}").chance(table.polity_lend_chance):
             continue
@@ -127,6 +129,7 @@ async def realm_default(ctx: TickContext, book: EconomyBook, loan: LoanRow, real
         await record(ctx, "banking.realm_jubilee", roles={IncidentRole.BORROWER: realm.entity.id, IncidentRole.LENDER: lender.id}, facts={"left": left})
         return "jubilee"
     loan.status = LoanStatus.DEFAULTED
+    await seize_collateral(ctx, loan)
     await on_default(ctx, realm.entity, lender)
     realm.profile.debt += round_half_up(left * table.polity_default_debt_pct / PERCENT)
     gain(lender, -table.default_bank_loss)
@@ -156,7 +159,7 @@ async def realm_default(ctx: TickContext, book: EconomyBook, loan: LoanRow, real
 async def collect_from_realms(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
     table = ctx.rules.banking
     realms = await RealmBook.load(ctx.session)
-    statement = select(LoanRow).where(LoanRow.status == LoanStatus.OPEN, LoanRow.held.is_(False)).order_by(LoanRow.id)
+    statement = select(LoanRow).where(LoanRow.status.in_(OWED_LOANS), LoanRow.held.is_(False)).order_by(LoanRow.id)
     for loan in await ctx.session.scalars(statement):
         realm = realms.realms.get(loan.borrower_entity_id)
         lender = book.entities.get(loan.lender_entity_id)

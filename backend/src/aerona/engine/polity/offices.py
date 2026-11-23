@@ -4,7 +4,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.civics import OFFICE_GATES, OFFICE_LEVELS
-from aerona.catalog.life.polity import COUNCIL, DEFAULT_POWERS, OFFICE_SKILLS, POWER_SKILLS, SUCCESSION_LINE_SUCCESSION_RULES
+from aerona.catalog.life.polity import CLAIM_STRENGTHS, COUNCIL, DEFAULT_POWERS, OFFICE_SKILLS, POWER_SKILLS, SUCCESSION_LINE_SUCCESSION_RULES
 from aerona.catalog.life_traits import OFFICE_KIND_TRAITS, having
 from aerona.catalog.reproduction import kind_of_sex, sex_rule_fit
 from aerona.constants.units import PERCENT
@@ -28,12 +28,12 @@ from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.folkways import BiasedDecision
-from aerona.domain.enums.intrigue import FavourOrigin
+from aerona.domain.enums.intrigue import FavourOrigin, HookDemand
 from aerona.domain.enums.life_traits import OfficeKindTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.polity import CoupCause, LawKind, OathBreach, OathKind, OfficeKind, OfficePower, SexRule, SuccessionRule, TreatyStatus
+from aerona.domain.enums.polity import ClaimBasis, CoupCause, LawKind, OathBreach, OathKind, OfficeKind, OfficePower, SexRule, SuccessionRule, TreatyStatus
 from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.settlement import TIER_ORDER
 from aerona.domain.enums.society import SocialClass
@@ -48,9 +48,10 @@ from aerona.engine.context import TickContext
 from aerona.engine.customs.rights import has_right
 from aerona.engine.cycles.book import stress_factor
 from aerona.engine.cycles.sides import PAIRED, drawn_side, second_sex, system_of_people
+from aerona.engine.factions.privileges import reserved_class
 from aerona.engine.folkways.biases import lean
 from aerona.engine.interconnect.causes import succession_incident
-from aerona.engine.intrigue.favours import owe
+from aerona.engine.intrigue.favours import hook_on, owe, use_hook
 from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.civics import reaches, realm_allows, realm_levels
 from aerona.engine.military.causes import press_claim_war
@@ -131,8 +132,24 @@ def adult(ctx: TickContext, mortal: EntityRow) -> bool:
     return (stat(mortal, "age") or 0) >= ctx.rules.succession.regency_age
 
 
+KEPT_OFFICES = having(OFFICE_KIND_TRAITS, OfficeKindTrait.SEATS_KEPT)
+
+
+async def pressed_candidate(ctx: TickContext, realm: Realm, candidates: list[EntityRow]) -> EntityRow | None:
+    if realm.ruler_id is None:
+        return None
+    for mortal in candidates:
+        hook = await hook_on(ctx, mortal.id, realm.ruler_id)
+        if hook is not None and await use_hook(ctx, hook, HookDemand.APPOINTMENT):
+            return mortal
+    return None
+
+
 async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: EntityRow | None, *, by_id: int | None, reason: str) -> None:
     if holder is not None and ctx.rules.citizenship.rightless_office and not await has_right(ctx.session, holder.id, MemberRight.OFFICE, realm.entity.id):
+        return
+    kept = await reserved_class(ctx.session, realm.entity.id)
+    if holder is not None and kept is not None and holder.social_class is not kept and office.kind not in KEPT_OFFICES:
         return
     if office.holder_entity_id is not None and office.id is not None:
         ctx.session.add(
@@ -245,6 +262,7 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, occupied: set[i
         bonus = ctx.rules.peer_groups.companion_weight
         scores = {mortal.id: await skill_score(ctx, mortal, kind) + weights[mortal.id] + (bonus if mortal.id in friends else 0) for mortal in candidates}
         best = max(candidates, key=lambda mortal: (scores[mortal.id], -mortal.id))
+        best = await pressed_candidate(ctx, realm, candidates) or best
         await appoint(ctx, realm, office, best, by_id=realm.ruler_id, reason="the seat was empty")
         occupied.add(best.id)
         filled += 1
@@ -332,6 +350,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
         SuccessionRule.BY_COMBAT: [*children, *siblings, *housemates],
         SuccessionRule.DIVINE_CHOICE: [*children, *housemates, *siblings],
         SuccessionRule.ULTIMOGENITURE: [*sorted(children, key=lambda item: (stat(item, "age") or 0, item.id)), *grandchildren, *siblings],
+        SuccessionRule.DESIGNATION: [*children, *housemates, *siblings, *grandchildren, *await subjects(ctx, realm)],
     }
     seen: set[int] = set()
     pool: list[EntityRow] = []
@@ -356,6 +375,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
     table = ctx.rules.succession
     order = {item.id: index for index, item in enumerate(pool)}
     favour = await divine_favour(ctx, realm, [item for _, item in eligible]) if rule is SuccessionRule.DIVINE_CHOICE else {}
+    named = await ctx.session.scalar(select(DesignatedHeirRow.heir_entity_id).where(DesignatedHeirRow.ruler_entity_id == ruler.id))
 
     def key(entry: tuple[int, EntityRow]) -> tuple[float, ...]:
         rank, item = entry
@@ -381,7 +401,11 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
         merit = (stat(item, "strength") or 0) + (stat(item, "charisma") or 0) + (item.importance or 0)
         return (rank, -(favour.get(item.id, 0) * PERCENT + merit), item.id)
 
-    return [item for _, item in sorted(eligible, key=key)]
+    def chosen(entry: tuple[int, EntityRow]) -> tuple[float, ...]:
+        rank, item = entry
+        return (0 if item.id == named else 1, rank, -((stat(item, "intellect") or 0) + (stat(item, "charisma") or 0) + (item.importance or 0)), item.id)
+
+    return [item for _, item in sorted(eligible, key=chosen if rule is SuccessionRule.DESIGNATION else key)]
 
 
 async def divine_favour(ctx: TickContext, realm: Realm, people: list[EntityRow]) -> dict[int, int]:
@@ -427,7 +451,64 @@ async def name_heir(ctx: TickContext, realm: Realm, line: list[EntityRow]) -> En
         designate.holder_entity_id = heir.id
         designate.since_epoch = ctx.epoch
         await owe(ctx, heir.id, realm.ruler_id, FavourOrigin.SUCCESSION_SUPPORT, ctx.rules.intrigue.succession_favour)
+        await claim_by_rule(ctx, realm, heir)
     return heir
+
+
+async def claim_by_rule(ctx: TickContext, realm: Realm, heir: EntityRow) -> None:
+    laws = await LawBook.load(ctx.session)
+    rule = SuccessionRule(str(laws.param(realm.entity.id, LawKind.SUCCESSION_RULE, "rule") or SuccessionRule.PRIMOGENITURE.value))
+    ruler = await living_entity(ctx.session, realm.ruler_id) if realm.ruler_id is not None else None
+    if ruler is None:
+        return
+    if rule is SuccessionRule.ELECTIVE:
+        await make_claim(ctx, realm, heir, ClaimBasis.ELECTION, ctx.rules.claims.adopted_claim, backer=None)
+        return
+    if rule is not SuccessionRule.DESIGNATION:
+        return
+    children, grandchildren, siblings = await kin(ctx, ruler)
+    blood = [*children, *grandchildren, *siblings]
+    await record(
+        ctx,
+        "succession.designated",
+        roles={IncidentRole.ACTOR: ruler.id, IncidentRole.SUCCESSOR: heir.id, IncidentRole.AUTHORITY: realm.entity.id},
+    )
+    if heir.id in {item.id for item in blood}:
+        return
+    await make_claim(ctx, realm, heir, ClaimBasis.ADOPTION, ctx.rules.claims.adopted_claim, backer=ruler.id)
+    rival = next((item for item in blood if not held(item.id)), None)
+    if rival is not None and ctx.rng(f"designation.contest.{realm.entity.id}.{heir.id}").chance(ctx.rules.succession.designation_contest_pct):
+        await make_claim(ctx, realm, rival, ClaimBasis.INHERITANCE, ctx.rules.succession.claim_press_pct, backer=None)
+
+
+async def make_claim(ctx: TickContext, realm: Realm, claimant: EntityRow, basis: ClaimBasis, strength: int, *, backer: int | None) -> ClaimRow | None:
+    if held(claimant.id):
+        return None
+    found = await ctx.session.scalar(
+        select(ClaimRow).where(
+            ClaimRow.claimant_entity_id == claimant.id, ClaimRow.polity_entity_id == realm.entity.id, ClaimRow.basis == basis, ClaimRow.ended_epoch.is_(None)
+        )
+    )
+    if found is not None:
+        return found
+    row = ClaimRow(
+        claimant_entity_id=claimant.id,
+        polity_entity_id=realm.entity.id,
+        basis=basis,
+        strength=strength,
+        backer_entity_id=backer,
+        since_epoch=ctx.epoch,
+        locked=[],
+    )
+    ctx.session.add(row)
+    await ctx.session.flush()
+    await record(
+        ctx,
+        "claim.made",
+        roles={IncidentRole.ACTOR: claimant.id, IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.PATRON: backer},
+        facts={"basis": basis, "strength": strength},
+    )
+    return row
 
 
 async def ensure_regent(ctx: TickContext, realm: Realm, ruler: EntityRow, occupied: set[int]) -> tuple[OfficeRow, EntityRow | None, bool]:
@@ -508,7 +589,7 @@ async def support(ctx: TickContext, realm: Realm, claim: ClaimRow) -> tuple[int,
     society = await ctx.session.get(CommunitySocietyRow, realm.profile.core_entity_id or -1)
     discontent = (PERCENT // 2 - society.satisfaction(SocialClass.NOBLE)) if society is not None else 0
     claimant_side = (
-        claim.strength
+        claim.strength * getattr(ctx.rules.claims, CLAIM_STRENGTHS[claim.basis]) / PERCENT
         + (rival.prestige if rival is not None else 0) * table.house_support_pct / PERCENT
         + await backing(ctx, claim.claimant_entity_id) * table.faction_support_pct / PERCENT
         + discontent * table.opinion_support_pct / PERCENT

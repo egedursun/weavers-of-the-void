@@ -33,6 +33,7 @@ from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.phase import Phase
 from aerona.engine.phases.warfare import Theatre, duel
 from aerona.engine.polity.laws import law_param
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import move_stat, shift_stat, stat
@@ -314,6 +315,37 @@ async def honour_duels(ctx: TickContext) -> int:
     return fought
 
 
+async def coming_of_age(ctx: TickContext, town: EntityRow) -> list[EntityRow]:
+    adult = ctx.rules.skills.adult_age
+    found = await ctx.session.scalars(
+        select(EntityRow)
+        .where(await present_among(ctx.session, [town.id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    grown = [mortal for mortal in found if stat(mortal, "age") is not None and (stat(mortal, "age") or 0) >= adult and stat(mortal, "hp") != 0]
+    return sorted(grown, key=lambda mortal: (stat(mortal, "age") or 0, mortal.id))
+
+
+async def ritual_duels(ctx: TickContext) -> int:
+    theatre: Theatre | None = None
+    fought = 0
+    towns = await ctx.session.scalars(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+    )
+    for town in list(towns):
+        if frozen(town.id) or not await keeps(ctx, town.id, TraditionFunction.DUEL_CUSTOM):
+            continue
+        if not ctx.rng(f"ritual_duel.{town.id}.{ctx.epoch}").chance(ctx.rules.duels.ritual_pct):
+            continue
+        pair = [mortal for mortal in await coming_of_age(ctx, town) if not frozen(mortal.id) and not await forbidden(ctx, mortal.id, ActKind.DUELLING)][:2]
+        if len(pair) < 2:
+            continue
+        theatre = theatre or await Theatre.load(ctx)
+        await duel(ctx, theatre, pair[0], pair[1], war=None, anchor_id=None, context=DuelContext.RITUAL)
+        fought += 1
+    return fought
+
+
 @reads(
     "cult.zeal",
     "item.damage",
@@ -358,6 +390,7 @@ async def honour_duels(ctx: TickContext) -> int:
     "table.cult_offices",
     "table.cult_tenets",
     "table.culture_ethics",
+    "table.culture_honour",
     "table.culture_values",
     "table.currencies",
     "table.death_readings",
@@ -384,6 +417,7 @@ async def honour_duels(ctx: TickContext) -> int:
     "table.goods",
     "table.grave_goods",
     "table.griefs",
+    "table.held_identities",
     "table.holder_levels",
     "table.house_members",
     "table.house_profiles",
@@ -432,6 +466,7 @@ async def honour_duels(ctx: TickContext) -> int:
     "table.professions_of_value",
     "table.prostheses",
     "table.region_environment",
+    "table.relationships",
     "table.reputations",
     "table.routes",
     "table.ruler_currencies",
@@ -535,6 +570,7 @@ async def honour_duels(ctx: TickContext) -> int:
 async def vendetta_cycles(ctx: TickContext) -> None:
     ctx.count("feud_actions", await feuds(ctx))
     ctx.count("honour_duels", await honour_duels(ctx))
+    ctx.count("ritual_duels", await ritual_duels(ctx))
 
 
 PHASES = (Phase("vendetta_cycles", vendetta_cycles),)

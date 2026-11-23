@@ -199,6 +199,7 @@ MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
         templates=("claim.exposed",),
         fields=("kind", "status", "credited", "magnitude", "token", "witnesses"),
         tables=(DeedRow.__tablename__, DeedClaimRow.__tablename__),
+        tools=("claim_deed",),
         exposure=Exposure.CONTEXT,
         targets=("mortal",),
         couplings=(

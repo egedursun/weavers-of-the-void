@@ -21,6 +21,8 @@ DEPOSITION = total(
             checked_by=("engine.polity.trials.tamper", "engine.polity.trials.testimony_weight", "engine.polity.trials.try_case"),
             used_by=("engine.polity.trials.tamper", "engine.polity.trials.testimony_of"),
         ),
-        Deposition.SILENT: Defined("Silent", checked_by=(), used_by=("engine.polity.trials.accuse_case", "engine.polity.trials.testimony_of")),
+        Deposition.SILENT: Defined(
+            "Silent", checked_by=(), used_by=("engine.intrigue.leverage.keep_silent", "engine.polity.trials.accuse_case", "engine.polity.trials.testimony_of")
+        ),
     },
 )

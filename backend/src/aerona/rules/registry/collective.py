@@ -65,6 +65,18 @@ class HistoriographyRules(Spanned):
     pride_order: int = rule(3, 0, 100, C, "Order a kept anniversary of a victory or founding lends")
     irredentist_claim_at: int = rule(60, 0, 100, W, "Memory strength of a lost land past which its old holder presses a claim")
     lost_land_fade: int = rule(2, 0, 100, W, "Memory strength a lost land loses each epoch")
+    song_drift_pct: int = rule(15, 0, 100, C, "Fidelity a song loses each epoch as each singer changes it (%)")
+    song_spread: int = rule(10, 0, 100, C, "Credence a song gains each epoch it is sung among folk who already know it")
+    genealogy_claim_weight: int = rule(20, 0, 100, C, "Strength a genealogy that glorifies a claimant adds to its claims at full credence")
+    glorify_standing_effect: int = rule(5, -100, 100, C, "Fame an account glorifying a figure gives it at full credence")
+    vilify_standing_effect: int = rule(-5, -100, 100, C, "Fame an account vilifying a figure gives it at full credence")
+    omit_standing_effect: int = rule(0, -100, 100, C, "Fame an account leaving a figure out gives it at full credence")
+    neutral_standing_effect: int = rule(0, -100, 100, C, "Fame a plain account gives a figure at full credence")
+    justify_standing_effect: int = rule(2, -100, 100, C, "Fame an account admitting and justifying a deed gives its doer at full credence")
+    lament_standing_effect: int = rule(0, -100, 100, C, "Fame an account lamenting a loss gives a figure at full credence")
+    mock_standing_effect: int = rule(-8, -100, 100, C, "Fame an account mocking a figure gives it at full credence")
+    mock_song_pct: int = rule(25, 0, 100, C, "Chance folk make a mocking song of their own ruler's defeat (%)")
+    lament_grief: int = rule(10, 0, 100, C, "Strength a lament gives the memory of the loss it tells")
 
     @property
     def commemorate_every(self) -> int:

@@ -1,12 +1,12 @@
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.kinds.trade_modes import TRADE_LOSS_CULPRITS, TRADE_MODES
+from aerona.catalog.kinds.trade_modes import TRADE_LOSS_CULPRITS, TRADE_LOSSES, TRADE_MODES
 from aerona.catalog.life.economy import EFFECT_WEIGHT
 from aerona.catalog.life_traits import STANCE_TRAITS, TRADE_MODE_TRAITS, WEATHER_EFFECT_TRAITS, having
 from aerona.catalog.terrain import terrains
@@ -23,6 +23,7 @@ from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.environment import TerrainTrait, WeatherEffect
 from aerona.domain.enums.life_traits import StanceTrait, TradeModeTrait, WeatherEffectTrait
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.operations import CarrierKind
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus
 from aerona.engine.context import TickContext
 from aerona.engine.creature_groups.groups import group_danger
@@ -55,21 +56,34 @@ TEMPER_WEIGHT: MappingProxyType[BeastTemper, Callable[[Rules], int]] = total(
 FALLING_EFFECTS = having(WEATHER_EFFECT_TRAITS, WeatherEffectTrait.FALLING_EFFECTS)
 
 
+SPOIL_SPAN = 10
+
+
 @dataclass
 class Dangers:
     bandits: int = 0
     beasts: int = 0
     weather: int = 0
     sea: int = 0
+    officials: int = 0
+    spoilage: int = 0
+    pilferage: int = 0
     bandit_id: int | None = None
     beast_id: int | None = None
+    official_id: int | None = None
 
     @property
     def total(self) -> int:
-        return clamp_int(self.bandits + self.beasts + self.weather + self.sea, 0, PERCENT)
+        return clamp_int(sum(int(getattr(self, cause.value)) for cause in TradeLoss), 0, PERCENT)
 
     def parts(self) -> dict[TradeLoss, int]:
-        return {TradeLoss.BANDITS: self.bandits, TradeLoss.BEASTS: self.beasts, TradeLoss.WEATHER: self.weather, TradeLoss.SEA: self.sea}
+        return {cause: int(getattr(self, cause.value)) for cause in TradeLoss}
+
+    def reckon(self, rules: Rules) -> "Dangers":
+        for cause, spec in TRADE_LOSSES.items():
+            if spec.reckoned:
+                setattr(self, cause.value, clamp_int(int(getattr(self, cause.value)) * int(getattr(rules.route_dangers, spec.rule)) // PERCENT, 0, PERCENT))
+        return self
 
     def culprit(self, cause: TradeLoss) -> int | None:
         attribute = TRADE_LOSS_CULPRITS[cause]
@@ -178,7 +192,15 @@ def harm(weather: Weather, effect: WeatherEffect) -> int:
     return max(0, -value) if effect in FALLING_EFFECTS else max(0, value)
 
 
-def weather_danger(ctx: TickContext, book: EconomyBook, mode: TradeMode, path: list[int], *, route_id: int, world_id: int | None) -> int:
+def weather_weight(rules: Rules, mode: TradeMode, carrier: CarrierKind | None, regions: Sequence[RegionEnvironmentRow]) -> int:
+    if carrier is CarrierKind.PACK_ANIMALS and any(region.dominant_terrain in CARAVAN_TERRAIN for region in regions):
+        return rules.route_dangers.caravan_weather_pct
+    return int(getattr(rules.route_dangers, TRADE_MODES[mode].weather_rule))
+
+
+def weather_danger(
+    ctx: TickContext, book: EconomyBook, mode: TradeMode, path: list[int], *, route_id: int, world_id: int | None, carrier: CarrierKind | None = None
+) -> int:
     regions = [row for row in (book.ground.regions.get(region) for region in path) if row is not None]
     if not regions or world_id is None:
         return 0
@@ -187,18 +209,31 @@ def weather_danger(ctx: TickContext, book: EconomyBook, mode: TradeMode, path: l
     for region in regions:
         weather = book.ground.weather(ctx.environment.world_seed, ctx.epoch, region, season, f"route.{route_id}")
         scores.append(sum(harm(weather, effect) * EFFECT_WEIGHT[effect](ctx.rules) / PERCENT for effect in TRADE_MODES[mode].exposure))
-    weight = getattr(ctx.rules.route_dangers, TRADE_MODES[mode].weather_rule)
+    weight = weather_weight(ctx.rules, mode, carrier, regions)
     return clamp_int(round_half_up(sum(scores) / len(scores) * weight / PERCENT), 0, PERCENT)
 
 
-def dangers_of(ctx: TickContext, book: EconomyBook, mode: TradeMode, path: list[int], lairs: Lairs, *, route_id: int, world_id: int | None) -> Dangers:
+def dangers_of(
+    ctx: TickContext,
+    book: EconomyBook,
+    mode: TradeMode,
+    path: list[int],
+    lairs: Lairs,
+    *,
+    route_id: int,
+    world_id: int | None,
+    carrier: CarrierKind | None = None,
+) -> Dangers:
     bandits, band = bandit_danger(ctx.rules, book, path, lairs.patrolled)
     beasts, beast = beast_danger(ctx.rules, path, lairs)
-    weather = weather_danger(ctx, book, mode, path, route_id=route_id, world_id=world_id)
+    weather = weather_danger(ctx, book, mode, path, route_id=route_id, world_id=world_id, carrier=carrier)
+    table = ctx.rules.route_dangers
+    spoilage = clamp_int(table.spoilage_pct * len(path) // max(1, SPOIL_SPAN), 0, PERCENT)
+    pilferage = 0 if any(region in lairs.patrolled for region in path) else table.pilferage_pct
     if TRADE_MODES[mode].seagoing:
         sea = clamp_int(ctx.rules.route_dangers.sea_danger_base + weather, 0, PERCENT)
-        return Dangers(bandits=bandits, beasts=beasts, sea=sea, bandit_id=band, beast_id=beast)
-    return Dangers(bandits=bandits, beasts=beasts, weather=weather, bandit_id=band, beast_id=beast)
+        return Dangers(bandits=bandits, beasts=beasts, sea=sea, spoilage=spoilage, pilferage=pilferage, bandit_id=band, beast_id=beast).reckon(ctx.rules)
+    return Dangers(bandits=bandits, beasts=beasts, weather=weather, spoilage=spoilage, pilferage=pilferage, bandit_id=band, beast_id=beast).reckon(ctx.rules)
 
 
 ICE_MODES = having(TRADE_MODE_TRAITS, TradeModeTrait.ICE_MODES)
@@ -230,7 +265,7 @@ def season_loss(rules: Rules, mode: TradeMode, regions: list[RegionEnvironmentRo
         return table.sky_season_pct * stormy
     snowed = any(high(rules, region) and season_heat(region, season) < table.freeze_temperature for region in regions)
     loss = table.land_season_pct * hardship + table.pass_snow_pct * snowed
-    if mode is TradeMode.CARAVAN:
+    if any(region.dominant_terrain in CARAVAN_TERRAIN for region in regions):
         burning = any(region.dominant_terrain in CARAVAN_TERRAIN and season_heat(region, season) > table.burning_temperature for region in regions)
         loss += table.caravan_heat_pct * burning
     return loss

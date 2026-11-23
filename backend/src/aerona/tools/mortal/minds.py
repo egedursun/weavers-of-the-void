@@ -45,6 +45,7 @@ from aerona.domain.enums.made import (
     RealmAwareness,
     RealmEntry,
     RealmPurpose,
+    RelicStance,
     RelicUse,
     ReplicatorOutput,
     ReplicatorScale,
@@ -63,6 +64,7 @@ from aerona.engine.collective.accounts import record
 from aerona.engine.constructs import control as constructs
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.made import control
+from aerona.engine.made.doctrine import doctrine_here
 from aerona.engine.made.intrusion import Attempt, intrude
 from aerona.engine.made.realms import enter_realm, withdraw
 from aerona.engine.made.surveillance import profile_for
@@ -718,9 +720,14 @@ async def study_relic(call: MortalCall, args: RelicInput) -> str:
     relic = await call.session.get(MadeRelicRow, item.id)
     if relic is None or not relic.is_relic:
         fail(MortalResult.STUDY_DECLINED, why=f"{item.name} holds nothing lost to study")
+    doctrine = await doctrine_here(call.session, call.me)
+    stance = doctrine.relic_stance if doctrine is not None else None
+    if stance is RelicStance.FORBIDDEN:
+        fail(MortalResult.STUDY_DECLINED, why="your faith forbids the study of such things")
     relic.use = RelicUse.REPURPOSED if "use" not in relic.locked else relic.use
     if "understood_pct" not in relic.locked:
-        relic.understood_pct = clamp_percent(relic.understood_pct + call.rules.made_relics.study_gain)
+        gain = call.rules.made_relics.study_gain * (2 if stance is RelicStance.STUDIED else 1)
+        relic.understood_pct = clamp_percent(relic.understood_pct + gain)
     call.target(item.id)
     await call.record("tools.mortal.study_relic", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: item.id})
     return result(MortalResult.RELIC_STUDIED, name=item.name, understood=relic.understood_pct)

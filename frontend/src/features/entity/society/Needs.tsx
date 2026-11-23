@@ -39,6 +39,7 @@ import { useSocietyDepth } from './depthApi'
 import {
   EFFECT_ORDER,
   EFFECT_SPEC,
+  type ShortfallEffect,
   type SocietyDepth,
   standingLabel,
 } from './depthLabels'
@@ -282,6 +283,82 @@ function HoldNeed({
   )
 }
 
+function HoldShortfall({
+  view,
+  blocked,
+}: {
+  view: SocietyDepth
+  blocked: string | null
+}) {
+  const [effect, setEffect] = useState<string>('thirst')
+  const [pct, setPct] = useState('0')
+  const send = useGodAction({
+    run: ({ want, held }: { want: string; held: number | null }) =>
+      unwrap(
+        api.POST('/api/actions/shortfall:set', {
+          body: {
+            community_id: view.entity_id,
+            effect: want as ShortfallEffect,
+            short_pct: held,
+          },
+        })
+      ),
+  })
+  const busy = blocked ?? (send.isPending ? WORKING : null)
+  const parsed = Number(pct)
+  const invalid = !Number.isInteger(parsed) || parsed < 0 || parsed > PERCENT
+  const heldKeys = view.effects
+    .filter((item) => item.held)
+    .map((item) => item.effect)
+  return (
+    <EditorGroup title='What they go without' icon={TriangleAlert} pairs>
+      <div className='col-span-full'>
+        <HeldStrip
+          keys={heldKeys}
+          labelOf={(key) => EFFECT_SPEC[key as ShortfallEffect].label}
+          blocked={busy}
+          onRelease={(keys) =>
+            keys.forEach((key) => send.mutate({ want: key, held: null }))
+          }
+        />
+      </div>
+      <IconPicker
+        label='Want'
+        value={effect}
+        table={EFFECT_SPEC}
+        blocked={busy}
+        onPick={setEffect}
+      />
+      <FieldTile
+        id={`shortfall-pct-${view.entity_id}`}
+        label='Share of the want unmet'
+      >
+        <Input
+          id={`shortfall-pct-${view.entity_id}`}
+          type='number'
+          min={0}
+          max={PERCENT}
+          value={pct}
+          disabled={busy !== null}
+          onChange={(event) => setPct(event.target.value)}
+        />
+      </FieldTile>
+      <div className='col-span-full flex min-w-0 items-end'>
+        <Button
+          size='sm'
+          className='w-full'
+          disabled={busy !== null || invalid}
+          disabledReason={busy ?? 'Give a share from 0 to 100.'}
+          onClick={() => send.mutate({ want: effect, held: parsed })}
+        >
+          <Lock />
+          Hold this want
+        </Button>
+      </div>
+    </EditorGroup>
+  )
+}
+
 function StandingControls({
   view,
   blocked,
@@ -389,12 +466,17 @@ export function NeedsSection({
   const blocked = readOnlyReason ?? reason()
   const data = view.data
   const present = (data?.classes ?? []).filter((row) => row.share > 0)
-  const effects = EFFECT_ORDER.map((effect) => ({
-    effect,
-    short: data?.effects.find((item) => item.effect === effect)?.short_pct,
-  })).filter(
-    (item): item is { effect: (typeof EFFECT_ORDER)[number]; short: number } =>
-      item.short !== undefined
+  const effects = EFFECT_ORDER.map((effect) => {
+    const found = data?.effects.find((item) => item.effect === effect)
+    return { effect, short: found?.short_pct, held: found?.held ?? false }
+  }).filter(
+    (
+      item
+    ): item is {
+      effect: (typeof EFFECT_ORDER)[number]
+      short: number
+      held: boolean
+    } => item.short !== undefined
   )
   const worst = [...effects].sort((left, right) => right.short - left.short)[0]
   return (
@@ -493,14 +575,14 @@ export function NeedsSection({
           >
             <div className='grid min-w-0 grid-cols-1 gap-3 @xl/needs:grid-cols-3'>
               <Paged items={effects}>
-                {({ effect, short }) => {
+                {({ effect, short, held }) => {
                   const spec = EFFECT_SPEC[effect]
                   return (
                     <Tooltip key={effect}>
                       <TooltipTrigger asChild>
                         <div tabIndex={0} className='min-w-0'>
                           <StatBar
-                            label={spec.label}
+                            label={held ? `${spec.label} (held)` : spec.label}
                             icon={spec.icon}
                             value={short}
                             max={PERCENT}
@@ -542,6 +624,7 @@ export function NeedsSection({
             note='Hold how much of a good a class receives, or how fed, provided and pampered it is. What you hold is kept against the stores until you release it; every change can be undone from the ledger.'
           >
             <HoldNeed view={data} blocked={blocked} />
+            <HoldShortfall view={data} blocked={blocked} />
             <StandingControls view={data} blocked={blocked} />
           </AdjustPanel>
         </div>

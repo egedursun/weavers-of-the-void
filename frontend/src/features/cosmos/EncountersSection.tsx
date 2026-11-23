@@ -45,7 +45,7 @@ import { type Named } from '@/features/entity/environment/labels'
 import { useMadeAction } from '@/features/minds/api'
 import { ChoiceField, NumberField } from '@/features/wars/military/parts'
 
-type Environment = components['schemas']['RouteEnvironment']
+type Environment = components['schemas']['TradeMode']
 type Effect = components['schemas']['EncounterEffect']
 type Encounter = components['schemas']['JourneyEncounterView']
 type Edit = { values: EditValues; release: string[] }
@@ -55,9 +55,10 @@ const HOLD =
   'Values you set are held against the engine until you release them.'
 
 export const ENVIRONMENTS: Record<Environment, Named> = {
+  road: { label: 'Road', icon: Mountain, tone: 'gold' },
+  river: { label: 'River', icon: Waves, tone: 'info' },
   sea: { label: 'Sea', icon: Waves, tone: 'info' },
-  land: { label: 'Land', icon: Mountain, tone: 'gold' },
-  air: { label: 'Air', icon: Cloud, tone: 'info' },
+  sky: { label: 'Sky', icon: Cloud, tone: 'info' },
   space: { label: 'Space', icon: Orbit, tone: 'verdigris' },
   rift: { label: 'Rift', icon: Zap, tone: 'danger' },
   network: { label: 'Network', icon: Network, tone: 'muted' },

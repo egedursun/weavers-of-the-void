@@ -194,6 +194,11 @@ class DuelsRules:
     mount_fall_pct: int = rule(60, 0, 100, W, "Share of its strength a mount loses before it throws its rider (%)")
     fall_hp: int = rule(10, 0, 1000, W, "Harm a rider takes falling from a mount")
     yield_refuse_mercy: int = rule(-40, -100, 100, W, "Mercy below which a victor refuses a foe's yield")
+    ritual_death_pct: int = rule(2, 0, 100, W, "Chance a ritual duel that downs a fighter ends in a death (%)")
+    ritual_pct: int = rule(30, 0, 100, W, "Chance each epoch a town that keeps a duel custom holds a ritual duel to mark a passage (%)")
+    ring_footing: int = rule(50, 0, 100, W, "Footing at or below which a fighter is driven beyond the marked bounds of a duel")
+    ritual_renown: int = rule(5, 0, 100, W, "Renown each fighter of a ritual duel gains for the passage it marks")
+    ritual_shame: int = rule(30, 0, 100, W, "Grievance the people bear a fighter who kills in a ritual duel against its rules")
 
 
 @dataclass(frozen=True)

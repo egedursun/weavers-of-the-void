@@ -2,7 +2,7 @@ from collections.abc import Mapping
 
 from sqlalchemy import select
 
-from aerona.catalog.life.polity import AREA_LOBBIES, AREA_ORDER
+from aerona.catalog.life.polity import AREA_CLASH, AREA_LOBBIES, AREA_ORDER
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -33,3 +33,8 @@ def pressed(rules: Rules, area: LawArea, lobbies: Mapping[FactionKind, int]) -> 
 
 def area_order(area: LawArea) -> float:
     return AREA_ORDER[area] / PERCENT
+
+
+def area_weight(rules: Rules, area: LawArea) -> float:
+    weight: int = getattr(rules.law, AREA_CLASH[area])
+    return weight / PERCENT

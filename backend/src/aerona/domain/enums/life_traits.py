@@ -48,6 +48,7 @@ class CaptiveFateTrait(StrEnum):
 class CaptiveStatusTrait(StrEnum):
     FREEING_STATUSES = "freeing_statuses"
     RESCUE_STATUSES = "rescue_statuses"
+    AFTER_CAPTIVITY = "after_captivity"
 
 
 class CharmPowerTrait(StrEnum):
@@ -100,6 +101,8 @@ class DeathRoleTrait(StrEnum):
 
 class DuelContextTrait(StrEnum):
     DUEL_CONTEXTS = "duel_contexts"
+    CUSTOMARY = "customary"
+    AT_WAR = "at_war"
 
 
 class EmotionTrait(StrEnum):
@@ -435,6 +438,7 @@ class TradePolicyKindTrait(StrEnum):
 
 class TradeRouteStatusTrait(StrEnum):
     LIVE_STATUSES = "live_statuses"
+    CARRYING = "carrying"
 
 
 class TreatyKindTrait(StrEnum):

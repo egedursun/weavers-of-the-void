@@ -2,22 +2,29 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.fugitives import FUGITIVES, SANCTUARIES
+from aerona.catalog.terrain import terrains
 from aerona.constants.units import PERCENT
 from aerona.db.tables.belonging import SanctuaryLawRow, SanctuaryRow
 from aerona.db.tables.collective import SocialNormRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import DefectionRow, OutlawRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.belonging import FugitiveKind, SanctuaryKind, SanctuaryState
 from aerona.domain.enums.collective import NormSituation
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.environment import TerrainTrait
+from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.justice import CaseStage
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
+from aerona.engine.belonging.fugitives_w52 import open_fugitives
 from aerona.engine.belonging.refuge import OPEN_STATES, refuge_of
 from aerona.engine.body.afflictions import desecration_curse
 from aerona.engine.body.customs import people_of
@@ -25,6 +32,7 @@ from aerona.engine.collective.book import ruler_id
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import realm_of
 from aerona.engine.economy.purse import give_coin, receive_coin, take_coin
+from aerona.engine.intrigue.favours import owe
 from aerona.engine.law.prisons import imprison
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.hooks import desecrated
@@ -37,6 +45,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 HOLY = (StructureKind.TEMPLE, StructureKind.SHRINE, StructureKind.MONASTERY)
+HIDING = terrains(TerrainTrait.WOODED) | terrains(TerrainTrait.HIGH) | terrains(TerrainTrait.WET)
 WELCOMING = frozenset({EthicalStance.REQUIRED, EthicalStance.ADMIRABLE})
 
 
@@ -84,16 +93,49 @@ async def welcoming(ctx: TickContext, town: EntityRow) -> bool:
     return any(stance in WELCOMING for stance in stances)
 
 
-async def host_for(ctx: TickContext, fugitive: Fugitive) -> tuple[EntityRow, SanctuaryKind] | None:
+async def embassy_in(ctx: TickContext, town: int) -> EntityRow | None:
+    found = await ctx.session.scalar(
+        select(EntityRow)
+        .join(StructureProfileRow, StructureProfileRow.structure_entity_id == EntityRow.id)
+        .where(EntityRow.location_id == town, EntityRow.status == EntityStatus.CANON, StructureProfileRow.kind == StructureKind.EMBASSY)
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    return found
+
+
+async def frees_runaways(ctx: TickContext, town: int) -> bool:
+    profile = await ctx.session.get(SettlementProfileRow, town)
+    return profile is not None and profile.free_city and profile.charter_entity_id is not None
+
+
+async def wilds_near(ctx: TickContext, town: EntityRow) -> EntityRow | None:
+    ground = await ctx.session.get(RegionEnvironmentRow, town.location_id) if town.location_id is not None else None
+    if ground is None or ground.dominant_terrain not in HIDING or held(ground.entity_id):
+        return None
+    return await ctx.session.get(EntityRow, ground.entity_id)
+
+
+async def host_for(ctx: TickContext, fugitive: Fugitive, wanted: SanctuaryKind | None = None) -> tuple[EntityRow, SanctuaryKind] | None:
     town = await ctx.session.get(EntityRow, fugitive.mortal.location_id) if fugitive.mortal.location_id is not None else None
     if town is None or town.entity_type is not EntityType.SETTLEMENT:
         return None
+    found: list[tuple[EntityRow, SanctuaryKind]] = []
     temple = await temple_in(ctx, town.id)
     if temple is not None and not await restricted(ctx, await realm_of(ctx.session, town.id)) and not held(temple.id):
-        return temple, SanctuaryKind.TEMPLE
+        found.append((temple, SanctuaryKind.TEMPLE))
+    embassy = await embassy_in(ctx, town.id)
+    if embassy is not None and FUGITIVES[fugitive.kind].embassy and not held(embassy.id):
+        found.append((embassy, SanctuaryKind.EMBASSY))
+    if FUGITIVES[fugitive.kind].city_frees and await frees_runaways(ctx, town.id) and not held(town.id):
+        found.append((town, SanctuaryKind.FREE_CITY))
     if await welcoming(ctx, town) and not held(town.id):
-        return town, SanctuaryKind.HOSPITALITY
-    return None
+        found.append((town, SanctuaryKind.HOSPITALITY))
+    wilds = await wilds_near(ctx, town)
+    if wilds is not None:
+        found.append((wilds, SanctuaryKind.WILDS))
+    chosen = [item for item in found if wanted is None or item[1] is wanted]
+    return chosen[0] if chosen else None
 
 
 async def fugitives(ctx: TickContext) -> list[Fugitive]:
@@ -108,6 +150,10 @@ async def fugitives(ctx: TickContext) -> list[Fugitive]:
         mortal = await living_entity(ctx.session, case.accused_entity_id)
         if mortal is not None:
             found.setdefault(mortal.id, Fugitive(mortal, FugitiveKind.ACCUSED, case.polity_entity_id))
+    for fled in await open_fugitives(ctx):
+        mortal = await living_entity(ctx.session, fled.mortal_entity_id)
+        if mortal is not None:
+            found.setdefault(mortal.id, Fugitive(mortal, fled.kind, fled.pursuer_entity_id))
     return [item for _, item in sorted(found.items())]
 
 
@@ -124,6 +170,7 @@ async def shelter(ctx: TickContext, fugitive: Fugitive, host: EntityRow, kind: S
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await owe(ctx, fugitive.mortal.id, host.id, FavourOrigin.HOSPITALITY, ctx.rules.favours.hospitality_favour)
     return row
 
 
@@ -179,6 +226,10 @@ async def violate(ctx: TickContext, row: SanctuaryRow, host: EntityRow, pursuer:
         if row.kind is SanctuaryKind.TEMPLE:
             await desecration_curse(ctx, host, ruler)
     await desecrated(ctx, host.id, pursuer.id, note="broke the sanctuary")
+    if row.kind is SanctuaryKind.EMBASSY and host.affiliated_entity_id is not None and not held(host.affiliated_entity_id):
+        await change_relation(
+            ctx, pursuer.id, host.affiliated_entity_id, -ctx.rules.sanctuary.embassy_crisis, MemoryKind.ILL_WILL, note="broke into its embassy"
+        )
     tally.violated += 1
     await record(
         ctx,
@@ -237,6 +288,9 @@ async def pursue(ctx: TickContext, row: SanctuaryRow, tally: SanctuaryTally) -> 
             tally.surrendered += 1
         return
     roll = ctx.rng(seed_of("sanctuary.pursue", row.id, ctx.epoch))
+    hidden = SANCTUARIES[row.kind].hides and roll.chance(table.wilds_hide_pct)
+    if hidden:
+        return
     if roll.chance(table.violate_chance):
         await violate(ctx, row, host, pursuer, tally)
     elif roll.chance(table.negotiate_chance):

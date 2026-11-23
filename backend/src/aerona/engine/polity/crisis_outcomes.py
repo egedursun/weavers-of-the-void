@@ -1,22 +1,29 @@
 from sqlalchemy import select
 
-from aerona.catalog.statecraft import DEMAND_TEXT
+from aerona.catalog.statecraft import DEMAND_TEXT, YIELDED_DEMANDS
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import TreatyProfileRow, VassalageRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import TreatyStatus
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.military.aims import cede
 from aerona.engine.polity.accords import end_treaty
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.crises import CrisisTally, Verdict, ripe_crises
-from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.polity.mediation import mediate_crisis
+from aerona.engine.primitives.levies import demobilise
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.recording.record import record
 from aerona.engine.services.war import declare_war
@@ -55,8 +62,53 @@ async def concede(ctx: TickContext, book: RealmBook, crisis: CrisisRow, demander
             return False
         target.profile.state_religion_id = crisis.subject_node_id
         return True
+    if crisis.demand in YIELDED_DEMANDS:
+        return await concede_more(ctx, crisis, demander, target)
     paid = min(crisis.amount, max(0, target.profile.treasury))
     return paid > 0 and move_amount(target.profile, demander.profile, "treasury", paid)
+
+
+async def concede_more(ctx: TickContext, crisis: CrisisRow, demander: Realm, target: Realm) -> bool:
+    if crisis.demand is CrisisDemand.HAND_OVER:
+        return await hand_over(ctx, crisis, demander, target)
+    if crisis.demand is CrisisDemand.DISARM:
+        return await disarm(ctx, target) > 0
+    first, second = demander.profile.core_entity_id, target.profile.core_entity_id
+    return (
+        first is not None
+        and second is not None
+        and await connect(ctx.session, second, first, BondKind.TRADES_WITH, ctx.epoch, description="opened at a demand") is not None
+    )
+
+
+async def hand_over(ctx: TickContext, crisis: CrisisRow, demander: Realm, target: Realm) -> bool:
+    person = await living_entity(ctx.session, crisis.subject_node_id) if crisis.subject_node_id is not None else None
+    seat = demander.profile.capital_entity_id
+    if person is None or seat is None or held(person.id):
+        return False
+    person.location_id = seat
+    shame(target, ctx.rules.crisis.hand_over_shame)
+    return True
+
+
+async def disarm(ctx: TickContext, target: Realm) -> int:
+    members = list(target.members)
+    sent = 0
+    armies = await ctx.session.scalars(
+        select(ArmyRow).where(ArmyRow.owner_entity_id.in_(members), ArmyRow.disbanded_epoch.is_(None)).order_by(ArmyRow.entity_id)
+    )
+    for row in list(armies):
+        army = await living_entity(ctx.session, row.entity_id)
+        owner = await ctx.session.get(EntityRow, row.owner_entity_id)
+        if army is None or held(army.id):
+            continue
+        size = stat(army, "size") or 0
+        returned = demobilise(ctx.rules, owner, round_half_up(size * ctx.rules.crisis.disarm_share_pct / 100))
+        if returned > 0:
+            with flowing(FlowCategory.LEVY):
+                set_stats(army, size=size - returned)
+            sent += returned
+    return sent
 
 
 async def reward_backers(ctx: TickContext, crisis: CrisisRow, demander: Realm) -> None:
@@ -92,6 +144,10 @@ async def settle(ctx: TickContext, book: RealmBook, verdict: Verdict, tally: Cri
     crisis = verdict.crisis
     demander, target = book.realms.get(crisis.demander_entity_id), book.realms.get(crisis.target_entity_id)
     state = verdict.state
+    if state is CrisisState.MEDIATED and verdict.mediator_id is not None:
+        if await mediate_crisis(ctx, book, crisis, verdict.mediator_id):
+            tally.mediated += 1
+        return
     if demander is None or target is None:
         state = CrisisState.BACKED_DOWN
     elif state is CrisisState.BACKED_DOWN:

@@ -76,6 +76,22 @@ class ChemistryRules:
     explosive_mining_pct: int = rule(20, 0, 100, E, "Mining output explosives add to their town at full output (%)")
     accident_harm: int = rule(25, 0, 100, E, "Harm an accident at a chemical works deals a worker")
     pollution_pct: int = rule(5, 0, 100, E, "Pollution a chemical works adds to its region each epoch at full output (% of its own pollution)")
+    dye_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of dye reaches (%)")
+    soap_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of soap reaches (%)")
+    mordant_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of mordant reaches (%)")
+    tanning_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of tanning agents reaches (%)")
+    fertiliser_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of fertiliser reaches (%)")
+    medicine_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of medicine reaches (%)")
+    incendiary_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of incendiaries reaches (%)")
+    explosive_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of explosives reaches (%)")
+    ink_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of ink reaches (%)")
+    glaze_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of glaze reaches (%)")
+    preservative_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of preservatives reaches (%)")
+    acid_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of acids reaches (%)")
+    glaze_quality: int = rule(20, 0, 100, E, "Quality glaze adds to a town's pottery at full output")
+    preservative_spoil_pct: int = rule(50, 0, 100, E, "Share of the spoiling of a town's food stores preservatives spare at full output (%)")
+    acid_metal_pct: int = rule(20, 0, 100, E, "Extra output acids give a town's smiths and metal workers at full output (%)")
+    acid_harm: int = rule(10, 0, 100, E, "Extra harm an accident at a works of acids deals")
 
 
 @dataclass(frozen=True)
@@ -91,6 +107,15 @@ class InsuranceRules(Spanned):
     belief_step: int = rule(5, 0, 100, M, "Change in an insurer's belief about risk after an epoch of claims or none")
     moral_hazard_pct: int = rule(40, 0, 100, M, "Share of the cost of danger an insured merchant stops counting when choosing a road (%)")
     ruin_opinion: int = rule(10, 0, 100, M, "Opinion holders lose of an insurer that is ruined")
+    cargo_premium_pct: int = rule(100, 0, 400, M, "Premium of cargo cover against the insurer's usual rate (%)")
+    house_premium_pct: int = rule(100, 0, 400, M, "Premium of house cover against the insurer's usual rate (%)")
+    life_premium_pct: int = rule(100, 0, 400, M, "Premium of life cover against the insurer's usual rate (%)")
+    crop_premium_pct: int = rule(120, 0, 400, M, "Premium of crop cover against the insurer's usual rate (%)")
+    vessel_premium_pct: int = rule(150, 0, 400, M, "Premium of vessel cover against the insurer's usual rate (%)")
+    livestock_premium_pct: int = rule(110, 0, 400, M, "Premium of livestock cover against the insurer's usual rate (%)")
+    crop_payout_pct: int = rule(50, 0, 100, M, "Share of a lost harvest an insured town is paid back (%)")
+    livestock_payout_pct: int = rule(50, 0, 100, M, "Share of lost herds an insured town is paid back (%)")
+    vessel_payout: int = rule(15, 0, 100, M, "Means an insured vessel pays its home port when it is wrecked")
 
 
 @dataclass(frozen=True)
@@ -111,6 +136,9 @@ class AidRules:
     fit_chance: int = rule(20, 0, 100, B, "Chance each epoch a mortal who needs an aid that its people can make receives it (%)")
     hearing_restore_pct: int = rule(70, 0, 100, B, "Hearing a hearing horn restores at full quality (%)")
     cane_aid_pct: int = rule(40, 0, 100, B, "Walking a cane restores at full quality (%)")
+    microscope_research_pct: int = rule(
+        20, 0, 100, B, "Faster research on sickness, plants and bodies where a scholar or healer of the town holds a microscope (%)"
+    )
     magnifier_craft_pct: int = rule(15, 0, 100, B, "Fine craft a magnifier adds at full quality (%)")
     telescope_xp: int = rule(3, 0, 100, B, "Astronomy practice a telescope gives its holder each epoch")
     telescope_forecast_pct: int = rule(
@@ -125,6 +153,7 @@ class ClockRules:
     discipline_unrest: int = rule(3, 0, 100, V, "Unrest the labour discipline of a public clock brings its town at full precision")
     command_pct: int = rule(15, 0, 100, V, "Levy a precise public clock adds to the town that raises an army, at full precision (%)")
     navigation_pct: int = rule(15, 0, 100, V, "Sea danger a precise clock in a port takes off its sea roads at full precision (%)")
+    chronometer_loss_cut_pct: int = rule(20, 0, 100, V, "Further sea losses a clock that keeps longitude in a port takes off its sea roads, with charts (%)")
 
 
 @dataclass(frozen=True)

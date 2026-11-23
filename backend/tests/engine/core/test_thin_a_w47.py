@@ -14,13 +14,14 @@ from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.thin_sections import JourneyEncounterRow, RelationComponentRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import IdeologyTenet, ProphecyPredicate, ProphecyState
+from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.folkways import BiasedDecision, DecisionBias, ImpuritySource
 from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.military import FeudAction, FeudLevel
 from aerona.domain.enums.mind import HonourModel, RelationComponent
 from aerona.domain.enums.polity import OathPenalty
-from aerona.domain.enums.travel import ArrivalOutcome, EncounterEffect, JourneyIntent, RouteEnvironment, TravelMethod
+from aerona.domain.enums.travel import ArrivalOutcome, EncounterEffect, JourneyIntent, TravelMethod
 from aerona.domain.models.entity_stats import CelestialStats, IdeologyStats, PeopleStats, ProphecyStats
 from aerona.engine.cosmos.encounters import ENVIRONMENTS, arrive, provision, seed_encounters
 from aerona.engine.cosmos.omens import seen_by
@@ -151,9 +152,9 @@ def test_conflict_is_joined_to_the_new_subsystems() -> None:
 async def test_journeys_meet_typed_encounters_and_arrive_by_outcome(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await at(session, 5)
     assert set(ENVIRONMENTS) == set(TravelMethod)
-    assert await seed_encounters(ctx) == len(RouteEnvironment) * len(EncounterEffect)
+    assert await seed_encounters(ctx) == len(TradeMode) * len(EncounterEffect)
     await session.flush()
-    assert int(await session.scalar(select(func.count(JourneyEncounterRow.id))) or 0) == len(RouteEnvironment) * len(EncounterEffect)
+    assert int(await session.scalar(select(func.count(JourneyEncounterRow.id))) or 0) == len(TradeMode) * len(EncounterEffect)
     journey = JourneyRow(intent=JourneyIntent.COLONY, population=100, supplies=10, births=0, deaths=0, start_epoch=1, epochs_left=2, events=[], locked=[])
     await provision(ctx, journey)
     assert journey.supplies == 0

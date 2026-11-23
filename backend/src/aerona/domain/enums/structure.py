@@ -259,6 +259,8 @@ class ConstructionState(StrEnum):
     COMPLETE = "complete"
     DAMAGED = "damaged"
     RUINED = "ruined"
+    ABANDONED = "abandoned"
+    DISMANTLED = "dismantled"
 
 
 class BuilderKind(StrEnum):

@@ -60,10 +60,20 @@ async def stores_for(session: AsyncSession, rules: Rules, me: EntityRow) -> Stor
         line = await route_line(session, profile, names, viewpoint=home.id)
         if line is None:
             continue
-        flags = [flag for flag, on in (("blockaded", line.blockaded_by != ""), ("a chokepoint", line.chokepoint)) if on]
+        flags = [
+            flag
+            for flag, on in (
+                ("blockaded", line.blockaded_by != ""),
+                ("a chokepoint", line.chokepoint),
+                (f"shut each year in {line.closed_season}", line.closed_season != ""),
+                (f"carried by {line.carrier}", line.carrier != ""),
+            )
+            if on
+        ]
         routes.append(
             f"{line.name} to {line.partner} by {line.mode}, danger {line.danger} "
-            f"(bandits {line.bandits}, beasts {line.beasts}, weather {line.weather}, sea {line.sea}){', ' + ', '.join(flags) if flags else ''}"
+            f"(bandits {line.bandits}, beasts {line.beasts}, weather {line.weather}, sea {line.sea}, officials {line.officials}, "
+            f"spoilage {line.spoilage}, pilferage {line.pilferage}){', ' + ', '.join(flags) if flags else ''}"
         )
     coin = await currency_line(session, home.id, names)
     debts = [

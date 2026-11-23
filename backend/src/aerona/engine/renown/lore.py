@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.pacts import LORE_PRICES, SERVICE_TASKS
 from aerona.catalog.renown import ENTITY_LORE, FACTION_LORE
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -18,6 +19,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.knowledge import KnowledgeKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.renown import LorePrice, ReputationAxis
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -25,11 +27,13 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import record
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.renown.book import acclaim
 from aerona.engine.renown.lore_kinds import WIDER_LORE, HeldIndex, by_holder
 
 Item = tuple[KnowledgeKind, str, int | None]
+SERVANTS = frozenset({EntityType.FACTION, EntityType.CULT, EntityType.PEOPLE})
 SEEKERS = frozenset({EntityType.FACTION, EntityType.CULT, EntityType.BEAST, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.POLITY})
 
 
@@ -196,16 +200,78 @@ async def best_offer(ctx: TickContext, seeker: EntityRow, sellers: list[EntityRo
     return best
 
 
-async def trade(ctx: TickContext, seller: EntityRow, buyer: EntityRow, item: Item, *, value: int, price: LorePrice | None = None) -> LoreTradeRow | None:
-    if not await grant(ctx, buyer, item):
+async def counter_offer(ctx: TickContext, seller: EntityRow, buyer: EntityRow, item: Item, value: int) -> tuple[Item, int] | None:
+    kinds = frozenset({item[0], *await wants_of(ctx.session, seller)})
+    found = await best_offer(ctx, seller, [buyer], kinds)
+    if found is None or found[1] == item:
         return None
-    paid = price or await pay(ctx, seller, buyer, value)
+    _, offered, worth = found
+    return (offered, worth) if worth * PERCENT >= value * ctx.rules.knowledge.exchange_fairness_pct else None
+
+
+async def owes_service(ctx: TickContext, buyer: EntityRow, value: int) -> bool:
+    purse = await ctx.session.get(FactionProfileRow, buyer.id)
+    poor = purse is None or purse.treasury < max(1, value // ctx.rules.lore_trade.wealth_per_value)
+    return poor and buyer.entity_type in SERVANTS
+
+
+async def settle_price(ctx: TickContext, seller: EntityRow, buyer: EntityRow, item: Item, value: int) -> tuple[LorePrice, Item | None]:
+    swap = await counter_offer(ctx, seller, buyer, item, value)
+    if swap is not None:
+        return LorePrice.EXCHANGE, swap[0]
+    if await owes_service(ctx, buyer, value):
+        return LorePrice.SERVICE, None
+    return await pay(ctx, seller, buyer, value), None
+
+
+async def trade(ctx: TickContext, seller: EntityRow, buyer: EntityRow, item: Item, *, value: int, price: LorePrice | None = None) -> LoreTradeRow | None:
+    paid, swapped = (price, None) if price is not None else await settle_price(ctx, seller, buyer, item, value)
+    deferred = LORE_PRICES[paid].deferred
+    if not deferred and not await grant(ctx, buyer, item):
+        return None
+    if swapped is not None and LORE_PRICES[paid].swaps:
+        await grant(ctx, seller, swapped)
+    task = ctx.rng(seed_of("lore.task", seller.id, buyer.id, ctx.epoch)).pick(list(SERVICE_TASKS)) if deferred else None
     row = LoreTradeRow(
-        seller_node_id=seller.id, buyer_node_id=buyer.id, kind=item[0], key=item[1], subject_node_id=item[2], value=value, price=paid, epoch=ctx.epoch
+        seller_node_id=seller.id,
+        buyer_node_id=buyer.id,
+        kind=item[0],
+        key=item[1],
+        subject_node_id=item[2],
+        value=value,
+        price=paid,
+        task=task,
+        passed=not deferred,
+        epoch=ctx.epoch,
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await record(
+        ctx,
+        "knowledge.sold",
+        roles={IncidentRole.SELLER: seller.id, IncidentRole.BUYER: buyer.id},
+        facts={"lore": item[0], "price": paid, "worth": value},
+    )
     return row
+
+
+async def perform_services(ctx: TickContext) -> int:
+    done = 0
+    pending = select(LoreTradeRow).where(LoreTradeRow.passed.is_(False), LoreTradeRow.epoch < ctx.epoch).order_by(LoreTradeRow.id)
+    for row in list(await ctx.session.scalars(pending)):
+        buyer = await living_entity(ctx.session, row.buyer_node_id)
+        if buyer is None or held(buyer.id, row.seller_node_id):
+            continue
+        if await grant(ctx, buyer, (row.kind, row.key, row.subject_node_id)):
+            row.passed = True
+            done += 1
+            await record(
+                ctx,
+                "knowledge.service_done",
+                roles={IncidentRole.BUYER: buyer.id, IncidentRole.SELLER: row.seller_node_id},
+                facts={"task": row.task, "lore": row.kind},
+            )
+    return done
 
 
 async def market(ctx: TickContext, tally: LoreTally) -> None:

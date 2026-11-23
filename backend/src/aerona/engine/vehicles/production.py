@@ -5,7 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.goods_tables import YARD_ROLES
 from aerona.catalog.goods_traits import workshops_with
 from aerona.catalog.life.domain import STANDING_STATES
-from aerona.catalog.life_traits import TRADE_MODE_TRAITS, having
+from aerona.catalog.life_traits import CARRYING_ROUTES, TRADE_MODE_TRAITS, having
 from aerona.catalog.vehicles import FRAMES
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.collective import DesignRow
@@ -16,7 +16,7 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.vehicles import DesignTechniqueRow, VehicleGroupRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode, TradeRouteStatus, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.goods_traits import WorkshopTrait
 from aerona.domain.enums.life_traits import TradeModeTrait
@@ -119,7 +119,7 @@ async def cartwrights(ctx: TickContext, knowledge: KnowledgeMap, tally: WorksTal
         if town is None or owner is None or held(town.id) or held(owner.id):
             continue
         mode = await trade_mode(ctx, town.id)
-        carrier = await carrier_design(ctx, owner, mode if mode in LAND_MODES else TradeMode.CARAVAN, knowledge, await ground_of(ctx.session, town))
+        carrier = await carrier_design(ctx, owner, mode if mode in LAND_MODES else TradeMode.ROAD, knowledge, await ground_of(ctx.session, town))
         if carrier is not None:
             await build(ctx, town, owner, carrier, points=yard.level * table.cart_points, tally=tally)
 
@@ -149,7 +149,7 @@ async def trade_mode(ctx: TickContext, town_id: int) -> TradeMode:
         select(TradeRouteProfileRow.mode)
         .where(
             (TradeRouteProfileRow.first_market_id == town_id) | (TradeRouteProfileRow.second_market_id == town_id),
-            TradeRouteProfileRow.status == TradeRouteStatus.OPEN,
+            TradeRouteProfileRow.status.in_(CARRYING_ROUTES),
         )
         .limit(1)
     )

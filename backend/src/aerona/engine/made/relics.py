@@ -7,7 +7,7 @@ from aerona.db.tables.networks import NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.eras import TechFamily
-from aerona.domain.enums.made import RelicState, RelicUse
+from aerona.domain.enums.made import RelicStance, RelicState, RelicUse
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.augments import seek_enhancements
 from aerona.engine.context import TickContext
@@ -85,12 +85,24 @@ async def keep_relic(ctx: TickContext, relic: MadeRelicRow, thing: EntityRow) ->
             facts={"understood": relic.understood_pct, "repair_knowledge": level},
             place=thing.location_id,
         )
-    if relic.function_state is RelicState.FAILING and relic.use is RelicUse.AS_MADE and holder is not None and not held(holder.id):
+    misused = relic.use is RelicUse.AS_MADE or (
+        relic.use is RelicUse.REPURPOSED and ctx.rng(f"relic.misuse.{relic.thing_node_id}.{ctx.epoch}").chance(table.wear)
+    )
+    if relic.function_state is RelicState.FAILING and misused and holder is not None and not held(holder.id):
         shift_stat(holder, "prosperity", -table.misuse_harm, 0)
     if relic.understood_pct < table.revere_below and holder is not None and "use" not in relic.locked:
         doctrine = await doctrine_here(ctx.session, holder)
         if doctrine is not None and doctrine.relic_stance in STANCE_USE:
+            before = relic.use
             relic.use = STANCE_USE[doctrine.relic_stance]
+            if doctrine.relic_stance is RelicStance.STUDIED and before is not relic.use:
+                await record(
+                    ctx,
+                    "relic.studied",
+                    roles={IncidentRole.SUBJECT: thing.id, IncidentRole.OWNER: holder.id},
+                    facts={"understood": relic.understood_pct},
+                    place=thing.location_id,
+                )
         elif doctrine is None and level == 0:
             relic.use = RelicUse.IGNORED
     if "function_state" not in relic.locked:

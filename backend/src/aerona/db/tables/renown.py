@@ -7,7 +7,7 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import ActKind, SkillKind
-from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LorePrice, ReputationAxis
+from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LorePrice, ReputationAxis, ServiceTask
 
 
 class ReputationRow(Base):
@@ -86,6 +86,7 @@ class DeedClaimRow(Base):
     claimant_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
     kind: Mapped[ClaimKind] = mapped_column(enum_type(ClaimKind, "kind"))
     status: Mapped[ClaimStatus] = mapped_column(enum_type(ClaimStatus, "status"), default=ClaimStatus.STANDING)
+    contested_by_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     credited: Mapped[int] = mapped_column(default=0)
     epoch: Mapped[int]
     settled_epoch: Mapped[int | None]
@@ -109,4 +110,6 @@ class LoreTradeRow(Base):
     subject_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     value: Mapped[int]
     price: Mapped[LorePrice] = mapped_column(enum_type(LorePrice, "price"))
+    task: Mapped[ServiceTask | None] = mapped_column(enum_type(ServiceTask, "task"))
+    passed: Mapped[bool] = mapped_column(default=True, server_default="1")
     epoch: Mapped[int]

@@ -2,20 +2,23 @@ import {
   Amphora,
   Anchor,
   Archive,
+  ArrowUpFromLine,
   Box,
   BrickWall,
   Clock,
+  Cog,
   Compass,
   Construction,
+  Cpu,
   Droplets,
-  FileText,
+  Fan,
   Feather,
+  FileText,
   Hammer,
   KeyRound,
   Layers,
   Leaf,
   Lock,
-  type LucideIcon,
   Map,
   Milk,
   Mountain,
@@ -24,14 +27,25 @@ import {
   Scroll,
   ScrollText,
   ShoppingBag,
+  Sparkles,
   Stamp,
   Tablet,
   Telescope,
+  type LucideIcon,
   Waves,
+  Wind,
   Wine,
-  Cog,
-  Fan,
-  ArrowUpFromLine,
+  Zap,
+  Shell,
+  Ribbon,
+  Rows3,
+  HardDrive,
+  Star,
+  Flame,
+  Satellite,
+  ShoppingBasket,
+  Droplet,
+  Cylinder,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -60,6 +74,10 @@ export const MEDIA: Record<Schema['WritingMedium'], Named> = {
   metal_plate: { label: 'Metal plate', icon: Stamp, tone: 'info' },
   stone: { label: 'Stone', icon: Mountain, tone: 'muted' },
   knotted_cord: { label: 'Knotted cord', icon: Archive, tone: 'verdigris' },
+  calcified_tissue: { label: 'Bone and shell', icon: Shell, tone: 'muted' },
+  silk: { label: 'Silk', icon: Ribbon, tone: 'gold' },
+  wood_slips: { label: 'Slips of wood or cane', icon: Rows3, tone: 'success' },
+  electronic: { label: 'Electronic record', icon: HardDrive, tone: 'info' },
 }
 
 export const LOCKS: Record<Schema['LockKind'], Named> = {
@@ -68,6 +86,12 @@ export const LOCKS: Record<Schema['LockKind'], Named> = {
   tumbler: { label: 'Tumbler lock', icon: KeyRound, tone: 'gold' },
   combination: { label: 'Combination lock', icon: Cog, tone: 'success' },
   warded_seal: { label: 'Warded lock with seal', icon: Stamp, tone: 'warning' },
+  worked: {
+    label: 'Lock held by a working',
+    icon: Sparkles,
+    tone: 'verdigris',
+  },
+  electronic: { label: 'Electronic lock', icon: Cpu, tone: 'info' },
 }
 
 export const LIFTS: Record<Schema['WaterLift'], Named> = {
@@ -76,6 +100,8 @@ export const LIFTS: Record<Schema['WaterLift'], Named> = {
   screw: { label: 'Water screw', icon: Construction, tone: 'gold' },
   chain_pump: { label: 'Chain pump', icon: Cog, tone: 'warning' },
   steam_pump: { label: 'Steam pump', icon: Waves, tone: 'danger' },
+  wind_pump: { label: 'Wind pump', icon: Wind, tone: 'info' },
+  electric_pump: { label: 'Electric pump', icon: Zap, tone: 'gold' },
 }
 
 export const AIDS: Record<Schema['NavigationAid'], Named> = {
@@ -83,6 +109,14 @@ export const AIDS: Record<Schema['NavigationAid'], Named> = {
   astrolabe: { label: 'Astrolabe', icon: Telescope, tone: 'gold' },
   log_line: { label: 'Log-line', icon: Ruler, tone: 'muted' },
   charts: { label: 'Charts', icon: Map, tone: 'verdigris' },
+  sounding_line: { label: 'Sounding line', icon: Anchor, tone: 'info' },
+  wayfinding: { label: 'Wayfinding lore', icon: Star, tone: 'gold' },
+  beacons: { label: 'Beacons on the shore', icon: Flame, tone: 'warning' },
+  positioning: {
+    label: 'Positioning by network',
+    icon: Satellite,
+    tone: 'verdigris',
+  },
 }
 
 export const CONTAINERS: Record<Schema['ContainerKind'], Named> = {
@@ -92,6 +126,10 @@ export const CONTAINERS: Record<Schema['ContainerKind'], Named> = {
   crate: { label: 'Crate', icon: Box, tone: 'info' },
   jar: { label: 'Jar', icon: Wine, tone: 'verdigris' },
   chest: { label: 'Chest', icon: Package, tone: 'success' },
+  bale: { label: 'Bale', icon: Layers, tone: 'muted' },
+  basket: { label: 'Basket', icon: ShoppingBasket, tone: 'gold' },
+  skin: { label: 'Skin', icon: Droplet, tone: 'warning' },
+  tank: { label: 'Tank', icon: Cylinder, tone: 'info' },
 }
 
 export const PORT_ICON: LucideIcon = Anchor

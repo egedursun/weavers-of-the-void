@@ -76,6 +76,28 @@
     "mint": [
       "mint",
       "darphane"
+    ],
+    "pottery": [
+      "pottery",
+      "potter",
+      "kiln"
+    ],
+    "glassworks": [
+      "glassworks",
+      "glass"
+    ],
+    "dyeworks": [
+      "dyeworks",
+      "dyer"
+    ],
+    "scriptorium": [
+      "scriptorium",
+      "scribe"
+    ],
+    "evaporation_works": [
+      "saltern",
+      "saltworks",
+      "salt"
     ]
   },
   "resources": {

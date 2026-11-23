@@ -6,15 +6,20 @@ from sqlalchemy import select
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.intrigue import BELIEF_ATTRIBUTES
 from aerona.catalog.life.intrigue import FALSE_CAMPFIRES_SKILL_KINDS
+from aerona.catalog.pacts import WILLLESS_LAWS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.afflictions import AfflictionRow
+from aerona.db.tables.belonging import FugitiveRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import RiteProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.intrigue import IdentityRow, SecretRow
+from aerona.db.tables.law_depth import OutlawRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, SpyAgentRow, SpyNetworkRow
+from aerona.db.tables.minds import MindLawRow, MindProfileRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Visibility
@@ -87,6 +92,31 @@ async def hidden_memberships(ctx: TickContext, tally: SourceTally) -> None:
             tally.secrets += 1
 
 
+async def hidden_lives(ctx: TickContext) -> list[tuple[int, IdentityReason, str | None, int | None]]:
+    found: list[tuple[int, IdentityReason, str | None, int | None]] = []
+    chance = ctx.rules.intrigue.exile_mask_pct
+    outlaws = set(await ctx.session.scalars(select(OutlawRow.mortal_entity_id)))
+    at_large = select(FugitiveRow.mortal_entity_id).where(FugitiveRow.caught_epoch.is_(None), FugitiveRow.freed_epoch.is_(None))
+    for runner in sorted(outlaws | set(await ctx.session.scalars(at_large))):
+        if ctx.rng(seed_of("intrigue.fugitive_name", runner)).chance(chance):
+            found.append((runner, IdentityReason.FUGITIVE, None, None))
+    heretics = select(SecretRow.holder_node_id).where(SecretRow.kind == IntrigueSecret.HERESY, SecretRow.exposed_epoch.is_(None)).order_by(SecretRow.id)
+    for heretic in await ctx.session.scalars(heretics):
+        if ctx.rng(seed_of("intrigue.faith_mask", heretic)).chance(chance):
+            found.append((heretic, IdentityReason.HIDDEN_FAITH, None, None))
+    made = (
+        select(MindProfileRow.node_id)
+        .join(EntityRow, EntityRow.id == MindProfileRow.node_id)
+        .join(MindLawRow, MindLawRow.world_id == EntityRow.world_id)
+        .where(MindProfileRow.made_by_node_id.is_not(None), MindLawRow.made_minds.in_(list(WILLLESS_LAWS)))
+        .order_by(MindProfileRow.node_id)
+    )
+    for mind in await ctx.session.scalars(made):
+        if ctx.rng(seed_of("intrigue.passing", mind)).chance(chance):
+            found.append((mind, IdentityReason.PASSING_KIND, None, None))
+    return found
+
+
 async def masked_lives(ctx: TickContext, namer: Namer, tally: SourceTally) -> None:
     masked = set(await ctx.session.scalars(select(IdentityRow.mortal_node_id)))
     wanted: list[tuple[int, IdentityReason, str | None, int | None]] = []
@@ -99,6 +129,7 @@ async def masked_lives(ctx: TickContext, namer: Namer, tally: SourceTally) -> No
     for flag in await ctx.session.scalars(select(EntityFlagRow.entity_id).where(EntityFlagRow.flag == EntityFlag.EXILE)):
         if ctx.rng(seed_of("intrigue.exile_name", flag)).chance(ctx.rules.intrigue.exile_mask_pct):
             wanted.append((flag, IdentityReason.EXILE, None, None))
+    wanted.extend(await hidden_lives(ctx))
     for mortal_id, reason, cover, community_id in wanted:
         if mortal_id in masked or held(mortal_id):
             continue
@@ -282,3 +313,21 @@ async def cowardice(ctx: TickContext, commander_id: int, side_id: int) -> None:
         return
     if ctx.rng(seed_of("intrigue.coward", commander_id, ctx.epoch)).chance(ctx.rules.intrigue.coward_pct):
         await keep_secret(ctx, commander_id, IntrigueSecret.COWARDICE_IN_BATTLE, about_id=side_id, source="battle")
+
+
+SECRETS_FIXUP = "secrets.w52"
+
+
+async def backfill_power_secrets(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, SECRETS_FIXUP) is not None:
+        return 0
+    kept = 0
+    masks = (
+        select(IdentityRow).where(IdentityRow.reason == IdentityReason.HIDDEN_POWER, IdentityRow.exposed_epoch.is_(None)).order_by(IdentityRow.mortal_node_id)
+    )
+    for mask in list(await ctx.session.scalars(masks)):
+        if await keep_secret(ctx, mask.mortal_node_id, IntrigueSecret.HIDDEN_POWER, source="identity.hidden_power") is not None:
+            kept += 1
+    ctx.session.add(AppliedFixupRow(key=SECRETS_FIXUP, result={"secrets": kept}))
+    await ctx.session.flush()
+    return kept

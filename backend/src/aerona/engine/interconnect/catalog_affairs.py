@@ -132,6 +132,7 @@ AFFAIRS_MECHANICS: tuple[Mechanic, ...] = (
         templates=("assembly.passed", "assembly.rejected"),
         fields=("kind", "state", "votes_for", "votes_against", "until_epoch", "aye", "weight"),
         tables=(ResolutionRow.__tablename__, ResolutionVoteRow.__tablename__),
+        tools=("propose_resolution",),
         exposure=Exposure.CONTEXT,
         targets=("faction", "polity", "son"),
         couplings=(
@@ -143,6 +144,7 @@ AFFAIRS_MECHANICS: tuple[Mechanic, ...] = (
     ),
     Mechanic(
         key="court",
+        tools=("appoint_court",),
         spec_item="S4.6/RP2",
         title="A ruler's court gathers courtiers into positions and shines with grandeur that wins renown, a warm welcome abroad and talent",
         subsystem=S.POLITY,

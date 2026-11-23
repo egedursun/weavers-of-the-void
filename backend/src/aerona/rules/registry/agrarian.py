@@ -241,6 +241,24 @@ class ReliefRules:
     love: int = rule(8, 0, 100, P, "Love a town gains for the god of those who sent it aid")
     refuse_below: int = rule(-30, -100, 100, P, "Regard under which a stricken realm refuses the aid of a rival")
     face_loss: int = rule(6, 0, 100, P, "Honour a ruler loses for refusing aid in a stricken hour, doubled in a culture of face")
+    granary_cost: int = rule(60, 0, 500, P, "Coin for every thousand people of the realm that grain kept against hunger costs each epoch")
+    granary_effect: int = rule(100, 0, 100, P, "Strength of grain kept against hunger at full reach (%)")
+    alms_cost: int = rule(40, 0, 500, P, "Coin for every thousand people of the realm that alms handed to the poor costs each epoch")
+    alms_effect: int = rule(100, 0, 100, P, "Strength of alms handed to the poor at full reach (%)")
+    workhouse_cost: int = rule(
+        50, 0, 500, P, "Coin for every thousand people of the realm that a workhouse that feeds the poor for their work costs each epoch"
+    )
+    workhouse_effect: int = rule(100, 0, 100, P, "Strength of a workhouse that feeds the poor for their work at full reach (%)")
+    parish_cost: int = rule(40, 0, 500, P, "Coin for every thousand people of the realm that relief given through the parishes of a faith costs each epoch")
+    parish_effect: int = rule(100, 0, 100, P, "Strength of relief given through the parishes of a faith at full reach (%)")
+    foster_care_cost: int = rule(50, 0, 500, P, "Coin for every thousand people of the realm that foster care of orphans costs each epoch")
+    foster_care_effect: int = rule(30, 0, 100, P, "Strength of foster care of orphans at full reach (%)")
+    sick_house_cost: int = rule(
+        70, 0, 500, P, "Coin for every thousand people of the realm that houses for the sick and those shunned for their illness costs each epoch"
+    )
+    sick_house_effect: int = rule(30, 0, 100, P, "Strength of houses for the sick and those shunned for their illness at full reach (%)")
+    pension_cost: int = rule(80, 0, 500, P, "Coin for every thousand people of the realm that pensions for veterans, the maimed and the old costs each epoch")
+    pension_effect: int = rule(10, 0, 100, P, "Strength of pensions for veterans, the maimed and the old at full reach (%)")
 
 
 @dataclass(frozen=True)

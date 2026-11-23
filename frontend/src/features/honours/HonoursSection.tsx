@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Flag, Plus, Users } from 'lucide-react'
+import { Flag, Medal, Plus, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -380,6 +380,25 @@ function VeteransPanel({
       (polity === null ? 'Choose the realm that grants it first' : null),
     granting.isPending
   )
+  const [standing, setStanding] = useState<string>(data.policy ?? 'pension')
+  const setting = useHonoursAction(
+    'profile:set',
+    (_: void) => ({
+      node_id: data.realm?.id ?? 0,
+      table: 'veteran_policies',
+      column: 'grant',
+      value: standing,
+      hold: true,
+    }),
+    'The realm keeps this grant for its veterans'
+  )
+  const policyBusy = why(
+    blocked ??
+      (data.realm === null
+        ? 'This place belongs to no realm that grants its veterans anything'
+        : null),
+    setting.isPending
+  )
   return (
     <div data-surface='VeteransPanel' className='flex min-w-0 flex-col gap-4'>
       <Bars
@@ -404,6 +423,33 @@ function VeteransPanel({
       >
         {(item) => <GrantCard row={item} blocked={blocked} />}
       </Listed>
+      <ForgeCard
+        icon={Medal}
+        tone='gold'
+        title='What the realm grants its veterans'
+        note={`When a war ends the realm grants its veterans this, where it can. Now: ${data.policy ? GRANTS[data.policy].label.toLowerCase() : 'not yet set'}${data.policy_locked ? ' (held)' : ''}.`}
+        columns={2}
+        action={
+          <Button
+            size='sm'
+            disabled={policyBusy !== null}
+            disabledReason={policyBusy ?? undefined}
+            onClick={() => setting.mutate()}
+          >
+            <Medal />
+            Set and hold
+          </Button>
+        }
+      >
+        <MindPicker
+          label='Standing grant'
+          value={standing}
+          table={table(GRANTS)}
+          placeholder='Choose'
+          blocked={policyBusy}
+          onPick={setStanding}
+        />
+      </ForgeCard>
       <ForgeCard
         icon={Users}
         tone='success'

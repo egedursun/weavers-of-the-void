@@ -70,6 +70,13 @@ describe('means of craft', () => {
       ],
       lifts: [
         { device: 'noria', count: 2, capacity: 6, since_epoch: 5, locked: [] },
+        {
+          device: 'wind_pump',
+          count: 1,
+          capacity: 5,
+          since_epoch: 6,
+          locked: [],
+        },
       ],
       kits: [
         {
@@ -99,6 +106,7 @@ describe('means of craft', () => {
       .toBeVisible()
     await screen.getByRole('tab', { name: /Water lifting/ }).click()
     await expect.element(screen.getByText('2 noria')).toBeVisible()
+    await expect.element(screen.getByText('1 wind pump')).toBeVisible()
     await screen.getByRole('button', { name: 'Raise them' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/water_lift:set'))

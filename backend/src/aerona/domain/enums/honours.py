@@ -7,12 +7,17 @@ class UnitHonourKind(StrEnum):
     SIEGE = "siege"
     SURVIVAL = "survival"
     MASSACRE = "massacre"
+    RELIEF = "relief"
+    CROSSING = "crossing"
 
 
 class VeteranGrant(StrEnum):
     LAND = "land"
     PENSION = "pension"
     NONE = "none"
+    MEMBERSHIP = "membership"
+    TITLE = "title"
+    TAX_EXEMPTION = "tax_exemption"
 
 
 class HonourPrivilege(StrEnum):

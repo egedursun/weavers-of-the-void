@@ -43,6 +43,10 @@ import {
   Target,
   Unlock,
   Users,
+  Binoculars,
+  Mountain,
+  Wifi,
+  Plane,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -238,6 +242,8 @@ export const FATE_OF: Record<string, Named> = {
   wounded: { label: 'Wounded', icon: HeartPulse, tone: 'warning' },
   maimed: { label: 'Maimed', icon: HeartPulse, tone: 'danger' },
   captured: { label: 'Captured', icon: Unlock, tone: 'info' },
+  missing: { label: 'Missing', icon: Map, tone: 'muted' },
+  deserted: { label: 'Deserted', icon: Leaf, tone: 'warning' },
 }
 
 export const MORALE_PART: Record<string, Named> = {
@@ -335,6 +341,9 @@ export const ROLE: Record<string, Named> = {
     tone: 'warning',
   },
   surgeon: { label: 'Surgeon', icon: HeartPulse, tone: 'verdigris' },
+  chaplain: { label: 'Chaplain', icon: Sparkles, tone: 'verdigris' },
+  paymaster: { label: 'Paymaster', icon: Coins, tone: 'gold' },
+  scout_master: { label: 'Master of scouts', icon: Binoculars, tone: 'info' },
 }
 
 export const CONTRACT_STATUS: Record<string, Named> = {
@@ -350,6 +359,8 @@ export const AGENT_STATUS: Record<string, Named> = {
   turned: { label: 'Turned', icon: Skull, tone: 'warning' },
   dead: { label: 'Dead', icon: Skull, tone: 'muted' },
   retired: { label: 'Retired', icon: Leaf, tone: 'muted' },
+  missing: { label: 'Out of contact', icon: Map, tone: 'muted' },
+  exposed: { label: 'Known to the enemy', icon: Eye, tone: 'warning' },
 }
 
 export const OWNER_KIND: Record<
@@ -368,6 +379,8 @@ export const SACK_CHOICE: Record<string, Named> = {
   mercy: { label: 'Mercy', icon: HandHeart, tone: 'success' },
   sack: { label: 'Sack', icon: Flame, tone: 'warning' },
   raze: { label: 'Raze', icon: Skull, tone: 'danger' },
+  ransom_city: { label: 'Ransom the city', icon: Coins, tone: 'gold' },
+  deport: { label: 'Deport its people', icon: Ship, tone: 'danger' },
 }
 
 export const SIEGE_WORK: Record<string, Named> = {
@@ -377,6 +390,17 @@ export const SIEGE_WORK: Record<string, Named> = {
   mines: { label: 'Mines', icon: Bone, tone: 'warning' },
   countermines: { label: 'Countermines', icon: Bone, tone: 'info' },
   ladders: { label: 'Ladders', icon: Rocket, tone: 'muted' },
+  bombardment: { label: 'Massed bombardment', icon: Hammer, tone: 'danger' },
+  sapping: { label: 'Sapping trenches', icon: Bone, tone: 'info' },
+  blockade_lines: { label: 'Blockade lines', icon: Map, tone: 'warning' },
+  air_assault: { label: 'Assault from the air', icon: Plane, tone: 'info' },
+  network_attack: {
+    label: 'Attack on the networks',
+    icon: Wifi,
+    tone: 'verdigris',
+  },
+  rite_breach: { label: 'Breaching rite', icon: Sparkles, tone: 'verdigris' },
+  ramp: { label: 'Siege ramp', icon: Mountain, tone: 'muted' },
 }
 
 export const WALL_MATERIAL: Record<string, Named> = {

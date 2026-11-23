@@ -135,14 +135,15 @@ describe('land, harvest, readiness and staples', () => {
         {
           id: 3,
           settlement: TOWN,
-          cause: 'fire',
-          plan: 'planned',
+          cause: 'sea_wave',
+          plan: 'relocated',
           cost: 540,
           paid: 200,
           progress: 50,
           planner: null,
           seized_by: REALM,
           seized: 12,
+          site: VALE,
           started_epoch: 5,
           finished_epoch: null,
           locked: [],
@@ -153,7 +154,7 @@ describe('land, harvest, readiness and staples', () => {
     onApi('POST', '/api/actions/reconstruction:finish', ACCEPTED_ACTION)
     const { screen } = await renderApp(<AgrarianSection nodeId={30} />)
     await expect
-      .element(screen.getByText('Hollin rebuilding after a fire'))
+      .element(screen.getByText('Hollin rebuilding after a sea wave'))
       .toBeVisible()
     await screen.getByRole('button', { name: 'Finish it now' }).click()
     await expect

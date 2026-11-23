@@ -53,10 +53,13 @@ export const CREDIT_TONE: Record<string, Named['tone']> = {
   strained: 'warning',
   default: 'danger',
   restructuring: 'info',
+  rescued: 'verdigris',
+  repudiated: 'danger',
 }
 
 export const HOARD_TONE: Record<string, Named['tone']> = {
   hoarding: 'warning',
   sold: 'success',
   bust: 'danger',
+  seized: 'info',
 }

@@ -153,6 +153,10 @@ ECONOMY_DEPTH_MECHANICS = (
     ),
     Mechanic(
         key="realm_loans",
+        tools=(
+            "rescue_polity",
+            "repudiate_debts",
+        ),
         spec_item="S6.4",
         title="Banks lend to realms at war or in debt; realms repay from the treasury or default into standing debt",
         subsystem=S.POLITY,
@@ -184,6 +188,7 @@ ECONOMY_DEPTH_MECHANICS = (
     ),
     Mechanic(
         key="workshop_designs",
+        tools=("found_workshop",),
         spec_item="S6.3",
         title="Workshop designs drawn on a base kind change capacity, output, quality and storage",
         subsystem=S.ECONOMY,

@@ -60,3 +60,18 @@ class CouncilRules:
     regulate_at: int = rule(5, 1, 1000, RuleGroup.COUNCIL, "Made minds, or sources of power open to anyone, at which the council moves to regulate them")
     regulate_drift: int = rule(30, 0, 100, RuleGroup.COUNCIL, "Drift of a living line at which the council moves to regulate living craft")
     failed_councils: int = rule(3, 1, 20, RuleGroup.COUNCIL, "Councils in a row that pass nothing before the council moves to change how it decides")
+    improve_relations_effect: int = rule(100, 0, 100, RuleGroup.POLITY, "How fully a chancellor's courting of a neighbour works (%)")
+    train_troops_effect: int = rule(100, 0, 100, RuleGroup.POLITY, "How fully a marshal's drilling of the armies works (%)")
+    collect_taxes_effect: int = rule(100, 0, 100, RuleGroup.POLITY, "How fully a treasurer's gathering of taxes works (%)")
+    disrupt_schemes_effect: int = rule(100, 0, 100, RuleGroup.POLITY, "How fully a spymaster's breaking of schemes works (%)")
+    convert_province_effect: int = rule(100, 0, 100, RuleGroup.POLITY, "How fully a chaplain's turning of a land works (%)")
+    purge_corruption_effect: int = rule(100, 0, 100, RuleGroup.POLITY, "How fully a judge's purge of corruption works (%)")
+    oversee_works_effect: int = rule(
+        10, 0, 100, RuleGroup.POLITY, "Share of each work's cost an overseer of works raises each epoch at full skill and diligence (%)"
+    )
+    promote_trade_effect: int = rule(
+        5, 0, 100, RuleGroup.POLITY, "Treasury an officer promoting trade earns per trading road of the realm each epoch at full skill and diligence"
+    )
+    advance_learning_effect: int = rule(
+        10, 0, 100, RuleGroup.POLITY, "Research an officer advancing learning adds to the realm's seat each epoch at full skill and diligence"
+    )

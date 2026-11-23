@@ -50,7 +50,7 @@ from aerona.api.schemas.mind import (
 )
 from aerona.api.views.common import node_ref, node_refs
 from aerona.catalog.aspirations import FEARS, FOCUSES, GOALS, INSPIRATION_LABELS, PERKS, WANTS
-from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS, STANCE_ORDER, STANCE_READINGS
+from aerona.catalog.ethics import ACT_LABELS, DUEL_END_LABELS, HONOUR_MODELS, STANCE_LABELS, STANCE_ORDER, STANCE_READINGS
 from aerona.catalog.mind import FIXED_ROLES, MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAIT_FAMILY, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS, SKILL_ATTRIBUTES
 from aerona.catalog.preferences import PREFERENCE_LABELS, SPECIES_KINDS, STATIC_TARGETS, target_label
@@ -557,6 +557,9 @@ async def culture_mind_view(services: ServicesDep, node_id: int = Path(ge=1)) ->
             honour_model=honour.model if honour is not None else None,
             honour_label=HONOUR_MODELS[honour.model].label if honour is not None else None,
             honour_held=honour is not None and "model" in (honour.locked or []),
+            duel_end=honour.duel_end if honour is not None else None,
+            duel_end_in_force=(honour.duel_end or HONOUR_MODELS[honour.model].duel_end) if honour is not None else None,
+            duel_end_held=honour is not None and "duel_end" in (honour.locked or []),
             preference_kinds=[
                 PreferenceKindView(kind=pref, label=PREFERENCE_LABELS[pref], targets=list(STATIC_TARGETS.get(pref, ())), from_records=pref in SPECIES_KINDS)
                 for pref in PreferenceKind
@@ -565,6 +568,7 @@ async def culture_mind_view(services: ServicesDep, node_id: int = Path(ge=1)) ->
             else [],
             stances=[LabelView(key=stance.value, label=STANCE_LABELS[stance]) for stance in STANCE_ORDER],
             honour_models=[LabelView(key=model.value, label=spec.label) for model, spec in HONOUR_MODELS.items()],
+            duel_ends=[LabelView(key=end.value, label=label) for end, label in DUEL_END_LABELS.items()],
         )
 
 

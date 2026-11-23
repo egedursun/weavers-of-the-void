@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Accessibility,
   Anchor,
   Axe,
@@ -23,6 +22,7 @@ import {
   CloudRain,
   Coins,
   Container,
+  Cross,
   Crosshair,
   Crown,
   Disc3,
@@ -92,6 +92,7 @@ import {
   TrendingUp,
   Trophy,
   Truck,
+  type LucideIcon,
   User,
   UserRound,
   Users,
@@ -314,6 +315,8 @@ export const DISTRICT_SPEC: Record<DistrictKind, Spec> = {
   },
   suburb: { label: 'Suburb', icon: House, tone: 'success' },
   arcology: { label: 'Arcology', icon: Building2, tone: 'verdigris' },
+  camp: { label: 'Camp of the displaced', icon: Tent, tone: 'warning' },
+  lazaretto: { label: 'Lazaretto', icon: Cross, tone: 'info' },
 }
 export const DISTRICT_MAX_LEVEL = 5
 

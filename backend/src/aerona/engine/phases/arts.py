@@ -22,6 +22,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "item.might",
     "item.protection",
     "mortal.creativity",
+    "settlement.population",
     "table.art_prices",
     "table.artwork_profiles",
     "table.bonds",
@@ -53,6 +54,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.polity_profiles",
     "table.relics",
     "table.resource_profiles",
+    "table.secrets",
     "table.skills",
     "table.sons",
     "table.stars",
@@ -83,6 +85,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.node_materials",
     "table.polity_profiles",
     "table.relics",
+    "table.secrets",
     "table.settlement_profiles",
 )
 async def art_market(ctx: TickContext) -> None:
@@ -99,6 +102,7 @@ async def art_market(ctx: TickContext) -> None:
     "table.art_movements",
     "table.artwork_profiles",
     "table.canon_works",
+    "table.culture_values",
     "table.entities",
     "table.faction_memberships",
     "table.faction_profiles",

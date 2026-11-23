@@ -6,13 +6,13 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 
 | Axis | Count |
 |---|---|
-| table | 994 |
-| enum | 1574 |
+| table | 997 |
+| enum | 1575 |
 | step | 500 |
 | incident | 5 |
-| tool | 720 |
-| lever | 2280 |
-| screen | 1404 |
+| tool | 769 |
+| lever | 2284 |
+| screen | 1405 |
 | text | 195 |
 
 | Axis | Item | Proven by | Open layers and the rows that close them |
@@ -145,6 +145,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | community_methods | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | community_needs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | community_relations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | community_shortfalls | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | community_societies | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | community_stocks | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | commutes | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -354,6 +355,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | fortune_sources | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | fossil_beds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | founding_myths | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | fugitives | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | furnishing_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | galactic_events | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | galactic_structures | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -970,6 +972,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | vessel_profiles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | vessel_sections | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | veteran_grants | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | veteran_policies | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | vis_stocks | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | visions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | wants | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -2239,6 +2242,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.renown.Currency | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.renown.LorePrice | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.renown.ReputationAxis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.renown.ServiceTask | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.restoration.RestorationBasis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.restoration.RestorationFailure | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.restoration.RestorationStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2356,6 +2360,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.tongues.LanguageStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.tongues.MorphologyType | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.tongues.NumberSystem | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.tongues.NumeralBase | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.tongues.ScriptChangeCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.tongues.ScriptFate | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.tongues.SenseShift | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2380,7 +2385,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.travel.JourneyStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.RefugeeCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.RouteClosure | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
-| enum | domain.enums.travel.RouteEnvironment | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.RouteState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.TravelMechanism | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.TravelMedium | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -3090,6 +3094,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | incident | population_policy.child_limit_resistance | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | population_policy.expulsion_grievance | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | population_policy.health_sanitation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
+| tool | mortal:abandon_work | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:accept_treaty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:accuse | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:accuse_of_witchcraft | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3099,8 +3104,10 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:answer_sickness | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:appeal_conviction | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:appoint_commander | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:appoint_court | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:appoint_officer | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:argue_doctrine | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:assign_army_role | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:assign_caste | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:assign_task | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:audit_endowment | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3144,6 +3151,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:censor_outlet | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:challenge_god | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:challenge_to_contest | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:challenge_to_duel | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:change_gear | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:change_money | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:charter_company | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3153,6 +3161,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:choose_storylet | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:claim_bounty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:claim_courts | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:claim_deed | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:claim_identity | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:claim_resource | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:claim_right | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3166,8 +3175,10 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:commemorate | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:commission_account | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:commission_artwork | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:compose_account | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:confer_honour | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:confine_in_realm | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:construct_language | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:consult_diviner | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:contain_replicator | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:contest_orbit | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3179,10 +3190,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:create_dish | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:create_office | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:cut_network | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:decide_captives | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:decide_fall | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:decipher_script | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:declare_closure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:declare_neutral | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:declare_posture | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:declare_war | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:defend_siege | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:defend_system | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:delve_site | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:deny_god | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3190,6 +3205,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:design_disease | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:design_line | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:design_rite | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:designate_heir | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:develop_knowledge | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:devise_custom | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:devise_use | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3197,6 +3213,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:dig_site | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:diplomacy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:discover_resource | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:dismantle_work | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:disown | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:divert_river | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:draft_unit_type | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3214,6 +3231,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:enter_realm | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:escape | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:establish_trade | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:expel_envoy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:explore_land | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:expose_collaborator | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:expose_hypocrisy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3224,6 +3242,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:find_carrier | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:find_route | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:fix_contest | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:flee | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:forbid_kind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:forecast | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:forecast_seasons | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3236,9 +3255,11 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:found_circle | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_club | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_company | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:found_coop | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_enchantment | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_enterprise | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_faction | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:found_garden | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_honour | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_language | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_league | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3249,13 +3270,16 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:found_school_method | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_settlement | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:found_worker_body | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:found_workshop | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:free_bound | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:free_mind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:fund_research | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:fund_works | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:give_relief | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:give_speech | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:go_on_adventure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:grant_pardon | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:grant_veterans | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:grow_gear | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:grow_organ | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:grow_structure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3265,11 +3289,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:hire_servant | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:hold_gathering | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:host_symbiont | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:hunt_fugitive | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:hunt_moles | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:impose_measure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:impose_script | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:improve_soil | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:inspect_entity | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:install_augment | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:insure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:interpret | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:intrude | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:invent_art_form | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3278,6 +3305,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:investigate | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:issue_demand | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:issue_mandate | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:jam_signal | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:join_cooperative | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:join_league | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:join_network | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3316,24 +3344,30 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:make_will | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:man_station | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:mark_body | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:mediate | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:merge_minds | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:merge_species | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:mock_the_ruler | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:negotiate_surrender | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:offer_terms | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:offer_to_spirit | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:open_district | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:open_ground | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:open_reckoning | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:open_shop | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:open_trading_post | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:order_formation | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:order_siege_work | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:parley | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:pay_ransom | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:persuade | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:petition_spirit | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:pick_lock | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:place_grave_goods | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:plan_rebuilding | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:plant_line | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:plant_perennial | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:play_market | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:plot_scheme | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:poach_game | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:post_bounty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3341,6 +3375,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:preach | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:preach_end_time | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:prepare_town | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:press_claim | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:press_demand | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:press_leverage | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:proclaim_age | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3350,6 +3385,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:promote_cult | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:prophesy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:propose_law | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:propose_resolution | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:propose_theory | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:propose_treaty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:protect_area | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3366,9 +3402,11 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:raise_restoration | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:raise_sapience | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:read_the_sky | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:rebuild | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reckon_years | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reconcile_kin | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:recount | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:recruit_agent | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:refit_section | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reform_script | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reform_youth | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3382,7 +3420,10 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:repay_debt | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:replan_land | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:report_cartel | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:repudiate_debts | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:reschedule_loan | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:rescue_captive | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:rescue_polity | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reserve_game | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:resist_drift | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:restore_mind | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3394,6 +3435,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:rob_grave | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:rouse_crowd | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:rule_commons | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:run_operation | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:run_racket | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:run_remote_body | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:sabotage | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3413,13 +3455,18 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:seek_sanctuary | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:seek_true_name | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:seek_vision | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:seize_hoards | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:seize_title | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:sell_loan | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:send_aid | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:send_convoy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:send_dispatch | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:set_army_stance | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_clone_law | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_commons_rule | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:set_crime_stance | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_economic_order | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:set_faction_goal | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_house_duties | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_land_use_rule | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_levy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3428,6 +3475,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:set_population_policy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_power_law | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_provision | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:set_rights | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_role_custom | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_speech | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:set_surveillance | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3445,6 +3493,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:strike_memory | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:study_fossils | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:study_relic | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:suborn_garrison | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:suspend_treaty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:swear_fealty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:swear_kinship | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:swear_oath | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3452,6 +3502,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:table_league_motion | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:take_arms | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:take_care | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:take_client | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:take_contract | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:take_leisure | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:take_longevity | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3467,6 +3518,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:tend_maimed | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:test_for_gifts | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:test_lore | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:testify | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:trade_lore | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:trade_security | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:train_herd | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3689,6 +3741,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:resurrect_sibling | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:retell_event | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:reveal_nature | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:reveal_script | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:reveal_secret | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:reveal_tenet | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:reveal_tongue | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -4648,6 +4701,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | founding_myth:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | founding_myth:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | founding_myth:set | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | fugitive:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | fugitive:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | fugitive:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | furnishing:add | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | furnishing:remove | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | galactic_event:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -5638,6 +5694,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | ship_state:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | ship_state:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | ship_state:set | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | shortfall:set | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | sibling:hinder_return | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | sibling:scheme | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | siege:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -6212,6 +6269,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/backups/TypedConfirm | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/beliefTrust/SourceTrustSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/belonging/BelongingSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/belonging/FugitivePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/belonging/IdentityPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/belonging/PeersPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/belonging/SanctuaryPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |

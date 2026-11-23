@@ -8,8 +8,10 @@ from aerona.engine.phase import Phase
 
 @reads(
     "mortal.age",
+    "table.bonds",
     "table.crime_cases",
     "table.departures",
+    "table.designated_heirs",
     "table.entities",
     "table.house_members",
     "table.incident_facts",

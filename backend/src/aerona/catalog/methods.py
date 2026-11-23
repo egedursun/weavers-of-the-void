@@ -9,6 +9,8 @@ from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.industry import EnergyKind, MethodKind, Pollutant, ProcessKind, QualityTier
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.rules.model import keyed
+from aerona.rules.registry import Rules
 
 E = EnergyKind
 M = MethodKind
@@ -42,11 +44,46 @@ class MethodSpec:
     inputs: tuple[tuple[CommodityKind, int, MaterialKind | None], ...] = ()
 
     @property
+    def noise(self) -> int:
+        return 0 if self.energy is EnergyKind.MUSCLE else self.energy_need
+
+    @property
+    def radiation(self) -> int:
+        return self.energy_need * 2 if self.energy is EnergyKind.FISSION else 0
+
+    @property
+    def light(self) -> int:
+        return self.energy_need if self.process is ProcessKind.LIGHTING and self.energy is EnergyKind.ELECTRIC else 0
+
+    @property
     def fouls(self) -> int:
-        return max(0, self.air) + max(0, self.water) + max(0, self.soil)
+        return sum(max(0, self.pollution(pollutant)) for pollutant in Pollutant)
 
     def pollution(self, pollutant: Pollutant) -> int:
-        return {Pollutant.AIR: self.air, Pollutant.WATER: self.water, Pollutant.SOIL: self.soil}[pollutant]
+        found: int = getattr(self, POLLUTANTS[pollutant].method_field)
+        return found
+
+
+@dataclass(frozen=True)
+class PollutantSpec:
+    label: str
+    method_field: str
+    recover_rule: str
+    harm_rule: str
+    crowd_rule: str | None = None
+
+
+POLLUTANTS = total(
+    Pollutant,
+    {
+        Pollutant.AIR: PollutantSpec("Air", "air", "recover_air", "air_harm", "crowd_air_per_10000"),
+        Pollutant.WATER: PollutantSpec("Water", "water", "recover_water", "water_harm", "crowd_water_per_10000"),
+        Pollutant.SOIL: PollutantSpec("Soil", "soil", "recover_soil", "soil_harm"),
+        Pollutant.RADIATION: PollutantSpec("Radiation", "radiation", "recover_radiation", "radiation_harm"),
+        Pollutant.NOISE: PollutantSpec("Noise", "noise", "recover_noise", "noise_harm", "crowd_noise_per_10000"),
+        Pollutant.LIGHT: PollutantSpec("Light", "light", "recover_light", "light_harm"),
+    },
+)
 
 
 m = MethodSpec
@@ -798,6 +835,154 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 technique=Technique.ELECTRICITY,
                 labour_pct=50,
             ),
+            m(M.HAND_FORGE, P.SMITHING, "Hand forge", "A smith beats metal at the anvil", E.HEAT, 2, branch=B.METALLURGY, level=1),
+            m(
+                M.TRIP_HAMMER,
+                P.SMITHING,
+                "Trip hammer",
+                "A wheel lifts the hammer for the smith",
+                E.WATER,
+                3,
+                output_pct=140,
+                labour_pct=70,
+                branch=B.METALLURGY,
+                level=3,
+            ),
+            m(
+                M.STEAM_HAMMER,
+                P.SMITHING,
+                "Steam hammer",
+                "Steam drives the great hammer",
+                E.FUEL,
+                4,
+                output_pct=220,
+                labour_pct=40,
+                air=2,
+                technique=Technique.STEAM_POWER,
+            ),
+            m(M.HAND_JOINERY, P.CARPENTRY, "Hand joinery", "Joints cut and fitted by hand", E.MUSCLE, 1),
+            m(
+                M.POLE_LATHE,
+                P.CARPENTRY,
+                "Pole lathe",
+                "A treadle spins the wood for turning",
+                E.MUSCLE,
+                2,
+                output_pct=130,
+                quality_bonus=5,
+                branch=B.ARCHITECTURE,
+                level=2,
+            ),
+            m(
+                M.POWER_PLANER,
+                P.CARPENTRY,
+                "Power planer",
+                "Powered blades plane and cut the timber",
+                E.ELECTRIC,
+                3,
+                output_pct=220,
+                labour_pct=40,
+                technique=Technique.ELECTRICITY,
+            ),
+            m(M.PIT_FIRING, P.FIRING, "Pit firing", "Clay fired in a pit under burning fuel", E.HEAT, 2, air=1),
+            m(
+                M.UPDRAFT_KILN,
+                P.FIRING,
+                "Updraft kiln",
+                "A kiln draws its heat up through the wares",
+                E.HEAT,
+                3,
+                output_pct=140,
+                quality_bonus=10,
+                air=1,
+                branch=B.ARCHITECTURE,
+                level=1,
+            ),
+            m(M.GLASSBLOWING, P.FIRING, "Glassblowing", "Molten glass shaped on the pipe", E.HEAT, 4, quality_bonus=15, air=2, branch=B.METALLURGY, level=2),
+            m(
+                M.TUNNEL_KILN,
+                P.FIRING,
+                "Tunnel kiln",
+                "Wares pass on carts through an endless fire",
+                E.FUEL,
+                4,
+                output_pct=250,
+                labour_pct=40,
+                air=2,
+                technique=Technique.FACTORY_PRODUCTION,
+            ),
+            m(M.VAT_DYEING, P.DYEING, "Vat dyeing", "Cloth steeped in vats of colour", E.MUSCLE, 1, water=2),
+            m(
+                M.MORDANT_DYEING,
+                P.DYEING,
+                "Mordant dyeing",
+                "Mordants fix the colour into the cloth",
+                E.HEAT,
+                2,
+                quality_bonus=15,
+                water=3,
+                technique=Technique.ALCHEMY,
+            ),
+            m(
+                M.SYNTHETIC_DYEING,
+                P.DYEING,
+                "Synthetic dyeing",
+                "Made colours in works of the new chemistry",
+                E.ELECTRIC,
+                3,
+                output_pct=220,
+                labour_pct=40,
+                water=5,
+                technique=Technique.INDUSTRIAL_CHEMISTRY,
+            ),
+            m(M.HAND_COPYING, P.COPYING, "Hand copying", "A copyist copies each page by hand", E.MUSCLE, 1, technique=Technique.ALPHABET),
+            m(
+                M.SCRIPTORIUM,
+                P.COPYING,
+                "Scriptorium",
+                "Many copyists work together under a keeper",
+                E.MUSCLE,
+                1,
+                output_pct=150,
+                quality_bonus=10,
+                technique=Technique.MONASTICISM,
+            ),
+            m(
+                M.COPYING_PRESS,
+                P.COPYING,
+                "Copying press",
+                "Pages pressed from set type",
+                E.MUSCLE,
+                2,
+                output_pct=400,
+                labour_pct=40,
+                technique=Technique.PRINTING_PRESS,
+            ),
+            m(
+                M.ROTARY_PRESS,
+                P.COPYING,
+                "Rotary press",
+                "Steam turns cylinders that print sheet after sheet",
+                E.FUEL,
+                4,
+                output_pct=500,
+                labour_pct=20,
+                air=1,
+                technique=Technique.STEAM_POWER,
+            ),
+            m(M.SOLAR_PANS, P.EVAPORATING, "Solar pans", "Sun and wind dry brine in shallow pans", E.SOLAR, 1, coast=True, climate=DRY_HEAT),
+            m(M.BOILING_PANS, P.EVAPORATING, "Boiling pans", "Brine boiled away over fire", E.HEAT, 3, output_pct=130, air=1),
+            m(
+                M.VACUUM_PANS,
+                P.EVAPORATING,
+                "Vacuum pans",
+                "Brine boiled under low pressure in sealed works",
+                E.FUEL,
+                3,
+                output_pct=250,
+                labour_pct=40,
+                technique=Technique.STEAM_POWER,
+            ),
         )
     }
 )
@@ -826,6 +1011,12 @@ PROCESS_LABELS: MappingProxyType[ProcessKind, str] = MappingProxyType(
         P.MILKING: "Milking",
         P.SHEARING: "Shearing",
         P.EGG_LAYING: "Egg laying",
+        P.SMITHING: "Smithing",
+        P.CARPENTRY: "Carpentry",
+        P.FIRING: "Firing clay and glass",
+        P.DYEING: "Dyeing",
+        P.COPYING: "Copying writings",
+        P.EVAPORATING: "Making salt",
     }
 )
 STEP_PROCESS: MappingProxyType[str, ProcessKind] = MappingProxyType(
@@ -864,6 +1055,16 @@ STEP_PROCESS: MappingProxyType[str, ProcessKind] = MappingProxyType(
         "pharmacy": P.DISTILLING,
         "synthetic_medicine": P.DISTILLING,
         "antibiotics": P.DISTILLING,
+        "smith_tools": P.SMITHING,
+        "joinery": P.CARPENTRY,
+        "fire_pottery": P.FIRING,
+        "blow_glass": P.FIRING,
+        "dye_works": P.DYEING,
+        "copy_books": P.COPYING,
+        "copy_books_rag": P.COPYING,
+        "evaporate_salt": P.EVAPORATING,
+        "press_oil": P.PRESSING,
+        "render_wax": P.PRESERVING,
     }
 )
 
@@ -966,7 +1167,7 @@ ENERGY_SOURCES: MappingProxyType[EnergyKind, str] = total(
         E.VOID: "the leak of its world",
     },
 )
-POLLUTANT_LABELS: MappingProxyType[Pollutant, str] = MappingProxyType({Pollutant.AIR: "Air", Pollutant.WATER: "Water", Pollutant.SOIL: "Soil"})
+POLLUTANT_LABELS: MappingProxyType[Pollutant, str] = MappingProxyType({pollutant: spec.label for pollutant, spec in POLLUTANTS.items()})
 TIER_LABELS: MappingProxyType[QualityTier, str] = MappingProxyType(
     {
         QualityTier.POOR: "Poor",
@@ -1031,6 +1232,12 @@ PROCESS_OUTPUT: MappingProxyType[ProcessKind, CommodityKind] = MappingProxyType(
         P.MILKING: CommodityKind.MILK,
         P.SHEARING: CommodityKind.WOOL,
         P.EGG_LAYING: CommodityKind.EGGS,
+        P.SMITHING: CommodityKind.TOOLS,
+        P.CARPENTRY: CommodityKind.LUXURIES,
+        P.FIRING: CommodityKind.POTTERY,
+        P.DYEING: CommodityKind.LUXURIES,
+        P.COPYING: CommodityKind.BOOKS,
+        P.EVAPORATING: CommodityKind.HALITE,
     }
 )
 PROCESS_JOB: MappingProxyType[ProcessKind, Job] = MappingProxyType(
@@ -1044,6 +1251,7 @@ PROCESS_JOB: MappingProxyType[ProcessKind, Job] = MappingProxyType(
         P.EGG_LAYING: Job.HERDING,
     }
 )
+EXTRA_WORKSHOP_PROCESSES: MappingProxyType[WorkshopKind, tuple[ProcessKind, ...]] = MappingProxyType({WorkshopKind.GLASSWORKS: (P.FIRING,)})
 PROCESS_WORKSHOP: MappingProxyType[ProcessKind, WorkshopKind] = MappingProxyType(
     {
         P.FISHING: WorkshopKind.FISHERY,
@@ -1057,7 +1265,33 @@ PROCESS_WORKSHOP: MappingProxyType[ProcessKind, WorkshopKind] = MappingProxyType
         P.MASONRY: WorkshopKind.MASON_YARD,
         P.CHARCOAL: WorkshopKind.CHARCOAL_KILN,
         P.PRESSING: WorkshopKind.BREWERY,
+        P.SMITHING: WorkshopKind.FORGE,
+        P.CARPENTRY: WorkshopKind.LUMBER_CAMP,
+        P.FIRING: WorkshopKind.POTTERY,
+        P.DYEING: WorkshopKind.DYEWORKS,
+        P.COPYING: WorkshopKind.SCRIPTORIUM,
+        P.EVAPORATING: WorkshopKind.EVAPORATION_WORKS,
     }
 )
+WORKSHOP_PROCESSES: MappingProxyType[WorkshopKind, frozenset[ProcessKind]] = MappingProxyType(
+    {
+        kind: frozenset(process for process, workshop in PROCESS_WORKSHOP.items() if workshop is kind) | frozenset(EXTRA_WORKSHOP_PROCESSES.get(kind, ()))
+        for kind in WorkshopKind
+    }
+)
+METAL_PROCESSES = frozenset({P.SMITHING, P.SMELTING})
+SEEDED_PROCESSES = (P.FIRING, P.COPYING, P.EVAPORATING)
 ALWAYS_PRACTISED = frozenset({P.FARMING, P.WEAVING, P.PRESERVING, P.LIGHTING, P.BUTCHERY, P.DAIRY})
 HERD_PROCESSES: MappingProxyType[ProcessKind, str] = MappingProxyType({P.MILKING: "milk", P.SHEARING: "wool", P.EGG_LAYING: "eggs"})
+
+
+def method_output(rules: Rules, spec: MethodSpec) -> int:
+    return keyed(rules.production, spec.kind.value, "output")
+
+
+def method_labour(rules: Rules, spec: MethodSpec) -> int:
+    return keyed(rules.production, spec.kind.value, "labour")
+
+
+def workshop_capacity(rules: Rules, kind: WorkshopKind) -> int:
+    return keyed(rules.workshops, kind.value, "capacity")

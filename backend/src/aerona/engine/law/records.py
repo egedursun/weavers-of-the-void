@@ -112,7 +112,7 @@ async def lines(ctx: TickContext) -> list[Entry]:
 @SOURCES.on(RegistryKind.LAND_TITLE)
 @SOURCES.on(RegistryKind.DEBT)
 @SOURCES.on(RegistryKind.SALE)
-@SOURCES.on(RegistryKind.UNION_PORTION)
+@SOURCES.on(RegistryKind.UNION_PAYMENT)
 @SOURCES.on(RegistryKind.INDENTURE)
 async def none_kept(_ctx: TickContext) -> list[Entry]:
     return []

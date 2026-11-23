@@ -47,6 +47,16 @@ class CreditRules(Spanned):
     war_chance: int = rule(20, 0, 100, G, "Chance a realm whose bank a realm defaulted on goes to war over the debt (%)")
     reserve_per_1000: int = rule(20, 1, 1000, G, "Gold and silver a thousand people's coin needs as full backing")
     reserve_trust: int = rule(4, 0, 50, G, "Trust a coin gains or loses each epoch by its backing in reserves")
+    repudiation_years: int = span(30, 0, 500, G, "Years a realm that repudiated its debts is shut out of credit")
+    rescue_sovereignty_cut: int = rule(20, 0, 100, G, "Share of its treasury a rescued realm pays its rescuer each epoch under its terms (%)")
+    rescue_standing: int = rule(10, 0, 100, G, "Standing a rescued realm owes its rescuer each epoch")
+    rescue_pct: int = rule(10, 0, 100, G, "Chance each epoch an ally rescues a realm in default (%)")
+    repudiate_pct: int = rule(10, 0, 100, G, "Chance each epoch a realm under a new ruler repudiates debts it cannot carry (%)")
+    repudiate_grievance: int = rule(10, 0, 100, G, "Standing the lenders' realms lose toward a realm that repudiated its debts")
+    sale_discount_pct: int = rule(30, 0, 100, G, "Discount at which a lender in need sells a loan to another lender (%)")
+    sale_pct: int = rule(10, 0, 100, G, "Chance each epoch a lender short of means sells one of its loans (%)")
+    reschedule_pct: int = rule(20, 0, 100, G, "Chance each epoch a strained borrower and its lender agree to change a loan's terms (%)")
+    reschedule_years: int = span(10, 0, 250, G, "Years a rescheduled loan is put off by")
 
     @property
     def restructure_epochs(self) -> int:
@@ -66,6 +76,10 @@ class SpeculationRules(Spanned):
     unrest_per_hoard: int = rule(5, 0, 50, G, "Unrest a hoard of food raises in a hungry market")
     spike_unrest_pct: int = rule(40, 0, 400, G, "How much of that unrest any other hoard raises as prices spike (%)")
     wealth_per_value: int = rule(60, 1, 1000, G, "Value that moves a speculator's wealth by one point")
+    seizure_price_cut_pct: int = rule(20, 0, 100, G, "Fall in price when an authority seizes a hoard and sells or gives its goods (%)")
+    seize_pct: int = rule(25, 0, 100, G, "Chance each epoch an authority seizes the food hoards of a hungry market (%)")
+    seizure_anger: int = rule(5, 0, 100, G, "Standing merchants lose toward an authority that seized their hoard")
+    rumour_price_swing_pct: int = rule(15, 0, 100, G, "Swing in a good's price a false report moves before the truth arrives (%)")
 
     @property
     def hold_epochs(self) -> int:

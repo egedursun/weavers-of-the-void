@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.session import Database
 from tests.conftest import OpenDatabase
+from tests.engine.core.factories import CoreWorld, seed_core_world
 from tests.engine.society.factories import Realm, build_realm
 
 
@@ -25,3 +26,8 @@ async def session(database: Database) -> AsyncIterator[AsyncSession]:
 @pytest.fixture
 async def realm(session: AsyncSession) -> Realm:
     return await build_realm(session)
+
+
+@pytest.fixture
+async def world(session: AsyncSession) -> CoreWorld:
+    return await seed_core_world(session)

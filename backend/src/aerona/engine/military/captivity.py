@@ -2,14 +2,19 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
+from aerona.core.random import SeededRandom
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow, SpyNetworkRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.military import CaptiveFate, SpyCover
-from aerona.domain.enums.mind import ActKind, ValueAxis
+from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import receive_coin
 from aerona.engine.faith.book import faith_tenets
@@ -18,6 +23,7 @@ from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.lore.taboos import forbidden
 from aerona.engine.military.ransom import carry_language, cohort_ransom, pay_from_treasury, release_by_opinion
+from aerona.engine.military.units import stacks_of, sync
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import judged
 from aerona.engine.polity.laws import law_param
@@ -27,6 +33,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat
 from aerona.engine.primitives.strength import patron_bonus
 from aerona.engine.recording.record import RoleValue, record
+from aerona.engine.services.community_relations import change_relation
 
 HUNDRED = 100
 
@@ -106,9 +113,54 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
     if sacrificial and rng.chance(table.sacrifice_chance) and not await forbidden(ctx, captor.id, ActKind.SACRIFICE_OF_PEOPLE):
         await sacrifice(ctx, row, captor)
         return CaptiveFate.SACRIFICED
-    if rng.chance(table.labour_pct) or ctx.epoch - row.since_epoch >= ctx.rules.campaigns.captive_defection_epochs:
+    harsh = await harsher_fate(ctx, row, captor, home, mercy=values.get(ValueAxis.MERCY, 0), rng=rng)
+    return harsh or CaptiveFate.HELD
+
+
+async def harsher_fate(
+    ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow, home: EntityRow | None, *, mercy: int, rng: SeededRandom
+) -> CaptiveFate | None:
+    if await press_into_army(ctx, row, captor, rng.chance(ctx.rules.captives.recruit_pct)):
+        return CaptiveFate.RECRUITED
+    if rng.chance(ctx.rules.captivity.labour_pct) or ctx.epoch - row.since_epoch >= ctx.rules.campaigns.captive_defection_epochs:
         return await put_to_work(ctx, row, captor, home)
-    return CaptiveFate.HELD
+    if mercy < 0 and rng.chance(ctx.rules.captives.execute_pct) and await execute(ctx, row, captor, home):
+        return CaptiveFate.EXECUTED
+    return None
+
+
+async def execute(ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow, home: EntityRow | None) -> bool:
+    if await forbidden(ctx, captor.id, ActKind.KILLING_CAPTIVE):
+        return False
+    if home is not None:
+        await judged(ctx, captor.id, home.id, ActKind.KILLING_CAPTIVE, note=f"{several(row.count, 'captive', 'captives')}")
+        await change_relation(ctx, home.id, captor.id, -ctx.rules.captives.executed_dread, MemoryKind.KILLED_KIN, note="killed its captives")
+    return True
+
+
+async def press_into_army(ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow, rolled: bool, *, forced: bool = False) -> bool:
+    if not rolled:
+        return False
+    if not forced and (row.social_class is not SocialClass.WARRIOR or not await BondRepository(ctx.session).outgoing(captor.id, BondKind.ENEMY)):
+        return False
+    army = await ctx.session.scalar(
+        select(ArmyRow).where(ArmyRow.owner_entity_id == captor.id, ArmyRow.disbanded_epoch.is_(None)).order_by(ArmyRow.entity_id).limit(1)
+    )
+    host = await living_entity(ctx.session, army.entity_id) if army is not None else None
+    if host is None or held(host.id):
+        return False
+    stacks = await stacks_of(ctx.session, host.id)
+    if not stacks:
+        return False
+    table = ctx.rules.captives
+    kept = row.count - round_half_up(row.count * table.recruited_desertion_pct / PERCENT)
+    stack = stacks[0]
+    if "count" not in stack.locked:
+        total = stack.count + kept
+        stack.morale = round_half_up((stack.morale * stack.count + table.recruited_loyalty * kept) / max(1, total))
+        stack.count = total
+    sync(host, stacks, ctx.rules)
+    return kept > 0
 
 
 CohortFate = tuple[int, int | None, CaptiveFate]

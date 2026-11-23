@@ -72,7 +72,6 @@ import {
   Sun,
   Swords,
   Target,
-  Tent,
   Thermometer,
   Ticket,
   Trash2,
@@ -86,6 +85,17 @@ import {
   Wrench,
   Zap,
   type LucideIcon,
+  Droplet,
+  Candy,
+  Flower2,
+  Hexagon,
+  Amphora,
+  GlassWater,
+  Bone,
+  CalendarClock,
+  ArrowRightLeft,
+  CalendarRange,
+  HandCoins,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -235,6 +245,19 @@ export const COMMODITY: Record<
     store: 'goods',
   },
   poison: { label: 'Poison', icon: Skull, family: 'strategic', store: 'goods' },
+  oil: { label: 'Oil', icon: Droplet, family: 'subsistence', store: 'food' },
+  sugar: { label: 'Sugar', icon: Candy, family: 'luxury', store: 'food' },
+  spice: { label: 'Spice', icon: Flower2, family: 'luxury', store: 'goods' },
+  halite: { label: 'Halite', icon: Gem, family: 'strategic', store: 'goods' },
+  honey: { label: 'Honey', icon: Hexagon, family: 'luxury', store: 'food' },
+  wax: { label: 'Wax', icon: Flame, family: 'industrial', store: 'goods' },
+  pottery: {
+    label: 'Pottery',
+    icon: Amphora,
+    family: 'subsistence',
+    store: 'goods',
+  },
+  books: { label: 'Books', icon: BookOpen, family: 'luxury', store: 'goods' },
 }
 
 export const GOODS_FAMILY: Record<GoodsFamily, Named & { note: string }> = {
@@ -313,14 +336,21 @@ export const WORKSHOP: Record<WorkshopKind, Named> = {
   alchemist: { label: 'Chemical works', icon: FlaskConical, tone: 'verdigris' },
   shrine_workshop: { label: 'Sacred works', icon: Cross, tone: 'gold' },
   mint: { label: 'Mint', icon: Coins, tone: 'gold' },
+  pottery: { label: 'Pottery', icon: Amphora, tone: 'warning' },
+  glassworks: { label: 'Glassworks', icon: GlassWater, tone: 'info' },
+  dyeworks: { label: 'Dyeworks', icon: Palette, tone: 'verdigris' },
+  scriptorium: { label: 'Scriptorium', icon: BookOpen, tone: 'gold' },
+  evaporation_works: { label: 'Salt works', icon: Waves, tone: 'muted' },
 }
 
 export const MODE: Record<TradeMode, Named> = {
   road: { label: 'Road', icon: Footprints, tone: 'gold' },
   river: { label: 'River way', icon: Waves, tone: 'info' },
   sea: { label: 'Sea lane', icon: Ship, tone: 'info' },
-  caravan: { label: 'Caravan way', icon: Tent, tone: 'warning' },
   sky: { label: 'Sky lane', icon: Bird, tone: 'verdigris' },
+  space: { label: 'Space lane', icon: Orbit, tone: 'verdigris' },
+  rift: { label: 'Rift passage', icon: Zap, tone: 'danger' },
+  network: { label: 'Network link', icon: Network, tone: 'muted' },
 }
 
 export const ROUTE_STATUS: Record<
@@ -352,6 +382,18 @@ export const ROUTE_STATUS: Record<
     tone: 'muted',
     variant: 'outline',
   },
+  contested: {
+    label: 'Contested',
+    icon: Swords,
+    tone: 'danger',
+    variant: 'warning',
+  },
+  seasonal: {
+    label: 'Seasonal',
+    icon: CalendarRange,
+    tone: 'gold',
+    variant: 'info',
+  },
 }
 
 export const ROUTE_STATUSES: readonly TradeRouteStatus[] = [
@@ -360,6 +402,8 @@ export const ROUTE_STATUSES: readonly TradeRouteStatus[] = [
   'blockaded',
   'closed',
   'decayed',
+  'contested',
+  'seasonal',
 ]
 
 export const TRADE_LOSS: Record<TradeLoss, Named> = {
@@ -367,6 +411,9 @@ export const TRADE_LOSS: Record<TradeLoss, Named> = {
   sea: { label: 'the sea', icon: Waves, tone: 'info' },
   beasts: { label: 'beasts', icon: PawPrint, tone: 'warning' },
   weather: { label: 'the weather', icon: CloudLightning, tone: 'muted' },
+  officials: { label: 'tolls and extortion', icon: Landmark, tone: 'gold' },
+  spoilage: { label: 'spoilage', icon: Apple, tone: 'warning' },
+  pilferage: { label: 'pilferage', icon: HandCoins, tone: 'danger' },
 }
 
 export const MONEY_FORM: Record<Schemas['MoneyForm'], Named> = {
@@ -431,6 +478,24 @@ export const LOAN_STATUS: Record<
     tone: 'verdigris',
     variant: 'info',
   },
+  rescheduled: {
+    label: 'Rescheduled',
+    icon: CalendarClock,
+    tone: 'info',
+    variant: 'info',
+  },
+  collateral_seized: {
+    label: 'Pledge seized',
+    icon: Gavel,
+    tone: 'danger',
+    variant: 'destructive',
+  },
+  sold: {
+    label: 'Sold on',
+    icon: ArrowRightLeft,
+    tone: 'warning',
+    variant: 'outline',
+  },
 }
 
 export const MATERIAL_FAMILY: Record<MaterialFamily, Named> = {
@@ -458,6 +523,13 @@ export const MATERIAL_ORIGIN: Record<MaterialOrigin, Named> = {
   rift: { label: 'From a rift', icon: Gem, tone: 'verdigris' },
   research: { label: 'Discovered', icon: FlaskConical, tone: 'info' },
   god_gift: { label: 'Gift of a god', icon: Sparkles, tone: 'gold' },
+  fossil: { label: 'From an old bed', icon: Bone, tone: 'muted' },
+  living_line: {
+    label: 'Grown from a living line',
+    icon: Sprout,
+    tone: 'success',
+  },
+  salvage: { label: 'Salvaged', icon: Recycle, tone: 'warning' },
 }
 
 export const MATERIAL_LABEL: Record<MaterialKind, string> = {
@@ -500,6 +572,12 @@ export const MATERIAL_LABEL: Record<MaterialKind, string> = {
   hydraulic_concrete: 'Hydraulic concrete',
   thatch: 'Thatch',
   tile: 'Tile',
+  ceramic: 'Fired pottery',
+  silk: 'Silk',
+  resin: 'Resin',
+  shell: 'Shell and nacre',
+  polymer: 'Polymer',
+  composite: 'Composite',
 }
 
 export const MATERIAL_KINDS = Object.keys(MATERIAL_LABEL) as MaterialKind[]

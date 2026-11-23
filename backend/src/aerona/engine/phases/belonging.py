@@ -1,3 +1,4 @@
+from aerona.engine.belonging.fugitives_w52 import keep_fugitives
 from aerona.engine.belonging.identities import IdentityTally, backfill_layers, keep_identities
 from aerona.engine.belonging.peers import PeerTally, keep_peers
 from aerona.engine.belonging.sanctuary import SanctuaryTally, keep_sanctuaries
@@ -95,20 +96,45 @@ async def belonging(ctx: TickContext) -> None:
     "table.culture_values",
     "table.defections",
     "table.entities",
+    "table.favours",
+    "table.fugitives",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.mind_facets",
+    "table.node_births",
     "table.nodes",
+    "table.offices",
     "table.outlaws",
     "table.personality_values",
     "table.polity_members",
+    "table.prisoners",
     "table.relationships",
     "table.reputations",
     "table.sanctuaries",
     "table.social_norms",
     "table.structure_profiles",
+    "table.thoughts",
     "table.traits",
 )
-@writes("cult.influence", "table.community_relations", "table.cult_doctrines", "table.entities", "table.memories", "table.mortal_profiles", "table.sanctuaries")
+@writes(
+    "cult.influence",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.cult_doctrines",
+    "table.entities",
+    "table.favours",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.mortal_profiles",
+    "table.sanctuaries",
+    "table.thoughts",
+)
 async def sanctuary(ctx: TickContext) -> None:
     tally = SanctuaryTally()
+    ctx.count("fugitives", await keep_fugitives(ctx))
     await keep_sanctuaries(ctx, tally)
     count(ctx, "sanctuary", tally)
 

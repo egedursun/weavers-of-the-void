@@ -18,6 +18,8 @@ class IntrigueSecret(StrEnum):
     ECOSABOTAGE = "ecosabotage"
     BROKEN_CIPHER = "broken_cipher"
     TRUE_HISTORY = "true_history"
+    HIDDEN_POWER = "hidden_power"
+    FORGERY = "forgery"
 
 
 class HookStrength(StrEnum):
@@ -39,6 +41,9 @@ class HookDemand(StrEnum):
     SUPPORT = "support"
     VOTE = "vote"
     LAW = "law"
+    APPOINTMENT = "appointment"
+    SILENCE = "silence"
+    PAYMENT = "payment"
 
 
 class FavourOrigin(StrEnum):
@@ -49,6 +54,8 @@ class FavourOrigin(StrEnum):
     SCHEME_AID = "scheme_aid"
     VOTE = "vote"
     RELIEF = "relief"
+    HOSPITALITY = "hospitality"
+    RANSOM = "ransom"
 
 
 class IdentityReason(StrEnum):
@@ -57,6 +64,9 @@ class IdentityReason(StrEnum):
     EXILE = "exile"
     IMPOSTOR = "impostor"
     HIDDEN_POWER = "hidden_power"
+    FUGITIVE = "fugitive"
+    HIDDEN_FAITH = "hidden_faith"
+    PASSING_KIND = "passing_kind"
 
 
 class PlotKind(StrEnum):

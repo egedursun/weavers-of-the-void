@@ -210,6 +210,7 @@ const WIZARD_OPTIONS = {
   technology_levels: { iron: 3, bronze: 2 },
   technology_level_max: 10,
   language: { free: 'Free', sibilant: 'Sibilant' },
+  numeral_bases: { decimal: 'Counts in tens', vigesimal: 'Counts in twenties' },
   cosmos: [
     { size: 'single', label: 'Single world', worlds: 1 },
     { size: 'small', label: 'Small cosmos', worlds: 2 },

@@ -61,6 +61,7 @@ from aerona.db.tables.economy import (
     WorkshopRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
@@ -454,6 +455,12 @@ async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow
     names = await names_of(session, wanted)
     son_ids = [row.closed_by_son_id for row in profiles if row.closed_by_son_id is not None]
     sons = {son_id: name for son_id, name in await session.execute(select(SonRow.id, SonRow.name).where(SonRow.id.in_(son_ids)))} if son_ids else {}
+    worlds = {entity.world_id for entity in entities.values() if entity.world_id is not None}
+    seasons: dict[int, dict[int, str]] = defaultdict(dict)
+    for season in await session.scalars(
+        select(WorldSeasonRow).where(WorldSeasonRow.world_id.in_(worlds)).order_by(WorldSeasonRow.world_id, WorldSeasonRow.position)
+    ):
+        seasons[season.world_id][season.position] = season.name
     views: list[TradeRouteView] = []
     for row in profiles:
         entity = entities.get(row.route_entity_id)
@@ -498,8 +505,19 @@ async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow
                 closed_by_player=row.closed_by_player,
                 closed_by_son_id=row.closed_by_son_id,
                 closed_by_son_name=sons.get(row.closed_by_son_id, "") if row.closed_by_son_id is not None else "",
-                dangers=RouteDangerView(bandits=row.danger_bandits, beasts=row.danger_beasts, weather=row.danger_weather, sea=row.danger_sea),
+                dangers=RouteDangerView(
+                    bandits=row.danger_bandits,
+                    beasts=row.danger_beasts,
+                    weather=row.danger_weather,
+                    sea=row.danger_sea,
+                    officials=row.danger_officials,
+                    spoilage=row.danger_spoilage,
+                    pilferage=row.danger_pilferage,
+                ),
                 season_pct=row.season_pct,
+                closed_season=row.closed_season,
+                seasons=seasons.get(entity.world_id, {}) if entity.world_id is not None else {},
+                carrier=row.carrier,
                 chokepoint=row.chokepoint,
                 locked=[key for key in row.locked or [] if not key.startswith(UNTOLLED)],
                 untolled=untolled_of(row.locked),

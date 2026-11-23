@@ -1,9 +1,10 @@
 from types import MappingProxyType
 
+from aerona.catalog.war_w52 import MOTIVES
 from aerona.core.total import total
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.law_depth import CourtLevel, JurisdictionClaim, KillMethod, LegalSystem, RecruitMotive, RegistryKind
+from aerona.domain.enums.law_depth import CourtLevel, JurisdictionClaim, KillMethod, LegalSystem, RegistryKind
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.polity import OfficeKind
 
@@ -25,6 +26,21 @@ COURT_TEXT = total(
         CourtLevel.PROVINCIAL: "the provincial court",
         CourtLevel.HIGH: "the high court",
         CourtLevel.RELIGIOUS: "the court of the faith",
+        CourtLevel.GUILD: "a trade court",
+        CourtLevel.MILITARY: "a court of the armed forces",
+        CourtLevel.CONSULAR: "a court of a foreign realm",
+    },
+)
+COURT_BIAS = total(
+    CourtLevel,
+    {
+        CourtLevel.LOCAL: "local_bias",
+        CourtLevel.PROVINCIAL: "provincial_bias",
+        CourtLevel.HIGH: "high_bias",
+        CourtLevel.RELIGIOUS: "religious_bias",
+        CourtLevel.GUILD: "guild_bias",
+        CourtLevel.MILITARY: "military_bias",
+        CourtLevel.CONSULAR: "consular_bias",
     },
 )
 COURT_OFFICES: MappingProxyType[CourtLevel, OfficeKind] = MappingProxyType({CourtLevel.PROVINCIAL: OfficeKind.GOVERNOR, CourtLevel.HIGH: OfficeKind.HIGH_JUDGE})
@@ -43,7 +59,7 @@ REGISTRY_TEXT = total(
         RegistryKind.LAND_TITLE: "title to land",
         RegistryKind.DEBT: "debt",
         RegistryKind.SALE: "sale",
-        RegistryKind.UNION_PORTION: "portion given at a union",
+        RegistryKind.UNION_PAYMENT: "payment made at a union, to one family, from one family or in service",
         RegistryKind.INDENTURE: "indenture",
         RegistryKind.PATENT: "patent",
         RegistryKind.PATTERN: "registered pattern",
@@ -56,25 +72,9 @@ REGISTRY_TEXT = total(
     },
 )
 PAID_IN_WORK = frozenset({RegistryKind.INDENTURE})
-OWED = frozenset({RegistryKind.DEBT, RegistryKind.SALE, RegistryKind.UNION_PORTION, RegistryKind.INDENTURE})
-MOTIVE_LOYALTY = total(
-    RecruitMotive,
-    {
-        RecruitMotive.MONEY: "money_loyalty",
-        RecruitMotive.IDEOLOGY: "ideology_loyalty",
-        RecruitMotive.COMPROMISE: "compromise_loyalty",
-        RecruitMotive.EGO: "ego_loyalty",
-    },
-)
-MOTIVE_TEXT = total(
-    RecruitMotive,
-    {
-        RecruitMotive.MONEY: "for money",
-        RecruitMotive.IDEOLOGY: "for belief",
-        RecruitMotive.COMPROMISE: "under a hook",
-        RecruitMotive.EGO: "for pride or grievance",
-    },
-)
+OWED = frozenset({RegistryKind.DEBT, RegistryKind.SALE, RegistryKind.UNION_PAYMENT, RegistryKind.INDENTURE})
+MOTIVE_LOYALTY = {motive: spec.loyalty_rule for motive, spec in MOTIVES.items()}
+MOTIVE_TEXT = {motive: spec.text for motive, spec in MOTIVES.items()}
 METHOD_STEALTH = total(
     KillMethod,
     {

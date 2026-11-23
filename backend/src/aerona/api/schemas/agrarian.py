@@ -141,6 +141,7 @@ class ReconstructionView(ApiModel):
     planner: NodeRef | None
     seized_by: NodeRef | None
     seized: int
+    site: NodeRef | None
     started_epoch: int
     finished_epoch: int | None
     locked: list[str]

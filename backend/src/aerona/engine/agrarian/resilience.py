@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from aerona.catalog.ethics import HONOUR_MODELS
 from aerona.catalog.life_traits import REBUILD_CAUSE_TRAITS, having
+from aerona.catalog.rebuilding import REBUILD_PLANS
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.db.tables.affairs import MandateRow
@@ -32,6 +33,7 @@ from aerona.domain.enums.settlement import BuildMaterial, SizeTier, TreasuryEntr
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.statecraft import MandateKind, MandateState
 from aerona.domain.enums.urban import Morphology
+from aerona.engine.agrarian.rebuilding_ways import abandon_town, choose_way, rebuilt
 from aerona.engine.agrarian.rings import put
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import shift
@@ -506,6 +508,7 @@ async def plan_rebuild(ctx: TickContext, row: ReconstructionRow, town: EntityRow
     able = planner is not None and knowledge.level(town.id, KnowledgeBranch.ARCHITECTURE) >= table.architecture_level
     if able and profile.treasury * 2 >= planned and "plan" not in row.locked:
         row.plan = RebuildPlan.PLANNED
+    await choose_way(ctx, row, town)
     put(row, "cost", planned if row.plan is RebuildPlan.PLANNED else hasty)
     put(row, "planner_entity_id", planner.id if planner is not None and row.plan is RebuildPlan.PLANNED else None)
 
@@ -523,6 +526,7 @@ async def finish(ctx: TickContext, row: ReconstructionRow, town: EntityRow, prof
         shift(profile, "fire_risk", -table.fire_cut)
         shift(built.infrastructure, "roads", 1, high=MOST_LEVEL)
     row.finished_epoch = ctx.epoch
+    await rebuilt(ctx, row, town)
     await record(
         ctx,
         f"reconstruction.{row.plan.value}",
@@ -542,6 +546,9 @@ async def rebuild(ctx: TickContext, tally: ResilienceTally) -> None:
         if town is None or profile is None or held(town.id):
             continue
         tally.rebuilding += 1
+        if not REBUILD_PLANS[row.plan].builds:
+            await abandon_town(ctx, row, town)
+            continue
         if row.cost == 0:
             await plan_rebuild(ctx, row, town, profile, knowledge)
             if row.cause in SEIZING and row.seized_by_node_id is None and ctx.rng(f"rebuild.seize.{row.id}").chance(table.seize_pct):

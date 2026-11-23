@@ -47,6 +47,7 @@ from aerona.db.tables.customs import (
 )
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.domain.enums.customs import MemberRight, Membership
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.collective.control import saved
 from aerona.engine.context import TickContext
 from aerona.engine.customs.age_sets import AgeSetTally, keep_age_sets
@@ -55,6 +56,7 @@ from aerona.engine.customs.town_life import TownLifeTally, keep_town_life
 from aerona.engine.cycles.control import node_exists
 from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import Values, allowed, found
+from aerona.engine.recording.record import record
 
 
 @dataclass(frozen=True)
@@ -130,6 +132,7 @@ async def grant_right(ctx: TickContext, polity_id: int, category: Membership, ri
     row.rights = sorted([*rights, right.value]) if granted else rights
     row.locked = sorted({*row.locked, "rights"})
     await ctx.session.flush()
+    await record(ctx, "law.right_changed", roles={IncidentRole.AUTHORITY: polity_id}, facts={"category": category, "right": right})
     return row
 
 

@@ -1,9 +1,11 @@
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.core.total import total
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.labour import DisputeAct, LabourDemand, LegalStanding, WorkerBodyForm
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.society_depth import LabourReason
 
 J = Job
 C = SocialClass
@@ -11,6 +13,8 @@ F = WorkerBodyForm
 A = DisputeAct
 L = LegalStanding
 D = LabourDemand
+K = KnowledgeBranch
+R = LabourReason
 
 TRADE_CLASS: MappingProxyType[Job, SocialClass] = total(
     Job,
@@ -85,4 +89,50 @@ ACT_PAID_PCT: MappingProxyType[DisputeAct, int] = total(
 DEMAND_TERMS: MappingProxyType[LabourDemand, str | None] = total(
     LabourDemand,
     {D.WAGE: "wage", D.HOURS: "hours", D.SAFETY: "safety", D.REST: "rest", D.KEEP: "keep", D.RECOGNITION: None},
+)
+
+
+@dataclass(frozen=True)
+class ReasonSpec:
+    label: str
+    phrase: str
+    chosen: bool
+
+
+REASONS: MappingProxyType[LabourReason, ReasonSpec] = total(
+    LabourReason,
+    {
+        R.CLASS: ReasonSpec("Class", "by the custom of their class", False),
+        R.PRICE: ReasonSpec("Price", "drawn by prices", True),
+        R.STRUCTURE: ReasonSpec("Workshop", "drawn by a workshop", True),
+        R.RESOURCE: ReasonSpec("Deposit", "drawn by a worked deposit", True),
+        R.NO_STRUCTURE: ReasonSpec("No workshop", "turned out for want of a workshop", False),
+        R.CORVEE: ReasonSpec("Corvee", "taken by a corvee", False),
+        R.HELD: ReasonSpec("Held", "held by a god", False),
+        R.LAW: ReasonSpec("Law", "kept by statute, caste or guild right", False),
+        R.SKILL: ReasonSpec("Skill", "drawn by what their people know", True),
+    },
+)
+
+JOB_BRANCH: MappingProxyType[Job, KnowledgeBranch | None] = total(
+    Job,
+    {
+        J.FARMING: K.AGRICULTURE,
+        J.HERDING: K.AGRICULTURE,
+        J.FISHING: K.SEAFARING,
+        J.MINING: K.METALLURGY,
+        J.CRAFTING: K.METALLURGY,
+        J.TRADE: K.TRADE,
+        J.SOLDIERING: K.WARFARE,
+        J.CLERGY: None,
+        J.SCHOLARSHIP: K.WRITING,
+        J.BUILDING: K.ARCHITECTURE,
+        J.SERVICE: None,
+        J.IDLE: None,
+        J.TRANSPORT: K.PATHFINDING,
+        J.ADMINISTRATION: K.CIVICS,
+        J.GATHERING: K.AGRICULTURE,
+        J.INDUSTRY: K.METALLURGY,
+        J.ARTS: None,
+    },
 )

@@ -85,7 +85,10 @@ TONGUE_MECHANICS = (
         templates=("tongues.script_",),
         tables=(ScriptRow.__tablename__,),
         exposure=Exposure.TOOL,
-        tools=("reform_script",),
+        tools=(
+            "reform_script",
+            "reveal_script",
+        ),
         targets=("language", "mortal"),
         couplings=(
             Coupling(S.ECONOMY, "a tongue of many merchants wears its script simpler", EdgeKind.TRIGGER, "script_evolution.merchant_share"),

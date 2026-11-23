@@ -119,6 +119,7 @@ class AccountDraft(Command):
     medium: AccountMedium = AccountMedium.BOOK
     collection_id: int | None = None
     subject_id: int | None = None
+    incident_id: int | None = None
     fidelity: int = Field(default=60, ge=0, le=SPAN)
     credence: int = Field(default=60, ge=0, le=SPAN)
 
@@ -524,6 +525,7 @@ async def account_write(scope: PlayerScope, command: AccountDraft) -> Effect:
         medium=command.medium,
         collection_id=command.collection_id,
         subject_id=command.subject_id,
+        incident_id=command.incident_id,
         fidelity=command.fidelity,
         credence=command.credence,
     )

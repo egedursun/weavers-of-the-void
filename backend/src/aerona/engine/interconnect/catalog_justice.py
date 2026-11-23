@@ -41,7 +41,10 @@ JUSTICE_MECHANICS: tuple[Mechanic, ...] = (
         fields=("evidence", "stage", "trial", "verdict", "wrongful", "tortured", "forged", "testimony", "reliability"),
         tables=(CrimeCaseRow.__tablename__, CaseWitnessRow.__tablename__),
         exposure=Exposure.TOOL,
-        tools=("accuse",),
+        tools=(
+            "accuse",
+            "testify",
+        ),
         targets=("mortal", "settlement", "polity"),
         couplings=(
             Coupling(S.BODY, "questioning under torture and trials by combat or ordeal wound the accused", E.FLOW, "trials.torture_hp"),

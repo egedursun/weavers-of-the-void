@@ -24,6 +24,7 @@ from aerona.catalog.genesis import (
 from aerona.catalog.image_styles import CUSTOM_STYLE_MAX_LENGTH
 from aerona.catalog.rarities import DEFAULT_FIRST_SONS
 from aerona.catalog.technology import ERA_LEVEL
+from aerona.catalog.tongues import BASES
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.core.grammar import ordinal_word, several, spoken
@@ -38,6 +39,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.rarity import RARITY_ORDER, Rarity
 from aerona.domain.enums.storyteller import StorytellerProfile
+from aerona.domain.enums.tongues import NumeralBase
 from aerona.domain.enums.world import (
     ClimateEra,
     CosmosShape,
@@ -88,6 +90,7 @@ class WizardInput(BaseModel):
     technology: str | None = None
     technology_levels: Any = None
     language: str | None = None
+    numeral_base: str | None = None
     peoples: Any = None
     cosmos: str | None = None
     shape: str | None = None
@@ -162,6 +165,7 @@ class WizardOptions:
     technology_levels: dict[TechnologyEra, int]
     technology_level_max: int
     language: dict[LanguageTexture, str]
+    numeral_bases: dict[NumeralBase, str]
     cosmos: list[CosmosOption]
     shapes: list[ShapeOption]
     layer_kinds: list[LayerOption]
@@ -198,6 +202,7 @@ def options(rules: Rules) -> WizardOptions:
         technology_levels=dict(ERA_LEVEL),
         technology_level_max=TECH_LEVEL_CEILING,
         language=dict(TEXTURE_LABELS),
+        numeral_bases={base: spec.label for base, spec in BASES.items()},
         cosmos=[CosmosOption(size, COSMOS_LABELS[size], 1 + extra_worlds(rules, size)) for size in CosmosSize],
         shapes=[ShapeOption(shape, SHAPE_LABELS[shape], SHAPE_HINTS[shape]) for shape in CosmosShape],
         layer_kinds=[LayerOption(kind, DIMENSION_KINDS[kind].label, DIMENSION_KINDS[kind].description) for kind in LAYER_KINDS],
@@ -264,7 +269,7 @@ def _choice[E: (TechnologyEra, LanguageTexture, CosmosSize, CosmosShape, Storyte
         return fallback
 
 
-def _optional[E: (WorldType, ClimateEra, WorldAge, DimensionKind)](kind: type[E], value: str | None, fallback: E | None) -> E | None:
+def _optional[E: (WorldType, ClimateEra, WorldAge, DimensionKind, NumeralBase)](kind: type[E], value: str | None, fallback: E | None) -> E | None:
     if value is None or value == "":
         return fallback
     try:
@@ -297,6 +302,7 @@ def sanitize(rules: Rules, raw: WizardInput) -> GenesisSettings:
         technology=_choice(TechnologyEra, raw.technology or (template.technology.value if template else None), TechnologyEra.IRON),
         technology_levels=_levels(raw.technology_levels),
         language_texture=_choice(LanguageTexture, raw.language or (template.language.value if template else None), LanguageTexture.FREE),
+        numeral_base=_optional(NumeralBase, raw.numeral_base, None),
         peoples=peoples,
         cosmos_size=size,
         cosmos_shape=shape,

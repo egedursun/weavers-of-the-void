@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life_traits import COOP_PURPOSE_TRAITS, having
+from aerona.catalog.relief import RELIEF_KINDS
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.customs import CommuteRow, CooperativeRow, PoorReliefRow, TavernRow, WelfareRow
@@ -43,8 +44,11 @@ async def realm_relief(session: AsyncSession, rules: Rules, town_id: int) -> int
     row = await session.get(PoorReliefRow, realm) if realm is not None else None
     if row is None or realm is None:
         return 0
+    if not RELIEF_KINDS[row.kind].eases_poverty:
+        return 0
     per_thousand = row.budget * PER_MILLE // max(PER_MILLE, await realm_people(session, realm))
-    return per_thousand * rules.poor_relief.relief_per_coin * row.reach // TEN // PERCENT
+    strength = int(getattr(rules.relief, RELIEF_KINDS[row.kind].effect))
+    return per_thousand * rules.poor_relief.relief_per_coin * row.reach * strength // TEN // PERCENT // PERCENT
 
 
 async def poverty_relief(session: AsyncSession, rules: Rules, town_id: int) -> int:

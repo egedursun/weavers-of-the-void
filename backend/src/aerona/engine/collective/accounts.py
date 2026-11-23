@@ -1,12 +1,10 @@
-from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.life.collective import MEDIUM_FADE
+from aerona.catalog.life.collective import ACCOUNT_KINDS, ACCOUNT_STANCES, MEDIUM_FADE, REMEMBERING_KINDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.total import total
 from aerona.db.record_context import Term
 from aerona.db.tables.collective import AccountRow, AccountStanceRow, CommemorationRow, FoundingMythRow, LostLandRow, MemoryStrikeRow
 from aerona.db.tables.culture import ArtworkProfileRow
@@ -15,7 +13,7 @@ from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberR
 from aerona.db.tables.made import DataStoreRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
-from aerona.db.tables.polity import HouseMemberRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow
+from aerona.db.tables.polity import ClaimRow, HouseMemberRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow
 from aerona.db.tables.renown import DeedClaimRow, DeedRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.warfare import CasusBelliRow
@@ -79,10 +77,10 @@ STAGED_KINDS = frozenset({C.PERFORMANCE, C.FEAST, C.CEREMONY, C.TOURNAMENT, C.CO
 SWORN_KINDS = frozenset({C.TRIAL, C.INVESTIGATION})
 PRIDE_KINDS = frozenset({C.FOUNDING, C.CORONATION})
 GRIEF_KINDS = frozenset({C.PERSECUTION, C.PURGE, C.PLAGUE, C.FAMINE, C.OCCUPATION, C.RIOT})
+LINEAGE_KINDS = frozenset({C.CORONATION, C.SUCCESSION_CRISIS})
 GREAT_KINDS = frozenset({C.WAR, C.SIEGE, C.FOUNDING, C.PERSECUTION, C.PURGE, C.CORONATION, C.INSURRECTION})
 TRIUMPH = frozenset({R.WINNER, R.FOUNDER, R.LEADER, R.HOST, R.FINDER})
 DEFEAT = frozenset({R.LOSER, R.VICTIM, R.ACCUSED})
-SLANT = {AccountStance.GLORIFY: 8, AccountStance.VILIFY: 8, AccountStance.OMIT: 15, AccountStance.NEUTRAL: 0}
 REVISION_LOSS = 20
 SCANDAL_CREDENCE = 30
 MYTH_FIDELITY = 30
@@ -106,7 +104,7 @@ class HistoryTally:
 
 
 def distance_from_truth(account: AccountRow, stances: list[AccountStance]) -> int:
-    return clamp_int(PERCENT - account.fidelity + sum(SLANT[stance] for stance in stances), 0, PERCENT)
+    return clamp_int(PERCENT - account.fidelity + sum(ACCOUNT_STANCES[stance].slant for stance in stances), 0, PERCENT)
 
 
 async def stances_of(ctx: TickContext, account_id: int) -> dict[int, AccountStance]:
@@ -137,6 +135,7 @@ async def record(
     stances: dict[int, AccountStance],
     collection_id: int | None = None,
     subject_id: int | None = None,
+    incident_id: int | None = None,
     medium: AccountMedium = AccountMedium.ORAL,
     author_id: int | None = None,
     structure_id: int | None = None,
@@ -152,6 +151,7 @@ async def record(
         kind=kind,
         medium=medium,
         collection_id=collection_id,
+        incident_id=incident_id,
         subject_node_id=subject_id,
         structure_entity_id=structure_id,
         artwork_entity_id=artwork_id,
@@ -168,13 +168,44 @@ async def record(
     for node_id, stance in sorted(stances.items()):
         ctx.session.add(AccountStanceRow(account_id=row.id, node_id=node_id, stance=stance))
     await ctx.session.flush()
+    await tell_standing(ctx, row, stances)
+    await record_incident(ctx, "account.made", roles={IncidentRole.SUBJECT: holder.id}, facts={"kind": kind, "medium": medium})
     return row
 
 
-def slant(side: int | None, own: int, role: CollectionRole) -> AccountStance:
+async def tell_standing(ctx: TickContext, row: AccountRow, stances: dict[int, AccountStance]) -> None:
+    table = ctx.rules.historiography
+    for node_id, stance in sorted(stances.items()):
+        effect = int(getattr(table, ACCOUNT_STANCES[stance].standing_rule)) * row.credence // PERCENT
+        profile = await ctx.session.get(MortalProfileRow, node_id)
+        if effect and profile is not None and not held(node_id):
+            shift(profile, "renown", effect)
+        if ACCOUNT_STANCES[stance].grieves and row.collection_id is not None:
+            await grieve(ctx, row.holder_entity_id, row.collection_id)
+        if ACCOUNT_KINDS[row.kind].backs_claims and ACCOUNT_STANCES[stance].praises:
+            await back_claims(ctx, node_id, row.credence)
+
+
+async def grieve(ctx: TickContext, holder_id: int, collection_id: int) -> None:
+    memory = await ctx.session.get(CommemorationRow, (holder_id, collection_id))
+    if memory is None:
+        memory = CommemorationRow(holder_entity_id=holder_id, collection_id=collection_id, pride=False, strength=0, since_epoch=ctx.epoch, locked=[])
+        ctx.session.add(memory)
+    if "strength" not in memory.locked:
+        memory.strength = clamp_int(memory.strength + ctx.rules.historiography.lament_grief, 0, PERCENT)
+
+
+async def back_claims(ctx: TickContext, claimant_id: int, credence: int) -> None:
+    weight = ctx.rules.historiography.genealogy_claim_weight * credence // PERCENT
+    for claim in await ctx.session.scalars(select(ClaimRow).where(ClaimRow.claimant_entity_id == claimant_id).order_by(ClaimRow.id)):
+        if "strength" not in claim.locked and not held(claim.polity_entity_id):
+            claim.strength = clamp_int(claim.strength + weight, 0, PERCENT)
+
+
+def slant(side: int | None, own: int, role: CollectionRole, *, grievous: bool = False) -> AccountStance:
     mine = side == own
     if mine and role in TRIUMPH:
-        return AccountStance.GLORIFY
+        return AccountStance.JUSTIFY if grievous else AccountStance.GLORIFY
     if mine and role in DEFEAT:
         return AccountStance.OMIT
     if not mine and role in TRIUMPH:
@@ -221,12 +252,13 @@ async def realm_accounts(ctx: TickContext, collection: CollectionRow, members: M
         profile = await ctx.session.get(PolityProfileRow, realm_id)
         if realm is None or profile is None:
             continue
-        stances = {node: slant(sides[node], realm_id, role) for node, role in members}
+        stances = {node: slant(sides[node], realm_id, role, grievous=collection.kind in GRIEF_KINDS) for node, role in members}
         own = realm_id in taking_part or index == 0
         if own:
             for claimant, doer in await false_credits(ctx, collection.id):
                 if await realm_id_of(ctx, claimant) == realm_id:
-                    stances[claimant], stances[doer] = AccountStance.GLORIFY, AccountStance.OMIT
+                    stances[claimant] = AccountStance.GLORIFY
+                    stances[doer] = AccountStance.OMIT
         boasts = own and any(stance is AccountStance.GLORIFY for stance in stances.values())
         monument = await monument_of(ctx, profile) if boasts else None
         artwork = await artwork_of(ctx, realm_id, [node for node, _ in members]) if boasts and monument is None else None
@@ -253,12 +285,35 @@ async def folk_accounts(ctx: TickContext, collection: CollectionRow, members: Me
     people = await people_of(ctx.session, place_row) if place_row is not None else None
     if people is None:
         return
-    folk = {node: AccountStance.GLORIFY if role in DEFEAT else AccountStance.NEUTRAL for node, role in members}
+    mourned = AccountStance.LAMENT if collection.kind in GRIEF_KINDS else AccountStance.GLORIFY
+    folk = {node: mourned if role in DEFEAT else AccountStance.NEUTRAL for node, role in members}
     kind = AccountKind.EPIC if collection.kind in EPIC_KINDS else AccountKind.TESTIMONY if collection.kind in SWORN_KINDS else AccountKind.FOLK_MEMORY
     medium = AccountMedium.PERFORMANCE if collection.kind in STAGED_KINDS else AccountMedium.ORAL
     fidelity = table.folk_fidelity + await truthful(ctx, people) // 5
     written = await record(ctx, people, kind, fidelity=fidelity, stances=folk, collection_id=collection.id, medium=medium)
     tally.accounts += written is not None
+    tally.accounts += await mocking_song(ctx, collection, members, people, place_row)
+
+
+async def mocking_song(ctx: TickContext, collection: CollectionRow, members: Members, people: EntityRow, place: EntityRow | None) -> bool:
+    realm = await realm_of_town(ctx, place.id) if place is not None else None
+    if realm is None:
+        return False
+    ruler = await ruler_id(ctx, realm.polity_entity_id)
+    mocked = [node for node in (ruler, realm.polity_entity_id) if node is not None]
+    beaten = ruler is not None and any(node in mocked and role in DEFEAT for node, role in members)
+    if not beaten or not ctx.rng(f"history.song.{collection.id}.{people.id}").chance(ctx.rules.historiography.mock_song_pct):
+        return False
+    song = await record(
+        ctx,
+        people,
+        AccountKind.SONG,
+        fidelity=ctx.rules.historiography.folk_fidelity,
+        stances=dict.fromkeys(mocked, AccountStance.MOCK),
+        collection_id=collection.id,
+        medium=AccountMedium.PERFORMANCE,
+    )
+    return song is not None
 
 
 async def gospels(ctx: TickContext, collection: CollectionRow, members: Members, tally: HistoryTally) -> None:
@@ -318,6 +373,29 @@ async def chronicle_collection(ctx: TickContext, collection: CollectionRow, tall
     await folk_accounts(ctx, collection, members, places, tally)
     await gospels(ctx, collection, members, tally)
     await identity_accounts(ctx, collection, members, places, tally)
+    await genealogies(ctx, collection, members, tally)
+
+
+async def genealogies(ctx: TickContext, collection: CollectionRow, members: Members, tally: HistoryTally) -> None:
+    if collection.kind not in LINEAGE_KINDS:
+        return
+    for node, role in members:
+        house_id = await house_of(ctx, node) if role in TRIUMPH else None
+        house = await ctx.session.get(EntityRow, house_id) if house_id is not None else None
+        if house is None or house.status is not EntityStatus.CANON:
+            continue
+        written = await record(
+            ctx,
+            house,
+            AccountKind.GENEALOGY,
+            fidelity=ctx.rules.historiography.official_fidelity,
+            stances={node: AccountStance.GLORIFY, house.id: AccountStance.GLORIFY},
+            collection_id=collection.id,
+            subject_id=node,
+            medium=AccountMedium.BOOK,
+            author_id=node,
+        )
+        tally.accounts += written is not None
 
 
 async def write_accounts(ctx: TickContext, tally: HistoryTally) -> None:
@@ -330,23 +408,6 @@ async def write_accounts(ctx: TickContext, tally: HistoryTally) -> None:
     for collection in list(rows):
         if not held(collection.world_id):
             await chronicle_collection(ctx, collection, tally)
-
-
-KIND_DECAY: Mapping[AccountKind, int] = total(
-    AccountKind,
-    {
-        AccountKind.OFFICIAL_CHRONICLE: 100,
-        AccountKind.FOLK_MEMORY: 120,
-        AccountKind.FOREIGN_ACCOUNT: 100,
-        AccountKind.GOSPEL: 60,
-        AccountKind.EPIC: 80,
-        AccountKind.INSCRIPTION: 30,
-        AccountKind.FOUNDING_MYTH: 50,
-        AccountKind.ELDER_MEMORY: 140,
-        AccountKind.RECORD: 20,
-        AccountKind.TESTIMONY: 110,
-    },
-)
 
 
 async def keeps_records(ctx: TickContext, realm_id: int) -> bool:
@@ -379,7 +440,10 @@ async def age_accounts(ctx: TickContext, tally: HistoryTally) -> None:
         if held(account.holder_entity_id):
             continue
         shift(account, "fidelity", -table.fidelity_decay * MEDIUM_FADE[account.medium] // PERCENT)
-        shift(account, "credence", -table.credence_decay * KIND_DECAY[account.kind] // PERCENT)
+        shift(account, "credence", -table.credence_decay * ACCOUNT_KINDS[account.kind].decay // PERCENT)
+        if ACCOUNT_KINDS[account.kind].sung:
+            shift(account, "fidelity", -account.fidelity * table.song_drift_pct // PERCENT)
+            shift(account, "credence", table.song_spread)
         tally.faded += 1
 
 
@@ -560,7 +624,7 @@ async def strike(ctx: TickContext, by_id: int, node_id: int, tally: HistoryTally
     surviving = select(AccountRow.revised_from_id).where(AccountRow.revised_from_id.is_not(None))
     for account in await ctx.session.scalars(select(AccountRow).where(AccountRow.holder_entity_id == by_id, AccountRow.id.not_in(surviving))):
         stance = await ctx.session.get(AccountStanceRow, (account.id, node_id))
-        if stance is not None:
+        if stance is not None and not ACCOUNT_KINDS[account.kind].sung:
             stance.stance = AccountStance.OMIT
             if account.medium is AccountMedium.INSCRIPTION and "defaced" not in account.locked:
                 account.defaced = True
@@ -588,7 +652,7 @@ async def fade_struck(ctx: TickContext, tally: HistoryTally) -> None:
             .where(
                 AccountStanceRow.node_id == row.node_id,
                 AccountStanceRow.stance != AccountStance.OMIT,
-                AccountRow.kind.in_([AccountKind.FOLK_MEMORY, AccountKind.FOREIGN_ACCOUNT, AccountKind.EPIC]),
+                AccountRow.kind.in_(REMEMBERING_KINDS),
                 AccountRow.credence > 0,
             )
         )

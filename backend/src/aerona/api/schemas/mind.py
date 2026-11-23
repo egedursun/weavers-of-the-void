@@ -3,6 +3,7 @@ from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.entity import MortalRole
 from aerona.domain.enums.folkways import IdeaStrain
+from aerona.domain.enums.military import DuelEnd
 from aerona.domain.enums.mind import (
     ActKind,
     Attribute,
@@ -396,9 +397,13 @@ class CultureMindView(ApiModel):
     honour_model: HonourModel | None
     honour_label: str | None
     honour_held: bool
+    duel_end: DuelEnd | None
+    duel_end_in_force: DuelEnd | None
+    duel_end_held: bool
     preference_kinds: list[PreferenceKindView]
     stances: list[LabelView]
     honour_models: list[LabelView]
+    duel_ends: list[LabelView]
 
 
 class MilestoneView(ApiModel):

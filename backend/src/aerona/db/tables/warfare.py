@@ -138,6 +138,7 @@ class SiegeRow(Base):
     wall_material: Mapped[BuildMaterial | None] = mapped_column(enum_type(BuildMaterial, "wall_material"))
     relief_army_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     choice: Mapped[SackChoice | None] = mapped_column(enum_type(SackChoice, "choice"))
+    ordered_epoch: Mapped[int | None]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -199,6 +200,7 @@ class CaptiveRow(Base):
     ransom_paid: Mapped[int | None]
     loyalty: Mapped[int] = mapped_column(default=0)
     married_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    oath_id: Mapped[int | None] = mapped_column(ForeignKey("oaths.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

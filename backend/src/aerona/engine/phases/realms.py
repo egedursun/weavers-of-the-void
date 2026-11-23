@@ -10,6 +10,7 @@ from aerona.engine.polity.governance import agenda, collect, conquest_conflict, 
 from aerona.engine.polity.houses import HouseBook, arrange_marriages, conquest_claims, dynasty_backfill, fabricate_claims, gather_kin, seed_houses, tend
 from aerona.engine.polity.law_effects import realm_coinage
 from aerona.engine.polity.laws import LawBook, backfill_kinds, ensure_profile
+from aerona.engine.polity.mediation import keep_neutrality
 from aerona.engine.polity.oath_terms import releases
 from aerona.engine.polity.oaths import lapse, pledges, vows
 from aerona.engine.polity.offices import coups, name_heir, office_effects, press_claims, purge, regency, staff, succession_line
@@ -81,6 +82,8 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.districts",
     "table.entities",
     "table.entity_flags",
+    "table.estate_privileges",
+    "table.estate_profiles",
     "table.exam_sittings",
     "table.fabrication",
     "table.faction_profiles",
@@ -95,6 +98,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.holder_custom_techniques",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.hooks",
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",
@@ -578,6 +582,8 @@ async def treaty_cycles(ctx: TickContext) -> None:
     ctx.count("tributes_closed", await tribute_ledger(ctx))
     for key, value in (await outer_pacts(ctx, book)).items():
         ctx.count(f"pacts_{key}", value)
+    for key, value in (await keep_neutrality(ctx, book)).items():
+        ctx.count(f"neutral_{key}", value)
     ctx.count("joined_wars", await join_wars(ctx, book))
     ctx.count("champions", await champions(ctx))
     rulers = {member: realm.ruler_id for realm in book.realms.values() if realm.ruler_id is not None for member in realm.members}

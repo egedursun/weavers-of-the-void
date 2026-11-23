@@ -1,40 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.polity import ClaimBasis, Jurisdiction, LegitimacyBasis
-
-CLAIM_BASIS = total(
-    ClaimBasis,
-    {
-        ClaimBasis.INHERITANCE: Defined(
-            "Inheritance",
-            checked_by=(),
-            used_by=(
-                "engine.arts.forgery.forge_lineage",
-                "engine.collective.accounts.rally_true_line",
-                "engine.polity.houses.branch",
-                "engine.polity.houses.inherit_claims",
-                "engine.regime.rule.claimed_by_kin",
-            ),
-        ),
-        ClaimBasis.MARRIAGE: Defined("Marriage", checked_by=(), used_by=("engine.polity.houses.marriage_claims",)),
-        ClaimBasis.CONQUEST: Defined(
-            "Conquest", checked_by=(), used_by=("catalog.life.polity.INHERIT_CLAIMS_CLAIM_BASISS", "engine.polity.houses.conquest_claims")
-        ),
-        ClaimBasis.DIVINE: Defined("Divine", checked_by=(), used_by=("catalog.life.polity.INHERIT_CLAIMS_CLAIM_BASISS", "services.player.realms.GrantClaim")),
-        ClaimBasis.FABRICATED: Defined(
-            "Fabricated",
-            checked_by=(),
-            used_by=(
-                "engine.arts.forgery.forge",
-                "engine.collective.storylets.apply_bond",
-                "engine.intrigue.schemes.fabricate_claim",
-                "engine.military.spycraft.plant_claimant",
-                "engine.polity.houses.fabricate_claims",
-            ),
-        ),
-        ClaimBasis.DE_JURE: Defined("De jure", checked_by=(), used_by=("engine.polity.titles.press_claims",)),
-    },
-)
+from aerona.domain.enums.polity import Jurisdiction, LegitimacyBasis
 
 JURISDICTION = total(
     Jurisdiction,

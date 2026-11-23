@@ -237,6 +237,7 @@ class EvidenceRow(Base):
     points_to_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     reliability: Mapped[int] = mapped_column(default=50)
     forged: Mapped[bool] = mapped_column(default=False)
+    sworn: Mapped[bool] = mapped_column(default=False, server_default="0")
     found_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -258,6 +259,7 @@ class MembershipRow(Base):
     polity_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     category: Mapped[Membership] = mapped_column(enum_type(Membership, "category"))
     path: Mapped[Naturalisation] = mapped_column(enum_type(Naturalisation, "path"), default=Naturalisation.DESCENT)
+    spouse_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     since_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

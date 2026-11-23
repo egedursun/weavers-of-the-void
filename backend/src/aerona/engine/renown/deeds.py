@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.pacts import CLAIM_STATES, CONTESTABLE_CLAIMS
 from aerona.catalog.renown import ACT_RENOWN
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -40,6 +41,7 @@ class DeedTally:
     false_claims: int = 0
     verified: int = 0
     exposed: int = 0
+    disputed: int = 0
 
 
 def axis_for(act: ActKind, reading: int) -> ReputationAxis | None:
@@ -115,11 +117,19 @@ async def incidents_with_deeds(session: AsyncSession) -> frozenset[int]:
 
 async def credit(ctx: TickContext, deed: DeedRow, community_id: int, amount: float, *, axis: ReputationAxis | None = None, witnessed: bool = False) -> int:
     claims = await claims_of(ctx, deed.id)
-    impostor = next((claim for claim in claims if claim.kind is ClaimKind.FALSE and claim.status is ClaimStatus.STANDING), None)
+    impostor = next((claim for claim in claims if claim.kind in CONTESTABLE_CLAIMS and claim.status is ClaimStatus.STANDING), None)
+    disputed = next((claim for claim in claims if claim.status is ClaimStatus.DISPUTED), None)
     shared = [claim for claim in claims if claim.kind is ClaimKind.SHARED and claim.status is not ClaimStatus.EXPOSED]
-    main = impostor if impostor is not None and not witnessed else next((claim for claim in claims if claim.kind is ClaimKind.TRUE), None)
+    true = next((claim for claim in claims if claim.kind is ClaimKind.TRUE), None)
+    split = CLAIM_STATES[ClaimStatus.DISPUTED].credit_pct
+    if impostor is not None and not witnessed:
+        heads: list[tuple[DeedClaimRow | None, int]] = [(impostor, PERCENT)]
+    elif disputed is not None:
+        heads = [(disputed, split), (true, PERCENT - split)]
+    else:
+        heads = [(true, PERCENT)]
     credited = 0
-    for claim, share in [(main, PERCENT), *((claim, ctx.rules.claims.shared_pct) for claim in shared)]:
+    for claim, share in [*heads, *((claim, ctx.rules.claims.shared_pct) for claim in shared)]:
         if claim is None:
             continue
         gain = amount * share / PERCENT
@@ -190,8 +200,12 @@ async def share_deeds(ctx: TickContext, deed: DeedRow, tally: DeedTally) -> None
         if partner is None or partner.id == deed.doer_node_id or partner.entity_type is not EntityType.MORTAL or held(partner.id):
             continue
         if await ctx.session.scalar(select(DeedClaimRow.id).where(DeedClaimRow.deed_id == deed.id, DeedClaimRow.claimant_node_id == partner.id)) is None:
-            ctx.session.add(new_claim(deed.id, partner.id, ClaimKind.SHARED, ctx.epoch))
+            bold = ctx.rng(seed_of("inflate", deed.id, partner.id)).chance(ctx.rules.claims.claim_pct * await boldness(ctx, partner.id))
+            kind = ClaimKind.INFLATED if bold else ClaimKind.SHARED
+            ctx.session.add(new_claim(deed.id, partner.id, kind, ctx.epoch))
             tally.shared += 1
+            if bold:
+                await record(ctx, "renown.claimed", roles={IncidentRole.ACTOR: partner.id, IncidentRole.VICTIM: deed.doer_node_id}, facts={"claim": kind})
 
 
 async def boldness(ctx: TickContext, mortal_id: int) -> float:

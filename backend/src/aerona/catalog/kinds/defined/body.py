@@ -83,7 +83,7 @@ BODY_FUNCTION = total(
         ),
         BodyFunction.SIGHT: Defined(
             "Sight",
-            checked_by=("catalog.anatomy.SIGHT_PARTS", "catalog.harm_kinds.sees", "engine.body.functions.redundancy"),
+            checked_by=("catalog.anatomy.SIGHT_PARTS", "catalog.harm_kinds.sees", "engine.body.functions.redundancy", "engine.tongues.modality.perceiving"),
             used_by=(
                 "catalog.anatomy.AMORPHOUS_PARTS",
                 "catalog.anatomy.AQUATIC_PARTS",
@@ -109,7 +109,7 @@ BODY_FUNCTION = total(
         ),
         BodyFunction.HEARING: Defined(
             "Hearing",
-            checked_by=("engine.body.functions.redundancy",),
+            checked_by=("engine.body.functions.redundancy", "engine.tongues.modality.perceiving"),
             used_by=(
                 "catalog.anatomy.AMORPHOUS_PARTS",
                 "catalog.anatomy.ARBOREAL_PARTS",
@@ -148,6 +148,7 @@ BODY_FUNCTION = total(
                 "catalog.life.constructs.FORMS",
                 "catalog.tongues.MODALITY_NEEDS",
                 "engine.body.capacities.capacities",
+                "engine.tongues.modality.settle_modalities",
             ),
         ),
         BodyFunction.BREATH: Defined(

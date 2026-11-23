@@ -67,7 +67,7 @@ BONE = Product("calcified_tissue", CommodityKind.TOOLS, MaterialKind.CALCIFIED_T
 IVORY = Product("ivory", CommodityKind.LUXURIES, MaterialKind.IVORY, 1)
 CHITIN = Product("chitin", CommodityKind.ARMOUR, MaterialKind.CHITIN, 1)
 VENOM = Product("venom", CommodityKind.MEDICINE, None, 1)
-SILK = Product("silk", CommodityKind.CLOTH, MaterialKind.CLOTH, 1)
+SILK = Product("silk", CommodityKind.CLOTH, MaterialKind.SILK, 1)
 WOOL = Product("wool", CommodityKind.WOOL, None, 1)
 MILK = Product("milk", CommodityKind.MILK, None, 1)
 EGGS = Product("eggs", CommodityKind.EGGS, None, 1)
@@ -78,8 +78,8 @@ BLOOD = Product("blood", CommodityKind.MEDICINE, None, 1)
 ORGANS = Product("organs", CommodityKind.MEDICINE, None, 1)
 FAT = Product("fat", CommodityKind.FUEL, None, 1)
 SCENT = Product("scent", CommodityKind.INCENSE, None, 1)
-HONEY = Product("honey", CommodityKind.BREW_BASE, None, 1)
-WAX = Product("wax", CommodityKind.LUXURIES, None, 1)
+HONEY = Product("honey", CommodityKind.HONEY, None, 1)
+WAX = Product("wax", CommodityKind.WAX, None, 1)
 PRODUCTS = {
     YieldProduct.MEAT: MEAT,
     YieldProduct.HIDE: HIDE,

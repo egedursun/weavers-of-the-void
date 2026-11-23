@@ -173,7 +173,11 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "material": MATERIAL_FIELD,
         "mechanics": "The resource's particular rules, at most {{ rules.mechanics.resource_max }} (if left empty they are read from its name and text; sacred makes it yours): {{ resource_mechanics }}",
     },
-    EntityType.LANGUAGE: {**WORD_FIELDS, "words": "The language's first words (at most {{ rules.son_tools.coin_word_max_words }}); matching the naming rule"},
+    EntityType.LANGUAGE: {
+        **WORD_FIELDS,
+        "words": "The language's first words (at most {{ rules.son_tools.coin_word_max_words }}); matching the naming rule",
+        "numeral_base": "How its speakers count; left out, it follows its parent tongue or the world's first tongues",
+    },
     EntityType.MORTAL: {
         "title": "Their nickname or title, drawn from their own deeds or nature; do not bury it in the name, write it here",
         "sex": "Which of the people's sexes, as its biology has them: bearer (bears young), begetter (begets young), both, neither, or none for a people without sexes",
@@ -1238,11 +1242,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "and its clauses run every age. Costs essence.",
         {
             "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact, naval_limit or arms_limit",
-            "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
+            "parties": "Each party's id and role (signatory, overlord, vassal, guarantor, mediator)",
             "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit, autonomous_weapons_ban, mind_seizure_ban, soldier_copy_ban, replicator_weapon_ban, civil_network_shield, civil_host_shield, no_mind_compulsion, no_plague_powers, no_designed_disease, mass_weapon_limit), who owes it, who gains, and its terms by name, as the clause kind requires",
             "epochs": "How many ages it holds; empty for ever",
             "parties.party_id": "The party's id",
-            "parties.role": "Its role: signatory, overlord, vassal or guarantor",
+            "parties.role": "Its role: signatory, overlord, vassal, guarantor or mediator",
             "clauses.kind": "The clause's kind",
             "clauses.obligor_id": "Who owes it",
             "clauses.beneficiary_id": "Who gains by it",
@@ -1330,16 +1334,13 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.RAISE_DISTRICT: ToolText(
-        "You raise or enlarge a district of a settlement: farmland, market, craft quarter, temple quarter, harbour, citadel, slums, palace, foreign quarter, "
-        "necropolis, residential, civic quarter, gardens or one of the world's district designs. Each kind changes the city: storage, housing, order, "
+        "You raise or enlarge a district of a settlement of any kind its world knows, or one of the world's district designs. Each kind changes the city: "
+        "storage, housing, order, "
         "sanitation, piety, administration, "
         "policing, trade and harbour capacity. {{ rules.son_tools.raise_district_essence }} essence, {{ rules.son_tools.raise_district_ap | several('action', 'actions') }}.",
         {
             "settlement_id": "The settlement's id",
-            "kind": (
-                "The district kind (farmland, market, craft_quarter, temple_quarter, harbour, citadel, slums, palace, foreign_quarter, necropolis, "
-                "residential, civic_quarter, gardens)"
-            ),
+            "kind": "The district kind",
             "design_id": "Or the id of one of the world's district designs",
             "material": "timber or stone (stone resists fire, flood and storm but falls in earthquakes)",
             "reason": "Why you raise it",
@@ -2361,5 +2362,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.BLESS_WITH: ToolText(
         "Lay an affliction of any kind on a being within your reach, as a blessing given by rite; a fortune laid this way leans to good. {{ rules.costs.curse }} essence, 1 action.",
         {"node_id": "The being", "package": "The kind of affliction", "reason": "Why you give it"},
+    ),
+    T.REVEAL_SCRIPT: ToolText(
+        "Give a tongue of your world a script of the kind you choose, through a prophet if you name one; the script is held sacred. 1 action.",
+        {"language_id": "The tongue", "system": "The kind of script", "prophet_id": "The mortal who receives it, if any", "reason": "Why you give it"},
     ),
 }

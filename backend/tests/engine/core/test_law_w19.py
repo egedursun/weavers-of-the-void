@@ -223,7 +223,7 @@ async def test_a_registered_debt_is_paid_through_the_courts_until_settled(sessio
 
 
 async def test_a_claimant_court_spares_its_own_and_takes_faith_cases(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await context(session, jurisdictions={"leniency": 50})
+    ctx = await context(session, jurisdictions={"leniency": 50}, courts={"religious_bias": 0})
     town = await settlement(session, "Ashby", world, world.regions[0])
     church = await entity(session, "The Church", EntityType.CULT, CultStats(), world_id=world.world.id)
     polity = await realm_of(session, world, town, religion=church.id)

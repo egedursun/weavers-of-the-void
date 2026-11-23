@@ -109,6 +109,16 @@ from tests.tools.every_setup import (
     worships_dead_sibling,
     young_in_town,
 )
+from tests.tools.every_setup_agent_c import (
+    locked_store,
+    realm_hunting,
+    realm_with_gang,
+    ruined_rule,
+    standing_work,
+    town_ruler,
+    wealthy_at_home,
+    work_being_raised,
+)
 from tests.tools.every_setup_ages import remade_land, sky_scholar, slain_kin
 from tests.tools.every_setup_arts import art_work, built_construct, known_technique, played_match, posted_contract, renowned_critic, sold_work
 from tests.tools.every_setup_belonging import hunted_by_a_temple, mocked_court
@@ -183,7 +193,11 @@ from tests.tools.every_setup_orders import (
     unissued_currency,
     wild_home,
 )
+from tests.tools.every_setup_pacts import council_seat, deed_of_another, envoy_at_court, station_here, treaty_between_others, treaty_of_mine
 from tests.tools.every_setup_powers import heard_truth, kept_truth, linked_pair, powered, seer, tested_realm
+from tests.tools.every_setup_statecraft import court_seat, free_body, held_claim, led_faction, open_case, ruled_heir
+from tests.tools.every_setup_w52b import foreign_debtor, held_loan, hoarded_market, indebted_realm, script_ruler
+from tests.tools.every_setup_war_w52 import besieged_home, besieging, crowned, held_captives, spymaster_post, war_host
 from tests.tools.every_setup_ways import (
     aboard,
     boss_at_home,
@@ -387,8 +401,46 @@ MORTAL_CASES: dict[str, Case] = {
     "lift_affliction": named(plain(affliction_id=created("affliction"), cure="medicine"), afflicted_healer),
     "choose_path": named(plain(path="trade")),
     "improve_soil": named(plain(nutrient="organic"), deep_land),
+    "appoint_court": named(plain(position="jester", mortal_id=created("mortal")), court_seat),
+    "take_client": named(plain(client_id=created("mortal"), role="artist"), second_mortal),
+    "set_rights": named(plain(category="resident_foreigner", right="vote", granted=True), ruler),
+    "press_claim": named(plain(realm_id=created("rival"), basis="adoption"), held_claim),
+    "designate_heir": named(plain(heir_id=created("mortal")), ruled_heir),
+    "found_coop": named(plain(purpose="granary"), free_body),
+    "testify": named(plain(case_id=created("case"), kind="hearsay", sworn=True), open_case),
+    "set_faction_goal": named(plain(goal="win_office", target_id=None), led_faction),
     "claim_identity": named(plain(layer="locality")),
+    "challenge_to_duel": named(plain(target_id=created("mortal"), context="ritual", ending="first_wound"), second_mortal),
     "mark_body": named(plain(kind="tattoo", meaning="faith", target_id=created("mortal")), second_mortal),
+    "construct_language": named(plain(name="Ordal", description=TEXT[:200], words=[{"word": "keta", "meaning": "count"}]), scribe),
+    "repudiate_debts": named(plain(), indebted_realm),
+    "rescue_polity": named(plain(polity_id=created("debtor"), terms=20), foreign_debtor),
+    "reschedule_loan": named(plain(loan_id=created("loan"), extra_epochs=2), held_loan),
+    "sell_loan": named(plain(loan_id=created("loan"), buyer_id=created("buyer")), held_loan),
+    "insure": named(plain(insurer_id=created("insurer"), cover="crop"), town_insurer),
+    "seize_hoards": named(plain(settlement_id=settlement), hoarded_market),
+    "play_market": named(plain(commodity="grain", play="rumour"), merchant_house),
+    "found_workshop": named(plain(kind="scriptorium")),
+    "compose_account": named(plain(incident_id=lambda _realm, ids: ids["incident"], kind="song", stance="mock"), witnessed_happening),
+    "impose_script": named(plain(language_id=created("subject_tongue")), script_ruler),
+    "mediate": named(plain(treaty_id=created("treaty")), treaty_between_others),
+    "suspend_treaty": named(plain(treaty_id=created("treaty")), treaty_of_mine),
+    "declare_neutral": named(plain(), ruled_realm),
+    "propose_resolution": named(plain(kind="aid", target_id=created("polity")), council_seat),
+    "expel_envoy": named(plain(envoy_id=created("envoy")), envoy_at_court),
+    "jam_signal": named(plain(link_id=created("link")), station_here),
+    "claim_deed": named(plain(deed_id=created("deed"), kind="inflated"), deed_of_another),
+    "set_army_stance": named(plain(army_id=pick_id("army"), stance="winter_quarters"), war_host),
+    "assign_army_role": named(plain(army_id=pick_id("army"), mortal_id=pick_id("mortal"), role="chaplain"), war_host),
+    "decide_captives": named(plain(cohort_id=pick_id("cohort"), fate="executed"), held_captives),
+    "suborn_garrison": named(plain(siege_id=pick_id("siege"), target_id=pick_id("inside")), besieging),
+    "order_siege_work": named(plain(siege_id=pick_id("siege"), work="ramp"), besieging),
+    "defend_siege": named(plain(siege_id=pick_id("siege"), defence="expel_mouths"), besieged_home),
+    "decide_fall": named(plain(siege_id=pick_id("siege"), choice="ransom_city"), besieging),
+    "negotiate_surrender": named(plain(siege_id=pick_id("siege")), besieging),
+    "run_operation": named(plain(target_id=pick_id("settlement"), operation="disinform"), spymaster_post),
+    "recruit_agent": named(plain(mortal_id=pick_id("mortal"), motive="money"), spymaster_post),
+    "grant_veterans": named(plain(grant="tax_exemption"), crowned),
     "stir_feeling": named(plain(place_or_household_id=lambda realm, _ids: realm.settlement_id, feeling="hope")),
     "argue_doctrine": named(plain(faith_id=pick_id("faith"), conception_axis="count", stance="many"), a_faith_conceived),
     "drive_off_group": named(plain(group_id=pick_id("group"), means="offering"), a_creature_group),
@@ -742,6 +794,16 @@ MORTAL_CASES: dict[str, Case] = {
     "replan_land": named(plain(ring=RING), ruler_at_home),
     "tend_maimed": named(plain(kind=MAIMED), town_of_maimed),
     "devise_custom": named(plain(catalog="technique", base=TECHNIQUE_BASE, name="Slow Fire Working", description=TEXT[:120])),
+    "open_district": named(plain(settlement_id=lambda realm, _ids: realm.settlement_id, kind="camp", material="timber"), town_ruler),
+    "rebuild": named(plain(settlement_id=lambda realm, _ids: realm.settlement_id, plan="planned"), ruined_rule),
+    "abandon_work": named(plain(structure_id=created("structure")), work_being_raised),
+    "dismantle_work": named(plain(structure_id=created("structure")), standing_work),
+    "found_garden": named(plain(kind="botanic"), wealthy_at_home),
+    "pick_lock": named(plain(structure_id=created("structure")), locked_store),
+    "set_crime_stance": named(plain(faction_id=created("faction"), stance="license"), realm_with_gang),
+    "flee": named(plain(sanctuary="temple"), hunted_by_a_temple),
+    "hunt_fugitive": named(plain(fugitive_id=created("fugitive")), realm_hunting),
+    "give_relief": named(plain(kind="pension", budget=10), town_ruler),
 }
 
 COMMUNITY_CASES: dict[str, Case] = {

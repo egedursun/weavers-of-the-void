@@ -95,7 +95,7 @@ async def lead_migration_tool(call: MortalCall, args: LeadMigrationInput) -> str
     if call.me.location_id != community.id and not await controls(call, community.id):
         fail(MortalResult.CROSSING_REFUSED, why="you lead the people of the place you live in or rule")
     if held(community.id):
-        fail(MortalResult.CROSSING_REFUSED, why="a god holds that place as it is")
+        fail(MortalResult.CROSSING_REFUSED, why="that place is held as it is")
     route = await route_between(call.tick, community.world_id, args.to_world_id)
     if route is None:
         fail(MortalResult.CROSSING_REFUSED, why="no open way joins those worlds")

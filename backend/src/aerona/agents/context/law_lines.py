@@ -2,13 +2,13 @@ from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.catalog.law_depth import COURT_TEXT, MOTIVE_TEXT, REGISTRY_TEXT, SYSTEM_TEXT
+from aerona.catalog.war_w52 import AGENT_STATES, AT_LARGE
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import AppealRow, JurisdictionRow, LegalSystemRow, OutlawRow, PrisonerRow, PrisonRow, RegistryRow
 from aerona.db.tables.military import SpyAgentRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
-from aerona.domain.enums.military import AgentStatus
 from aerona.domain.enums.polity import OfficeKind
 
 
@@ -54,9 +54,9 @@ async def own_lines(scope: Scope, me: EntityRow) -> list[str]:
     ):
         side = "owed to you" if deed.owner_entity_id == me.id else "owed by you"
         found.append(f"a registered {REGISTRY_TEXT[deed.kind]} of {deed.amount}, {side}")
-    agent = await session.scalar(select(SpyAgentRow).where(SpyAgentRow.mortal_entity_id == me.id, SpyAgentRow.status == AgentStatus.ACTIVE).limit(1))
+    agent = await session.scalar(select(SpyAgentRow).where(SpyAgentRow.mortal_entity_id == me.id, SpyAgentRow.status.in_(list(AT_LARGE))).limit(1))
     if agent is not None:
-        found.append(f"you spy {MOTIVE_TEXT[agent.motive]}, loyalty {agent.loyalty}")
+        found.append(f"you spy {MOTIVE_TEXT[agent.motive]}, loyalty {agent.loyalty}; your standing as an agent: {AGENT_STATES[agent.status].label.lower()}")
     if await session.scalar(select(OfficeRow.id).where(OfficeRow.holder_entity_id == me.id, OfficeRow.kind == OfficeKind.SPYMASTER).limit(1)) is not None:
         found.append("as spymaster you may hunt for moles at court")
     return found

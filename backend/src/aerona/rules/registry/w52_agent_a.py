@@ -90,3 +90,95 @@ class BreakRules(Spanned):
     withdrawal_years: int = span(5, 0, 100, MIND, "Years one who withdraws stops acting, leaving office and duties")
     withdrawal_care_cut: int = rule(30, 0, 100, MIND, "How much care from a healer shortens a withdrawal (%)")
     withdrawal_ease: int = rule(10, 0, 100, MIND, "Stress a withdrawn mortal sheds each epoch of rest")
+
+
+P = RuleGroup.POLITY
+CIV = RuleGroup.CIVILIZATION
+WAR = RuleGroup.WAR_AND_DIPLOMACY
+
+
+@dataclass(frozen=True)
+class MandatesRules:
+    ration_death_cut_pct: int = rule(30, 0, 100, P, "How far a ration mandate cuts the deaths of hunger in its town (%)")
+    corvee_grievance: int = rule(10, 0, 100, P, "Unrest a town gains each epoch its people are called out to forced labour")
+    corvee_progress_pct: int = rule(15, 0, 100, P, "Share of a work's cost that called-out labour raises each epoch (%)")
+    ration_grievance_pct: int = rule(100, 0, 300, P, "How much of the unrest of rationing a town feels, scaled by how corrupt its realm is (%)")
+
+
+@dataclass(frozen=True)
+class CrisisRules:
+    cede_region_weight: int = rule(100, 0, 100, WAR, "How readily a realm turns a quarrel into a demand that a land be ceded (%)")
+    release_vassal_weight: int = rule(100, 0, 100, WAR, "How readily a realm turns a quarrel into a demand that a vassal be released (%)")
+    convert_weight: int = rule(100, 0, 100, WAR, "How readily a realm turns a quarrel into a demand of conversion (%)")
+    pay_weight: int = rule(100, 0, 100, WAR, "How readily a realm turns a quarrel into a demand of payment (%)")
+    hand_over_weight: int = rule(80, 0, 100, WAR, "How readily a realm turns a quarrel into a demand that a person be handed over (%)")
+    disarm_weight: int = rule(60, 0, 100, WAR, "How readily a realm turns a quarrel into a demand that forces be cut (%)")
+    open_trade_weight: int = rule(80, 0, 100, WAR, "How readily a realm turns a quarrel into a demand that roads and ports be opened (%)")
+    disarm_share_pct: int = rule(30, 0, 100, WAR, "Share of its armies a realm that gives way to a demand to disarm sends home (%)")
+    hand_over_shame: int = rule(10, 0, 100, WAR, "Legitimacy a realm loses besides when it hands over one who sheltered with it")
+    mediation_chance_pct: int = rule(15, 0, 100, WAR, "Chance each season a crisis with a third power trusted by both sides is settled by its mediation (%)")
+
+
+@dataclass(frozen=True)
+class CourtRules:
+    jester_calm: int = rule(5, 0, 50, P, "Unrest a jester's tolerated mockery takes from the seat of the realm each epoch")
+    seer_sway_pct: int = rule(15, 0, 100, P, "How far a court seer's readings sway the realm's standing by the seer's renown (%)")
+    jester_grudge: int = rule(20, 0, 100, P, "Ill will a jester bears a ruler who silences their mockery")
+
+
+@dataclass(frozen=True)
+class PatronageRules:
+    broker_share_pct: int = rule(10, 0, 100, P, "Share of the favours passing through a broker that the broker keeps (%)")
+    artist_renown: int = rule(5, 0, 50, P, "Renown an artist client's works and praise bring a patron each epoch")
+
+
+@dataclass(frozen=True)
+class MembershipRules:
+    office_grievance: int = rule(10, 0, 100, P, "Unrest a membership barred from office adds where it lives")
+    marriage_grievance: int = rule(10, 0, 100, P, "Unrest a membership barred from marrying freely adds where it lives")
+    arms_grievance: int = rule(5, 0, 100, P, "Unrest a membership barred from bearing arms adds where it lives")
+    courts_grievance: int = rule(10, 0, 100, P, "Unrest a membership barred from the courts adds where it lives")
+    property_grievance: int = rule(15, 0, 100, P, "Unrest a membership barred from holding property adds where it lives")
+    movement_grievance: int = rule(10, 0, 100, P, "Unrest a membership barred from moving and settling adds where it lives")
+    vote_grievance: int = rule(10, 0, 100, P, "Unrest a membership barred from voting adds where it lives")
+    worship_grievance: int = rule(15, 0, 100, P, "Unrest a membership barred from worshipping openly adds where it lives")
+
+
+@dataclass(frozen=True)
+class LawAreaRules:
+    succession_clash_weight: int = rule(60, 0, 100, P, "How hard a law of succession that clashes with a people's values stirs unrest (%)")
+    property_clash_weight: int = rule(70, 0, 100, P, "How hard a law of property that clashes with a people's values stirs unrest (%)")
+    fiscal_clash_weight: int = rule(80, 0, 100, P, "How hard a law of taxes and coin that clashes with a people's values stirs unrest (%)")
+    penal_clash_weight: int = rule(70, 0, 100, P, "How hard a law of crime and punishment that clashes with a people's values stirs unrest (%)")
+    military_clash_weight: int = rule(50, 0, 100, P, "How hard a law of arms and service that clashes with a people's values stirs unrest (%)")
+    social_clash_weight: int = rule(80, 0, 100, P, "How hard a law of standing and custom that clashes with a people's values stirs unrest (%)")
+    public_health_clash_weight: int = rule(40, 0, 100, P, "How hard a law of health that clashes with a people's values stirs unrest (%)")
+    magic_clash_weight: int = rule(60, 0, 100, P, "How hard a law of powers that clashes with a people's values stirs unrest (%)")
+    constitutional_clash_weight: int = rule(70, 0, 100, P, "How hard a law of the realm's frame that clashes with a people's values stirs unrest (%)")
+    commerce_clash_weight: int = rule(60, 0, 100, P, "How hard a law of trade, contracts and guilds that clashes with a people's values stirs unrest (%)")
+    faith_clash_weight: int = rule(90, 0, 100, P, "How hard a law of faith, tithes and rites that clashes with a people's values stirs unrest (%)")
+    labour_clash_weight: int = rule(70, 0, 100, P, "How hard a law of work, wages and bondage that clashes with a people's values stirs unrest (%)")
+
+
+@dataclass(frozen=True)
+class CourtLevelRules:
+    local_bias: int = rule(0, -100, 100, P, "How far a local court leans toward its own people over strangers")
+    provincial_bias: int = rule(0, -100, 100, P, "How far a provincial court leans toward its own people over strangers")
+    high_bias: int = rule(0, -100, 100, P, "How far a high court leans toward its own people over strangers")
+    religious_bias: int = rule(20, -100, 100, P, "How far a court of faith leans toward the faithful over others")
+    guild_bias: int = rule(25, -100, 100, P, "How far a guild court leans toward the guild's members over outsiders")
+    military_bias: int = rule(30, -100, 100, P, "How far a military court leans toward soldiers over civilians")
+    consular_bias: int = rule(40, -100, 100, P, "How far a court of foreigners leans toward its own nation's people")
+    dispute_pct: int = rule(25, 0, 100, P, "Chance a case two courts both claim becomes a dispute of jurisdiction (%)")
+
+
+@dataclass(frozen=True)
+class CoopRules:
+    mill_gain: int = rule(10, 0, 100, CIV, "How strongly a milling cooperative lifts its town's prosperity (tenths of the usual)")
+    boats_gain: int = rule(10, 0, 100, CIV, "How strongly a boat cooperative lifts its town's prosperity (tenths of the usual)")
+    irrigation_gain: int = rule(10, 0, 100, CIV, "How strongly an irrigation cooperative lifts its town's prosperity (tenths of the usual)")
+    insurance_gain: int = rule(10, 0, 100, CIV, "How much an insurance cooperative pays each member out of its pool (tenths of the usual)")
+    burial_gain: int = rule(10, 0, 100, CIV, "How much a burial society pays each member out of its pool (tenths of the usual)")
+    credit_gain: int = rule(10, 0, 100, CIV, "How much a credit cooperative lends each member out of its pool (tenths of the usual)")
+    granary_gain: int = rule(10, 0, 100, CIV, "Grain a granary cooperative gives out from its stores for each member in a hungry epoch, in tenths")
+    herding_gain: int = rule(10, 0, 100, CIV, "Beasts a herding cooperative's shared herders add for each member each epoch, in tenths")

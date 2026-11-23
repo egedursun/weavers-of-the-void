@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.finance import PLAYS
 from aerona.catalog.urban import MERCHANT_HOUSES
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -25,6 +26,8 @@ from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.rules.registry import Rules
 
+RUMOUR_SHARE = 4
+
 
 @dataclass
 class PlayTally:
@@ -35,6 +38,8 @@ class PlayTally:
 def swing(rules: Rules, play: MarketPlay, strength: int) -> float:
     table = rules.manipulation
     share = strength / PERCENT
+    if PLAYS[play].by_rumour:
+        return 1 + rules.speculation.rumour_price_swing_pct / PERCENT * share
     return 1 + table.corner_pct / PERCENT * share if play is MarketPlay.CORNER else 1 - table.dump_pct / PERCENT * share
 
 
@@ -111,6 +116,8 @@ async def play_markets(ctx: TickContext, tally: PlayTally) -> None:
         commodity, amount = max(sorted(stock.items(), key=lambda item: item[0].value), key=lambda item: item[1])
         amount += stored
         play = MarketPlay.CORNER if amount >= table.corner_stock else MarketPlay.DUMP
+        if amount * RUMOUR_SHARE < table.corner_stock and ctx.rng(f"market_play.rumour.{house.id}.{ctx.epoch}").chance(table.play_pct):
+            play = MarketPlay.RUMOUR
         if await ctx.session.get(MarketPlayRow, (house.id, market, commodity, play)) is not None:
             continue
         strength = min(PERCENT, round(amount * PERCENT / max(1, table.corner_stock)))
@@ -122,11 +129,13 @@ async def play_markets(ctx: TickContext, tally: PlayTally) -> None:
                 play=play,
                 strength=strength,
                 since_epoch=ctx.epoch,
-                until_epoch=ctx.epoch + table.length,
+                until_epoch=ctx.epoch + (1 if PLAYS[play].by_rumour else table.length),
                 locked=[],
             )
         )
         tally.played += 1
+        if PLAYS[play].by_rumour:
+            await record(ctx, "market.rumour_play", roles={IncidentRole.ACTOR: house.id, IncidentRole.PLACE: market}, facts={"good": commodity}, place=market)
         await record(
             ctx,
             "trade.market_play",

@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.finance import OWED_LOANS
 from aerona.catalog.life.domain import LENDER_KINDS
 from aerona.catalog.life.military import PAY_CONTRACTS_CONTRACT_STATUSS
 from aerona.constants.units import PER_MILLE, PERCENT
@@ -67,7 +68,7 @@ async def war_credit(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow
     lender = await lender_for(ctx, owner, principal)
     if lender is not None:
         open_loan = await ctx.session.scalar(
-            select(LoanRow.id).where(LoanRow.borrower_entity_id == polity_id, LoanRow.status == LoanStatus.OPEN, LoanRow.purpose == "war").limit(1)
+            select(LoanRow.id).where(LoanRow.borrower_entity_id == polity_id, LoanRow.status.in_(OWED_LOANS), LoanRow.purpose == "war").limit(1)
         )
         if open_loan is None:
             ctx.session.add(

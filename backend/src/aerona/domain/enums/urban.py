@@ -85,6 +85,8 @@ class ConvoyStatus(StrEnum):
     ARRIVED = "arrived"
     RAIDED = "raided"
     LOST = "lost"
+    STRANDED = "stranded"
+    QUARANTINED = "quarantined"
 
 
 class TransportKind(StrEnum):
@@ -138,11 +140,14 @@ class PreservationMethod(StrEnum):
 class MarketPlay(StrEnum):
     CORNER = "corner"
     DUMP = "dump"
+    RUMOUR = "rumour"
 
 
 class CrimeStance(StrEnum):
     SUPPRESS = "suppress"
     CO_OPT = "co_opt"
+    TOLERATE = "tolerate"
+    LICENSE = "license"
 
 
 class ZoneKind(StrEnum):

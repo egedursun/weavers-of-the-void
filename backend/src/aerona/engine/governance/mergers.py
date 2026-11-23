@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.finance import OWED_LOANS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
@@ -7,7 +8,6 @@ from aerona.db.tables.estates import CompanyShareRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.governance import OrgGovernanceRow, OrgMergerRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.governance import OPEN_MERGER_STAGES, MergerKind, MergerStage
 from aerona.domain.enums.modifier import IncidentRole
@@ -139,9 +139,7 @@ async def join(ctx: TickContext, merger: OrgMergerRow, target: EntityRow, acquir
     elif source is not None:
         await give_coin(ctx.session, ctx.rules, acquirer, source.treasury)
         source.treasury = 0
-    for loan in await ctx.session.scalars(
-        select(LoanRow).where(LoanRow.borrower_entity_id == target.id, LoanRow.status == LoanStatus.OPEN).order_by(LoanRow.id)
-    ):
+    for loan in await ctx.session.scalars(select(LoanRow).where(LoanRow.borrower_entity_id == target.id, LoanRow.status.in_(OWED_LOANS)).order_by(LoanRow.id)):
         if not loan.held:
             loan.borrower_entity_id = acquirer.id
 

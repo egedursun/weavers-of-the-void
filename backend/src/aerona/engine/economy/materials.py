@@ -17,6 +17,7 @@ from aerona.domain.enums.economy import FoeNature, MaterialFamily, MaterialOrigi
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.rules.model import keyed
 from aerona.rules.registry import Rules
 
 
@@ -161,15 +162,27 @@ def alloy_inputs(material: MaterialKind) -> tuple[MaterialKind, ...]:
     return ALLOYS.get(material, (material,))
 
 
+def hardness_of(rules: Rules, props: MaterialProps) -> int:
+    if props.kind is None or props.world_material_id is not None:
+        return props.hardness
+    return keyed(rules.materials, props.kind.value, "hardness")
+
+
+def value_of(rules: Rules, props: MaterialProps) -> int:
+    if props.kind is None or props.world_material_id is not None:
+        return props.base_value
+    return keyed(rules.materials, props.kind.value, "value")
+
+
 def weapon_damage(rules: Rules, props: MaterialProps, quality: int) -> int:
     table = rules.materials
-    raw = props.hardness * table.damage_hardness_pct + sharpness(props) * table.damage_edge_pct + quality * table.damage_quality_pct
+    raw = hardness_of(rules, props) * table.damage_hardness_pct + sharpness(props) * table.damage_edge_pct + quality * table.damage_quality_pct
     return clamp_int(round_half_up(raw / PERCENT), 0, PERCENT)
 
 
 def armour_protection(rules: Rules, props: MaterialProps, quality: int) -> int:
     table = rules.materials
-    raw = props.hardness * table.protection_hardness_pct + props.toughness * table.protection_toughness_pct + quality * table.protection_quality_pct
+    raw = hardness_of(rules, props) * table.protection_hardness_pct + props.toughness * table.protection_toughness_pct + quality * table.protection_quality_pct
     return clamp_int(round_half_up(raw / PERCENT), 0, PERCENT)
 
 
@@ -214,21 +227,21 @@ MIDDLE = PERCENT // 2
 WORTH_FLOOR = 0.1
 
 
-def worth(props: MaterialProps) -> float:
-    return (props.rarity + props.base_value) / 2
+def worth(rules: Rules, props: MaterialProps) -> float:
+    return (props.rarity + value_of(rules, props)) / 2
 
 
 def worth_factor(rules: Rules, props: MaterialProps | None) -> float:
     if props is None:
         return 1.0
-    return max(WORTH_FLOOR, 1 + (worth(props) - MIDDLE) / PERCENT * rules.materials.item_worth_pct / PERCENT)
+    return max(WORTH_FLOOR, 1 + (worth(rules, props) - MIDDLE) / PERCENT * rules.materials.item_worth_pct / PERCENT)
 
 
 def price_premium(rules: Rules, props: MaterialProps | None) -> float:
     if props is None:
         return 1.0
     table = rules.markets
-    lift = ((props.rarity - MIDDLE) * table.rarity_price_pct + (props.base_value - MIDDLE) * table.value_price_pct) / PERCENT / PERCENT
+    lift = ((props.rarity - MIDDLE) * table.rarity_price_pct + (value_of(rules, props) - MIDDLE) * table.value_price_pct) / PERCENT / PERCENT
     return max(WORTH_FLOOR, 1 + lift)
 
 

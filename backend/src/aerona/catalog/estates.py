@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 from aerona.core.total import total
 from aerona.domain.enums.faction import EstatePrivilege
@@ -36,8 +37,15 @@ ESTATE_NAMES = total(
 PRIVILEGE_WISHES = total(
     SocialClass,
     {
-        SocialClass.NOBLE: (EstatePrivilege.TAX_EXEMPTION, EstatePrivilege.JUDICIAL_IMMUNITY, EstatePrivilege.COUNCIL_SEAT, EstatePrivilege.ARMS),
-        SocialClass.PRIEST: (EstatePrivilege.JUDICIAL_IMMUNITY, EstatePrivilege.TAX_EXEMPTION, EstatePrivilege.COUNCIL_SEAT),
+        SocialClass.NOBLE: (
+            EstatePrivilege.TAX_EXEMPTION,
+            EstatePrivilege.JUDICIAL_IMMUNITY,
+            EstatePrivilege.COUNCIL_SEAT,
+            EstatePrivilege.ARMS,
+            EstatePrivilege.LAND_HOLDING,
+            EstatePrivilege.RESERVED_OFFICES,
+        ),
+        SocialClass.PRIEST: (EstatePrivilege.JUDICIAL_IMMUNITY, EstatePrivilege.TAX_EXEMPTION, EstatePrivilege.COUNCIL_SEAT, EstatePrivilege.LAND_HOLDING),
         SocialClass.MERCHANT: (EstatePrivilege.MONOPOLY, EstatePrivilege.COUNCIL_SEAT, EstatePrivilege.TAX_EXEMPTION),
         SocialClass.ARTISAN: (EstatePrivilege.MONOPOLY, EstatePrivilege.COUNCIL_SEAT),
         SocialClass.FARMER: (EstatePrivilege.COUNCIL_SEAT, EstatePrivilege.ARMS),
@@ -48,7 +56,12 @@ PRIVILEGE_WISHES = total(
         SocialClass.MONASTIC: (EstatePrivilege.TAX_EXEMPTION, EstatePrivilege.JUDICIAL_IMMUNITY),
         SocialClass.WORKER: (EstatePrivilege.COUNCIL_SEAT, EstatePrivilege.MONOPOLY),
         SocialClass.PROFESSIONAL: (EstatePrivilege.MONOPOLY, EstatePrivilege.COUNCIL_SEAT),
-        SocialClass.OFFICIAL: (EstatePrivilege.JUDICIAL_IMMUNITY, EstatePrivilege.COUNCIL_SEAT, EstatePrivilege.TAX_EXEMPTION),
+        SocialClass.OFFICIAL: (
+            EstatePrivilege.RESERVED_OFFICES,
+            EstatePrivilege.JUDICIAL_IMMUNITY,
+            EstatePrivilege.COUNCIL_SEAT,
+            EstatePrivilege.TAX_EXEMPTION,
+        ),
         SocialClass.CITIZEN: (EstatePrivilege.COUNCIL_SEAT, EstatePrivilege.ARMS),
         SocialClass.UNEMPLOYED: (EstatePrivilege.COUNCIL_SEAT,),
     },
@@ -79,4 +92,29 @@ PRIVILEGE_LABELS: dict[EstatePrivilege, str] = {
     EstatePrivilege.COUNCIL_SEAT: "A seat in council",
     EstatePrivilege.ARMS: "The right to bear arms",
     EstatePrivilege.JUDICIAL_IMMUNITY: "Immunity from the courts",
+    EstatePrivilege.RESERVED_OFFICES: "Offices kept for the estate",
+    EstatePrivilege.LAND_HOLDING: "The sole right to hold land",
 }
+
+
+@dataclass(frozen=True)
+class PrivilegeSpec:
+    loyalty: str
+    cost: str
+    rent: bool = False
+
+
+PRIVILEGES: Mapping[EstatePrivilege, PrivilegeSpec] = total(
+    EstatePrivilege,
+    {
+        EstatePrivilege.TAX_EXEMPTION: PrivilegeSpec("tax_exemption_loyalty", "tax_exemption_cost"),
+        EstatePrivilege.MONOPOLY: PrivilegeSpec("monopoly_loyalty", "monopoly_cost", rent=True),
+        EstatePrivilege.COUNCIL_SEAT: PrivilegeSpec("council_seat_loyalty", "council_seat_cost"),
+        EstatePrivilege.ARMS: PrivilegeSpec("arms_loyalty", "arms_cost"),
+        EstatePrivilege.JUDICIAL_IMMUNITY: PrivilegeSpec("judicial_immunity_loyalty", "judicial_immunity_cost"),
+        EstatePrivilege.RESERVED_OFFICES: PrivilegeSpec("reserved_offices_loyalty", "reserved_offices_cost"),
+        EstatePrivilege.LAND_HOLDING: PrivilegeSpec("land_holding_loyalty", "land_holding_cost", rent=True),
+    },
+)
+
+RENTED = frozenset(privilege for privilege, spec in PRIVILEGES.items() if spec.rent)

@@ -4,12 +4,14 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from aerona.constants.units import PERCENT
+from aerona.catalog.pacts import OPINION_WEIGHTS
+from aerona.constants.units import PERCENT, TENTHS
 from aerona.db.fast_session import rows_by_prefix
 from aerona.db.read_memo import memoized
 from aerona.db.tables.communication import APPROVAL_MAX, APPROVAL_MIN, PublicOpinionRow
 from aerona.db.tables.culture import ArtworkProfileRow, IdeologyAdherentRow, RumourRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.faith import CultHoldingRow
 from aerona.db.tables.interconnect import IncidentParticipantRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -21,7 +23,7 @@ from aerona.domain.enums.communication import OpinionSubject
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EngineKind, EntityStatus
 from aerona.domain.enums.eras import EraChannel
-from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.belonging.mockery import sting
@@ -33,10 +35,16 @@ from aerona.engine.polity.laws import LawBook, discord
 from aerona.engine.primitives.faith import patron_node
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.services.community_relations import change_relation
+from aerona.engine.services.community_relations import relation as community_relation_of
 
 HALF = PERCENT // 2
 APPROVAL = "approval"
 TEMPLE = aliased(EntityRow)
+
+
+FACTIONS_HEARD = 3
+POWERS_HEARD = 2
 
 
 @dataclass
@@ -174,7 +182,48 @@ async def subjects_of(ctx: TickContext, community: EntityRow, realm_id: int | No
     if god is not None:
         piety = stat_or(community, "piety", HALF)
         found.append((god, OpinionSubject.GOD, piety - HALF + values.get(ValueAxis.PIETY, 0) / 4 + await sermons(ctx, community, god)))
-    return found
+    for faction in await ctx.session.scalars(
+        select(FactionProfileRow).where(FactionProfileRow.home_entity_id == community.id).order_by(FactionProfileRow.faction_entity_id).limit(FACTIONS_HEARD)
+    ):
+        found.append(
+            (
+                faction.faction_entity_id,
+                OpinionSubject.FACTION,
+                faction.reputation - HALF + await community_relation_of(ctx.session, ctx.rules, community.id, faction.faction_entity_id) / 2,
+            )
+        )
+    found.extend((power, OpinionSubject.FOREIGN_POWER, view / 2) for power, view in await foreign_views(ctx, community, realm_id))
+    weighted: list[tuple[int, OpinionSubject, float]] = []
+    for subject_id, subject, target in found:
+        weighted.append((subject_id, subject, target * OPINION_WEIGHTS[subject](ctx.rules) / PERCENT))
+    return weighted
+
+
+async def foreign_views(ctx: TickContext, community: EntityRow, realm_id: int | None) -> list[tuple[int, float]]:
+    others = (
+        select(PolityProfileRow)
+        .join(EntityRow, EntityRow.id == PolityProfileRow.polity_entity_id)
+        .where(EntityRow.world_id == community.world_id, EntityRow.status == EntityStatus.CANON, PolityProfileRow.polity_entity_id != (realm_id or 0))
+    )
+    views: list[tuple[int, float]] = []
+    for other in await ctx.session.scalars(others.order_by(PolityProfileRow.polity_entity_id)):
+        if other.core_entity_id is None:
+            continue
+        views.append((other.polity_entity_id, await community_relation_of(ctx.session, ctx.rules, community.id, other.core_entity_id)))
+    return sorted(views, key=lambda item: (-abs(item[1]), item[0]))[:POWERS_HEARD]
+
+
+async def answer(ctx: TickContext, community: EntityRow, row: PublicOpinionRow) -> None:
+    if row.subject is OpinionSubject.FACTION:
+        faction = await ctx.session.get(FactionProfileRow, row.subject_node_id)
+        if faction is not None and "reputation" not in faction.locked and not held(faction.faction_entity_id):
+            faction.reputation = clamp_int(faction.reputation + round_half_up(row.approval / TENTHS), 0, PERCENT)
+    elif row.subject is OpinionSubject.FOREIGN_POWER:
+        other = await ctx.session.get(PolityProfileRow, row.subject_node_id)
+        if other is not None and other.core_entity_id is not None and not held(other.core_entity_id):
+            await change_relation(
+                ctx, community.id, other.core_entity_id, row.approval / TENTHS, MemoryKind.TRADED_WITH, note="the town's view of a foreign power"
+            )
 
 
 async def tend_community(ctx: TickContext, community: EntityRow, laws: LawBook, tally: OpinionTally) -> None:
@@ -195,6 +244,7 @@ async def tend_community(ctx: TickContext, community: EntityRow, laws: LawBook, 
         drift = table.opinion_drift_pct * await tech_factor(ctx.session, ctx.rules, community.id, EraChannel.OPINION)
         row.approval = clamp_int(row.approval + round_half_up((aim - row.approval) * min(PERCENT, drift) / PERCENT), APPROVAL_MIN, APPROVAL_MAX)
         tally.formed += 1
+        await answer(ctx, community, row)
         law = laws.in_force(realm_id, LawKind.CENSORSHIP) if realm_id is not None else None
         noticed = ctx.rng(f"opinion.censored.{community.id}.{ctx.epoch}").chance(table.censorship_found_pct)
         if subject is OpinionSubject.RULER and law is not None and not row.censored and noticed:

@@ -64,6 +64,8 @@ class LabourRules(Spanned):
     artist_prestige: int = rule(30, 0, 100, S, "Prestige a town gains at a full share of its people working at the arts")
     soldier_pct: int = rule(60, 0, 100, S, "Share of warriors who soldier rather than farm in peace (%)")
     price_pull_pct: int = rule(30, 0, 100, S, "How strongly dear goods pull workers into the trades that make them (%)")
+    law_pin_pct: int = rule(70, 0, 100, S, "Share of the workers of a trade that a statute, a caste or a guild right keeps in it against every other pull (%)")
+    skill_pull_pct: int = rule(30, 0, 100, S, "How strongly a people's knowledge pulls workers toward the trades it fits, where law allows (%)")
     idle_outcast_pct: int = rule(70, 0, 100, S, "Share of outcasts who find no work (%)")
     slave_output_pct: int = rule(130, 0, 500, S, "Output of serfs and slaves in mines and fields compared with free workers (%)")
     workshop_workers_per_level: int = rule(40, 0, 100000, S, "Workers each level of a workshop draws into its trade in a small community")

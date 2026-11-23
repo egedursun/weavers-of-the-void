@@ -149,6 +149,7 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
         gap_pct(table.hunger_food, food),
         gap_pct(table.hunger_prosperity, prosperity),
         basket.get(ShortfallEffect.HUNGER, 0) * plenty.hunger_pressure_pct / PERCENT,
+        basket.get(ShortfallEffect.THIRST, 0) * ctx.rules.shortfall.thirst_pressure_pct / PERCENT,
     ) * await ctx.hook_easing(community.id, DomainHook.FASTING)
     memories = list(await held_memories(session, community.id))
     threat = sum(-strength_of(row, ctx.epoch) for row in memories if row.kind in THREAT_MEMORIES and row.magnitude < 0)
@@ -159,6 +160,7 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
     fertility = stat(location, FERTILITY_KEY) if location is not None else None
     room = (fertility if fertility is not None else table.default_fertility) * table.crowd_per_fertility
     crowding = pct((population - room) * PERCENT / room) if room > 0 else 0
+    crowding = max(crowding, pct(basket.get(ShortfallEffect.SHELTER, 0) * ctx.rules.shortfall.shelter_pressure_pct / PERCENT))
     poverty = max(
         gap_pct(table.poverty_prosperity, prosperity),
         pct(await poverty_of(session, community.id, await class_shares(session, ctx.rules, community.id)) * plenty.poverty_pressure_pct / PERCENT),

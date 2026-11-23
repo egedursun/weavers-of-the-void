@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.finance import OWED_LOANS
 from aerona.catalog.goods_traits import materials_with
 from aerona.catalog.life.finance import REFUSES_CREDIT_STATES
 from aerona.constants.units import PERCENT
@@ -93,6 +94,11 @@ async def borrowers(ctx: TickContext) -> list[int]:
     return sorted(found)
 
 
+def kept_state(row: CreditProfileRow, epoch: int) -> bool:
+    shut_out = row.state is CreditState.REPUDIATED and row.repudiated_until is not None and row.repudiated_until >= epoch
+    return shut_out or (row.state is CreditState.RESCUED and row.rescuer_node_id is not None)
+
+
 async def rate(ctx: TickContext, subject_id: int, tally: CreditTally) -> CreditProfileRow | None:
     if held(subject_id):
         return None
@@ -100,7 +106,7 @@ async def rate(ctx: TickContext, subject_id: int, tally: CreditTally) -> CreditP
     loans = list(await ctx.session.scalars(select(LoanRow).where(LoanRow.borrower_entity_id == subject_id)))
     repaid = sum(1 for loan in loans if loan.status is LoanStatus.REPAID)
     defaulted = sum(1 for loan in loans if loan.status is LoanStatus.DEFAULTED)
-    debt = sum(owed(loan) for loan in loans if loan.status is LoanStatus.OPEN)
+    debt = sum(owed(loan) for loan in loans if loan.status in OWED_LOANS)
     realm = await ctx.session.get(PolityProfileRow, subject_id)
     if realm is not None:
         debt += realm.debt
@@ -115,7 +121,9 @@ async def rate(ctx: TickContext, subject_id: int, tally: CreditTally) -> CreditP
             BASE_RATING + repaid * table.repay_gain - row.defaults * table.default_loss + treasury / table.treasury_per_point + stability // 2, 0, PERCENT
         )
     if "state" not in locked:
-        if row.restructured_until is not None and row.restructured_until >= ctx.epoch:
+        if kept_state(row, ctx.epoch):
+            pass
+        elif row.restructured_until is not None and row.restructured_until >= ctx.epoch:
             row.state = CreditState.RESTRUCTURING
         elif row.state is CreditState.DEFAULT:
             row.state, row.restructured_until = CreditState.RESTRUCTURING, ctx.epoch + table.restructure_epochs

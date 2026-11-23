@@ -21,7 +21,7 @@ COMMUNICATION_MECHANICS: tuple[Mechanic, ...] = (
         fields=("medium", "content", "state", "arrival_epoch", "intercepted_by_node_id", "forged", "misread", "enciphered", "envoy_fate"),
         tables=(MessageRow.__tablename__,),
         exposure=Exposure.TOOL,
-        tools=("send_dispatch",),
+        tools=("send_dispatch", "expel_envoy"),
         targets=("polity", "mortal", "settlement"),
         couplings=(
             Coupling(S.INTRIGUE, "spies intercept messages to and from their targets and learn what they carry", E.FLOW, "communication.spy_intercept_pct"),
@@ -79,6 +79,7 @@ COMMUNICATION_MECHANICS: tuple[Mechanic, ...] = (
         templates=("communication.cipher_broken",),
         fields=("strength", "broken_by", "break_known", "kind", "state"),
         tables=(CipherRow.__tablename__, SignalLinkRow.__tablename__),
+        tools=("jam_signal",),
         exposure=Exposure.CONTEXT,
         targets=("polity", "region"),
         couplings=(

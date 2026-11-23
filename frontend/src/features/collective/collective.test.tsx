@@ -9,6 +9,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ArmsCrest } from './ArmsCrest'
 import { CollectiveSection } from './CollectiveSection'
+import { ACCOUNT_KINDS, STANCES } from './labels'
 
 vi.mock('@/api/client', async () => {
   const { createFakeClient } = await import('@/test-utils/fakeApi')
@@ -237,6 +238,90 @@ describe('crowds, memory, customs and craft', () => {
       .toHaveLength(1)
     expect(callsTo('POST', '/api/actions/account:expose')[0].body).toEqual({
       account_id: 12,
+    })
+  })
+
+  it('shows a lamenting song tied to a happening and ties it to another', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/30', {
+      ...EMPTY,
+      node: REALM,
+      accounts: [
+        {
+          id: 12,
+          holder: REALM,
+          author: null,
+          kind: 'song',
+          medium: 'book',
+          collection_id: null,
+          collection_name: null,
+          subject: KING,
+          structure: null,
+          artwork: null,
+          fidelity: 50,
+          credence: 70,
+          distance: 20,
+          revised_from_id: null,
+          defaced: false,
+          authenticity: 'genuine',
+          epoch: 6,
+          dated: 'the 4th year of the reign of Brannoc',
+          happening: 'The flood of Ashby',
+          stances: [{ node: KING, stance: 'lament' }],
+          locked: [],
+        },
+      ],
+    })
+    onApi('GET', '/api/nodes/30/history', {
+      node_id: 30,
+      offset: 0,
+      limit: 50,
+      total_incidents: 1,
+      incidents: [
+        {
+          incident_id: 77,
+          kind: 'battle.fought',
+          group: null,
+          moment: null,
+          roles: [],
+          line: 'Varo fought at the ford.',
+          place_id: null,
+          place_name: null,
+          tier: 'line',
+          facts: 0,
+        },
+      ],
+      total_steps: 0,
+      steps: [],
+      total_changes: 0,
+      changes: [],
+      kinds: [],
+    })
+    onApi('POST', '/api/actions/account:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CollectiveSection nodeId={30} />)
+    await expect
+      .element(screen.getByText(ACCOUNT_KINDS.song.label, { exact: true }))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText(STANCES.lament.label, { exact: false }).first())
+      .toBeVisible()
+    await expect.element(screen.getByText('The flood of Ashby')).toBeVisible()
+    await screen.getByRole('button', { name: 'Adjust' }).first().click()
+    await screen.getByRole('combobox', { name: 'Happening it tells' }).click()
+    await screen
+      .getByRole('option', { name: 'Varo fought at the ford.' })
+      .click()
+    await screen
+      .getByRole('button', { name: 'Hold these values' })
+      .first()
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/account:edit'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/account:edit')[0].body).toEqual({
+      account_id: 12,
+      values: { incident_id: 77 },
+      release: [],
     })
   })
 

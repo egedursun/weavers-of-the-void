@@ -6,6 +6,7 @@ from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.cosmography import DimensionKind, WorldAge
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.storyteller import StorytellerProfile
+from aerona.domain.enums.tongues import NumeralBase
 from aerona.domain.enums.world import ClimateEra, CosmosShape, CosmosSize, GenesisTemplate, LanguageTexture, TechnologyEra, WorldType
 from aerona.domain.models.base import ValueObject
 
@@ -27,6 +28,7 @@ class GenesisSettings(ValueObject):
     technology: TechnologyEra = TechnologyEra.IRON
     technology_levels: dict[TechFamily, TechLevel] = Field(default_factory=dict)
     language_texture: LanguageTexture = LanguageTexture.FREE
+    numeral_base: NumeralBase | None = None
     peoples: int = Field(ge=1)
     cosmos_size: CosmosSize = CosmosSize.SINGLE
     cosmos_shape: CosmosShape = CosmosShape.ONE_SUN

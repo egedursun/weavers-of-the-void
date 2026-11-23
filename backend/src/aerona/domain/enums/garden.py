@@ -9,3 +9,5 @@ class GardenKind(StrEnum):
     HUNTING_PARK = "hunting_park"
     SACRED_GROVE = "sacred_grove"
     CEMETERY = "cemetery"
+    BOTANIC = "botanic"
+    MENAGERIE = "menagerie"

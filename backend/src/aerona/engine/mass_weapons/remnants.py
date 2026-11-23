@@ -18,6 +18,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.environment.book import add_scar
+from aerona.engine.industry.sky import irradiate
 from aerona.engine.lifecycle.wounds import slay
 from aerona.engine.lore.research import techniques_of
 from aerona.engine.mass_weapons.book import ArsenalTally
@@ -55,6 +56,8 @@ async def leave_remnant(
     ground = await ctx.session.get(RegionEnvironmentRow, region) if region is not None and kind in POISONING else None
     if ground is not None:
         add_scar(ground, ScarKind.POISONED, density)
+    if region is not None and kind is RemnantKind.FALLOUT:
+        await irradiate(ctx.session, region, density, ctx.epoch)
     query = select(WarRemnantRow).where(WarRemnantRow.kind == kind, WarRemnantRow.region_entity_id == region, WarRemnantRow.orbit_world_id == orbit)
     found = await ctx.session.scalar(query.order_by(WarRemnantRow.id).limit(1))
     if found is not None:

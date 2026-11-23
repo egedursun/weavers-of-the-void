@@ -124,6 +124,8 @@ async def unit_types(ctx: TickContext) -> None:
 
 @reads(
     "polity.subjects",
+    "settlement.population",
+    "settlement.wealth",
     "table.applied_fixups",
     "table.armies",
     "table.army_profiles",
@@ -159,6 +161,7 @@ async def unit_types(ctx: TickContext) -> None:
     "table.world_materials",
 )
 @writes(
+    "settlement.wealth",
     "table.applied_fixups",
     "table.community_stocks",
     "table.design_components",

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Sprout, Trash2, Undo2, X } from 'lucide-react'
+import { Crown, Plus, Sprout, Trash2, Undo2, X } from 'lucide-react'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,6 +20,7 @@ import {
 } from '@/features/cosmography/parts'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
+import { NodePicker } from '@/features/dominion/parts'
 import { Ref, ThingPicker } from '@/features/gatherings/parts'
 import { Bars } from '@/features/sacred/parts'
 import { ChoiceField } from '@/features/wars/military/parts'
@@ -101,12 +102,15 @@ function Collection({
   )
   const retyping = useEndsAction(
     'museum_piece:edit',
-    (vars: { pieceId: number; kind: string }) => ({
+    (vars: {
+      pieceId: number
+      values: Record<string, string | number | null>
+    }) => ({
       piece_id: vars.pieceId,
-      values: { kind: vars.kind },
+      values: vars.values,
       release: [],
     }),
-    'The piece keeps its new kind'
+    'The piece keeps its new values'
   )
   const addBlocked =
     blocked ?? (item === null ? 'Choose a thing to place' : null)
@@ -139,6 +143,11 @@ function Collection({
                         : 'nothing named'
                     }
                   />
+                  {piece.polity && (
+                    <Chip icon={Crown} variant='secondary'>
+                      Regalia of {piece.polity.name}
+                    </Chip>
+                  )}
                   {piece.looted_from && (
                     <Chip icon={Undo2} variant='warning'>
                       Taken from {piece.looted_from.name}
@@ -156,8 +165,29 @@ function Collection({
                     table={PIECE_KINDS}
                     blocked={why(blocked, retyping.isPending)}
                     onPick={(next) =>
-                      retyping.mutate({ pieceId: piece.id, kind: next })
+                      retyping.mutate({
+                        pieceId: piece.id,
+                        values: { kind: next },
+                      })
                     }
+                  />
+                  <NodePicker
+                    label='Realm whose regalia it is'
+                    value={piece.polity?.id ?? null}
+                    onChange={(next) =>
+                      retyping.mutate({
+                        pieceId: piece.id,
+                        values: { polity_entity_id: next },
+                      })
+                    }
+                    blocked={why(
+                      blocked ??
+                        (piece.kind === 'regalia'
+                          ? null
+                          : 'Only regalia name a realm'),
+                      retyping.isPending
+                    )}
+                    types={['polity']}
                   />
                   <StepButton
                     icon={Undo2}

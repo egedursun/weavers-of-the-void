@@ -15,6 +15,7 @@ import {
   Section,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { Ref } from '@/features/gatherings/parts'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -60,6 +61,7 @@ const STATUSES: Record<string, string> = {
   hoarding: 'Hoarding',
   sold: 'Sold',
   bust: 'Bust',
+  seized: 'Seized',
 }
 
 type Props = { view: Finance; blocked: string | null; hold: boolean }
@@ -175,6 +177,15 @@ function CreditCard({ view, blocked, hold }: Props) {
             {credit.restructured_until !== null && (
               <Badge variant='secondary'>{`Restructuring until epoch ${credit.restructured_until}`}</Badge>
             )}
+            {credit.repudiated_until !== null && (
+              <Badge variant='destructive'>{`Shut out of credit until epoch ${credit.repudiated_until}`}</Badge>
+            )}
+            {credit.rescuer && (
+              <Badge variant='secondary'>
+                Rescued by <Ref node={credit.rescuer} empty='a lost power' />
+                {` on terms of ${credit.rescue_terms}`}
+              </Badge>
+            )}
             {credit.held.length > 0 && <Badge variant='secondary'>Held</Badge>}
           </div>
           <ItemRow
@@ -185,6 +196,24 @@ function CreditCard({ view, blocked, hold }: Props) {
             editLabel='the credit'
             editor={
               <>
+                <NodePicker
+                  label='Rescuer'
+                  value={credit.rescuer?.id ?? null}
+                  onChange={(value) =>
+                    value !== null &&
+                    void unwrap(
+                      api.POST('/api/actions/credit:set', {
+                        body: {
+                          subject_id: view.node_id,
+                          rescuer_node_id: value,
+                          hold,
+                        },
+                      })
+                    )
+                  }
+                  blocked={busy}
+                  types={['polity', 'faction']}
+                />
                 <MindPicker
                   label='Standing with lenders'
                   value={credit.state}
@@ -230,6 +259,19 @@ function CreditCard({ view, blocked, hold }: Props) {
                           label: 'Restructuring until epoch',
                           value: credit.restructured_until ?? 0,
                           min: 0,
+                        },
+                        {
+                          key: 'repudiated_until',
+                          label: 'Shut out of credit until epoch',
+                          value: credit.repudiated_until ?? 0,
+                          min: 0,
+                        },
+                        {
+                          key: 'rescue_terms',
+                          label: 'Share paid to its rescuer',
+                          value: credit.rescue_terms,
+                          min: 0,
+                          max: SPAN,
                         },
                       ],
                     },

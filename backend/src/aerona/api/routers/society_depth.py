@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Path
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
@@ -25,7 +25,15 @@ from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.db.tables.society_depth import CorveeRow, DriftCauseRow, DriftImpositionRow, LabourReasonRow, MobilityEventRow, PolityLoyaltyRow
+from aerona.db.tables.society_depth import (
+    CommunityShortfallRow,
+    CorveeRow,
+    DriftCauseRow,
+    DriftImpositionRow,
+    LabourReasonRow,
+    MobilityEventRow,
+    PolityLoyaltyRow,
+)
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import GRIEVANCE_PARTS, LoyaltyPart
 from aerona.engine.demography.basket import effect_shortfalls, held_got, needs_of, standing_of, staples_of
@@ -118,6 +126,13 @@ async def society_depth(services: ServicesDep, entity_id: int = Path(ge=1)) -> S
         standing = await standing_of(session, entity.id)
         needs = await needs_of(session, entity.id)
         corvee = await session.get(CorveeRow, entity.id)
+        held_wants = set(
+            await session.scalars(
+                select(CommunityShortfallRow.effect)
+                .where(CommunityShortfallRow.community_entity_id == entity.id, func.json_array_length(CommunityShortfallRow.locked) > 0)
+                .order_by(CommunityShortfallRow.effect)
+            )
+        )
         work = await session.get(EntityRow, corvee.work_entity_id) if corvee is not None and corvee.work_entity_id is not None else None
         prices = await local_prices(session, rules, entity.id, stat(entity, "population") or 0) if society is not None else {}
         shares = {social_class: society.share(social_class) for social_class in SocialClass} if society is not None else {}
@@ -152,7 +167,10 @@ async def society_depth(services: ServicesDep, entity_id: int = Path(ge=1)) -> S
                 )
                 for social_class, row in sorted(standing.items(), key=lambda item: item[0].value)
             ],
-            effects=[EffectView(effect=effect, short_pct=value) for effect, value in sorted((await effect_shortfalls(session, entity.id)).items())],
+            effects=[
+                EffectView(effect=effect, short_pct=value, held=effect in held_wants)
+                for effect, value in sorted((await effect_shortfalls(session, entity.id)).items())
+            ],
             labour_reasons=[
                 LabourReasonView(job=row.job, reason=row.reason, workers=row.workers, commodity=row.commodity, workshop=row.workshop, price_pct=row.price_pct)
                 for row in await session.scalars(

@@ -42,7 +42,7 @@ from aerona.db.tables.agrarian import (
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.arcana import LabTextRow, LawUpkeepRow, LongevityRow, RiteGrammarRow, VisStockRow, WarpingRow
 from aerona.db.tables.arts import ArtMovementRow, ArtPriceRow, ArtSaleRow, BetRow, CanonWorkRow, ClubRow, CollectorRow, ForgeryRow, LeagueRow, MatchRow
-from aerona.db.tables.belonging import HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryLawRow, SanctuaryRow, SatireRow
+from aerona.db.tables.belonging import FugitiveRow, HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryLawRow, SanctuaryRow, SatireRow
 from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -318,7 +318,7 @@ from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
-from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow, VeteranGrantRow
+from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow, VeteranGrantRow, VeteranPolicyRow
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
@@ -503,6 +503,7 @@ from aerona.db.tables.society import CommunityRelationRow, CommunitySocietyRow
 from aerona.db.tables.society_depth import (
     ClassStandingRow,
     CommunityNeedRow,
+    CommunityShortfallRow,
     CorveeRow,
     DriftCauseRow,
     LabourReasonRow,
@@ -1662,9 +1663,11 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
     ),
     ComplianceRow(
         "S5.1/RP6",
-        (NamedUnitRow.__tablename__, UnitHonourRow.__tablename__, VeteranGrantRow.__tablename__),
+        (NamedUnitRow.__tablename__, UnitHonourRow.__tablename__, VeteranGrantRow.__tablename__, VeteranPolicyRow.__tablename__),
         ("veterans", "campaigns"),
         (
+            "profile:set",
+            "profile:release",
             "named_unit:create",
             "named_unit:edit",
             "named_unit:delete",
@@ -1678,8 +1681,8 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ),
         ("HonoursSection", "section-honours"),
         ("mortal_context", "son_turn_system"),
-        (),
-        ("honours.", "veterans."),
+        ("grant_veterans",),
+        ("honours.", "veterans.", "veteran."),
         ("c3567396253d",),
     ),
     ComplianceRow(
@@ -6154,6 +6157,28 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("places.kind_backfill", "place_profiles"),
     ),
     ComplianceRow(
+        "52.216",
+        (CommunityShortfallRow.__tablename__,),
+        ("society_economy",),
+        ("shortfall:set",),
+        ("NeedsBasket", "section-needs"),
+        ("mortal_context",),
+        (),
+        ("community.shortfall", "consumption.thirst_deaths"),
+        (),
+    ),
+    ComplianceRow(
+        "52.240",
+        (FugitiveRow.__tablename__,),
+        ("belonging",),
+        ("fugitive:create", "fugitive:edit", "fugitive:delete"),
+        ("FugitivePanel", "section-belonging"),
+        ("mortal_context",),
+        ("flee", "hunt_fugitive"),
+        ("fugitive.", "sanctuary.freed", "sanctuary.sought"),
+        (),
+    ),
+    ComplianceRow(
         "F3",
         (CommunityNeedRow.__tablename__,),
         ("society_economy",),
@@ -8225,6 +8250,17 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("death.named",),
         ("death_readings.w52",),
+    ),
+    ComplianceRow(
+        "S52.73 disease routes",
+        ("disease_routes",),
+        ("disease_paths", "epidemics", "pathogen_evolution", "natural_disasters"),
+        ("disease_route:set", "disease_route:remove"),
+        ("RouteControls",),
+        ("society_lines",),
+        ("loose_disease",),
+        ("disease.",),
+        (),
     ),
     ComplianceRow(
         "S52.150 crowd feelings",

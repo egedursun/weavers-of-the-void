@@ -261,6 +261,7 @@ class BattleCasualtyRow(Base):
     fate: Mapped[CasualtyFate] = mapped_column(enum_type(CasualtyFate, "fate"))
     harm: Mapped[int] = mapped_column(default=0)
     note: Mapped[str | None] = mapped_column(Text)
+    resolved_epoch: Mapped[int | None]
 
 
 class PeaceTermRow(Base):
@@ -447,6 +448,7 @@ class SpyNetworkRow(Base):
     side_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     revealed_aims: Mapped[list[int]] = mapped_column(JSON, default=list)
     warned_epoch: Mapped[int | None]
+    institution_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

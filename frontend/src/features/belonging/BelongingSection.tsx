@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, LoadingBlock, Section } from '@/components/domain'
 import { useNodeKind } from '@/features/cycles/model'
+import { FugitivePanel } from './FugitivePanel'
 import { IdentityPanel } from './IdentityPanel'
 import { PeersPanel } from './PeersPanel'
 import { SanctuaryPanel } from './SanctuaryPanel'
@@ -30,7 +31,10 @@ const PANES: {
   {
     key: 'sanctuary',
     label: 'Sanctuary',
-    count: (data) => data.sanctuaries.length + (data.sanctuary_law ? 1 : 0),
+    count: (data) =>
+      data.sanctuaries.length +
+      data.fugitives.length +
+      (data.sanctuary_law ? 1 : 0),
   },
   {
     key: 'satire',
@@ -112,6 +116,7 @@ export function BelongingSection({
               className='flex min-w-0 flex-col gap-6'
             >
               <SanctuaryPanel {...props} data={query.data} />
+              <FugitivePanel {...props} data={query.data} />
             </TabsContent>
             <TabsContent value='satire' className='flex min-w-0 flex-col gap-6'>
               <SatirePanel {...props} data={query.data} />

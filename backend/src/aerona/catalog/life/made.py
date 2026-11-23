@@ -86,7 +86,12 @@ DECLINE = {RelicState.WORKING: RelicState.FAILING, RelicState.FAILING: RelicStat
 
 STANCE_USE = partial(
     RelicStance,
-    {RelicStance.SACRED: RelicUse.REVERED, RelicStance.FORBIDDEN: RelicUse.FEARED, RelicStance.HERITAGE: RelicUse.DISPLAYED},
+    {
+        RelicStance.SACRED: RelicUse.REVERED,
+        RelicStance.FORBIDDEN: RelicUse.FEARED,
+        RelicStance.HERITAGE: RelicUse.DISPLAYED,
+        RelicStance.STUDIED: RelicUse.REPURPOSED,
+    },
     without={RelicStance.TOOL},
 )
 

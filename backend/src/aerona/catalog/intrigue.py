@@ -35,6 +35,8 @@ SECRETS: dict[IntrigueSecret, SecretSpec] = {
         SecretSpec(IntrigueSecret.ECOSABOTAGE, "A sabotage of the land", 70),
         SecretSpec(IntrigueSecret.BROKEN_CIPHER, "A broken cipher", 65),
         SecretSpec(IntrigueSecret.TRUE_HISTORY, "The true history behind an official account", 55),
+        SecretSpec(IntrigueSecret.HIDDEN_POWER, "A concealed innate power", 60),
+        SecretSpec(IntrigueSecret.FORGERY, "A forgery made or used", 60, ActKind.THEFT),
     )
 }
 
@@ -109,6 +111,9 @@ HOOK_DEMAND_LABELS: dict[HookDemand, str] = {
     HookDemand.SUPPORT: "Lend support",
     HookDemand.VOTE: "Vote as told on the laws under debate",
     HookDemand.LAW: "Back the holder's laws with the weight of rule",
+    HookDemand.APPOINTMENT: "Appoint the holder to an office",
+    HookDemand.SILENCE: "Keep silent before a court",
+    HookDemand.PAYMENT: "Pay the holder",
 }
 FAVOUR_LABELS: dict[FavourOrigin, str] = {
     FavourOrigin.GIFT: "A gift",
@@ -118,6 +123,8 @@ FAVOUR_LABELS: dict[FavourOrigin, str] = {
     FavourOrigin.SCHEME_AID: "Aid in a scheme",
     FavourOrigin.VOTE: "A vote that carried a law",
     FavourOrigin.RELIEF: "Aid in a stricken hour",
+    FavourOrigin.HOSPITALITY: "Shelter given",
+    FavourOrigin.RANSOM: "A ransom paid",
 }
 IDENTITY_LABELS: dict[IdentityReason, str] = {
     IdentityReason.SPY: "A spy's cover",
@@ -125,6 +132,9 @@ IDENTITY_LABELS: dict[IdentityReason, str] = {
     IdentityReason.EXILE: "An exile's new name",
     IdentityReason.IMPOSTOR: "An impostor's guise",
     IdentityReason.HIDDEN_POWER: "A name kept apart from one's powers",
+    IdentityReason.FUGITIVE: "A fugitive's other name",
+    IdentityReason.HIDDEN_FAITH: "A believer's hidden faith",
+    IdentityReason.PASSING_KIND: "A being passing as another kind",
 }
 
 BELIEF_ATTRIBUTES: tuple[str, ...] = ("wealth", "defense", "population", "prosperity")
@@ -236,5 +246,7 @@ SECRET_TOLD: Mapping[IntrigueSecret, str] = total(
         IntrigueSecret.ECOSABOTAGE: "a sabotage of the land",
         IntrigueSecret.BROKEN_CIPHER: "a broken cipher",
         IntrigueSecret.TRUE_HISTORY: "the true history behind an official account",
+        IntrigueSecret.HIDDEN_POWER: "a power they were born with and kept hidden",
+        IntrigueSecret.FORGERY: "a forgery they made or used",
     },
 )

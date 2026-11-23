@@ -35,15 +35,18 @@ from aerona.engine.phases.dominion import count
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
+    "table.professions_of_value",
     "table.relationships",
     "table.reputations",
     "table.ruler_currencies",
     "table.settlement_profiles",
     "table.sons",
+    "table.speaker_cohorts",
     "table.stars",
     "table.tradition_profiles",
     "table.traits",
     "table.veteran_grants",
+    "table.veteran_policies",
     "table.war_sides",
     "table.wars",
     "table.worlds",
@@ -68,6 +71,7 @@ from aerona.engine.phases.dominion import count
     "table.reputations",
     "table.settlement_profiles",
     "table.veteran_grants",
+    "table.veteran_policies",
 )
 async def veterans(ctx: TickContext) -> None:
     tally = VeteranTally()

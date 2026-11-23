@@ -5,6 +5,8 @@ class SavingForm(StrEnum):
     HOARD = "hoard"
     DEPOSIT = "deposit"
     INVESTMENT = "investment"
+    LAND = "land"
+    GOODS = "goods"
 
 
 class HoardState(StrEnum):

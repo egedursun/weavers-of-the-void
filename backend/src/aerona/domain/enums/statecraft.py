@@ -19,6 +19,9 @@ class CrisisDemand(StrEnum):
     RELEASE_VASSAL = "release_vassal"
     CONVERT = "convert"
     PAY = "pay"
+    HAND_OVER = "hand_over"
+    DISARM = "disarm"
+    OPEN_TRADE = "open_trade"
 
 
 class CrisisState(StrEnum):
@@ -26,6 +29,7 @@ class CrisisState(StrEnum):
     BACKED_DOWN = "backed_down"
     CONCEDED = "conceded"
     WAR = "war"
+    MEDIATED = "mediated"
 
 
 class CrisisSide(StrEnum):
@@ -40,6 +44,9 @@ class CouncilTask(StrEnum):
     DISRUPT_SCHEMES = "disrupt_schemes"
     CONVERT_PROVINCE = "convert_province"
     PURGE_CORRUPTION = "purge_corruption"
+    OVERSEE_WORKS = "oversee_works"
+    PROMOTE_TRADE = "promote_trade"
+    ADVANCE_LEARNING = "advance_learning"
 
 
 class TaxKind(StrEnum):
@@ -70,6 +77,8 @@ class MandateKind(StrEnum):
     SLUM_CLEARANCE = "slum_clearance"
     PREPARE = "prepare"
     ENCLOSURE = "enclosure"
+    RATION = "ration"
+    CORVEE = "corvee"
 
 
 class MandateState(StrEnum):
@@ -90,6 +99,9 @@ class ResolutionKind(StrEnum):
     EMBARGO = "embargo"
     VOID_BAN = "void_ban"
     SANCTION = "sanction"
+    QUARANTINE = "quarantine"
+    ARBITRATION = "arbitration"
+    AID = "aid"
 
 
 class ResolutionState(StrEnum):
@@ -106,3 +118,5 @@ class CourtPosition(StrEnum):
     TUTOR = "tutor"
     CHRONICLER = "chronicler"
     MASTER_OF_REVELS = "master_of_revels"
+    JESTER = "jester"
+    SEER = "seer"

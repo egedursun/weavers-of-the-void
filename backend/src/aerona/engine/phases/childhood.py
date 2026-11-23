@@ -46,6 +46,7 @@ from aerona.engine.phase import Phase
     "table.sons",
     "table.stars",
     "table.structure_profiles",
+    "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
     "table.transform_prospects",

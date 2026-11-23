@@ -213,7 +213,11 @@ AGRARIAN_MECHANICS = (
         templates=("relief.sent", "relief.refused"),
         tables=(ReliefAidRow.__tablename__,),
         exposure=Exposure.TOOL,
-        tools=("send_aid", "inspire_relief"),
+        tools=(
+            "send_aid",
+            "inspire_relief",
+            "give_relief",
+        ),
         targets=("settlement", "polity", "cult"),
         couplings=(
             Coupling(S.INTRIGUE, "a stricken ruler owes the giver a favour", E.FLOW, "relief.favour"),

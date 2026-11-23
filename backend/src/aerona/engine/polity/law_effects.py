@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.finance import OWED_LOANS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
@@ -92,7 +93,7 @@ async def jubilee(ctx: TickContext, realm: Realm, laws: LawBook) -> int:
         return 0
     debtors = [realm.entity.id, *realm.members]
     forgiven = 0
-    for loan in await ctx.session.scalars(select(LoanRow).where(LoanRow.status == LoanStatus.OPEN, LoanRow.borrower_entity_id.in_(debtors))):
+    for loan in await ctx.session.scalars(select(LoanRow).where(LoanRow.status.in_(OWED_LOANS), LoanRow.borrower_entity_id.in_(debtors))):
         loan.status = LoanStatus.FORGIVEN
         forgiven += 1
     for member_id in realm.members:

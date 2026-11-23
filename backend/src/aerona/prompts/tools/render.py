@@ -36,7 +36,7 @@ from aerona.domain.enums.crafts import CatchGround, Gear, RightKind
 from aerona.domain.enums.creature_groups import DriveMeans, GroupAim
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import ArtMode, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
-from aerona.domain.enums.customs import MarkKind, MarkMeaning, RevivalGoal, RevivalWay
+from aerona.domain.enums.customs import CoopPurpose, EvidenceKind, MarkKind, MarkMeaning, MemberRight, Membership, RevivalGoal, RevivalWay
 from aerona.domain.enums.cycles import (
     AdoptionKind,
     ChallengeKind,
@@ -76,26 +76,40 @@ from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, Legend
 from aerona.domain.enums.environment import CleansingMethod, MovementMode, ScarKind, SoilKind
 from aerona.domain.enums.evolution import PlagueResponse, PlanetaryCycle, SuccessionStage
 from aerona.domain.enums.facets import FacetKind
-from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.faction import EstatePrivilege, FactionGoalKind, FactionKind
 from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath
 from aerona.domain.enums.folkways import ImpuritySource, MishapKind
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
 from aerona.domain.enums.fossil import FossilReading
 from aerona.domain.enums.geology import RockKind, UndergroundStratum
-from aerona.domain.enums.honours import HonourPrivilege
+from aerona.domain.enums.honours import HonourPrivilege, VeteranGrant
 from aerona.domain.enums.intrigue import PlotKind
-from aerona.domain.enums.law_depth import RegistryKind
+from aerona.domain.enums.law_depth import RecruitMotive, RegistryKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.military import ArmourType, Formation, ShieldType
+from aerona.domain.enums.military import (
+    ArmourType,
+    ArmyRole,
+    CaptiveFate,
+    DefenderAction,
+    DuelContext,
+    DuelEnd,
+    Formation,
+    SackChoice,
+    ShieldType,
+    SiegeWork,
+    SpyOperation,
+    Stance,
+)
 from aerona.domain.enums.mind import Emotion
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRole
 from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
 from aerona.domain.enums.operations import EchelonOrder, QuirkKind
 from aerona.domain.enums.place import PlaceKind, SecretKind
-from aerona.domain.enums.polity import CLOSURES, HouseTrait, LawKind
-from aerona.domain.enums.regime import SelectorateKind
+from aerona.domain.enums.polity import CLOSURES, ClaimBasis, HouseTrait, LawKind, OathKind
+from aerona.domain.enums.regime import ClientRole, SelectorateKind
 from aerona.domain.enums.region import DangerHarm, DangerSource, RegionMemoryKind, TerrainHazard
 from aerona.domain.enums.sacred import BureauRank, DivinationQuestion, OmenVerdict, PetitionKind, SacramentKind, SacramentProtection
+from aerona.domain.enums.statecraft import CouncilTask, CourtPosition, CrisisDemand, MandateKind
 from aerona.domain.enums.structure import BuildingForm
 from aerona.domain.enums.tongues import LanguagePolicy, SoundChangeKind, SoundEnvironment
 from aerona.domain.enums.travel import VehicleKind
@@ -246,7 +260,31 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "echelon_orders": ", ".join(item.value for item in EchelonOrder),
         "movement_modes": ", ".join(item.value for item in MovementMode),
         "soil_kinds": ", ".join(item.value for item in SoilKind),
+        "council_tasks": ", ".join(item.value for item in CouncilTask),
+        "mandate_kinds": ", ".join(item.value for item in MandateKind),
+        "crisis_demands": ", ".join(item.value for item in CrisisDemand),
+        "oath_kinds": ", ".join(item.value for item in OathKind),
+        "estate_privileges": ", ".join(item.value for item in EstatePrivilege),
+        "court_positions": ", ".join(item.value for item in CourtPosition),
+        "client_roles": ", ".join(item.value for item in ClientRole),
+        "member_rights": ", ".join(item.value for item in MemberRight),
+        "memberships": ", ".join(item.value for item in Membership),
+        "claim_bases": ", ".join(item.value for item in ClaimBasis),
+        "coop_purposes": ", ".join(item.value for item in CoopPurpose),
+        "evidence_kinds": ", ".join(item.value for item in EvidenceKind),
+        "faction_goals": ", ".join(item.value for item in FactionGoalKind),
         "nutrient_kinds": ", ".join(item.value for item in NutrientKind),
+        "duel_contexts": ", ".join(item.value for item in DuelContext),
+        "duel_ends": ", ".join(item.value for item in DuelEnd),
+        "army_stances": ", ".join(item.value for item in Stance),
+        "army_roles": ", ".join(item.value for item in ArmyRole),
+        "captive_fates": ", ".join(item.value for item in CaptiveFate),
+        "siege_works": ", ".join(item.value for item in SiegeWork),
+        "defender_actions": ", ".join(item.value for item in DefenderAction),
+        "fall_choices": ", ".join(item.value for item in SackChoice),
+        "spy_operations": ", ".join(item.value for item in SpyOperation),
+        "recruit_motives": ", ".join(item.value for item in RecruitMotive),
+        "veteran_grants": ", ".join(item.value for item in VeteranGrant),
         "bureau_ranks": ", ".join(item.value for item in BureauRank),
         "sacrament_kinds": ", ".join(item.value for item in SacramentKind),
         "sacrament_protections": ", ".join(item.value for item in SacramentProtection),

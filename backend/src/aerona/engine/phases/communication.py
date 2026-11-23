@@ -3,9 +3,9 @@ from sqlalchemy import select
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.communication.ciphers import CipherTally, tend_ciphers
-from aerona.engine.communication.dispatches import DispatchTally, courtesies, tend_dispatches
+from aerona.engine.communication.dispatches import DispatchTally, courtesies, orders_and_warnings, tend_dispatches
 from aerona.engine.communication.opinion import OpinionTally, tend_opinion
-from aerona.engine.communication.signals import SignalTally, build_links, fall_links
+from aerona.engine.communication.signals import SignalTally, build_links, fall_links, tend_stations
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
@@ -54,12 +54,14 @@ async def correspondence(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     dispatches = DispatchTally()
     await courtesies(ctx, atlas, dispatches)
+    await orders_and_warnings(ctx, atlas, dispatches)
     await tend_dispatches(ctx, dispatches)
     ciphers = CipherTally()
     await tend_ciphers(ctx, await living(ctx, CIPHER_OWNERS), ciphers)
     signals = SignalTally()
     await build_links(ctx, atlas, signals)
     await fall_links(ctx, signals)
+    await tend_stations(ctx, signals)
     for key, value in (*vars(dispatches).items(),):
         ctx.count(f"dispatches_{key}", value)
     for key, value in vars(ciphers).items():
@@ -76,27 +78,51 @@ async def correspondence(ctx: TickContext) -> None:
     "settlement.prosperity",
     "table.artwork_profiles",
     "table.bonds",
+    "table.community_relations",
     "table.cult_holdings",
+    "table.culture_ethics",
     "table.culture_values",
+    "table.deed_claims",
+    "table.deeds",
     "table.entities",
+    "table.faction_profiles",
+    "table.held_identities",
     "table.holder_techniques",
     "table.ideology_adherents",
     "table.incident_participants",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.minds",
     "table.mortal_profiles",
     "table.nodes",
     "table.offices",
+    "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
+    "table.professions_of_value",
     "table.public_opinion",
+    "table.relationships",
+    "table.reputations",
+    "table.ruler_currencies",
     "table.rumours",
     "table.satires",
     "table.settlement_profiles",
+    "table.speaker_cohorts",
+    "table.tradition_profiles",
+    "table.traits",
     "table.war_sides",
     "table.wars",
 )
-@writes("table.public_opinion")
+@writes(
+    "table.community_relations",
+    "table.deed_claims",
+    "table.deeds",
+    "table.faction_profiles",
+    "table.memories",
+    "table.professions_of_value",
+    "table.public_opinion",
+    "table.reputations",
+)
 async def public_opinion(ctx: TickContext) -> None:
     tally = OpinionTally()
     await tend_opinion(ctx, await living(ctx, OPINION_HOLDERS), tally)

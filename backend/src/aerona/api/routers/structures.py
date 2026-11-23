@@ -13,6 +13,7 @@ from aerona.api.schemas.structures import (
     SettlementStructuresView,
     StructureView,
 )
+from aerona.catalog.life.domain import GONE_STATES
 from aerona.catalog.materials import MATERIALS
 from aerona.catalog.structure_effects import STRUCTURE_OWN_EFFECTS
 from aerona.catalog.structures import STRUCTURES
@@ -26,7 +27,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.structure import BuildScale, ConstructionState
+from aerona.domain.enums.structure import BuildScale
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.structures.profiles import condition_factor
 from aerona.engine.structures.spec import Resolved, build_cost, resolve, slots_for, tier_allows
@@ -219,7 +220,7 @@ async def host_structures(services: ServicesDep, entity_id: int = Path(ge=1)) ->
         structures = [await structure_view(session, rules, work, profile) for work, profile in rows]
         town = await session.get(SettlementProfileRow, host.id)
         tier = town.size_tier if town is not None else None
-        present = Counter(item.kind for item in structures if item.construction_state is not ConstructionState.RUINED)
+        present = Counter(item.kind for item in structures if item.construction_state not in GONE_STATES)
         kinds = [
             KindOptionView(
                 kind=kind,

@@ -1,14 +1,24 @@
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleSpec
+from aerona.domain.enums.agrarian import PreparednessKind, RebuildCause, RebuildPlan
+from aerona.domain.enums.belonging import FugitiveKind, SanctuaryKind
+from aerona.domain.enums.chronicle import FeedCategory as F
 from aerona.domain.enums.collective import FormativeKind
+from aerona.domain.enums.customs import ReliefKind
 from aerona.domain.enums.demography import InheritanceCustom
+from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.garden import GardenKind
+from aerona.domain.enums.means import LockKind
 from aerona.domain.enums.mind import ActKind, EthicalStance
 from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule
 from aerona.domain.enums.records import ProcessClock as C
 from aerona.domain.enums.records import ProcessGroup as G
 from aerona.domain.enums.renown import ReputationAxis
+from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.society_depth import MobilityEvent
+from aerona.domain.enums.society_depth import MobilityEvent, ShortfallEffect
+from aerona.domain.enums.structure import StructureKind
+from aerona.domain.enums.urban import CrimeStance
 
 KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
@@ -104,6 +114,390 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         roles=(RoleSpec(R.PREDECESSOR), RoleSpec(R.HEIR), RoleSpec(R.ACCUSER)),
         facts=(FactSpec("custom", FactValue.ENUM, enum=InheritanceCustom),),
         place=PlaceRule.NONE,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "community.shortfall",
+        G.EXCHANGE,
+        "{victim} went short of {effect}: {short} of the want unmet.",
+        roles=(RoleSpec(R.VICTIM),),
+        facts=(FactSpec("effect", FactValue.ENUM, enum=ShortfallEffect), FactSpec("short", FactValue.NUMBER, FactUnit.PERCENT)),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "consumption.thirst_deaths",
+        G.EXCHANGE,
+        "Without water, {dead} of {victim} died of thirst.",
+        roles=(RoleSpec(R.VICTIM),),
+        facts=(FactSpec("dead", FactValue.NUMBER, FactUnit.PEOPLE), FactSpec("short", FactValue.NUMBER, FactUnit.PERCENT)),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+        feed=F.DISASTER,
+    ),
+    IncidentKindSpec(
+        "district.opened",
+        G.SOCIAL,
+        "{kind:an} was opened in {place}.",
+        roles=(RoleSpec(R.PLACE),),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=DistrictKind),),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "district.settled",
+        G.SOCIAL,
+        "A camp of the displaced in {place} settled into {kind:an}.",
+        roles=(RoleSpec(R.PLACE),),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=DistrictKind),),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "settlement.relocated",
+        G.PEOPLES,
+        "After {cause:an}, {subject} was rebuilt in {destination}, leaving {product}.",
+        roles=(
+            RoleSpec(R.SUBJECT),
+            RoleSpec(R.DESTINATION),
+            RoleSpec(R.PRODUCT),
+        ),
+        facts=(FactSpec("cause", FactValue.ENUM, enum=RebuildCause),),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "settlement.left_after_ruin",
+        G.PEOPLES,
+        "After {cause:an}, {subject} was left; {displaced:person|people} of it went to {host}.",
+        roles=(
+            RoleSpec(R.SUBJECT),
+            RoleSpec(R.HOST, required=False),
+        ),
+        facts=(
+            FactSpec("cause", FactValue.ENUM, enum=RebuildCause),
+            FactSpec("displaced", FactValue.NUMBER, FactUnit.PEOPLE),
+        ),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "settlement.lesson_learned",
+        G.PEOPLES,
+        "Rebuilt after {cause:an}, {subject} raised {lesson:an}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(
+            FactSpec("cause", FactValue.ENUM, enum=RebuildCause),
+            FactSpec("lesson", FactValue.ENUM, enum=PreparednessKind),
+        ),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "settlement.rebuilt",
+        G.PEOPLES,
+        "{subject} was rebuilt after {cause:an}, {plan}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(
+            FactSpec("cause", FactValue.ENUM, enum=RebuildCause),
+            FactSpec("plan", FactValue.ENUM, enum=RebuildPlan),
+        ),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "reconstruction.relocated",
+        G.PEOPLES,
+        "{subject} finished rising again on its new site, at a cost of {cost}.",
+        roles=(
+            RoleSpec(R.SUBJECT),
+            RoleSpec(R.MAKER, required=False),
+        ),
+        facts=(FactSpec("cost", FactValue.NUMBER, FactUnit.COIN),),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "relief.given",
+        G.SOCIAL,
+        "{authority} gave relief by {kind}, reaching {helped}.",
+        roles=(RoleSpec(R.AUTHORITY),),
+        facts=(
+            FactSpec("kind", FactValue.ENUM, enum=ReliefKind),
+            FactSpec("helped", FactValue.NUMBER, FactUnit.COUNT),
+        ),
+        place=PlaceRule.NONE,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "structure.dismantled",
+        G.MAKING,
+        "{subject} was taken apart; {gained} went to new building.",
+        roles=(
+            RoleSpec(R.SUBJECT),
+            RoleSpec(R.ACTOR, required=False),
+            RoleSpec(R.BENEFICIARY, required=False),
+        ),
+        facts=(
+            FactSpec("structure", FactValue.ENUM, enum=StructureKind),
+            FactSpec("gained", FactValue.NUMBER, FactUnit.COIN),
+        ),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "structure.legend_gathered",
+        G.MAKING,
+        "{product} came to be told of {subject}, a work left unfinished.",
+        roles=(
+            RoleSpec(R.SUBJECT),
+            RoleSpec(R.PRODUCT),
+        ),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "structure.left_unfinished",
+        G.MAKING,
+        "{actor} left {subject} unfinished.",
+        roles=(
+            RoleSpec(R.SUBJECT),
+            RoleSpec(R.ACTOR, required=False),
+        ),
+        facts=(FactSpec("structure", FactValue.ENUM, enum=StructureKind),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "collection.trophy_taken",
+        G.BATTLES,
+        "{actor} carried {pieces:treasure|treasures} of {victim} off to its trophy hall, regalia among them: {regalia}.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.VICTIM),
+        ),
+        facts=(
+            FactSpec("pieces", FactValue.NUMBER, FactUnit.COUNT),
+            FactSpec("regalia", FactValue.NUMBER, FactUnit.COUNT),
+        ),
+        place=PlaceRule.NONE,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "garden.founded",
+        G.NATURE,
+        "{kind:an} garden was laid out in {place}.",
+        roles=(RoleSpec(R.PLACE),),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=GardenKind),),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "garden.beasts_loosed",
+        G.NATURE,
+        "The neglected menagerie of {place} let {kinds:kind|kinds} of beasts loose into its land.",
+        roles=(RoleSpec(R.PLACE),),
+        facts=(FactSpec("kinds", FactValue.NUMBER, FactUnit.COUNT),),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "relic.studied",
+        G.KNOWLEDGE,
+        "The keepers of {subject} took it up for study, {understood} understood.",
+        roles=(
+            RoleSpec(R.SUBJECT),
+            RoleSpec(R.OWNER, required=False),
+        ),
+        facts=(FactSpec("understood", FactValue.NUMBER, FactUnit.PERCENT),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "theft.lock_beaten",
+        G.LAW,
+        "{actor} got past the {lock} guarding {target} of {victim}.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.VICTIM),
+            RoleSpec(R.TARGET),
+        ),
+        facts=(FactSpec("lock", FactValue.ENUM, enum=LockKind),),
+        place=PlaceRule.NONE,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "polity.crime_stance",
+        G.LAW,
+        "{authority} chose to {stance} {target}.",
+        roles=(
+            RoleSpec(R.AUTHORITY),
+            RoleSpec(R.TARGET),
+        ),
+        facts=(FactSpec("stance", FactValue.ENUM, enum=CrimeStance),),
+        place=PlaceRule.NONE,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "underworld.gang_grown",
+        G.LAW,
+        "{subject} grew from a street gang into {kind:an}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=FactionKind),),
+        place=PlaceRule.NONE,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "underworld.trafficked",
+        G.LAW,
+        "{actor} took {taken:person|people} from {victim} into bondage.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.VICTIM),
+        ),
+        facts=(FactSpec("taken", FactValue.NUMBER, FactUnit.PEOPLE),),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "fugitive.fled",
+        G.LAW,
+        "{actor} fled as {kind:an}, hunted by {opponent}.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.OPPONENT, required=False),
+        ),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=FugitiveKind),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "fugitive.caught",
+        G.LAW,
+        "{victim}, {kind:an}, was taken by {actor}.",
+        roles=(
+            RoleSpec(R.VICTIM),
+            RoleSpec(R.ACTOR, required=False),
+        ),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=FugitiveKind),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "sanctuary.freed",
+        G.LAW,
+        "{actor} stayed out the term in {host} and went free.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.HOST),
+        ),
+        place=PlaceRule.REQUIRED,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "sanctuary.sought",
+        G.LAW,
+        "{actor} sought refuge in {host} ({kind}), out of reach of {opponent}.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.HOST),
+            RoleSpec(R.OPPONENT, required=False),
+        ),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=SanctuaryKind),),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.open_district",
+        G.SOCIAL,
+        "{actor} opened {kind:an} in {place}.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.PLACE),
+        ),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=DistrictKind),),
+        place=PlaceRule.REQUIRED,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.rebuild",
+        G.SOCIAL,
+        "{actor} chose how {place} would be rebuilt: {plan}.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.PLACE),
+        ),
+        facts=(FactSpec("plan", FactValue.ENUM, enum=RebuildPlan),),
+        place=PlaceRule.REQUIRED,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.abandon_work",
+        G.MAKING,
+        "{actor} called the builders away from {subject}.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.SUBJECT),
+        ),
+        facts=(FactSpec("structure", FactValue.ENUM, enum=StructureKind),),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.dismantle_work",
+        G.MAKING,
+        "{actor} had {subject} taken apart, {gained} going to new building.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.SUBJECT),
+        ),
+        facts=(FactSpec("gained", FactValue.NUMBER, FactUnit.COIN),),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.found_garden",
+        G.NATURE,
+        "{actor} laid out {kind:an} garden in {place}.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.PLACE),
+        ),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=GardenKind),),
+        place=PlaceRule.REQUIRED,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.pick_lock",
+        G.LAW,
+        "{actor} tried the guard of {target}; held: {held}.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.TARGET),
+        ),
+        facts=(FactSpec("held", FactValue.NUMBER, FactUnit.COUNT),),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.hunt_fugitive",
+        G.LAW,
+        "{actor} hunted {target}; taken: {caught}.",
+        roles=(
+            RoleSpec(R.ACTOR),
+            RoleSpec(R.TARGET),
+        ),
+        facts=(FactSpec("caught", FactValue.NUMBER, FactUnit.COUNT),),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "reconstruction.abandoned",
+        G.PEOPLES,
+        "{subject} was given up rather than rebuilt, at a cost of {cost}.",
+        roles=(RoleSpec(R.SUBJECT), RoleSpec(R.MAKER, required=False)),
+        facts=(FactSpec("cost", FactValue.NUMBER, FactUnit.COIN),),
+        place=PlaceRule.REQUIRED,
         clock=C.SEASON,
     ),
 )

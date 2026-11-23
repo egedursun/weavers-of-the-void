@@ -11,6 +11,8 @@ class ShortfallEffect(StrEnum):
     TOIL = "toil"
     INSECURITY = "insecurity"
     ARCANE = "arcane"
+    THIRST = "thirst"
+    SHELTER = "shelter"
 
 
 class LabourReason(StrEnum):
@@ -21,6 +23,8 @@ class LabourReason(StrEnum):
     NO_STRUCTURE = "no_structure"
     CORVEE = "corvee"
     HELD = "held"
+    LAW = "law"
+    SKILL = "skill"
 
 
 class DriftCause(StrEnum):

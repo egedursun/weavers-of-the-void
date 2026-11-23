@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from aerona.catalog.ethics import ACT_LABELS, STANCE_LABELS
+from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS
 from aerona.catalog.preferences import PREFERENCE_LABELS, SPECIES_KINDS, STATIC_TARGETS, target_label
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an, spoken
@@ -8,8 +8,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureHonourRow, PreferenceRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.military import DuelEnd
 from aerona.domain.enums.mind import ActKind, EthicalStance, HonourModel, PreferenceKind
-from aerona.engine.mind.ethics import MODEL_FIELD, STANCE_FIELD, write_stance
+from aerona.engine.mind.ethics import DUEL_END_FIELD, MODEL_FIELD, STANCE_FIELD, write_stance
 from aerona.engine.mind.preferences import STRENGTH_FIELD, write_pref
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -40,6 +41,7 @@ class SetStance(Command):
 class SetHonour(Command):
     holder_id: int
     model: HonourModel
+    duel_end: DuelEnd | None = None
     hold: bool = True
 
 
@@ -112,6 +114,8 @@ async def set_honour(scope: PlayerScope, command: SetHonour) -> Effect:
         row = CultureHonourRow(entity_id=holder.id, model=command.model, locked=[])
         scope.session.add(row)
     row.model = command.model
-    row.locked = held(row.locked, MODEL_FIELD, command.hold)
+    row.duel_end = command.duel_end
+    row.locked = held(held(row.locked, MODEL_FIELD, command.hold), DUEL_END_FIELD, command.hold)
     await scope.session.flush()
-    return Effect(f"The {holder.name} now live by {spoken(command.model)}.", target_node_id=holder.id)
+    ending = HONOUR_MODELS[command.model].duel_end if command.duel_end is None else command.duel_end
+    return Effect(f"The {holder.name} now live by {spoken(command.model)}, and their duels end at {spoken(ending)}.", target_node_id=holder.id)

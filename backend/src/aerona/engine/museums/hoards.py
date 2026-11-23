@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, or_, select
 
+from aerona.catalog.life.museums import PIECE_OF_CLASS, PIECE_PRESTIGE, WAR_PIECES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -9,12 +10,13 @@ from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.fossils import FossilBedRow
 from aerona.db.tables.museums import MuseumCollectionRow, MuseumPieceRow
-from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.museum import HoardKind, PieceKind
 from aerona.domain.enums.polity import OfficeKind
@@ -24,24 +26,11 @@ from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.services.community_relations import change_relation
 
 HALLS = {StructureKind.MUSEUM: HoardKind.MUSEUM, StructureKind.TEMPLE: HoardKind.TEMPLE_TREASURY}
-RELICS = frozenset({ItemClass.HOLY_RELIC, ItemClass.IDOL})
-ARTIFACTS = frozenset(
-    {
-        ItemClass.CROWN,
-        ItemClass.SCEPTRE,
-        ItemClass.SEAL,
-        ItemClass.STANDARD,
-        ItemClass.JEWEL,
-        ItemClass.RING,
-        ItemClass.ASTROLABE,
-        ItemClass.MAP,
-        ItemClass.MIRROR,
-        ItemClass.INSTRUMENT,
-        ItemClass.DEVICE,
-    }
-)
+RELICS = frozenset(item for item, kind in PIECE_OF_CLASS.items() if kind is PieceKind.RELIC)
+ARTIFACTS = frozenset(item for item, kind in PIECE_OF_CLASS.items() if kind is not PieceKind.RELIC)
 
 
 @dataclass
@@ -99,7 +88,7 @@ async def prized_of(ctx: TickContext, owner_id: int) -> list[tuple[int, PieceKin
         .where(ItemProfileRow.item_entity_id.in_(owned), EntityRow.status == EntityStatus.CANON, ItemProfileRow.item_class.in_(list(RELICS | ARTIFACTS)))
         .order_by(ItemProfileRow.item_entity_id)
     )
-    return [(item_id, PieceKind.RELIC if item_class in RELICS else PieceKind.ARTIFACT) for item_id, item_class in rows.all()]
+    return [(item_id, PIECE_OF_CLASS[item_class]) for item_id, item_class in rows.all()]
 
 
 async def prized_in(ctx: TickContext, town_id: int, classes: frozenset[ItemClass]) -> list[tuple[int, PieceKind]]:
@@ -115,7 +104,7 @@ async def prized_in(ctx: TickContext, town_id: int, classes: frozenset[ItemClass
         )
         .order_by(ItemProfileRow.item_entity_id)
     )
-    return [(item_id, PieceKind.RELIC if item_class in RELICS else PieceKind.ARTIFACT) for item_id, item_class in rows.all()]
+    return [(item_id, PIECE_OF_CLASS.get(item_class, PieceKind.ARTIFACT)) for item_id, item_class in rows.all()]
 
 
 async def ruler_of(ctx: TickContext, polity_id: int) -> int | None:
@@ -166,7 +155,12 @@ async def gather(ctx: TickContext, atlas: RegionAtlas, hoard: MuseumCollectionRo
             if specimens >= ctx.rules.museums.per_epoch(ctx.rules.museums.specimens_per_epoch):
                 continue
             specimens += 1
-        ctx.session.add(MuseumPieceRow(collection_id=hoard.id, kind=kind, item_entity_id=item_id, fossil_bed_id=bed_id, acquired_epoch=ctx.epoch, locked=[]))
+        polity = hoard.keeper_entity_id if kind is PieceKind.REGALIA and hoard.kind is HoardKind.ROYAL_COLLECTION else None
+        ctx.session.add(
+            MuseumPieceRow(
+                collection_id=hoard.id, kind=kind, item_entity_id=item_id, fossil_bed_id=bed_id, polity_entity_id=polity, acquired_epoch=ctx.epoch, locked=[]
+            )
+        )
         tally.gathered += 1
     await ctx.session.flush()
 
@@ -174,8 +168,8 @@ async def gather(ctx: TickContext, atlas: RegionAtlas, hoard: MuseumCollectionRo
 async def weigh(ctx: TickContext, hoard: MuseumCollectionRow) -> None:
     if "prestige" in hoard.locked:
         return
-    pieces = len(list(await ctx.session.scalars(select(MuseumPieceRow.id).where(MuseumPieceRow.collection_id == hoard.id))))
-    hoard.prestige = clamp_int(pieces * ctx.rules.museums.prestige_per_piece, 0, PERCENT)
+    kinds = list(await ctx.session.scalars(select(MuseumPieceRow.kind).where(MuseumPieceRow.collection_id == hoard.id).order_by(MuseumPieceRow.id)))
+    hoard.prestige = clamp_int(sum(int(getattr(ctx.rules.museums, PIECE_PRESTIGE[kind])) for kind in kinds), 0, PERCENT)
 
 
 async def keep_hoards(ctx: TickContext, tally: HoardTally) -> None:
@@ -207,13 +201,19 @@ async def loot(ctx: TickContext, victim_id: int, sacker_id: int) -> int:
     taking = round_half_up(len(pieces) * ctx.rules.museums.loot_pct / PERCENT)
     if not taking:
         return 0
-    spoils = await hoard_of(ctx, sacker_id, HoardKind.ROYAL_COLLECTION)
+    spoils = await hoard_of(ctx, sacker_id, HoardKind.TROPHY_HALL)
     moved = 0
+    shamed: set[int] = set()
     for piece in pieces[:taking]:
         if piece.locked:
             continue
         piece.collection_id, piece.looted_from_entity_id, piece.acquired_epoch = spoils.id, victim_id, ctx.epoch
+        if piece.kind in WAR_PIECES:
+            piece.kind = PieceKind.TROPHY
+        if piece.kind is PieceKind.REGALIA and piece.polity_entity_id is not None:
+            shamed.add(piece.polity_entity_id)
         moved += 1
+    await take_trophies(ctx, victim_id, sacker_id, moved, shamed)
     victim, sacker = await ctx.session.get(EntityRow, victim_id), await ctx.session.get(EntityRow, sacker_id)
     if moved and victim is not None and sacker is not None:
         await record(
@@ -225,6 +225,37 @@ async def loot(ctx: TickContext, victim_id: int, sacker_id: int) -> int:
         )
     await ctx.session.flush()
     return moved
+
+
+async def take_trophies(ctx: TickContext, victim_id: int, sacker_id: int, moved: int, shamed: set[int]) -> None:
+    if moved <= 0:
+        return
+    table = ctx.rules.museums
+    await change_relation(ctx, victim_id, sacker_id, -table.trophy_grievance, MemoryKind.ILL_WILL, note="carried off its banners and treasures")
+    for polity_id in sorted(shamed):
+        realm = await ctx.session.get(PolityProfileRow, polity_id)
+        if realm is not None and not held(polity_id) and "legitimacy" not in realm.locked:
+            realm.legitimacy = clamp_int(realm.legitimacy - table.regalia_shame, 0, PERCENT)
+    await record(
+        ctx,
+        "collection.trophy_taken",
+        roles={IncidentRole.ACTOR: sacker_id, IncidentRole.VICTIM: victim_id},
+        facts={"pieces": moved, "regalia": len(shamed)},
+    )
+
+
+async def return_trophies(ctx: TickContext, victor_id: int, loser_id: int) -> int:
+    pieces = await ctx.session.scalars(
+        select(MuseumPieceRow)
+        .join(MuseumCollectionRow, MuseumCollectionRow.id == MuseumPieceRow.collection_id)
+        .where(MuseumCollectionRow.keeper_entity_id == victor_id, MuseumPieceRow.looted_from_entity_id == loser_id)
+        .order_by(MuseumPieceRow.id)
+    )
+    returned = 0
+    for piece in list(pieces):
+        if not piece.locked and await restitute(ctx, piece) is not None:
+            returned += 1
+    return returned
 
 
 async def restitute(ctx: TickContext, piece: MuseumPieceRow) -> MuseumCollectionRow | None:

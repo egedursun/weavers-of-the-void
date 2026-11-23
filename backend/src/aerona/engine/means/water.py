@@ -1,14 +1,17 @@
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.means import LIFTS, MINE_PUMPS
 from aerona.constants.units import PER_MILLE, PERCENT
+from aerona.db.tables.climes import RegionWindRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.means import WaterLiftRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.means import WaterLift
 from aerona.domain.enums.modifier import IncidentRole
@@ -18,6 +21,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
+from aerona.rules.registry import Rules
 
 
 @dataclass
@@ -25,9 +29,25 @@ class WaterTally:
     built: int = 0
 
 
-def best_lift(known: frozenset[object], mine: bool) -> WaterLift | None:
-    fitting = [lift for lift, spec in LIFTS.items() if spec.needs in known and (not mine or lift in MINE_PUMPS)]
+def best_lift(known: frozenset[object], mine: bool, windy: bool = True) -> WaterLift | None:
+    fitting = [lift for lift, spec in LIFTS.items() if spec.needs in known and (not mine or lift in MINE_PUMPS) and (windy or not spec.wind)]
     return max(fitting, key=lambda lift: (LIFTS[lift].capacity, lift.value), default=None)
+
+
+async def wind_at(session: AsyncSession, town: EntityRow) -> int:
+    row = await session.get(RegionWindRow, town.location_id) if town.location_id is not None else None
+    return row.strength if row is not None else 0
+
+
+async def lift_power(session: AsyncSession, rules: Rules, town: EntityRow, lift: WaterLift) -> float:
+    spec = LIFTS[lift]
+    share = int(getattr(rules.water_lift, spec.share)) / PERCENT
+    if spec.wind:
+        wind = await wind_at(session, town)
+        return 0.0 if wind < rules.water_lift.still_wind else share * wind / PERCENT
+    if spec.electric and Technique.ELECTRICITY not in await era_techniques(session, town.id):
+        return 0.0
+    return share
 
 
 async def deep_mine_near(ctx: TickContext, town: EntityRow) -> bool:
@@ -60,7 +80,8 @@ async def build_lifts(ctx: TickContext, tally: WaterTally) -> None:
         dry, deep = await dry_land(ctx, town), await deep_mine_near(ctx, town)
         if not dry and not deep:
             continue
-        lift = best_lift(await era_techniques(ctx.session, town.id), mine=deep and not dry)
+        windy = await wind_at(ctx.session, town) >= ctx.rules.water_lift.still_wind
+        lift = best_lift(await era_techniques(ctx.session, town.id), mine=deep and not dry, windy=windy)
         if lift is None or not ctx.rng(seed_of("water.lift", town.id, ctx.epoch)).chance(table.build_chance):
             continue
         row = await ctx.session.get(WaterLiftRow, (town.id, lift))
@@ -76,8 +97,15 @@ async def build_lifts(ctx: TickContext, tally: WaterTally) -> None:
 
 
 async def lifted_in(ctx: TickContext, town_ids: list[int]) -> int:
-    rows = await ctx.session.scalars(select(WaterLiftRow).where(WaterLiftRow.settlement_entity_id.in_(town_ids)))
-    return sum(row.count * LIFTS[row.device].capacity for row in rows)
+    rows = list(
+        await ctx.session.scalars(select(WaterLiftRow).where(WaterLiftRow.settlement_entity_id.in_(town_ids)).order_by(WaterLiftRow.settlement_entity_id))
+    )
+    lifted = 0.0
+    for row in rows:
+        town = await ctx.session.get(EntityRow, row.settlement_entity_id)
+        if town is not None:
+            lifted += row.count * LIFTS[row.device].capacity * await lift_power(ctx.session, ctx.rules, town, row.device)
+    return round_half_up(lifted)
 
 
 async def irrigation_lift(ctx: TickContext, env: RegionEnvironmentRow) -> float:

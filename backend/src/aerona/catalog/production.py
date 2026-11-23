@@ -68,6 +68,30 @@ CHAIN_STEPS: tuple[ChainStep, ...] = (
     ChainStep("weave_wool", "Weaving wool", W.WEAVERY, ((C.WOOL, 2),), C.CLOTH, 2, S.WEAVING, material=MaterialKind.CLOTH, quality_gain=10),
     ChainStep("weave_fibre", "Weaving plant fibre", W.WEAVERY, ((C.FIBRE, 2),), C.CLOTH, 2, S.WEAVING, material=MaterialKind.CLOTH),
     ChainStep("dye_cloth", "Dyeing cloth", W.WEAVERY, ((C.CLOTH, 1), (C.DYE, 1)), C.LUXURIES, 1, S.WEAVING, B.AGRICULTURE, 1, quality_gain=20),
+    ChainStep(
+        "smith_tools",
+        "Smithing tools at the anvil",
+        W.FORGE,
+        ((C.ORE, 1), (C.FUEL, 1)),
+        C.TOOLS,
+        2,
+        S.SMITHING,
+        B.METALLURGY,
+        2,
+        keeps_material=C.ORE,
+        quality_gain=10,
+    ),
+    ChainStep("joinery", "Joining timber into furnishings", W.LUMBER_CAMP, ((C.TIMBER, 2),), C.LUXURIES, 1, S.CARPENTRY, B.ARCHITECTURE, 1),
+    ChainStep(
+        "fire_pottery", "Firing clay into pottery", W.POTTERY, ((C.STONE, 2), (C.FUEL, 1)), C.POTTERY, 3, S.POTTERY, None, 0, material=MaterialKind.CERAMIC
+    ),
+    ChainStep("blow_glass", "Blowing glass", W.GLASSWORKS, ((C.STONE, 2), (C.FUEL, 2)), C.LUXURIES, 1, S.POTTERY, B.METALLURGY, 2, material=MaterialKind.GLASS),
+    ChainStep("dye_works", "Dyeing cloth in vats", W.DYEWORKS, ((C.CLOTH, 2), (C.DYE, 1)), C.LUXURIES, 2, S.WEAVING, B.AGRICULTURE, 1, quality_gain=25),
+    ChainStep("copy_books", "Copying books", W.SCRIPTORIUM, ((C.TIMBER, 1), (C.DYE, 1)), C.BOOKS, 2, S.WRITING, B.WRITING, 1),
+    ChainStep("copy_books_rag", "Copying books on rag paper", W.SCRIPTORIUM, ((C.CLOTH, 1), (C.DYE, 1)), C.BOOKS, 3, S.WRITING, B.WRITING, 2),
+    ChainStep("evaporate_salt", "Drawing salt from brine", W.EVAPORATION_WORKS, ((C.FUEL, 1),), C.HALITE, 3, S.ENGINEERING, None, 0),
+    ChainStep("press_oil", "Pressing oil from fruit and seed", W.BREWERY, ((C.FRUIT, 2),), C.OIL, 1, S.ALCHEMY, B.AGRICULTURE, 1),
+    ChainStep("render_wax", "Rendering wax from honeycomb", W.WAREHOUSE, ((C.HONEY, 2),), C.WAX, 1, S.ALCHEMY, None, 0),
     ChainStep("brew_base", "Brewing from a brew base", W.BREWERY, ((C.BREW_BASE, 2),), C.LUXURIES, 1, S.ALCHEMY, B.AGRICULTURE, 1),
     ChainStep("herbal_remedies", "Making remedies from herbs", None, ((C.HERBS, 2),), C.MEDICINE, 1, S.ALCHEMY, B.MEDICINE, 1),
     ChainStep("coke_fuel", "Baking coal into coke", W.CHARCOAL_KILN, ((C.COAL, 1),), C.FUEL, 2, S.ENGINEERING, technique=T.COKE_SMELTING),
@@ -411,5 +435,12 @@ WORKSHOP_LABELS: MappingProxyType[WorkshopKind, str] = MappingProxyType(
         W.ALCHEMIST: "Chemical works",
         W.SHRINE_WORKSHOP: "Sacred works",
         W.MINT: "Mint",
+        W.POTTERY: "Pottery",
+        W.GLASSWORKS: "Glassworks",
+        W.DYEWORKS: "Dyeworks",
+        W.SCRIPTORIUM: "Scriptorium",
+        W.EVAPORATION_WORKS: "Salt works",
     }
 )
+
+OPEN_GROUND_WORKSHOPS = frozenset({WorkshopKind.EVAPORATION_WORKS})

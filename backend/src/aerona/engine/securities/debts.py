@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.finance import OWED_LOANS
 from aerona.catalog.life.securities import FOLLOW_LOAN_LOAN_STATUSS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import LoanRow
@@ -27,7 +28,7 @@ async def mirror_loans(ctx: TickContext, tally: SecuritiesTally) -> None:
     face = ctx.rules.securities.bond_face
     mirrored = select(IssuedSecurityRow.loan_id).where(IssuedSecurityRow.loan_id.is_not(None))
     realms = select(PolityProfileRow.polity_entity_id)
-    query = select(LoanRow).where(LoanRow.status == LoanStatus.OPEN, LoanRow.borrower_entity_id.in_(realms), LoanRow.id.not_in(mirrored)).order_by(LoanRow.id)
+    query = select(LoanRow).where(LoanRow.status.in_(OWED_LOANS), LoanRow.borrower_entity_id.in_(realms), LoanRow.id.not_in(mirrored)).order_by(LoanRow.id)
     for loan in await ctx.session.scalars(query):
         realm = await ctx.session.get(EntityRow, loan.borrower_entity_id)
         if realm is None or held(realm.id) or held(loan.lender_entity_id):

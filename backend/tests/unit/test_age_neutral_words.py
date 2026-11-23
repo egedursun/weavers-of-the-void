@@ -64,9 +64,9 @@ def test_a_new_leader_comes_to_lead_what_it_rules() -> None:
 
 
 def test_a_modern_faction_is_named_for_its_age() -> None:
-    names = [plan.noun(TechnologyEra.INFORMATION) for plan in BLUEPRINTS]
+    names = [plan.noun(TechnologyEra.INFORMATION) for plan in BLUEPRINTS.values()]
     assert [name for name in names if ERA_BOUND.search(name)] == []
-    craft = next(plan for plan in BLUEPRINTS if plan.subtype == "craft association")
+    craft = next(plan for plan in BLUEPRINTS.values() if plan.subtype == "craft association")
     assert (craft.noun(TechnologyEra.MEDIEVAL), craft.noun(TechnologyEra.INFORMATION)) == ("Craft Guild", "Craft Association")
 
 
@@ -77,8 +77,8 @@ def test_a_people_is_led_by_a_title_of_its_age() -> None:
 
 def test_generated_names_and_typed_labels_fit_any_age() -> None:
     words = [
-        *(plan.subtype for plan in BLUEPRINTS),
-        *(plan.members for plan in BLUEPRINTS),
+        *(plan.subtype for plan in BLUEPRINTS.values()),
+        *(plan.members for plan in BLUEPRINTS.values()),
         *(" ".join(pair) for pair in FACTION_KINDS.values()),
         *TRADITIONS.values(),
         *(title.noun(TechnologyEra.INFORMATION) for title in RULER_TITLES.values()),

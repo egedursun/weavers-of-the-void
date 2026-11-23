@@ -1,17 +1,15 @@
 from collections.abc import Mapping
 
+from aerona.catalog.war_w52 import HOMEWARD_FATES, KEPT_FATES, SIEGE_ACTION_SPECS, STANCES
 from aerona.core.total import total
 from aerona.domain.enums.military import (
     BattlePhase,
-    CaptiveFate,
     CommanderTrait,
     ContractStatus,
     DefenderAction,
     FeudAction,
     FeudLevel,
     SiegeAction,
-    SiegeWork,
-    Stance,
     Tactic,
     WarAimKind,
 )
@@ -144,6 +142,7 @@ SIEGE_ACTIONS = {
     SiegeAction.MINE: StepAction.UNDERMINE,
     SiegeAction.ASSAULT: StepAction.STORM,
     SiegeAction.NEGOTIATE: StepAction.NEGOTIATE,
+    SiegeAction.SUBORN: StepAction.BETRAY,
 }
 
 
@@ -152,25 +151,20 @@ DEFENCE_ACTIONS = {
     DefenderAction.REPAIR: StepAction.REPAIR,
     DefenderAction.RATION: StepAction.HOLD,
     DefenderAction.SEEK_RELIEF: StepAction.REINFORCE,
+    DefenderAction.FLOOD_APPROACHES: StepAction.FLOOD_LAND,
+    DefenderAction.SCORCHED_EARTH: StepAction.BURN_LAND,
+    DefenderAction.EXPEL_MOUTHS: StepAction.LEAVE,
 }
 
-
-ACTION_WORKS = {
-    SiegeAction.BLOCKADE: (SiegeWork.CIRCUMVALLATION,),
-    SiegeAction.BOMBARD: (SiegeWork.TOWERS, SiegeWork.RAMS),
-    SiegeAction.MINE: (SiegeWork.MINES,),
-    SiegeAction.ASSAULT: (SiegeWork.LADDERS, SiegeWork.RAMS),
-    SiegeAction.NEGOTIATE: (),
-}
 
 WANTED_TRAITS_TACTICS = frozenset({Tactic.FRONTAL_ASSAULT, Tactic.WEDGE})
-SETTLE_COHORT_CAPTIVE_FATES = frozenset({CaptiveFate.RELEASED, CaptiveFate.RANSOMED, CaptiveFate.EXCHANGED})
-SETTLE_COHORT_CAPTIVE_FATES_2 = frozenset({CaptiveFate.ENSLAVED, CaptiveFate.LABOUR})
+SETTLE_COHORT_CAPTIVE_FATES = HOMEWARD_FATES
+SETTLE_COHORT_CAPTIVE_FATES_2 = KEPT_FATES
 PAY_CONTRACTS_CONTRACT_STATUSS = (ContractStatus.ACTIVE, ContractStatus.UNPAID)
-ENTRENCH_STANCES = frozenset({Stance.ENTRENCH, Stance.GARRISON, Stance.BESIEGE})
-FEED_STANCES = frozenset({Stance.FORAGE, Stance.MARCH, Stance.BESIEGE, Stance.RAID})
-FEED_STANCES_2 = frozenset({Stance.FORAGE, Stance.RAID})
+ENTRENCH_STANCES = frozenset(stance for stance, spec in STANCES.items() if spec.entrenches)
+FEED_STANCES = frozenset(stance for stance, spec in STANCES.items() if spec.feeds)
+FEED_STANCES_2 = frozenset(stance for stance, spec in STANCES.items() if spec.plunders)
 EXTRA_TERMS_WAR_ENDINGS = frozenset({WarEnding.WHITE_PEACE, WarEnding.EXHAUSTION, WarEnding.PEACE, WarEnding.MIRACLE})
-BATTER_SIEGE_ACTIONS = frozenset({SiegeAction.BOMBARD, SiegeAction.MINE})
+BATTER_SIEGE_ACTIONS = frozenset(action for action, spec in SIEGE_ACTION_SPECS.items() if spec.batters)
 BLACKMAIL_OFFICE_OFFICE_KINDS = frozenset({OfficeKind.CHANCELLOR, OfficeKind.AMBASSADOR})
 HIRE_MERCENARIES_CONTRACT_STATUSS = (ContractStatus.ACTIVE, ContractStatus.UNPAID)

@@ -281,7 +281,7 @@ async def test_a_people_that_knows_logic_finds_the_zero_and_reckons_sharper(sess
     await keep_numbers(await at(session, 3, numeracy={"milestone_chance": 100}), tally)
     system = await session.get(NumberSystemRow, world.people.id)
     assert system is not None and system.zero and tally.milestones == 1 and system.base in {10, 12, 20, 60}
-    assert await reckoned(session, town.id, rules.numeracy.tax_pct) > 1
+    assert await reckoned(session, rules, town.id, rules.numeracy.tax_pct) > 1
     assert await notation_boost(session, rules, town.id, KnowledgeBranch.ASTRONOMY) > 1
     assert await notation_boost(session, rules, town.id, KnowledgeBranch.WARFARE) == 1
 

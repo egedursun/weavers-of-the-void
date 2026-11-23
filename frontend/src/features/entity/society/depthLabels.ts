@@ -6,8 +6,11 @@ import {
   Church,
   Coins,
   Crown,
+  Droplets,
   Flame,
+  Gavel,
   Gem,
+  GraduationCap,
   HandCoins,
   Handshake,
   HardHat,
@@ -22,6 +25,7 @@ import {
   Snowflake,
   Sparkles,
   Sprout,
+  Tent,
   Swords,
   Trophy,
   Unlink,
@@ -97,6 +101,18 @@ export const EFFECT_SPEC: Record<ShortfallEffect, Spec> = {
     tone: 'info',
     hint: 'No magical reagents: scholars stagnate',
   },
+  thirst: {
+    label: 'Thirst',
+    icon: Droplets,
+    tone: 'danger',
+    hint: 'No water from drought, siege or dry wells: thirst kills faster than hunger',
+  },
+  shelter: {
+    label: 'No roof',
+    icon: Tent,
+    tone: 'warning',
+    hint: 'Homes destroyed or overcrowded: exposure brings sickness and cold',
+  },
 }
 export const EFFECT_ORDER = Object.keys(EFFECT_SPEC) as ShortfallEffect[]
 
@@ -142,6 +158,18 @@ export const REASON_SPEC: Record<LabourReason, Spec> = {
     icon: Lock,
     tone: 'gold',
     hint: 'A number of workers you set and hold',
+  },
+  law: {
+    label: 'By law',
+    icon: Gavel,
+    tone: 'verdigris',
+    hint: 'Kept in their trade by statute, caste or guild right',
+  },
+  skill: {
+    label: 'By skill',
+    icon: GraduationCap,
+    tone: 'info',
+    hint: 'Drawn to the trades their people know best, where law allows',
   },
 }
 

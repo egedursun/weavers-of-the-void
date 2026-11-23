@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.finance import OWED_LOANS
 from aerona.catalog.life.domain import LENDER_KINDS
 from aerona.catalog.life.economy import REFORM_MONEY_FORMS
 from aerona.catalog.materials import COIN_MATERIALS
@@ -34,6 +35,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.finance.credit import interest_for, on_default, refuses
+from aerona.engine.finance.w52_credit import seize_collateral
 from aerona.engine.governance.insolvency import InsolvencyTally, file_case
 from aerona.engine.loops.delay import lagged
 from aerona.engine.monetary.authorities import borrow_factor, establish
@@ -353,7 +355,7 @@ async def lend(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
     for borrower in book.communities:
         if held(borrower.id) or riches(borrower) >= table.borrower_wealth_below or not await _at_war(ctx, borrower.id):
             continue
-        open_loan = await ctx.session.scalar(select(LoanRow.id).where(LoanRow.borrower_entity_id == borrower.id, LoanRow.status == LoanStatus.OPEN).limit(1))
+        open_loan = await ctx.session.scalar(select(LoanRow.id).where(LoanRow.borrower_entity_id == borrower.id, LoanRow.status.in_(OWED_LOANS)).limit(1))
         row = book.societies.get(borrower.id)
         lending = table.lend_chance * await borrow_factor(ctx, row.currency_id if row is not None else None)
         if open_loan is not None or not ctx.rng(f"lend.{borrower.id}.{ctx.epoch}").chance(lending):
@@ -397,7 +399,7 @@ async def lend_to_organisations(ctx: TickContext, book: EconomyBook, lenders: li
         borrower = book.entities.get(org_id)
         if borrower is None or held(org_id) or riches(borrower) >= table.borrower_wealth_below:
             continue
-        open_loan = await ctx.session.scalar(select(LoanRow.id).where(LoanRow.borrower_entity_id == org_id, LoanRow.status == LoanStatus.OPEN).limit(1))
+        open_loan = await ctx.session.scalar(select(LoanRow.id).where(LoanRow.borrower_entity_id == org_id, LoanRow.status.in_(OWED_LOANS)).limit(1))
         if open_loan is not None or not ctx.rng(f"lend.enterprise.{org_id}.{ctx.epoch}").chance(table.enterprise_lend_chance):
             continue
         others = [bank for bank in lenders if bank.id != org_id]
@@ -438,7 +440,7 @@ def owed(loan: LoanRow) -> int:
 
 async def collect(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
     table = ctx.rules.banking
-    statement = select(LoanRow).where(LoanRow.status == LoanStatus.OPEN, LoanRow.held.is_(False)).order_by(LoanRow.id)
+    statement = select(LoanRow).where(LoanRow.status.in_(OWED_LOANS), LoanRow.held.is_(False)).order_by(LoanRow.id)
     for loan in await ctx.session.scalars(statement):
         borrower = book.entities.get(loan.borrower_entity_id)
         lender = book.entities.get(loan.lender_entity_id)
@@ -491,6 +493,7 @@ async def default(ctx: TickContext, book: EconomyBook, loan: LoanRow, borrower: 
     elif law is not None and law.remedy is DebtRemedy.PRISON:
         await jail_debtor(ctx, borrower, lender, f"a debt of {max(0, owed(loan))}")
     loan.status = LoanStatus.DEFAULTED
+    await seize_collateral(ctx, loan)
     gain(lender, -table.default_bank_loss)
     await on_default(ctx, borrower, lender)
     await change_relation(ctx, lender.id, borrower.id, -table.default_relation_loss, MemoryKind.BETRAYED_ME, note="defaulted on a loan")

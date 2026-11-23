@@ -189,7 +189,7 @@ function RebuildCard({
     <Held
       icon={cause.icon}
       tone={plan.tone}
-      title={`${row.settlement.name} rebuilding after a ${cause.label.toLowerCase()}`}
+      title={`${row.settlement.name} rebuilding after ${cause.label.toLowerCase()}`}
       caption={`${plan.label} · begun in epoch ${row.started_epoch}${row.finished_epoch !== null ? ` · finished in epoch ${row.finished_epoch}` : ''}`}
       removeLabel='Abandon the rebuilding'
       editTitle='Set the rebuilding'
@@ -227,6 +227,12 @@ function RebuildCard({
           label: 'Seized by',
           kind: 'node',
           types: HOLDER_TYPES,
+        },
+        {
+          key: 'site_entity_id',
+          label: 'New site',
+          kind: 'node',
+          types: ['region'],
         },
         {
           key: 'seized',
@@ -276,6 +282,10 @@ function RebuildCard({
           [
             'Seized by',
             <Ref key='seizer' node={row.seized_by} empty='no one' />,
+          ],
+          [
+            'New site',
+            <Ref key='site' node={row.site} empty='where it stood' />,
           ],
         ]}
       />

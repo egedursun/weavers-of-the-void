@@ -1,14 +1,20 @@
 from sqlalchemy import select
 
+from aerona.catalog.pacts import FAVOUR_WEIGHTS, HOOK_COSTS
+from aerona.constants.units import PERCENT
 from aerona.db.tables.intrigue import FavourRow, HookRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand, HookStrength
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.mortal.standing import add_honour
+from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.recording.record import record
 from aerona.engine.relations.book import ensure_relation, shift
 
 
 async def owe(ctx: TickContext, owed_by: int, owed_to: int, origin: FavourOrigin, magnitude: int) -> FavourRow | None:
+    magnitude = round_half_up(magnitude * FAVOUR_WEIGHTS[origin](ctx.rules) / PERCENT)
     if owed_by == owed_to or held(owed_by) or magnitude <= 0:
         return None
     found = await ctx.session.scalar(
@@ -21,6 +27,7 @@ async def owe(ctx: TickContext, owed_by: int, owed_to: int, origin: FavourOrigin
     row = FavourRow(owed_by_node_id=owed_by, owed_to_node_id=owed_to, magnitude=min(100, magnitude), origin=origin, created_epoch=ctx.epoch)
     ctx.session.add(row)
     await ctx.session.flush()
+    await record(ctx, "favour.owed", roles={IncidentRole.ACTOR: owed_by, IncidentRole.BENEFICIARY: owed_to}, facts={"origin": origin, "size": row.magnitude})
     return row
 
 
@@ -54,6 +61,14 @@ async def use_hook(ctx: TickContext, hook: HookRow, demand: HookDemand) -> bool:
     hook.last_demand = demand
     if hook.strength is HookStrength.WEAK and not hook.locked:
         hook.used_epoch = ctx.epoch
+    elif not hook.locked and ctx.rng(f"intrigue.hook_wear.{hook.id}.{ctx.epoch}").chance(HOOK_COSTS[demand](ctx.rules)):
+        hook.strength = HookStrength.WEAK
+    await record(
+        ctx,
+        "hook.used",
+        roles={IncidentRole.ACTOR: hook.holder_node_id, IncidentRole.TARGET: hook.target_node_id},
+        facts={"demand": demand},
+    )
     return complied
 
 

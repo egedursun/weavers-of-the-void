@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.structures import WORKSHOP_STRUCTURES
+from aerona.catalog.structures import OPEN_GROUND_WORKSHOPS, WORKSHOP_STRUCTURES
 from aerona.catalog.urban import HOME_DISTRICT
 from aerona.catalog.zones import CIVIC_SERVICE_OF, RING_OF_ZONE, ZONE_OF_DISTRICT, ZONE_OF_STRUCTURE
 from aerona.core.errors import ConflictError
@@ -380,7 +380,7 @@ def test_every_new_work_has_a_zone_a_district_to_stand_in_and_a_house_for_any_wo
     for kind in StructureKind:
         assert kind in ZONE_OF_STRUCTURE
     for workshop in WorkshopKind:
-        assert workshop in WORKSHOP_STRUCTURES, workshop
+        assert workshop in WORKSHOP_STRUCTURES or workshop in OPEN_GROUND_WORKSHOPS, workshop
     for kind in (StructureKind.ORPHANAGE, StructureKind.APOTHECARY, StructureKind.TRAINING_GROUND, StructureKind.MUSEUM):
         assert kind in CIVIC_SERVICE_OF and HOME_DISTRICT[kind] is DistrictKind.CIVIC_QUARTER
 

@@ -2,8 +2,10 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
+from aerona.catalog.ethics import DUEL_END_LABELS
 from aerona.catalog.life.agents import WAR_OFFICES
-from aerona.catalog.operations import GROUND_LABELS, QUIRKS, RESOLVE_EFFECTS
+from aerona.catalog.life_traits import CAPTIVE_STATUS_TRAITS, having
+from aerona.catalog.operations import CREW_STATIONS, GROUND_LABELS, QUIRKS, RESOLVE_EFFECTS
 from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -15,15 +17,22 @@ from aerona.db.tables.operations import (
     ExpeditionMemberRow,
     ExpeditionRow,
     QuirkRow,
+    ShipCrewRow,
     ShipStateRow,
     TheatreRow,
 )
-from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.polity import OathRow, OfficeRow
 from aerona.db.tables.sons import SonRow
-from aerona.db.tables.warfare import ArmyRow
+from aerona.db.tables.warfare import ArmyRow, CaptiveRow
+from aerona.domain.enums.life_traits import CaptiveStatusTrait
 from aerona.domain.enums.operations import EchelonLevel, EchelonOrder, ExpeditionStatus
+from aerona.domain.enums.polity import OathStatus
+from aerona.domain.enums.war import CaptiveStatus
+from aerona.engine.mind.ethics import custom_end
+from aerona.engine.operations.crews import fitted_stations
 
 LIST_LINES = 3
+AFTER_CAPTIVITY = having(CAPTIVE_STATUS_TRAITS, CaptiveStatusTrait.AFTER_CAPTIVITY)
 UNDER_WAY = (ExpeditionStatus.UNDERWAY, ExpeditionStatus.CAMPED)
 
 
@@ -115,7 +124,43 @@ async def ship_lines(scope: Scope, me: EntityRow) -> list[str]:
             f"your ship {await named(scope, vessel.entity_id)} sails {spoken(state.point_of_sail)}, leaks {state.leak}, burns {state.fire}, "
             f"fires {spoken(state.shot)} shot at a rate of {state.rate_of_fire}"
         )
+        found.extend(await crew_lines(scope, vessel))
     return found
+
+
+async def crew_lines(scope: Scope, vessel: VesselProfileRow) -> list[str]:
+    session = scope.session
+    fitted = await fitted_stations(session, vessel.entity_id, vessel)
+    crews = {row.station: row for row in await session.scalars(select(ShipCrewRow).where(ShipCrewRow.vessel_entity_id == vessel.entity_id))}
+    manned = [f"{CREW_STATIONS[station].label.lower()} {crews[station].count} of skill {crews[station].skill}" for station in fitted if station in crews]
+    empty = [CREW_STATIONS[station].label.lower() for station in fitted if station not in crews or crews[station].count <= 0]
+    lines = [f"its crew: {', '.join(manned)}"] if manned else []
+    if empty:
+        lines.append(f"its sections call for {', '.join(empty)} that no one works")
+    return lines
+
+
+async def captivity_lines(scope: Scope, me: EntityRow) -> list[str]:
+    session = scope.session
+    found: list[str] = []
+    rows = await session.scalars(
+        select(CaptiveRow).where(CaptiveRow.captive_entity_id == me.id, CaptiveRow.status.in_(sorted(AFTER_CAPTIVITY))).order_by(CaptiveRow.id)
+    )
+    for row in rows:
+        captor = await named(scope, row.captor_entity_id)
+        if row.status is CaptiveStatus.PAROLED:
+            oath = await session.get(OathRow, row.oath_id) if row.oath_id is not None else None
+            kept = "and you have kept it" if oath is not None and oath.status is OathStatus.SWORN else "and you have broken it"
+            found.append(f"you were freed on parole by {captor}, sworn not to fight again, {kept}")
+        else:
+            spouse = await named(scope, row.married_entity_id) if row.married_entity_id is not None else "one of them"
+            found.append(f"you were a captive of {captor}, married {spouse} and joined that people for good")
+    return found
+
+
+async def duel_custom_lines(scope: Scope, me: EntityRow) -> list[str]:
+    ending = await custom_end(scope.session, me.id)
+    return [f"by the custom of your people, a duel of honour or a ritual duel ends {DUEL_END_LABELS[ending].lower()}"]
 
 
 async def mortal_operations_lines(scope: Scope, me: EntityRow) -> list[str]:
@@ -125,6 +170,8 @@ async def mortal_operations_lines(scope: Scope, me: EntityRow) -> list[str]:
         *await command_lines(scope, me),
         *await realm_lines(scope, me),
         *await ship_lines(scope, me),
+        *await captivity_lines(scope, me),
+        *await duel_custom_lines(scope, me),
     ]
 
 

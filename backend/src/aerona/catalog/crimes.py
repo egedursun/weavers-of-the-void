@@ -152,7 +152,7 @@ CRIMES: Mapping[CrimeKind, CrimeSpec] = total(
         K.BANDITRY: CrimeSpec(A.PENAL, 55, (V.WITNESS,), 50, P.OUTLAWRY, "banditry"),
         K.PIRACY: CrimeSpec(A.PENAL, 60, (V.WITNESS,), 40, P.DEATH, "piracy"),
         K.REBELLION: CrimeSpec(A.CONSTITUTIONAL, 85, (V.WITNESS,), 60, P.DEATH, "rebellion"),
-        K.VAGRANCY: CrimeSpec(A.SOCIAL, 5, (V.WITNESS,), 60, P.COMMUNITY_WORK, "vagrancy where it is banned"),
+        K.VAGRANCY: CrimeSpec(A.LABOUR, 5, (V.WITNESS,), 60, P.COMMUNITY_WORK, "vagrancy where it is banned"),
         K.UNLAWFUL_ASSEMBLY: CrimeSpec(A.SOCIAL, 20, (V.WITNESS,), 60, P.FINE, "unlawful assembly"),
         K.DESERTION: CrimeSpec(A.MILITARY, 50, (V.WITNESS,), 60, P.FLOGGING, "desertion"),
         K.MUTINY: CrimeSpec(A.MILITARY, 75, (V.WITNESS,), 65, P.DEATH, "mutiny"),
@@ -241,7 +241,7 @@ CRIMES: Mapping[CrimeKind, CrimeSpec] = total(
             "customs fraud",
         ),
         K.DEBASEMENT: CrimeSpec(A.FISCAL, 55, (V.TRACE,), 30, P.CONFISCATION, "debasing the coin"),
-        K.UNLICENSED_TRADE: CrimeSpec(A.FISCAL, 15, (V.DOCUMENT,), 40, P.FINE, "trading without a licence"),
+        K.UNLICENSED_TRADE: CrimeSpec(A.COMMERCE, 15, (V.DOCUMENT,), 40, P.FINE, "trading without a licence"),
         K.QUARANTINE_BREACH: CrimeSpec(A.PUBLIC_HEALTH, 35, (V.WITNESS,), 55, P.FINE, "breaking quarantine"),
         K.WELL_POISONING: CrimeSpec(
             A.PUBLIC_HEALTH,
@@ -262,9 +262,9 @@ CRIMES: Mapping[CrimeKind, CrimeSpec] = total(
         K.INTOXICATION: CrimeSpec(A.SOCIAL, 10, (V.WITNESS,), 60, P.FINE, "intoxication where it is banned"),
         K.TABOO_BREACH: CrimeSpec(A.SOCIAL, 30, (V.WITNESS,), 50, P.PENANCE, "breaking a taboo"),
         K.PURITY_BREACH: CrimeSpec(A.SOCIAL, 20, (V.WITNESS,), 50, P.PENANCE, "breaching purity"),
-        K.BLASPHEMY: CrimeSpec(A.MAGIC, 40, (V.WITNESS,), 60, P.FINE, "blasphemy"),
+        K.BLASPHEMY: CrimeSpec(A.FAITH, 40, (V.WITNESS,), 60, P.FINE, "blasphemy"),
         K.HERESY: CrimeSpec(
-            A.MAGIC,
+            A.FAITH,
             50,
             (
                 V.WITNESS,
@@ -275,7 +275,7 @@ CRIMES: Mapping[CrimeKind, CrimeSpec] = total(
             "heresy",
         ),
         K.SACRILEGE: CrimeSpec(
-            A.MAGIC,
+            A.FAITH,
             60,
             (
                 V.WITNESS,
@@ -286,7 +286,7 @@ CRIMES: Mapping[CrimeKind, CrimeSpec] = total(
             "sacrilege",
         ),
         K.DESECRATION: CrimeSpec(
-            A.MAGIC,
+            A.FAITH,
             65,
             (
                 V.WITNESS,

@@ -63,6 +63,13 @@ const MIND = {
     { key: 'dignity', label: 'Dignity' },
     { key: 'face', label: 'Face' },
   ],
+  duel_end: null,
+  duel_end_in_force: 'ring_out',
+  duel_end_held: false,
+  duel_ends: [
+    { key: 'first_wound', label: 'At the first wound' },
+    { key: 'ring_out', label: 'When one is driven out of the bounds' },
+  ],
 }
 
 function serve(readOnly = false) {
@@ -146,6 +153,27 @@ describe('ethics', () => {
       holder_id: 41,
       act: 'fixing_contests',
       stance: 'unthinkable',
+      hold: true,
+    })
+  })
+
+  it('says how its duels end and sets the ending in force', async () => {
+    serve()
+    onApi('GET', '/api/minds/41/culture', MIND)
+    onApi('POST', '/api/actions/ethics:honour', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<EthicsSection nodeId={41} />)
+    await expect
+      .element(screen.getByText('When one is driven out of the bounds'))
+      .toBeVisible()
+    await screen.getByRole('combobox', { name: 'Duels end' }).click()
+    await screen.getByRole('option', { name: 'At the first wound' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/ethics:honour'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/ethics:honour')[0].body).toEqual({
+      holder_id: 41,
+      model: 'face',
+      duel_end: 'first_wound',
       hold: true,
     })
   })

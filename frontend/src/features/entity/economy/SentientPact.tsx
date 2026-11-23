@@ -58,6 +58,7 @@ const STATUS: Record<
   expired: { label: 'Lapsed', icon: Hourglass, variant: 'outline' },
   proposed: { label: 'Proposed', icon: Hourglass, variant: 'outline' },
   rejected: { label: 'Rejected', icon: CircleX, variant: 'destructive' },
+  suspended: { label: 'Suspended', icon: Hourglass, variant: 'outline' },
 }
 const GOODS: Record<string, string> = {
   [NO_GOODS]: 'Prosperity, not goods',

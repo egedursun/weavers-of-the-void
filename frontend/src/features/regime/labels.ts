@@ -1,19 +1,24 @@
 import {
-  Trophy,
   Award,
+  BadgeCheck,
   BookOpenCheck,
+  Briefcase,
   Building2,
   Church,
+  Cpu,
   Crown,
   Eye,
+  Flag,
   Flame,
   GitBranch,
   GraduationCap,
   Handshake,
   HardHat,
   Landmark,
-  type LucideIcon,
+  Medal,
   Network,
+  Palette,
+  Repeat,
   ScrollText,
   Shield,
   ShieldAlert,
@@ -22,14 +27,11 @@ import {
   Swords,
   Tent,
   TreePine,
+  Trophy,
   UserCheck,
   Users,
   Vote,
-  Flag,
-  Briefcase,
-  Cpu,
-  BadgeCheck,
-  Medal,
+  type LucideIcon,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -94,6 +96,8 @@ export const CLIENT_ROLES: Record<Schema['ClientRole'], Named> = {
   retainer: { label: 'Retainer', icon: Handshake, tone: 'verdigris' },
   official: { label: 'Official', icon: ScrollText, tone: 'info' },
   commander: { label: 'Commander', icon: Swords, tone: 'danger' },
+  broker: { label: 'Broker', icon: Repeat, tone: 'warning' },
+  artist: { label: 'Artist', icon: Palette, tone: 'gold' },
 }
 
 export const STANCES: Record<Schema['PowerStance'], Named> = {

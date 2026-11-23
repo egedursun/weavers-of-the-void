@@ -24,6 +24,8 @@ class SociolectKind(StrEnum):
     COURT = "court"
     CANT = "cant"
     SAILORS = "sailors"
+    YOUTH = "youth"
+    SOLDIERS = "soldiers"
 
 
 class SignCause(StrEnum):
@@ -31,6 +33,7 @@ class SignCause(StrEnum):
     SILENCE_VOW = "silence_vow"
     HUNTING_SILENCE = "hunting_silence"
     MUTILATION = "mutilation"
+    TRADE = "trade"
 
 
 class TeachingState(StrEnum):

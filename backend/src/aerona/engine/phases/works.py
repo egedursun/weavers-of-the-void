@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.eras import ERA_FLOORS
-from aerona.catalog.life.domain import STANDING_STATES
+from aerona.catalog.life.domain import GONE_STATES, STANDING_STATES
 from aerona.catalog.structures import ENGINE_KIND_STRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
@@ -15,7 +15,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityType
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
-from aerona.domain.enums.structure import ConstructionState, ConstructionStatus, StructureKind
+from aerona.domain.enums.structure import ConstructionStatus, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.environment.years import world_years
 from aerona.engine.eras.effects import world_start
@@ -70,7 +70,7 @@ async def used_slots(ctx: TickContext, host_id: int) -> int:
     rows = await ctx.session.scalars(
         select(StructureProfileRow.structure_entity_id).where(
             StructureProfileRow.host_entity_id == host_id,
-            StructureProfileRow.construction_state != ConstructionState.RUINED,
+            StructureProfileRow.construction_state.not_in(list(GONE_STATES)),
             StructureProfileRow.kind.not_in(sorted(GROWING)),
         )
     )
@@ -88,7 +88,7 @@ async def plan_work(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, 
     full = await free_slots(ctx, site) <= 0
     facts = await facts_for(ctx, site, knowledge, atlas)
     tier = facts.town.size_tier if facts.town is not None else None
-    for kind in wanted(ctx.rules, facts):
+    for kind in sorted(wanted(ctx.rules, facts), key=lambda kind: kind not in GROWING):
         if (full and kind not in GROWING) or (tier is not None and not tier_allows(tier, resolve(kind))):
             continue
         work, _ = await begin(ctx, Commission(site=site, kind=kind, level=commission_level(ctx.rules, facts, kind)))

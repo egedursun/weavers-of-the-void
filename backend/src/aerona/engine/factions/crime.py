@@ -14,7 +14,6 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.faction import FactionRank
 from aerona.domain.enums.intrigue import HookSource
-from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OathBreach, OathKind
 from aerona.domain.enums.urban import CrimeStance
@@ -22,6 +21,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.disease.stigma import values_for
 from aerona.engine.economy.purse import give_coin
+from aerona.engine.factions.underworld_w52 import keep_underworld, license_trade, stance_for, tolerate
 from aerona.engine.intrigue.secrets import grant_hook, learn
 from aerona.engine.lifecycle.wounds import slay
 from aerona.engine.polity.oaths import break_on, oaths_of, swear
@@ -148,11 +148,10 @@ async def take_stance(ctx: TickContext, faction: EntityRow, profile: FactionProf
         return
     realm = await ctx.session.get(EntityRow, realm_id)
     values = await values_for(ctx, realm) if realm is not None else {}
-    stance = CrimeStance.SUPPRESS if values.get(ValueAxis.LAW, 0) >= values.get(ValueAxis.WEALTH, 0) else CrimeStance.CO_OPT
-    ctx.session.add(
-        CrimeStanceRow(polity_entity_id=realm_id, faction_entity_id=faction.id, stance=stance, strength=PERCENT // 2, since_epoch=ctx.epoch, locked=[])
-    )
+    stance, strength = await stance_for(ctx, realm_id, profile, values)
+    ctx.session.add(CrimeStanceRow(polity_entity_id=realm_id, faction_entity_id=faction.id, stance=stance, strength=strength, since_epoch=ctx.epoch, locked=[]))
     tally.stances += 1
+    await record(ctx, "polity.crime_stance", roles={IncidentRole.AUTHORITY: realm_id, IncidentRole.TARGET: faction.id}, facts={"stance": stance})
 
 
 async def inform(ctx: TickContext, stance: CrimeStanceRow, town_id: int) -> bool:
@@ -185,14 +184,19 @@ async def bear_stances(ctx: TickContext) -> None:
             for turf in await ctx.session.scalars(select(TurfRow).where(TurfRow.faction_entity_id == stance.faction_entity_id)):
                 if "strength" not in turf.locked:
                     turf.strength = clamp_int(round_half_up(turf.strength - table.suppress_loss * weight * shield), 0, PERCENT)
-        else:
+        elif stance.stance is CrimeStance.CO_OPT:
             town = await ctx.session.get(SettlementProfileRow, profile.home_entity_id)
             if town is not None and "crime" not in town.locked:
                 town.crime = clamp_int(round_half_up(town.crime - table.co_opt_crime * weight), 0, PERCENT)
             await inform(ctx, stance, profile.home_entity_id)
+        elif stance.stance is CrimeStance.TOLERATE:
+            await tolerate(ctx, stance, profile)
+        else:
+            await license_trade(ctx, stance, profile)
 
 
 async def run_underworld(ctx: TickContext, tally: CrimeTally) -> None:
+    tally.stances += await keep_underworld(ctx)
     for faction, profile in await crime_orgs(ctx.session):
         await keep_rackets(ctx, faction, profile, tally)
         await buy_officials(ctx, faction, profile, tally)

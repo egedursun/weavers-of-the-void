@@ -1,4 +1,4 @@
-from aerona.db.tables.economy import ProductionRunRow, TradeRouteLossRow, TradeRouteProfileRow, TradeRouteTollRow
+from aerona.db.tables.economy import ROUTE_DANGER_COLUMNS, ProductionRunRow, TradeRouteLossRow, TradeRouteProfileRow, TradeRouteTollRow
 from aerona.db.tables.military import WarAimRow
 from aerona.db.tables.polity import PolityTreasuryRow, TreatyClauseRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
@@ -19,7 +19,7 @@ ROUTE_MECHANICS = (
         surface=Surface(drawer=ROUTE, layer=TRADE_LAYER),
         backfill="trade_flow: every route's dangers are read from its lands, beasts and weather each epoch",
         templates=("trade_route.beast_raid", "trade_route.weather_loss", "trade_route.shipwreck"),
-        fields=("danger", "danger_bandits", "danger_beasts", "danger_weather", "danger_sea", "lost"),
+        fields=("danger", *ROUTE_DANGER_COLUMNS, "lost"),
         tables=(TradeRouteProfileRow.__tablename__, TradeRouteLossRow.__tablename__),
         exposure=Exposure.CONTEXT,
         targets=("trade_route", "beast", "region", "faction"),
@@ -27,6 +27,14 @@ ROUTE_MECHANICS = (
             Coupling(S.ECOLOGY, "a hungry or enraged beast near the way takes cargo to its hoard", EdgeKind.FLOW, "route_dangers.beast_hoard_pct"),
             Coupling(S.ENVIRONMENT, "the age's weather in the lands crossed spoils cargo", EdgeKind.MODIFIER, "route_dangers.weather_footing_pct"),
             Coupling(S.INTRIGUE, "robber bands on the way take a share of what is lost", EdgeKind.FLOW, "trade_routes.bandit_share_pct"),
+            Coupling(
+                S.POLITY, "corrupt officials of the realms at its ends take tolls and bribes from a route's goods", EdgeKind.FLOW, "route_dangers.officials_pct"
+            ),
+            Coupling(S.ECONOMY, "goods spoil on a long way", EdgeKind.MODIFIER, "route_dangers.spoilage_pct"),
+            Coupling(S.WAR, "guards and crews pilfer where no patrol watches the way", EdgeKind.MODIFIER, "route_dangers.pilferage_pct"),
+            Coupling(S.WAR, "a route fought over by realms at war loses more of its goods", EdgeKind.MODIFIER, "route_dangers.contested_loss_pct"),
+            Coupling(S.ENVIRONMENT, "a pass snowed shut or a monsoon sea closes a seasonal route in its season", EdgeKind.TRIGGER, "convoys.stranded_pct"),
+            Coupling(S.ECONOMY, "the carrier a route uses sets how much it can move", EdgeKind.MODIFIER, "route_dangers.carrier_full_capacity"),
         ),
     ),
     Mechanic(

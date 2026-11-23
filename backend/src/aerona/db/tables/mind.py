@@ -6,6 +6,7 @@ from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.folkways import IdeaStrain
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN, RELATION_MAX, RELATION_MIN
+from aerona.domain.enums.military import DuelEnd
 from aerona.domain.enums.mind import (
     ActKind,
     Attribute,
@@ -306,6 +307,7 @@ class CultureHonourRow(Base):
 
     entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     model: Mapped[HonourModel] = mapped_column(enum_type(HonourModel, "model"))
+    duel_end: Mapped[DuelEnd | None] = mapped_column(enum_type(DuelEnd, "duel_end"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

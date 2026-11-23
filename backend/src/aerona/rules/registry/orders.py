@@ -14,6 +14,11 @@ class SavingRules:
     insecure_from: int = rule(50, 0, 100, E, "Insecurity of a town from which its households bury what they save")
     war_insecurity: int = rule(40, 0, 100, E, "Insecurity a war adds to a town")
     find_chance: int = rule(5, 0, 100, E, "Chance each epoch that the lost hoards of a town are found by those who dig there (%)")
+    goods_spoil_pct: int = rule(5, 0, 100, E, "Share of goods kept as savings that spoil or die each epoch (%)")
+    land_rent_pct: int = rule(5, 0, 100, E, "Rent land kept as savings earns each epoch (%)")
+    land_war_loss_pct: int = rule(20, 0, 100, E, "Share of land savings lost each epoch its town is at war (%)")
+    dearth_gain_pct: int = rule(50, 0, 400, E, "Extra worth stored goods fetch when they are sold in a hungry town (%)")
+    rural_from: int = rule(40, 0, 100, E, "Share of farmers from which a town's households save in land (%)")
 
 
 @dataclass(frozen=True)

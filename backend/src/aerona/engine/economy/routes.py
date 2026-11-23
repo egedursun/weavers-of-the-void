@@ -4,8 +4,9 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import or_, select
 
+from aerona.catalog.carriers import CARRIERS
 from aerona.catalog.commodities import COMMODITIES
-from aerona.catalog.kinds.trade_modes import TRADE_MODES
+from aerona.catalog.kinds.trade_modes import TRADE_LOSSES, TRADE_MODES
 from aerona.catalog.life.economy import DANGER_KEYS, OPEN
 from aerona.catalog.life_traits import TRADE_ROUTE_STATUS_TRAITS, having
 from aerona.catalog.senses import NAVIGATION
@@ -41,6 +42,7 @@ from aerona.domain.enums.life_traits import TradeRouteStatusTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.operations import CarrierKind
 from aerona.domain.enums.polity import ClauseKind
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.settlement import TreasuryEntry
@@ -74,7 +76,7 @@ from aerona.engine.interpretation.work import interpret, reach_of
 from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.research_depth import capable_among
 from aerona.engine.lore.truth import theory_factor
-from aerona.engine.means.containers import packed_capacity
+from aerona.engine.means.containers import packed_capacity, suited_relief
 from aerona.engine.means.navigation import instrument_navigation
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.nature.effects import sensed
@@ -88,6 +90,8 @@ from aerona.engine.primitives.stats import headcount, set_stats, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import declare_war
 from aerona.engine.settlement.book import credit
+from aerona.engine.tongues.signs import sign_ease
+from aerona.rules.registry import Rules
 from aerona.rules.registry.markets import TradeRoutesRules
 
 THOUSAND = 1000
@@ -200,9 +204,14 @@ def choose_mode(book: EconomyBook, first: EntityRow, second: EntityRow, path: li
     regions = [book.ground.regions.get(region) for region in path]
     if len(path) > 1 and all(region is not None and region.river_class is not RiverClass.NONE for region in regions):
         return TradeMode.RIVER
-    if any(region is not None and region.dominant_terrain in CARAVAN_TERRAIN for region in regions):
-        return TradeMode.CARAVAN
     return TradeMode.ROAD
+
+
+def carrier_for(book: EconomyBook, mode: TradeMode, path: list[int]) -> CarrierKind | None:
+    regions = [book.ground.regions.get(region) for region in path]
+    if mode is TradeMode.ROAD and any(region is not None and region.dominant_terrain in CARAVAN_TERRAIN for region in regions):
+        return CarrierKind.PACK_ANIMALS
+    return None
 
 
 def length_of(ctx: TickContext, mode: TradeMode, path: list[int]) -> int:
@@ -270,7 +279,7 @@ def route_locked(route: Route, key: str) -> bool:
 
 def assess(ctx: TickContext, book: EconomyBook, route: Route, lairs: Lairs, ice_open: int = PERCENT) -> Dangers:
     profile = route.profile
-    found = dangers_of(ctx, book, profile.mode, route.path, lairs, route_id=route.entity.id, world_id=route.entity.world_id)
+    found = dangers_of(ctx, book, profile.mode, route.path, lairs, route_id=route.entity.id, world_id=route.entity.world_id, carrier=profile.carrier)
     for cause, key in DANGER_KEYS.items():
         if route_locked(route, key):
             setattr(found, cause.value, getattr(profile, key))
@@ -283,8 +292,10 @@ def assess(ctx: TickContext, book: EconomyBook, route: Route, lairs: Lairs, ice_
     return found
 
 
-def season_factor(route: Route) -> float:
-    return route.profile.season_pct / PERCENT
+def season_factor(route: Route, seasons: int = 0) -> float:
+    closed = route.profile.status is TradeRouteStatus.SEASONAL and route.profile.closed_season is not None and seasons > 0
+    share = (seasons - 1) / seasons if closed else 1.0
+    return route.profile.season_pct / PERCENT * share
 
 
 async def write_path(ctx: TickContext, route_id: int, path: list[int]) -> None:
@@ -316,6 +327,7 @@ async def found_route(ctx: TickContext, book: EconomyBook, first: EntityRow, sec
         first_market_id=first.id,
         second_market_id=second.id,
         mode=mode,
+        carrier=carrier_for(book, mode, path),
         status=TradeRouteStatus.FORMING,
         length=length_of(ctx, mode, path),
         founded_epoch=ctx.epoch,
@@ -537,7 +549,14 @@ async def carried_capacity(ctx: TickContext, route: Route, fallback: int) -> int
     carried = await route_capacity(ctx.session, route.entity.id)
     capacity = await packed_capacity(ctx, route.ends, fallback if carried is None else carried)
     harbour = await harbour_limit(ctx.session, ctx.rules, route.profile)
+    capacity = round_half_up(capacity * carrier_share(ctx.rules, route.profile.carrier))
     return capacity if harbour is None else min(capacity, harbour)
+
+
+def carrier_share(rules: Rules, carrier: CarrierKind | None) -> float:
+    if carrier is None:
+        return 1.0
+    return min(1.0, CARRIERS[carrier].capacity / rules.route_dangers.carrier_full_capacity)
 
 
 async def kept_by(ctx: TickContext, route: Route) -> PreservationMethod:
@@ -561,7 +580,9 @@ async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = Fa
     goods = await good_book(ctx.session)
     spoiled = spoilage(ctx.rules, goods.cargo(lane.commodity), route.profile.mode, await kept_by(ctx, route))
     spoiled *= await tech_relief(ctx.session, ctx.rules, lane.seller_id, EraChannel.SPOILAGE)
-    keep = sent - min(sent, round_half_up(lane.volume * ctx.rules.trade_routes.danger_loss_pct / PERCENT * danger / PERCENT + sent * spoiled))
+    spoiled *= await suited_relief(ctx, lane.seller_id, goods.cargo(lane.commodity), sent)
+    fought = ctx.rules.route_dangers.contested_loss_pct / PERCENT if route.profile.status is TradeRouteStatus.CONTESTED else 0.0
+    keep = sent - min(sent, round_half_up(lane.volume * ctx.rules.trade_routes.danger_loss_pct / PERCENT * danger / PERCENT + sent * (spoiled + fought)))
     delivered = 0
     for lot in taken:
         part = min(lot.quantity, keep - delivered)
@@ -655,6 +676,13 @@ async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: 
         ctx.session.add(
             TradeRouteLossRow(route_entity_id=route.entity.id, epoch=ctx.epoch, commodity=lane.commodity, cause=cause, units=units, culprit_entity_id=culprit)
         )
+        if not TRADE_LOSSES[cause].told_by_its_own:
+            await record(
+                ctx,
+                "route.loss",
+                roles={IncidentRole.SUBJECT: route.entity.id, **({IncidentRole.BENEFICIARY: culprit} if culprit is not None else {})},
+                facts={"loss": cause, "good": lane.commodity, "units": units},
+            )
         calm = await ctx.hook_easing(lane.seller_id, DomainHook.SEA_CALM) * (
             1 - await sensed(ctx.session, ctx.rules, lane.seller_id, NAVIGATION, ctx.rules.senses.navigation_pct)
         )
@@ -667,6 +695,10 @@ async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: 
         elif cause is TradeLoss.BEASTS:
             tally.beast_losses += units
             await feed_beast(ctx, book, route.entity, lane.commodity, units=units, beast_id=culprit)
+        elif cause is TradeLoss.OFFICIALS and culprit is not None:
+            officials = book.entities.get(culprit)
+            if officials is not None:
+                pay(ctx.rules.markets.seller_wealth_per_value, officials, round_half_up(lane.landed * units / PERCENT))
         elif cause is TradeLoss.WEATHER:
             tally.weather_losses += units
             frozen = froze(ctx.rules, book, route.profile.mode, route.path, route.entity.world_id)
@@ -705,8 +737,8 @@ async def carry(
     if book.closed & set(route.ends):
         capacity = round_half_up(capacity * (PERCENT - ctx.rules.plague_responses.border_trade_pct) / PERCENT)
     factor, fee, toll_realm = await crossing(ctx.session, ctx.rules, route.ends)
-    capacity = round_half_up(capacity * factor)
-    season = season_factor(route)
+    capacity = round_half_up(capacity * factor * await sign_ease(ctx.session, ctx.rules, route.ends))
+    season = season_factor(route, len(book.ground.seasons_of(route.entity.world_id)) if route.entity.world_id is not None else 0)
     trust = await coin_trust(ctx, book, route.ends)
     covered = await cargo_holders(ctx.session)
     gaps = await price_gaps(ctx.session, ctx.rules, route.ends)

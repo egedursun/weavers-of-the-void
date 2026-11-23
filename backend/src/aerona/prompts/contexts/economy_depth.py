@@ -70,7 +70,14 @@ class RouteLine(ContextItem):
     beasts: int
     weather: int
     sea: int
+    officials: int = 0
+    spoilage: int = 0
+    pilferage: int = 0
     season_pct: int
+    closed_season: str = ""
+    carrier: str = ""
+    aids: list[str] = Field(default_factory=list)
+    convoys: list[str] = Field(default_factory=list)
     length: int
     renown: int
     controller: str = ""

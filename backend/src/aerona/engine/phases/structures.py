@@ -3,6 +3,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.structures.backfill import backfill_structures, snapshot_styles
 from aerona.engine.structures.functions import run_functions
+from aerona.engine.structures.leftovers import keep_leftovers
 from aerona.engine.structures.types import type_standing
 from aerona.engine.structures.upkeep import upkeep_all
 
@@ -56,9 +57,11 @@ async def structure_survey(ctx: TickContext) -> None:
 @reads(
     "structure.durability",
     "structure.function",
+    "table.bonds",
     "table.community_cohorts",
     "table.community_stocks",
     "table.entities",
+    "table.name_registry",
     "table.node_births",
     "table.node_materials",
     "table.nodes",
@@ -72,14 +75,18 @@ async def structure_survey(ctx: TickContext) -> None:
     "table.world_materials",
 )
 @writes(
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_stocks",
+    "table.entities",
     "table.entity_flags",
     "table.goods_flows",
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.name_registry",
+    "table.node_births",
     "table.settlement_profiles",
     "table.settlement_treasury",
     "table.structure_profiles",
@@ -89,6 +96,7 @@ async def structure_survey(ctx: TickContext) -> None:
 )
 async def structure_upkeep(ctx: TickContext) -> None:
     ctx.count("kept", await upkeep_all(ctx))
+    ctx.count("leftovers", await keep_leftovers(ctx))
 
 
 @reads(

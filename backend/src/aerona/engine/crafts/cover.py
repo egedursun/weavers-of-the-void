@@ -6,7 +6,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.crafts import InsuranceCover
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import shift_points
+from aerona.engine.recording.record import record
 
 
 async def cargo_holders(session: AsyncSession) -> frozenset[int]:
@@ -57,4 +60,13 @@ async def claim(session: AsyncSession, holder_id: int, cover: InsuranceCover, lo
         insurer.pool -= paid
     if "claims" not in policy.locked:
         policy.claims += 1
+    return paid
+
+
+async def insured_loss(ctx: TickContext, holder_id: int | None, cover: InsuranceCover, loss: int) -> int:
+    if holder_id is None:
+        return 0
+    paid = await claim(ctx.session, holder_id, cover, loss)
+    if paid > 0:
+        await record(ctx, "insurance.paid", roles={IncidentRole.BENEFICIARY: holder_id}, facts={"cover": cover, "paid": paid})
     return paid

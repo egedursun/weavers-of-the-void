@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.crafts import CatchMedium, CatchRight, InsuranceCover, Notation
+from aerona.domain.enums.crafts import CatchMedium, CatchRight, Notation
 
 CATCH_MEDIUM = total(
     CatchMedium,
@@ -26,23 +26,6 @@ CATCH_RIGHT = total(
             used_by=("db.tables.crafts.CatchGroundRow", "engine.crafts.grounds.seed_fisheries", "services.player.crafts.CatchGroundDraft"),
         ),
         CatchRight.OWNED: Defined("Owned", checked_by=("engine.crafts.grounds.poaching",), used_by=("engine.crafts.grounds.seed_fisheries",)),
-    },
-)
-
-INSURANCE_COVER = total(
-    InsuranceCover,
-    {
-        InsuranceCover.CARGO: Defined(
-            "Cargo",
-            checked_by=("engine.crafts.cover.cargo_holders",),
-            used_by=("engine.crafts.insurance.candidates", "engine.economy.routes.mourn_losses", "services.player.crafts.InsurancePolicyDraft"),
-        ),
-        InsuranceCover.HOUSE: Defined("House", checked_by=(), used_by=("engine.crafts.insurance.candidates", "engine.environment.hazards.strike")),
-        InsuranceCover.LIFE: Defined(
-            "Life",
-            checked_by=("engine.crafts.cover.claim", "tools.mortal.crafts.buy_insurance"),
-            used_by=("engine.crafts.insurance.candidates", "engine.lifecycle.mortal_death.die", "tools.mortal.crafts.buy_insurance"),
-        ),
     },
 )
 

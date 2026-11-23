@@ -164,6 +164,7 @@ REALM_MECHANICS = (
         templates=("treaty.broken", "treaty.champions"),
         fields=("kind", "status", "signed_epoch", "until_epoch", "ended_epoch", "witness", "renewals", "parties", "guarantors", "breaches", *CLAUSES),
         tables=(TreatyProfileRow.__tablename__, TreatyPartyRow.__tablename__, TreatyClauseRow.__tablename__, TreatyBreachRow.__tablename__),
+        tools=("mediate", "suspend_treaty"),
         targets=("treaty", "polity", *COMMUNITIES),
         couplings=(
             Coupling(Subsystem.WAR, "allies answer the call to arms and realm members share wars", EdgeKind.TRIGGER, "treaties.call_to_arms_chance"),
@@ -306,7 +307,11 @@ REALM_MECHANICS = (
             "loyalty",
         ),
         tables=(FactionProfileRow.__tablename__, FactionGoalRow.__tablename__, FactionMembershipRow.__tablename__, FactionActionRow.__tablename__),
-        tools=("found_faction",),
+        tools=(
+            "found_faction",
+            "found_coop",
+            "set_faction_goal",
+        ),
         targets=("faction", "polity", "mortal", *COMMUNITIES, "treaty"),
         couplings=(
             Coupling(Subsystem.POLITY, "the factions' power balance steers the realm's will", EdgeKind.MODIFIER, "factions.balance_pct"),

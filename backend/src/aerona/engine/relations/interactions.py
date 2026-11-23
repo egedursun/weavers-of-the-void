@@ -69,6 +69,7 @@ from aerona.engine.relations.book import RELATIONS_KEY, ensure_relation, mood_of
 from aerona.engine.relations.persuasion import persuade
 from aerona.engine.renown.deeds import acclaim_deed
 from aerona.engine.renown.lore import confide
+from aerona.engine.tongues.speech import slips
 
 K = InteractionKind
 FACET_SPAN = 50
@@ -577,6 +578,8 @@ async def interact(scene: Scene, actor: int, target: int, kind: InteractionKind,
             await record(
                 ctx, "social.interaction", roles={IncidentRole.ACTOR: actor, IncidentRole.TARGET: target}, facts={"interaction": kind}, place=scene.place_id
             )
+        if actor in scene.mortals and target in scene.mortals:
+            await slips(ctx, scene.mortals[actor], scene.mortals[target], hostile=spec.hostile, rng=rng, place=scene.place_id)
     elif heard is not None:
         shift(ctx.rules, heard, ctx.epoch, friendship=-abs(spec.friendship) / 2, familiarity=1)
     if spec.skill is not None:

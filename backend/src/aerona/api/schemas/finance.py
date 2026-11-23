@@ -14,6 +14,9 @@ class FinanceCreditView(ApiModel):
     reserves: int
     defaults: int
     restructured_until: int | None
+    rescuer: NodeRef | None
+    rescue_terms: int
+    repudiated_until: int | None
     epoch: int
     held: list[str]
 

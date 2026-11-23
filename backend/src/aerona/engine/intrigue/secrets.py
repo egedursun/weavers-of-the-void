@@ -2,10 +2,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.intrigue import SECRETS
+from aerona.catalog.pacts import SECRET_WEIGHTS
 from aerona.constants.units import PERCENT
-from aerona.db.tables.intrigue import HookRow, SecretRow
+from aerona.db.tables.intrigue import HookRow, IdentityRow, SecretRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.intrigue import HookSource, HookStrength, IntrigueSecret
+from aerona.domain.enums.intrigue import HookSource, HookStrength, IdentityReason, IntrigueSecret
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
@@ -17,6 +18,9 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 
 KNOWN = "known_by"
+
+
+EXPOSURE = "exposure"
 
 
 async def secrets_of(session: AsyncSession, holder_id: int) -> list[SecretRow]:
@@ -44,7 +48,7 @@ async def keep_secret(
         holder_node_id=holder_id,
         kind=kind,
         about_node_id=about_id,
-        severity=severity if severity is not None else SECRETS[kind].severity,
+        severity=severity if severity is not None else SECRET_WEIGHTS[kind](ctx.rules),
         known_by=sorted({holder_id, *known_by}),
         source=source,
         created_epoch=ctx.epoch,
@@ -107,4 +111,12 @@ async def expose(ctx: TickContext, secret: SecretRow, *, by_id: int | None = Non
             facts={"severity": secret.severity},
             place=holder.location_id,
         )
+    await undone_by_light(ctx, secret)
     return True
+
+
+async def undone_by_light(ctx: TickContext, secret: SecretRow) -> None:
+    if secret.kind is IntrigueSecret.HIDDEN_POWER:
+        mask = await ctx.session.get(IdentityRow, secret.holder_node_id)
+        if mask is not None and mask.reason is IdentityReason.HIDDEN_POWER and mask.exposed_epoch is None and EXPOSURE not in (mask.locked or []):
+            mask.exposure, mask.exposed_epoch = PERCENT, ctx.epoch

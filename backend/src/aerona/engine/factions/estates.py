@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.civics import PRIVILEGE_GATES
-from aerona.catalog.estates import ESTATE_CLASSES, ESTATE_LAWS, ESTATE_NAMES, PRIVILEGE_WISHES
+from aerona.catalog.estates import ESTATE_CLASSES, ESTATE_LAWS, ESTATE_NAMES, PRIVILEGE_WISHES, RENTED
+from aerona.catalog.estates import PRIVILEGES as PRIVILEGE_SPECS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import EstatePrivilegeRow, EstateProfileRow
@@ -33,6 +34,7 @@ LOYALTY = "loyalty"
 INFLUENCE = "influence"
 PRIVILEGES = "privileges"
 POWER = 2
+TEN = 10
 
 
 @dataclass
@@ -99,11 +101,15 @@ async def tend_estate(ctx: TickContext, realm: Realm, row: EstateProfileRow, sha
     privileges = await privileges_of(ctx, row.faction_entity_id)
     if LOYALTY not in (row.locked or []):
         approval = await approval_of(ctx, realm.entity.id, row.social_class)
-        aim = PERCENT // 2 + len(privileges) * table.privilege_loyalty + (await class_mood(ctx, realm, row.social_class) - PERCENT / 2) / 2 + approval / 2
+        bought = sum(getattr(table, PRIVILEGE_SPECS[privilege].loyalty) for privilege in privileges) * table.privilege_loyalty / TEN
+        aim = PERCENT // 2 + bought + (await class_mood(ctx, realm, row.social_class) - PERCENT / 2) / 2 + approval / 2
         row.loyalty = clamp_int(row.loyalty + round_half_up((aim - row.loyalty) * table.loyalty_drift_pct / PERCENT), 0, PERCENT)
     if INFLUENCE not in (row.locked or []):
         seat = table.council_seat_influence if EstatePrivilege.COUNCIL_SEAT in privileges else 0
         row.influence = clamp_int(share * table.share_influence_pct / PERCENT + seat, 0, PERCENT)
+    cost = sum(getattr(table, PRIVILEGE_SPECS[privilege].cost) for privilege in privileges)
+    if cost > 0 and "treasury" not in realm.profile.locked:
+        realm.profile.treasury = max(0, realm.profile.treasury - cost)
     profile = await ctx.session.get(FactionProfileRow, row.faction_entity_id)
     if profile is not None and "influence_over" not in (profile.locked or []):
         profile.influence_over = {**(profile.influence_over or {}), str(realm.entity.id): row.influence}
@@ -234,7 +240,8 @@ async def monopoly_rent(ctx: TickContext, tally: EstateTally) -> None:
     rows = await ctx.session.scalars(
         select(EstateProfileRow)
         .join(EstatePrivilegeRow, EstatePrivilegeRow.estate_entity_id == EstateProfileRow.faction_entity_id)
-        .where(EstatePrivilegeRow.privilege == EstatePrivilege.MONOPOLY)
+        .where(EstatePrivilegeRow.privilege.in_(list(RENTED)))
+        .order_by(EstateProfileRow.faction_entity_id)
     )
     for row in list(rows):
         faction = await ctx.session.get(EntityRow, row.faction_entity_id)

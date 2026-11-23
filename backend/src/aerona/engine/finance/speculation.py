@@ -17,7 +17,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.finance import SpeculationStatus
-from aerona.domain.enums.mind import ActKind, Facet, PressureKind
+from aerona.domain.enums.mind import ActKind, Facet, MemoryKind, PressureKind
 from aerona.domain.enums.modifier import IncidentRole, ModifierOp
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -27,6 +27,8 @@ from aerona.engine.intrigue.beliefs import believed_prices
 from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
+from aerona.engine.renown.currencies import realm_of_community
+from aerona.engine.services.community_relations import change_relation
 
 
 @dataclass
@@ -35,6 +37,7 @@ class SpeculationTally:
     sold: int = 0
     busts: int = 0
     famine_hoards: int = 0
+    seized: int = 0
 
 
 async def prices(ctx: TickContext, market_id: int, epoch: int) -> dict[CommodityKind, int]:
@@ -167,6 +170,37 @@ async def settle_hoards(ctx: TickContext, book: EconomyBook, tally: SpeculationT
             tally.sold += 1
 
 
+async def seize_hoard(ctx: TickContext, row: SpeculationRow, authority_id: int, *, by: int | None = None) -> bool:
+    if "status" in (row.locked or []) or held(row.merchant_node_id) or row.status is not SpeculationStatus.HOARDING:
+        return False
+    table = ctx.rules.speculation
+    await goods_of(ctx.session, ctx.epoch).add(row.market_node_id, row.commodity, row.units, GoodsFlow.TRADE)
+    row.status, row.settled_epoch, row.gain = SpeculationStatus.SEIZED, ctx.epoch, -round_half_up(row.price * row.units / PERCENT)
+    price = await ctx.session.get(MarketPriceRow, (row.market_node_id, row.commodity, ctx.epoch))
+    if price is not None:
+        price.price = max(1, price.price * (PERCENT - table.seizure_price_cut_pct) // PERCENT)
+    await change_relation(ctx, row.merchant_node_id, authority_id, -table.seizure_anger, MemoryKind.ILL_WILL, note="seized a hoard")
+    roles = {IncidentRole.AUTHORITY: authority_id, IncidentRole.VICTIM: row.merchant_node_id, IncidentRole.PLACE: row.market_node_id}
+    if by is not None:
+        roles[IncidentRole.ACTOR] = by
+    await record(ctx, "market.hoard_seized", roles=roles, facts={"good": row.commodity, "units": row.units}, place=row.market_node_id)
+    return True
+
+
+async def seize_hoards(ctx: TickContext, tally: SpeculationTally) -> None:
+    table = ctx.rules.speculation
+    for row in list(await ctx.session.scalars(select(SpeculationRow).where(SpeculationRow.status == SpeculationStatus.HOARDING).order_by(SpeculationRow.id))):
+        if await hunger_at(ctx, row.market_node_id) < table.famine_hunger:
+            continue
+        realm = await realm_of_community(ctx.session, row.market_node_id)
+        authority = realm if realm is not None else row.market_node_id
+        if held(authority) or not ctx.rng(f"speculation.seize.{row.id}.{ctx.epoch}").chance(table.seize_pct):
+            continue
+        if await seize_hoard(ctx, row, authority):
+            tally.seized += 1
+
+
 async def tend_speculation(ctx: TickContext, book: EconomyBook, tally: SpeculationTally) -> None:
     await settle_hoards(ctx, book, tally)
+    await seize_hoards(ctx, tally)
     await open_hoards(ctx, book, tally)

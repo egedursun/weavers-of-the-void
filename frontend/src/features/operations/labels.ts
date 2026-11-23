@@ -129,6 +129,18 @@ export const STATIONS: Record<Schema['CrewStation'], Named> = {
   marines: { label: 'Marines', icon: Swords, tone: 'warning' },
   officers: { label: 'Officers', icon: Compass, tone: 'gold' },
   rowers: { label: 'Rowers', icon: Repeat, tone: 'muted' },
+  pilots: { label: 'Pilots', icon: Plane, tone: 'info' },
+  engineers: { label: 'Engineers', icon: Zap, tone: 'warning' },
+  sensor_operators: {
+    label: 'Sensor operators',
+    icon: Telescope,
+    tone: 'verdigris',
+  },
+  medics: { label: 'Medics', icon: HeartPulse, tone: 'success' },
+  handlers: { label: 'Handlers', icon: PawPrint, tone: 'gold' },
+  link_operators: { label: 'Link operators', icon: Network, tone: 'info' },
+  casters: { label: 'Casters', icon: Sparkles, tone: 'gold' },
+  navigators: { label: 'Navigators', icon: Navigation, tone: 'verdigris' },
 }
 
 export const ROLES: Record<Schema['ExpeditionRole'], Named> = {

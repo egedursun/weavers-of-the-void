@@ -161,7 +161,7 @@ async def test_a_word_takes_in_another_meaning_and_the_name_of_a_dreaded_beast_i
     assert tally.veiled >= 1
     veiled = await session.scalar(select(NameExonymRow).where(NameExonymRow.language_entity_id == language.id))
     assert veiled is not None
-    old = await session.scalar(select(LexemeRow).where(LexemeRow.language_entity_id == language.id, LexemeRow.register == WordRegister.SACRED))
+    old = await session.scalar(select(LexemeRow).where(LexemeRow.language_entity_id == language.id, LexemeRow.register == WordRegister.TABOO))
     assert old is not None
     assert old.word == "Graw"
 

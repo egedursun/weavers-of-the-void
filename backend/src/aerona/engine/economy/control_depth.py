@@ -50,6 +50,7 @@ from aerona.engine.economy.materials import set_node_material
 from aerona.engine.economy.provenance import ensure_materials
 from aerona.engine.economy.stocks import goods_of, sync_aggregates
 from aerona.engine.economy.workshop_designs import assign_design
+from aerona.engine.gatherings.control import node as known_node
 from aerona.engine.monetary.authorities import establish
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
@@ -638,7 +639,12 @@ async def edit_loan(ctx: TickContext, loan_id: int, values: Mapping[str, int | N
         if value < (1 if key == "principal" else 0):
             raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} is too low.")
         setattr(row, key, value)
+    collateral = values.get("collateral_node_id")
+    if collateral is not None:
+        row.collateral_node_id = (await known_node(ctx, collateral, "collateral")).id
     if status is not None:
+        if status is LoanStatus.COLLATERAL_SEIZED and row.collateral_node_id is None:
+            raise ValidationFailedError("A loan whose collateral is seized names its collateral.")
         row.status = status
     if hold is not None:
         row.held = hold

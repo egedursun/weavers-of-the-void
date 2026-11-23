@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.types import String
 
 from aerona.api.dependencies import ServicesDep, reader, world_rules
+from aerona.api.routers.prehistory import incident_text
 from aerona.api.schemas.collective import (
     AccountStanceView,
     AccountView,
@@ -247,6 +248,7 @@ async def account_views(session: AsyncSession, node_id: int, clock: Clock) -> li
                 medium=row.medium,
                 collection_id=row.collection_id,
                 collection_name=names.get(row.collection_id) if row.collection_id is not None else None,
+                happening=await incident_text(session, row.incident_id),
                 subject=at(refs, row.subject_node_id),
                 structure=at(refs, row.structure_entity_id),
                 artwork=at(refs, row.artwork_entity_id),

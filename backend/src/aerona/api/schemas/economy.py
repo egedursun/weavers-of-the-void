@@ -22,6 +22,7 @@ from aerona.domain.enums.economy import (
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.nature_kinds import MaterialSource
+from aerona.domain.enums.operations import CarrierKind
 from aerona.domain.enums.polity import DebtRemedy
 from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
 
@@ -238,6 +239,9 @@ class RouteDangerView(ApiModel):
     beasts: int
     weather: int
     sea: int
+    officials: int
+    spoilage: int
+    pilferage: int
 
 
 class RouteLossView(ApiModel):
@@ -289,6 +293,9 @@ class TradeRouteView(ApiModel):
     closed_by_son_name: str
     dangers: RouteDangerView
     season_pct: int
+    closed_season: int | None
+    seasons: dict[int, str]
+    carrier: CarrierKind | None
     chokepoint: bool
     locked: list[str]
     untolled: list[int]

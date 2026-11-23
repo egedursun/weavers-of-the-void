@@ -20,7 +20,7 @@ from aerona.db.tables.happenings import RegionGeomorphRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held, unheld
-from aerona.domain.enums.agrarian import NutrientKind
+from aerona.domain.enums.agrarian import NutrientKind, RebuildCause
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import SpreadPath
@@ -42,6 +42,7 @@ from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.agrarian.book import deposit, shield_of
+from aerona.engine.agrarian.ruin import mark_ruin
 from aerona.engine.body.hits import Harm
 from aerona.engine.body.variants import folk_biology
 from aerona.engine.context import TickContext
@@ -292,6 +293,15 @@ async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster
     return impact
 
 
+async def harm_districts(ctx: TickContext, entity: EntityRow, disaster: Disaster, scale: float) -> None:
+    hurt = DISTRICT_HARMS.get(disaster)
+    if hurt is None or entity.entity_type is not EntityType.SETTLEMENT:
+        return
+    if disaster is Disaster.ERUPTION:
+        await mark_ruin(ctx, entity, RebuildCause.ERUPTION)
+    await damage_districts(ctx, entity, hurt, scale)
+
+
 async def strike_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: float) -> DisasterImpact:
     impact = DisasterImpact()
     knowledge = await KnowledgeMap.load(ctx.session)
@@ -323,9 +333,7 @@ async def strike_disaster(ctx: TickContext, target: EntityRow, disaster: Disaste
             impact.destroyed.append(entity)
             continue
         _strike_stats(ctx.rules, entity, disaster, scale, knowledge)
-        hurt = DISTRICT_HARMS.get(disaster)
-        if hurt is not None and entity.entity_type is EntityType.SETTLEMENT:
-            await damage_districts(ctx, entity, hurt, scale)
+        await harm_districts(ctx, entity, disaster, scale)
         after = headcount_value(entity)
         if entity.entity_type in STRUCK_TYPES:
             lost = max(0, before - after) if before is not None and after is not None else None
@@ -1012,6 +1020,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.chronicle_entities",
     "table.conditions",
     "table.disease_profiles",
+    "table.disease_routes",
     "table.districts",
     "table.divine_standing",
     "table.entities",

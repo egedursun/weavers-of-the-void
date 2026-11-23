@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Anchor,
   Baby,
   Beer,
@@ -12,6 +11,7 @@ import {
   Cpu,
   Crown,
   Droplets,
+  Ear,
   Eye,
   Feather,
   FileText,
@@ -22,16 +22,19 @@ import {
   Gavel,
   Gem,
   Ghost,
+  GraduationCap,
   Hammer,
   HandHeart,
   Heart,
   HeartCrack,
+  HeartPulse,
   Home,
   Hourglass,
   Landmark,
   Languages,
   Leaf,
   MapPin,
+  Medal,
   Moon,
   Paintbrush,
   Pill,
@@ -48,9 +51,12 @@ import {
   Tag,
   Tent,
   TrendingUp,
+  type LucideIcon,
   User,
   UserRound,
   Users,
+  Vote,
+  Warehouse,
   Wheat,
   Wind,
   Wine,
@@ -190,6 +196,8 @@ export const PURPOSES: Record<Schema['CoopPurpose'], Named> = {
   insurance: { label: 'Insurance', icon: Shield, tone: 'success' },
   burial: { label: 'Burial', icon: Ghost, tone: 'muted' },
   credit: { label: 'Credit', icon: Coins, tone: 'warning' },
+  granary: { label: 'A shared granary', icon: Warehouse, tone: 'gold' },
+  herding: { label: 'Shared herds', icon: Footprints, tone: 'success' },
 }
 
 export const EVIDENCE_KINDS: Record<Schema['EvidenceKind'], Named> = {
@@ -199,6 +207,12 @@ export const EVIDENCE_KINDS: Record<Schema['EvidenceKind'], Named> = {
   confession: { label: 'A confession', icon: Scroll, tone: 'danger' },
   divination: { label: 'A divination', icon: Sparkles, tone: 'verdigris' },
   magic: { label: 'Magic', icon: Zap, tone: 'gold' },
+  expert: {
+    label: 'One skilled in the matter',
+    icon: GraduationCap,
+    tone: 'info',
+  },
+  hearsay: { label: 'Hearsay', icon: Ear, tone: 'muted' },
 }
 
 export const MEMBERSHIPS: Record<Schema['Membership'], Named> = {
@@ -222,6 +236,10 @@ export const RIGHTS: Record<Schema['MemberRight'], Named> = {
   marriage: { label: 'Marriage', icon: Heart, tone: 'info' },
   arms: { label: 'Arms', icon: Swords, tone: 'danger' },
   courts: { label: 'The courts', icon: Gavel, tone: 'verdigris' },
+  property: { label: 'Property', icon: Home, tone: 'gold' },
+  movement: { label: 'Moving and settling', icon: Footprints, tone: 'info' },
+  vote: { label: 'The vote', icon: Vote, tone: 'verdigris' },
+  worship: { label: 'Open worship', icon: Sparkles, tone: 'gold' },
 }
 
 export const PATHS: Record<Schema['Naturalisation'], Named> = {
@@ -232,6 +250,7 @@ export const PATHS: Record<Schema['Naturalisation'], Named> = {
   service: { label: 'By service', icon: Swords, tone: 'danger' },
   purchase: { label: 'By purchase', icon: Coins, tone: 'warning' },
   grant: { label: 'By grant', icon: Crown, tone: 'gold' },
+  union: { label: 'By union', icon: Heart, tone: 'verdigris' },
 }
 
 export const RELIEFS: Record<Schema['ReliefKind'], Named> = {
@@ -239,4 +258,7 @@ export const RELIEFS: Record<Schema['ReliefKind'], Named> = {
   alms: { label: 'Alms', icon: HandHeart, tone: 'success' },
   workhouse: { label: 'Workhouses', icon: Hammer, tone: 'muted' },
   parish: { label: 'Parish relief', icon: Landmark, tone: 'verdigris' },
+  foster_care: { label: 'Foster care', icon: Baby, tone: 'success' },
+  sick_house: { label: 'Sick house', icon: HeartPulse, tone: 'info' },
+  pension: { label: 'Pension', icon: Medal, tone: 'gold' },
 }

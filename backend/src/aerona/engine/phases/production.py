@@ -12,11 +12,15 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.ecology import HerdRow
 from aerona.db.tables.economy import CommunityStockRow, NodeMaterialRow, ResourceProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
+from aerona.db.tables.faith import RelicRow
+from aerona.db.tables.fossils import FossilBedRow
+from aerona.db.tables.living import LivingLineRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.economy import CommodityKind, MaterialOrigin
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.fossil import FossilReading
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
@@ -29,6 +33,7 @@ from aerona.engine.economy.provenance import sweep_materials
 from aerona.engine.economy.refining import RefiningTally, refine_community
 from aerona.engine.economy.stocks import sync_aggregates
 from aerona.engine.economy.survey import depth_backfill, economy_backfill, profile_resources, seed_communities
+from aerona.engine.economy.w52_goods import seed_new_goods
 from aerona.engine.environment.book import active_sky
 from aerona.engine.industry.fuels import lay_coal_seams
 from aerona.engine.interconnect.annotations import reads, writes
@@ -232,7 +237,7 @@ async def material_decay(ctx: TickContext) -> None:
     crumbled = 0
     for row in rows:
         entity = book.entities.get(row.node_id)
-        if entity is None or entity.entity_type not in (EntityType.ITEM, EntityType.STRUCTURE):
+        if entity is None or held(entity.id) or entity.entity_type not in (EntityType.ITEM, EntityType.STRUCTURE):
             continue
         props = book.materials.props(entity.world_id, row.material, row.world_material_id)
         if props is None:
@@ -378,6 +383,42 @@ async def _research(ctx: TickContext, book: EconomyBook) -> int:
     return made
 
 
+async def _fossil_materials(ctx: TickContext) -> int:
+    made = 0
+    for bed in list(await ctx.session.scalars(select(FossilBedRow).where(FossilBedRow.reading == FossilReading.MATERIAL).order_by(FossilBedRow.id))):
+        place = await ctx.session.get(EntityRow, bed.region_entity_id)
+        if place is None or held(place.id) or await has_substance(ctx, place.id):
+            continue
+        if ctx.rng(f"substance.fossil.{bed.id}.{ctx.epoch}").chance(ctx.rules.materials.world_material_beast_chance):
+            await new_substance(ctx, MaterialOrigin.FOSSIL, place, source_node_id=place.id)
+            made += 1
+    return made
+
+
+async def _grown_materials(ctx: TickContext) -> int:
+    made = 0
+    for line in list(await ctx.session.scalars(select(LivingLineRow).where(LivingLineRow.owner_node_id.is_not(None)).order_by(LivingLineRow.id))):
+        owner = await ctx.session.get(EntityRow, line.owner_node_id)
+        if owner is None or held(owner.id) or await has_substance(ctx, owner.id):
+            continue
+        if ctx.rng(f"substance.line.{line.id}.{ctx.epoch}").chance(ctx.rules.materials.world_material_research_chance):
+            await new_substance(ctx, MaterialOrigin.LIVING_LINE, owner, source_node_id=owner.id)
+            made += 1
+    return made
+
+
+async def _salvaged_materials(ctx: TickContext) -> int:
+    made = 0
+    for relic in list(await ctx.session.scalars(select(RelicRow).where(RelicRow.shrine_entity_id.is_not(None)).order_by(RelicRow.item_entity_id))):
+        place = await ctx.session.get(EntityRow, relic.shrine_entity_id)
+        if place is None or held(place.id) or await has_substance(ctx, relic.item_entity_id):
+            continue
+        if ctx.rng(f"substance.salvage.{relic.item_entity_id}.{ctx.epoch}").chance(ctx.rules.materials.world_material_research_chance):
+            await new_substance(ctx, MaterialOrigin.SALVAGE, place, source_node_id=relic.item_entity_id)
+            made += 1
+    return made
+
+
 async def _slain_beasts(ctx: TickContext) -> int:
     made = 0
     statement = select(EntityFlagRow.entity_id).where(EntityFlagRow.flag == EntityFlag.EXTINCT, EntityFlagRow.epoch == ctx.epoch)
@@ -398,6 +439,8 @@ async def _slain_beasts(ctx: TickContext) -> int:
 
 
 @reads(
+    "people.population",
+    "settlement.population",
     "table.army_profiles",
     "table.bodies",
     "table.bonds",
@@ -409,10 +452,13 @@ async def _slain_beasts(ctx: TickContext) -> int:
     "table.entities",
     "table.entity_flags",
     "table.forced_weather",
+    "table.fossil_beds",
+    "table.goods_flows",
     "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
     "table.irregular_seasons",
+    "table.living_lines",
     "table.name_registry",
     "table.nodes",
     "table.place_environment",
@@ -422,6 +468,7 @@ async def _slain_beasts(ctx: TickContext) -> int:
     "table.region_crops",
     "table.region_environment",
     "table.region_pollution",
+    "table.relics",
     "table.resource_profiles",
     "table.resource_workers",
     "table.skills",
@@ -439,10 +486,13 @@ async def _slain_beasts(ctx: TickContext) -> int:
     "table.worlds",
 )
 @writes(
+    "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_stocks",
     "table.entities",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
@@ -457,6 +507,10 @@ async def world_materials(ctx: TickContext) -> None:
     ctx.count("leak_crystals", await _leak_crystals(ctx, book))
     ctx.count("alloys", await _research(ctx, book))
     ctx.count("beasts", await _slain_beasts(ctx))
+    ctx.count("fossil_materials", await _fossil_materials(ctx))
+    ctx.count("new_goods_seeded", await seed_new_goods(ctx, book))
+    ctx.count("grown_materials", await _grown_materials(ctx))
+    ctx.count("salvaged_materials", await _salvaged_materials(ctx))
 
 
 async def _grounds(ctx: TickContext) -> dict[int, list[tuple[EntityRow, ResourceProfileRow]]]:

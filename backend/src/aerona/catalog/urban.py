@@ -106,6 +106,7 @@ AMENITIES = acting_set(
 )
 NUISANCES = acting_set(frozenset({K.TANNERY, K.PRISON, K.FORGE, K.MILL, K.MINE, K.QUARRY, K.SLAUGHTERHOUSE, K.CHARCOAL_KILN, K.FISHERY, K.SAWMILL}))
 NUISANCE_DISTRICTS = frozenset({D.SLUMS, D.NECROPOLIS})
+ROUGH_QUARTERS = frozenset({D.SLUMS, D.CAMP})
 HOME_DISTRICT: MappingProxyType[StructureKind, DistrictKind] = acting(
     {
         K.TEMPLE: D.TEMPLE_QUARTER,
@@ -256,6 +257,8 @@ DENSITY_RULE = total(
         D.SUBURB: "suburb_housing_pct",
         D.TRANSPORT_HUB: "transport_hub_housing_pct",
         D.UNIVERSITY: "university_housing_pct",
+        D.CAMP: "camp_housing_pct",
+        D.LAZARETTO: "lazaretto_housing_pct",
     },
 )
 HOUSING_RULE = {
@@ -324,6 +327,8 @@ RACKETS_OF: MappingProxyType[FactionKind, tuple[RacketKind, ...]] = MappingProxy
         FactionKind.PIRATE_CONFEDERACY: (RacketKind.SMUGGLING, RacketKind.KIDNAPPING, RacketKind.TRAFFICKING),
         FactionKind.ASSASSINS: (RacketKind.EXTORTION, RacketKind.DATA_THEFT),
         FactionKind.BANDITS: (RacketKind.PROTECTION, RacketKind.TRAFFICKING),
+        FactionKind.STREET_GANG: (RacketKind.PROTECTION, RacketKind.INTOXICANTS),
+        FactionKind.TRAFFICKING_RING: (RacketKind.TRAFFICKING, RacketKind.KIDNAPPING),
     }
 )
 RACKET_TOLL: Mapping[RacketKind, tuple[int, str, int]] = total(

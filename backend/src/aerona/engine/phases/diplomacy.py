@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import and_, or_, select
 
 from aerona.catalog.life_traits import TREATY_KIND_TRAITS, having
+from aerona.catalog.pacts import STANDINGS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondRepository
@@ -279,6 +280,8 @@ class PairContext:
         return max(self.weights.get(self.standing.get(item, RegionalStanding.MINOR_POWER), PERCENT) for item in (first, second)) / PERCENT
 
     def alliance_weight(self, first: int, second: int) -> float:
+        if any(not STANDINGS[self.standing.get(item, RegionalStanding.MINOR_POWER)].allies for item in (first, second)):
+            return 0.0
         threatened = any(self.standing.get(item) is RegionalStanding.HEGEMON for item in self.standing if item not in (first, second))
         return self.balance_pct / PERCENT if threatened else 1.0
 
@@ -291,12 +294,7 @@ async def _pair_context(ctx: TickContext, book: RealmBook | None = None) -> Pair
         if book is not None
         else {}
     )
-    weights = {
-        RegionalStanding.HEGEMON: table.hegemon_war_pct,
-        RegionalStanding.GREAT_POWER: table.great_war_pct,
-        RegionalStanding.MINOR_POWER: table.minor_war_pct,
-        RegionalStanding.CLIENT: table.client_war_pct,
-    }
+    weights = {standing: spec.war_pct(ctx.rules) for standing, spec in STANDINGS.items()}
     return PairContext(bonds, await blood_feud_pairs(ctx.session), standing, weights, table.balance_alliance_pct)
 
 
@@ -500,6 +498,8 @@ async def alliance_lifetimes(ctx: TickContext, communities: int) -> int:
     "table.memories",
     "table.mind_profiles",
     "table.minds",
+    "table.museum_collections",
+    "table.museum_pieces",
     "table.name_registry",
     "table.network_nodes",
     "table.node_births",

@@ -7,11 +7,13 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.sea_waves import SeaWaveCoastRow, SeaWaveRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.agrarian import RebuildCause
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import ScarKind, TerrainKind
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sea_waves import WaveOrigin
+from aerona.engine.agrarian.ruin import ruin_towns_in
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.keystones import reef_shield, services_by_region
 from aerona.engine.environment.book import add_scar
@@ -75,6 +77,7 @@ async def strike_coast(ctx: TickContext, atlas: RegionAtlas, wave: SeaWaveRow, r
     if row.warned:
         severity *= 1 - table.warning_death_cut_pct / PERCENT
         await record(ctx, "land.wave_warned", roles={IncidentRole.PLACE: region_id}, facts={"height": height})
+    await ruin_towns_in(ctx, region_id, RebuildCause.SEA_WAVE)
     impact = await strike(ctx, region, Disaster.FLOOD, severity)
     if ground is not None and "scar.flooded" not in ground.locked:
         add_scar(ground, ScarKind.FLOODED, height // 2)

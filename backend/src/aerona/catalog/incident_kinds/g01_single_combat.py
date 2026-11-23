@@ -26,6 +26,7 @@ from aerona.domain.enums.war import WarCause
 DUEL_ACTIONS = frozenset(
     {
         A.CLOSE,
+        A.FLEE,
         A.STRIKE,
         A.CUT,
         A.THRUST,

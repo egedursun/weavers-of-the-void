@@ -25,6 +25,15 @@ class SeasonStep:
 
 SEASON_POSITIONS: tuple[SeasonPosition, ...] = (
     SeasonPosition(
+        "trade_route_profiles",
+        "closed_season",
+        True,
+        WorldLink.ENTITY,
+        "route_entity_id",
+        SeasonDating.POSITION,
+        ("engine/economy/route_states.py", "engine/economy/route_control.py"),
+    ),
+    SeasonPosition(
         "season_onsets",
         "season_position",
         False,

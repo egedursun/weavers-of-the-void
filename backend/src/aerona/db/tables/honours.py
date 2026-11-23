@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
+from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.honours import UnitHonourKind, VeteranGrant
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
@@ -60,6 +61,18 @@ class VeteranGrantRow(Base):
     war_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class VeteranPolicyRow(Base):
+    __tablename__ = "veteran_policies"
+
+    polity_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    grant: Mapped[VeteranGrant] = mapped_column(enum_type(VeteranGrant, "grant"), default=VeteranGrant.PENSION)
+    set_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+register_profile_table(VeteranPolicyRow.__tablename__, "polity_entity_id")
 
 
 class HonourKindRow(Base):

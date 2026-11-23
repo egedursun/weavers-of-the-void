@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.crimes import CRIMES, PUNISHMENTS
 from aerona.catalog.ethics import ACT_CRIMES, HONOUR_MODELS
+from aerona.catalog.finance import OWED_LOANS
 from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.catalog.life.demography import INHERITANCE_RULES
 from aerona.catalog.life.domain import LENDER_KINDS
@@ -58,7 +59,7 @@ from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.ethics import ethics_of, honour_of
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.enactment import propose
-from aerona.engine.polity.law_areas import area_order, lobbies_of, pressed
+from aerona.engine.polity.law_areas import area_order, area_weight, lobbies_of, pressed
 from aerona.engine.polity.law_effects import jubilee, levy_terms, standing_soldiers, tenure_and_serfdom
 from aerona.engine.polity.laws import LawBook, discord, enact, repeal, settle_justice, validate
 from aerona.engine.polity.living_laws import living_world_laws
@@ -621,7 +622,7 @@ async def service_debt(ctx: TickContext, book: RealmBook, realm: Realm) -> None:
     table = ctx.rules.government
     profile = realm.profile
     loans = list(
-        await ctx.session.scalars(select(LoanRow).where(LoanRow.borrower_entity_id == realm.entity.id, LoanRow.status == LoanStatus.OPEN).order_by(LoanRow.id))
+        await ctx.session.scalars(select(LoanRow).where(LoanRow.borrower_entity_id == realm.entity.id, LoanRow.status.in_(OWED_LOANS)).order_by(LoanRow.id))
     )
     outstanding = sum(owed(loan) for loan in loans)
     paid = outstanding - profile.debt
@@ -633,7 +634,7 @@ async def service_debt(ctx: TickContext, book: RealmBook, realm: Realm) -> None:
         paid -= share
         if owed(loan) == 0:
             loan.status = LoanStatus.REPAID
-    covered = sum(owed(loan) for loan in loans if loan.status is LoanStatus.OPEN)
+    covered = sum(owed(loan) for loan in loans if loan.status in OWED_LOANS)
     if profile.debt > covered and "debt" not in profile.locked:
         lender = await lender_for(ctx, book, realm)
         if lender is not None:
@@ -659,7 +660,7 @@ async def service_debt(ctx: TickContext, book: RealmBook, realm: Realm) -> None:
             elif stat(lender, "wealth") is not None:
                 shift_stat(lender, "wealth", -principal // PERCENT, ctx.rules.society.default_stat)
     for loan in loans:
-        if loan.status is LoanStatus.OPEN and loan.due_epoch < ctx.epoch and owed(loan) > 0:
+        if loan.status in OWED_LOANS and loan.due_epoch < ctx.epoch and owed(loan) > 0:
             await default(ctx, book, realm, loan)
 
 
@@ -805,7 +806,7 @@ async def enforce(ctx: TickContext, realm: Realm, laws: LawBook) -> int:
         if "conflict" not in profile.locked:
             profile.conflict = clamp_int(profile.conflict - table.conflict_decay + pressed(ctx.rules, profile.area, lobbies), 0, PERCENT)
         if discord(profile.kind, profile.params, values) >= table.discord_distance:
-            unrest += table.discord_unrest
+            unrest += round_half_up(table.discord_unrest * area_weight(ctx.rules, profile.area))
         unrest += round_half_up(profile.conflict * table.conflict_unrest_pct / PERCENT)
         settle_justice(law, profile, values)
     if unrest:

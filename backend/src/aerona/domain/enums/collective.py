@@ -83,6 +83,8 @@ class AccountKind(StrEnum):
     ELDER_MEMORY = "elder_memory"
     RECORD = "record"
     TESTIMONY = "testimony"
+    GENEALOGY = "genealogy"
+    SONG = "song"
 
 
 class AccountStance(StrEnum):
@@ -90,6 +92,9 @@ class AccountStance(StrEnum):
     VILIFY = "vilify"
     OMIT = "omit"
     NEUTRAL = "neutral"
+    JUSTIFY = "justify"
+    LAMENT = "lament"
+    MOCK = "mock"
 
 
 class AccountMedium(StrEnum):

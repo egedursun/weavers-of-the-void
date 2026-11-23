@@ -26,6 +26,7 @@ const EMPTY = {
   fault_layer: null,
   peer_groups: [],
   sanctuaries: [],
+  fugitives: [],
   sanctuary_law: null,
   satires: [],
   jester: null,
@@ -125,6 +126,35 @@ describe('identities, play, sanctuary and satire', () => {
       .toBeVisible()
     await expect
       .element(screen.getByRole('button', { name: 'Make the law' }))
+      .toBeDisabled()
+  })
+
+  it('lists a runaway the realm hunts and sets another mortal to flight', async () => {
+    serveBase()
+    onApi('GET', '/api/belonging/of/50', {
+      ...EMPTY,
+      node: REALM,
+      fugitives: [
+        {
+          id: 3,
+          mortal: PELL,
+          kind: 'runaway',
+          pursuer: REALM,
+          fled_epoch: 4,
+          caught_epoch: null,
+          freed_epoch: null,
+          locked: [],
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/fugitive:create', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<BelongingSection nodeId={50} />)
+    await screen.getByRole('tab', { name: /Sanctuary/ }).click()
+    await expect
+      .element(screen.getByText('Pell, runaway from bondage', { exact: true }))
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole('button', { name: 'Set them to flight' }))
       .toBeDisabled()
   })
 

@@ -57,9 +57,13 @@ import {
   DANGER_FIELD,
   DANGER_KEYS,
   type DangerKey,
+  CARRIER_CHOICES,
   LAND_DECIDES,
   MODE_CHOICES,
+  NO_CARRIER,
+  OPEN_ALL_YEAR,
   STATUS_CHOICES,
+  seasonChoices,
   fieldLabel,
   seasonTone,
   seasonWord,
@@ -98,12 +102,9 @@ function useOptions(types: readonly string[]): ComboboxOption[] {
 }
 
 function lossesBy(losses: Loss[]): Record<DangerKey, number> {
-  const totals: Record<DangerKey, number> = {
-    bandits: 0,
-    beasts: 0,
-    weather: 0,
-    sea: 0,
-  }
+  const totals = Object.fromEntries(
+    DANGER_KEYS.map((key) => [key, 0])
+  ) as Record<DangerKey, number>
   for (const loss of losses) totals[loss.cause] += loss.units
   return totals
 }
@@ -275,6 +276,10 @@ export function RouteEditor({
   const armies = useOptions(['army'])
   const [mode, setMode] = useState<string>(route.mode)
   const [status, setStatus] = useState<string>(route.status)
+  const [closedSeason, setClosedSeason] = useState<string>(
+    route.closed_season === null ? OPEN_ALL_YEAR : String(route.closed_season)
+  )
+  const [carrier, setCarrier] = useState<string>(route.carrier ?? NO_CARRIER)
   const [controller, setController] = useState<string | null>(
     route.controller_id === null ? null : String(route.controller_id)
   )
@@ -376,6 +381,57 @@ export function RouteEditor({
             disabled={blocked !== null}
             disabledReason={blocked ?? undefined}
             onClick={() => hold('status', status)}
+          >
+            <Check />
+          </Button>
+        </div>
+        <div className='flex min-w-0 items-end gap-2'>
+          <div className='min-w-0 flex-1'>
+            <MindPicker
+              label='Closed season'
+              value={closedSeason}
+              table={seasonChoices(route.seasons)}
+              blocked={blocked}
+              onPick={setClosedSeason}
+            />
+          </div>
+          <Button
+            size='icon'
+            variant={
+              route.locked.includes('closed_season') ? 'default' : 'outline'
+            }
+            aria-label='Hold the closed season'
+            disabled={blocked !== null}
+            disabledReason={blocked ?? undefined}
+            onClick={() =>
+              hold(
+                'closed_season',
+                closedSeason === OPEN_ALL_YEAR ? null : Number(closedSeason)
+              )
+            }
+          >
+            <Check />
+          </Button>
+        </div>
+        <div className='flex min-w-0 items-end gap-2'>
+          <div className='min-w-0 flex-1'>
+            <MindPicker
+              label='Carried by'
+              value={carrier}
+              table={CARRIER_CHOICES}
+              blocked={blocked}
+              onPick={setCarrier}
+            />
+          </div>
+          <Button
+            size='icon'
+            variant={route.locked.includes('carrier') ? 'default' : 'outline'}
+            aria-label='Hold the carrier'
+            disabled={blocked !== null}
+            disabledReason={blocked ?? undefined}
+            onClick={() =>
+              hold('carrier', carrier === NO_CARRIER ? null : carrier)
+            }
           >
             <Check />
           </Button>

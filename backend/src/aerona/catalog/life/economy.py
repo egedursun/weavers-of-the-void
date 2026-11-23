@@ -6,14 +6,30 @@ from aerona.domain.enums.body import DamageType, MaimedKind
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import ExtractionKind, HazardKind, MoneyForm, TradeLoss, TradeRouteStatus
 from aerona.domain.enums.environment import WeatherEffect
+from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.urban import ConvoyStatus
 from aerona.rules.registry import Rules
 
-LIVE = (TradeRouteStatus.FORMING, TradeRouteStatus.OPEN, TradeRouteStatus.BLOCKADED)
+LIVE = (TradeRouteStatus.FORMING, TradeRouteStatus.OPEN, TradeRouteStatus.BLOCKADED, TradeRouteStatus.CONTESTED, TradeRouteStatus.SEASONAL)
+CONTESTABLE = (TradeRouteStatus.OPEN, TradeRouteStatus.CONTESTED)
 
 
-OPEN = (ConvoyStatus.LOADING, ConvoyStatus.TRAVELLING, ConvoyStatus.DELAYED)
+OPEN = (ConvoyStatus.LOADING, ConvoyStatus.TRAVELLING, ConvoyStatus.DELAYED, ConvoyStatus.STRANDED, ConvoyStatus.QUARANTINED)
+CONVOY_WORDS = total(
+    ConvoyStatus,
+    {
+        ConvoyStatus.LOADING: "loading",
+        ConvoyStatus.TRAVELLING: "on the way",
+        ConvoyStatus.DELAYED: "delayed",
+        ConvoyStatus.ARRIVED: "arrived",
+        ConvoyStatus.RAIDED: "raided",
+        ConvoyStatus.LOST: "lost",
+        ConvoyStatus.STRANDED: "stranded by the season",
+        ConvoyStatus.QUARANTINED: "held in quarantine",
+    },
+)
+SHUTTING_RESPONSES = (PlagueResponse.CLOSE_BORDERS, PlagueResponse.QUARANTINE)
 
 
 BRANCH_OF: dict[ExtractionKind, KnowledgeBranch] = {
@@ -114,7 +130,15 @@ HAZARD_RULES: Mapping[HazardKind, str] = total(
 
 
 DANGER_KEYS: MappingProxyType[TradeLoss, str] = MappingProxyType(
-    {TradeLoss.BANDITS: "danger_bandits", TradeLoss.BEASTS: "danger_beasts", TradeLoss.WEATHER: "danger_weather", TradeLoss.SEA: "danger_sea"}
+    {
+        TradeLoss.BANDITS: "danger_bandits",
+        TradeLoss.BEASTS: "danger_beasts",
+        TradeLoss.WEATHER: "danger_weather",
+        TradeLoss.SEA: "danger_sea",
+        TradeLoss.OFFICIALS: "danger_officials",
+        TradeLoss.SPOILAGE: "danger_spoilage",
+        TradeLoss.PILFERAGE: "danger_pilferage",
+    }
 )
 
 

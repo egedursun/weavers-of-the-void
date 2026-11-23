@@ -1,3 +1,4 @@
+import type { components } from '@/api/generated/schema'
 import {
   DEFAULT_IMAGE_STYLE,
   type ImageStyle,
@@ -37,6 +38,8 @@ export const WIZARD_STEPS = [
   'cosmos',
   'review',
 ] as const
+type NumeralBase = components['schemas']['NumeralBase']
+
 export type WizardStep = (typeof WIZARD_STEPS)[number]
 
 export const STEP_TITLE: Record<WizardStep, string> = {
@@ -60,6 +63,7 @@ export type WizardDraft = {
   technology: TechnologyEra
   technologyLevels: Partial<Record<TechFamily, number>>
   language: LanguageTexture
+  numeralBase: NumeralBase | null
   cosmos: CosmosSize
   shape: CosmosShape
   layerKind: DimensionKind | null
@@ -98,6 +102,7 @@ export function initialDraft(defaults: WizardDefaults): WizardDraft {
     technology: 'iron',
     technologyLevels: {},
     language: 'free',
+    numeralBase: null,
     cosmos: 'single',
     shape: 'one_sun',
     layerKind: null,
@@ -145,6 +150,7 @@ export function applyTemplate(
     technology: template.technology,
     technologyLevels: {},
     language: template.language,
+    numeralBase: null,
     cosmos: template.cosmos,
     shape: template.shape,
     layerKind: null,
@@ -265,6 +271,7 @@ export function toRequest(
       technology: draft.technology,
       technology_levels: draft.technologyLevels,
       language: draft.language,
+      numeral_base: draft.numeralBase,
       cosmos: draft.cosmos,
       shape: effectiveShape(draft),
       layer_kind: effectiveShape(draft) === 'layered' ? draft.layerKind : null,

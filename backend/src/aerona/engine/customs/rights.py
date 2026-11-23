@@ -53,3 +53,17 @@ async def crossing(session: AsyncSession, rules: Rules, ends: tuple[int, int]) -
     factor *= max(0.0, 1 - border.delay * rules.borders.delay_pct / PERCENT * border.enforcement / PERCENT)
     fee = border.fee * rules.borders.fee_per_100 / PERCENT / PERCENT * (1 - border.corruption * rules.borders.forged_pass_pct / PERCENT / PERCENT)
     return factor, fee, second
+
+
+async def voteless_share(session: AsyncSession, realm_id: int | None) -> float:
+    if realm_id is None:
+        return 0.0
+    barred = {
+        row.category
+        for row in await session.scalars(select(MembershipCategoryRow).where(MembershipCategoryRow.polity_entity_id == realm_id))
+        if MemberRight.VOTE.value not in row.rights
+    }
+    categories = list(await session.scalars(select(MembershipRow.category).where(MembershipRow.polity_entity_id == realm_id)))
+    if not categories:
+        return 0.0
+    return sum(1 for category in categories if category in barred) / len(categories)

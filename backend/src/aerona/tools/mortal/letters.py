@@ -6,6 +6,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.communication import DispatchContent, Medium
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
+from aerona.engine.communication.dispatches import ARMY, REGION
 from aerona.engine.communication.post import send
 from aerona.engine.recording.record import StepDraft
 from aerona.prompts import MortalToolId
@@ -20,6 +21,8 @@ class DispatchInput(ToolInput):
     recipient_id: int
     content: DispatchContent
     medium: Medium
+    army_id: int | None = None
+    region_id: int | None = None
 
 
 async def send_dispatch(call: MortalCall, args: DispatchInput) -> str:
@@ -28,7 +31,8 @@ async def send_dispatch(call: MortalCall, args: DispatchInput) -> str:
         fail(MortalResult.DISPATCH_REFUSED, why="a message goes to someone else")
     if args.medium not in MORTAL_MEDIA:
         fail(MortalResult.DISPATCH_REFUSED, why="dreams and magic sendings are not yours to send")
-    row = await send(call.tick, call.me.id, recipient.id, args.content, args.medium)
+    orders = {ARMY: args.army_id, REGION: args.region_id} if args.army_id is not None and args.region_id is not None else None
+    row = await send(call.tick, call.me.id, recipient.id, args.content, args.medium, payload=orders)
     if row is None:
         fail(MortalResult.DISPATCH_REFUSED, why="a god holds you against change")
     label = CONTENT_LABELS[args.content].lower()

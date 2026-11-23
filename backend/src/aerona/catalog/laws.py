@@ -5,6 +5,7 @@ from aerona.catalog.crimes import CRIME_PENALTY_DEFAULTS, CRIMES, PENALTY_WORDS,
 from aerona.core.grammar import fill
 from aerona.core.total import total
 from aerona.domain.enums.crafts import Gear
+from aerona.domain.enums.industry import Pollutant
 from aerona.domain.enums.justice import TrialKind
 from aerona.domain.enums.labour import LegalStanding
 from aerona.domain.enums.mortal import CrimeKind
@@ -95,8 +96,9 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
             "child_labour": Param(False),
             "unions": Param(True),
             "bodies": pick(*(item.value for item in LegalStanding), default=LegalStanding.TOLERATED.value),
+            "hereditary_trades": Param(False),
         },
-        LawKind.ENVIRONMENT_LAW: {"strictness": Param(40)},
+        LawKind.ENVIRONMENT_LAW: {"strictness": Param(40), "pollutant": pick("every_kind", *(item.value for item in Pollutant), default="every_kind")},
         LawKind.DATA_PRIVACY: {"strictness": Param(50)},
         LawKind.CLOSED_SEASON: {},
         LawKind.PROTECTED_WATERS: {},
@@ -259,8 +261,11 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.FRANCHISE: "The vote belongs to the {voters}.",
         LawKind.CONSTITUTION: "The realm is {government:an} that decides by {decision_rule}; the vote belongs to the {voters}, and {estates}.",
         LawKind.CUSTOM: "An old custom without a written rule.",
-        LawKind.LABOUR_LAW: "Work is capped at {max_hours} hours a week; child labour: {child_labour}; unions: {unions}; worker bodies stand {bodies}.",
-        LawKind.ENVIRONMENT_LAW: "Works must hold back their pollution with strictness {strictness}.",
+        LawKind.LABOUR_LAW: (
+            "Work is capped at {max_hours} hours a week; child labour: {child_labour}; unions: {unions}; worker bodies stand {bodies}; "
+            "trades pass from parent to child: {hereditary_trades}."
+        ),
+        LawKind.ENVIRONMENT_LAW: "Works must hold back their pollution ({pollutant}) with strictness {strictness}.",
         LawKind.DATA_PRIVACY: "Records of the people are shielded from prying with strictness {strictness}.",
         LawKind.CLOSED_SEASON: "Fishing and hunting stop for a season so the stock can return.",
         LawKind.PROTECTED_WATERS: "Breeding waters and grounds may not be worked.",

@@ -1,12 +1,13 @@
 from sqlalchemy import func, select
 
 from aerona.agents.context.scope import Scope
+from aerona.catalog.tongues import BASES, REGISTERS, SCRIPT_CAUSES, STAGES
 from aerona.core.grammar import agree, an, several, spoken
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.sons import SonRow
-from aerona.db.tables.tongues import DecipherWorkRow, DivineTongueRow, LanguagePolicyRow
+from aerona.db.tables.tongues import DecipherWorkRow, DivineTongueRow, LanguagePolicyRow, ScriptRow
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.tongues import LanguageModality, LanguageStage
 from aerona.engine.tongues.modality import own_tongue
@@ -37,8 +38,18 @@ async def mortal_tongue_lines(scope: Scope, me: EntityRow) -> list[str]:
     if tongue is not None and profile is not None:
         written = f"written in {an(spoken(profile.writing_system))} script" if profile.writing_system is not None else "unwritten"
         kind = "" if profile.modality is LanguageModality.VOCAL else f" ({spoken(profile.modality)})"
-        stage = "" if profile.stage is LanguageStage.NATURAL else f", {an(profile.stage.value)}"
-        found.append(f"your people speak {tongue.name}{kind}{stage}, {written}")
+        stage = "" if profile.stage is LanguageStage.NATURAL else f", {STAGES[profile.stage].label.lower()}"
+        ancestor = await session.get(EntityRow, profile.parent_language_id) if profile.parent_language_id is not None else None
+        come = f" from {ancestor.name}" if ancestor is not None and profile.stage is LanguageStage.REVIVED else ""
+        found.append(f"your people speak {tongue.name}{kind}{stage}{come}, {written}; it counts {BASES[profile.numeral_base].label.lower()}")
+        held_registers = sorted(
+            set(await session.scalars(select(LexemeRow.register).where(LexemeRow.language_entity_id == tongue.id).distinct())), key=lambda item: item.value
+        )
+        if held_registers:
+            found.append(f"{tongue.name} has words of {', '.join(REGISTERS[item].label.lower() for item in held_registers)}")
+        script = await session.get(ScriptRow, profile.script_id) if profile.script_id is not None else None
+        if script is not None:
+            found.append(f"its script, {script.name}, was {SCRIPT_CAUSES[script.cause].label.lower()} in epoch {script.epoch}")
         for policy in await session.scalars(
             select(LanguagePolicyRow).where(LanguagePolicyRow.language_entity_id == tongue.id).order_by(LanguagePolicyRow.holder_entity_id)
         ):

@@ -548,6 +548,7 @@ export const RELIC_STANCES: Record<Schema['RelicStance'], Named> = {
   tool: { label: 'A tool', icon: Wrench, tone: 'info' },
   forbidden: { label: 'Forbidden', icon: Ban, tone: 'danger' },
   heritage: { label: 'Heritage', icon: Landmark, tone: 'verdigris' },
+  studied: { label: 'Studied', icon: Microscope, tone: 'info' },
 }
 
 export const ENERGY_KINDS: Record<Schema['EnergyKind'], Named> = {

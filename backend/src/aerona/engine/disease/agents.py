@@ -19,6 +19,7 @@ from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.aiding import lens_in
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
@@ -139,7 +140,7 @@ async def treat(ctx: TickContext, outbreak: OutbreakRow, pair: tuple[DiseaseProf
     if community is None:
         return
     medicine = await medicine_of(ctx, community.id)
-    if not row.identified and medicine >= table.identify_level and "identified" not in row.locked:
+    if not row.identified and (medicine >= table.identify_level or await lens_in(ctx.session, community.id)) and "identified" not in row.locked:
         row.identified = True
         tally.identified += 1
         await record(

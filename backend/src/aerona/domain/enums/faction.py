@@ -40,6 +40,8 @@ class FactionKind(StrEnum):
     FINANCIERS = "financiers"
     VETERANS = "veterans"
     WORKER_BODY = "worker_body"
+    STREET_GANG = "street_gang"
+    TRAFFICKING_RING = "trafficking_ring"
 
 
 class FactionScale(StrEnum):
@@ -61,6 +63,9 @@ class FactionGoalKind(StrEnum):
     CONVERT_REALM = "convert_realm"
     INDEPENDENCE = "independence"
     LOOT = "loot"
+    GAIN_PRIVILEGE = "gain_privilege"
+    WIN_OFFICE = "win_office"
+    RUIN_RIVAL = "ruin_rival"
 
 
 class FactionActionKind(StrEnum):
@@ -79,6 +84,8 @@ class FactionActionKind(StrEnum):
     SUPPRESSED = "suppressed"
     HIRED = "hired"
     DEFECTED = "defected"
+    PROPAGANDA = "propaganda"
+    BOYCOTT = "boycott"
 
 
 class FactionRank(StrEnum):
@@ -94,6 +101,8 @@ class EstatePrivilege(StrEnum):
     COUNCIL_SEAT = "council_seat"
     ARMS = "arms"
     JUDICIAL_IMMUNITY = "judicial_immunity"
+    RESERVED_OFFICES = "reserved_offices"
+    LAND_HOLDING = "land_holding"
 
 
 class MovementCause(StrEnum):

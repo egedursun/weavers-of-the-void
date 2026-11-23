@@ -67,6 +67,12 @@ const CAPTIVE_STATUS: Record<string, Named> = {
   rescued: { label: 'Rescued', icon: Shield, tone: 'success' },
   released: { label: 'Released', icon: Handshake, tone: 'success' },
   ward: { label: 'Raised as a ward', icon: HeartHandshake, tone: 'info' },
+  paroled: { label: 'Freed on parole', icon: Gavel, tone: 'gold' },
+  married_in: {
+    label: 'Married into the captors',
+    icon: HeartHandshake,
+    tone: 'success',
+  },
 }
 
 function ContractCard({
@@ -353,6 +359,13 @@ function PrisonerCard({
       <div className='flex min-w-0 flex-wrap gap-1'>
         {married && (
           <Plain icon={HeartHandshake}>{`Wed to ${married.name}`}</Plain>
+        )}
+        {row.values.status === 'paroled' && (
+          <Plain icon={Gavel}>
+            {typeof row.values.oath_id === 'number'
+              ? 'Sworn not to fight again'
+              : 'Freed without an oath'}
+          </Plain>
         )}
         {typeof row.values.ransom_paid === 'number' && (
           <Plain

@@ -1041,19 +1041,26 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"site_id": "The site you dig"},
     ),
     T.PRESS_LEVERAGE: ToolText(
-        "You lean on someone you hold a hook on, or who owes you a favour: to marry you, to step down from their offices, or to lend you support. "
-        "A weak hook is spent; a favour called in may be refused. 1 action.",
+        "You lean on someone you hold a hook on, or who owes you a favour, with one demand: marriage, step down, support, vote, law, "
+        "appointment, silence or payment. Appointment puts you in a vacant office of the realm they rule; silence keeps them from "
+        "testifying before a court that tries you. "
+        "A weak hook is spent and a strong one may wear weak; a favour called in may be refused. 1 action.",
         {"target_id": "Whom you press", "demand": "What you demand"},
     ),
     T.SEND_DISPATCH: ToolText(
-        "You send a message to someone: a proposal, a demand, a threat, an insult, word of a gift, a declaration, a report, a plea or intelligence, "
+        "You send a message to someone: proposal, demand, threat, insult, gift notice, declaration, report, plea, intelligence, order or warning, "
         "by one of these: {{ mortal_media | join(', ') }}. It takes time by distance, medium and season; spies may read or seize it, "
         "outlaws may waylay it, and in another tongue it may be misread. 1 action.",
-        {"recipient_id": "To whom", "content": "What it says", "medium": "How it travels"},
+        {
+            "recipient_id": "To whom",
+            "content": "What it says",
+            "medium": "How it travels",
+            "army_id": "For an order to a commander: the army it moves",
+            "region_id": "For an order to a commander: the land the army is to go to",
+        },
     ),
     T.BARGAIN_WITH_ESTATE: ToolText(
-        "As the ruler of a realm, you grant one of its estates a privilege (freedom from taxes, a monopoly, a seat in council, the right to bear arms, "
-        "immunity from the courts) to win its loyalty, or take one back at a cost in loyalty. "
+        "As the ruler of a realm, you grant one of its estates a privilege ({{ estate_privileges }}) to win its loyalty, or take one back at a cost in loyalty. "
         "At most {{ rules.mortal_tools.estate_bargain_per_epoch | several('bargain', 'bargains') }} an age. 1 action.",
         {"estate_id": "The estate", "privilege": "The privilege", "grant": "True to grant it, false to take it back"},
     ),
@@ -1072,12 +1079,12 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"accused_id": "Whom you accuse", "crime": "The crime you charge them with"},
     ),
     T.ISSUE_DEMAND: ToolText(
-        "As ruler or regent you demand something of another realm: a land ceded, a vassal released, its faith changed to yours, or a payment. "
+        "As ruler or regent you demand something of another realm: {{ crisis_demands }}. A person to hand over is named as the subject. "
         "A crisis opens: other realms back a side, the weaker side backs down or concedes, and if neither yields it becomes war. 1 action.",
         {
             "target_id": "The realm you make the demand of",
-            "demand": "What you demand: cede_region, release_vassal, convert or pay",
-            "subject_id": "The land to cede or the vassal to release, if the demand names one",
+            "demand": "What you demand: cede_region, release_vassal, convert, pay, hand_over, disarm or open_trade",
+            "subject_id": "The land to cede, the vassal to release or the person to hand over, if the demand names one",
         },
     ),
     T.BACK_CRISIS: ToolText(
@@ -1085,11 +1092,9 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"crisis_id": "The crisis", "side": "Which side you back: demander or target"},
     ),
     T.ISSUE_MANDATE: ToolText(
-        "As ruler or regent you issue a mandate: a production order, a ban on exporting a good, an order to build a quarter, relief from the state "
-        "granaries for a land short of food, a curfew, slum clearance, works against disaster, or the enclosure of a town's commons. Unmet mandates "
-        "cost you legitimacy, and harsh ones weigh on your people. 1 action.",
+        "As ruler or regent you issue a mandate: {{ mandate_kinds }}. Unmet mandates cost you legitimacy, and harsh ones weigh on your people. 1 action.",
         {
-            "kind": "produce, export_ban, build, famine_relief, curfew, slum_clearance, prepare or enclosure",
+            "kind": "produce, export_ban, build, famine_relief, curfew, slum_clearance, prepare, enclosure, ration or corvee",
             "settlement_id": "The settlement it is laid on, if any",
             "commodity": "The good to produce, ban or send",
             "district": "The quarter to build",
@@ -1097,8 +1102,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.ASSIGN_TASK: ToolText(
-        "As ruler or regent you set an officer of your council to a task: improving relations with a realm, training troops, collecting taxes, "
-        "disrupting schemes, carrying the faith into a land, or purging corruption. 1 action.",
+        "As ruler or regent you set an officer of your council to a task: {{ council_tasks }}. 1 action.",
         {"office_id": "The office", "task": "The task", "target_id": "The realm or land the task aims at, if any"},
     ),
     T.SEIZE_TITLE: ToolText(
@@ -1128,12 +1132,15 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.TRADE_LORE: ToolText(
         "You trade a piece of lore you hold (a technique, a hidden site, knowledge of a land or a prophecy) to a neighbour who lacks it. "
-        "Rarer lore is worth more, and each telling makes it less rare. You are paid in wealth or in renown for wisdom. 1 action.",
+        "Rarer lore is worth more, and each telling makes it less rare. You may name the price: wealth, favour, renown, exchange or service. "
+        "Exchange takes a piece of lore the buyer holds and you lack; service is a deed the buyer must do before the lore passes. "
+        "Otherwise the buyer pays as it can. 1 action.",
         {
             "buyer_id": "Who receives the lore",
             "kind": "The kind of lore",
             "key": "Which piece: the technique key, or site, region or prophecy",
             "subject_id": "The site, land or prophecy, if any",
+            "price": "The price, if you name it",
         },
     ),
     T.PERSUADE: ToolText(
@@ -1515,7 +1522,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.SWEAR_OATH: ToolText(
-        "You swear an oath (fealty, vengeance, celibacy, pilgrimage, protection, silence, sworn_kinship); keeping it wins honour, breaking it costs honour and a god's favour. "
+        "You swear an oath ({{ oath_kinds }}); keeping it wins honour, breaking it costs honour and a god's favour. "
         "Free, {{ " + M + ".swear_oath_per_epoch }} per age.",
         {"kind": "The oath", "recipient_id": "To whom or against whom, if anyone (for a pilgrimage: the holy place)", "words": "The words of the oath"},
     ),
@@ -2447,6 +2454,44 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "raised. How much it takes depends on how easily the soil there is worked and how acid it is. Soils: {{ soil_kinds }}. 1 action.",
         {"nutrient": "The stock you restore"},
     ),
+    T.APPOINT_COURT: ToolText(
+        "As ruler or regent you seat a mortal of your court in one of its places ({{ court_positions }}); each place serves the ruler in its own way. 1 action.",
+        {"position": "The place at court", "mortal_id": "Who takes it"},
+    ),
+    T.TAKE_CLIENT: ToolText(
+        "You take a mortal where you are as your client, in one of these roles: {{ client_roles }}. Clients serve their patron, and a patron speaks for them. 1 action.",
+        {"client_id": "The mortal", "role": "The role they take"},
+    ),
+    T.SET_RIGHTS: ToolText(
+        "As ruler or regent you grant or take away a right ({{ member_rights }}) for one standing of your realm ({{ memberships }}). Those who lack a right grow restless. 1 action.",
+        {"category": "The standing", "right": "The right", "granted": "True to grant it, false to take it away"},
+    ),
+    T.PRESS_CLAIM: ToolText(
+        "You press a claim you hold to rule a realm, named by its basis ({{ claim_bases }}); a pressed claim grows stronger and may be fought for. 1 action.",
+        {"realm_id": "The realm", "basis": "The basis of your claim"},
+    ),
+    T.DESIGNATE_HEIR: ToolText(
+        "As ruler you name your heir from among any living mortal; under a law of designation your choice stands, though blood kin may contest it. 1 action.",
+        {"heir_id": "The heir"},
+    ),
+    T.FOUND_COOP: ToolText(
+        "You lead a body of your town to pool its members' means as a cooperative, for one purpose: {{ coop_purposes }}. 1 action.",
+        {"purpose": "What the cooperative is for"},
+    ),
+    T.TESTIFY: ToolText(
+        "You give evidence in an open case of your town, of one kind: {{ evidence_kinds }}. Sworn evidence counts for more, and a false oath is broken. 1 action.",
+        {"case_id": "The case", "kind": "The kind of evidence", "sworn": "True to swear before you speak"},
+    ),
+    T.SET_FACTION_GOAL: ToolText(
+        "As leader of a faction you set what it presses for: {{ faction_goals }}. 1 action.",
+        {"goal": "The aim", "target_id": "Whom or what it aims at, if anyone"},
+    ),
+    T.CHALLENGE_TO_DUEL: ToolText(
+        "You challenge a mortal to single combat. Kinds of duel: {{ duel_contexts }}; a duel of war, of champions or of gods needs a war "
+        "between your homes, the others someone where you are. A duel may end by: {{ duel_ends }}; leave the ending empty to fight by the "
+        "custom of your people. 1 action.",
+        {"target_id": "Whom you challenge", "context": "What kind of duel it is", "ending": "How it ends; leave empty for your people's custom"},
+    ),
     T.CLAIM_IDENTITY: ToolText(
         "You hold one of the identities you have closer, or loosen your hold on it. How much each counts for you decides whom you trust and "
         "with whom you side when your town divides. Layers: {{ identity_layers | join(', ') }}. You can claim only a layer you have. 1 action.",
@@ -2457,5 +2502,174 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "an augment the bearer carries and has not yet shown. Meanings: {{ mark_meanings }}. What a mark tells changes how others see "
         "its bearer, as the people of your town read it. 1 action.",
         {"kind": "The mark", "meaning": "What it tells", "target_id": "Who bears it; leave empty for yourself"},
+    ),
+    T.OPEN_DISTRICT: ToolText(
+        "As one who rules a settlement, you open or enlarge a district of it of any of the kinds its world knows; each kind changes what the city stores, "
+        "houses, keeps in order and pays for. 1 action.",
+        {"settlement_id": "The settlement you rule", "kind": "The kind of district", "material": "What it is built of"},
+    ),
+    T.REBUILD: ToolText(
+        "As one who rules a settlement that waits to be rebuilt after a disaster, you choose how: planned, as it comes, on a safer site nearby, or not at all, "
+        "its people leaving. 1 action.",
+        {"settlement_id": "The settlement you rule", "plan": "How it is rebuilt"},
+    ),
+    T.ABANDON_WORK: ToolText(
+        "As one who rules a settlement, you call the builders away from a work still being raised there; it stands unfinished. 1 action.",
+        {"structure_id": "The work"},
+    ),
+    T.DISMANTLE_WORK: ToolText(
+        "As one who rules a settlement, you take a work there apart; a share of what it cost goes to new building and little is left. 1 action.",
+        {"structure_id": "The work"},
+    ),
+    T.FOUND_GARDEN: ToolText(
+        "You pay to lay out a garden of your town of any of the kinds there are; each keeps its own living things and gives its own good. 1 action.",
+        {"kind": "The kind of garden"},
+    ),
+    T.PICK_LOCK: ToolText(
+        "You try to get past the lock and guards of a store or vault where you are; some locks yield only to the working or the skill that made them. 1 action.",
+        {"structure_id": "The store or vault"},
+    ),
+    T.SET_CRIME_STANCE: ToolText(
+        "As the ruler of a realm, you set how it treats an organisation of crime in it: hunt it down, use it, look away for its bribes or license its trade "
+        "under terms. 1 action.",
+        {"faction_id": "The organisation", "stance": "How the realm treats it"},
+    ),
+    T.FLEE: ToolText(
+        "If you are hunted, or bound and would run, you flee to a refuge that will take you in where you are: a temple, a host, an embassy, a city whose "
+        "charter frees those who stay, or the wilds. 1 action.",
+        {"sanctuary": "The kind of refuge you seek, or leave it empty to take the first that will have you"},
+    ),
+    T.HUNT_FUGITIVE: ToolText(
+        "You hunt down a fugitive your realm pursues; those in sanctuary are out of your reach. 1 action.",
+        {"fugitive_id": "The fugitive"},
+    ),
+    T.GIVE_RELIEF: ToolText(
+        "As the ruler of a realm you set what relief it gives and what it spends on it each epoch; as anyone else, you give coin to the relief it already gives. "
+        "1 action.",
+        {"kind": "The kind of relief", "budget": "The coin it costs each epoch, or that you give"},
+    ),
+    T.CONSTRUCT_LANGUAGE: ToolText(
+        "You make a tongue on purpose, with a regular grammar and no inherited history; your town begins to learn it, and it spreads where schools or law teach it. Needs skill in languages. 1 action.",
+        {"name": "The tongue's name", "description": "What the tongue is and why it was made", "words": "Its first words", **WORD_FIELDS},
+    ),
+    T.REPUDIATE_DEBTS: ToolText(
+        "As ruler you declare your realm's debts void; its lenders lose them, your realm is shut out of credit for years, and the lenders' realms may take it as cause for war. 1 action.",
+        {},
+    ),
+    T.RESCUE_POLITY: ToolText(
+        "As ruler you carry another realm's debts on terms: it keeps paying under your terms, gives you that share of its treasury each epoch, and owes you standing. 1 action.",
+        {"polity_id": "The realm you rescue", "terms": "Share of its treasury it pays you each epoch, out of 100"},
+    ),
+    T.RESCHEDULE_LOAN: ToolText(
+        "As a lender you put off the due date of a loan you hold, giving its borrower more time. 1 action.",
+        {"loan_id": "The loan", "extra_epochs": "Epochs to put it off by"},
+    ),
+    T.SELL_LOAN: ToolText(
+        "As a lender you sell a loan you hold to another at a discount; they collect it from then on. 1 action.",
+        {"loan_id": "The loan", "buyer_id": "Who buys it"},
+    ),
+    T.INSURE: ToolText(
+        "You buy cover from an insurer of your town against one kind of loss: cargo, house, life, crop, vessel or livestock; you pay a premium each epoch and it pays when the loss comes, if it can. 1 action.",
+        {"insurer_id": "The insurer", "cover": "What the cover is against"},
+    ),
+    T.SEIZE_HOARDS: ToolText(
+        "As ruler you seize every hoard held back in a market of your realm, returning its goods to sale; prices fall and the merchants resent it. 1 action.",
+        {"settlement_id": "The market"},
+    ),
+    T.PLAY_MARKET: ToolText(
+        "As leader of a merchant house you play your home market in a good: cornering it, dumping stock, or spreading a false report that moves its price until the truth arrives. 1 action.",
+        {"commodity": "The good", "play": "How you play it"},
+    ),
+    T.FOUND_WORKSHOP: ToolText(
+        "You found a workshop your community lacks and own it; it works its crafts from the next season, needing its inputs and energy. 1 action.",
+        {"kind": "The kind of workshop"},
+    ),
+    T.COMPOSE_ACCOUNT: ToolText(
+        "You tell a happening you know of in an account of your own, of any kind and stance; your people keep it as one telling among others, and it moves the standing of those it names. 1 action.",
+        {"incident_id": "The happening you tell", "kind": "The kind of account", "stance": "How it tells those who took part"},
+    ),
+    T.IMPOSE_SCRIPT: ToolText(
+        "As a ruler whose own tongue is written, you replace by law the script of a tongue your subjects speak with your realm's script; its speakers resent it. 1 action.",
+        {"language_id": "The tongue whose script you replace"},
+    ),
+    T.MEDIATE: ToolText(
+        "As ruler or regent you offer your realm as mediator: of a treaty in force between other realms, which then holds your standing on it "
+        "and lets you settle disputes under it, or of an open crisis between two other realms, which you settle by terms both accept if both trust you. "
+        "Name either a treaty or a crisis. 1 action.",
+        {"treaty_id": "The treaty you stand behind", "crisis_id": "The crisis you settle"},
+    ),
+    T.SUSPEND_TREATY: ToolText(
+        "As ruler or regent you suspend a treaty your realm is party to: its clauses rest without a breach until it resumes or lapses by its term; "
+        "the other parties trust you less, though less than for a breach. 1 action.",
+        {"treaty_id": "The treaty"},
+    ),
+    T.DECLARE_NEUTRAL: ToolText(
+        "As ruler or regent you declare your realm neutral: it leaves its alliances, joins none, and trades with every side of the wars around it; "
+        "whoever makes war on it alarms every realm of its world. 1 action.",
+        {},
+    ),
+    T.PROPOSE_RESOLUTION: ToolText(
+        "As ruler or regent of a member you put a resolution to your council of worlds for its members to vote on: "
+        "route security, embargo, void ban, sanction, quarantine, arbitration or aid. "
+        "An embargo, sanction, quarantine, arbitration or aid names what it is about: a realm, a god, a world struck by plague, a member at odds or a "
+        "stricken member. 1 action.",
+        {"kind": "The resolution", "target_id": "What it is about"},
+    ),
+    T.EXPEL_ENVOY: ToolText(
+        "As ruler or regent you send home an envoy received at your court: a mark of anger short of war. 1 action.",
+        {"envoy_id": "The envoy"},
+    ),
+    T.JAM_SIGNAL: ToolText(
+        "You jam a signal station where you are, by interference, a working or sabotage: it carries nothing until the next season and is not taken. 1 action.",
+        {"link_id": "The station"},
+    ),
+    T.CLAIM_DEED: ToolText(
+        "You speak up about a deed: you lay a claim to it, as true, shared, false or inflated (the whole of a deed you shared), or you dispute "
+        "a claim another has laid, which splits its renown until proof, a duel or a court settles it. 1 action.",
+        {"deed_id": "The deed", "kind": "Your claim", "contest": "True to dispute the claim that stands instead of laying your own"},
+    ),
+    T.SET_ARMY_STANCE: ToolText(
+        "You set the stance of an army you command or own. Stances: {{ army_stances }}. Winter quarters spare it attrition in a closed season and feed it on the land it holds; pursuit turns a beaten enemy's rout into losses and risks ambush; an escort guards its convoys and siege trains against raids. 1 action.",
+        {"army_id": "The army", "stance": "The stance"},
+    ),
+    T.ASSIGN_ARMY_ROLE: ToolText(
+        "You give someone near you a place on the staff of an army you command or own. Roles: {{ army_roles }}. A chaplain keeps its rites and buries its dead, a paymaster holds its chest and, if honest, keeps it from mutiny, a master of scouts spares it ambushes. 1 action.",
+        {"army_id": "The army", "mortal_id": "Who takes the place", "role": "The place on the staff"},
+    ),
+    T.DECIDE_CAPTIVES: ToolText(
+        "You decide what becomes of a band of captives your side holds. Fates: {{ captive_fates }}. Each is judged by the peoples who hear of it; the recruited join your army with little loyalty and desert easily. 1 action.",
+        {"cohort_id": "The band of captives", "fate": "What becomes of them"},
+    ),
+    T.SUBORN_GARRISON: ToolText(
+        "As a besieger, you work on someone inside a besieged place with bribes, hooks or a shared grudge to open a gate or postern; if the plot is found out, the defence grows firmer. It costs coin. 1 action.",
+        {"siege_id": "The siege", "target_id": "Whom inside you work on"},
+    ),
+    T.ORDER_SIEGE_WORK: ToolText(
+        "As a besieger, you set your army to raise a siege work now. Works: {{ siege_works }}. Assault from the air needs fliers, an attack on the networks needs knowledge of computation on both sides, a breaching rite needs casters. 1 action.",
+        {"siege_id": "The siege", "work": "The work"},
+    ),
+    T.DEFEND_SIEGE: ToolText(
+        "As a defender, you choose how your besieged place holds out this season. Defences: {{ defender_actions }}. Flooding the approaches needs a river or water works; driving out those who cannot fight is judged by every people that hears of it. 1 action.",
+        {"siege_id": "The siege", "defence": "The defence"},
+    ),
+    T.DECIDE_FALL: ToolText(
+        "As a besieger, you decide what becomes of the place if it falls. Choices: {{ fall_choices }}. A ransom spares it for a payment; deportation moves its people to your lands. 1 action.",
+        {"siege_id": "The siege", "choice": "What becomes of it"},
+    ),
+    T.NEGOTIATE_SURRENDER: ToolText(
+        "As a besieger, you offer terms to a besieged place; if it yields, the siege ends in surrender on terms you may keep or break. 1 action.",
+        {"siege_id": "The siege"},
+    ),
+    T.RUN_OPERATION: ToolText(
+        "As a realm's spymaster, you set its network on a rival realm or community. Operations: {{ spy_operations }}. Each can fail by its difficulty against your network's depth and your skill. 1 action.",
+        {"target_id": "Whom you work against", "operation": "The operation"},
+    ),
+    T.RECRUIT_AGENT: ToolText(
+        "As a realm's spymaster, you win someone living among those you spy on as an agent. Motives: {{ recruit_motives }}. Money always serves; the others must truly move them. Love holds while their bond to the handler holds; revenge holds while its target stands. 1 action.",
+        {"mortal_id": "Whom you recruit", "motive": "What wins them"},
+    ),
+    T.GRANT_VETERANS: ToolText(
+        "As a ruler, you set what your realm grants its veterans when a war ends. Grants: {{ veteran_grants }}. Each costs the treasury and wins the loyalty of the towns by its own measure. 1 action.",
+        {"grant": "The grant"},
     ),
 }

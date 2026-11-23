@@ -1604,6 +1604,7 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     "table.applied_fixups",
     "table.entities",
     "table.ley_lines",
+    "table.node_births",
     "table.nodes",
     "table.place_environment",
     "table.region_environment",
@@ -1611,6 +1612,8 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     "table.structure_ley",
     "table.structure_profiles",
     "table.world_maps",
+    "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "structure.function",
@@ -1618,6 +1621,7 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.ley_lines",

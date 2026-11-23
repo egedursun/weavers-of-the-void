@@ -1,10 +1,26 @@
 from collections.abc import Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.core.total import total
+from aerona.domain.enums.belonging import IdentityLayer, SalienceDriver
 from aerona.domain.enums.body import BodyFunction
 from aerona.domain.enums.chronicle import PartOfSpeech, WritingSystem
-from aerona.domain.enums.tongues import LanguageModality, MorphologyType, NumberSystem, SoundChangeKind, WordOrder
+from aerona.domain.enums.couplings import SignCause, SociolectKind
+from aerona.domain.enums.nature import SenseKind
+from aerona.domain.enums.tongues import (
+    LanguageModality,
+    LanguagePolicy,
+    LanguageStage,
+    MorphologyType,
+    NumberSystem,
+    NumeralBase,
+    ScriptChangeCause,
+    SenseShift,
+    SoundChangeKind,
+    WordOrder,
+    WordRegister,
+)
 from aerona.domain.enums.world import LanguageTexture
 
 W = WritingSystem
@@ -40,7 +56,21 @@ SCRIPT_SIGNS = total(
     },
 )
 
-WRITABLE = total(LanguageModality, {M.VOCAL: True, M.SIGN: True, M.SCENT: False, M.COLOUR: True, M.TELEPATHIC: False, M.DATA: True, M.CHEMICAL: False})
+WRITABLE = total(
+    LanguageModality,
+    {
+        M.VOCAL: True,
+        M.SIGN: True,
+        M.SCENT: False,
+        M.COLOUR: True,
+        M.TELEPATHIC: False,
+        M.DATA: True,
+        M.CHEMICAL: False,
+        M.TACTILE: True,
+        M.VIBRATION: False,
+        M.ELECTRIC: False,
+    },
+)
 
 MODALITY_NEEDS = total(
     LanguageModality,
@@ -52,10 +82,47 @@ MODALITY_NEEDS = total(
         M.TELEPATHIC: frozenset({BodyFunction.COGNITION}),
         M.DATA: frozenset({BodyFunction.COGNITION}),
         M.CHEMICAL: frozenset({BodyFunction.PRESENCE}),
+        M.TACTILE: frozenset({BodyFunction.GRASP}),
+        M.VIBRATION: frozenset({BodyFunction.PRESENCE}),
+        M.ELECTRIC: frozenset({BodyFunction.PRESENCE}),
     },
 )
 
-MODALITY_ORDER = (M.VOCAL, M.SIGN, M.COLOUR, M.SCENT, M.TELEPATHIC)
+MODALITY_SENSE: Mapping[LanguageModality, SenseKind | None] = total(
+    LanguageModality,
+    {
+        M.VOCAL: SenseKind.HEARING,
+        M.SIGN: SenseKind.SIGHT,
+        M.SCENT: SenseKind.SMELL,
+        M.COLOUR: SenseKind.SIGHT,
+        M.TELEPATHIC: None,
+        M.DATA: None,
+        M.CHEMICAL: SenseKind.SMELL,
+        M.TACTILE: None,
+        M.VIBRATION: SenseKind.VIBRATION,
+        M.ELECTRIC: SenseKind.ELECTRIC,
+    },
+)
+
+MODALITY_RANGE: Mapping[LanguageModality, str | None] = total(
+    LanguageModality,
+    {
+        M.VOCAL: None,
+        M.SIGN: None,
+        M.SCENT: None,
+        M.COLOUR: None,
+        M.TELEPATHIC: None,
+        M.DATA: None,
+        M.CHEMICAL: None,
+        M.TACTILE: None,
+        M.VIBRATION: "vibration_range",
+        M.ELECTRIC: "electric_range",
+    },
+)
+
+MODALITY_ORDER = (M.VOCAL, M.SIGN, M.COLOUR, M.SCENT, M.TACTILE, M.TELEPATHIC)
+FIELD_MODALITIES = (M.ELECTRIC, M.VIBRATION)
+BASE_SENSES = frozenset({SenseKind.SIGHT, SenseKind.HEARING, SenseKind.SMELL})
 
 KIND_WEIGHTS = total(
     SoundChangeKind,
@@ -134,5 +201,179 @@ PART_OF_SPEECH_LABELS = total(
         PartOfSpeech.PROPER_NAME: "Proper name",
         PartOfSpeech.NUMBER: "Number",
         PartOfSpeech.INTERJECTION: "Interjection",
+    },
+)
+
+
+@dataclass(frozen=True)
+class BaseSpec:
+    label: str
+    radix: int
+    divisors: int
+    fine_division: bool
+    needs_writing: bool
+    rule: str
+
+
+BASES = total(
+    NumeralBase,
+    {
+        NumeralBase.DECIMAL: BaseSpec("Tens", 10, 2, False, False, "decimal_reckoning_pct"),
+        NumeralBase.VIGESIMAL: BaseSpec("Twenties", 20, 4, False, False, "vigesimal_reckoning_pct"),
+        NumeralBase.DUODECIMAL: BaseSpec("Twelves", 12, 4, True, False, "duodecimal_reckoning_pct"),
+        NumeralBase.SEXAGESIMAL: BaseSpec("Sixties", 60, 10, True, False, "sexagesimal_reckoning_pct"),
+        NumeralBase.OCTAL: BaseSpec("Eights", 8, 2, False, False, "octal_reckoning_pct"),
+        NumeralBase.BODY_TALLY: BaseSpec("Counting along the body", 27, 0, False, True, "body_tally_reckoning_pct"),
+    },
+)
+
+
+@dataclass(frozen=True)
+class StageSpec:
+    label: str
+    inherits_sounds: bool
+    taught: bool
+
+
+STAGES = total(
+    LanguageStage,
+    {
+        LanguageStage.NATURAL: StageSpec("A natural tongue", True, False),
+        LanguageStage.PIDGIN: StageSpec("A pidgin", False, False),
+        LanguageStage.CREOLE: StageSpec("A creole", True, False),
+        LanguageStage.DIVINE: StageSpec("A divine tongue", False, False),
+        LanguageStage.CONSTRUCTED: StageSpec("A made tongue", False, True),
+        LanguageStage.REVIVED: StageSpec("A revived tongue", True, True),
+    },
+)
+
+
+@dataclass(frozen=True)
+class ShiftSpec:
+    label: str
+    rule: str | None
+
+
+SHIFTS = total(
+    SenseShift,
+    {
+        SenseShift.BROADENED: ShiftSpec("Broadened", "broadened_rate"),
+        SenseShift.NARROWED: ShiftSpec("Narrowed", "narrowed_rate"),
+        SenseShift.PEJORATIVE: ShiftSpec("Grew darker", "pejorative_rate"),
+        SenseShift.AMELIORATIVE: ShiftSpec("Grew kinder", "ameliorative_rate"),
+        SenseShift.EUPHEMISM: ShiftSpec("Said instead of a name", None),
+        SenseShift.RESTORED: ShiftSpec("Restored", "restored_rate"),
+        SenseShift.EXTENDED: ShiftSpec("Carried over by likeness", "extended_rate"),
+        SenseShift.ASSOCIATED: ShiftSpec("Carried over by nearness", "associated_rate"),
+    },
+)
+DRIFTS = tuple(shift for shift, spec in SHIFTS.items() if spec.rule is not None)
+
+
+@dataclass(frozen=True)
+class RegisterSpec:
+    label: str
+    drifts: bool
+    insult_rule: str | None
+    marks_members: bool
+
+
+REGISTERS = total(
+    WordRegister,
+    {
+        WordRegister.COMMON: RegisterSpec("Common speech", True, None, False),
+        WordRegister.SACRED: RegisterSpec("Sacred speech", False, None, False),
+        WordRegister.POETIC: RegisterSpec("Poetry", False, None, False),
+        WordRegister.ARCHAIC: RegisterSpec("Archaic", False, None, False),
+        WordRegister.TABOO: RegisterSpec("Not to be said", False, "taboo_insult", False),
+        WordRegister.TECHNICAL: RegisterSpec("Words of a craft", False, None, True),
+        WordRegister.HONORIFIC: RegisterSpec("Speech to superiors", False, "honorific_insult", False),
+    },
+)
+
+
+@dataclass(frozen=True)
+class ScriptCauseSpec:
+    label: str
+    by_law: bool
+    sacred: bool
+
+
+SCRIPT_CAUSES = total(
+    ScriptChangeCause,
+    {
+        ScriptChangeCause.INVENTION: ScriptCauseSpec("Invented", False, False),
+        ScriptChangeCause.REFORM: ScriptCauseSpec("Reformed", False, False),
+        ScriptChangeCause.SIMPLIFICATION: ScriptCauseSpec("Worn simpler", False, False),
+        ScriptChangeCause.BORROWING: ScriptCauseSpec("Borrowed", False, False),
+        ScriptChangeCause.IMPOSITION: ScriptCauseSpec("Imposed by law", True, False),
+        ScriptChangeCause.REVELATION: ScriptCauseSpec("Revealed", False, True),
+    },
+)
+
+
+@dataclass(frozen=True)
+class PolicySpec:
+    label: str
+    teaches: bool
+    shields: bool
+    standardises: bool
+    identity: int = 0
+    driver: SalienceDriver = SalienceDriver.BASELINE
+
+
+POLICIES = total(
+    LanguagePolicy,
+    {
+        LanguagePolicy.OFFICIAL: PolicySpec("Official", True, False, False),
+        LanguagePolicy.LITURGICAL: PolicySpec("Sacred", False, False, False),
+        LanguagePolicy.SUPPRESSED: PolicySpec("Suppressed", False, False, False, 1, SalienceDriver.PERSECUTION),
+        LanguagePolicy.REVIVAL: PolicySpec("Revived", True, False, False, 1, SalienceDriver.RHETORIC),
+        LanguagePolicy.PROTECTED: PolicySpec("Protected", False, True, False, -1),
+        LanguagePolicy.STANDARDISED: PolicySpec("Set by an academy", False, False, True),
+    },
+)
+
+
+@dataclass(frozen=True)
+class SociolectSpec:
+    label: str
+    layer: IdentityLayer
+    prestige: int
+    drift_rule: str
+    carries_words: bool
+    coins_technical: bool = False
+
+
+SOCIOLECTS = total(
+    SociolectKind,
+    {
+        SociolectKind.CLASS: SociolectSpec("Speech of a class", IdentityLayer.CLASS, 0, "class_drift", False),
+        SociolectKind.CASTE: SociolectSpec("Speech of a caste", IdentityLayer.CLASS, 0, "caste_drift", False),
+        SociolectKind.GUILD: SociolectSpec("Speech of a trade", IdentityLayer.PROFESSION, 20, "guild_drift", False, coins_technical=True),
+        SociolectKind.COURT: SociolectSpec("Speech of a court", IdentityLayer.POLITY, 60, "court_drift", False),
+        SociolectKind.CANT: SociolectSpec("Secret cant", IdentityLayer.CIRCLE, -50, "cant_drift", False),
+        SociolectKind.SAILORS: SociolectSpec("Speech of sailors", IdentityLayer.PROFESSION, -10, "sailors_drift", False),
+        SociolectKind.YOUTH: SociolectSpec("Speech of the young", IdentityLayer.GENERATION, -20, "youth_drift", False),
+        SociolectKind.SOLDIERS: SociolectSpec("Speech of soldiers", IdentityLayer.PROFESSION, 0, "soldiers_drift", True),
+    },
+)
+
+
+@dataclass(frozen=True)
+class SignCauseSpec:
+    label: str
+    sacred: bool
+    spreads_on_routes: bool
+
+
+SIGN_CAUSES = total(
+    SignCause,
+    {
+        SignCause.DEAFNESS: SignCauseSpec("Born of deafness", False, False),
+        SignCause.SILENCE_VOW: SignCauseSpec("Born of a vow of silence", True, False),
+        SignCause.HUNTING_SILENCE: SignCauseSpec("Born of silent hunting", False, False),
+        SignCause.MUTILATION: SignCauseSpec("Born of maiming", False, False),
+        SignCause.TRADE: SignCauseSpec("Born of trade between tongues", False, True),
     },
 )

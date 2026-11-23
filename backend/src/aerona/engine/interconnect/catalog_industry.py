@@ -318,6 +318,7 @@ INDUSTRY_MECHANICS: tuple[Mechanic, ...] = (
     ),
     Mechanic(
         key="credit",
+        tools=("sell_loan",),
         spec_item="S6.4/RP2",
         title="Lenders rate borrowers by repayment, treasury and stability; credit runs sound, strained, in default and restructuring, and reserves back coin",
         subsystem=S.ECONOMY,

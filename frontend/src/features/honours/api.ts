@@ -34,6 +34,7 @@ export type HonoursAction =
   | 'unit_honour:edit'
   | 'unit_honour:delete'
   | 'veteran_grant:create'
+  | 'profile:set'
   | 'veteran_grant:edit'
   | 'veteran_grant:delete'
   | 'honours:run'

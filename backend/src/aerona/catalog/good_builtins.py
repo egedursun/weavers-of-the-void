@@ -60,5 +60,13 @@ BUILT_IN_GOODS: Mapping[CommodityKind, BuiltInGood] = total(
         C.POISON: BuiltInGood(G.CHEMICAL, S.METHOD, T.STRATEGIC, 0, 5, 10, 0),
         C.EGGS: BuiltInGood(G.EGGS, S.SPECIES, T.STAPLE, 1, 20, 5, 5),
         C.WOOL: BuiltInGood(G.FIBRE, S.SPECIES, T.ORDINARY, 0, 40, 10, 0),
+        C.OIL: BuiltInGood(G.OIL_AND_FAT, S.SPECIES, T.ORDINARY, 2, 30, 15, 15),
+        C.SUGAR: BuiltInGood(G.SWEETENER, S.METHOD, T.LUXURY, 0, 20, 35, 5),
+        C.SPICE: BuiltInGood(G.SEASONING, S.SPECIES, T.LUXURY, 1, 5, 55, 15),
+        C.HALITE: BuiltInGood(G.MINERAL_SEASONING, S.DEPOSIT, T.STRATEGIC, 0, 40, 15, 10),
+        C.HONEY: BuiltInGood(G.SWEETENER, S.SPECIES, T.ORDINARY, 0, 15, 25, 20),
+        C.WAX: BuiltInGood(G.CHEMICAL, S.SPECIES, T.ORDINARY, 0, 15, 10, 20),
+        C.POTTERY: BuiltInGood(G.CLAY_AND_CERAMIC, S.MAKING, T.ORDINARY, 0, 50, 10, 5),
+        C.BOOKS: BuiltInGood(G.BOOKS_AND_RECORDS, S.MAKING, T.ORDINARY, 1, 15, 40, 20),
     },
 )

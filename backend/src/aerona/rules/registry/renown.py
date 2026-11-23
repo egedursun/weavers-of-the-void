@@ -59,6 +59,7 @@ class LoreTradeRules:
 
 @dataclass(frozen=True)
 class ClaimRules:
+    inflated_expose_pct: int = rule(20, 0, 100, G, "Chance each epoch beyond a false claim's that a claim to the whole of a shared deed is exposed (%)")
     claim_pct: int = rule(15, 0, 100, G, "Chance a vain and deceitful mortal who shares a place claims another's great deed (%)")
     claim_at: int = rule(20, 0, 100, G, "Size of a deed worth claiming falsely")
     vanity_pct: int = rule(100, 0, 400, G, "How strongly vanity and deceit drive a false claim (%)")
@@ -69,3 +70,12 @@ class ClaimRules:
     exposure_shame: int = rule(15, 0, 100, G, "Trickery an exposed false claimant earns everywhere their claim was believed")
     punish_pct: int = rule(50, 0, 100, G, "Chance an exposed impostor is punished as the law punishes theft (%)")
     exposure_memory: int = rule(-50, -100, 0, G, "Memory the true doer keeps of an exposed impostor")
+    inheritance_strength: int = rule(100, 0, 100, RuleGroup.POLITY, "How much a claim by inheritance weighs when it is pressed (%)")
+    marriage_strength: int = rule(80, 0, 100, RuleGroup.POLITY, "How much a claim by marriage weighs when it is pressed (%)")
+    conquest_strength: int = rule(70, 0, 100, RuleGroup.POLITY, "How much a claim by conquest weighs when it is pressed (%)")
+    divine_strength: int = rule(90, 0, 100, RuleGroup.POLITY, "How much a claim by a god's choice weighs when it is pressed (%)")
+    fabricated_strength: int = rule(50, 0, 100, RuleGroup.POLITY, "How much a forged claim weighs when it is pressed (%)")
+    de_jure_strength: int = rule(80, 0, 100, RuleGroup.POLITY, "How much a claim by right of title weighs when it is pressed (%)")
+    election_strength: int = rule(90, 0, 100, RuleGroup.POLITY, "How much a claim won by an electorate's vote weighs when it is pressed (%)")
+    adoption_strength: int = rule(70, 0, 100, RuleGroup.POLITY, "How much a claim by adoption as heir weighs when it is pressed (%)")
+    adopted_claim: int = rule(60, 0, 100, RuleGroup.POLITY, "Strength of the claim an heir named by adoption holds")

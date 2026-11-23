@@ -7,6 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import ChemicalWorksRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.crafts import ChemicalProduct
+from aerona.rules.model import keyed
 from aerona.rules.registry import Rules
 
 
@@ -34,3 +35,23 @@ async def soap_relief(session: AsyncSession, rules: Rules) -> dict[int, int]:
         if region is not None:
             relief[region] += output * rules.chemistry.soap_disease / PERCENT
     return {region: round(value) for region, value in relief.items()}
+
+
+async def strength(session: AsyncSession, rules: Rules, community_id: int, product: ChemicalProduct) -> float:
+    return await works_output(session, community_id, product) * keyed(rules.chemistry, product.value, "yield") / PERCENT / PERCENT
+
+
+async def inked(session: AsyncSession, rules: Rules, community_id: int) -> float:
+    return 1 + await strength(session, rules, community_id, ChemicalProduct.INK)
+
+
+async def glazed(session: AsyncSession, rules: Rules, community_id: int) -> int:
+    return round(await strength(session, rules, community_id, ChemicalProduct.GLAZE) * rules.chemistry.glaze_quality)
+
+
+async def preserved(session: AsyncSession, rules: Rules, community_id: int) -> float:
+    return 1 - await strength(session, rules, community_id, ChemicalProduct.PRESERVATIVE) * rules.chemistry.preservative_spoil_pct / PERCENT
+
+
+async def etched(session: AsyncSession, rules: Rules, community_id: int) -> float:
+    return 1 + await strength(session, rules, community_id, ChemicalProduct.ACID) * rules.chemistry.acid_metal_pct / PERCENT

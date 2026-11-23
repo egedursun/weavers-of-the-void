@@ -137,12 +137,22 @@ INFAMOUS = frozenset(axis for axis, spec in AXES.items() if not spec.glorious)
 CURRENCY_LABELS: MappingProxyType[Currency, str] = MappingProxyType(
     {Currency.PRESTIGE: "Prestige", Currency.PIETY: "Piety", Currency.DREAD: "Dread", Currency.TYRANNY: "Tyranny"}
 )
-CLAIM_LABELS: MappingProxyType[ClaimKind, str] = MappingProxyType({ClaimKind.TRUE: "True", ClaimKind.SHARED: "Shared", ClaimKind.FALSE: "False"})
+CLAIM_LABELS: MappingProxyType[ClaimKind, str] = MappingProxyType(
+    {ClaimKind.TRUE: "True", ClaimKind.SHARED: "Shared", ClaimKind.FALSE: "False", ClaimKind.INFLATED: "The whole of a shared deed"}
+)
 STATUS_LABELS: MappingProxyType[ClaimStatus, str] = MappingProxyType(
-    {ClaimStatus.STANDING: "Believed", ClaimStatus.VERIFIED: "Proven", ClaimStatus.EXPOSED: "Exposed"}
+    {ClaimStatus.STANDING: "Believed", ClaimStatus.VERIFIED: "Proven", ClaimStatus.EXPOSED: "Exposed", ClaimStatus.DISPUTED: "Disputed"}
 )
 LORE_LABELS: Mapping[KnowledgeKind, str] = {kind: spec.label for kind, spec in KNOWLEDGE.items()}
-PRICE_LABELS: MappingProxyType[LorePrice, str] = MappingProxyType({LorePrice.WEALTH: "Wealth", LorePrice.FAVOUR: "A favour", LorePrice.RENOWN: "Renown"})
+PRICE_LABELS: MappingProxyType[LorePrice, str] = MappingProxyType(
+    {
+        LorePrice.WEALTH: "Wealth",
+        LorePrice.FAVOUR: "A favour",
+        LorePrice.RENOWN: "Renown",
+        LorePrice.EXCHANGE: "Knowledge for knowledge",
+        LorePrice.SERVICE: "A deed done for the seller",
+    }
+)
 
 FACTION_LORE: MappingProxyType[FactionKind, frozenset[KnowledgeKind]] = MappingProxyType(
     {

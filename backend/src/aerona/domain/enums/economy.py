@@ -44,6 +44,14 @@ class CommodityKind(StrEnum):
     POISON = "poison"
     EGGS = "eggs"
     WOOL = "wool"
+    OIL = "oil"
+    SUGAR = "sugar"
+    SPICE = "spice"
+    HALITE = "halite"
+    HONEY = "honey"
+    WAX = "wax"
+    POTTERY = "pottery"
+    BOOKS = "books"
 
 
 class MaterialFamily(StrEnum):
@@ -62,6 +70,9 @@ class MaterialOrigin(StrEnum):
     RIFT = "rift"
     RESEARCH = "research"
     GOD_GIFT = "god_gift"
+    FOSSIL = "fossil"
+    LIVING_LINE = "living_line"
+    SALVAGE = "salvage"
 
 
 class FoeNature(StrEnum):
@@ -98,6 +109,11 @@ class WorkshopKind(StrEnum):
     ALCHEMIST = "alchemist"
     SHRINE_WORKSHOP = "shrine_workshop"
     MINT = "mint"
+    POTTERY = "pottery"
+    GLASSWORKS = "glassworks"
+    DYEWORKS = "dyeworks"
+    SCRIPTORIUM = "scriptorium"
+    EVAPORATION_WORKS = "evaporation_works"
 
 
 class ExtractionKind(StrEnum):
@@ -142,8 +158,10 @@ class TradeMode(StrEnum):
     ROAD = "road"
     RIVER = "river"
     SEA = "sea"
-    CARAVAN = "caravan"
     SKY = "sky"
+    SPACE = "space"
+    RIFT = "rift"
+    NETWORK = "network"
 
 
 class TradeRouteStatus(StrEnum):
@@ -152,6 +170,8 @@ class TradeRouteStatus(StrEnum):
     BLOCKADED = "blockaded"
     CLOSED = "closed"
     DECAYED = "decayed"
+    CONTESTED = "contested"
+    SEASONAL = "seasonal"
 
 
 class TradeLoss(StrEnum):
@@ -159,6 +179,9 @@ class TradeLoss(StrEnum):
     SEA = "sea"
     BEASTS = "beasts"
     WEATHER = "weather"
+    OFFICIALS = "officials"
+    SPOILAGE = "spoilage"
+    PILFERAGE = "pilferage"
 
 
 class LoanStatus(StrEnum):
@@ -166,6 +189,9 @@ class LoanStatus(StrEnum):
     REPAID = "repaid"
     DEFAULTED = "defaulted"
     FORGIVEN = "forgiven"
+    RESCHEDULED = "rescheduled"
+    COLLATERAL_SEIZED = "collateral_seized"
+    SOLD = "sold"
 
 
 class GoodsFlow(StrEnum):

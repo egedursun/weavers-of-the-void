@@ -1,10 +1,13 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
+from aerona.catalog.pacts import RESOLUTIONS
+from aerona.constants.units import PERCENT
 from aerona.db.faction_kinds import of_kinds
 from aerona.db.tables.affairs import ResolutionRow, ResolutionVoteRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import ROUTE_DANGER_COLUMNS, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.finance import TradePolicyRow
@@ -12,9 +15,12 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.statecraft import SphereRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.disease import OutbreakStatus
+from aerona.domain.enums.economy import TradeRouteStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.finance import TradePolicyKind
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind, LegitimacyBasis
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
@@ -25,9 +31,9 @@ from aerona.engine.polity.laws import LawBook, enact
 from aerona.engine.polity.regard import shift_regard
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
-from aerona.engine.services.community_relations import relation
+from aerona.engine.services.community_relations import change_relation, relation
 
 RESOLUTION_REASON = "a resolution of the assembly"
 STATE = "state"
@@ -41,6 +47,7 @@ class AssemblyTally:
     rejected: int = 0
     lapsed: int = 0
     breaches: int = 0
+    quarantined: int = 0
 
 
 async def assemblies(ctx: TickContext) -> list[EntityRow]:
@@ -100,6 +107,48 @@ async def outer_beings(ctx: TickContext, members: list[EntityRow]) -> bool:
     return found is not None
 
 
+async def plagued_world(ctx: TickContext, members: list[EntityRow]) -> int | None:
+    worlds = sorted({member.world_id for member in members if member.world_id is not None})
+    if len(worlds) < 2:
+        return None
+    found = await ctx.session.scalar(
+        select(EntityRow.world_id)
+        .join(OutbreakRow, OutbreakRow.region_entity_id == EntityRow.id)
+        .where(OutbreakRow.status == OutbreakStatus.ACTIVE, EntityRow.world_id.in_(worlds))
+        .order_by(EntityRow.world_id)
+        .limit(1)
+    )
+    return int(found) if found is not None else None
+
+
+async def quarrel(ctx: TickContext, members: list[EntityRow]) -> tuple[int, int] | None:
+    worst: tuple[float, int, int] | None = None
+    for first in members:
+        for second in members:
+            if first.id >= second.id:
+                continue
+            value = await relation(ctx.session, ctx.rules, first.id, second.id)
+            if value < 0 and (worst is None or value < worst[0]):
+                worst = (value, first.id, second.id)
+    return (worst[1], worst[2]) if worst is not None else None
+
+
+def stricken(members: list[EntityRow]) -> int | None:
+    poor = [member for member in members if stat_or(member, "prosperity", PERCENT) < PERCENT // 4]
+    return min(poor, key=lambda member: (stat_or(member, "prosperity", 0), member.id)).id if poor else None
+
+
+async def gathered_motion(ctx: TickContext, members: list[EntityRow]) -> tuple[ResolutionKind, int | None] | None:
+    plague = await plagued_world(ctx, members)
+    if plague is not None:
+        return ResolutionKind.QUARANTINE, plague
+    pair = await quarrel(ctx, members)
+    if pair is not None:
+        return ResolutionKind.ARBITRATION, pair[0]
+    needy = stricken(members)
+    return (ResolutionKind.AID, needy) if needy is not None else None
+
+
 async def motion(ctx: TickContext, members: list[EntityRow]) -> tuple[ResolutionKind, int | None] | None:
     enemy = await enemy_of(ctx, members)
     if enemy is not None:
@@ -109,9 +158,10 @@ async def motion(ctx: TickContext, members: list[EntityRow]) -> tuple[Resolution
         return ResolutionKind.SANCTION, son
     if await outer_beings(ctx, members):
         return ResolutionKind.VOID_BAN, None
-    if len({member.world_id for member in members}) > 1:
-        return ResolutionKind.ROUTE_SECURITY, None
-    return None
+    found = await gathered_motion(ctx, members)
+    if found is not None:
+        return found
+    return (ResolutionKind.ROUTE_SECURITY, None) if len({member.world_id for member in members}) > 1 else None
 
 
 async def aye(ctx: TickContext, member: EntityRow, row: ResolutionRow) -> bool:
@@ -122,6 +172,10 @@ async def aye(ctx: TickContext, member: EntityRow, row: ResolutionRow) -> bool:
         return all(bond.target_node_id != row.target_node_id for bond in worships)
     if row.kind is ResolutionKind.VOID_BAN:
         return (stat(member, "piety") or 0) >= 40
+    if row.kind is ResolutionKind.QUARANTINE:
+        return member.world_id != row.target_node_id
+    if row.kind is ResolutionKind.AID and row.target_node_id is not None and member.id != row.target_node_id:
+        return await relation(ctx.session, ctx.rules, member.id, row.target_node_id) >= 0
     return True
 
 
@@ -224,7 +278,72 @@ async def ban_void(ctx: TickContext, book: RealmBook, members: list[EntityRow]) 
             current.params = {**current.params, "level": level}
 
 
+async def close_to(ctx: TickContext, row: ResolutionRow, members: list[EntityRow]) -> int:
+    away = [member.id for member in members if member.world_id != row.target_node_id]
+    there = select(EntityRow.id).where(EntityRow.world_id == row.target_node_id)
+    routes = await ctx.session.scalars(
+        select(TradeRouteProfileRow)
+        .where(
+            or_(
+                TradeRouteProfileRow.first_market_id.in_(there) & TradeRouteProfileRow.second_market_id.in_(away),
+                TradeRouteProfileRow.second_market_id.in_(there) & TradeRouteProfileRow.first_market_id.in_(away),
+            ),
+            TradeRouteProfileRow.status == TradeRouteStatus.OPEN,
+        )
+        .order_by(TradeRouteProfileRow.route_entity_id)
+    )
+    closed = 0
+    for route in list(routes):
+        if held(route.route_entity_id) or "status" in route.locked:
+            continue
+        route.status, route.blockaded_by_entity_id = TradeRouteStatus.BLOCKADED, row.assembly_entity_id
+        closed += 1
+    return closed
+
+
+async def reopen(ctx: TickContext, row: ResolutionRow) -> None:
+    if row.kind is not ResolutionKind.QUARANTINE:
+        return
+    for route in await ctx.session.scalars(
+        select(TradeRouteProfileRow).where(
+            TradeRouteProfileRow.blockaded_by_entity_id == row.assembly_entity_id, TradeRouteProfileRow.status == TradeRouteStatus.BLOCKADED
+        )
+    ):
+        if not held(route.route_entity_id) and "status" not in route.locked:
+            route.status, route.blockaded_by_entity_id = TradeRouteStatus.OPEN, None
+
+
+async def arbitrate(ctx: TickContext, row: ResolutionRow, members: list[EntityRow], amount: int) -> None:
+    pair = await quarrel(ctx, members)
+    if pair is None or row.target_node_id not in pair:
+        return
+    first, second = pair
+    await change_relation(ctx, first, second, amount, MemoryKind.FREED_US, note="a dispute settled by the council")
+    await change_relation(ctx, second, first, amount, MemoryKind.FREED_US, note="a dispute settled by the council")
+
+
+async def gathered_enforce(ctx: TickContext, row: ResolutionRow, members: list[EntityRow], tally: AssemblyTally, effect: int) -> bool:
+    if row.kind is ResolutionKind.QUARANTINE:
+        if ctx.rng(f"assembly.quarantine.{row.id}.{ctx.epoch}").chance(effect):
+            tally.quarantined += await close_to(ctx, row, members)
+        return True
+    if row.kind is ResolutionKind.ARBITRATION:
+        await arbitrate(ctx, row, members, effect)
+        return True
+    if row.kind is ResolutionKind.AID:
+        needy = next((member for member in members if member.id == row.target_node_id), None)
+        if needy is not None and not held(needy.id):
+            shift_stat(needy, "prosperity", effect, high=PERCENT)
+        return True
+    return False
+
+
 async def enforce(ctx: TickContext, book: RealmBook, row: ResolutionRow, members: list[EntityRow], tally: AssemblyTally) -> None:
+    effect = RESOLUTIONS[row.kind].effect(ctx.rules)
+    if await gathered_enforce(ctx, row, members, tally, effect):
+        return
+    if not ctx.rng(f"assembly.enforce.{row.id}.{ctx.epoch}").chance(effect):
+        return
     if row.kind is ResolutionKind.EMBARGO and row.target_node_id is not None:
         target = book.realm_for(row.target_node_id)
         await embargo(ctx, book, members, [target.entity.id if target is not None else row.target_node_id])
@@ -320,6 +439,7 @@ async def sit(ctx: TickContext, book: RealmBook, assembly: EntityRow, tally: Ass
         if row.state is ResolutionState.PASSED and row.until_epoch is not None and ctx.epoch >= row.until_epoch:
             row.state = ResolutionState.LAPSED
             await lift(ctx, book, members)
+            await reopen(ctx, row)
             tally.lapsed += 1
         elif row.state is ResolutionState.PASSED:
             await enforce(ctx, book, row, members, tally)

@@ -19,11 +19,11 @@ from aerona.domain.enums.vehicles import VehicleFrame, VehicleSection
 from aerona.engine.climes.shifts import prevailing
 from aerona.engine.context import TickContext
 from aerona.engine.military.battle import stack_material
+from aerona.engine.operations.crews import fitted_stations
 from aerona.engine.operations.fields import keep
 from aerona.engine.operations.limits import tonnage_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import record
-from aerona.engine.vehicles.sections import design_sections
 
 OCTANTS = 8
 HALF_TURN = 4
@@ -32,7 +32,6 @@ SHELL_LEVEL = 6
 GUIDED_LEVEL = 7
 ENERGY_LEVEL = 9
 GRAPE_CREW_PCT = 130
-ROWED = frozenset({VehicleFrame.GALLEY, VehicleFrame.LONGSHIP})
 GUIDED_FAMILIES = frozenset({EquipmentFamily.MISSILE_LAUNCHER, EquipmentFamily.ROCKET_LAUNCHER, EquipmentFamily.TORPEDO})
 RITE_FAMILIES = frozenset({EquipmentFamily.FOCUS, EquipmentFamily.FOCUS_ARRAY})
 P = PointOfSail
@@ -71,17 +70,10 @@ async def ship_state(ctx: TickContext, vessel_id: int) -> ShipStateRow:
     return row
 
 
-async def oared(ctx: TickContext, row: VesselProfileRow) -> bool:
-    if row.design_id is None:
-        return row.frame in ROWED
-    return VehicleSection.OARS in await design_sections(ctx.session, row.design_id)
-
-
 async def crews_of(ctx: TickContext, vessel_id: int, row: VesselProfileRow) -> dict[CrewStation, ShipCrewRow]:
     found = {crew.station: crew for crew in await ctx.session.scalars(select(ShipCrewRow).where(ShipCrewRow.vessel_entity_id == vessel_id))}
-    rowing = await oared(ctx, row)
-    stations = [station for station in CrewStation if station is not S.ROWERS or rowing]
-    weight = sum(STATION_SHARES[station] for station in stations)
+    stations = await fitted_stations(ctx.session, vessel_id, row)
+    weight = max(1, sum(STATION_SHARES[station] for station in stations))
     for station in stations:
         if station in found:
             continue

@@ -32,6 +32,7 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.evolution import PlagueResponse
+from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.cuisine.drinks import drink_safety
@@ -43,6 +44,7 @@ from aerona.engine.lore.truth import ruling_truths
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat
+from aerona.engine.settlement.quarter_levels import quarter_levels
 from aerona.engine.structures.readers import region_strength, regions_of
 from aerona.rules.registry import Rules
 
@@ -103,6 +105,8 @@ class DiseaseBook:
     responses: dict[tuple[int, int], set[PlagueResponse]] = field(default_factory=dict)
     safe_drink: dict[int, int] = field(default_factory=dict)
     routes: dict[int, list[tuple[Transmission, int]]] = field(default_factory=dict)
+    camps: dict[int, int] = field(default_factory=dict)
+    lazarettos: dict[int, int] = field(default_factory=dict)
 
     def drink_guard(self, target_id: int) -> float:
         safety = self.safe_drink.get(target_id, 0)
@@ -159,6 +163,8 @@ class DiseaseBook:
         book.safe_drink = await drink_safety(session)
         for route_row in await session.scalars(select(DiseaseRouteRow).order_by(DiseaseRouteRow.disease_entity_id, DiseaseRouteRow.route)):
             book.routes.setdefault(route_row.disease_entity_id, []).append((route_row.route, route_row.share))
+        book.camps = await quarter_levels(session, DistrictKind.CAMP)
+        book.lazarettos = await quarter_levels(session, DistrictKind.LAZARETTO)
         return book
 
     async def load_hosts(self, session: AsyncSession) -> None:

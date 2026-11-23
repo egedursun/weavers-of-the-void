@@ -183,6 +183,8 @@ export const STATES: Record<Schema['ConstructionState'], string> = {
   complete: 'Standing',
   damaged: 'Damaged',
   ruined: 'In ruins',
+  abandoned: 'Left unfinished',
+  dismantled: 'Taken apart',
 }
 
 export const GROUND_FILL: Record<Schema['LandGround'], string> = {

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.means import CONTAINERS
+from aerona.catalog.means import CONTAINERS, container_capacity
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.means import ContainerStockRow
@@ -13,6 +13,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.means import ContainerKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.urban import CargoClass
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import reveal_hidden_route
 from aerona.engine.economy.stocks import goods_of
@@ -83,7 +84,7 @@ async def break_containers(ctx: TickContext, town: EntityRow, tally: ContainerTa
 
 async def capacity_held(ctx: TickContext, town_id: int) -> int:
     rows = await ctx.session.scalars(select(ContainerStockRow).where(ContainerStockRow.community_entity_id == town_id))
-    return sum(row.count * CONTAINERS[row.kind].capacity for row in rows) * ctx.rules.containers.per_capacity
+    return sum(row.count * container_capacity(ctx.rules, row.kind) for row in rows) * ctx.rules.containers.per_capacity
 
 
 async def packed_capacity(ctx: TickContext, ends: tuple[int, int], capacity: int) -> int:
@@ -96,7 +97,7 @@ async def packed_capacity(ctx: TickContext, ends: tuple[int, int], capacity: int
 
 async def sealed_share(ctx: TickContext, town_id: int, units: int) -> float:
     rows = await ctx.session.scalars(select(ContainerStockRow).where(ContainerStockRow.community_entity_id == town_id))
-    sealed = sum(row.count * CONTAINERS[row.kind].capacity for row in rows if CONTAINERS[row.kind].sealed) * ctx.rules.containers.per_capacity
+    sealed = sum(row.count * container_capacity(ctx.rules, row.kind) for row in rows if CONTAINERS[row.kind].sealed) * ctx.rules.containers.per_capacity
     covered = min(1.0, sealed / units) if units > 0 else 0.0
     return 1 - covered * ctx.rules.containers.sealed_pct / PERCENT
 
@@ -126,3 +127,12 @@ async def keep_containers(ctx: TickContext, tally: ContainerTally) -> None:
         await break_containers(ctx, town, tally)
         await make_containers(ctx, town, tally)
     await ctx.session.flush()
+
+
+async def suited_relief(ctx: TickContext, town_id: int, cargo: CargoClass, units: int) -> float:
+    rows = await ctx.session.scalars(select(ContainerStockRow).where(ContainerStockRow.community_entity_id == town_id))
+    fitting = (
+        sum(row.count * container_capacity(ctx.rules, row.kind) for row in rows if cargo in CONTAINERS[row.kind].suits) * ctx.rules.containers.per_capacity
+    )
+    covered = min(1.0, fitting / units) if units > 0 else 0.0
+    return 1 - covered * ctx.rules.containers.fit_spoil_pct / PERCENT

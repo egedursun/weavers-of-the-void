@@ -255,7 +255,7 @@ export function CosmosAgrarianSection() {
                   icon={CAUSES[item.cause].icon}
                   tone={PLANS[item.plan].tone}
                   title={<Ref node={item.settlement} />}
-                  caption={`After a ${CAUSES[item.cause].label.toLowerCase()}, ${PLANS[item.plan].label.toLowerCase()}`}
+                  caption={`After ${CAUSES[item.cause].label.toLowerCase()}, ${PLANS[item.plan].label.toLowerCase()}`}
                 >
                   <Meter label='Rebuilt' value={item.progress} tone='success' />
                 </RecordRow>

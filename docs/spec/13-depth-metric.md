@@ -8,41 +8,41 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 
 | Node type | A | B | C |
 |---|---:|---:|---:|
-| region | 665 / 215 met | 539 / 160 met | 400 / 120 met |
+| region | 668 / 215 met | 539 / 160 met | 400 / 120 met |
 | place | 183 / 25 met | 185 / 20 met | 294 / 15 met |
 | resource | 94 / 35 met | 71 / 50 met | 239 / 30 met |
-| settlement | 1827 / 280 met | 1435 / 230 met | 420 / 145 met |
+| settlement | 1837 / 280 met | 1435 / 230 met | 420 / 145 met |
 | species | 268 / 150 met | 242 / 150 met | 215 / 95 met |
-| people | 1605 / 320 met | 1131 / 220 met | 420 / 140 met |
-| mortal | 1349 / 355 met | 1021 / 340 met | 420 / 200 met |
+| people | 1613 / 320 met | 1131 / 220 met | 420 / 140 met |
+| mortal | 1354 / 355 met | 1021 / 340 met | 420 / 200 met |
 | item | 141 / 65 met | 120 / 60 met | 240 / 45 met |
-| structure | 1382 / 55 met | 867 / 70 met | 420 / 55 met |
-| language | 1317 / 110 met | 827 / 90 met | 420 / 55 met |
+| structure | 1387 / 55 met | 870 / 70 met | 420 / 55 met |
+| language | 1333 / 110 met | 832 / 90 met | 420 / 55 met |
 | legend | 79 / 30 met | 59 / 40 met | 130 / 35 met |
 | tradition | 68 / 20 met | 60 / 25 met | 90 / 25 met |
 | cult | 818 / 90 met | 566 / 100 met | 420 / 75 met |
-| faction | 925 / 95 met | 546 / 110 met | 400 / 80 met |
-| celestial | 438 / 10 met | 283 / 12 met | 380 / 15 met |
+| faction | 930 / 95 met | 546 / 110 met | 400 / 80 met |
+| celestial | 441 / 10 met | 283 / 12 met | 380 / 15 met |
 | artwork | 64 / 20 met | 50 / 20 met | 158 / 15 met |
 | law | 246 / 55 met | 89 / 60 met | 200 / 45 met |
 | spirit | 232 / 60 met | 218 / 60 met | 280 / 40 met |
 | knowledge | 322 / 70 met | 276 / 110 met | 300 / 85 met |
 | prophecy | 27 / 15 met | 24 / 15 met | 80 / 15 met |
 | event | 380 / 15 met | 234 / 20 met | 340 / 15 met |
-| vessel | 861 / 80 met | 579 / 65 met | 400 / 35 met |
+| vessel | 862 / 80 met | 579 / 65 met | 400 / 35 met |
 | outer_being | 41 / 15 met | 20 / 20 met | 159 / 20 met |
-| army | 794 / 240 met | 396 / 200 met | 400 / 95 met |
-| natural_law | 964 / 10 met | 583 / 30 met | 420 / 30 met |
-| trade_route | 95 / 25 met | 65 / 25 met | 220 / 25 met |
+| army | 797 / 240 met | 396 / 200 met | 400 / 95 met |
+| natural_law | 968 / 10 met | 585 / 30 met | 420 / 30 met |
+| trade_route | 98 / 25 met | 65 / 25 met | 220 / 25 met |
 | disease | 99 / 45 met | 72 / 50 met | 220 / 40 met |
 | polity | 567 / 225 met | 329 / 220 met | 372 / 150 met |
-| house | 146 / 60 met | 84 / 55 met | 316 / 45 met |
+| house | 147 / 60 met | 84 / 55 met | 316 / 45 met |
 | treaty | 94 / 25 met | 37 / 20 met | 140 / 20 met |
 | title | 267 / 25 met | 84 / 25 met | 256 / 25 met |
 | ideology | 30 / 20 met | 32 / 20 met | 115 / 20 met |
 | rite | 103 / 50 met | 96 / 55 met | 120 / 45 met |
-| beast | 1004 / 150 met | 806 / 90 met | 420 / 65 met |
-| theory | 446 / 15 met | 312 / 20 met | 400 / 25 met |
+| beast | 1009 / 150 met | 806 / 90 met | 420 / 65 met |
+| theory | 449 / 15 met | 312 / 20 met | 400 / 25 met |
 | art_form | 189 / 20 met | 148 / 20 met | 220 / 20 met |
 | phenomenon | 52 / 20 met | 91 / 20 met | 200 / 25 met |
 | cosmic_being | 0 | 1 | 20 |
@@ -53,10 +53,10 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | building_type | 0 | 0 | 0 |
 | network | 0 | 5 | 100 |
 | league | 0 | 3 | 39 |
-| son | 1985 / 350 met | 1634 / 320 met | 420 / 190 met |
-| creator | 1678 / 35 met | 1406 / 40 met | 420 / 35 met |
-| foreign_god | 1779 / 200 met | 1537 / 140 met | 420 / 100 met |
-| war | 1397 / 95 met | 1009 / 110 met | 420 / 75 met |
-| world | 2106 / 195 met | 1728 / 135 met | 420 / 115 met |
-| star | 1830 / 35 met | 1584 / 30 met | 420 / 25 met |
-| route | 850 / 45 met | 514 / 30 met | 420 / 25 met |
+| son | 1993 / 350 met | 1636 / 320 met | 420 / 190 met |
+| creator | 1686 / 35 met | 1406 / 40 met | 420 / 35 met |
+| foreign_god | 1787 / 200 met | 1537 / 140 met | 420 / 100 met |
+| war | 1402 / 95 met | 1009 / 110 met | 420 / 75 met |
+| world | 2116 / 195 met | 1730 / 135 met | 420 / 115 met |
+| star | 1838 / 35 met | 1586 / 30 met | 420 / 25 met |
+| route | 851 / 45 met | 514 / 30 met | 420 / 25 met |
