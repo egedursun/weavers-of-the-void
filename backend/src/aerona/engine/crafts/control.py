@@ -27,8 +27,15 @@ from aerona.db.tables.crafts import (
     PublicClockRow,
     SympatheticLinkRow,
 )
+from aerona.db.tables.cuisine import DishRow
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.economy import WorldMaterialRow
+from aerona.db.tables.mortal import MarriageRow
+from aerona.db.tables.relations import ContestRow
+from aerona.domain.enums.crafts import RightAcquired, RightKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.folk_knowledge import NumberReading
+from aerona.domain.enums.relations import ContestEnd
 from aerona.engine.collective.control import saved
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.aids import AidTally, keep_aids
@@ -38,7 +45,7 @@ from aerona.engine.crafts.games import GameTally, keep_games
 from aerona.engine.crafts.grounds import GroundTally, keep_grounds
 from aerona.engine.crafts.insurance import InsuranceTally, keep_insurance
 from aerona.engine.crafts.numbers import NumberTally, keep_numbers
-from aerona.engine.crafts.rights import RightsTally, keep_rights
+from aerona.engine.crafts.rights import RightsTally, house_of, keep_rights, made, wed_portion, win_right
 from aerona.engine.crafts.spirits import SpiritTally, keep_spirits
 from aerona.engine.crafts.sympathy import SympathyTally, keep_sympathy
 from aerona.engine.cycles.control import node_exists
@@ -102,6 +109,57 @@ async def edit_record(ctx: TickContext, name: str, key: object, values: Values, 
     row = apply(await found(ctx, kind.table, key, kind.label), allowed(values, kind.fields, kind.label), release)
     await ctx.session.flush()
     return row
+
+
+async def claim_right(
+    ctx: TickContext,
+    holder_id: int,
+    kind: RightKind,
+    name: str,
+    *,
+    subject_id: int | None = None,
+    dish_id: int | None = None,
+    technique: Technique | None = None,
+    contest_id: int | None = None,
+    marriage_id: int | None = None,
+) -> IncorporealRightRow:
+    await node_exists(ctx, holder_id, "holder")
+    if contest_id is not None:
+        contest = await found(ctx, ContestRow, contest_id, "contest")
+        loser = contest.defender_node_id if contest.challenger_node_id == holder_id else contest.challenger_node_id
+        won = await win_right(ctx, contest.id, contest.stake_node_id, holder_id, loser) if contest.outcome is not ContestEnd.DRAWN else None
+        if won is None:
+            raise ValidationFailedError("No right was staked in that contest, or you did not win it.")
+        return won
+    if marriage_id is not None:
+        union = await found(ctx, MarriageRow, marriage_id, "union")
+        if holder_id not in {union.first_id, union.second_id}:
+            raise ValidationFailedError("That union is not yours.")
+        partner = union.second_id if union.first_id == holder_id else union.first_id
+        portion = await wed_portion(ctx, await house_of(ctx, partner), holder_id, union.id)
+        if portion is None:
+            raise ValidationFailedError("Your partner's line has no right to pass with the union.")
+        return portion
+    if kind is RightKind.RECIPE and (dish_id is None or await ctx.session.get(DishRow, dish_id) is None):
+        raise ValidationFailedError("A right to a recipe names a dish.")
+    if kind is RightKind.TECHNIQUE:
+        known = await ctx.session.get(HolderTechniqueRow, (holder_id, technique)) if technique is not None else None
+        if known is None:
+            raise ValidationFailedError("A right to a technique names a technique you hold.")
+    return await made(
+        ctx,
+        IncorporealRightRow(
+            holder_node_id=holder_id,
+            kind=kind,
+            subject_node_id=subject_id,
+            name=name,
+            dish_id=dish_id,
+            technique=technique,
+            acquired=RightAcquired.CREATED,
+            since_epoch=ctx.epoch,
+            locked=[],
+        ),
+    )
 
 
 async def read_number(ctx: TickContext, people_id: int, number: int, reading: NumberReading | None) -> NumberSystemRow:

@@ -306,3 +306,6 @@ class SonToolsRules:
         35, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to move a river, parch or green a land, or salt or enrich its soil"
     )
     reshape_land_ap: int = rule(2, 1, 10, RuleGroup.SON_TOOLS, "reshape_land action cost")
+    mark_land_essence: int = rule(15, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to set a memory into a land")
+    wound_land_essence: int = rule(25, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to leave a scar on a land")
+    heal_land_essence: int = rule(20, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to heal a scar of a land")

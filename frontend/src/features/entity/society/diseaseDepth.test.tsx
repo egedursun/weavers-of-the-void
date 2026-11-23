@@ -37,13 +37,16 @@ const OUTBREAK = {
 const DISEASE = {
   entity_id: 41,
   name: 'the marsh ague',
-  vector: 'bite',
+  primary_route: 'bite',
+  primary_share: 80,
+  routes: [{ route: 'blood', share: 20, held: false }],
   virulence: 52,
   lethality: 33,
   chronic_rate: 22,
   incubation: 3,
   target_functions: ['breath', 'cognition'],
-  climate_affinity: 'wet',
+  affinity_warmth: 'any',
+  affinity_moisture: 'wet',
   host_species_id: 90,
   immunity_epochs: 8,
   mutation_rate: 5,
@@ -105,24 +108,25 @@ const DISEASE = {
 const DEMOGRAPHY = {
   entity_id: 30,
   people_id: null,
+  sex_kinds: ['bearer', 'begetter'],
   cohorts: [
     {
       age_band: 'adult',
-      sex: 'male',
+      sex_kind: 'begetter',
       social_class: 'farmer',
       condition: 'none',
       count: 1200,
     },
     {
       age_band: 'adult',
-      sex: 'male',
+      sex_kind: 'begetter',
       social_class: 'farmer',
       condition: 'sick',
       count: 300,
     },
     {
       age_band: 'adult',
-      sex: 'female',
+      sex_kind: 'bearer',
       social_class: 'farmer',
       condition: 'maimed',
       count: 40,
@@ -142,7 +146,7 @@ const DEMOGRAPHY = {
     {
       disease_id: 41,
       disease: 'the marsh ague',
-      vector: 'bite',
+      primary_route: 'bite',
       target_functions: ['breath'],
       severity: 64,
       status: 'active',
@@ -214,7 +218,7 @@ describe('disease depth and cohorts', () => {
     }
     expect(body.region_id).toBe(7)
     expect(body.name).toBe('The Grey Cough')
-    expect(body.values.vector).toBe('air')
+    expect(body.values.primary_route).toBe('inhalation')
     expect(body.values.target_functions).toEqual(['breath'])
     expect(body.values.incubation).toBe(1)
     expect(body.hold).toBe(true)
@@ -336,10 +340,79 @@ describe('disease depth and cohorts', () => {
     expect(callsTo('POST', '/api/actions/cohort:set')[0].body).toEqual({
       community_id: 30,
       age_band: 'adult',
-      sex: 'male',
+      sex_kind: 'begetter',
       social_class: 'farmer',
       condition: 'none',
       count: 250,
     })
+  })
+
+  it('shows every route a sickness passes by and opens, holds and closes a further route', async () => {
+    serve()
+    onApi('GET', '/api/entities/41/disease', {
+      ...DISEASE,
+      outbreaks: [
+        OUTBREAK,
+        {
+          ...OUTBREAK,
+          id: 4,
+          region: 'Lowmere',
+          region_id: 8,
+          path: 'waterway',
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/disease_route:set', ACCEPTED_ACTION)
+    onApi('POST', '/api/actions/disease_route:remove', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<DiseaseSection diseaseId={41} />)
+    await expect.element(screen.getByText('Thrives in wet lands')).toBeVisible()
+    await expect
+      .element(screen.getByText('Thrives in any warmth'))
+      .toBeVisible()
+    await expect.element(screen.getByText('Came downstream')).toBeVisible()
+    await screen.getByRole('button', { name: 'Adjust' }).click()
+    await expect.element(screen.getByText('Every way it passes')).toBeVisible()
+    await expect
+      .element(screen.getByText('Bites of beasts (main route)'))
+      .toBeVisible()
+    await screen.getByRole('button', { name: 'Set its share' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/disease_route:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/disease_route:set')[0].body).toEqual({
+      disease_id: 41,
+      route: 'blood',
+      share: 20,
+      hold: false,
+    })
+    await screen.getByRole('button', { name: 'Close this route' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/disease_route:remove'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/disease_route:remove')[0].body
+    ).toEqual({
+      disease_id: 41,
+      route: 'blood',
+    })
+  })
+
+  it('draws the population pyramid by the sex kinds the people has', async () => {
+    serve()
+    onApi('GET', '/api/entities/30/demography', DEMOGRAPHY)
+    const { screen } = await renderApp(<DemographySection communityId={30} />)
+    await expect
+      .element(
+        screen.getByRole('img', {
+          name: 'Population by age, sex kind and class',
+        })
+      )
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Bearers', { exact: true }))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Begetters', { exact: true }))
+      .toBeVisible()
   })
 })

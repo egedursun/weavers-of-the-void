@@ -132,6 +132,7 @@ class ExpeditionRules:
     wilds_legs: int = rule(4, 1, 50, X, "Legs into the wilds")
     underworld_legs: int = rule(5, 1, 50, X, "Legs into an underworld stratum")
     realm_legs: int = rule(6, 1, 50, X, "Legs into a mythic realm")
+    hard_way_legs_pct: int = rule(100, 0, 300, X, "More legs an expedition needs where its way of travel finds no passage at all, less as passage grows (%)")
     provisions_per_member: int = rule(3, 0, 50, X, "Provisions a party packs for each member")
     porter_provisions: int = rule(4, 0, 50, X, "Extra provisions each porter carries")
     light_stock: int = rule(6, 0, 50, X, "Light a party packs")

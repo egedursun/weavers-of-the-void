@@ -214,7 +214,7 @@ async def settle_captives(scope: PlayerScope, command: SettleCaptives) -> Effect
 @player_action("commander:trait", ActionKind.EDIT_RECORD)
 async def commander_trait(scope: PlayerScope, command: CommanderTraitOrder) -> Effect:
     await control.set_trait(await scope.context("commander_trait"), command.mortal_id, command.trait, held=command.held)
-    label = command.trait.value.replace("_", " ")
+    label = spoken(command.trait)
     return Effect(f"They are now known as {label}." if command.held else f"They are no longer {label}.", command.mortal_id)
 
 

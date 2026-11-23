@@ -463,6 +463,7 @@ async def alliance_lifetimes(ctx: TickContext, communities: int) -> int:
 @reads(
     "army.size",
     "cult.followers",
+    "cult.zeal",
     "mortal.age",
     "people.population",
     "settlement.population",
@@ -538,6 +539,7 @@ async def alliance_lifetimes(ctx: TickContext, communities: int) -> int:
 @writes(
     "army.size",
     "cult.followers",
+    "cult.zeal",
     "people.population",
     "settlement.population",
     "table.armies",

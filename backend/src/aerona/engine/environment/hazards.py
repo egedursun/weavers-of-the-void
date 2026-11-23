@@ -14,7 +14,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import RiverClass, ScarKind, WeatherEffect
+from aerona.domain.enums.environment import CoastKind, RiverClass, ScarKind, SeasonWarmth, WeatherEffect
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.region import HazardSeason, TerrainHazard
 from aerona.engine.body.hits import Harm
@@ -22,6 +22,7 @@ from aerona.engine.climes.shifts import fire_wind
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.cover import claim
 from aerona.engine.environment.book import EnvironmentBook, add_scar
+from aerona.engine.environment.season_shape import season_of_warmth, season_phase, wettest
 from aerona.engine.environment.succession import burn_back
 from aerona.engine.environment.years import grant_sub_steps, sampled_years
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -32,6 +33,7 @@ from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import round_half_up, scaled_cap
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.recording.record import record
+from aerona.engine.water.courses import slide_dam
 from aerona.rules.registry import Rules
 
 PERMILLE = 1000
@@ -52,29 +54,76 @@ CHANCES: dict[TerrainHazard, Callable[[Rules], int]] = {
     TerrainHazard.SPRING_FLOOD: lambda rules: rules.hazards.spring_flood_chance,
     TerrainHazard.WILDFIRE: lambda rules: rules.hazards.wildfire_chance,
     TerrainHazard.WHITEOUT: lambda rules: rules.hazards.whiteout_chance,
+    TerrainHazard.MUDSLIDE: lambda rules: rules.hazards.mudslide_chance,
+    TerrainHazard.FLASH_FLOOD: lambda rules: rules.hazards.flash_flood_chance,
+    TerrainHazard.THIN_ICE: lambda rules: rules.hazards.thin_ice_chance,
+    TerrainHazard.ICE_JAM: lambda rules: rules.hazards.ice_jam_chance,
+    TerrainHazard.STORM_SURGE: lambda rules: rules.hazards.storm_surge_chance,
+    TerrainHazard.DUST_STORM: lambda rules: rules.hazards.dust_storm_chance,
 }
 THRESHOLDS: dict[TerrainHazard, Callable[[Rules], int]] = {
     TerrainHazard.AVALANCHE: lambda rules: rules.hazards.avalanche_weather_min,
     TerrainHazard.SPRING_FLOOD: lambda rules: rules.hazards.spring_flood_weather_min,
     TerrainHazard.WILDFIRE: lambda rules: rules.hazards.wildfire_weather_min,
     TerrainHazard.WHITEOUT: lambda rules: rules.hazards.whiteout_weather_min,
+    TerrainHazard.MUDSLIDE: lambda rules: rules.hazards.mudslide_weather_min,
+    TerrainHazard.FLASH_FLOOD: lambda rules: rules.hazards.flash_flood_weather_min,
+    TerrainHazard.THIN_ICE: lambda rules: rules.hazards.thin_ice_weather_min,
+    TerrainHazard.ICE_JAM: lambda rules: rules.hazards.ice_jam_weather_min,
+    TerrainHazard.STORM_SURGE: lambda rules: rules.hazards.storm_surge_weather_min,
+    TerrainHazard.DUST_STORM: lambda rules: rules.hazards.dust_storm_weather_min,
 }
 DEATHS: dict[TerrainHazard, Callable[[Rules], int]] = {
     TerrainHazard.AVALANCHE: lambda rules: rules.hazards.avalanche_deaths_permille,
     TerrainHazard.SPRING_FLOOD: lambda rules: rules.hazards.spring_flood_deaths_permille,
     TerrainHazard.WILDFIRE: lambda rules: rules.hazards.wildfire_deaths_permille,
     TerrainHazard.WHITEOUT: lambda rules: rules.hazards.whiteout_deaths_permille,
+    TerrainHazard.MUDSLIDE: lambda rules: rules.hazards.mudslide_deaths_permille,
+    TerrainHazard.FLASH_FLOOD: lambda rules: rules.hazards.flash_flood_deaths_permille,
+    TerrainHazard.THIN_ICE: lambda rules: rules.hazards.thin_ice_deaths_permille,
+    TerrainHazard.ICE_JAM: lambda rules: rules.hazards.ice_jam_deaths_permille,
+    TerrainHazard.STORM_SURGE: lambda rules: rules.hazards.storm_surge_deaths_permille,
+    TerrainHazard.DUST_STORM: lambda rules: rules.hazards.dust_storm_deaths_permille,
 }
 ARMY_LOSSES: dict[TerrainHazard, Callable[[Rules], int]] = {
     TerrainHazard.AVALANCHE: lambda rules: rules.hazards.avalanche_army_pct,
     TerrainHazard.SPRING_FLOOD: lambda rules: rules.hazards.spring_flood_army_pct,
     TerrainHazard.WILDFIRE: lambda rules: rules.hazards.wildfire_army_pct,
     TerrainHazard.WHITEOUT: lambda rules: rules.hazards.whiteout_army_pct,
+    TerrainHazard.MUDSLIDE: lambda rules: rules.hazards.mudslide_army_pct,
+    TerrainHazard.FLASH_FLOOD: lambda rules: rules.hazards.flash_flood_army_pct,
+    TerrainHazard.THIN_ICE: lambda rules: rules.hazards.thin_ice_army_pct,
+    TerrainHazard.ICE_JAM: lambda rules: rules.hazards.ice_jam_army_pct,
+    TerrainHazard.STORM_SURGE: lambda rules: rules.hazards.storm_surge_army_pct,
+    TerrainHazard.DUST_STORM: lambda rules: rules.hazards.dust_storm_army_pct,
+}
+WORKS_CUT: dict[TerrainHazard, Callable[[Rules], int]] = {
+    TerrainHazard.MUDSLIDE: lambda rules: rules.hazards.mudslide_works_cut_pct,
+    TerrainHazard.FLASH_FLOOD: lambda rules: rules.hazards.flash_flood_works_cut_pct,
+    TerrainHazard.THIN_ICE: lambda rules: rules.hazards.thin_ice_works_cut_pct,
+    TerrainHazard.ICE_JAM: lambda rules: rules.hazards.ice_jam_works_cut_pct,
+    TerrainHazard.STORM_SURGE: lambda rules: rules.hazards.storm_surge_works_cut_pct,
+    TerrainHazard.DUST_STORM: lambda rules: rules.hazards.dust_storm_works_cut_pct,
 }
 
 
-def chance_of(rules: Rules, hazard: TerrainHazard) -> int:
-    return CHANCES[hazard](rules)
+def chance_of(rules: Rules, hazard: TerrainHazard, built: int = 0) -> float:
+    cut = WORKS_CUT[hazard](rules) * built / PERCENT if hazard in WORKS_CUT else 0
+    return CHANCES[hazard](rules) * (PERCENT - cut) / PERCENT
+
+
+def loose_slope(ground: RegionEnvironmentRow) -> bool:
+    return ground.cleared > 0 or ground.scars.get(ScarKind.ERODED.value, 0) > 0 or ground.scars.get(ScarKind.DEFORESTED.value, 0) > 0
+
+
+SEASONED: dict[TerrainHazard, Callable[[RegionEnvironmentRow], bool]] = {
+    TerrainHazard.MUDSLIDE: lambda ground: ground.wetland > 0 and loose_slope(ground),
+    TerrainHazard.FLASH_FLOOD: lambda ground: ground.rainfall > 0,
+    TerrainHazard.THIN_ICE: lambda ground: ground.river_class is not RiverClass.NONE or ground.coast_kind is not CoastKind.NONE,
+    TerrainHazard.ICE_JAM: lambda ground: ground.river_class in FLOODING_RIVERS,
+    TerrainHazard.STORM_SURGE: lambda ground: ground.coast_kind is not CoastKind.NONE,
+    TerrainHazard.DUST_STORM: lambda ground: ground.forest_cover < PERCENT // 4 or ground.scars.get(ScarKind.OVERGRAZED.value, 0) > 0,
+}
 
 
 def threshold_of(rules: Rules, hazard: TerrainHazard) -> int:
@@ -90,6 +139,8 @@ def army_loss_of(rules: Rules, hazard: TerrainHazard) -> int:
 
 
 def exposed(rules: Rules, hazard: TerrainHazard, spec: HazardSpec, ground: RegionEnvironmentRow) -> bool:
+    if spec.traits:
+        return bool(spec.traits & TERRAIN[ground.dominant_terrain].traits) and hazard in SEASONED and SEASONED[hazard](ground)
     if hazard is TerrainHazard.SPRING_FLOOD:
         return hazard in TERRAIN[ground.dominant_terrain].hazards or ground.river_class in FLOODING_RIVERS
     if hazard is TerrainHazard.WILDFIRE:
@@ -100,11 +151,16 @@ def exposed(rules: Rules, hazard: TerrainHazard, spec: HazardSpec, ground: Regio
 def season_for(seasons: list[WorldSeasonRow], kind: HazardSeason) -> WorldSeasonRow | None:
     if not seasons:
         return None
+    if kind is HazardSeason.WARMING:
+        phases = season_phase(seasons)
+        return next((season for season in seasons if phases[season.position].warmth is SeasonWarmth.WARMING), seasons[0])
+    if kind is HazardSeason.DRIEST:
+        return min(seasons, key=lambda season: (season.rain_shift, season.position))
     if kind is HazardSeason.COLDEST:
-        return min(seasons, key=lambda season: (season.temperature_shift, season.position))
+        return season_of_warmth(seasons, SeasonWarmth.COLDEST) or seasons[0]
     if kind is HazardSeason.WETTEST:
-        return max(seasons, key=lambda season: (season.rain_shift, -season.position))
-    return max(seasons, key=lambda season: (season.temperature_shift, -season.rain_shift, -season.position))
+        return wettest(seasons)
+    return season_of_warmth(seasons, SeasonWarmth.WARMEST) or seasons[0]
 
 
 def strength_of(rules: Rules, hazard: TerrainHazard, spec: HazardSpec, effects: dict[WeatherEffect, int]) -> int:
@@ -175,6 +231,8 @@ async def strike(
         add_scar(ground, ScarKind.BURNED, rules.hazards.wildfire_scar)
     if hazard is TerrainHazard.WILDFIRE:
         burn_back(ground, ctx.epoch)
+    if hazard is TerrainHazard.MUDSLIDE:
+        await slide_dam(ctx, ground)
     season_name = season.name if season is not None else "a hard season"
     write = await record(
         ctx,
@@ -234,7 +292,9 @@ async def roll_hazards(ctx: TickContext) -> HazardTally:
                 weather = book.weather(ctx.environment.world_seed, ctx.epoch, ground, season, f"hazard.{hazard.value}.{year.year}")
                 power = strength_of(rules, hazard, spec, dict(weather.effects))
                 fanned = await fire_wind(ctx.session, rules, region_id) if hazard is TerrainHazard.WILDFIRE else 1.0
-                if power and ctx.rng(f"hazard.{region_id}.{hazard.value}.{year.year}").chance(chance_of(rules, hazard) * power / PERCENT * fanned):
+                if power and ctx.rng(f"hazard.{region_id}.{hazard.value}.{year.year}").chance(
+                    chance_of(rules, hazard, ground.built) * power / PERCENT * fanned
+                ):
                     await strike(ctx, atlas, ground, hazard, season=season, year=year.year, tally=tally)
                     break
     await ctx.session.flush()

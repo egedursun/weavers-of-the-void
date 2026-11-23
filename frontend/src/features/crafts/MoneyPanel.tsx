@@ -145,7 +145,26 @@ function PolicyCard({ row, blocked }: { row: Policy; blocked: string | null }) {
   )
 }
 
-function RightCard({ row, blocked }: { row: Right; blocked: string | null }) {
+function choices(rows: { id: number; name: string }[]): Record<string, string> {
+  return Object.fromEntries(rows.map((item) => [String(item.id), item.name]))
+}
+
+function RightCard({
+  row,
+  data,
+  blocked,
+}: {
+  row: Right
+  data: View
+  blocked: string | null
+}) {
+  const techniques = Object.fromEntries(
+    data.technique_choices.map((item) => [item.technique, item.label])
+  )
+  const contest = data.contest_choices.find(
+    (item) => item.id === row.contest_id
+  )
+  const union = data.union_choices.find((item) => item.id === row.marriage_id)
   const action = useCraftsRow(
     'incorporeal_right:edit',
     'incorporeal_right:delete',
@@ -194,6 +213,30 @@ function RightCard({ row, blocked }: { row: Right; blocked: string | null }) {
           kind: 'node',
           types: HOLDERS,
         },
+        {
+          key: 'dish_id',
+          label: 'Dish of a recipe',
+          kind: 'pick',
+          table: choices(data.dish_choices),
+        },
+        {
+          key: 'technique',
+          label: 'Technique it covers',
+          kind: 'pick',
+          table: techniques,
+        },
+        {
+          key: 'contest_id',
+          label: 'Contest it was won in',
+          kind: 'pick',
+          table: choices(data.contest_choices),
+        },
+        {
+          key: 'marriage_id',
+          label: 'Union it passed with',
+          kind: 'pick',
+          table: choices(data.union_choices),
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -211,6 +254,10 @@ function RightCard({ row, blocked }: { row: Right; blocked: string | null }) {
             'Licensed to',
             <Ref key='licensee' node={row.licensed_to} empty='no one' />,
           ],
+          ['Dish', row.dish ?? 'no dish'],
+          ['Technique', row.technique_label ?? 'no technique'],
+          ['Won in', contest !== undefined ? contest.name : 'no contest'],
+          ['Passed with', union !== undefined ? union.name : 'no union'],
         ]}
       />
     </Held>
@@ -234,6 +281,8 @@ export function MoneyPanel({
   const [rightKind, setRightKind] = useState('song')
   const [name, setName] = useState('')
   const [subject, setSubject] = useState<number | null>(null)
+  const [dish, setDish] = useState('')
+  const [technique, setTechnique] = useState('')
   const insuring = useCraftsAction(
     'insurer:set',
     (_: void) => ({ insurer_id: nodeId }),
@@ -255,6 +304,8 @@ export function MoneyPanel({
       kind: rightKind as Right['kind'],
       subject_node_id: subject,
       name: name.trim(),
+      dish_id: dish ? Number(dish) : null,
+      technique: technique ? (technique as Right['technique']) : null,
     }),
     'The right is held'
   )
@@ -272,7 +323,14 @@ export function MoneyPanel({
     writing.isPending
   )
   const rightBusy = why(
-    blocked ?? (!name.trim() ? 'Write what the right is called' : null),
+    blocked ??
+      (!name.trim()
+        ? 'Write what the right is called'
+        : rightKind === 'recipe' && !dish
+          ? 'A right to a recipe names a dish'
+          : rightKind === 'technique' && !technique
+            ? 'A right to a technique names a technique it holds'
+            : null),
     holding.isPending
   )
   return (
@@ -317,7 +375,7 @@ export function MoneyPanel({
         noun={['right', 'rights']}
         itemKey={(item) => item.id}
       >
-        {(item) => <RightCard row={item} blocked={blocked} />}
+        {(item) => <RightCard row={item} data={data} blocked={blocked} />}
       </Listed>
       <ForgeCard
         icon={Coins}
@@ -403,6 +461,32 @@ export function MoneyPanel({
           onChange={setSubject}
           blocked={blocked}
           types={SUBJECTS}
+        />
+        <MindPicker
+          label='Dish of a recipe'
+          value={dish}
+          table={choices(data.dish_choices)}
+          placeholder='No dish'
+          blocked={
+            data.dish_choices.length === 0
+              ? 'No dish is known in this world'
+              : blocked
+          }
+          onPick={setDish}
+        />
+        <MindPicker
+          label='Technique it covers'
+          value={technique}
+          table={Object.fromEntries(
+            data.technique_choices.map((item) => [item.technique, item.label])
+          )}
+          placeholder='No technique'
+          blocked={
+            data.technique_choices.length === 0
+              ? 'It holds no technique'
+              : blocked
+          }
+          onPick={setTechnique}
         />
       </ForgeCard>
     </div>

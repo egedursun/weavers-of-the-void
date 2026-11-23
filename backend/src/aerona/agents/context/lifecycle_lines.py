@@ -32,7 +32,7 @@ async def son_world_end_lines(scope: Scope, son: SonRow) -> list[str]:
     del son
     ended = select(WorldRow.name, WorldEndRow.state).join(WorldEndRow, WorldEndRow.world_id == WorldRow.id).order_by(WorldRow.id)
     rows = (await scope.session.execute(ended)).all()
-    shown = [f"{name} ({state.value.replace('_', ' ')})" for name, state in rows]
+    shown = [f"{name} ({spoken(state)})" for name, state in rows]
     return [f"Worlds that have come to their end: {', '.join(shown)}."] if shown else []
 
 

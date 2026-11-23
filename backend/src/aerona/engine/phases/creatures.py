@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
@@ -143,7 +144,7 @@ async def mutate_species(ctx: TickContext, species: EntityRow, leak: int, chance
         }
         stats = revised(stats, changes)
     cause = "what leaked in from outside" if leak >= creatures.mutation_leak_text_threshold else "curse and magic"
-    born = f": {new_trait.value.replace('_', ' ')}" if new_trait is not None else ""
+    born = f": {spoken(new_trait)}" if new_trait is not None else ""
     mutant = await open_record(
         ctx.session,
         ctx.epoch,

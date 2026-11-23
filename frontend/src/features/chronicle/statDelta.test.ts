@@ -1,11 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { chronicleKindValues } from '@/api/generated/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type EpochStatistics } from './api'
-import {
-  humanKind,
-  kindTone,
-  kindWeight,
-  strongestKind,
-} from './chronicleKinds'
+import { kindTone, kindWeight, strongestKind } from './chronicleKinds'
 import { DELTA_FIELDS, DELTA_LABEL, deltaOf, sonFaithTotal } from './statDelta'
 
 function stats(data: Record<string, unknown>): EpochStatistics {
@@ -52,6 +49,6 @@ describe('chronicle kinds', () => {
   })
 
   it('shows a readable type name', () => {
-    expect(humanKind('engine_raw')).toBe('Engine raw')
+    expect(wordOf(chronicleKindValues, 'engine_raw')).toBe('Engine raw')
   })
 })

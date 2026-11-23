@@ -1,4 +1,5 @@
 import { Hammer, HandHeart, MessageSquare } from 'lucide-react'
+import { entityStatusValues, messageIntentValues } from '@/api/generated/schema'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -11,7 +12,8 @@ import {
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { PRAYER_TONES } from '@/features/dominion/labels'
-import { humanize, useLabels } from '@/features/pantheon/labels'
+import { wordOf } from '@/features/entity/affairs/labels'
+import { useLabels } from '@/features/pantheon/labels'
 import { NodeLink } from './SonBonds'
 import { type SonDetail } from './api'
 
@@ -88,7 +90,7 @@ export function SonRecords({ detail }: { detail: SonDetail }) {
                         entity.subtype,
                         `Epoch ${entity.birth_epoch}`,
                         entity.status !== 'canon'
-                          ? humanize(entity.status)
+                          ? wordOf(entityStatusValues, entity.status)
                           : null,
                       ]
                         .filter(Boolean)
@@ -131,7 +133,7 @@ export function SonRecords({ detail }: { detail: SonDetail }) {
                       <Muted>Unknown</Muted>
                     )}
                     <Badge size='sm' variant='outline'>
-                      {humanize(message.intent)}
+                      {wordOf(messageIntentValues, message.intent)}
                     </Badge>
                     {message.tone && (
                       <Badge size='sm' variant='outline'>

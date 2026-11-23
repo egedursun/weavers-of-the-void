@@ -138,6 +138,7 @@ class Persuade(Command):
     aim: PersuasionAim = PersuasionAim.BELIEF
     axis: ValueAxis | None = None
     toward: int = Field(default=SPAN, ge=-SPAN, le=SPAN)
+    subject_id: int | None = None
 
 
 class PersuasionTarget(Command):
@@ -436,8 +437,10 @@ async def attempt_persuasion(scope: PlayerScope, command: Persuade) -> Effect:
     speaker, target = await mortal(scope, command.speaker_id), await mortal(scope, command.target_id)
     if command.aim is PersuasionAim.BELIEF and command.axis is None:
         raise ValidationFailedError("Name the belief the argument is about.")
+    if command.aim is PersuasionAim.SURRENDER and command.subject_id is None:
+        raise ValidationFailedError("Name the besieged town whose surrender is sought.")
     ctx = await scope.context("persuasion:attempt")
-    argument = await persuade(ctx, speaker.id, target.id, command.appeal, command.aim, axis=command.axis, toward=command.toward)
+    argument = await persuade(ctx, speaker.id, target.id, command.appeal, command.aim, axis=command.axis, toward=command.toward, subject_id=command.subject_id)
     told = "won over" if argument.success else "failed to sway"
     return Effect(f"{speaker.name} {told} {target.name} ({argument.score}).", target_node_id=target.id, values={"persuasion_id": argument.record_id or 0})
 

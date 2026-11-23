@@ -1,6 +1,8 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.mind import ActKind, EthicalStance, HonourModel
 from aerona.domain.enums.mortal import CrimeKind
 
@@ -24,7 +26,8 @@ STANCE_READINGS: MappingProxyType[EthicalStance, int] = MappingProxyType(
     {S.REQUIRED: 70, S.ADMIRABLE: 40, S.ACCEPTABLE: 0, S.FROWNED_UPON: -25, S.SHAMEFUL: -55, S.UNTHINKABLE: -85}
 )
 
-ACT_LABELS: MappingProxyType[ActKind, str] = MappingProxyType(
+ACT_LABELS: Mapping[ActKind, str] = total(
+    ActKind,
     {
         A.EXECUTION: "Execution",
         A.MUTILATION: "Mutilation as punishment",
@@ -78,7 +81,14 @@ ACT_LABELS: MappingProxyType[ActKind, str] = MappingProxyType(
         A.SELLING_OFFICES: "Selling the offices of the realm",
         A.POACHING: "Poaching game reserved for another",
         A.ENCLOSING: "Enclosing the common land of the folk",
-    }
+        A.LYING: "Lying",
+        A.DRUNKENNESS: "Drunkenness",
+        A.TOMB_ROBBING: "Robbing graves and hoards",
+        A.USING_CHARMS: "Using charms",
+        A.FEEDING_ON_HOSTS: "Feeding on a living host",
+        A.KILLING_SACRED_ANIMAL: "Killing a sacred animal",
+        A.FIXING_CONTESTS: "Fixing a contest",
+    },
 )
 
 CRIME_ACTS: MappingProxyType[CrimeKind, ActKind] = MappingProxyType(

@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.market_kinds import FORGERIES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.base import Base
@@ -28,12 +29,13 @@ from aerona.db.tables.arts import (
 )
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.arts import ArtMarketRole, CanonPath, ClubKind
+from aerona.domain.enums.arts import ArtMarketRole, CanonPath, ClubKind, ForgeryKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.arts.forgery import expose, forge
 from aerona.engine.arts.market import appraise, owner_of, sell, start_collection
+from aerona.engine.arts.market_roles import critic_of, review
 from aerona.engine.arts.movements import PATH_WEIGHT, found_movement, makers_by_town
 from aerona.engine.arts.sport import SportTally, found_club, play, wager
 from aerona.engine.collective.control import of_type, saved
@@ -50,6 +52,7 @@ PEOPLES = frozenset({EntityType.PEOPLE})
 REALMS = frozenset({EntityType.POLITY})
 HOLDERS = frozenset({EntityType.MORTAL, EntityType.POLITY, EntityType.CULT, EntityType.FACTION, EntityType.SETTLEMENT})
 FORGED = frozenset({EntityType.ARTWORK, EntityType.ITEM, EntityType.TITLE, EntityType.LAW, EntityType.TREATY, EntityType.SETTLEMENT})
+TITLES = frozenset({EntityType.TITLE})
 
 
 async def artwork_profile(ctx: TickContext, artwork_id: int) -> tuple[EntityRow, ArtworkProfileRow]:
@@ -97,8 +100,13 @@ async def add_collector(ctx: TickContext, holder_id: int, role: ArtMarketRole | 
     return row
 
 
-async def forge_work(ctx: TickContext, original_id: int, forger_id: int) -> ForgeryRow:
+async def forge_work(ctx: TickContext, original_id: int, forger_id: int, kind: ForgeryKind | None = None) -> ForgeryRow:
     forger = await of_type(ctx, forger_id, MORTALS, "a mortal")
+    against = FORGERIES[kind].against if kind is not None else "work"
+    if kind is not None and against == "realm":
+        return await forge(ctx, await of_type(ctx, original_id, REALMS, "a realm"), forger, kind=kind)
+    if kind is not None and against == "title":
+        return await forge(ctx, await of_type(ctx, original_id, TITLES, "a title"), forger, kind=kind)
     original = await of_type(ctx, original_id, FORGED, "a work, relic, document or a town with a brand")
     brand = None
     if original.entity_type is EntityType.SETTLEMENT:
@@ -106,6 +114,18 @@ async def forge_work(ctx: TickContext, original_id: int, forger_id: int) -> Forg
         if brand is None:
             raise ValidationFailedError(f"{original.name} has no brand to counterfeit.")
     return await forge(ctx, original, forger, brand=brand)
+
+
+async def review_work(ctx: TickContext, artwork_id: int, critic_id: int) -> int:
+    critic = await of_type(ctx, critic_id, MORTALS, "a mortal")
+    work, profile = await artwork_profile(ctx, artwork_id)
+    judge = await critic_of(ctx, critic)
+    if judge is None:
+        raise ValidationFailedError("Only a critic, or one of enough renown to become one, can judge a work before the market.")
+    price = await appraise(ctx, work, profile)
+    swing = await review(ctx, judge, profile, price)
+    await ctx.session.flush()
+    return swing
 
 
 async def expose_forgery(ctx: TickContext, forgery_id: int, expert_id: int | None) -> ForgeryRow:
@@ -153,6 +173,19 @@ async def start_movement(ctx: TickContext, town_id: int) -> ArtMovementRow:
 async def start_club(ctx: TickContext, town_id: int, kind: ClubKind | None) -> ClubRow:
     town = await of_type(ctx, town_id, TOWNS, "a town")
     return await found_club(ctx, town, kind)
+
+
+async def fix_contest(ctx: TickContext, fixer_id: int, match_id: int, side_id: int) -> ClubRow:
+    await of_type(ctx, fixer_id, HOLDERS, "one who can fix a contest")
+    match = await found(ctx, MatchRow, match_id, "match")
+    if side_id not in {match.home_entity_id, match.away_entity_id}:
+        raise ValidationFailedError("The side to win must be one of the two clubs of that match.")
+    club = await found(ctx, ClubRow, side_id, "club")
+    if "fixed_by_entity_id" in club.locked:
+        raise ValidationFailedError("A god holds who fixes that club's contests.")
+    club.fixed_by_entity_id, club.fixed_winner_entity_id = fixer_id, side_id
+    await ctx.session.flush()
+    return club
 
 
 async def start_league(ctx: TickContext, realm_id: int, town_id: int | None) -> LeagueRow:

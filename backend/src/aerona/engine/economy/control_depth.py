@@ -7,6 +7,7 @@ from aerona.catalog.materials import MATERIALS
 from aerona.catalog.money import MONEY_FORMS, issuer_kind_of, metal_allowed
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
@@ -473,7 +474,7 @@ async def create_currency(ctx: TickContext, coin: NewCoin) -> CurrencyRow:
     if not coin.name.strip():
         raise ValidationFailedError("A coin needs a name.")
     check_money(coin.form, coin.metal)
-    made_of = f"of {coin.metal.value.replace('_', ' ')}" if coin.metal is not None else f"of {MONEY_FORMS[coin.form].label.lower()}"
+    made_of = f"of {spoken(coin.metal)}" if coin.metal is not None else f"of {MONEY_FORMS[coin.form].label.lower()}"
     item = await create_record(
         ctx,
         RecordSpec(

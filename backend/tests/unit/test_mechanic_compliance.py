@@ -16,7 +16,7 @@ from aerona.prompts.tools.ids import MortalToolId, SonToolId
 from aerona.services.player.catalog import ACTIONS_BY_ID
 
 ROOT = Path(__file__).resolve().parents[3]
-MATRICES = (ROOT / "docs" / "spec" / "13-coverage.md", ROOT / "docs" / "spec" / "16-coverage.md")
+MATRICES = tuple(ROOT / "docs" / "spec" / f"{number}-coverage.md" for number in (13, 16, 17))
 FRONTEND = ROOT / "frontend" / "src"
 GENERIC_LEVERS = ("lever:pin", "lever:unpin", "lever:suppress", "lever:unsuppress", "lever:run", "modifier:add", "modifier:remove")
 

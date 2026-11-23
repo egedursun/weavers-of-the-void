@@ -13,7 +13,7 @@ from aerona.db.tables.intrigue import SecretRow, TrueNameRow
 from aerona.db.tables.powers import PowerSourceRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.discovery import BlueprintSource
-from aerona.domain.enums.renown import LoreKind
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.secrets import learn
 from aerona.engine.primitives.queries import connect
@@ -141,9 +141,9 @@ async def grant_source(ctx: TickContext, holder: EntityRow, subject: int | None)
     return await connect(ctx.session, holder.id, subject, BondKind.KNOWS, ctx.epoch, description="told where power wells up") is not None
 
 
-WIDER_LORE: Mapping[LoreKind, LoreWay] = {
-    LoreKind.TRUE_NAME: LoreWay(names_held, name_holders, grant_name),
-    LoreKind.WEAKNESS: LoreWay(weaknesses_held, weakness_holders, grant_weakness),
-    LoreKind.PATTERN: LoreWay(patterns_held, pattern_holders, grant_pattern),
-    LoreKind.SOURCE: LoreWay(sources_held, source_holders, grant_source),
+WIDER_LORE: Mapping[KnowledgeKind, LoreWay] = {
+    KnowledgeKind.TRUE_NAME: LoreWay(names_held, name_holders, grant_name),
+    KnowledgeKind.WEAKNESS: LoreWay(weaknesses_held, weakness_holders, grant_weakness),
+    KnowledgeKind.PATTERN: LoreWay(patterns_held, pattern_holders, grant_pattern),
+    KnowledgeKind.SOURCE: LoreWay(sources_held, source_holders, grant_source),
 }

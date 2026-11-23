@@ -36,7 +36,7 @@ async def move_economic_order(call: SonCall, args: MoveEconomicOrderInput) -> st
         fail(SonResult.ORDER_MOVE_REFUSED, why="there is no such realm")
     await ensure_in_reach(call, realm)
     if held(realm.id):
-        fail(SonResult.ORDER_MOVE_REFUSED, why="a stronger hand holds that realm")
+        fail(SonResult.ORDER_MOVE_REFUSED, why="that realm is held")
     allowed = [item.value for item in AXIS_ENUMS[args.axis]]
     if args.value not in allowed:
         fail(SonResult.ORDER_MOVE_REFUSED, why=f"{args.axis} may be {', '.join(allowed)}")

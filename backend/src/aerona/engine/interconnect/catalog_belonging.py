@@ -17,7 +17,7 @@ BELONGING_MECHANICS = (
         templates=(),
         tables=(HeldIdentityRow.__tablename__,),
         exposure=Exposure.TOOL,
-        tools=("stir_identity",),
+        tools=("stir_identity", "claim_identity"),
         targets=("settlement", "people", "mortal", "polity"),
         couplings=(
             Coupling(S.FAITH, "a holy war makes faith matter more", E.MODIFIER, "identities.holy_war"),

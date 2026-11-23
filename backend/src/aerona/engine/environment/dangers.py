@@ -1,11 +1,13 @@
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.beast_tempers import HELD_TEMPERS
 from aerona.catalog.terrain import terrains
+from aerona.catalog.wind_belts import CURRENTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.culture import TraditionParticipationRow, TraditionProfileRow
@@ -19,13 +21,14 @@ from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.ecology import BeastTemper, DomesticationStage
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.environment import ScarKind, SoilKind, TerrainKind, TerrainTrait
+from aerona.domain.enums.environment import CoastKind, ScarKind, SoilKind, TerrainKind, TerrainTrait
 from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource
 from aerona.engine.cosmos.kinds import PHENOMENON_MECHANICS
 from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.cycles.hospitality import circuit_stops
 from aerona.engine.ecology.ranges import wildness
 from aerona.engine.environment.memory import darkness
+from aerona.engine.environment.profile import RIVER_RANK
 from aerona.engine.nature.symbiosis import mimics_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
@@ -34,8 +37,12 @@ from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.rules.registry import Rules
 
 SNOW_TERRAIN = terrains(TerrainTrait.COLD, without=(TerrainTrait.OPEN,))
+SLOPES = terrains(TerrainTrait.ROUGH, TerrainTrait.HIGH)
+HIGH_GROUND = terrains(TerrainTrait.HIGH)
+OPEN_GROUND = terrains(TerrainTrait.OPEN)
+WET_GROUND = terrains(TerrainTrait.WET)
 VOLCANIC_SOILS = frozenset({SoilKind.VOLCANIC, SoilKind.TEPHRA})
-HELD_BEASTS = frozenset({BeastTemper.BOUND, BeastTemper.TAMED})
+HELD_BEASTS = HELD_TEMPERS
 DANGER_KEY = "danger"
 
 
@@ -46,48 +53,165 @@ HARM_WEIGHTS: dict[tuple[DangerSource, DangerHarm], Callable[[Rules], int]] = {
     (DangerSource.BEASTS, DangerHarm.ARMIES): lambda rules: rules.regional_danger.beasts_armies,
     (DangerSource.BEASTS, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.beasts_ambush,
     (DangerSource.BEASTS, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.beasts_merchants,
+    (DangerSource.BEASTS, DangerHarm.CROPS): lambda rules: rules.regional_danger.beasts_crops,
+    (DangerSource.BEASTS, DangerHarm.VESSELS): lambda rules: rules.regional_danger.beasts_vessels,
+    (DangerSource.BEASTS, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.beasts_structures,
+    (DangerSource.BEASTS, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.beasts_pilgrims,
+    (DangerSource.BEASTS, DangerHarm.WORKERS): lambda rules: rules.regional_danger.beasts_workers,
     (DangerSource.BANDITS, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.bandits_settlers,
     (DangerSource.BANDITS, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.bandits_livestock,
     (DangerSource.BANDITS, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.bandits_travellers,
     (DangerSource.BANDITS, DangerHarm.ARMIES): lambda rules: rules.regional_danger.bandits_armies,
     (DangerSource.BANDITS, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.bandits_ambush,
     (DangerSource.BANDITS, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.bandits_merchants,
+    (DangerSource.BANDITS, DangerHarm.CROPS): lambda rules: rules.regional_danger.bandits_crops,
+    (DangerSource.BANDITS, DangerHarm.VESSELS): lambda rules: rules.regional_danger.bandits_vessels,
+    (DangerSource.BANDITS, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.bandits_structures,
+    (DangerSource.BANDITS, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.bandits_pilgrims,
+    (DangerSource.BANDITS, DangerHarm.WORKERS): lambda rules: rules.regional_danger.bandits_workers,
     (DangerSource.MONSTERS, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.monsters_settlers,
     (DangerSource.MONSTERS, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.monsters_livestock,
     (DangerSource.MONSTERS, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.monsters_travellers,
     (DangerSource.MONSTERS, DangerHarm.ARMIES): lambda rules: rules.regional_danger.monsters_armies,
     (DangerSource.MONSTERS, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.monsters_ambush,
     (DangerSource.MONSTERS, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.monsters_merchants,
+    (DangerSource.MONSTERS, DangerHarm.CROPS): lambda rules: rules.regional_danger.monsters_crops,
+    (DangerSource.MONSTERS, DangerHarm.VESSELS): lambda rules: rules.regional_danger.monsters_vessels,
+    (DangerSource.MONSTERS, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.monsters_structures,
+    (DangerSource.MONSTERS, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.monsters_pilgrims,
+    (DangerSource.MONSTERS, DangerHarm.WORKERS): lambda rules: rules.regional_danger.monsters_workers,
     (DangerSource.PHENOMENA, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.phenomena_settlers,
     (DangerSource.PHENOMENA, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.phenomena_livestock,
     (DangerSource.PHENOMENA, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.phenomena_travellers,
     (DangerSource.PHENOMENA, DangerHarm.ARMIES): lambda rules: rules.regional_danger.phenomena_armies,
     (DangerSource.PHENOMENA, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.phenomena_ambush,
     (DangerSource.PHENOMENA, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.phenomena_merchants,
+    (DangerSource.PHENOMENA, DangerHarm.CROPS): lambda rules: rules.regional_danger.phenomena_crops,
+    (DangerSource.PHENOMENA, DangerHarm.VESSELS): lambda rules: rules.regional_danger.phenomena_vessels,
+    (DangerSource.PHENOMENA, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.phenomena_structures,
+    (DangerSource.PHENOMENA, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.phenomena_pilgrims,
+    (DangerSource.PHENOMENA, DangerHarm.WORKERS): lambda rules: rules.regional_danger.phenomena_workers,
     (DangerSource.DISEASE, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.disease_settlers,
     (DangerSource.DISEASE, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.disease_livestock,
     (DangerSource.DISEASE, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.disease_travellers,
     (DangerSource.DISEASE, DangerHarm.ARMIES): lambda rules: rules.regional_danger.disease_armies,
     (DangerSource.DISEASE, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.disease_ambush,
     (DangerSource.DISEASE, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.disease_merchants,
+    (DangerSource.DISEASE, DangerHarm.CROPS): lambda rules: rules.regional_danger.disease_crops,
+    (DangerSource.DISEASE, DangerHarm.VESSELS): lambda rules: rules.regional_danger.disease_vessels,
+    (DangerSource.DISEASE, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.disease_structures,
+    (DangerSource.DISEASE, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.disease_pilgrims,
+    (DangerSource.DISEASE, DangerHarm.WORKERS): lambda rules: rules.regional_danger.disease_workers,
     (DangerSource.AVALANCHE, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.avalanche_settlers,
     (DangerSource.AVALANCHE, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.avalanche_livestock,
     (DangerSource.AVALANCHE, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.avalanche_travellers,
     (DangerSource.AVALANCHE, DangerHarm.ARMIES): lambda rules: rules.regional_danger.avalanche_armies,
     (DangerSource.AVALANCHE, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.avalanche_ambush,
     (DangerSource.AVALANCHE, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.avalanche_merchants,
+    (DangerSource.AVALANCHE, DangerHarm.CROPS): lambda rules: rules.regional_danger.avalanche_crops,
+    (DangerSource.AVALANCHE, DangerHarm.VESSELS): lambda rules: rules.regional_danger.avalanche_vessels,
+    (DangerSource.AVALANCHE, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.avalanche_structures,
+    (DangerSource.AVALANCHE, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.avalanche_pilgrims,
+    (DangerSource.AVALANCHE, DangerHarm.WORKERS): lambda rules: rules.regional_danger.avalanche_workers,
     (DangerSource.QUICKSAND, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.quicksand_settlers,
     (DangerSource.QUICKSAND, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.quicksand_livestock,
     (DangerSource.QUICKSAND, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.quicksand_travellers,
     (DangerSource.QUICKSAND, DangerHarm.ARMIES): lambda rules: rules.regional_danger.quicksand_armies,
     (DangerSource.QUICKSAND, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.quicksand_ambush,
     (DangerSource.QUICKSAND, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.quicksand_merchants,
+    (DangerSource.QUICKSAND, DangerHarm.CROPS): lambda rules: rules.regional_danger.quicksand_crops,
+    (DangerSource.QUICKSAND, DangerHarm.VESSELS): lambda rules: rules.regional_danger.quicksand_vessels,
+    (DangerSource.QUICKSAND, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.quicksand_structures,
+    (DangerSource.QUICKSAND, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.quicksand_pilgrims,
+    (DangerSource.QUICKSAND, DangerHarm.WORKERS): lambda rules: rules.regional_danger.quicksand_workers,
     (DangerSource.VOLCANIC, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.volcanic_settlers,
     (DangerSource.VOLCANIC, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.volcanic_livestock,
     (DangerSource.VOLCANIC, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.volcanic_travellers,
     (DangerSource.VOLCANIC, DangerHarm.ARMIES): lambda rules: rules.regional_danger.volcanic_armies,
     (DangerSource.VOLCANIC, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.volcanic_ambush,
     (DangerSource.VOLCANIC, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.volcanic_merchants,
+    (DangerSource.VOLCANIC, DangerHarm.CROPS): lambda rules: rules.regional_danger.volcanic_crops,
+    (DangerSource.VOLCANIC, DangerHarm.VESSELS): lambda rules: rules.regional_danger.volcanic_vessels,
+    (DangerSource.VOLCANIC, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.volcanic_structures,
+    (DangerSource.VOLCANIC, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.volcanic_pilgrims,
+    (DangerSource.VOLCANIC, DangerHarm.WORKERS): lambda rules: rules.regional_danger.volcanic_workers,
+    (DangerSource.LANDSLIDE, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.landslide_settlers,
+    (DangerSource.LANDSLIDE, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.landslide_livestock,
+    (DangerSource.LANDSLIDE, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.landslide_travellers,
+    (DangerSource.LANDSLIDE, DangerHarm.ARMIES): lambda rules: rules.regional_danger.landslide_armies,
+    (DangerSource.LANDSLIDE, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.landslide_ambush,
+    (DangerSource.LANDSLIDE, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.landslide_merchants,
+    (DangerSource.LANDSLIDE, DangerHarm.CROPS): lambda rules: rules.regional_danger.landslide_crops,
+    (DangerSource.LANDSLIDE, DangerHarm.VESSELS): lambda rules: rules.regional_danger.landslide_vessels,
+    (DangerSource.LANDSLIDE, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.landslide_structures,
+    (DangerSource.LANDSLIDE, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.landslide_pilgrims,
+    (DangerSource.LANDSLIDE, DangerHarm.WORKERS): lambda rules: rules.regional_danger.landslide_workers,
+    (DangerSource.EXPOSURE, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.exposure_settlers,
+    (DangerSource.EXPOSURE, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.exposure_livestock,
+    (DangerSource.EXPOSURE, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.exposure_travellers,
+    (DangerSource.EXPOSURE, DangerHarm.ARMIES): lambda rules: rules.regional_danger.exposure_armies,
+    (DangerSource.EXPOSURE, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.exposure_ambush,
+    (DangerSource.EXPOSURE, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.exposure_merchants,
+    (DangerSource.EXPOSURE, DangerHarm.CROPS): lambda rules: rules.regional_danger.exposure_crops,
+    (DangerSource.EXPOSURE, DangerHarm.VESSELS): lambda rules: rules.regional_danger.exposure_vessels,
+    (DangerSource.EXPOSURE, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.exposure_structures,
+    (DangerSource.EXPOSURE, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.exposure_pilgrims,
+    (DangerSource.EXPOSURE, DangerHarm.WORKERS): lambda rules: rules.regional_danger.exposure_workers,
+    (DangerSource.CURRENTS, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.currents_settlers,
+    (DangerSource.CURRENTS, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.currents_livestock,
+    (DangerSource.CURRENTS, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.currents_travellers,
+    (DangerSource.CURRENTS, DangerHarm.ARMIES): lambda rules: rules.regional_danger.currents_armies,
+    (DangerSource.CURRENTS, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.currents_ambush,
+    (DangerSource.CURRENTS, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.currents_merchants,
+    (DangerSource.CURRENTS, DangerHarm.CROPS): lambda rules: rules.regional_danger.currents_crops,
+    (DangerSource.CURRENTS, DangerHarm.VESSELS): lambda rules: rules.regional_danger.currents_vessels,
+    (DangerSource.CURRENTS, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.currents_structures,
+    (DangerSource.CURRENTS, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.currents_pilgrims,
+    (DangerSource.CURRENTS, DangerHarm.WORKERS): lambda rules: rules.regional_danger.currents_workers,
+    (DangerSource.TOXIC_GROUND, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.toxic_ground_settlers,
+    (DangerSource.TOXIC_GROUND, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.toxic_ground_livestock,
+    (DangerSource.TOXIC_GROUND, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.toxic_ground_travellers,
+    (DangerSource.TOXIC_GROUND, DangerHarm.ARMIES): lambda rules: rules.regional_danger.toxic_ground_armies,
+    (DangerSource.TOXIC_GROUND, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.toxic_ground_ambush,
+    (DangerSource.TOXIC_GROUND, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.toxic_ground_merchants,
+    (DangerSource.TOXIC_GROUND, DangerHarm.CROPS): lambda rules: rules.regional_danger.toxic_ground_crops,
+    (DangerSource.TOXIC_GROUND, DangerHarm.VESSELS): lambda rules: rules.regional_danger.toxic_ground_vessels,
+    (DangerSource.TOXIC_GROUND, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.toxic_ground_structures,
+    (DangerSource.TOXIC_GROUND, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.toxic_ground_pilgrims,
+    (DangerSource.TOXIC_GROUND, DangerHarm.WORKERS): lambda rules: rules.regional_danger.toxic_ground_workers,
+    (DangerSource.LIGHTNING, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.lightning_settlers,
+    (DangerSource.LIGHTNING, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.lightning_livestock,
+    (DangerSource.LIGHTNING, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.lightning_travellers,
+    (DangerSource.LIGHTNING, DangerHarm.ARMIES): lambda rules: rules.regional_danger.lightning_armies,
+    (DangerSource.LIGHTNING, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.lightning_ambush,
+    (DangerSource.LIGHTNING, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.lightning_merchants,
+    (DangerSource.LIGHTNING, DangerHarm.CROPS): lambda rules: rules.regional_danger.lightning_crops,
+    (DangerSource.LIGHTNING, DangerHarm.VESSELS): lambda rules: rules.regional_danger.lightning_vessels,
+    (DangerSource.LIGHTNING, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.lightning_structures,
+    (DangerSource.LIGHTNING, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.lightning_pilgrims,
+    (DangerSource.LIGHTNING, DangerHarm.WORKERS): lambda rules: rules.regional_danger.lightning_workers,
+    (DangerSource.SINKHOLE, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.sinkhole_settlers,
+    (DangerSource.SINKHOLE, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.sinkhole_livestock,
+    (DangerSource.SINKHOLE, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.sinkhole_travellers,
+    (DangerSource.SINKHOLE, DangerHarm.ARMIES): lambda rules: rules.regional_danger.sinkhole_armies,
+    (DangerSource.SINKHOLE, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.sinkhole_ambush,
+    (DangerSource.SINKHOLE, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.sinkhole_merchants,
+    (DangerSource.SINKHOLE, DangerHarm.CROPS): lambda rules: rules.regional_danger.sinkhole_crops,
+    (DangerSource.SINKHOLE, DangerHarm.VESSELS): lambda rules: rules.regional_danger.sinkhole_vessels,
+    (DangerSource.SINKHOLE, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.sinkhole_structures,
+    (DangerSource.SINKHOLE, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.sinkhole_pilgrims,
+    (DangerSource.SINKHOLE, DangerHarm.WORKERS): lambda rules: rules.regional_danger.sinkhole_workers,
+    (DangerSource.ROCKFALL, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.rockfall_settlers,
+    (DangerSource.ROCKFALL, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.rockfall_livestock,
+    (DangerSource.ROCKFALL, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.rockfall_travellers,
+    (DangerSource.ROCKFALL, DangerHarm.ARMIES): lambda rules: rules.regional_danger.rockfall_armies,
+    (DangerSource.ROCKFALL, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.rockfall_ambush,
+    (DangerSource.ROCKFALL, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.rockfall_merchants,
+    (DangerSource.ROCKFALL, DangerHarm.CROPS): lambda rules: rules.regional_danger.rockfall_crops,
+    (DangerSource.ROCKFALL, DangerHarm.VESSELS): lambda rules: rules.regional_danger.rockfall_vessels,
+    (DangerSource.ROCKFALL, DangerHarm.STRUCTURES): lambda rules: rules.regional_danger.rockfall_structures,
+    (DangerSource.ROCKFALL, DangerHarm.PILGRIMS): lambda rules: rules.regional_danger.rockfall_pilgrims,
+    (DangerSource.ROCKFALL, DangerHarm.WORKERS): lambda rules: rules.regional_danger.rockfall_workers,
 }
 
 
@@ -95,8 +219,18 @@ def harm_weight(rules: Rules, source: DangerSource, harm: DangerHarm) -> int:
     return HARM_WEIGHTS[source, harm](rules)
 
 
+def reaches(rules: Rules, source: DangerSource) -> list[DangerHarm]:
+    return [harm for harm in DangerHarm if harm_weight(rules, source, harm) > 0]
+
+
+def row_weight(rules: Rules, row: RegionDangerRow, harm: DangerHarm) -> int:
+    if row.harmed and harm.value not in row.harmed:
+        return 0
+    return harm_weight(rules, row.source, harm)
+
+
 def weighted(rules: Rules, rows: Iterable[RegionDangerRow], harm: DangerHarm) -> int:
-    return clamp_int(round_half_up(sum(row.strength * harm_weight(rules, row.source, harm) / PERCENT for row in rows)), 0, PERCENT)
+    return clamp_int(round_half_up(sum(row.strength * row_weight(rules, row, harm) / PERCENT for row in rows)), 0, PERCENT)
 
 
 def total(rules: Rules, rows: Iterable[RegionDangerRow]) -> int:
@@ -285,6 +419,81 @@ def _ground(rules: Rules, scene: DangerScene) -> None:
             volcanic.add(scar.get(ScarKind.CRATER.value, 0) * table.volcanic_crater_pct / PERCENT)
 
 
+def landslide(rules: Rules, ground: RegionEnvironmentRow) -> float:
+    table = rules.regional_danger
+    if ground.dominant_terrain not in SLOPES:
+        return 0.0
+    loose = ground.scars.get(ScarKind.ERODED.value, 0) + ground.scars.get(ScarKind.DEFORESTED.value, 0)
+    wet = ground.rainfall / PERCENT
+    return table.landslide_base + ground.roughness * table.landslide_roughness_pct / PERCENT * wet + loose * table.landslide_eroded_pct / PERCENT
+
+
+def exposure(rules: Rules, ground: RegionEnvironmentRow) -> float:
+    table = rules.regional_danger
+    beyond = max(0, table.exposure_cold_below - ground.temperature, ground.temperature - table.exposure_heat_above)
+    return table.exposure_base + beyond * table.exposure_extreme_pct / PERCENT if beyond > 0 else 0.0
+
+
+def currents(rules: Rules, ground: RegionEnvironmentRow) -> float:
+    table = rules.regional_danger
+    river = RIVER_RANK[ground.river_class] * table.currents_river_step
+    coast = table.currents_coast if ground.coast_kind is not CoastKind.NONE else 0
+    if not river and not coast:
+        return 0.0
+    return float(table.currents_base + river + coast + max(0, CURRENTS[ground.current].danger(rules)))
+
+
+def toxic_ground(rules: Rules, ground: RegionEnvironmentRow) -> float:
+    table = rules.regional_danger
+    fumes = table.toxic_ground_base if ground.dominant_terrain is TerrainKind.VOLCANIC else 0
+    marsh = ground.wetland * table.toxic_ground_marsh_pct / PERCENT if ground.dominant_terrain in WET_GROUND else 0
+    return fumes + marsh + ground.scars.get(ScarKind.POISONED.value, 0) * table.toxic_ground_poisoned_pct / PERCENT
+
+
+def lightning(rules: Rules, ground: RegionEnvironmentRow) -> float:
+    table = rules.regional_danger
+    return float(table.lightning_harm) if ground.rainfall > table.lightning_rain_above and ground.dominant_terrain in OPEN_GROUND else 0.0
+
+
+def sinkhole(rules: Rules, ground: RegionEnvironmentRow) -> float:
+    return float(rules.regional_danger.sinkhole_harm) if ground.dominant_terrain is TerrainKind.KARST else 0.0
+
+
+def rockfall(rules: Rules, ground: RegionEnvironmentRow) -> float:
+    table = rules.regional_danger
+    if ground.dominant_terrain not in HIGH_GROUND:
+        return 0.0
+    return table.rockfall_harm + ground.roughness * table.rockfall_roughness_pct / PERCENT
+
+
+RISING: Mapping[DangerSource, Callable[[Rules, RegionEnvironmentRow], float]] = {
+    DangerSource.LANDSLIDE: landslide,
+    DangerSource.EXPOSURE: exposure,
+    DangerSource.CURRENTS: currents,
+    DangerSource.TOXIC_GROUND: toxic_ground,
+    DangerSource.LIGHTNING: lightning,
+    DangerSource.SINKHOLE: sinkhole,
+    DangerSource.ROCKFALL: rockfall,
+}
+PROTECTION: Mapping[DangerSource, Callable[[Rules], int]] = {
+    DangerSource.LANDSLIDE: lambda rules: rules.regional_danger.landslide_protection_cut_pct,
+    DangerSource.EXPOSURE: lambda rules: rules.regional_danger.exposure_protection_cut_pct,
+    DangerSource.CURRENTS: lambda rules: rules.regional_danger.currents_protection_cut_pct,
+    DangerSource.TOXIC_GROUND: lambda rules: rules.regional_danger.toxic_ground_protection_cut_pct,
+    DangerSource.LIGHTNING: lambda rules: rules.regional_danger.lightning_protection_cut_pct,
+    DangerSource.SINKHOLE: lambda rules: rules.regional_danger.sinkhole_protection_cut_pct,
+    DangerSource.ROCKFALL: lambda rules: rules.regional_danger.rockfall_protection_cut_pct,
+}
+
+
+def _rising(rules: Rules, scene: DangerScene) -> None:
+    for region_id, ground in scene.grounds.items():
+        for source, rise in RISING.items():
+            slot = scene.slot(region_id, source)
+            if slot is not None:
+                slot.add(rise(rules, ground) * (PERCENT - ground.built * PROTECTION[source](rules) / PERCENT) / PERCENT)
+
+
 async def _cosmic(session: AsyncSession, rules: Rules, scene: DangerScene) -> None:
     statement = (
         select(PhenomenonFootprintRow.region_entity_id, PhenomenonFootprintRow.intensity, PhenomenonProfileRow.kind, PhenomenonProfileRow.entity_id)
@@ -315,6 +524,7 @@ async def derive(session: AsyncSession, rules: Rules, scene: DangerScene, epoch:
     await _monsters(session, rules, scene)
     await _bandits(session, rules, scene, epoch)
     _ground(rules, scene)
+    _rising(rules, scene)
     return scene.derived
 
 

@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.catalog.life.agents import WAR_OFFICES
 from aerona.catalog.operations import GROUND_LABELS, QUIRKS, RESOLVE_EFFECTS
@@ -75,7 +75,7 @@ async def command_lines(scope: Scope, me: EntityRow) -> list[str]:
             state = "its offensive has culminated" if operation.culminated else f"{several(operation.offensive_seasons, 'season', 'seasons')} on the offensive"
             found.append(f"it needs {operation.need} supply a season and received {operation.delivered}; {state}")
     for row in await session.scalars(select(EchelonRow).where(EchelonRow.commander_entity_id == me.id).order_by(EchelonRow.id).limit(LIST_LINES)):
-        found.append(f"you command {row.name} (formation {row.id}), {an(words(row.level.value))} on {spoken(row.order)} orders")
+        found.append(f"you command {row.name} (formation {row.id}), {an(spoken(row.level))} on {spoken(row.order)} orders")
     return found
 
 
@@ -112,7 +112,7 @@ async def ship_lines(scope: Scope, me: EntityRow) -> list[str]:
         .limit(1)
     ):
         found.append(
-            f"your ship {await named(scope, vessel.entity_id)} sails {words(state.point_of_sail.value)}, leaks {state.leak}, burns {state.fire}, "
+            f"your ship {await named(scope, vessel.entity_id)} sails {spoken(state.point_of_sail)}, leaks {state.leak}, burns {state.fire}, "
             f"fires {spoken(state.shot)} shot at a rate of {state.rate_of_fire}"
         )
     return found

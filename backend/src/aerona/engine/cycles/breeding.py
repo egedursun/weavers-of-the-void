@@ -1,15 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.reproduction import SEX_SYSTEMS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.cycles import MortalCasteRow, PeopleReproductionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.cycles import ReproductiveCaste, ReproductiveSystem
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.engine.cycles.lineage import caste_of, reproduction_of, sexes_fixed
 from aerona.rules.registry import Rules
-
-SEXLESS = frozenset({ReproductiveSystem.AMBISEXUAL, ReproductiveSystem.CASTE, ReproductiveSystem.ASEXUAL})
 
 
 async def reproduction_at(session: AsyncSession, community_id: int) -> PeopleReproductionRow | None:
@@ -47,10 +46,13 @@ async def soldier_factor(session: AsyncSession, rules: Rules, community: EntityR
     return max(0.1, 1 + (row.soldier_pct - table.soldier_norm_pct) * table.soldier_levy_weight / PERCENT / PERCENT)
 
 
-def born_sex(rules: Rules, system: ReproductiveSystem, rng: SeededRandom) -> Sex:
-    if system in SEXLESS or rng.chance(rules.fertility.other_sex_pct):
-        return Sex.OTHER
-    return Sex.FEMALE if rng.chance(PERCENT // 2) else Sex.MALE
+def born_sex(rules: Rules, system: ReproductiveSystem, rng: SeededRandom) -> SexKind:
+    spec = SEX_SYSTEMS[system]
+    if not spec.split:
+        return spec.sexes[0]
+    if rng.chance(rules.fertility.both_sex_pct):
+        return SexKind.BOTH
+    return rng.pick(list(spec.sexes))
 
 
 def caste_for(row: PeopleReproductionRow, rng: SeededRandom) -> ReproductiveCaste:

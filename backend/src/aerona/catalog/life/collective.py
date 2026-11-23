@@ -1,9 +1,9 @@
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from aerona.catalog.collective import ANGER, TRIGGERS
+from aerona.catalog.collective import ACTS
 from aerona.core.total import total
-from aerona.domain.enums.collective import AccountMedium, CollectiveActKind, RoleKind
+from aerona.domain.enums.collective import AccountMedium, CollectiveActKind, CrowdFeeling, RoleKind
 from aerona.domain.enums.mind import Facet, ValueAxis
 from aerona.domain.enums.mortal import CareerPath
 from aerona.domain.enums.relations import InteractionKind
@@ -26,10 +26,7 @@ MEDIUM_FADE: Mapping[AccountMedium, int] = total(
 CONFORMING = (Facet.COOPERATION, Facet.POLITENESS, Facet.SENSE_OF_DUTY)
 
 
-TRIGGER_MOOD: dict[CollectiveActKind, str] = {spec.act: spec.mood for spec in TRIGGERS.values()} | {
-    CollectiveActKind.LYNCHING: ANGER,
-    CollectiveActKind.REVOLT: ANGER,
-}
+TRIGGER_MOOD: Mapping[CollectiveActKind, CrowdFeeling] = MappingProxyType({act: spec.feeling for act, spec in ACTS.items()})
 
 
 MOUNT_FALLBACKS = (

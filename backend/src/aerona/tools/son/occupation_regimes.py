@@ -38,11 +38,11 @@ async def sway_occupation(call: SonCall, args: SwayOccupationInput) -> str:
         fail(SonResult.OCCUPATION_REFUSED, why="there is no such occupation still in force")
     await ensure_in_reach(call, region)
     if held(regime.region_entity_id) or held(regime.occupier_entity_id):
-        fail(SonResult.OCCUPATION_REFUSED, why="a stronger hand holds that occupation as it is")
+        fail(SonResult.OCCUPATION_REFUSED, why="that occupation is held as it is")
     choice = args.rule_or_measure
     if isinstance(choice, OccupationRule):
         if not await set_rule(call.tick, regime, choice, RegimeTally(), by=call.son.id):
-            fail(SonResult.OCCUPATION_REFUSED, why=f"it is already under {spoken(choice)} rule, or a stronger hand holds its rule")
+            fail(SonResult.OCCUPATION_REFUSED, why=f"it is already under {spoken(choice)} rule, or its rule is held")
     else:
         await impose(call.tick, regime, choice, SWAYED_STRENGTH, RegimeTally(), by=call.son.id)
     call.target(region.id)

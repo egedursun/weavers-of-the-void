@@ -63,6 +63,7 @@ CAUSE_EPOCHS: Mapping[OutageCause, int] = total(
         OutageCause.POWER: 100,
         OutageCause.SHORTAGE: 150,
         OutageCause.DIVINE: 300,
+        OutageCause.ICE_STORM: 100,
     },
 )
 

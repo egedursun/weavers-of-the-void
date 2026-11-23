@@ -120,6 +120,8 @@ class TraditionCard(ApiModel):
     kind: TraditionFunction
     stage: RiteStage | None = None
     calendar_slot: CalendarSlot | None
+    slot_open: bool | None = None
+    slot_reason: str | None = None
     season_position: int | None = None
     calendar_entity_id: int | None = None
     notable_year_id: int | None = None

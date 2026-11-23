@@ -45,6 +45,8 @@ def shares_for(values: dict[ValueAxis, int], rules: Rules, *, sleeps: bool = Tru
     rest, travel = 20, 3
     housework = clamp_int(rules.daily_life.usual_housework + values.get(ValueAxis.FAMILY, 0) // 20, 0, 30)
     sleep = rules.daily_life.usual_sleep if sleeps else 0
+    civic = clamp_int(values.get(ValueAxis.LAW, 0) // 20, 0, 15)
+    training = clamp_int(values.get(ValueAxis.MARTIAL, 0) // 20, 0, 15)
     shares = {
         "rest": rest,
         "worship": worship,
@@ -56,6 +58,8 @@ def shares_for(values: dict[ValueAxis, int], rules: Rules, *, sleeps: bool = Tru
         "art": art,
         "housework": housework,
         "sleep": sleep,
+        "civic": civic,
+        "training": training,
     }
     for key, shift in STAGE_SHIFTS[stage].items():
         shares[key] = clamp_int(shares[key] + shift, 0, PERCENT)

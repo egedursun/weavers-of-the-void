@@ -4,6 +4,7 @@ from types import MappingProxyType
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.demography import AGE_BANDS, AGE_ORDER, BEARING_BANDS, MINOR_BANDS
 from aerona.catalog.reproduction import ROLE_WEIGHTS, SEX_SYSTEMS, SexSpec, sex_shares
 from aerona.constants.units import PERCENT
 from aerona.core.total import partial
@@ -14,7 +15,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.collective import RoleEligibility, RoleKind
 from aerona.domain.enums.cycles import ReproductiveSystem
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.modifier import ModifierOp
 from aerona.domain.enums.society import SocialClass
@@ -31,21 +32,21 @@ from aerona.engine.recording.terms import explaining, term
 from aerona.rules.registry import Rules
 
 A = AgeBand
-CohortKey = tuple[AgeBand, Sex, SocialClass, CohortCondition]
+CohortKey = tuple[AgeBand, SexKind, SocialClass, CohortCondition]
 FC = FlowCategory
 AGE_PROFILES: Mapping[FlowCategory, Mapping[AgeBand, float]] = partial(
     FlowCategory,
     MappingProxyType(
         {
-            FC.FAMINE: {A.CHILD: 2.0, A.ELDER: 2.0, A.ADULT: 0.5},
-            FC.CASUALTY: {A.ADULT: 8.0, A.ELDER: 0.4},
-            FC.LEVY: {A.ADULT: 9.0, A.ELDER: 0.3},
-            FC.PLAGUE: {A.CHILD: 1.5, A.ELDER: 2.5, A.ADULT: 0.7},
-            FC.DEATH: {A.ELDER: 3.0, A.ADULT: 0.7, A.CHILD: 0.8},
-            FC.BIRTH: {A.CHILD: 1.0},
-            FC.GROWTH: {A.CHILD: 1.5, A.ADULT: 1.0},
-            FC.MIGRATION: {A.ADULT: 2.25, A.CHILD: 0.8, A.ELDER: 0.3},
-            FC.JOURNEY: {A.ADULT: 2.25, A.CHILD: 0.5},
+            FC.FAMINE: {A.INFANT: 3.0, A.CHILD: 2.0, A.YOUTH: 0.8, A.ELDER: 2.0, A.ADULT: 0.5},
+            FC.CASUALTY: {A.YOUTH: 8.0, A.ADULT: 8.0, A.ELDER: 0.4},
+            FC.LEVY: {A.YOUTH: 9.0, A.ADULT: 9.0, A.ELDER: 0.3},
+            FC.PLAGUE: {A.INFANT: 2.5, A.CHILD: 1.5, A.YOUTH: 0.7, A.ELDER: 2.5, A.ADULT: 0.7},
+            FC.DEATH: {A.INFANT: 2.0, A.ELDER: 3.0, A.ADULT: 0.7, A.YOUTH: 0.5, A.CHILD: 0.8},
+            FC.BIRTH: {A.INFANT: 1.0},
+            FC.GROWTH: {A.INFANT: 1.5, A.CHILD: 1.0, A.YOUTH: 1.0, A.ADULT: 1.0},
+            FC.MIGRATION: {A.ADULT: 2.25, A.YOUTH: 2.0, A.CHILD: 0.8, A.INFANT: 0.5, A.ELDER: 0.3},
+            FC.JOURNEY: {A.ADULT: 2.25, A.YOUTH: 2.0, A.CHILD: 0.5},
             FC.CAPTIVE: {A.ADULT: 2.0, A.CHILD: 1.0},
             FC.CONVERSION: {A.ADULT: 1.25, A.ELDER: 1.0},
         }
@@ -61,9 +62,9 @@ AGE_PROFILES: Mapping[FlowCategory, Mapping[AgeBand, float]] = partial(
     ),
 )
 COMBAT_FLOWS = frozenset({FC.CASUALTY, FC.LEVY})
-UNIFORM: Mapping[tuple[AgeBand, Sex], float] = MappingProxyType({(age, sex): 1.0 for age in AgeBand for sex in Sex})
-PROFILES: Mapping[FlowCategory, Mapping[tuple[AgeBand, Sex], float]] = MappingProxyType(
-    {category: {(age, sex): weight for age, weight in ages.items() for sex in Sex} for category, ages in AGE_PROFILES.items()}
+UNIFORM: Mapping[tuple[AgeBand, SexKind], float] = MappingProxyType({(age, sex): 1.0 for age in AgeBand for sex in SexKind})
+PROFILES: Mapping[FlowCategory, Mapping[tuple[AgeBand, SexKind], float]] = MappingProxyType(
+    {category: {(age, sex): weight for age, weight in ages.items() for sex in SexKind} for category, ages in AGE_PROFILES.items()}
 )
 FLOW_CONDITION: Mapping[FlowCategory, CohortCondition] = MappingProxyType({FC.CAPTIVE: CohortCondition.CAPTIVE})
 
@@ -73,7 +74,7 @@ async def cohort_rows(session: AsyncSession, community_id: int) -> list[CohortRo
 
 
 async def cohorts_of(session: AsyncSession, community_id: int) -> dict[CohortKey, CohortRow]:
-    return {(row.age_band, row.sex, row.social_class, row.condition): row for row in await cohort_rows(session, community_id)}
+    return {(row.age_band, row.sex_kind, row.social_class, row.condition): row for row in await cohort_rows(session, community_id)}
 
 
 def total(rows: Mapping[CohortKey, CohortRow]) -> int:
@@ -82,12 +83,14 @@ def total(rows: Mapping[CohortKey, CohortRow]) -> int:
 
 def pyramid(rules: Rules) -> dict[AgeBand, float]:
     table = rules.cohorts
-    child, elder = table.child_pct / PERCENT, table.elder_pct / PERCENT
-    return {A.CHILD: child, A.ELDER: elder, A.ADULT: max(0.0, 1 - child - elder)}
+    young, elder = table.child_pct / PERCENT, table.elder_pct / PERCENT
+    shares = {band: spec.youth_share or 0.0 for band, spec in AGE_BANDS.items()}
+    whole = sum(shares.values()) or 1.0
+    return {**{band: young * share / whole for band, share in shares.items() if share}, A.ELDER: elder, A.ADULT: max(0.0, 1 - young - elder)}
 
 
-def sexes(rules: Rules, spec: SexSpec = SEX_SYSTEMS[ReproductiveSystem.TWO_SEX]) -> dict[Sex, float]:
-    return sex_shares(spec, rules.cohorts.female_pct)
+def sexes(rules: Rules, spec: SexSpec = SEX_SYSTEMS[ReproductiveSystem.TWO_SEX]) -> dict[SexKind, float]:
+    return sex_shares(spec, rules.cohorts.bearer_pct)
 
 
 async def sex_spec(session: AsyncSession, community: EntityRow) -> SexSpec:
@@ -96,7 +99,7 @@ async def sex_spec(session: AsyncSession, community: EntityRow) -> SexSpec:
     return SEX_SYSTEMS[row.system if row is not None else ReproductiveSystem.TWO_SEX]
 
 
-async def combat_weights(session: AsyncSession, community: EntityRow) -> dict[Sex, float]:
+async def combat_weights(session: AsyncSession, community: EntityRow) -> dict[SexKind, float]:
     folk = await people_of(session, community)
     holders = [community.id, *([folk.id] if folk is not None else [])]
     for holder in holders:
@@ -111,7 +114,7 @@ def row_for(session: AsyncSession, rows: dict[CohortKey, CohortRow], community_i
     if row is None:
         age, sex, social_class, condition = key
         row = CohortRow(
-            community_entity_id=community_id, age_band=age, sex=sex, social_class=social_class, condition=condition, count=0, generation_epoch=epoch
+            community_entity_id=community_id, age_band=age, sex_kind=sex, social_class=social_class, condition=condition, count=0, generation_epoch=epoch
         )
         session.add(row)
         rows[key] = row
@@ -181,13 +184,18 @@ def weights_for(
     condition: CohortCondition | None = None,
     *,
     sick_weight: float = 1.0,
-    combat: Mapping[Sex, float] | None = None,
+    combat: Mapping[SexKind, float] | None = None,
+    bands: Mapping[AgeBand, float] | None = None,
 ) -> dict[CohortKey, float]:
     profile = PROFILES.get(category, UNIFORM)
     lean = sick_weight if category is FC.PLAGUE else 1.0
     lean_by_sex = combat if combat is not None and category in COMBAT_FLOWS else {}
+    lean_by_band = bands or {}
     return {
-        key: profile.get((key[0], key[1]), 0.0) * (lean if key[3] is CohortCondition.SICK else 1.0) * lean_by_sex.get(key[1], 1.0)
+        key: profile.get((key[0], key[1]), 0.0)
+        * (lean if key[3] is CohortCondition.SICK else 1.0)
+        * lean_by_sex.get(key[1], 1.0)
+        * lean_by_band.get(key[0], 1.0)
         for key in rows
         if condition is None or key[3] is condition
     }
@@ -207,7 +215,15 @@ async def place_flow(
 ) -> None:
     combat = await combat_weights(session, community) if category in COMBAT_FLOWS else None
     if delta < 0:
-        place(rows, weights_for(rows, category, sick_weight=rules.epidemiology.sick_death_weight_pct / PERCENT, combat=combat), -delta, add=False)
+        adults = sum(row.count for key, row in rows.items() if key[0] in BEARING_BANDS)
+        place(
+            rows,
+            weights_for(rows, category, sick_weight=rules.epidemiology.sick_death_weight_pct / PERCENT, combat=combat, bands=band_leans(rules, category)),
+            -delta,
+            add=False,
+        )
+        if category in ORPHANING_FLOWS:
+            orphan(session, community, rows, adults - sum(row.count for key, row in rows.items() if key[0] in BEARING_BANDS), adults, epoch=epoch)
         return
     shares = await class_shares(session, rules, community.id)
     condition = FLOW_CONDITION.get(category, CohortCondition.NONE)
@@ -219,6 +235,55 @@ async def place_flow(
                 if profile.get((age, sex), 0.0) > 0 and share > 0:
                     row_for(session, rows, community.id, (age, sex, social_class, condition), epoch)
     place(rows, {key: profile.get((key[0], key[1]), 0.0) * max(0.0, shares.get(key[2], 0.0)) for key in rows if key[3] is condition}, delta, add=True)
+
+
+def band_leans(rules: Rules, category: FlowCategory) -> dict[AgeBand, float]:
+    if category in COMBAT_FLOWS:
+        return {A.YOUTH: rules.demography.youth_levy_pct / PERCENT}
+    if category in INFANT_PERILS:
+        return {A.INFANT: 1 + rules.demography.infant_mortality_pct / PERCENT}
+    return {}
+
+
+INFANT_PERILS = frozenset({FC.FAMINE, FC.PLAGUE, FC.DEATH})
+ORPHANING_FLOWS = frozenset({FC.CASUALTY, FC.FAMINE, FC.PLAGUE, FC.DISASTER})
+ORPHANS_KEY = "orphaned_this_epoch"
+
+
+def orphan(session: AsyncSession, community: EntityRow, rows: dict[CohortKey, CohortRow], lost: int, adults: int, *, epoch: int) -> int:
+    if lost <= 0 or adults <= 0:
+        return 0
+    moved = 0
+    for key in sorted((key for key in rows if key[0] in MINOR_BANDS and key[3] is CohortCondition.NONE), key=lambda key: tuple(part.value for part in key)):
+        moving = min(rows[key].count, round_half_up(rows[key].count * lost / adults))
+        if moving > 0:
+            move_amount(rows[key], row_for(session, rows, community.id, (key[0], key[1], key[2], CohortCondition.ORPHANED), epoch), "count", moving)
+            moved += moving
+    found: dict[int, int] = session.info.setdefault(ORPHANS_KEY, {})
+    found[community.id] = found.get(community.id, 0) + moved
+    return moved
+
+
+def displace(session: AsyncSession, community: EntityRow, rows: dict[CohortKey, CohortRow], count: int, epoch: int) -> int:
+    free = sorted((key for key in rows if key[3] is CohortCondition.NONE and rows[key].count > 0), key=lambda key: -rows[key].count)
+    moved = 0
+    for key in free:
+        if moved >= count:
+            break
+        moving = min(rows[key].count, count - moved)
+        move_amount(rows[key], row_for(session, rows, community.id, (key[0], key[1], key[2], CohortCondition.DISPLACED), epoch), "count", moving)
+        moved += moving
+    return moved
+
+
+def settle_displaced(session: AsyncSession, community: EntityRow, rows: dict[CohortKey, CohortRow], share_pct: int, epoch: int) -> int:
+    settled = 0
+    for key in sorted((key for key in rows if key[3] is CohortCondition.DISPLACED), key=lambda key: tuple(part.value for part in key)):
+        moving = round_half_up(rows[key].count * share_pct / PERCENT)
+        if moving > 0:
+            move_amount(rows[key], row_for(session, rows, community.id, (key[0], key[1], key[2], CohortCondition.NONE), epoch), "count", moving)
+            settled += moving
+    return settled
 
 
 async def reconcile(session: AsyncSession, rules: Rules, community: EntityRow, rows: dict[CohortKey, CohortRow], epoch: int) -> int:
@@ -247,17 +312,24 @@ async def settle_moved(ctx: TickContext, moved: Counter[tuple[int, str]]) -> Non
 AFTER_PHASE.append(settle_moved)
 
 
+def band_years(band: AgeBand, spans: tuple[int, int]) -> float:
+    maturity, adult_span = spans
+    share = AGE_BANDS[band].youth_share
+    return max(1.0, maturity * share) if share is not None else max(1.0, adult_span)
+
+
 def age_cohorts(session: AsyncSession, community: EntityRow, rows: dict[CohortKey, CohortRow], spans: tuple[int, int], epoch: int) -> None:
     maturity, adult_span = spans
     moves: list[tuple[CohortKey, CohortKey, int]] = []
     for key, row in sorted(rows.items(), key=lambda item: tuple(part.value for part in item[0])):
         band, sex, social_class, condition = key
-        if row.count <= 0 or band is A.ELDER:
+        if row.count <= 0 or band is AGE_ORDER[-1]:
             continue
-        share = 1 / max(1, maturity) if band is A.CHILD else 1 / max(1, adult_span)
-        moving = round_half_up(row.count * share)
+        moving = round_half_up(row.count / band_years(band, spans))
         if moving > 0:
-            moves.append((key, (A.ADULT if band is A.CHILD else A.ELDER, sex, social_class, condition), moving))
+            older = AGE_ORDER[AGE_ORDER.index(band) + 1]
+            grown = CohortCondition.NONE if condition is CohortCondition.ORPHANED and older not in MINOR_BANDS else condition
+            moves.append((key, (older, sex, social_class, grown), moving))
     with explaining():
         term("cohorts.maturity_years", maturity, source_node_id=community.id)
         term("cohorts.adult_years", adult_span, source_node_id=community.id)

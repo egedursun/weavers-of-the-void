@@ -48,7 +48,7 @@ AGES_MECHANICS = (
         templates=("seasons.irregular", "seasons.winter", "seasons.summer", "seasons.settled"),
         tables=(IrregularSeasonRow.__tablename__, WinterForecastRow.__tablename__),
         exposure=Exposure.TOOL,
-        tools=("unsettle_seasons", "lengthen_winter", "forecast_seasons"),
+        tools=("unsettle_seasons", "lengthen_winter", "forecast_seasons", "end_long_season"),
         targets=("world", "people", "settlement", "mortal"),
         couplings=(
             Coupling(S.ECONOMY, "a long winter uses up the food of every town", E.FLOW, "long_seasons.winter_loss_pct"),

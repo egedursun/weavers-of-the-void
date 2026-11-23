@@ -9,9 +9,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.db.tables.warfare import SiegeRow, WarRow
+from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -21,6 +22,8 @@ from aerona.domain.enums.military import DefenderAction, SackChoice, SiegeAction
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome, StepState
+from aerona.domain.enums.relations import AppealKind, PersuasionAim
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, TreasuryEntry
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import SiegeStatus
@@ -68,9 +71,12 @@ from aerona.engine.powers.war import breach_by_power
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import FactInput, StepDraft, record
+from aerona.engine.relations.book import relation
+from aerona.engine.relations.persuasion import already_won, persuade
+from aerona.engine.renown.axes import renown_share
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.settlement.circuit import tower_defence
 from aerona.engine.settlement.districts import damage_districts
@@ -247,10 +253,50 @@ async def surrenders(ctx: TickContext, siege: SiegeRow, action: SiegeAction) -> 
     table = ctx.rules.siegecraft
     rng = ctx.rng(f"surrender.{siege.id}.{siege.rounds}")
     leaning = await lean_community(ctx, siege.besieged_entity_id, BiasedDecision.SURRENDER)
+    mercy = await renown_share(ctx.session, siege.besieger_entity_id, [siege.besieged_entity_id], ReputationAxis.MERCY)
+    leaning *= 1 + mercy * ctx.rules.renown.mercy_surrender_pct / PERCENT
     hunger = STARVATION[siege.starvation].surrender_pct
     if hunger:
         return rng.chance(table.surrender_chance * hunger / PERCENT * leaning)
     return action is SiegeAction.NEGOTIATE and rng.chance(table.negotiate_chance * leaning)
+
+
+FULL_SUPPLIES = 180
+
+
+async def talked_down(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, march: March) -> bool:
+    town = await ctx.session.get(SettlementProfileRow, besieged.id)
+    order = town.public_order if town is not None else PERCENT // 2
+    morale = order * min(1.0, siege.supplies / FULL_SUPPLIES)
+    if morale >= ctx.rules.persuasion.surrender_morale_floor:
+        return False
+    won = await already_won(ctx.session, PersuasionAim.SURRENDER, target_id=None, subject_id=besieged.id, since=ctx.epoch - 1)
+    if won is not None:
+        await record(
+            ctx,
+            "war.surrendered_by_talk",
+            roles={IncidentRole.ACTOR: won.speaker_node_id, IncidentRole.TARGET: besieged.id},
+            facts={"appeal": won.appeal, "morale": round(morale)},
+            place=besieged.id,
+        )
+        return True
+    army = await ctx.session.get(ArmyRow, march.army.id)
+    envoy = army.commander_entity_id if army is not None and army.commander_entity_id is not None else march.owner.id
+    rulers = await active_bonds(ctx.session, [BondKind.RULES], targets=[besieged.id])
+    listener = rulers[0].source_node_id if rulers else besieged.id
+    bonded = await relation(ctx.session, listener, envoy)
+    appeal = AppealKind.BOND if bonded is not None and bonded.friendship > 0 else AppealKind.SELF_INTEREST
+    argument = await persuade(ctx, envoy, listener, appeal, PersuasionAim.SURRENDER, subject_id=besieged.id)
+    if not argument.success:
+        return False
+    await record(
+        ctx,
+        "war.surrendered_by_talk",
+        roles={IncidentRole.ACTOR: envoy, IncidentRole.TARGET: besieged.id},
+        facts={"appeal": appeal, "morale": round(morale)},
+        place=besieged.id,
+    )
+    return True
 
 
 async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march: March, garrison: int) -> SiegeSeason:
@@ -296,7 +342,7 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
         found.relieved = True
     else:
         found.betrayed = await hunger_betrayal(ctx, siege, besieged)
-        found.surrendered = found.betrayed or await surrenders(ctx, siege, action)
+        found.surrendered = found.betrayed or await surrenders(ctx, siege, action) or await talked_down(ctx, siege, besieged, march)
         if found.surrendered:
             await offer_terms(ctx, siege)
         found.assault = not found.surrendered and action is SiegeAction.ASSAULT

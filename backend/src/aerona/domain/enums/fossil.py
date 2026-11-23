@@ -7,6 +7,8 @@ class FossilSource(StrEnum):
     BEAST = "beast"
     PREVIOUS_CREATION = "previous_creation"
     EXTINCT_PEOPLE = "extinct_people"
+    GOD = "god"
+    BURIED_DEAD = "buried_dead"
 
 
 class FossilReading(StrEnum):
@@ -14,6 +16,8 @@ class FossilReading(StrEnum):
     LEGEND = "legend"
     RELIC = "relic"
     DEEP_TIME = "deep_time"
+    MATERIAL = "material"
+    MEDICINE = "medicine"
 
 
 class Preservation(StrEnum):

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Building2, Plus, Ruler } from 'lucide-react'
+import { structureSectionValues } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
@@ -9,6 +10,7 @@ import { Held, Listed } from '@/features/collective/parts'
 import { Chip, Facts, ForgeCard } from '@/features/cosmography/parts'
 import { SPAN } from '@/features/cycles/model'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { COMMODITY, MATERIAL_LABEL } from '@/features/entity/economy/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { CLASS_SPEC, SIZE_SPEC } from '@/features/entity/society/labels'
@@ -26,7 +28,6 @@ import {
   FORM,
   STRUCTURE_SECTIONS,
   namedTable,
-  sectionLabel,
   wordTable,
 } from './labels'
 import { OWNER_TYPES, useKindRow, useKindStep } from './model'
@@ -62,7 +63,7 @@ function PartCard({
     <Held
       icon={crit.icon}
       tone={crit.tone}
-      title={sectionLabel(row.section)}
+      title={wordOf(structureSectionValues, row.section)}
       caption={`${crit.label} · ${row.share}% of the whole · ${row.material ? MATERIAL_LABEL[row.material] : 'the type’s material'}`}
       removeLabel='Follow the common layout'
       editTitle='Set the section of the type'

@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from functools import cache
 from typing import Any
 
-from sqlalchemy import Table, event
-from sqlalchemy.orm import Mapper, Session
+from sqlalchemy import Table, delete, event
+from sqlalchemy.orm import Mapper, Session, object_mapper
 from sqlalchemy.orm.attributes import instance_state, set_committed_value
 
 from aerona.db.base import Base
@@ -78,6 +78,51 @@ def follow_cascades(session: Session, _context: object) -> None:
                 set_committed_value(row, key, None)
 
 
+def deleted_parents(deleted: list[Any]) -> dict[int, set[int]]:
+    table = followers()
+    owners: dict[tuple[type[Any], str, Any], list[int]] = {}
+    for row in deleted:
+        for follower in table.get(type(row), ()):
+            value = instance_state(row).dict.get(follower.parent_key)
+            if follower.removes and value is not None:
+                owners.setdefault((follower.child, follower.child_key, value), []).append(id(row))
+    if not owners:
+        return {}
+    keys_by_child: dict[type[Any], set[str]] = {}
+    for child, key, _value in owners:
+        keys_by_child.setdefault(child, set()).add(key)
+    found: dict[int, set[int]] = {}
+    for row in deleted:
+        for key in sorted(keys_by_child.get(type(row), ())):
+            parents = owners.get((type(row), key, instance_state(row).dict.get(key)), [])
+            mine = {parent for parent in parents if parent != id(row)}
+            if mine:
+                found.setdefault(id(row), set()).update(mine)
+    return found
+
+
+def delete_children_first(session: Session, _context: object, _instances: object) -> None:
+    deleted = list(session.deleted)
+    if len(deleted) < 2:
+        return
+    parents = deleted_parents(deleted)
+    pending = [row for row in deleted if id(row) in parents]
+    while pending:
+        above = {parent for row in pending for parent in parents[id(row)]}
+        lowest = [row for row in pending if id(row) not in above] or pending
+        for row in lowest:
+            mapper = object_mapper(row)
+            identity = instance_state(row).identity
+            if identity is not None:
+                matches = [column == value for column, value in zip(mapper.primary_key, identity, strict=True)]
+                session.execute(delete(type(row)).where(*matches), execution_options={"synchronize_session": False})
+            session.expunge(row)
+        done = {id(row) for row in lowest}
+        pending = [row for row in pending if id(row) not in done]
+
+
 def install_cascade_following() -> None:
     if not event.contains(Session, "after_flush", follow_cascades):
         event.listen(Session, "after_flush", follow_cascades)
+    if not event.contains(Session, "before_flush", delete_children_first):
+        event.listen(Session, "before_flush", delete_children_first)

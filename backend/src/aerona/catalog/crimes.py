@@ -361,6 +361,7 @@ CRIMES: Mapping[CrimeKind, CrimeSpec] = total(
         K.MACHINE_SEIZURE: CrimeSpec(A.PROPERTY, 50, (V.TRACE,), 35, P.IMPRISONMENT, "seizing a made thing"),
         K.IMPERSONATION: CrimeSpec(A.CONSTITUTIONAL, 45, (V.DOCUMENT,), 30, P.FINE, "passing as another by a copy"),
         K.MIND_COMPULSION: CrimeSpec(A.PENAL, 70, (V.MAGIC,), 25, P.IMPRISONMENT, "bending a mind by a power"),
+        K.FIXING_CONTESTS: CrimeSpec(A.PROPERTY, 35, (V.WITNESS,), 30, P.FINE, "fixing a contest"),
     },
 )
 

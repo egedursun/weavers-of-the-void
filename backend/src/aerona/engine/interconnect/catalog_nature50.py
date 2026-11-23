@@ -1,7 +1,9 @@
 from aerona.db.tables.body_systems import BodySystemRow, SensitivityRow
+from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.disease_agents import DiseaseAgentRow
 from aerona.db.tables.facets import FacetPracticeRow
 from aerona.db.tables.forecasting import ObservationMethodRow, WeatherWorkRow
+from aerona.db.tables.geology import RegionGeologyRow, RegionStratumRow
 from aerona.db.tables.plants import PlantAnatomyRow, PlantPartRow
 from aerona.db.tables.space_weather import SpaceWeatherEventRow, StarActivityRow, WorldFieldRow
 from aerona.db.tables.standing import ProfessionOfValueRow
@@ -12,6 +14,24 @@ S = Subsystem
 E = EdgeKind
 
 NATURE50_MECHANICS = (
+    Mechanic(
+        key="the_deep",
+        spec_item="S52.30",
+        title="The deep: rock columns and strata beneath each land, reached by digging, bored, drawn on, breached and sealed",
+        subsystem=S.ENVIRONMENT,
+        phases=("region_survey", "resource_economy", "industry_methods", "natural_disasters", "ecology"),
+        surface=Surface(drawer="section-beneath"),
+        backfill="region_survey: every land gains its rock column and strata from its terrain and world",
+        templates=("deep.",),
+        tables=(RegionGeologyRow.__tablename__, RegionStratumRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("dig_deeper", "bore", "drill_reservoir", "seal_depth", "open_the_deep", "close_the_deep"),
+        targets=("region", "settlement"),
+        couplings=(
+            Coupling(S.ECONOMY, "mining deepens a land's shafts until they reach the strata below", E.TRIGGER, "rocks.depth_per_mined"),
+            Coupling(S.ECOLOGY, "a stratum breached by magma scars its land", E.TRIGGER, "underground.magma_breach_scar"),
+        ),
+    ),
     Mechanic(
         key="facets",
         spec_item="S50.16",
@@ -112,6 +132,25 @@ NATURE50_MECHANICS = (
             Coupling(S.KNOWLEDGE, "healers of enough medicine learn what a disease is", E.TRIGGER, "disease.identify_level"),
             Coupling(S.ECOLOGY, "a reservoir kind or soil keeps a disease in its land", E.TRIGGER, "disease.linger_load"),
             Coupling(S.BODY, "an overused cure breeds resistance", E.MODIFIER, "disease.resistance_per_overuse"),
+        ),
+    ),
+    Mechanic(
+        key="disease_paths",
+        spec_item="S52.75",
+        title="Paths of spread: wild hosts, migrants, crowds at gatherings and rivers carry a sickness into new lands",
+        subsystem=S.BODY,
+        phases=("disease_paths",),
+        surface=Surface(drawer="section-disease"),
+        backfill="disease_paths: none needed; paths act on outbreaks as they run",
+        templates=("disease.spread",),
+        tables=(OutbreakRow.__tablename__,),
+        levers=("outbreak:edit",),
+        targets=("disease", "region"),
+        couplings=(
+            Coupling(S.ECOLOGY, "a host species carries a sickness across its range", E.TRIGGER, "spread.wildlife_pct"),
+            Coupling(S.DEMOGRAPHY, "refugees and migrants carry a sickness to their new home", E.TRIGGER, "spread.migration_pct"),
+            Coupling(S.SOCIAL, "guests at a gathering carry a sickness home", E.TRIGGER, "spread.gathering_pct"),
+            Coupling(S.ENVIRONMENT, "a river carries a water-borne sickness downstream", E.TRIGGER, "spread.waterway_pct"),
         ),
     ),
     Mechanic(

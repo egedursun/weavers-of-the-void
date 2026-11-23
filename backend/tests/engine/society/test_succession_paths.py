@@ -7,14 +7,14 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import TraitKind, TraitSource
-from aerona.domain.enums.polity import ClaimBasis, GenderRule, LawKind, OfficeKind
+from aerona.domain.enums.polity import ClaimBasis, LawKind, OfficeKind, SexRule
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.models.entity_stats import FactionStats, HouseStats
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import add_trait
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.formation import found_polity, set_ruler, sync_members
-from aerona.engine.polity.offices import backing, divine_favour, gender_rank, house_of, living_mortal, regency, support
+from aerona.engine.polity.offices import backing, divine_favour, house_of, living_mortal, regency, sex_rank, support
 from aerona.engine.primitives.queries import add_flag, connect
 from tests.engine.society.factories import Realm as World
 from tests.engine.society.factories import context, make, mortal, settlement, son, tuned
@@ -35,20 +35,20 @@ async def kingdom(world: World, ruler_age: int = 40) -> tuple[TickContext, Realm
     return ctx, state, capital, ruler
 
 
-async def test_no_law_prefers_a_sex_and_each_gender_rule_ranks_as_written(realm: World) -> None:
-    assert LAW_PARAMS[LawKind.SUCCESSION_RULE]["gender"].default == GenderRule.ANY.value
+async def test_no_law_prefers_a_sex_and_each_sex_rule_ranks_as_written(realm: World) -> None:
+    assert LAW_PARAMS[LawKind.SUCCESSION_RULE]["sex_rule"].default == SexRule.ANY.value
     for path in SOURCE.rglob("*.py"):
         text = path.read_text(encoding="utf-8")
-        assert "or GenderRule.MALE" not in text and "or GenderRule.FEMALE" not in text, path
-        assert "default=GenderRule.MALE" not in text and "default=GenderRule.FEMALE" not in text, path
+        assert "or SexRule.BEGETTERS_ONLY" not in text and "or SexRule.BEARERS_ONLY" not in text, path
+        assert "default=SexRule.BEGETTERS_ONLY" not in text and "default=SexRule.BEARERS_ONLY" not in text, path
     first = await mortal(realm, "Ana")
     second = await mortal(realm, "Bo")
-    first.stats = first.stats.model_copy(update={"sex": "female"})
-    second.stats = second.stats.model_copy(update={"sex": "male"})
-    assert gender_rank(GenderRule.ANY, first) == gender_rank(GenderRule.ANY, second) == 0
-    assert gender_rank(GenderRule.MALE_ONLY, first) is None and gender_rank(GenderRule.MALE_ONLY, second) == 0
-    assert gender_rank(GenderRule.FEMALE_ONLY, first) == 0 and gender_rank(GenderRule.FEMALE_ONLY, second) is None
-    assert gender_rank(GenderRule.MALE_PREFERENCE, first) == 1 and gender_rank(GenderRule.FEMALE_PREFERENCE, first) == 0
+    first.stats = first.stats.model_copy(update={"sex": "bearer"})
+    second.stats = second.stats.model_copy(update={"sex": "begetter"})
+    assert sex_rank(SexRule.ANY, first) == sex_rank(SexRule.ANY, second) == 0
+    assert sex_rank(SexRule.BEGETTERS_ONLY, first) is None and sex_rank(SexRule.BEGETTERS_ONLY, second) == 0
+    assert sex_rank(SexRule.BEARERS_ONLY, first) == 0 and sex_rank(SexRule.BEARERS_ONLY, second) is None
+    assert sex_rank(SexRule.BEGETTER_PREFERENCE, first) == 1 and sex_rank(SexRule.BEARER_PREFERENCE, first) == 0
     ctx = context(realm.session)
     assert await living_mortal(ctx, first.id) is first
     assert await living_mortal(ctx, realm.region.id) is None

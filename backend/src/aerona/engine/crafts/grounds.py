@@ -2,8 +2,10 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.catch import GROUNDS
+from aerona.catalog.catch import GEAR, GROUNDS
+from aerona.catalog.evolution import APEX_SIZES
 from aerona.constants.units import PERCENT
+from aerona.db.tables.agrarian import GameReserveRow
 from aerona.db.tables.crafts import CatchGroundRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow
@@ -12,7 +14,7 @@ from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPlan, HarmCause
 from aerona.domain.enums.crafts import CatchGround, CatchRight
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -20,10 +22,13 @@ from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.catch import LAND_GROUNDS
+from aerona.engine.crafts.shores import keep_worked_grounds, stock_of
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war
@@ -37,6 +42,9 @@ class GroundTally:
     hurt: int = 0
     poached: int = 0
     wars: int = 0
+
+
+GAME_SIZES = APEX_SIZES
 
 
 async def owner_of(ctx: TickContext, community_id: int) -> int:
@@ -95,7 +103,8 @@ async def seed_land(ctx: TickContext, tally: GroundTally) -> None:
         profile = await ctx.session.get(SpeciesProfileRow, row.species_entity_id)
         rng = ctx.rng(seed_of("ground", *key))
         fowling = profile.body_plan is BodyPlan.AVIAN if profile is not None else rng.chance(table.fowling_chance)
-        ground = CatchGround.FOWLING if fowling else CatchGround.TRAPPING
+        large = profile is not None and profile.size_class in GAME_SIZES
+        ground = CatchGround.FOWLING if fowling else CatchGround.GAME_HUNT if large else CatchGround.TRAPPING
         ctx.session.add(
             CatchGroundRow(
                 source_entity_id=row.species_entity_id,
@@ -111,6 +120,9 @@ async def seed_land(ctx: TickContext, tally: GroundTally) -> None:
 
 
 def abundance_pct(row: CatchGroundRow, profile: ResourceProfileRow | None, range_row: SpeciesRangeRow | None) -> int | None:
+    worked_stock = stock_of(row)
+    if worked_stock is not None:
+        return worked_stock
     stock = range_row.abundance if range_row is not None else profile.reserve if profile is not None else None
     return None if stock is None else round(stock * PERCENT / max(1, row.first_stock))
 
@@ -163,6 +175,39 @@ async def workers_of(ctx: TickContext, row: CatchGroundRow) -> list[int]:
     )
 
 
+async def free_share(ctx: TickContext, row: CatchGroundRow) -> int:
+    reserve = await ctx.session.scalar(
+        select(GameReserveRow)
+        .where(
+            GameReserveRow.region_entity_id == row.region_entity_id,
+            (GameReserveRow.species_entity_id.is_(None)) | (GameReserveRow.species_entity_id == row.source_entity_id),
+        )
+        .order_by(GameReserveRow.id)
+        .limit(1)
+    )
+    return PERCENT if reserve is None else reserve.poaching
+
+
+async def hunt_game(ctx: TickContext, row: CatchGroundRow, workers: list[int]) -> int:
+    if row.ground is not CatchGround.GAME_HUNT or row.collapsed:
+        return 0
+    towns = [town for town in workers if not held(town)]
+    range_row = await ctx.session.get(SpeciesRangeRow, (row.source_entity_id, row.region_entity_id))
+    left = abundance_pct(row, None, range_row)
+    if not towns or not left:
+        return 0
+    full = ctx.rules.grounds.game_hunt_rate * min(left, PERCENT) / PERCENT * GEAR[row.gear].rate(ctx.rules) / PERCENT
+    yielded = round_half_up(full * await free_share(ctx, row) / PERCENT)
+    if "last_catch" not in row.locked:
+        row.last_catch = yielded
+    goods = goods_of(ctx.session, ctx.epoch)
+    for index, town in enumerate(towns):
+        share = yielded // len(towns) + (1 if index < yielded % len(towns) else 0)
+        if share > 0:
+            await goods.add(town, CommodityKind.MEAT, share, GoodsFlow.EXTRACTION)
+    return yielded
+
+
 async def hunt_risk(ctx: TickContext, row: CatchGroundRow, workers: list[int], tally: GroundTally) -> None:
     table = ctx.rules.grounds
     if row.ground is not CatchGround.MARINE_HUNT or row.last_catch <= 0 or not workers:
@@ -213,11 +258,13 @@ async def keep_grounds(ctx: TickContext, tally: GroundTally) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     await seed_fisheries(ctx, atlas, tally)
     await seed_land(ctx, tally)
+    tally.read += await keep_worked_grounds(ctx)
     for row in list(await ctx.session.scalars(select(CatchGroundRow).order_by(CatchGroundRow.source_entity_id, CatchGroundRow.region_entity_id))):
         if held(row.source_entity_id) or held(row.region_entity_id):
             continue
         await judge(ctx, row, tally)
         workers = await workers_of(ctx, row)
+        await hunt_game(ctx, row, workers)
         await hunt_risk(ctx, row, workers, tally)
         await poaching(ctx, row, workers, tally)
     await ctx.session.flush()

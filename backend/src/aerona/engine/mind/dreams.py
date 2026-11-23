@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.kinds.dreams import DREAM_TRUTH
 from aerona.catalog.thoughts import EMOTIONS, NEED_READINGS, NEEDS, READINGS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -308,7 +309,7 @@ async def read_into(ctx: TickContext, mortal: EntityRow, row: DreamRow) -> None:
     if is_notable(ctx.rules, mortal, await EntityRepository(ctx.session).flags(mortal.id)):
         reader = await ctx.session.get(EntityRow, row.reader_node_id) if row.reader_node_id is not None else None
         by = f" by {reader.name}" if reader is not None and reader.id != mortal.id else ""
-        reading = row.reading.value.replace("_", " ")
+        reading = spoken(row.reading)
         await record(
             ctx,
             "dream.reading",

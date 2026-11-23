@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.conditions import MADNESS_CONDITIONS
 from aerona.catalog.life_traits import OATH_KIND_TRAITS, PASSION_KIND_TRAITS, having
+from aerona.catalog.relations import HATING_KEYS, INTIMATE_KEYS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import LifeDreamRow, MemoryRow
@@ -69,12 +70,16 @@ async def from_bonds(ctx: TickContext, holder_id: int, found: dict[Key, tuple[in
     at = ctx.rules.passions.relation_at
     for row in await ctx.session.scalars(select(RelationshipRow).where(RelationshipRow.holder_node_id == holder_id)):
         kinds = set(row.kinds)
-        if kinds & {RelationType.LOVER.value, RelationType.SPOUSE.value} and row.romance >= at:
+        if kinds & INTIMATE_KEYS and row.romance >= at:
             found[(PassionKind.LOVE, row.subject_node_id)] = (row.romance, PassionSource.RELATIONSHIP)
         elif RelationType.BEST_FRIEND.value in kinds and row.friendship >= at:
             found[(PassionKind.LOVE, row.subject_node_id)] = (row.friendship, PassionSource.RELATIONSHIP)
-        if kinds & {RelationType.ENEMY.value, RelationType.NEMESIS.value} and -row.friendship >= at:
+        if kinds & HATING_KEYS and -row.friendship >= at:
             found[(PassionKind.HATRED, row.subject_node_id)] = (-row.friendship, PassionSource.RELATIONSHIP)
+        if RelationType.FOSTER.value in kinds and (PassionKind.LOVE, row.subject_node_id) not in found:
+            found[(PassionKind.LOYALTY, row.subject_node_id)] = (ctx.rules.relations.foster_loyalty, PassionSource.UPBRINGING)
+        elif RelationType.SWORN_KIN.value in kinds and (PassionKind.LOVE, row.subject_node_id) not in found:
+            found[(PassionKind.LOYALTY, row.subject_node_id)] = (ctx.rules.relations.sworn_kin_duty, PassionSource.OATH)
 
 
 async def from_oaths(ctx: TickContext, holder_id: int, found: dict[Key, tuple[int, PassionSource]]) -> None:

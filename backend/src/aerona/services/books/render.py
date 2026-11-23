@@ -26,6 +26,7 @@ from aerona.constants.books import (
     PRINT_PORTRAIT_PIXELS,
     PRINT_PORTRAIT_WIDTH,
 )
+from aerona.core.grammar import spoken
 from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.divine import CouncilMotion
 from aerona.rules.registry import Rules
@@ -241,6 +242,7 @@ def _html_environment() -> Environment:
     environment.filters["motion"] = motion_label
     environment.filters["speech_part"] = speech_part
     environment.filters["with_descendants"] = with_descendants
+    environment.filters["spoken"] = spoken
     return environment
 
 
@@ -254,6 +256,7 @@ def _markdown_environment() -> Environment:
     environment.filters["keys"] = key_words
     environment.filters["motion"] = motion_label
     environment.filters["speech_part"] = speech_part
+    environment.filters["spoken"] = spoken
     environment.globals["guide_markdown"] = guide_markdown
     return environment
 

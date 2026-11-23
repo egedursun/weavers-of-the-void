@@ -3,19 +3,20 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.constants.calendar import SEASONS_MAX
+from aerona.constants.calendar import SEASONS_MAX, SHARE_TOTAL
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, StructureLeyRow, WorldSeasonRow
+from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, SeasonOnsetRow, StructureLeyRow, WorldSeasonRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.environment import NotableYearKind, WeatherKind
+from aerona.domain.enums.environment import NotableYearKind, SeasonOnset, WeatherKind
 from aerona.engine.environment.control import CALENDAR_FIELDS, SEASON_NUMBERS, hold_calendar
 from aerona.engine.environment.ley_works import LEY_WORK_KINDS, ley_row
 from aerona.engine.environment.season_remap import remap_positions
+from aerona.engine.environment.season_shape import rebalanced
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
@@ -35,6 +36,12 @@ async def _seasons(session: AsyncSession, world_id: int) -> list[WorldSeasonRow]
     return list(await session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world_id).order_by(WorldSeasonRow.position)))
 
 
+def share_out(seasons: list[WorldSeasonRow], fixed: dict[int, int], held: frozenset[int] = frozenset()) -> None:
+    shares = rebalanced({season.id: season.share_pct for season in seasons}, fixed, held)
+    for season in seasons:
+        season.share_pct = shares[season.id]
+
+
 async def _renumber(session: AsyncSession, seasons: list[WorldSeasonRow]) -> None:
     offset = len(seasons) + SEASONS_MAX
     for season in seasons:
@@ -45,17 +52,21 @@ async def _renumber(session: AsyncSession, seasons: list[WorldSeasonRow]) -> Non
     await session.flush()
 
 
-async def add_season(session: AsyncSession, world_id: int, name: str, values: dict[str, int], position: int | None) -> WorldSeasonRow:
+async def add_season(
+    session: AsyncSession, world_id: int, name: str, values: dict[str, int], position: int | None, *, share_pct: int | None = None
+) -> WorldSeasonRow:
     world = await _world(session, world_id)
     seasons = await _seasons(session, world_id)
     if len(seasons) >= SEASONS_MAX:
         raise ValidationFailedError(f"A world keeps at most {several(SEASONS_MAX, 'season', 'seasons')}.")
     numbers = {key: clamp_int(values.get(key, (low + high) // 2 if low >= 0 else 0), low, high) for key, (low, high) in SEASON_NUMBERS.items()}
-    row = WorldSeasonRow(world_id=world_id, position=len(seasons) + SEASONS_MAX * 2, name=name.strip(), edited=True, **numbers)
+    share = clamp_int(share_pct if share_pct is not None else SHARE_TOTAL // (len(seasons) + 1), 1, SHARE_TOTAL - len(seasons))
+    row = WorldSeasonRow(world_id=world_id, position=len(seasons) + SEASONS_MAX * 2, name=name.strip(), edited=True, share_pct=share, **numbers)
     session.add(row)
     await session.flush()
     at = len(seasons) if position is None else max(0, min(position, len(seasons)))
     ordered = [*seasons[:at], row, *seasons[at:]]
+    share_out(ordered, {row.id: share})
     mapping = {season.position: index for index, season in enumerate(ordered) if season is not row}
     await _renumber(session, ordered)
     world.season_count = len(ordered)
@@ -76,6 +87,7 @@ async def remove_season(session: AsyncSession, season_id: int) -> WorldSeasonRow
     await session.delete(season)
     await session.flush()
     rest = [item for item in seasons if item.id != season_id]
+    share_out(rest, {})
     mapping: dict[int, int | None] = {item.position: None for item in seasons if item.id == season_id}
     mapping.update({item.position: index for index, item in enumerate(rest)})
     await _renumber(session, rest)
@@ -94,6 +106,43 @@ async def release_season(session: AsyncSession, season_id: int) -> WorldSeasonRo
     season.edited = False
     await session.flush()
     return season
+
+
+async def set_onset(session: AsyncSession, world_id: int, year: int, position: int, onset: SeasonOnset, *, by_node_id: int | None) -> SeasonOnsetRow:
+    seasons = await _seasons(session, world_id)
+    if position >= len(seasons):
+        raise ValidationFailedError(f"That world keeps {several(len(seasons), 'season', 'seasons')}.")
+    found = await session.scalar(
+        select(SeasonOnsetRow).where(SeasonOnsetRow.world_id == world_id, SeasonOnsetRow.year == year, SeasonOnsetRow.season_position == position).limit(1)
+    )
+    row = found or SeasonOnsetRow(world_id=world_id, year=year, season_position=position, onset=onset)
+    row.onset, row.locked, row.by_node_id = onset, True, by_node_id
+    session.add(row)
+    await session.flush()
+    return row
+
+
+async def _onset(session: AsyncSession, onset_id: int) -> SeasonOnsetRow:
+    row = await session.get(SeasonOnsetRow, onset_id)
+    if row is None:
+        raise NotFoundError("No such onset.")
+    return row
+
+
+async def release_onset(session: AsyncSession, onset_id: int) -> SeasonOnsetRow:
+    row = await _onset(session, onset_id)
+    if not row.locked:
+        raise ValidationFailedError("That onset is not held.")
+    row.locked = False
+    await session.flush()
+    return row
+
+
+async def clear_onset(session: AsyncSession, onset_id: int) -> SeasonOnsetRow:
+    row = await _onset(session, onset_id)
+    await session.delete(row)
+    await session.flush()
+    return row
 
 
 def set_moons(world: WorldRow, rules: Rules, *, moon_count: int | None, tidal_strength: int | None) -> None:

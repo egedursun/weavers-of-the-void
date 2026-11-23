@@ -8,7 +8,7 @@ from aerona.domain.enums.crafts import Gear
 from aerona.domain.enums.justice import TrialKind
 from aerona.domain.enums.labour import LegalStanding
 from aerona.domain.enums.mortal import CrimeKind
-from aerona.domain.enums.polity import DebtRemedy, DecisionRule, GenderRule, GovernmentKind, LawKind, SuccessionRule
+from aerona.domain.enums.polity import DebtRemedy, DecisionRule, GovernmentKind, LawKind, SexRule, SuccessionRule
 from aerona.domain.enums.unions import PluralSide, UnionForm
 
 
@@ -40,7 +40,7 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
     {
         LawKind.SUCCESSION_RULE: {
             "rule": pick(*(item.value for item in SuccessionRule)),
-            "gender": pick(*(item.value for item in GenderRule), default=GenderRule.ANY.value),
+            "sex_rule": pick(*(item.value for item in SexRule), default=SexRule.ANY.value),
             "wholeness_required": Param(False),
             "min_age": Param(16, 0, 200),
         },
@@ -225,7 +225,7 @@ def penal_cruelty(params: dict[str, int | str | bool]) -> int:
 
 LAW_EFFECTS = MappingProxyType(
     {
-        LawKind.SUCCESSION_RULE: "Decides who succeeds to rule: {rule}, {gender}{wholeness}.",
+        LawKind.SUCCESSION_RULE: "Decides who succeeds to rule: {rule}, {sex_rule}{wholeness}.",
         LawKind.INHERITANCE_SPLIT: "Property passes {split}.",
         LawKind.LAND_TENURE: "Land is held {tenure}.",
         LawKind.SLAVERY: "Slavery is {status}; captives may be bound where it is allowed.",

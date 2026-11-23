@@ -14,6 +14,7 @@ from aerona.engine.phases.dominion import count
     "table.fossil_beds",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
     "table.legend_profiles",

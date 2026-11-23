@@ -13,13 +13,14 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.ecology import RangeTrend
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.fossil import FossilReading
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.ecology.fossils import told
 from aerona.engine.primitives.knowledge import knows
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import top_region
+from aerona.engine.primitives.queries import living_entity, top_region
 from aerona.engine.recording.terms import explaining_alone, term
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -31,6 +32,7 @@ from aerona.tools.framework.validation import fail
 
 class StudyFossilsInput(ToolInput):
     bed_id: int
+    reading: FossilReading = FossilReading.DEEP_TIME
 
 
 async def revive(call: MortalCall, bed: FossilBedRow) -> str | None:
@@ -69,8 +71,22 @@ async def study_fossils(call: MortalCall, args: StudyFossilsInput) -> str:
         fail(MortalResult.FOSSILS_REFUSED, why="the bed lies in another land")
     if held(bed.region_entity_id) or "reading" in bed.locked:
         fail(MortalResult.FOSSILS_REFUSED, why="a god holds this bed as it is")
+    if args.reading is FossilReading.UNREAD:
+        fail(MortalResult.FOSSILS_REFUSED, why="studying a bed reads it one way or another")
+    bed.reading = args.reading
+    if args.reading is not FossilReading.DEEP_TIME:
+        community = await living_entity(call.session, call.me.location_id)
+        if community is not None and community.entity_type in COMMUNITY_TYPES:
+            await told(call.tick, bed, community)
+        call.target(bed.region_entity_id)
+        await call.record(
+            "land.fossil_read",
+            roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: bed.region_entity_id},
+            facts={"preservation": bed.preservation, "richness": bed.richness},
+            place=bed.region_entity_id,
+        )
+        return result(MortalResult.FOSSILS_STUDIED, richness=bed.richness, preservation=spoken(bed.preservation))
     shift = call.rules.fossils.theory_shift
-    bed.reading = FossilReading.DEEP_TIME
     for row in list(
         await call.session.scalars(
             select(TheoryAdherentRow).where(TheoryAdherentRow.adherent_entity_id == call.me.id).order_by(TheoryAdherentRow.theory_entity_id)
@@ -88,8 +104,8 @@ async def study_fossils(call: MortalCall, args: StudyFossilsInput) -> str:
         place=bed.region_entity_id,
     )
     raised = await revive(call, bed)
-    told = f" From its remains {raised} lives again." if raised else ""
-    return result(MortalResult.FOSSILS_STUDIED, richness=bed.richness, preservation=spoken(bed.preservation)) + told
+    revived = f" From its remains {raised} lives again." if raised else ""
+    return result(MortalResult.FOSSILS_STUDIED, richness=bed.richness, preservation=spoken(bed.preservation)) + revived
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

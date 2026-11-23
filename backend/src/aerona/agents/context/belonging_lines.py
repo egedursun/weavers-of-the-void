@@ -1,6 +1,6 @@
 from sqlalchemy import func, select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.core.grammar import agree, several, spoken
 from aerona.db.tables.belonging import HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryRow, SatireRow
@@ -24,7 +24,7 @@ async def identity_lines(scope: Scope, holder_id: int) -> list[str]:
     )
     found = []
     for row in rows:
-        value = await named(scope, row.value_node_id) if row.value_node_id is not None else words(row.value_label or "")
+        value = await named(scope, row.value_node_id) if row.value_node_id is not None else spoken(row.value_label or "")
         found.append(f"your {spoken(row.layer)} ({value}) matters {row.salience} out of 100 to you")
     return found
 
@@ -46,11 +46,11 @@ async def mortal_belonging_lines(scope: Scope, me: EntityRow) -> list[str]:
         )
         playmates = ", ".join([await named(scope, friend) for friend in friends]) or "no one named"
         found.append(
-            f"you play {words(group.play.value).lower()} with the children of your town ({playmates}){'; there is no time to play' if group.deprived else ''}"
+            f"you play {spoken(group.play).lower()} with the children of your town ({playmates}){'; there is no time to play' if group.deprived else ''}"
         )
     refuge = await refuge_of(session, me.id)
     if refuge is not None:
-        found.append(f"you shelter in {await named(scope, refuge.host_entity_id)} ({words(refuge.state.value).lower()})")
+        found.append(f"you shelter in {await named(scope, refuge.host_entity_id)} ({spoken(refuge.state).lower()})")
     jester = await session.scalar(select(OfficeRow.polity_entity_id).where(OfficeRow.kind == OfficeKind.JESTER, OfficeRow.holder_entity_id == me.id).limit(1))
     if jester is not None:
         found.append(f"you serve the court of {await named(scope, jester)} as its jester, licensed to mock its ruler")

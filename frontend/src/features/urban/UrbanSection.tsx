@@ -33,6 +33,7 @@ import {
 } from '@/features/cosmography/parts'
 import { why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
+import { COMMODITIES } from '@/features/entity/affairs/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { DISTRICT_SPEC } from '@/features/entity/society/labels'
 import { NumberField } from '@/features/entity/wilds/parts'
@@ -946,7 +947,7 @@ function PlayCard({
     <Held
       icon={spec.icon}
       tone={spec.tone}
-      title={`${spec.label}: ${row.commodity.replace('_', ' ')}`}
+      title={`${spec.label}: ${COMMODITIES[row.commodity].toLowerCase()}`}
       caption={
         <>
           <Ref node={row.holder} empty='a lost house' />

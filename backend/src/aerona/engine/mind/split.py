@@ -3,6 +3,7 @@ from collections.abc import Iterable, Mapping
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.genetics import TEMPERAMENT_LOCI
 from aerona.catalog.mind_split import ATTRIBUTES, CONDITION_ATTRIBUTES, FACETS, IDEAS, SKILL_ATTRIBUTES, SUMMARIES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -11,6 +12,7 @@ from aerona.db.read_memo import memoized
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import ATTRIBUTE_MAX, ATTRIBUTE_MIN, FACET_MAX, FACET_MIN, AttributeRow, FacetRow, IdeaRow, SkillRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import write_blocked
@@ -21,7 +23,9 @@ from aerona.domain.enums.mind import Attribute, Facet, IdeaState, SkillKind, Tra
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR
 from aerona.engine.body.customs import people_of
 from aerona.engine.folkways.fed import healing_charm, underfed
+from aerona.engine.genetics.genome import score_of
 from aerona.engine.mind.book import Values, add_trait, is_locked, mind_of, stored_values, traits_of
+from aerona.engine.mortal.kin import parents_of
 from aerona.engine.primitives.augment_bonus import lifts_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import base_stat, set_base_stats, stat
@@ -225,6 +229,19 @@ def seed_facets(rules: Rules, mean: Facets, traits: set[TraitKind], rng: SeededR
     return seeded
 
 
+async def inherited_mean(session: AsyncSession, rules: Rules, node: Bodied, mean: Facets) -> Facets:
+    genome = await session.get(GenomeRow, node.id)
+    parents = [facets for parent in await parents_of(session, node.id) if (facets := await facets_for(session, parent))]
+    if genome is None or not parents:
+        return mean
+    carried = sum(1 for locus in TEMPERAMENT_LOCI if score_of(genome.genes, locus) != 0) / max(1, len(TEMPERAMENT_LOCI))
+    weight = rules.genetics.temperament_weight_pct / PERCENT * (1 + carried)
+    return {
+        facet: clamp_facet(value + (sum(parent.get(facet, value) for parent in parents) / len(parents) - value) * min(1.0, weight))
+        for facet, value in mean.items()
+    }
+
+
 async def seed_split(session: AsyncSession, rules: Rules, node: Bodied, rng: SeededRandom) -> int:
     seeded = 0
     stored = await attributes_of(session, node.id) if has_attributes(node) else None
@@ -233,7 +250,7 @@ async def seed_split(session: AsyncSession, rules: Rules, node: Bodied, rng: See
         seeded += 1
     felt = {row.facet: row.value for row in await rows_by_prefix(session, FacetRow, node.id)} if has_facets(node) else None
     if felt is not None and len(felt) < len(FACETS):
-        mean = await culture_mean(session, rules, node)
+        mean = await inherited_mean(session, rules, node, await culture_mean(session, rules, node))
         await write_facets(session, node.id, {**seed_facets(rules, mean, await traits_of(session, node.id), rng), **felt})
         seeded += 1
     return seeded

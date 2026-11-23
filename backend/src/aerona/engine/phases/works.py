@@ -250,6 +250,7 @@ WORKS_READS = (
     "table.polity_profiles",
     "table.professions_of_value",
     "table.region_environment",
+    "table.region_geology",
     "table.reputations",
     "table.resource_profiles",
     "table.settlement_profiles",

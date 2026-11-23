@@ -17,6 +17,31 @@ class SeasonCause(StrEnum):
     ORBIT = "orbit"
     NATURAL_LAW = "natural_law"
     DIVINE = "divine"
+    IMPACT = "impact"
+    ERUPTION = "eruption"
+    STELLAR = "stellar"
+    OCEAN_SHIFT = "ocean_shift"
+    MADE = "made"
+
+
+class SeasonSpellShape(StrEnum):
+    CYCLING = "cycling"
+    SINGLE = "single"
+
+
+class LongSeasonReach(StrEnum):
+    WORLD = "world"
+    NORTH = "north"
+    SOUTH = "south"
+    EQUATOR = "equator"
+    POLES = "poles"
+
+
+class SeasonSource(StrEnum):
+    IMPACT = "impact"
+    REGION = "region"
+    STAR = "star"
+    INCIDENT = "incident"
 
 
 class SeasonSpell(StrEnum):
@@ -45,6 +70,10 @@ class ArcTemplate(StrEnum):
     FALL_OF_A_HOUSE = "fall_of_a_house"
     FOUNDING = "founding"
     APOTHEOSIS = "apotheosis"
+    OVERCOMING = "overcoming"
+    RECONCILIATION = "reconciliation"
+    SACRIFICE = "sacrifice"
+    DISCOVERY = "discovery"
 
 
 class ArcStage(StrEnum):

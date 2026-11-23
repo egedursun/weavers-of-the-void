@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.scars import SCARS
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -23,7 +24,6 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.models.entity_stats import ItemStats, PolityStats
 from aerona.engine.economy.route_dangers import patrol_share
 from aerona.engine.economy.stocks import goods_of
-from aerona.engine.environment.profile import SCAR_FERTILITY
 from aerona.engine.military import orders, records
 from aerona.engine.military.battle import BattleResult, Field, dug_in, family_factor
 from aerona.engine.military.campaign import bridged, on_road, spar, step_cost
@@ -33,7 +33,6 @@ from aerona.engine.military.logistics import dig_rate, regroup, restock
 from aerona.engine.military.marshal import keep_templates
 from aerona.engine.military.standards import capture_standard
 from aerona.engine.military.templates import blend, upgrades, weights_of
-from aerona.engine.phases.environment import SCAR_DECAY
 from aerona.engine.services.war import open_war
 from aerona.rules.registry import Rules
 from tests.engine.warfare.factories import make, make_ctx
@@ -95,7 +94,8 @@ def test_earthworks_stay_on_the_land_and_shelter_the_defender_against_charges() 
 
 
 def test_every_scar_heals_and_weighs_on_the_harvest() -> None:
-    assert set(SCAR_DECAY) == set(ScarKind) and set(SCAR_FERTILITY) == set(ScarKind)
+    assert set(SCARS) == set(ScarKind)
+    assert all(0 <= spec.decay(RULES) <= 100 and 0 <= spec.fertility(RULES) <= 100 for spec in SCARS.values())
 
 
 def test_commanders_lead_best_where_their_skills_and_traits_lie() -> None:

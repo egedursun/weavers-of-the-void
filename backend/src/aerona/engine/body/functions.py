@@ -40,24 +40,31 @@ def redundancy(rules: CapacityRules, function: BodyFunction) -> int:
 MIND_WOUNDS = injuries_where(lambda spec: spec.of_the_mind)
 
 
-def part_losses(anatomy: Anatomy, wounds: Iterable[Wound], venom_paralysis_at: int) -> tuple[dict[str, float], dict[BodyFunction, float]]:
+def part_losses(
+    anatomy: Anatomy, wounds: Iterable[Wound], venom_paralysis_at: int, *, share: int = PERCENT
+) -> tuple[dict[str, float], dict[BodyFunction, float]]:
     losses: dict[str, float] = defaultdict(float)
     direct: dict[BodyFunction, float] = defaultdict(float)
     for wound in wounds:
-        share = wound.loss / PERCENT
+        loss = wound.loss / PERCENT
         if wound.kind is InjuryKind.VENOM:
-            direct[BodyFunction.VITAL] = max(direct[BodyFunction.VITAL], share)
+            direct[BodyFunction.VITAL] = max(direct[BodyFunction.VITAL], loss)
             if wound.severity >= venom_paralysis_at:
-                direct[BodyFunction.LOCOMOTION] = max(direct[BodyFunction.LOCOMOTION], share)
+                direct[BodyFunction.LOCOMOTION] = max(direct[BodyFunction.LOCOMOTION], loss)
             continue
         if wound.kind in MIND_WOUNDS:
-            direct[BodyFunction.COGNITION] = max(direct[BodyFunction.COGNITION], share)
+            direct[BodyFunction.COGNITION] = max(direct[BodyFunction.COGNITION], loss)
             continue
         if wound.kind is InjuryKind.RADIATION_SICKNESS:
-            direct[BodyFunction.VITAL] = max(direct[BodyFunction.VITAL], share)
+            direct[BodyFunction.VITAL] = max(direct[BodyFunction.VITAL], loss)
             continue
-        if anatomy.part(wound.part) is not None:
-            losses[wound.part] = min(1.0, max(losses[wound.part], share))
+        part = anatomy.part(wound.part)
+        if part is None:
+            continue
+        if part.paralyses:
+            direct[BodyFunction.LOCOMOTION] = max(direct[BodyFunction.LOCOMOTION], loss)
+        taken = min(loss, wound.severity * share / PERCENT) if part.shared else loss
+        losses[wound.part] = min(1.0, losses[wound.part] + taken if part.shared else max(losses[wound.part], taken))
     return losses, direct
 
 
@@ -69,8 +76,9 @@ def function_levels(
     venom_paralysis_at: int,
     *,
     afflicted: Iterable[tuple[str, int]] = (),
+    share: int = PERCENT,
 ) -> dict[BodyFunction, float]:
-    losses, direct = part_losses(anatomy, wounds, venom_paralysis_at)
+    losses, direct = part_losses(anatomy, wounds, venom_paralysis_at, share=share)
     for key, loss in afflicted:
         if anatomy.part(key) is not None:
             losses[key] = min(1.0, max(losses.get(key, 0.0), loss / PERCENT))

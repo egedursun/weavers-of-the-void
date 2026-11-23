@@ -5,7 +5,8 @@ from aerona.db.tables.concealment import HiddenTruthRow
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sacred import ForesightRow
-from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector
+from aerona.domain.enums.affliction import Transmission
+from aerona.domain.enums.disease import ClimateWarmth
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.models.entity_stats import DiseaseStats
 from aerona.engine.disease.designed import designed_aim
@@ -38,8 +39,8 @@ async def test_a_disease_made_for_one_people_strikes_them_harder_and_others_less
     session.add(
         DiseaseProfileRow(
             disease_entity_id=plague.id,
-            vector=DiseaseVector.AIR,
-            climate_affinity=ClimateAffinity.WARM,
+            primary_route=Transmission.INHALATION,
+            affinity_warmth=ClimateWarmth.WARM,
             virulence=50,
             lethality=30,
             chronic_rate=0,

@@ -35,10 +35,23 @@ import {
   Vote,
 } from 'lucide-react'
 import {
+  bondRoleValues,
+  coastKindValues,
   commodityKindValues,
   type components,
   districtKindValues,
+  entityTypeValues,
+  epochStepKindValues,
+  holdingKindValues,
+  needKindValues,
+  nodeKindValues,
+  resourceMechanicValues,
   socialClassValues,
+  stanceValues,
+  techniqueValues,
+  temperatureBandValues,
+  terrainKindValues,
+  warEndingValues,
 } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
 import { sentence } from '../realm/labels'
@@ -159,9 +172,33 @@ export function valueTable(
   return Object.fromEntries(values.map((value) => [value, sentence(value)]))
 }
 
+const WORD_TABLES = new Map<ReadonlyArray<string>, Record<string, string>>()
+
+export function wordOf<T extends string>(
+  values: ReadonlyArray<T>,
+  value: T
+): string {
+  const known = WORD_TABLES.get(values) ?? valueTable(values)
+  WORD_TABLES.set(values, known)
+  return known[value]
+}
+
 export const COMMODITIES = valueTable(commodityKindValues)
 export const DISTRICTS = valueTable(districtKindValues)
 export const CLASSES = valueTable(socialClassValues)
+export const TECHNIQUE_WORDS = valueTable(techniqueValues)
+export const WAR_ENDING_WORDS = valueTable(warEndingValues)
+export const RESOURCE_MECHANIC_WORDS = valueTable(resourceMechanicValues)
+export const NEED_WORDS = valueTable(needKindValues)
+export const BOND_ROLE_WORDS = valueTable(bondRoleValues)
+export const ENTITY_TYPE_WORDS = valueTable(entityTypeValues)
+export const COAST_WORDS = valueTable(coastKindValues)
+export const TERRAIN_WORDS = valueTable(terrainKindValues)
+export const TEMPERATURE_WORDS = valueTable(temperatureBandValues)
+export const EPOCH_STEP_WORDS = valueTable(epochStepKindValues)
+export const STANCE_WORDS = valueTable(stanceValues)
+export const HOLDING_WORDS = valueTable(holdingKindValues)
+export const NODE_KIND_WORDS = valueTable(nodeKindValues)
 
 export function spec(
   table: Record<string, Named>,

@@ -1,12 +1,13 @@
 from sqlalchemy import select
 
+from aerona.catalog.kinds.harm import HARM_DEATHS
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MarriageRow, MortalProfileRow
 from aerona.domain.enums.body import BodyFunction, BodyPart, DamageType, HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mortal import CrimeKind, DeathCause, HarshnessScale, LifeStage, MarriageEnd, PunishmentKind, StressBreak
 from aerona.domain.models.entity_stats import MortalStats
@@ -17,7 +18,7 @@ from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mortal.acts import break_weights, stress_break
 from aerona.engine.mortal.course import live_one_epoch, seed_mortal, upkeep_standing
-from aerona.engine.mortal.death import HARM_DEATHS, manner_of
+from aerona.engine.mortal.death import manner_of
 from aerona.engine.mortal.justice import sentence
 from aerona.engine.mortal.kin import children_of, close_kin_of, parents_of, siblings_of, spouses_of
 from aerona.engine.mortal.kinship import add_parent, backfill_kin, end_marriage, marry
@@ -54,10 +55,10 @@ def test_life_stages_follow_the_lifespan_curve() -> None:
 
 
 def test_fertility_has_a_window_by_sex() -> None:
-    assert fertility_level(RULES, None, Sex.FEMALE, age=30, lifespan=80, body=None) == 100
-    assert fertility_level(RULES, None, Sex.FEMALE, age=55, lifespan=80, body=None) == 0
-    assert fertility_level(RULES, None, Sex.MALE, age=55, lifespan=80, body=None) == 100
-    assert fertility_level(RULES, None, Sex.MALE, age=5, lifespan=80, body=None) == 0
+    assert fertility_level(RULES, None, SexKind.BEARER, age=30, lifespan=80, body=None) == 100
+    assert fertility_level(RULES, None, SexKind.BEARER, age=55, lifespan=80, body=None) == 0
+    assert fertility_level(RULES, None, SexKind.BEGETTER, age=55, lifespan=80, body=None) == 100
+    assert fertility_level(RULES, None, SexKind.BEGETTER, age=5, lifespan=80, body=None) == 0
 
 
 def test_old_age_kills_by_a_hazard_curve() -> None:

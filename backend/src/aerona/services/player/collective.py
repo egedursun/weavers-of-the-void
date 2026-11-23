@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from pydantic import Field
 
 from aerona.core.grammar import spoken
@@ -10,6 +12,7 @@ from aerona.domain.enums.collective import (
     ChargeArrangement,
     CollectiveActKind,
     CollectiveTrigger,
+    CrowdFeeling,
     DatingSystemKind,
     DesignComponentKind,
     FormativeKind,
@@ -43,11 +46,16 @@ NAME = 200
 
 class MoodDraft(Command):
     town_id: int
-    anger: int = Field(default=0, ge=0, le=SPAN)
-    anxiety: int = Field(default=0, ge=0, le=SPAN)
-    fervour: int = Field(default=0, ge=0, le=SPAN)
+    feelings: dict[CrowdFeeling, Annotated[int, Field(ge=0, le=SPAN)]] = Field(default_factory=dict)
     deterrence: int = Field(default=0, ge=0, le=SPAN)
     agitation: int = Field(default=0, ge=0, le=SPAN)
+
+
+class FeelingDraft(Command):
+    town_id: int
+    feeling: CrowdFeeling
+    level: int = Field(default=0, ge=0, le=SPAN)
+    hold: bool | None = None
 
 
 class TownTarget(Command):
@@ -301,8 +309,8 @@ class CommunityEdit(Edited):
 
 class SexRatioDraft(Command):
     community_id: int
-    males_per_hundred: int = Field(default=100, ge=0, le=1000)
-    widows: int = Field(default=0, ge=0, le=CROWD)
+    begetters_per_hundred: int = Field(default=100, ge=0, le=1000)
+    bereaved_partners: int = Field(default=0, ge=0, le=CROWD)
 
 
 class RoleDraft(Command):
@@ -423,13 +431,19 @@ class WearEdit(Edited):
 
 
 def mood_values(command: MoodDraft) -> dict[str, int]:
-    return {"anger": command.anger, "anxiety": command.anxiety, "fervour": command.fervour, "deterrence": command.deterrence, "agitation": command.agitation}
+    return {"deterrence": command.deterrence, "agitation": command.agitation}
 
 
 @player_action("crowd_mood:set", ActionKind.EDIT_RECORD)
 async def crowd_mood_set(scope: PlayerScope, command: MoodDraft) -> Effect:
-    await control.set_mood(await scope.context("crowd_mood_set"), command.town_id, mood_values(command))
+    await control.set_mood(await scope.context("crowd_mood_set"), command.town_id, mood_values(command), feelings=command.feelings)
     return Effect("The town's mood is set so.", command.town_id)
+
+
+@player_action("crowd_feeling:set", ActionKind.EDIT_RECORD)
+async def crowd_feeling_set(scope: PlayerScope, command: FeelingDraft) -> Effect:
+    row = await control.set_crowd_feeling(await scope.context("crowd_feeling_set"), command.town_id, command.feeling, command.level, hold=command.hold)
+    return Effect(f"The town's {spoken(row.feeling)} stands at {row.level}{' and is held' if row.locked else ''}.", command.town_id)
 
 
 @player_action("crowd_mood:edit", ActionKind.EDIT_RECORD)
@@ -780,7 +794,7 @@ async def transition_delete(scope: PlayerScope, command: CommunityTarget) -> Eff
 
 @player_action("sex_ratio:set", ActionKind.EDIT_RECORD)
 async def sex_ratio_set(scope: PlayerScope, command: SexRatioDraft) -> Effect:
-    values = {"males_per_hundred": command.males_per_hundred, "widows": command.widows}
+    values = {"begetters_per_hundred": command.begetters_per_hundred, "bereaved_partners": command.bereaved_partners}
     await control.set_sex_ratio(await scope.context("sex_ratio_set"), command.community_id, values)
     return Effect("The community's balance is set so.", command.community_id)
 

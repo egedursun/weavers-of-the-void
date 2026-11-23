@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.grammar import spoken
 from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.foreign_gods import ForeignGodRow, GodConflictRow
@@ -61,9 +62,9 @@ async def creator_hand(session: AsyncSession) -> list[HandEpoch]:
 
 
 async def son_fate(session: AsyncSession, son: SonRow, names: dict[int, str]) -> list[str]:
-    lines: list[str] = [f"Status: {son.status.value.replace('_', ' ')}"]
+    lines: list[str] = [f"Status: {spoken(son.status)}"]
     if son.status is SonStatus.DEAD and son.death_epoch is not None:
-        cause = f" ({son.death_cause.value.replace('_', ' ')})" if son.death_cause is not None else ""
+        cause = f" ({spoken(son.death_cause)})" if son.death_cause is not None else ""
         lines.append(f"Died in Epoch {son.death_epoch}{cause}")
     if son.rebel:
         lines.append("In rebellion against the Creator")
@@ -72,7 +73,7 @@ async def son_fate(session: AsyncSession, son: SonRow, names: dict[int, str]) ->
     if son.standing_order:
         lines.append(f"Standing order{' (absolute)' if son.order_absolute else ''}: {son.standing_order}")
     if son.reputation_label is not None:
-        lines.append(f"Reputation: {son.reputation_label.value.replace('_', ' ')}")
+        lines.append(f"Reputation: {spoken(son.reputation_label)}")
     if son.anchor_entity_id is not None:
         lines.append(f"Anchor: {names.get(son.anchor_entity_id, '?')}")
     if son.current_world_id is not None:

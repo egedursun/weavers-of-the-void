@@ -89,6 +89,7 @@ from aerona.agents.context.world_summary import route_lines
 from aerona.agents.context.world_view_lines import mortal_world_lines
 from aerona.agents.context.youth_lines import mortal_youth_lines
 from aerona.catalog.domains import DOMAIN_LABELS
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.chronicle import ChronicleRepository
 from aerona.db.tables.entities import EntityRow
@@ -185,7 +186,7 @@ async def known_knowledge(scope: Scope, me: EntityRow) -> list[KnowledgeItem]:
     for bond in bonds:
         entity = await scope.session.get(EntityRow, bond.target_node_id)
         if entity is not None and entity.knowledge_branch is not None:
-            label = entity.knowledge_branch.value.replace("_", " ")
+            label = spoken(entity.knowledge_branch)
             items.append(KnowledgeItem(id=entity.id, name=entity.name, branch_label=label, level=knowledge_level(scope.rules, entity)))
     return items
 
@@ -200,7 +201,7 @@ async def mortal_land(scope: Scope, land: EntityRow, neighbours: list[EntityRow 
     return MortalLand(
         id=land.id,
         name=land.name,
-        elevation_label=record.elevation_class.value.replace("_", " ") if record is not None else None,
+        elevation_label=spoken(record.elevation_class) if record is not None else None,
         coastal=record.coastal if record is not None else False,
         neighbours=[NamedRecord(id=region.id, name=region.name) for region in neighbours if region is not None],
         ground=described or None,

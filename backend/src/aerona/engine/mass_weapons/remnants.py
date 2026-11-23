@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.mass_weapons import WarRemnantRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.warfare import BattleRow, WarRow, WarSideRow
@@ -10,11 +11,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.mass_weapons import RemnantKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
+from aerona.engine.environment.book import add_scar
 from aerona.engine.lifecycle.wounds import slay
 from aerona.engine.lore.research import techniques_of
 from aerona.engine.mass_weapons.book import ArsenalTally
@@ -33,6 +36,9 @@ CANDIDATES = 40
 LAND_ARMS = ((Technique.GUNPOWDER, RemnantKind.BURIED_CHARGES), (Technique.NECROMANCY, RemnantKind.UNQUIET_DEAD))
 
 
+POISONING = frozenset({RemnantKind.POISONED_GROUND, RemnantKind.FALLOUT})
+
+
 async def leave_remnant(
     ctx: TickContext,
     kind: RemnantKind,
@@ -46,6 +52,9 @@ async def leave_remnant(
 ) -> WarRemnantRow | None:
     if (region is None) == (orbit is None) or (region is not None and held(region)):
         return None
+    ground = await ctx.session.get(RegionEnvironmentRow, region) if region is not None and kind in POISONING else None
+    if ground is not None:
+        add_scar(ground, ScarKind.POISONED, density)
     query = select(WarRemnantRow).where(WarRemnantRow.kind == kind, WarRemnantRow.region_entity_id == region, WarRemnantRow.orbit_world_id == orbit)
     found = await ctx.session.scalar(query.order_by(WarRemnantRow.id).limit(1))
     if found is not None:

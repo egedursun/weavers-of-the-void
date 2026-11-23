@@ -1,16 +1,21 @@
 import {
+  type LucideIcon,
+  Baby,
   Bird,
   Bone,
   Box,
+  Boxes,
+  Bug,
   CloudFog,
   Dna,
+  Droplets,
   Flame,
   Gem,
   Ghost,
   HeartPulse,
   Hexagon,
   Hourglass,
-  type LucideIcon,
+  Link2,
   Moon,
   Mountain,
   Repeat,
@@ -20,9 +25,7 @@ import {
   Utensils,
   Waves,
   Wind,
-  Baby,
-  Droplets,
-  Bug,
+  Zap,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -44,6 +47,10 @@ export const VARIANTS: Record<Schema['BiologyVariant'], Named> = {
   gaseous: { label: 'Gaseous', icon: CloudFog, tone: 'info' },
   crystalline: { label: 'Crystalline', icon: Gem, tone: 'verdigris' },
   undead: { label: 'Undead', icon: Skull, tone: 'danger' },
+  fungal: { label: 'Fungal', icon: Sprout, tone: 'verdigris' },
+  colonial: { label: 'Colonial', icon: Boxes, tone: 'success' },
+  energy: { label: 'Of energy', icon: Zap, tone: 'gold' },
+  symbiotic: { label: 'Symbiotic', icon: Link2, tone: 'info' },
 }
 
 export const SHARES = [

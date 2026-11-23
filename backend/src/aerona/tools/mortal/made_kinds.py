@@ -156,7 +156,7 @@ async def create_dish(call: MortalCall, args: CreateDishInput) -> str:
         name=dish.name,
         method=spoken(args.method),
         course=spoken(args.course),
-        ingredients=", ".join(food.value.replace("_", " ") for food in foods),
+        ingredients=", ".join(spoken(food) for food in foods),
         nourishment=dish.nourishment,
         delight=dish.delight,
         keeps=dish.keeps,
@@ -175,7 +175,7 @@ async def draw_building_type(call: MortalCall, args: DrawStructureTypeInput) -> 
         roles={IncidentRole.MAKER: call.me.id, IncidentRole.OWNER: people.id, IncidentRole.PRODUCT: design.entity_id},
         facts={"structure": args.structure_kind, "storeys": design.storeys},
     )
-    form = design.form.value.replace("_", " ") if design.form is not None else "any form"
+    form = spoken(design.form) if design.form is not None else "any form"
     return result(
         MortalResult.STRUCTURE_TYPE_DRAWN,
         owner=people.name,

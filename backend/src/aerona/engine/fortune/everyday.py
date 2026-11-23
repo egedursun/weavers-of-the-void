@@ -110,7 +110,7 @@ async def befall(ctx: TickContext, mortal: EntityRow, exposure: Exposure = UNEXP
     elif kind in FRIGHTS or HARMED[kind] is None:
         await add_stress(ctx.session, mortal.id, table.small_stress * level, ctx.epoch)
     else:
-        words = kind.value.replace("_", " ")
+        words = spoken(kind)
         wounded = await apply_hits(ctx, mortal, Harm(float(damage), HarmCause.ACCIDENT, an(words), damage_type=HARMED[kind]))
         died = mortal.status is not EntityStatus.CANON
         level = max(level, max((row.severity for row in wounded.injuries), default=0) // 2)
@@ -141,7 +141,7 @@ async def trigger(ctx: TickContext, victim: EntityRow, kind: MishapKind, level: 
     elif kind in FRIGHTS or HARMED[kind] is None:
         await add_stress(ctx.session, victim.id, table.small_stress * level, ctx.epoch)
     else:
-        wounded = await apply_hits(ctx, victim, Harm(float(damage), HarmCause.ACCIDENT, an(kind.value.replace("_", " ")), damage_type=HARMED[kind]))
+        wounded = await apply_hits(ctx, victim, Harm(float(damage), HarmCause.ACCIDENT, an(spoken(kind)), damage_type=HARMED[kind]))
         died = victim.status is not EntityStatus.CANON
         severity = max(level, max((row.severity for row in wounded.injuries), default=0) // 2)
     return Mishap(kind, victim.id, severity, died, "brought about by a god's hand")

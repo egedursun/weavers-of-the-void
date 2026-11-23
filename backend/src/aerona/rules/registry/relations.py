@@ -64,6 +64,8 @@ class CircleRules:
     recruit_pct: int = rule(100, 0, 400, G, "How much more readily factions recruit circle members whose belief they share (%)")
     per_place: int = rule(4, 0, 1000, G, "Circles any place may hold, before its mortals add more")
     place_mortals: int = rule(10, 0, 100000, G, "Mortals of a place for each further circle it may hold (0: no more for its mortals)")
+    sport_rivalry_pct: int = rule(20, 0, 100, G, "Chance each epoch two sport clubs of neighbouring places meet in a match (%)")
+    gaming_debt_pct: int = rule(15, 0, 100, G, "Chance each epoch a member of a gaming circle falls into debt to another (%)")
 
 
 @dataclass(frozen=True)
@@ -99,6 +101,10 @@ class PersuasionRules:
     envoy_pct: int = rule(30, 0, 200, G, "How much a persuasive envoy raises the chance a treaty is accepted (%)")
     counsel_pct: int = rule(30, 0, 200, G, "How much a persuasive chancellor or treasurer raises the chance the ruler orders public works (%)")
     argue_pct: int = rule(30, 0, 100, G, "Chance an argument between mortals turns into an attempt to persuade (%)")
+    feeling_weight: int = rule(30, 0, 100, G, "Weight of the listener's empathy and present feelings in an appeal to feeling")
+    bond_weight: int = rule(40, 0, 100, G, "Weight of the friendship, kinship and oaths between two beings in an appeal to a bond")
+    surrender_morale_floor: int = rule(30, 0, 100, G, "Morale below which a besieged garrison may be talked into yielding")
+    false_confession_pct: int = rule(20, 0, 100, G, "Chance a frightened innocent confesses when talked into confession (%)")
 
 
 @dataclass(frozen=True)
@@ -129,4 +135,6 @@ class ContestRules:
     famous_margin: int = rule(2, 1, 9, G, "Round margin that makes a contest between notables famous")
     union_romance: int = rule(15, 0, 100, G, "Romance the contested mortal feels for the winner")
     wager_wealth: int = rule(5, 0, 50, G, "Wealth a wager passes from loser to winner")
+    race_endurance_pct: int = rule(50, 0, 100, G, "Weight of endurance in a race against the mount or vessel that carries the racer (%)")
+    craft_masterwork_pct: int = rule(10, 0, 100, G, "Chance the winning work of a craft contest becomes a masterwork (%)")
     favour_followers_pct: int = rule(5, 0, 100, G, "Followers a god's cult gains when its priest wins a contest for favour (%)")

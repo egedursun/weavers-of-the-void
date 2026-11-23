@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.demography import GROWN_BANDS
 from aerona.catalog.life.happenings import STARVING
 from aerona.constants.units import PERCENT
 from aerona.db.tables.disease import OutbreakRow
@@ -7,7 +8,6 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.warfare import SiegeRow
-from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityStatus
 from aerona.domain.enums.environment import ScarKind
@@ -74,7 +74,7 @@ async def plague_active(ctx: TickContext, event: EntityRow) -> bool:
 
 async def adult_loss_pct(ctx: TickContext, event: EntityRow, community: EntityRow) -> float:
     statement = select(EventCasualtyRow.count).where(
-        EventCasualtyRow.event_entity_id == event.id, EventCasualtyRow.community_entity_id == community.id, EventCasualtyRow.age_band == AgeBand.ADULT
+        EventCasualtyRow.event_entity_id == event.id, EventCasualtyRow.community_entity_id == community.id, EventCasualtyRow.age_band.in_(sorted(GROWN_BANDS))
     )
     adults = sum(await ctx.session.scalars(statement))
     population = stat(community, "population") or 0

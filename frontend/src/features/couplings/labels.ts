@@ -1,26 +1,30 @@
 import {
+  type LucideIcon,
   Anchor,
+  ArrowDownToLine,
   Ban,
   BookOpen,
   Brain,
   Castle,
+  Cog,
   Crown,
   Eye,
   EyeOff,
   Feather,
   Flag,
+  Flame,
   Footprints,
   Gem,
   Ghost,
   Hammer,
   Hand,
-  Handshake,
   HandHelping,
+  Handshake,
   Hourglass,
   Languages,
   Link2,
   Lock,
-  type LucideIcon,
+  MapIcon,
   MapPin,
   Megaphone,
   MicOff,
@@ -30,13 +34,17 @@ import {
   ScrollText,
   Shield,
   ShieldOff,
+  Shovel,
   Skull,
   Snowflake,
-  ArrowDownToLine,
   Sparkles,
+  Sprout,
   Swords,
+  Target,
   Users,
+  Waves,
   Wind,
+  Zap,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -81,7 +89,7 @@ export const SIGN_CAUSES: Record<Schema['SignCause'], Named> = {
   mutilation: { label: 'Many who cannot speak', icon: Skull, tone: 'danger' },
 }
 
-export const TEACHING_KINDS: Record<Schema['TeachingKind'], Named> = {
+export const TEACHING_KINDS: Record<Schema['KnowledgeKind'], Named> = {
   song: { label: 'A song', icon: Music, tone: 'gold' },
   art_form: { label: 'An art form', icon: Feather, tone: 'gold' },
   rite: { label: 'A rite', icon: Sparkles, tone: 'verdigris' },
@@ -91,6 +99,12 @@ export const TEACHING_KINDS: Record<Schema['TeachingKind'], Named> = {
   treasure: { label: 'Where a treasure lies', icon: MapPin, tone: 'gold' },
   language: { label: 'A language', icon: Languages, tone: 'info' },
   account: { label: 'The memory of an age', icon: BookOpen, tone: 'muted' },
+  site: { label: 'A hidden site', icon: MapPin, tone: 'verdigris' },
+  map: { label: 'Knowledge of a land', icon: MapIcon, tone: 'info' },
+  weakness: { label: 'A weakness', icon: Target, tone: 'danger' },
+  pattern: { label: 'A pattern of a made thing', icon: Cog, tone: 'muted' },
+  source: { label: 'Where a source of power lies', icon: Zap, tone: 'gold' },
+  secret: { label: 'A secret', icon: EyeOff, tone: 'warning' },
 }
 
 export const TEACHING_STATES: Record<Schema['TeachingState'], Named> = {
@@ -123,6 +137,13 @@ export const SEAL_KINDS: Record<Schema['SealKind'], Named> = {
   structure: { label: 'Walls and gates', icon: Castle, tone: 'info' },
   rite: { label: 'A warding rite', icon: Sparkles, tone: 'verdigris' },
   divine: { label: 'A god’s hand', icon: Crown, tone: 'gold' },
+  power: { label: 'An innate power', icon: Zap, tone: 'warning' },
+  living: { label: 'A grown barrier', icon: Sprout, tone: 'success' },
+  pact: {
+    label: 'A sworn pact',
+    icon: Handshake,
+    tone: 'verdigris',
+  },
 }
 
 export const CARRION_ICON: LucideIcon = Wind
@@ -139,4 +160,7 @@ export const CARRION_RESTS: Record<Schema['CarrionRest'], Named> = {
     tone: 'muted',
   },
   floating: { label: 'Floating where they died', icon: Ghost, tone: 'warning' },
+  buried: { label: 'Buried', icon: Shovel, tone: 'muted' },
+  burned: { label: 'Burned', icon: Flame, tone: 'warning' },
+  sunk: { label: 'Sunk to the floor of the waters', icon: Waves, tone: 'info' },
 }

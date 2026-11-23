@@ -1,4 +1,14 @@
-import { Bug, Droplet, Hand, HeartPulse, RotateCcw, Unlock } from 'lucide-react'
+import { useState } from 'react'
+import {
+  Bug,
+  Droplet,
+  Hand,
+  HeartPulse,
+  Link2,
+  RotateCcw,
+  Unlink,
+  Unlock,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -16,6 +26,7 @@ import {
 } from '@/features/cosmography/parts'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
+import { NodePicker } from '@/features/entity/mind/parts'
 import { TISSUE } from '@/features/entity/wilds/anatomyLabels'
 import { BIASES } from '@/features/folkways/labels'
 import { Ref } from '@/features/gatherings/parts'
@@ -160,6 +171,8 @@ function Leanings({ data }: { data: BiologyNodeView }) {
   )
 }
 
+const SPECIES = ['species']
+
 function VariantPicker({
   data,
   blocked,
@@ -197,6 +210,47 @@ function VariantPicker({
           </Button>
         )
       })}
+    </div>
+  )
+}
+
+function PartnerPicker({
+  data,
+  blocked,
+  onSet,
+}: {
+  data: BiologyNodeView
+  blocked: string | null
+  onSet: (partner: number | null) => void
+}) {
+  const [partner, setPartner] = useState<number | null>(
+    data.partner?.id ?? null
+  )
+  const symbiotic = data.variants.includes('symbiotic')
+  const reason =
+    blocked ??
+    (symbiotic ? null : 'Only a symbiotic kind lives joined to another')
+  return (
+    <div className='flex min-w-0 flex-wrap items-end gap-2'>
+      <NodePicker
+        label='Partner kind'
+        types={SPECIES}
+        value={partner}
+        onChange={setPartner}
+        blocked={reason}
+      />
+      <StepButton
+        icon={Link2}
+        label='Bind it to this kind'
+        busy={reason ?? (partner === null ? 'Pick the kind first' : null)}
+        onClick={() => onSet(partner)}
+      />
+      <StepButton
+        icon={Unlink}
+        label='Free it of its partner'
+        busy={reason ?? (data.partner === null ? 'It has no partner' : null)}
+        onClick={() => onSet(null)}
+      />
     </div>
   )
 }
@@ -278,6 +332,14 @@ export function BiologySection({
                 ],
                 ['Variants its body shows', named(query.data.body_variants)],
                 [
+                  'Kind it lives joined to',
+                  <Ref
+                    key='partner'
+                    node={query.data.partner}
+                    empty='none: only a symbiotic kind has a partner'
+                  />,
+                ],
+                [
                   'Set for this kind',
                   query.data.seeded
                     ? `since epoch ${query.data.updated_epoch ?? 0}`
@@ -302,6 +364,16 @@ export function BiologySection({
               busy={adding.isPending || removing.isPending}
               onToggle={(variant, present) =>
                 present ? adding.mutate(variant) : removing.mutate(variant)
+              }
+            />
+            <PartnerPicker
+              data={query.data}
+              blocked={why(blocked, editing.isPending)}
+              onSet={(partner) =>
+                editing.mutate({
+                  values: { partner_species_id: partner },
+                  release: [],
+                })
               }
             />
             <Effects data={query.data} />

@@ -19,6 +19,7 @@ class KinRole(StrEnum):
     CHOSEN_KIN = "chosen_kin"
     GODPARENT = "godparent"
     SWORN_KIN = "sworn_kin"
+    FOSTER_KIN = "foster_kin"
 
 
 class KinDuty(StrEnum):

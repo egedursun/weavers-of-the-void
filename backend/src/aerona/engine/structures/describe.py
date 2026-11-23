@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.domain import STANDING_STATES, UNFINISHED_STATES
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import ConstructionRow, StructureProfileRow, StructureStaffRow
@@ -43,11 +43,11 @@ async def structure_detail(session: AsyncSession, work: EntityRow) -> list[str]:
     if profile is None:
         return []
     resolved = await resolved_of(session, profile)
-    lines = [f"it is {words(resolved.label.lower())} of the {words(resolved.group.value)} kind, level {profile.level}"]
+    lines = [f"it is {words(resolved.label.lower())} of the {spoken(resolved.group)} kind, level {profile.level}"]
     if profile.construction_state in STANDING_STATES:
         lines.append(f"it works at {profile.effect_pct}% (condition {profile.condition}, staffed {profile.staff_pct}%)")
     else:
-        lines.append(f"it is {words(profile.construction_state.value)}, {profile.progress}% raised")
+        lines.append(f"it is {spoken(profile.construction_state)}, {profile.progress}% raised")
     construction = await session.scalar(
         select(ConstructionRow).where(ConstructionRow.structure_entity_id == work.id, ConstructionRow.status == ConstructionStatus.ACTIVE).limit(1)
     )
@@ -58,9 +58,9 @@ async def structure_detail(session: AsyncSession, work: EntityRow) -> list[str]:
         )
     staff = await session.scalar(select(StructureStaffRow).where(StructureStaffRow.structure_entity_id == work.id).limit(1))
     if staff is not None:
-        lines.append(f"it needs {staff.required} {words(staff.social_class.value)}s and has {staff.allocated}")
+        lines.append(f"it needs {staff.required} {spoken(staff.social_class)}s and has {staff.allocated}")
     if profile.upkeep_coin or profile.upkeep_goods:
-        lines.append(f"its upkeep is {profile.upkeep_coin} coin and {profile.upkeep_goods} {words(resolved.upkeep_commodity.value)} each age")
+        lines.append(f"its upkeep is {profile.upkeep_coin} coin and {profile.upkeep_goods} {spoken(resolved.upkeep_commodity)} each age")
     son = await session.get(SonRow, profile.dedicated_son_id) if profile.dedicated_son_id is not None else None
     if son is not None:
         lines.append(f"it is dedicated to {son.name}{' and anchors that god' if profile.anchor else ''}")

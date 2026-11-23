@@ -13,6 +13,7 @@ from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.collective import CommemorationRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
@@ -23,9 +24,11 @@ from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.collective import CrowdFeeling
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
@@ -37,6 +40,7 @@ from aerona.domain.enums.polity import OfficeKind, TreatyKind
 from aerona.domain.enums.records import FactUnit, InstrumentKind, StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.hits import Harm
+from aerona.engine.collective.feelings import stir_feelings
 from aerona.engine.context import TickContext
 from aerona.engine.customs.time_budgets import leisure_odds
 from aerona.engine.economy.purse import take_coin
@@ -46,11 +50,13 @@ from aerona.engine.folkways.purity import apart_at_table, unclean
 from aerona.engine.gatherings.occasions import Guest, Occasion, household_of
 from aerona.engine.happenings.profile import season_for, year_at
 from aerona.engine.history.collections import open_collection
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.intrigue.schemes import SchemeTally, execute
 from aerona.engine.intrigue.secrets import learn
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.taboos import kept
 from aerona.engine.lore.traditions import cohere
+from aerona.engine.military.units import stacks_of, take
 from aerona.engine.mind.ethics import conscience, culture_of, ethics_of
 from aerona.engine.mind.memories import remember as mind_remember
 from aerona.engine.mind.thoughts import think
@@ -62,8 +68,9 @@ from aerona.engine.polity.treaties import sign_derived
 from aerona.engine.powers.society import test_people
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import folk_among, present_among
+from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
 from aerona.engine.recording.record import FactInput, StepDraft, record
 from aerona.engine.relations.book import ensure_relation, relation, relations_of, shift
 
@@ -501,6 +508,46 @@ async def fair(ctx: TickContext, holding: Holding) -> None:
     for merchant in merchants:
         if not held(merchant):
             await add_wealth(ctx.session, int(merchant), ctx.rules.gatherings.fair_wealth, ctx.epoch)
+
+
+@OUTCOMES.on(GatheringKind.COMMEMORATION)
+async def commemoration(ctx: TickContext, holding: Holding) -> None:
+    host = holding.row.host_node_id
+    proud = False
+    for row in await ctx.session.scalars(select(CommemorationRow).where(CommemorationRow.holder_entity_id == host).order_by(CommemorationRow.collection_id)):
+        proud = proud or row.pride
+        if "last_observed_epoch" not in row.locked:
+            row.last_observed_epoch = ctx.epoch
+    town = holding.row.place_entity_id or host
+    if await ctx.session.get(SettlementProfileRow, town) is not None and not held(town):
+        feeling = CrowdFeeling.FERVOUR if proud else CrowdFeeling.GRIEF
+        await stir_feelings(ctx, town, {feeling: ctx.rules.gatherings.commemoration_feeling})
+        holding.facts["feeling"] = feeling
+
+
+@OUTCOMES.on(GatheringKind.MUSTER)
+async def muster_held(ctx: TickContext, holding: Holding) -> None:
+    host = await ctx.session.get(EntityRow, holding.row.host_node_id)
+    armies = await ctx.session.scalars(
+        select(ArmyRow).where(ArmyRow.owner_entity_id == holding.row.host_node_id, ArmyRow.disbanded_epoch.is_(None)).order_by(ArmyRow.entity_id)
+    )
+    fled = 0
+    for row in list(armies):
+        army = await ctx.session.get(EntityRow, row.entity_id)
+        if army is None or held(army.id):
+            continue
+        stacks = await stacks_of(ctx.session, army.id)
+        leaving = sum(stack.count for stack in stacks) * ctx.rules.gatherings.muster_desertion_pct // PERCENT
+        gone = take(stacks, leaving)
+        if gone <= 0:
+            continue
+        with flowing(FlowCategory.LEVY):
+            returned = demobilise(ctx.rules, host, gone)
+            set_stats(army, size=max(0, (stat(army, "size") or 0) - returned))
+        fled += gone
+    holding.facts["deserted"] = fled
+    if fled:
+        holding.steps.append(StepDraft(StepAction.FLEE, amount=fled, unit=FactUnit.PEOPLE))
 
 
 @OUTCOMES.on(GatheringKind.PERFORMANCE)

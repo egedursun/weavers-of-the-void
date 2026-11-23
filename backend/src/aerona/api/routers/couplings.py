@@ -1,7 +1,9 @@
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import APIRouter, Path
 from sqlalchemy import or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.couplings import (
@@ -11,6 +13,7 @@ from aerona.api.schemas.couplings import (
     FieldAgreementView,
     HappeningChoice,
     NoveltyView,
+    SealLinkChoice,
     SealView,
     SignOriginView,
     SinecureView,
@@ -20,6 +23,7 @@ from aerona.api.schemas.couplings import (
 )
 from aerona.api.views.common import node_refs
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.couplings import (
     CaptiveRestraintRow,
@@ -37,13 +41,18 @@ from aerona.db.tables.culture import RiteProfileRow
 from aerona.db.tables.discovery import ArtFormProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionRow
+from aerona.db.tables.living import LivingLineRow
 from aerona.db.tables.node import NodeRow
-from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.polity import OathRow, OfficeRow
+from aerona.db.tables.powers import PowerRow
 from aerona.db.tables.warfare import CaptiveRow, WarRow, WarSideRow
 from aerona.domain.enums.collective import AccountKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.polity import OathStatus
+from aerona.domain.enums.powers import PowerState
 from aerona.domain.enums.war import CaptiveStatus, WarStatus
 from aerona.engine.couplings.teachers import learners_of
+from aerona.engine.lore.tellings import node_names
 from aerona.engine.primitives.manual import manual_context
 
 router = APIRouter(tags=["couplings"])
@@ -51,6 +60,25 @@ NodeId = Annotated[int, Path(ge=1)]
 TEACHERS = (EntityType.SPIRIT, EntityType.BEAST)
 PLACES = (EntityType.PLACE, EntityType.RESOURCE, EntityType.REGION, EntityType.SETTLEMENT)
 HAPPENINGS_OFFERED = 40
+
+
+@dataclass(frozen=True)
+class SealChoices:
+    oaths: list[SealLinkChoice]
+    powers: list[SealLinkChoice]
+    lines: list[SealLinkChoice]
+
+
+async def seal_links(session: AsyncSession) -> SealChoices:
+    oaths = list(await session.scalars(select(OathRow).where(OathRow.status == OathStatus.SWORN).order_by(OathRow.id.desc())))
+    powers = list(await session.scalars(select(PowerRow).where(PowerRow.state == PowerState.ACTIVE).order_by(PowerRow.strength.desc(), PowerRow.id)))
+    lines = list(await session.scalars(select(LivingLineRow).where(LivingLineRow.escaped.is_(False)).order_by(LivingLineRow.id)))
+    names = await node_names(session, [row.swearer_entity_id for row in oaths] + [row.holder_node_id for row in powers])
+    return SealChoices(
+        oaths=[SealLinkChoice(id=row.id, label=f"{names.get(row.swearer_entity_id, 'Someone')}'s oath of {spoken(row.kind)}") for row in oaths],
+        powers=[SealLinkChoice(id=row.id, label=f"{names.get(row.holder_node_id, 'Someone')}'s power of {spoken(row.form)}") for row in powers],
+        lines=[SealLinkChoice(id=row.id, label=row.name) for row in lines],
+    )
 
 
 @router.get("/couplings/of/{node_id}", response_model=CouplingNodeView)
@@ -94,6 +122,7 @@ async def node_couplings(services: ServicesDep, node_id: NodeId) -> CouplingNode
             )
         )
         seals = list(await session.scalars(select(DeepSealRow).where(DeepSealRow.place_entity_id == node.id).order_by(DeepSealRow.id)))
+        links = await seal_links(session)
         sinecures = list(
             await session.scalars(select(OfficeRow).where(OfficeRow.polity_entity_id == node.id, OfficeRow.sinecure.is_(True)).order_by(OfficeRow.id))
         )
@@ -254,10 +283,16 @@ async def node_couplings(services: ServicesDep, node_id: NodeId) -> CouplingNode
                     sealer=refs.get(row.sealer_node_id) if row.sealer_node_id is not None else None,
                     epoch=row.epoch,
                     broken_epoch=row.broken_epoch,
+                    pact_oath_id=row.pact_oath_id,
+                    power_id=row.power_id,
+                    living_line_id=row.living_line_id,
                     locked=row.locked,
                 )
                 for row in seals
             ],
+            oath_choices=links.oaths,
+            power_choices=links.powers,
+            line_choices=links.lines,
             novelty=NoveltyView(
                 novelty=novelty.novelty,
                 adoption=novelty.adoption,

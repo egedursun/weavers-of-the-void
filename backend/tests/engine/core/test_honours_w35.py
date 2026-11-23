@@ -15,7 +15,7 @@ from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass, ItemDeed
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.honours import UnitHonourKind, VeteranGrant
@@ -103,7 +103,12 @@ async def test_a_realm_grants_its_veterans_pensions_after_a_war_and_its_veterans
     realm = await crown(session, world, town)
     session.add(
         CohortRow(
-            community_entity_id=town.id, age_band=AgeBand.ADULT, sex=Sex.MALE, social_class=SocialClass.WARRIOR, condition=CohortCondition.VETERAN, count=60
+            community_entity_id=town.id,
+            age_band=AgeBand.ADULT,
+            sex_kind=SexKind.BEGETTER,
+            social_class=SocialClass.WARRIOR,
+            condition=CohortCondition.VETERAN,
+            count=60,
         )
     )
     event = await entity(session, "The Long War", EntityType.EVENT, EventStats(), world_id=world.world.id)
@@ -154,7 +159,12 @@ async def test_veterans_are_granted_after_a_war_whose_sides_all_left_it_at_the_p
     realm = await crown(session, world, town)
     session.add(
         CohortRow(
-            community_entity_id=town.id, age_band=AgeBand.ADULT, sex=Sex.MALE, social_class=SocialClass.WARRIOR, condition=CohortCondition.VETERAN, count=40
+            community_entity_id=town.id,
+            age_band=AgeBand.ADULT,
+            sex_kind=SexKind.BEGETTER,
+            social_class=SocialClass.WARRIOR,
+            condition=CohortCondition.VETERAN,
+            count=40,
         )
     )
     event = await entity(session, "The Short War", EntityType.EVENT, EventStats(), world_id=world.world.id)

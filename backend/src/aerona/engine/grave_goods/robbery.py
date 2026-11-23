@@ -2,9 +2,11 @@ from dataclasses import dataclass
 
 from sqlalchemy import ColumnElement, and_, or_, select
 
+from aerona.catalog.peoples import FUNERALS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.cosmos import AppliedFixupRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.grave_goods import GraveGoodsRow
 from aerona.db.tables.justice import CrimeCaseRow
@@ -15,16 +17,17 @@ from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.grave_goods import GraveGuard
 from aerona.domain.enums.justice import CaseStage
-from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.structure import StructureKind
-from aerona.engine.body.customs import people_of
+from aerona.engine.body.customs import people_id_of, people_of
 from aerona.engine.collective.accounts import record as record_account
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import shift_points
 from aerona.engine.grave_goods.furnish import furnish_grave
 from aerona.engine.lore import items
+from aerona.engine.mind.hooks import committed
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.mortal.standing import shift_standing
@@ -66,8 +69,17 @@ async def steps_of(ctx: TickContext, row: GraveGoodsRow, place_id: int | None) -
 async def rob_chance(ctx: TickContext, row: GraveGoodsRow, place_id: int | None) -> float:
     table = ctx.rules.grave_goods
     worth = row.goods_value + ITEM_WORTH * len(row.items or [])
-    base = table.rob_chance_per_value_pct * worth / ITEM_WORTH
+    base = table.rob_chance_per_value_pct * worth / ITEM_WORTH * await preserved_draw(ctx, row)
     return min(PERCENT, base * (1 - table.guard_cut_pct / PERCENT) ** await steps_of(ctx, row, place_id))
+
+
+async def preserved_draw(ctx: TickContext, row: GraveGoodsRow) -> float:
+    dead = await ctx.session.get(EntityRow, row.dead_entity_id)
+    people = await people_id_of(ctx.session, dead)
+    culture = await ctx.session.get(PeopleCultureRow, people) if people is not None else None
+    if culture is None or not FUNERALS[culture.funeral_rite].preserves:
+        return 1.0
+    return 1 + ctx.rules.funerals.preserved_draw_pct / PERCENT
 
 
 async def robber_at(ctx: TickContext, row: GraveGoodsRow, place_id: int) -> EntityRow | None:
@@ -126,6 +138,7 @@ async def rob(ctx: TickContext, row: GraveGoodsRow, robber: EntityRow | None, ta
     row.goods_value, row.items, row.robbed_epoch, row.robber_node_id = 0, [], ctx.epoch, robber.id if robber is not None else None
     if robber is not None:
         await grieve(ctx, row, dead, robber)
+        await committed(ctx, robber.id, ActKind.TOMB_ROBBING, dead.id)
     roles = {IncidentRole.SUBJECT: dead.id, IncidentRole.ACTOR: row.robber_node_id, IncidentRole.PLACE: row.grave_entity_id, IncidentRole.INSTRUMENT: taken}
     await record(ctx, "dead.grave_robbed", roles=roles, facts={"value": worth, "items": len(taken), "guard": row.guard}, place=place.id)
     tally.robbed += 1

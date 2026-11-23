@@ -50,7 +50,7 @@ async def bind_species(call: SonCall, args: BindSpeciesInput) -> str:
     if call.son.current_world_id not in {first.world_id, second.world_id}:
         fail(SonResult.SPECIES_UNBOUND, why="you can bind only kinds of the world you stand on")
     if held(first.id) or held(second.id):
-        fail(SonResult.SPECIES_UNBOUND, why="a stronger hand holds them")
+        fail(SonResult.SPECIES_UNBOUND, why="they are held")
     paired = await call.session.scalar(
         select(SpeciesRelationRow.id).where(
             ((SpeciesRelationRow.first_species_id == first.id) & (SpeciesRelationRow.second_species_id == second.id))
@@ -86,7 +86,7 @@ async def sharpen_sense(call: SonCall, args: SharpenSenseInput) -> str:
         fail(SonResult.SENSE_UNSHARPENED, why="you can sharpen only the senses of the world you stand on")
     row = await call.session.get(SenseProfileRow, (holder.id, args.sense))
     if held(holder.id) or (row is not None and "acuity" in row.locked):
-        fail(SonResult.SENSE_UNSHARPENED, why="a stronger hand holds it")
+        fail(SonResult.SENSE_UNSHARPENED, why="it is held")
     if row is None:
         row = SenseProfileRow(holder_entity_id=holder.id, sense=args.sense, acuity=0)
         row.locked = []

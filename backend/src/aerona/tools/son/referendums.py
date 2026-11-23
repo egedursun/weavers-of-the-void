@@ -38,7 +38,7 @@ async def sway_vote(call: SonCall, args: SwayVoteInput) -> str:
         fail(SonResult.VOTE_REFUSED, why="there is no such vote still to be held")
     await ensure_in_reach(call, holder)
     if held(holder.id) or "yes_pct" in (row.locked or []):
-        fail(SonResult.VOTE_REFUSED, why="a stronger hand holds that vote")
+        fail(SonResult.VOTE_REFUSED, why="that vote is held")
     row.yes_pct = clamp_int(row.yes_pct + SWAY * SIDE_SIGN[args.side], 0, PERCENT)
     call.target(holder.id)
     await call.record("vote.swayed", roles={IncidentRole.SUBJECT: holder.id}, facts={"side": args.side, "yes": row.yes_pct})

@@ -25,6 +25,17 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.life_traits import OrderKindTrait
 from aerona.domain.enums.war import CaptiveStatus
+from aerona.engine.mortal.readings import mend_death_cause, mismatched_deaths
+from aerona.services.integrity.agent_d_links import (
+    clear_identity_target,
+    lost_identity_targets,
+    misfit_revivals,
+    refit_revival,
+    slot_tradition,
+    strike_unbacked_implant,
+    unbacked_implants,
+    unslotted_traditions,
+)
 from aerona.services.integrity.ages_links import free_keeper_seat, keepers_not_mortal
 from aerona.services.integrity.arsenal_links import (
     dismantle,
@@ -37,6 +48,7 @@ from aerona.services.integrity.arsenal_links import (
     widen_posture,
 )
 from aerona.services.integrity.city_links import mend_conurbation, odd_conurbations, stray_rules, widen_rule
+from aerona.services.integrity.cohort_sexes import resplit_cohort_sexes, stray_cohort_sexes
 from aerona.services.integrity.competition_links import (
     call_off_war,
     drop_outsiders,
@@ -126,10 +138,28 @@ from aerona.services.integrity.life_links import (
     venueless_speeches,
     void_lease,
 )
+from aerona.services.integrity.market_links import beastless_clubs, bind_right, loose_fixings, settle_fixing, unbeast_club, unbound_rights
 from aerona.services.integrity.monetary_links import align_issuer, bad_pegs, clear_peg, stray_issuers
 from aerona.services.integrity.money_links import clear_metal, clear_source, metal_paper, stray_sources
 from aerona.services.integrity.mood_links import mend_mood, odd_moods
-from aerona.services.integrity.nature_links import drop_aims, drop_protection, kindless_protections, landless_areas, lift_landless, stray_aims
+from aerona.services.integrity.nature_links import (
+    balance_will,
+    drop_aims,
+    drop_protection,
+    ground_outbreak,
+    kindless_protections,
+    landless_areas,
+    lift_landless,
+    refit_dwelling,
+    settle_strayed_wound,
+    stray_aims,
+    strayed_wounds,
+    strike_unsourced_products,
+    unbalanced_wills,
+    uncarried_outbreaks,
+    unfit_dwellings,
+    unsourced_products,
+)
 from aerona.services.integrity.occupation_links import (
     end_loose_measure,
     end_orphan,
@@ -143,6 +173,7 @@ from aerona.services.integrity.occupation_links import (
     strangers,
 )
 from aerona.services.integrity.order_links import bad_axes, clean_axes, doubled_orders, drop_order, fail_transition, orphan_transitions
+from aerona.services.integrity.package_links import aimless_charms, end_aimless_charm, formless_changes, mend_formless_change, sign_fortune, unsigned_fortunes
 from aerona.services.integrity.reckoning_links import align_measure, keep_recorded, mend_fall, reckonings_before_the_fall, stray_measures, unrecorded_acts
 from aerona.services.integrity.record_links import (
     absent_witnesses,
@@ -176,7 +207,18 @@ from aerona.services.integrity.referendum_links import aimless_votes, align_fran
 from aerona.services.integrity.restoration_links import end_living_fallen, link_restored, living_fallen, unlinked_restored
 from aerona.services.integrity.restoration_links import mend_end as mend_restoration_end
 from aerona.services.integrity.restoration_links import mismatched_ends as restoration_ends
+from aerona.services.integrity.season_shares import even_year, follow_forecast, mend_spell, strayed_forecasts, strayed_spells, uneven_years
 from aerona.services.integrity.securities_links import align_price, delist, issuerless, overheld, scale_holdings, stray_prices
+from aerona.services.integrity.w52_agent_b import (
+    clear_stake,
+    dead_promises,
+    drop_intoxicant,
+    end_promise,
+    name_partner,
+    partnerless,
+    unnamed_stakes,
+    unsourced_intoxicants,
+)
 from aerona.services.integrity.wave_links import stray_coasts, strike_stray_coast
 
 LOCKED = "locked"
@@ -473,6 +515,7 @@ async def part_gods(session: AsyncSession, syncretism_id: int) -> None:
 
 
 CHECKS: dict[str, tuple[Find, Fix]] = {
+    "cohort_sex_kinds": (stray_cohort_sexes, resplit_cohort_sexes),
     "living_captor": (dead_captors, release_captive),
     "living_range": (dead_ranges, empty_ranges),
     "order_target": (targetless_orders, lapse_order),
@@ -497,6 +540,9 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "birth_dated": (births_unknown, date_birth),
     "step_moment_order": (steps_out_of_order, follow_step),
     "time_shares": (uneven_budgets, even_budget),
+    "season_shares": (uneven_years, even_year),
+    "long_season_source": (strayed_spells, mend_spell),
+    "forecast_world": (strayed_forecasts, follow_forecast),
     "child_ages": (unordered_ages, order_ages),
     "upbringing_shares": (uneven_upbringing, even_upbringing),
     "norm_sexes": (sexless_norms, drop_sexless_norm),
@@ -516,6 +562,23 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "grave_goods_held": (loose_grave_goods, gather_grave_goods),
     "interpretation_reader": (unskilled_readers, unseat_reader),
     "feeling_spread_values": (odd_moods, mend_mood),
+    "plant_product_part": (unsourced_products, strike_unsourced_products),
+    "will_shares_whole": (unbalanced_wills, balance_will),
+    "dwelling_fits_body": (unfit_dwellings, refit_dwelling),
+    "identity_value_target": (lost_identity_targets, clear_identity_target),
+    "revival_way_goal": (misfit_revivals, refit_revival),
+    "implant_mark_augment": (unbacked_implants, strike_unbacked_implant),
+    "tradition_slot_fit": (unslotted_traditions, slot_tradition),
+    "outbreak_path_carrier": (uncarried_outbreaks, ground_outbreak),
+    "wound_part_in_plan": (strayed_wounds, settle_strayed_wound),
+    "betrothal_living": (dead_promises, end_promise),
+    "contest_stake_named": (unnamed_stakes, clear_stake),
+    "intoxicant_source": (unsourced_intoxicants, drop_intoxicant),
+    "symbiotic_partner": (partnerless, name_partner),
+    "death_cause_last_wound": (mismatched_deaths, mend_death_cause),
+    "charm_names_living_target": (aimless_charms, end_aimless_charm),
+    "transformation_target_valid": (formless_changes, mend_formless_change),
+    "fortune_has_sign": (unsigned_fortunes, sign_fortune),
     "kin_dynamic_scope": (unscoped_dynamics, scope_dynamic),
     "kin_favour_other": (self_ties, drop_self_favour),
     "kin_rivalry_pair": (lopsided_rivalries, order_rivalry),
@@ -523,6 +586,9 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "protected_area_region": (landless_areas, lift_landless),
     "species_protection_kind": (kindless_protections, drop_protection),
     "conservation_movement_cause": (stray_aims, drop_aims),
+    "right_sources": (unbound_rights, bind_right),
+    "club_sport_animals": (beastless_clubs, unbeast_club),
+    "fixing_names_match": (loose_fixings, settle_fixing),
     "land_use_rule_district": (stray_rules, widen_rule),
     "conurbation_members": (odd_conurbations, mend_conurbation),
     "interworld_campaign_route": (astray_campaigns, withdraw_campaign),

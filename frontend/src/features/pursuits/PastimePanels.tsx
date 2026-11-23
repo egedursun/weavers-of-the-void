@@ -32,6 +32,7 @@ import { type PursuitsNodeView, usePursuitsAction } from './api'
 import { CLUB_KINDS, FANDOM_LINES, MOVEMENT_ICON } from './labels'
 import {
   FACTION_TYPES,
+  FIXER_TYPES,
   FORM_TYPES,
   LINE_TYPES,
   MANY,
@@ -367,6 +368,18 @@ function ClubCard({ row, blocked }: { row: Club; blocked: string | null }) {
           kind: 'node',
           types: REALM_TYPES,
         },
+        {
+          key: 'fixed_by_entity_id',
+          label: 'Its next contest fixed by',
+          kind: 'node',
+          types: FIXER_TYPES,
+        },
+        {
+          key: 'fixed_winner_entity_id',
+          label: 'Club the fixing makes win',
+          kind: 'node',
+          types: FACTION_TYPES,
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -404,6 +417,14 @@ function ClubCard({ row, blocked }: { row: Club; blocked: string | null }) {
           [
             'Bought by',
             <Ref key='bought' node={row.bought_by} empty='no ruler' />,
+          ],
+          [
+            'Next contest fixed by',
+            <Ref key='fixer' node={row.fixed_by} empty='no one' />,
+          ],
+          [
+            'Fixed to win',
+            <Ref key='fixed' node={row.fixed_winner} empty='no club' />,
           ],
         ]}
       />
@@ -713,10 +734,10 @@ function MatchCard({ row, blocked }: { row: Match; blocked: string | null }) {
       icon={Swords}
       tone={row.riot ? 'danger' : 'info'}
       title={`${row.home.name} against ${row.away.name}`}
-      caption={`Epoch ${row.epoch} · ${row.stake} wagered${row.riot ? ' · a riot followed' : ''}`}
+      caption={`Epoch ${row.epoch} · ${row.stake} wagered${row.riot ? ' · a riot followed' : ''}${row.fixing_exposed ? ' · found to be fixed' : ''}`}
       removeLabel='Strike the match'
       editTitle='Set the match'
-      note='A match between two clubs: who won, how much the towns wagered and whether the loser’s fans rioted.'
+      note='A match between two clubs: who won, how much the towns wagered, whether the loser’s fans rioted, and whether the contest was fixed and found out, voiding the wagers.'
       fields={[
         {
           key: 'home_entity_id',
@@ -738,16 +759,37 @@ function MatchCard({ row, blocked }: { row: Match; blocked: string | null }) {
         },
         { key: 'stake', label: 'Wagered', kind: 'number', min: 0, max: MANY },
         { key: 'riot', label: 'A riot followed', kind: 'pick', table: YES_NO },
+        {
+          key: 'fixed_by_entity_id',
+          label: 'Fixed by',
+          kind: 'node',
+          types: FIXER_TYPES,
+        },
+        {
+          key: 'fixing_exposed',
+          label: 'The fixing came out',
+          kind: 'pick',
+          table: YES_NO,
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
       onEdit={action.onEdit}
       onRemove={action.onRemove}
       extra={
-        row.riot ? (
-          <Badge size='sm' variant='destructive'>
-            Riot
-          </Badge>
+        row.riot || row.fixing_exposed ? (
+          <>
+            {row.riot && (
+              <Badge size='sm' variant='destructive'>
+                Riot
+              </Badge>
+            )}
+            {row.fixing_exposed && (
+              <Badge size='sm' variant='warning'>
+                Fixed
+              </Badge>
+            )}
+          </>
         ) : undefined
       }
     >
@@ -755,6 +797,7 @@ function MatchCard({ row, blocked }: { row: Match; blocked: string | null }) {
         items={[
           ['League', <Ref key='league' node={row.league} empty='a friendly' />],
           ['Winner', <Ref key='winner' node={row.winner} empty='none' />],
+          ['Fixed by', <Ref key='fixer' node={row.fixed_by} empty='no one' />],
         ]}
       />
     </Held>

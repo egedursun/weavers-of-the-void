@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.disease_agents import AGENT_OF_VECTOR, AGENTS
+from aerona.catalog.disease_agents import AGENT_OF_VECTOR, AGENTS, CURES, MEDICINE_ORDER, OVERUSED
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.disease import DiseaseProfileRow, EndemicDiseaseRow, OutbreakRow
@@ -28,9 +28,7 @@ from aerona.engine.recording.terms import explaining_alone, term
 from aerona.rules.registry import Rules
 
 COMMUNITIES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
-HERB_LEVEL = 2
-MEDICINE_ORDER = (CureClass.ANTIMICROBIAL, CureClass.ANTIPARASITIC, CureClass.ANTITOXIN, CureClass.NUTRITIONAL, CureClass.HERBAL, CureClass.REST_AND_CARE)
-OVERUSED = frozenset({CureClass.ANTIMICROBIAL, CureClass.ANTIPARASITIC, CureClass.ANTITOXIN})
+MEDICINE_MAX = 10
 
 
 @dataclass
@@ -59,7 +57,7 @@ async def agent_of(ctx: TickContext, profile: DiseaseProfileRow, tally: AgentTal
     row = await ctx.session.get(DiseaseAgentRow, profile.disease_entity_id)
     if row is not None:
         return row
-    agent = DiseaseAgent.MADE if profile.designed_line_id is not None else AGENT_OF_VECTOR[profile.vector]
+    agent = DiseaseAgent.MADE if profile.designed_line_id is not None else AGENT_OF_VECTOR[profile.primary_route]
     spec = AGENTS[agent]
     row = DiseaseAgentRow(
         disease_entity_id=profile.disease_entity_id,
@@ -91,10 +89,19 @@ def cure_tried(rules: Rules, community: EntityRow, medicine: int, row: DiseaseAg
         return CureClass.RITE
     if row.identified and medicine >= rules.disease.identify_level:
         known = AGENTS[row.agent].cures
-        return next((cure for cure in MEDICINE_ORDER if cure in known), CureClass.REST_AND_CARE)
+        return next((cure for cure in MEDICINE_ORDER if cure in known and within_reach(rules, cure, medicine)), CureClass.REST_AND_CARE)
     if medicine >= rules.disease.identify_level:
         return CureClass.ANTIMICROBIAL
-    return CureClass.HERBAL if medicine >= HERB_LEVEL else CureClass.REST_AND_CARE
+    return CureClass.HERBAL if within_reach(rules, CureClass.HERBAL, medicine) else CureClass.REST_AND_CARE
+
+
+def within_reach(rules: Rules, cure: CureClass, medicine: int) -> bool:
+    level = CURES[cure].level
+    return level is not None and medicine >= level(rules)
+
+
+def unclean(rules: Rules, medicine: int) -> float:
+    return max(0.0, 1 - medicine / MEDICINE_MAX) * rules.cures.surgery_death_pct / PERCENT
 
 
 async def largest_in(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> EntityRow | None:
@@ -116,8 +123,9 @@ async def overuse(ctx: TickContext, profile: DiseaseProfileRow, row: DiseaseAgen
         return
     row.overuse = 0
     with explaining_alone():
-        term("disease.overuse", table.resistance_per_overuse, source_node_id=profile.disease_entity_id)
-        profile.resistance = clamp_int(profile.resistance + table.resistance_per_overuse, 0, PERCENT)
+        gain = CURES[cure].resistance(ctx.rules)
+        term("disease.overuse", gain, source_node_id=profile.disease_entity_id)
+        profile.resistance = clamp_int(profile.resistance + gain, 0, PERCENT)
     tally.resistant += 1
     await record(
         ctx, "disease.resistance_rose", roles={IncidentRole.SUBJECT: profile.disease_entity_id}, facts={"cure": cure, "resistance": profile.resistance}
@@ -142,13 +150,22 @@ async def treat(ctx: TickContext, outbreak: OutbreakRow, pair: tuple[DiseaseProf
         )
     cure = cure_tried(ctx.rules, community, medicine, row)
     roles = {IncidentRole.SUBJECT: profile.disease_entity_id, IncidentRole.ACTOR: community.id}
+    if cure is CureClass.SURGERY and ctx.rng(f"disease.surgery.{outbreak.id}.{ctx.epoch}").chance(round(unclean(ctx.rules, medicine) * PERCENT)):
+        tally.wrong += 1
+        infection = ctx.rules.cures.surgery_infection_pct
+        if "severity" not in outbreak.locked:
+            with explaining_alone():
+                term("disease.surgery_failed", infection, source_node_id=community.id)
+                outbreak.severity = clamp_int(outbreak.severity + infection, 0, PERCENT)
+        await record(ctx, "disease.surgery_failed", roles=roles, facts={"severity": outbreak.severity}, place=outbreak.region_entity_id)
+        return
     if cure in AGENTS[row.agent].cures:
         tally.right += 1
         if "severity" not in outbreak.locked:
             with explaining_alone():
                 term("disease.right_cure", -table.right_cure_cut, source_node_id=community.id)
                 outbreak.severity = clamp_int(outbreak.severity - table.right_cure_cut, 0, PERCENT)
-        await record(ctx, "disease.right_cure", roles=roles, facts={"cure": cure, "severity": outbreak.severity}, place=outbreak.region_entity_id)
+        await record(ctx, CURES[cure].worked, roles=roles, facts={"cure": cure, "severity": outbreak.severity}, place=outbreak.region_entity_id)
     else:
         tally.wrong += 1
         with explaining_alone():

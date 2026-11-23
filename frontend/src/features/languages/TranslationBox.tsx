@@ -4,14 +4,14 @@ import { Languages } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import { type components } from '@/api/generated/schema'
+import { type components, partOfSpeechValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { KeyValueList, Paged, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { NO_LLM_REASON, READ_ONLY_REASON } from '@/features/entity/actions/gate'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { loreKeys } from '@/features/entity/api/keys'
 import { useWorldState } from '@/features/entity/api/queries'
 
@@ -167,7 +167,7 @@ export function TranslationBox({
                       <Text as='strong' weight='semibold'>
                         {word.word}
                       </Text>
-                      {` · ${word.meaning} · ${humanize(word.kind)} · ${word.origin}`}
+                      {` · ${word.meaning} · ${wordOf(partOfSpeechValues, word.kind)} · ${word.origin}`}
                     </Text>
                   )}
                 </Paged>

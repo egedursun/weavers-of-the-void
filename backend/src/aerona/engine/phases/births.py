@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.reproduction import BEARING_KINDS, kind_of_sex
 from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
@@ -11,6 +12,7 @@ from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
@@ -19,15 +21,15 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import HouseProfileRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.affliction import PackageKind, Transmission
+from aerona.domain.enums.body import BodyPart, ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
-from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitEffect, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage
 from aerona.domain.enums.records import StepAction, StepOutcome
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.storyteller import RecoveryKind
 from aerona.domain.enums.transform import TransformKind
 from aerona.domain.enums.unions import UnionForm, UnionPurpose
@@ -36,9 +38,10 @@ from aerona.domain.models.entity_stats import MortalStats, PeopleStats, Settleme
 from aerona.engine.agrarian.book import gap_site
 from aerona.engine.body.afflictions import afflict, inherit
 from aerona.engine.body.cohorts import healer_demand
+from aerona.engine.body.conditions import condition_of
 from aerona.engine.body.customs import culture_of
 from aerona.engine.body.healing import Care, HealingWorld, tier_index
-from aerona.engine.body.hits import weighted
+from aerona.engine.body.hits import Harm, weighted
 from aerona.engine.context import TickContext
 from aerona.engine.customs.time_budgets import rested_fertility
 from aerona.engine.cycles.breeding import assign_caste, bearer_among, born_sex
@@ -48,13 +51,15 @@ from aerona.engine.demography.urban import founding_factor
 from aerona.engine.eras.effects import MODERN_FROM, era_at, era_order
 from aerona.engine.fertility_means.factor import user_factor
 from aerona.engine.folkways.fed import fed_fertility
-from aerona.engine.genetics.life import express, fertility_factor, found_genome, raise_child, upbringing_pct
+from aerona.engine.genetics.genome import genome_of
+from aerona.engine.genetics.life import express, fertility_factor, found_genome, raise_child, twinning_chance, upbringing_pct
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.intimacy.course import birth_course
 from aerona.engine.intrigue.sources import hidden_birth
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.ruler_roles import ruler_role
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import effect_of, pressures_of, scaled_by
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.needs import sustenance_need
@@ -952,6 +957,8 @@ async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, k
             chance *= table.youth_rate_pct / PERCENT
         elif not adult(profile.life_stage):
             return 0.0
+        if await condition_of(ctx, parent.id, ConditionKind.INFERTILITY) is not None:
+            return 0.0
         chance *= profile.fertility / PERCENT
         chance *= max(0.0, 1 - profile.stress / table.stress_divisor)
         chance *= await sustenance_need(ctx.session, parent.id)
@@ -971,7 +978,7 @@ async def concubinage_allowed(ctx: TickContext, mortal: EntityRow) -> bool:
 
 def bearer_of(first: EntityRow, second: EntityRow) -> EntityRow:
     for mortal in (first, second):
-        if isinstance(mortal.stats, MortalStats) and mortal.stats.sex == Sex.FEMALE.value:
+        if isinstance(mortal.stats, MortalStats) and kind_of_sex(mortal.stats.sex) in BEARING_KINDS:
             return mortal
     return first
 
@@ -1022,8 +1029,9 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
         await record(ctx, "births.stillborn", roles=roles, facts=facts, steps=steps, place=bearer.location_id)
         ctx.count("stillborn")
     else:
-        count = 2 if table.twin_cap > 1 and rng.chance(table.twins_pct) else 1
-        while 1 < count < table.twin_cap and rng.chance(table.twins_pct):
+        twins_pct = twinning_chance(ctx.rules, table.twins_pct, [await genome_of(ctx.session, first.id), await genome_of(ctx.session, second.id)])
+        count = 2 if table.twin_cap > 1 and rng.chance(twins_pct) else 1
+        while 1 < count < table.twin_cap and rng.chance(twins_pct):
             count += 1
         for twin in range(count):
             born.append(await bear_child(ctx, first, second, namer, twin=twin, bearer=bearer, attendant=attendant, birth=facts))
@@ -1033,6 +1041,7 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
             ctx.count("twins")
     if born and not lost:
         await birth_course(ctx, bearer, born, attendant)
+        await birth_harm(ctx, bearer)
     if lost:
         other = second if bearer is first else first
         for child in born:
@@ -1057,6 +1066,16 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
         await die(ctx, bearer, cause="died in childbirth", manner=DeathCause.CHILDBIRTH)
         ctx.count("childbirth_deaths")
     return born
+
+
+async def birth_harm(ctx: TickContext, bearer: EntityRow) -> None:
+    table = ctx.rules.harm
+    level = await ctx.session.get(HolderLevelRow, (bearer.location_id or 0, KnowledgeBranch.MEDICINE)) if bearer.location_id is not None else None
+    levels = ctx.rules.morale.medicine_levels
+    medicine = min(levels, level.level if level is not None else 0)
+    risk = table.childbirth_risk_pct * (1 - table.childbirth_medicine_cut_pct / PERCENT * medicine / levels)
+    if ctx.rng(seed_of("birth_harm", bearer.id, ctx.epoch)).chance(risk):
+        await apply_hits(ctx, bearer, Harm(table.childbirth_hp, HarmCause.CHILDBIRTH, "died in childbirth", part=BodyPart.GROIN), lethal=False)
 
 
 async def unwed_heads(ctx: TickContext) -> list[int]:
@@ -1145,6 +1164,7 @@ async def wed_within_the_community(ctx: TickContext) -> int:
     "table.charms",
     "table.chemical_works",
     "table.child_standing",
+    "table.conditions",
     "table.culture_values",
     "table.dwellings",
     "table.endemic_diseases",

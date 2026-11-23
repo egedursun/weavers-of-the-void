@@ -12,6 +12,7 @@ import {
   Sparkles,
   Wand2,
 } from 'lucide-react'
+import { domainValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState, KpiTile, PagedList } from '@/components/domain'
@@ -25,6 +26,7 @@ import {
   RecordEditor,
   RecordRow,
 } from '@/features/cosmography/parts'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { TextField } from '@/features/entity/economy/parts'
 import { NumberField } from '@/features/entity/wilds/parts'
 import {
@@ -405,7 +407,7 @@ function ImageCard({
             <Chip icon={stance.icon}>{stance.label}</Chip>
             {image.believed_domain && (
               <Chip icon={DOMAIN_GLYPH[image.believed_domain]}>
-                {`Believed a god of ${words(image.believed_domain).toLowerCase()}`}
+                {`Believed a god of ${wordOf(domainValues, image.believed_domain).toLowerCase()}`}
               </Chip>
             )}
           </div>

@@ -25,7 +25,7 @@ from aerona.tools.framework.validation import fail
 async def take_care(call: MortalCall, _args: ToolInput) -> str:
     table = call.rules.fortune
     if held(call.me.id):
-        fail(MortalResult.CARE_DECLINED, why="a stronger hand holds you")
+        fail(MortalResult.CARE_DECLINED, why="your own course is held")
     if await points_of(call.session, call.me) < table.care_cost:
         fail(MortalResult.CARE_DECLINED, why="you cannot spare what care would cost")
     await shift_points(call.session, call.me, -table.care_cost)

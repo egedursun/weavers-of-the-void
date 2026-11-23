@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Gem, Pickaxe } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { entityTypeValues } from '@/api/generated/schema'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -13,10 +14,10 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { FormRow, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { CosmicActionButton } from './CosmicActionButton'
 import { type TravelResource } from './api'
 import { type CosmosIndex } from './model/cosmosModel'
-import { humanize } from './model/labels'
 import { useCosmicAction } from './useCosmicAction'
 
 const NAME_MAX = 60
@@ -185,7 +186,7 @@ function DepositForm({
             <SelectContent>
               {places.map((item) => (
                 <SelectItem key={item.id} value={String(item.id)}>
-                  {`${item.name} · ${humanize(item.entity_type)}`}
+                  {`${item.name} · ${wordOf(entityTypeValues, item.entity_type)}`}
                 </SelectItem>
               ))}
             </SelectContent>

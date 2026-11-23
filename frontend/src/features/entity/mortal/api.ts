@@ -16,7 +16,7 @@ export type PunishmentKind = components['schemas']['PunishmentKind']
 export type UnionForm = components['schemas']['UnionForm']
 export type UnionPurpose = components['schemas']['UnionPurpose']
 export type MarriageEnd = components['schemas']['MarriageEnd']
-export type MortalSex = components['schemas']['Sex']
+export type MortalSex = components['schemas']['SexKind']
 
 export function profileKey(mortalId: number) {
   return [...loreKeys.entity(mortalId), 'mortal-profile'] as const

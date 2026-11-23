@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.node import NodeBirthRow
 from aerona.db.tables.sacred import FORTUNE_MAX, FORTUNE_MIN, BirthSignRow, DivinationSystemRow
@@ -15,6 +16,7 @@ from aerona.domain.enums.sacred import DivinationKind, SignInfluence
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.omens import BRIGHT, influence_share, returns_now
+from aerona.engine.environment.season_shape import pick_season
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -98,9 +100,9 @@ async def birth_season(ctx: TickContext, mortal: EntityRow) -> int:
     born = await ctx.session.get(NodeBirthRow, mortal.id)
     if born is not None and born.season is not None:
         return born.season
-    world = await ctx.session.get(WorldRow, mortal.world_id)
-    count = world.season_count if world is not None and world.season_count else 1
-    return ctx.rng(f"sign.season.{mortal.id}").below(count)
+    seasons = list(await ctx.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == mortal.world_id).order_by(WorldSeasonRow.position)))
+    picked = pick_season(seasons, ctx.rng(f"sign.season.{mortal.id}"))
+    return picked.position if picked is not None else 0
 
 
 async def sign_birth(ctx: TickContext, mortal: EntityRow, tally: SignTally) -> BirthSignRow:

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.climes_lines import mortal_climes_lines
 from aerona.agents.context.scope import load_scope
 from aerona.cartography.biomes import Biome
+from aerona.catalog.wind_belts import BELTS, CURRENTS
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.climes import ClimateOscillationRow, CosmopolitanCultureRow, CosmopolitanMemberRow, LaunchWindowRow, MonsoonSeasonRow, RegionWindRow
 from aerona.db.tables.culture import SpeakerCohortRow
@@ -77,7 +78,7 @@ async def test_trade_winds_cast_a_rain_shadow_raise_cold_water_and_carry_foul_ai
     mountain = await session.get(RegionWindRow, peak)
     assert mountain is not None and mountain.windward and mountain.shadow == 0
     coast = await session.get(RegionWindRow, first)
-    assert coast is not None and coast.upwelling and coast.monsoon == rules.monsoons.strength and grounds[0].current is OceanCurrent.COLD
+    assert coast is not None and coast.upwelling and coast.monsoon == rules.monsoons.strength and grounds[0].current is OceanCurrent.UPWELLING
     far_coast = await session.get(RegionWindRow, far)
     assert far_coast is not None and not far_coast.upwelling and grounds[3].current is OceanCurrent.WARM
     downwind = await session.get(RegionPollutionRow, lee)
@@ -111,9 +112,14 @@ async def test_a_failed_monsoon_is_a_hungry_year_and_endangers_the_sea_roads_of_
     assert stat(port, "prosperity") == 50 - rules.monsoons.famine_prosperity and stat(inland, "prosperity") == 50
     hunger = await session.scalar(select(NotableYearRow).where(NotableYearRow.kind == NotableYearKind.HUNGER, NotableYearRow.world_id == world.world.id))
     assert hunger is not None
-    assert await sea_navigation(session, rules, (port.id, inland.id), 3) == 1 + rules.monsoons.sea_danger_pct / 100
+    ways = max(
+        1 - BELTS[CirculationBand.TRADE].sailing_pct(rules) / 100,
+        1 - CURRENTS[OceanCurrent.UPWELLING].sailing_pct(rules) / 100,
+        1 - CURRENTS[OceanCurrent.NONE].sailing_pct(rules) / 100,
+    )
+    assert await sea_navigation(session, rules, (port.id, inland.id), 3) == (1 + rules.monsoons.sea_danger_pct / 100) * ways
     season.failed, season.strength = False, 160
-    assert await sea_navigation(session, rules, (port.id, inland.id), 3) == 1 - rules.monsoons.sea_danger_pct / 100
+    assert await sea_navigation(session, rules, (port.id, inland.id), 3) == (1 - rules.monsoons.sea_danger_pct / 100) * ways
 
 
 async def test_a_climate_swing_turns_its_phase_and_shifts_the_rains_of_the_warm_coasts(session: AsyncSession, world: CoreWorld) -> None:

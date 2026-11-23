@@ -189,7 +189,7 @@ async def test_a_priced_work_is_forged_and_a_keen_eyed_collector_exposes_it(sess
     piece = await work(session, world, "The Golden Field", master, town, quality=90)
     session.add(ArtPriceRow(artwork_entity_id=piece.id, price=500, locked=[]))
     critic = await mortal(session, "Orrin", world, town.id)
-    session.add(CollectorRow(holder_entity_id=critic.id, connoisseurship=100, locked=[]))
+    session.add(CollectorRow(holder_entity_id=critic.id, role=ArtMarketRole.CONNOISSEUR, connoisseurship=100, locked=[]))
     await session.flush()
     ctx = await at(session, 3, forgery={"forge_chance": 100, "skill_floor": 50, "price_floor": 100, "expose_chance": 100})
     tally = ForgeryTally()

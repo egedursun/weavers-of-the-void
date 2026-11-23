@@ -59,6 +59,22 @@ CLIMATES: Mapping[ClimateEra, ClimateSpec] = total(
                 lambda rules: rules.climate_effects.temperate_weight,
             ),
             ClimateSpec(
+                ClimateEra.WARMING,
+                "Warming age",
+                "Warmth rises step by step between two ages; frozen ground thaws.",
+                lambda rules: rules.climate_effects.warming_temperature,
+                lambda rules: rules.climate_effects.warming_rain,
+                lambda rules: rules.climate_effects.warming_weight,
+            ),
+            ClimateSpec(
+                ClimateEra.COOLING,
+                "Cooling age",
+                "Warmth falls step by step between two ages; ground freezes deeper.",
+                lambda rules: rules.climate_effects.cooling_temperature,
+                lambda rules: rules.climate_effects.cooling_rain,
+                lambda rules: rules.climate_effects.cooling_weight,
+            ),
+            ClimateSpec(
                 ClimateEra.DROUGHT,
                 "Drought century",
                 "Less rain and more heat: rivers shrink and the dry inland suffers.",

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.beast_products import BEAST_PRODUCTS, BY_PRODUCT_NAME
 from aerona.catalog.diets import GRAZERS, HUNTERS
 from aerona.catalog.domestication import HOUSED_STAGES, SOCIALITIES
 from aerona.catalog.senses import TRACKING
@@ -17,10 +18,13 @@ from aerona.db.tables.ecology import HerdRow, SpeciesHostRow, SpeciesProductRow,
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.gardens import GardenRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.records import IncidentFactRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.divine import DomainHook
-from aerona.domain.enums.ecology import SIZE_ORDER, Biochemistry, HerdTraining, RangeTrend, Sociality
+from aerona.domain.enums.ecology import SIZE_ORDER, Biochemistry, HerdTraining, RangeTrend, Sociality, YieldProduct
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.environment import TemperatureBand
@@ -28,6 +32,7 @@ from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.agrarian.book import reserve_factor, reserve_marks
 from aerona.engine.body.variants import ORDINARY, BiologyView, biology_views
@@ -53,6 +58,7 @@ from aerona.engine.primitives.physics import flight_capacity_pct
 from aerona.engine.primitives.queries import active_bonds, canon
 from aerona.engine.primitives.stats import stat
 from aerona.engine.protected_nature.book import hunting_marks, spared_species
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 T = CreatureTrait
@@ -140,7 +146,7 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
     wilds.refuges = await refuges(ctx.session, {town: atlas.top_region(town) for town in towns})
     wilds.refuge_floor = ctx.rules.gardens.refuge_floor
     for region, communities in wilds.hunters.items():
-        keen = [await sense_score(ctx.session, community.id, TRACKING) for community in communities]
+        keen = [await sense_score(ctx.session, ctx.rules, community.id, TRACKING) for community in communities]
         wilds.tracking[region] = 1 + sum(keen) / len(keen) * ctx.rules.senses.tracking_pct / PERCENT if keen else 1.0
     await sacred_and_sick(ctx, wilds)
     return wilds
@@ -163,12 +169,12 @@ async def sacred_and_sick(ctx: TickContext, wilds: Wilds) -> None:
     atlas = wilds.atlas
     await holy_to_gods(ctx, wilds)
     for church in (await FaithBook.load(ctx.session)).churches.values():
-        held = church.tenets.get(TenetKind.SACRED_SPECIES)
-        if held is not None and held.target is not None and held.target.isdigit():
+        tenet = church.tenets.get(TenetKind.SACRED_SPECIES)
+        if tenet is not None and tenet.target is not None and tenet.target.isdigit():
             for member in church.members:
                 region = atlas.top_region(member.id)
                 if region is not None:
-                    wilds.sacred[int(held.target)].add(region)
+                    wilds.sacred[int(tenet.target)].add(region)
     totems = await ctx.session.execute(
         select(BondRow.source_node_id, TraditionProfileRow.origin_entity_id)
         .join(TraditionProfileRow, TraditionProfileRow.tradition_entity_id == BondRow.target_node_id)
@@ -439,10 +445,10 @@ def size_weights(atlas: RegionAtlas, regions: dict[int, EntityRow]) -> dict[int,
     sizes: dict[int, int] = {}
     by_world: dict[int | None, list[int]] = defaultdict(list)
     for region_id, region in regions.items():
-        record = atlas.record(region_id)
-        if record is not None and record.size > 0 and not atlas.is_water(region_id):
-            sizes[region_id] = record.size
-            by_world[region.world_id].append(record.size)
+        found = atlas.record(region_id)
+        if found is not None and found.size > 0 and not atlas.is_water(region_id):
+            sizes[region_id] = found.size
+            by_world[region.world_id].append(found.size)
     means = {world: sum(values) / len(values) for world, values in by_world.items() if values}
     return {region_id: size / means[regions[region_id].world_id] for region_id, size in sizes.items()}
 
@@ -570,6 +576,14 @@ async def migrate(ctx: TickContext, wilds: Wilds, species: list[EntityRow]) -> i
     return moved
 
 
+def beast_worth(rules: Rules, product: str) -> float:
+    kind = BY_PRODUCT_NAME.get(product)
+    if kind is None:
+        return 1.0
+    spec = BEAST_PRODUCTS[kind]
+    return spec.worth(rules) / PERCENT * spec.share(rules) / PERCENT
+
+
 async def harvest_hunt(ctx: TickContext, wilds: Wilds, species_id: int, region: int, hunted: float) -> int:
     if hunted <= 0 or not wilds.hunters[region]:
         return 0
@@ -580,13 +594,47 @@ async def harvest_hunt(ctx: TickContext, wilds: Wilds, species_id: int, region: 
     for community in wilds.hunters[region]:
         luck = await ctx.hook_factor(community.id, DomainHook.HUNT_YIELD)
         luck *= await folk_factor(ctx.session, ctx.rules, community, FolkDomain.ANIMALS)
+        nesting = await nesting_gain(ctx, species_id)
         for item in products:
-            amount = round_half_up(share * item.rate * wilds.hunt_bonus.get(community.id, 1.0) * luck)
+            amount = round_half_up(share * item.rate * wilds.hunt_bonus.get(community.id, 1.0) * luck * beast_worth(ctx.rules, item.product) * nesting)
             if amount > 0 and item.commodity is not None:
                 taken += await ledger.add(
                     community.id, item.commodity, amount, GoodsFlow.EXTRACTION, material=item.material, world_material_id=item.world_material_id
                 )
+                await first_beast_trade(ctx, community, BY_PRODUCT_NAME.get(item.product))
+        if nesting > 1 and taken > 0:
+            await record(
+                ctx, "life.colony_harvested", roles={IncidentRole.SUBJECT: species_id, IncidentRole.PLACE: community.id}, facts={"taken": taken}, place=region
+            )
     return taken
+
+
+async def nesting_gain(ctx: TickContext, species_id: int) -> float:
+    profile = await ctx.session.get(SpeciesProfileRow, species_id)
+    colonial = profile is not None and profile.sociality is Sociality.COLONY
+    return 1 + ctx.rules.species_forms.colony_harvest_pct / PERCENT if colonial else 1.0
+
+
+BEAST_FIRST_TRADED = "trade.beast_product_first_traded"
+
+
+async def first_beast_trade(ctx: TickContext, community: EntityRow, product: YieldProduct | None) -> None:
+    if product is None or held(community.id):
+        return
+    known = await ctx.session.scalar(
+        select(IncidentFactRow.id)
+        .join(IncidentRow, IncidentRow.id == IncidentFactRow.incident_id)
+        .join(IncidentParticipantRow, IncidentParticipantRow.incident_id == IncidentFactRow.incident_id)
+        .where(
+            IncidentRow.kind == BEAST_FIRST_TRADED,
+            IncidentParticipantRow.node_id == community.id,
+            IncidentFactRow.key == "product",
+            IncidentFactRow.enum_value == product.value,
+        )
+        .limit(1)
+    )
+    if known is None:
+        await record(ctx, BEAST_FIRST_TRADED, roles={IncidentRole.SUBJECT: community.id}, facts={"product": product})
 
 
 TERRAIN_WORDS = {

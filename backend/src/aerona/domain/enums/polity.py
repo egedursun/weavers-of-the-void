@@ -105,12 +105,12 @@ class SuccessionRule(StrEnum):
     ULTIMOGENITURE = "ultimogeniture"
 
 
-class GenderRule(StrEnum):
+class SexRule(StrEnum):
     ANY = "any"
-    MALE_PREFERENCE = "male_preference"
-    MALE_ONLY = "male_only"
-    FEMALE_PREFERENCE = "female_preference"
-    FEMALE_ONLY = "female_only"
+    BEGETTER_PREFERENCE = "begetter_preference"
+    BEGETTERS_ONLY = "begetters_only"
+    BEARER_PREFERENCE = "bearer_preference"
+    BEARERS_ONLY = "bearers_only"
 
 
 class LawArea(StrEnum):

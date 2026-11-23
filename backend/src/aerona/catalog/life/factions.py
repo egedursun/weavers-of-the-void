@@ -1,7 +1,7 @@
 from types import MappingProxyType
 
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.faction import FactionActionKind, FactionGoalKind, FactionKind, MovementCause
+from aerona.domain.enums.faction import FactionActionKind, FactionGoalKind, FactionKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 
@@ -99,25 +99,6 @@ CLASS_OF_KIND = MappingProxyType(
 
 GUILDS = (FactionKind.CRAFT_GUILD, FactionKind.MERCHANT_GUILD)
 
-
-GOALS: dict[MovementCause, FactionGoalKind] = {
-    MovementCause.ABOLITION: FactionGoalKind.ABOLISH_LAW,
-    MovementCause.INDEPENDENCE: FactionGoalKind.INDEPENDENCE,
-    MovementCause.REVIVAL: FactionGoalKind.CONVERT_REALM,
-    MovementCause.LAND_REFORM: FactionGoalKind.ABOLISH_LAW,
-    MovementCause.FRANCHISE: FactionGoalKind.ENACT_LAW,
-    MovementCause.PEACE: FactionGoalKind.PEACE_WITH,
-    MovementCause.CONSERVATION: FactionGoalKind.ENACT_LAW,
-}
-
-
-LAW_TARGETS: dict[MovementCause, LawKind] = {
-    MovementCause.ABOLITION: LawKind.SLAVERY,
-    MovementCause.LAND_REFORM: LawKind.SERFDOM,
-}
-
-
-ENACTED = {MovementCause.FRANCHISE: LawKind.FRANCHISE, MovementCause.CONSERVATION: LawKind.ENVIRONMENT_LAW}
 
 GOAL_TARGET_FACTION_GOAL_KINDS = frozenset({FactionGoalKind.LOWER_TAXES, FactionGoalKind.PROTECT_CRAFT})
 REALM_GOAL_FACTION_GOAL_KINDS = frozenset({FactionGoalKind.WAR_ON, FactionGoalKind.PEACE_WITH})

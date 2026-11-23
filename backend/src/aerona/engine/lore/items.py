@@ -23,6 +23,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, OfficeRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind, BondState
@@ -748,7 +749,7 @@ async def relic_year(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
         son = await ctx.session.get(SonRow, patron) if patron is not None else None
         for condition in list(sick):
             bearer = await ctx.session.get(EntityRow, condition.bearer_node_id)
-            if bearer is None:
+            if bearer is None or frozen(bearer.id):
                 continue
             potency = await ctx.hook_factor(cult.id, DomainHook.RELIC_POWER)
             if ctx.rng(f"relic_heal.{relic.item_entity_id}.{condition.id}.{ctx.epoch}").chance(table.healing_chance * potency):

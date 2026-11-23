@@ -16,7 +16,6 @@ W = RuleGroup.WAR_AND_DIPLOMACY
 @dataclass(frozen=True)
 class CollectiveBehaviourRules:
     trigger_pct: int = rule(25, 0, 100, S, "Chance each epoch that a town's strongest grievance sparks a collective act (%)")
-    base_threshold: int = rule(60, 0, 100, S, "Share of a district already acting that an average dweller needs before joining (%)")
     anger_cut: int = rule(40, 0, 100, S, "Threshold points a town's full anger takes away")
     anxiety_cut: int = rule(35, 0, 100, S, "Threshold points a town's full anxiety takes away from panic")
     fervour_cut: int = rule(40, 0, 100, S, "Threshold points a town's full fervour takes away from faith's mass acts")
@@ -38,8 +37,8 @@ class CollectiveBehaviourRules:
     movement_decay: int = rule(5, 0, 100, S, "Strength a movement loses each epoch without a fresh grievance")
     movement_revolt_at: int = rule(70, 0, 100, S, "Strength at which a movement takes up arms as a rebel faction")
     conversion_pct: int = rule(5, 0, 100, R, "Share of a district a mass conversion wins to the cult that sparked it (%)")
-    mood_decay: int = rule(10, 0, 100, S, "Anger, anxiety and fervour a town loses each epoch")
-    heat: int = rule(20, 0, 100, S, "Mood a trigger at full force adds to a town's anger, anxiety or fervour")
+    mood_decay: int = rule(10, 0, 100, S, "Sway an agitator holds over a town that it loses each epoch")
+    heat: int = rule(20, 0, 100, S, "Feeling unrest, a stormed mob or a forced crowd at full force adds to a town's crowd")
     deterrence_full: int = rule(8, 1, 100, S, "Soldiers and watch per hundred dwellers that give a town full deterrence")
     spread_pct: int = rule(20, 0, 100, S, "Spread of thresholds around a town's mean, as a share of the scale (%)")
     sample: int = rule(200, 10, 5000, S, "Dwellers a cascade samples to find who joins")
@@ -110,6 +109,7 @@ class SocialLearningRules:
 class GenerationRules(Spanned):
     youth_years: int = span(20, 1, 2500, P, "Years of a generation's youth, when the great incidents shape it")
     shift: int = rule(10, 0, 100, M, "Value points a formative incident shifts the generation it shaped")
+    long_season_mark: int = rule(20, 0, 100, M, "Value points growing up under a long winter or summer shifts the generation it shaped")
     inherited_pct: int = rule(50, 0, 100, M, "Share of a generation's shift its children inherit (%)")
     turnover_unrest: int = rule(5, 0, 100, M, "Unrest a generation's passing stirs as suppressed movements rise")
     lifespan_years: int = span(60, 1, 25000, P, "Years a generation lives on after its youth before it has passed")
@@ -137,7 +137,7 @@ class DiasporaRules:
 class DemographicTransitionRules:
     urban_cut: int = rule(30, 0, 100, P, "Fertility points full urbanisation takes away")
     literacy_cut: int = rule(25, 0, 100, P, "Fertility points full literacy takes away")
-    education_cut: int = rule(15, 0, 100, P, "Fertility points women's education takes away where role norms let them study")
+    education_cut: int = rule(15, 0, 100, P, "Fertility points the education of those who bear young takes away where role norms let them study")
     lag_pct: int = rule(25, 0, 100, P, "Share of the gap to its new fertility a people closes each epoch (%)")
     elder_levy_cut: int = rule(50, 0, 100, P, "Share of the levy an ageing people loses for each elder share point above a third (%)")
     elder_stability: int = rule(5, 0, 100, P, "Order an elder-respecting people gains when it ages")
@@ -145,10 +145,10 @@ class DemographicTransitionRules:
 
 @dataclass(frozen=True)
 class SexRatioRules:
-    skew_at: int = rule(85, 0, 1000, P, "Grown men per hundred grown women below which a war has skewed the marriage market")
+    skew_at: int = rule(85, 0, 1000, P, "Grown begetters per hundred grown bearers below which a war has skewed the marriage market")
     polygamy_pct: int = rule(20, 0, 100, P, "Extra marriages a skewed people makes where several spouses are allowed (%)")
     late_marriage_pct: int = rule(20, 0, 100, P, "Marriages a skewed people delays (%)")
-    norm_shift_pct: int = rule(30, 0, 100, P, "Chance a skewed people opens a craft or office to women where its norms are flexible (%)")
+    norm_shift_pct: int = rule(30, 0, 100, P, "Chance a skewed people opens a craft or office to the scarcer sex where its norms are flexible (%)")
 
 
 @dataclass(frozen=True)

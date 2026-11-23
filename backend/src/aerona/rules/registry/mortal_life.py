@@ -31,9 +31,11 @@ class AgingRules:
 @dataclass(frozen=True)
 class FertilityRules(Spanned):
     window_start_pct: int = rule(16, 0, 100, G, "Share of a lifespan at which mortals can first bear children (%)")
-    female_window_end_pct: int = rule(60, 0, 200, G, "Share of a lifespan past which women bear no more children (%)")
-    male_window_end_pct: int = rule(85, 0, 200, G, "Share of a lifespan past which men father no more children (%)")
-    other_window_end_pct: int = rule(70, 0, 200, G, "Share of a lifespan past which others bear no more children (%)")
+    bearer_window_end_pct: int = rule(60, 0, 200, G, "Share of a lifespan past which those who bear young bear no more (%)")
+    begetter_window_end_pct: int = rule(85, 0, 200, G, "Share of a lifespan past which those who beget young beget no more (%)")
+    both_window_end_pct: int = rule(
+        70, 0, 200, G, "Share of a lifespan past which those who both bear and beget, or a people without sexes, bring forth no more (%)"
+    )
     unwed_rate_pct: int = rule(25, 0, 100, G, "Rate of children born to lovers who are not wed (%)")
     concubine_rate_pct: int = rule(60, 0, 100, G, "Rate of children born of concubinage (%)")
     youth_rate_pct: int = rule(40, 0, 100, G, "Rate of children born to youths where custom allows it (%)")
@@ -45,7 +47,7 @@ class FertilityRules(Spanned):
     stillbirth_pct: float = rule(8.0, 0.0, 100.0, G, "Chance of a stillbirth (%)")
     hunger_stillbirth_pct: int = rule(200, 100, 1000, G, "Stillbirth chance in a starving community (%)")
     hunger_from: int = rule(50, 0, 100, G, "Hunger at which stillbirths grow more likely")
-    other_sex_pct: float = rule(0.0, 0.0, 100.0, G, "Chance a child is born neither female nor male, where the world allows it (%)")
+    both_sex_pct: float = rule(0.0, 0.0, 100.0, G, "Chance a child of a two-sexed people is born able both to bear and to beget, where the world allows it (%)")
     kinship_pct: int = rule(40, 0, 200, G, "How much a culture that prizes kinship lifts the birth rate (%)")
     ability_deviation: int = rule(8, 0, 50, G, "How far a child's abilities stray from their parents' mean")
     twin_cap: int = rule(4, 1, 12, G, "Most children one birth can bring; each child past the second needs the twin chance again")

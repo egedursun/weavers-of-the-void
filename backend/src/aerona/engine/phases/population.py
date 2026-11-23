@@ -182,6 +182,7 @@ async def grow_community(
     "table.galaxy_clusters",
     "table.holder_levels",
     "table.law_jurisdictions",
+    "table.law_profiles",
     "table.natural_law_profiles",
     "table.nodes",
     "table.outbreaks",

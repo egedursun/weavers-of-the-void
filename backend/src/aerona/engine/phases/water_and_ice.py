@@ -21,9 +21,11 @@ from aerona.engine.water.ice import WaterTally, keep_water
     "table.outbreaks",
     "table.region_cryosphere",
     "table.region_environment",
+    "table.river_shifts",
     "table.sediment_flows",
     "table.sons",
     "table.stars",
+    "table.structure_profiles",
     "table.worlds",
 )
 @writes(

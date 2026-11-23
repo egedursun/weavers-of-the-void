@@ -44,7 +44,7 @@ async def people_in_reach(call: SonCall, people_id: int) -> EntityRow:
         fail(SonResult.KIND_REFUSED, why="there is no such people")
     await ensure_in_reach(call, people)
     if held(people.id):
-        fail(SonResult.KIND_REFUSED, why="a stronger hand holds them")
+        fail(SonResult.KIND_REFUSED, why="they are held")
     return people
 
 

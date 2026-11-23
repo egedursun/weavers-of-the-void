@@ -12,7 +12,7 @@ import {
   Users,
   Wrench,
 } from 'lucide-react'
-import { techniqueValues } from '@/api/generated/schema'
+import { techniqueValues, vehicleSectionValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { KpiTile, PagedList } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
@@ -21,6 +21,7 @@ import { Held, Listed } from '@/features/collective/parts'
 import { Chip, Facts, ForgeCard } from '@/features/cosmography/parts'
 import { SPAN } from '@/features/cycles/model'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { useWorldMaterials } from '@/features/entity/economy/api'
 import { COMMODITY } from '@/features/entity/economy/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
@@ -83,7 +84,7 @@ function SectionCard({
     <Held
       icon={crit.icon}
       tone={crit.tone}
-      title={sectionLabel(row.section)}
+      title={wordOf(vehicleSectionValues, row.section)}
       caption={`${crit.label} section · ${PARTS[row.function].label} · ${row.share}% of the whole · ${HAZARD[row.hazard].label.toLowerCase()}`}
       removeLabel='Take it out'
       editTitle='Set the section'
@@ -185,7 +186,7 @@ function MountCard({
       icon={mount.icon}
       tone={mount.tone}
       title={`${mount.label} × ${row.count}`}
-      caption={`${ARC[row.arc].label} · on ${row.section ? sectionLabel(row.section).toLowerCase() : 'no section'} · ${row.model_name ?? 'no weapon fitted'}`}
+      caption={`${ARC[row.arc].label} · on ${row.section ? wordOf(vehicleSectionValues, row.section).toLowerCase() : 'no section'} · ${row.model_name ?? 'no weapon fitted'}`}
       removeLabel='Take it off'
       editTitle='Set the mount'
       note='Each mount carries the weapon model fitted to it; its arc sets which foes it can bear on, and it is lost when its section is destroyed.'
@@ -391,7 +392,10 @@ export function VehicleTypePage({
   const family = row.family ? VEHICLE_FAMILY[row.family] : VEHICLE_FAMILY.cart
   const seagoing = row.domain !== null && SEAGOING.has(row.domain)
   const sections = Object.fromEntries(
-    row.sections.map((item) => [item.section, sectionLabel(item.section)])
+    row.sections.map((item) => [
+      item.section,
+      wordOf(vehicleSectionValues, item.section),
+    ])
   )
 
   return (

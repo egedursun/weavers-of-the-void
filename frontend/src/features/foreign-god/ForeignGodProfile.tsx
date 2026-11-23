@@ -1,13 +1,15 @@
 import { Sparkles } from 'lucide-react'
+import { existenceModeValues } from '@/api/generated/schema'
 import { KeyValueList, Section, StatBar, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import {
   RELATION_SCALE,
   STAT_MIN,
   STAT_SCALE,
 } from '@/features/pantheon/constants'
-import { STATS, humanize } from '@/features/pantheon/labels'
+import { STATS } from '@/features/pantheon/labels'
 import {
   FOREIGN_EFFECT_LABEL,
   type ForeignGodDetail,
@@ -140,7 +142,9 @@ export function ForeignGodProfile({ detail }: { detail: ForeignGodDetail }) {
                     { label: 'Nature', value: existence.nature || '—' },
                     {
                       label: 'State',
-                      value: existence.mode ? humanize(existence.mode) : '—',
+                      value: existence.mode
+                        ? wordOf(existenceModeValues, existence.mode)
+                        : '—',
                     },
                     {
                       label: 'Manifestation',

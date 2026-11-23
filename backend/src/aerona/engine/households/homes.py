@@ -1,22 +1,34 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.genetics import DWELLINGS, dwelling_spec
 from aerona.catalog.life.households import CLASS_DISTRICTS, RULES_REALM_OFFICE_KINDS
+from aerona.catalog.movement import breathes_under_water
 from aerona.constants.units import PERCENT
+from aerona.db.tables.cosmos import AppliedFixupRow
+from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.dwelling_kinds import DwellingKindRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.settlement import DistrictRow
+from aerona.db.write_guard import held
+from aerona.domain.enums.biology import BiologyVariant
 from aerona.domain.enums.entity import EntityType, MortalRole
+from aerona.domain.enums.genetics import DwellingKind
+from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
+from aerona.engine.body.variants import people_variants
+from aerona.engine.context import TickContext
 from aerona.engine.genetics.life import disease_factor
 from aerona.engine.gods.queries import community_of
 from aerona.engine.households.dwelling_kinds import dwelling_of_people
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -59,6 +71,7 @@ COMMON_EXPECTATION = 30
 WAGE_CLASSES = frozenset({SocialClass.WORKER, SocialClass.PROFESSIONAL, SocialClass.OFFICIAL, SocialClass.CITIZEN, SocialClass.UNEMPLOYED})
 SEA_ROLES = frozenset({MortalRole.CAPTAIN, MortalRole.EXPLORER, MortalRole.PILOT})
 TOWER_ROLES = frozenset({MortalRole.SEER, MortalRole.SAGE, MortalRole.SCIENTIST})
+WET_GROUND = 60
 
 
 async def household_of(session: AsyncSession, member_id: int) -> HouseholdRow | None:
@@ -115,7 +128,43 @@ async def settled_kind(session: AsyncSession, rules: Rules, mortal: EntityRow) -
         return "tent"
     if (stat(community, "population") or 0) >= rules.urban.town_population:
         return "apartment" if mortal.social_class in WAGE_CLASSES else "townhouse"
-    return "longhouse" if mortal.social_class in (SocialClass.WARRIOR, SocialClass.FARMER) else "hut"
+    if mortal.social_class is SocialClass.FARMER:
+        return DwellingKind.FARMSTEAD
+    return "longhouse" if mortal.social_class is SocialClass.WARRIOR else "hut"
+
+
+async def born_dwelling(session: AsyncSession, mortal: EntityRow) -> DwellingKind | None:
+    people = await people_of(session, mortal)
+    biology = await session.get(PeopleBiologyRow, people.id) if people is not None else None
+    if biology is None:
+        return None
+    variants = set(people_variants(biology))
+    if BiologyVariant.AQUATIC in variants or breathes_under_water(biology.body_plan):
+        return DwellingKind.SUBMERGED
+    if BiologyVariant.AERIAL in variants:
+        return DwellingKind.NEST
+    if BiologyVariant.SUBTERRANEAN in variants:
+        return DwellingKind.BURROW
+    return None
+
+
+async def wet_ground(session: AsyncSession, mortal: EntityRow) -> bool:
+    community = await community_of(session, mortal)
+    if community is None or community.entity_type is not EntityType.SETTLEMENT:
+        return False
+    region = (await RegionAtlas.load(session)).top_region(community.id)
+    ground = await session.get(RegionEnvironmentRow, region) if region is not None else None
+    return ground is not None and ground.wetland >= WET_GROUND
+
+
+async def shelter(session: AsyncSession, rules: Rules, mortal_id: int, disaster: Disaster) -> float:
+    _household, dwelling, _quality, _members = await home_of(session, rules, mortal_id)
+    kind = await session.get(DwellingKindRow, dwelling.dwelling_kind_id) if dwelling is not None and dwelling.dwelling_kind_id is not None else None
+    spec = dwelling_spec(kind.built_in_key) if kind is not None else None
+    if spec is None:
+        return 1.0
+    guard = spec.floods if disaster is Disaster.FLOOD else spec.cold if disaster is Disaster.STORM else None
+    return 1 - guard(rules) / PERCENT if guard is not None else 1.0
 
 
 async def dwelling_key_for(session: AsyncSession, rules: Rules, mortal: EntityRow) -> str:
@@ -126,7 +175,13 @@ async def dwelling_key_for(session: AsyncSession, rules: Rules, mortal: EntityRo
         (mortal.mortal_role in TOWER_ROLES, "tower"),
         (mortal.social_class is SocialClass.NOBLE, "manor"),
     )
-    return next((key for chosen, key in choices if chosen), None) or await settled_kind(session, rules, mortal)
+    chosen = next((key for chosen, key in choices if chosen), None)
+    if chosen is not None:
+        return chosen
+    born = await born_dwelling(session, mortal)
+    if born is not None:
+        return born
+    return DwellingKind.STILT_HOUSE if await wet_ground(session, mortal) else await settled_kind(session, rules, mortal)
 
 
 async def dwelling_kind_for(session: AsyncSession, rules: Rules, mortal: EntityRow) -> DwellingKindRow:
@@ -154,3 +209,29 @@ async def sickness_factor(session: AsyncSession, rules: Rules, mortal_id: int) -
     _household, dwelling, quality, _members = await home_of(session, rules, mortal_id)
     squalor = dwelling is not None and quality < rules.households.squalor_at
     return disease_factor(rules, genome) * (1 + rules.households.squalor_disease_pct / PERCENT if squalor else 1.0)
+
+
+DWELLINGS_FIXUP = "dwellings.w52"
+W52_DWELLINGS = frozenset(kind for kind, spec in DWELLINGS.items() if spec.since_w52)
+
+
+async def backfill_dwellings(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, DWELLINGS_FIXUP) is not None:
+        return 0
+    moved = 0
+    rows = await ctx.session.execute(select(DwellingRow, HouseholdRow).join(HouseholdRow, HouseholdRow.id == DwellingRow.household_id).order_by(DwellingRow.id))
+    for dwelling, household in list(rows):
+        head = await ctx.session.get(EntityRow, household.head_node_id) if household.head_node_id is not None else None
+        if head is None or held(head.id) or "dwelling_kind_id" in (dwelling.locked or []):
+            continue
+        wanted = await dwelling_key_for(ctx.session, ctx.rules, head)
+        if wanted not in W52_DWELLINGS:
+            continue
+        people = await people_of(ctx.session, head)
+        kind = await dwelling_of_people(ctx.session, people.id if people is not None else None, wanted)
+        if dwelling.dwelling_kind_id != kind.id:
+            dwelling.dwelling_kind_id = kind.id
+            moved += 1
+    ctx.session.add(AppliedFixupRow(key=DWELLINGS_FIXUP, result={"dwellings": moved}))
+    await ctx.session.flush()
+    return moved

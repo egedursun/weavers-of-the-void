@@ -33,18 +33,6 @@ class SignCause(StrEnum):
     MUTILATION = "mutilation"
 
 
-class TeachingKind(StrEnum):
-    SONG = "song"
-    ART_FORM = "art_form"
-    RITE = "rite"
-    TECHNIQUE = "technique"
-    TRUE_NAME = "true_name"
-    PROPHECY = "prophecy"
-    TREASURE = "treasure"
-    LANGUAGE = "language"
-    ACCOUNT = "account"
-
-
 class TeachingState(StrEnum):
     TAUGHT = "taught"
     BLOCKED = "blocked"
@@ -71,6 +59,15 @@ class SealKind(StrEnum):
     STRUCTURE = "structure"
     RITE = "rite"
     DIVINE = "divine"
+    POWER = "power"
+    LIVING = "living"
+    PACT = "pact"
+
+
+class SealLink(StrEnum):
+    OATH = "oath"
+    POWER = "power"
+    LINE = "line"
 
 
 class CarrionRest(StrEnum):
@@ -79,3 +76,6 @@ class CarrionRest(StrEnum):
     FROZEN = "frozen"
     DRIFTING = "drifting"
     FLOATING = "floating"
+    BURIED = "buried"
+    BURNED = "burned"
+    SUNK = "sunk"

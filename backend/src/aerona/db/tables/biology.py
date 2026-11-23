@@ -16,6 +16,7 @@ BIOLOGY_SHARES = (
 )
 BIOLOGY_FLAGS = ("breathes", "drinks", "ages", "sleeps")
 BIOLOGY_EFFECTS = (*BIOLOGY_SHARES, *BIOLOGY_FLAGS)
+BIOLOGY_EDITABLE = (*BIOLOGY_EFFECTS, "partner_species_id")
 
 
 class BiologyRow(Base):
@@ -38,5 +39,6 @@ class BiologyRow(Base):
     drinks: Mapped[bool] = mapped_column(default=True)
     ages: Mapped[bool] = mapped_column(default=True)
     sleeps: Mapped[bool] = mapped_column(default=True, server_default="1")
+    partner_species_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

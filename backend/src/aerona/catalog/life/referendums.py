@@ -12,5 +12,10 @@ PETITIONS = total(
         MovementCause.FRANCHISE: ReferendumSubject.CONSTITUTION,
         MovementCause.PEACE: ReferendumSubject.WAR,
         MovementCause.CONSERVATION: None,
+        MovementCause.LABOUR: ReferendumSubject.LAW,
+        MovementCause.FAITH_REFORM: ReferendumSubject.FAITH,
+        MovementCause.TEMPERANCE: ReferendumSubject.LAW,
+        MovementCause.MIND_RIGHTS: ReferendumSubject.LAW,
+        MovementCause.EQUAL_STANDING: ReferendumSubject.CONSTITUTION,
     },
 )

@@ -101,7 +101,7 @@ class SettlementPlanLine(ContextItem):
 
 class CohortLine(ContextItem):
     age_band: str
-    sex: str
+    sex_kind: str
     social_class: str
     condition: str
     count: int

@@ -36,6 +36,7 @@ from aerona.catalog.knowledge import NATURAL_LAWS
 from aerona.catalog.life.divine import HUNGER_LABELS, MOTION_LABELS, WOUND_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -67,10 +68,6 @@ from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["divine"])
 Id = Annotated[int, Path(ge=1)]
-
-
-def act_label(value: str) -> str:
-    return value.replace("_", " ").capitalize()
 
 
 def ref(refs: dict[int, NodeRef], node_id: int | None) -> NodeRef | None:
@@ -261,7 +258,7 @@ async def creator_divinity(services: ServicesDep) -> CreatorDivinity:
             taboos=[
                 CreatorTabooView(
                     act=row.act,
-                    label=act_label(row.act.value),
+                    label=spoken(row.act).capitalize(),
                     severity=row.severity,
                     since_epoch=row.since_epoch,
                     broken=row.broken,

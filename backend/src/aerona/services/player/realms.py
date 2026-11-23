@@ -155,7 +155,7 @@ async def edit_polity(scope: PlayerScope, command: EditPolity) -> Effect:
 @player_action("polity:appoint", ActionKind.EDIT_RECORD)
 async def appoint(scope: PlayerScope, command: Appoint) -> Effect:
     await control.appoint_office(await scope.context("polity_appoint"), command.polity_id, command.office, command.mortal_id, region_id=command.region_id)
-    label = command.office.value.replace("_", " ")
+    label = spoken(command.office)
     return Effect(f"The {label} is appointed." if command.mortal_id is not None else f"The {label}'s seat stands empty.", command.polity_id)
 
 
@@ -420,7 +420,7 @@ async def create_office(scope: PlayerScope, command: CreateOffice) -> Effect:
         target_id=command.target_id,
         holder_id=command.holder_id,
     )
-    return Effect(f"The office of {office.title or office.kind.value.replace('_', ' ')} is created.", command.polity_id, values={"office_id": office.id})
+    return Effect(f"The office of {office.title or spoken(office.kind)} is created.", command.polity_id, values={"office_id": office.id})
 
 
 @player_action("office:edit", ActionKind.EDIT_RECORD)
@@ -436,13 +436,13 @@ async def edit_office(scope: PlayerScope, command: EditOffice) -> Effect:
         target_id=command.target_id,
         release=command.release,
     )
-    return Effect(f"The office of {office.title or office.kind.value.replace('_', ' ')} is set.", office.polity_entity_id)
+    return Effect(f"The office of {office.title or spoken(office.kind)} is set.", office.polity_entity_id)
 
 
 @player_action("office:abolish", ActionKind.DESTROY)
 async def abolish_office(scope: PlayerScope, command: OfficeTarget) -> Effect:
     office = await control.abolish_office(await scope.context("office_abolish"), command.office_id)
-    return Effect(f"The office of {office.title or office.kind.value.replace('_', ' ')} is abolished.", office.polity_entity_id)
+    return Effect(f"The office of {office.title or spoken(office.kind)} is abolished.", office.polity_entity_id)
 
 
 @player_action("claim:edit", ActionKind.EDIT_RECORD)

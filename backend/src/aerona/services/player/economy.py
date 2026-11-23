@@ -2,7 +2,7 @@ from pydantic import Field
 
 from aerona.catalog.commodities import commodity_label
 from aerona.catalog.production import WORKSHOP_LABELS
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.economy import CommodityKind, CurrencyIssuer, MaterialFamily, MoneyBacking, MoneyForm, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
@@ -123,7 +123,7 @@ async def edit_material(scope: PlayerScope, command: EditMaterial) -> Effect:
     row = await control.edit_material(
         ctx, command.world_id, material=command.material, world_material_id=command.world_material_id, values=command.values, name=command.name, text=text
     )
-    label = row.name or (command.material.value.replace("_", " ") if command.material else "the substance")
+    label = row.name or (spoken(command.material) if command.material else "the substance")
     return Effect(f"{label.capitalize()} now holds the properties you set in this world.", values={"world_material_id": row.id})
 
 
@@ -221,5 +221,5 @@ async def forgive_loan(scope: PlayerScope, command: LoanTarget) -> Effect:
 @player_action("hoard:inject", ActionKind.OTHER)
 async def inject_hoard(scope: PlayerScope, command: InjectHoard) -> Effect:
     added = await control.hoard(await scope.context("hoard_inject"), command.community_id, command.metal, command.units, command.world_material_id)
-    what = "a substance of this world" if command.world_material_id is not None else command.metal.value.replace("_", " ")
+    what = "a substance of this world" if command.world_material_id is not None else spoken(command.metal)
     return Effect(f"A hoard of {several(added, 'load', 'loads')} of {what} flooded the market.", command.community_id, values={"added": added})

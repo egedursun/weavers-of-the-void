@@ -12,7 +12,9 @@ class LandUseRing(StrEnum):
 class CentralityRank(StrEnum):
     DAILY = "daily"
     WEEKLY = "weekly"
+    SEASONAL = "seasonal"
     RARE = "rare"
+    METROPOLITAN = "metropolitan"
 
 
 class NutrientKind(StrEnum):
@@ -48,6 +50,8 @@ class CommonsRule(StrEnum):
     CUSTOMARY = "customary"
     COUNCIL = "council"
     ENCLOSED = "enclosed"
+    STATE = "state"
+    LICENSED = "licensed"
 
 
 class PreparednessKind(StrEnum):

@@ -28,10 +28,27 @@ def test_every_trait_has_a_reader() -> None:
 
 
 def test_trait_queries_keep_the_old_memberships() -> None:
-    assert terrains(TerrainTrait.AMBUSH_COVER) == {TerrainKind.FOREST, TerrainKind.JUNGLE, TerrainKind.MARSH, TerrainKind.CANYON, TerrainKind.RUIN_FIELD}
-    assert terrains(TerrainTrait.ROUGH) == {TerrainKind.HILLS, TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.CANYON}
+    assert terrains(TerrainTrait.AMBUSH_COVER) == {
+        TerrainKind.FOREST,
+        TerrainKind.JUNGLE,
+        TerrainKind.MARSH,
+        TerrainKind.CANYON,
+        TerrainKind.RUIN_FIELD,
+        TerrainKind.MANGROVE,
+        TerrainKind.SCRUBLAND,
+        TerrainKind.TAIGA,
+    }
+    assert terrains(TerrainTrait.ROUGH) == {
+        TerrainKind.HILLS,
+        TerrainKind.MOUNTAINS,
+        TerrainKind.HIGH_PASS,
+        TerrainKind.CANYON,
+        TerrainKind.BADLANDS,
+        TerrainKind.KARST,
+        TerrainKind.REGOLITH_PLAIN,
+    }
     assert terrains(every=(TerrainTrait.HIGH, TerrainTrait.COLD)) == {TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS}
-    assert terrains(TerrainTrait.COLD, without=(TerrainTrait.OPEN,)) == {TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.ICE_SHEET}
+    assert terrains(TerrainTrait.COLD, without=(TerrainTrait.OPEN,)) == {TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.ICE_SHEET, TerrainKind.TAIGA}
     assert terrain_has(TerrainKind.MARSH, TerrainTrait.WET) and not terrain_has(None, TerrainTrait.WET)
-    assert TACTIC_TERRAIN[Tactic.RIVER_DEFENCE] == {TerrainKind.RIVER_VALLEY}
+    assert TACTIC_TERRAIN[Tactic.RIVER_DEFENCE] == {TerrainKind.RIVER_VALLEY, TerrainKind.FLOODPLAIN}
     assert Tactic.HOLD_LINE not in TACTIC_TERRAIN

@@ -21,7 +21,7 @@ from aerona.domain.enums.cycles import (
     ResidenceRule,
     StressComponent,
 )
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.unions import (
     KinMatch,
     PartnerScope,
@@ -108,6 +108,9 @@ class GiftRecordView(ApiModel):
     item: NodeRef | None
     state: GiftState
     answers_gift_id: int | None
+    circuit_id: int | None
+    owed: bool
+    owed_back: int
     due_epoch: int | None
     settled_epoch: int | None
     epoch: int
@@ -141,7 +144,7 @@ class KinshipView(ApiModel):
     descent_group: DescentGroup
     kin_terms: KinTermSystem
     adoption: AdoptionKind
-    first_side: Sex
+    first_side: SexKind
     sibling_union_first: bool
     sibling_union_second: bool
     locked: list[str]

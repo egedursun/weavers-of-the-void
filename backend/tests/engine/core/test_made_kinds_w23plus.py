@@ -171,12 +171,12 @@ def test_a_dish_nourishes_keeps_and_honours_by_how_it_is_made() -> None:
 
 
 def test_attraction_gates_courtship_by_whom_a_mortal_is_drawn_to() -> None:
-    drawn_one = MortalProfileRow(entity_id=1, drawn_to=["female", "other"], attraction=60)
+    drawn_one = MortalProfileRow(entity_id=1, drawn_to=["bearer", "both"], attraction=60)
     none = MortalProfileRow(entity_id=2, drawn_to=[], attraction=60)
-    cold = MortalProfileRow(entity_id=3, drawn_to=["male"], attraction=0)
-    assert drawn(drawn_one, "female") and not drawn(drawn_one, "male")
-    assert not drawn(none, "female") and not drawn(cold, "male")
-    assert pull(drawn_one, "other") == 0.6 and pull(cold, "male") == 0.0
+    cold = MortalProfileRow(entity_id=3, drawn_to=["begetter"], attraction=0)
+    assert drawn(drawn_one, "bearer") and not drawn(drawn_one, "begetter")
+    assert not drawn(none, "bearer") and not drawn(cold, "begetter")
+    assert pull(drawn_one, "both") == 0.6 and pull(cold, "begetter") == 0.0
 
 
 async def test_a_struck_cosmic_being_loses_might_through_its_body(session: AsyncSession, world: CoreWorld) -> None:

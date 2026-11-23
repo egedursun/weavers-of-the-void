@@ -85,9 +85,9 @@ async def test_a_held_realm_refuses_every_economic_tool(database: Database) -> N
         ("set_economic_order", {"polity_id": polity, **MARKET_ORDER, "reason": REASON}),
         ("begin_transition", {"polity_id": polity, "kind": "land_reform", "compensation": "none", "reason": REASON}),
     ):
-        assert "a stronger hand holds that realm" in await rejected(mortal, name, arguments)
+        assert "that realm is held" in await rejected(mortal, name, arguments)
     son = await son_toolkit(database, realm.son_id, action_points=6)
-    assert "a stronger hand holds that realm" in await son_rejected(
+    assert "that realm is held" in await son_rejected(
         son, "move_economic_order", {"polity_id": polity, "axis": "allocation", "value": "command", "reason": REASON}
     )
 
@@ -108,7 +108,7 @@ async def test_money_is_changed_only_by_the_skilled_at_a_free_market(database: D
         await money_changer(session, realm)
     await hold(database, realm.settlement_id, "exchange")
     held_market = await mortal_toolkit(database, realm.mortal_id)
-    assert "a stronger hand holds" in await rejected(held_market, "change_money", {})
+    assert "this market is held" in await rejected(held_market, "change_money", {})
     async with database.read() as session:
         rate = await session.scalar(select(ExchangeRateRow))
     assert rate is not None and rate.changer_node_id is None

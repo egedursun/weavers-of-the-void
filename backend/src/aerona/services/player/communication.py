@@ -157,9 +157,7 @@ async def edit_dispatch(scope: PlayerScope, command: EditDispatch) -> Effect:
         raise ValidationFailedError("Set at least one value.")
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(
-        f"The message is {row.state.value.replace('_', ' ') if row.state else 'set'}, due in epoch {row.arrival_epoch}.", target_node_id=row.sender_node_id
-    )
+    return Effect(f"The message is {spoken(row.state) if row.state else 'set'}, due in epoch {row.arrival_epoch}.", target_node_id=row.sender_node_id)
 
 
 @player_action("dispatch:hold", ActionKind.EDIT_RECORD)

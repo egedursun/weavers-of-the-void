@@ -78,7 +78,7 @@ class MortalStats(ValueObject):
     age: Count | None = None
     lifespan: Count | None = None
     death_year: int | None = None
-    sex: Literal["female", "male", "other"] | None = None
+    sex: Literal["bearer", "begetter", "both", "neither", "none"] | None = None
 
 
 class ItemStats(ValueObject):

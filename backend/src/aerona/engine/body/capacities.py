@@ -73,7 +73,9 @@ def age_curve(rules: CapacityRules, age: int | None, lifespan: int | None) -> fl
 
 def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capacity, int]:
     table = rules.capacities
-    levels = function_levels(table, state.anatomy, state.wounds, state.counts, rules.injury.venom_paralysis_at, afflicted=state.afflicted)
+    levels = function_levels(
+        table, state.anatomy, state.wounds, state.counts, rules.injury.venom_paralysis_at, afflicted=state.afflicted, share=rules.body.tentacle_share
+    )
     grip = weapon_grasp(table, state.anatomy, state.wounds, state.counts, hands=hand_shares(state.lost_digits), handedness=state.handedness)
     pain = pain_of(table, state.open_severity) / PERCENT
     hurt = 1 - pain * table.pain_weight_pct / PERCENT
@@ -134,6 +136,16 @@ def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capac
         * blend(levels[F.VITAL], table.mobility_vital)
         * blend(tail, table.mobility_tail)
         * hurt
+    )
+    values[C.ENDURANCE] = (
+        stats.endurance
+        * blend(levels[F.BREATH], table.mobility_breath)
+        * blend(levels[F.VITAL], table.mobility_vital)
+        * blend(stride, table.mobility_locomotion)
+        * hurt
+    )
+    values[C.PERCEPTION] = (
+        PERCENT * perception_factor(table, round(levels[F.HEARING] * PERCENT), round(reading * PERCENT)) * blend(levels[F.COGNITION], table.command_cognition)
     )
     values[C.FERTILITY] = (
         PERCENT

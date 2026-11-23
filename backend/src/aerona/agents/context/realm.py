@@ -56,9 +56,9 @@ async def treaty_lines(session: AsyncSession, parties: list[int]) -> list[str]:
         ):
             terms = ", ".join(f"{words(key)} {value}" for key, value in clause.params.items() if key != "misread")
             who = f"{await name_of(session, clause.obligor_node_id)} owes {await name_of(session, clause.beneficiary_node_id)}"
-            clauses.append(f"{words(clause.kind.value)} ({who}{'; ' + terms if terms else ''})")
+            clauses.append(f"{spoken(clause.kind)} ({who}{'; ' + terms if terms else ''})")
         until = f", until age {profile.until_epoch}" if profile.until_epoch is not None else ""
-        found.append(f"{treaty.name if treaty is not None else 'a treaty'} [{words(profile.kind.value)}{until}]: {'; '.join(clauses) or 'no clauses'}")
+        found.append(f"{treaty.name if treaty is not None else 'a treaty'} [{spoken(profile.kind)}{until}]: {'; '.join(clauses) or 'no clauses'}")
     return found
 
 
@@ -74,7 +74,7 @@ async def statecraft(session: AsyncSession, me: EntityRow, home: EntityRow, real
         claimant = await name_of(session, claim.claimant_entity_id)
         realm = await name_of(session, claim.polity_entity_id)
         pressed = ", pressed by war" if claim.pressed else ""
-        lines.claims.append(f"{claimant} claims the {words(claim.office.value)} of {realm} by {words(claim.basis.value)} (strength {claim.strength}{pressed})")
+        lines.claims.append(f"{claimant} claims the {spoken(claim.office)} of {realm} by {spoken(claim.basis)} (strength {claim.strength}{pressed})")
     if realm_id is None:
         return lines
     ruler = await session.scalar(select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == realm_id, OfficeRow.kind == OfficeKind.RULER).limit(1))
@@ -91,7 +91,7 @@ async def statecraft(session: AsyncSession, me: EntityRow, home: EntityRow, real
         .order_by(LawProfileRow.law_entity_id)
     )
     for profile in laws:
-        lines.laws.append(f"{words(profile.kind.value)}: {law_effect(profile.kind, dict(profile.params))} (enforced {profile.enforcement})")
+        lines.laws.append(f"{spoken(profile.kind)}: {law_effect(profile.kind, dict(profile.params))} (enforced {profile.enforcement})")
     return lines
 
 
@@ -109,8 +109,8 @@ async def realm_overview(session: AsyncSession, world_id: int | None) -> list[st
         treaties = f"; treaties: {'; '.join(lines.treaties)}" if lines.treaties else ""
         claims = f"; claims: {'; '.join(lines.claims)}" if lines.claims else ""
         found.append(
-            f"realm#{realm.id} {realm.name} ({words(profile.government.value)}, tier {profile.tier}, legitimacy {profile.legitimacy}, "
-            f"{words(profile.standing.value)}){ruler}{laws}{treaties}{claims}"
+            f"realm#{realm.id} {realm.name} ({spoken(profile.government)}, tier {profile.tier}, legitimacy {profile.legitimacy}, "
+            f"{spoken(profile.standing)}){ruler}{laws}{treaties}{claims}"
         )
     return found
 
@@ -127,10 +127,10 @@ async def faction_lines(session: AsyncSession, mortal_id: int) -> list[str]:
             .where(FactionGoalRow.faction_entity_id == faction.id, FactionGoalRow.achieved_epoch.is_(None))
             .order_by(FactionGoalRow.priority.desc())
         )
-        aims = [f"{words(goal.kind.value)} ({goal.progress}%)" for goal in goals]
+        aims = [f"{spoken(goal.kind)} ({goal.progress}%)" for goal in goals]
         outlaw = ", outlawed" if profile.outlawed else ""
         found.append(
-            f"{spoken(membership.rank)} of {faction.name} ({words(profile.kind.value)}{outlaw}; "
+            f"{spoken(membership.rank)} of {faction.name} ({spoken(profile.kind)}{outlaw}; "
             f"treasury {profile.treasury}, cohesion {profile.cohesion})" + (f", striving to {', '.join(aims)}" if aims else "")
         )
     return found

@@ -12,9 +12,11 @@ import {
   Users,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
+import { formatInteger } from '@/lib/format'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
-import { Label } from '@/components/typography'
+import { Label, Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Chip, Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
 import { why } from '@/features/dominion/model'
@@ -22,6 +24,7 @@ import { NodePicker } from '@/features/dominion/parts'
 import { VALUE_ICONS } from '@/features/entity/mind/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
+import { SEX_SPEC } from '@/features/entity/society/labels'
 import { Ref } from '@/features/gatherings/parts'
 import { type CollectiveView, useCollectiveAction } from './api'
 import { FORMATIVE } from './labels'
@@ -365,7 +368,7 @@ function TransitionCard({
       icon={Building2}
       tone='info'
       title='Demographic transition'
-      caption='Towns, letters and women’s schooling lower births slowly; an ageing people raises smaller levies.'
+      caption='Towns, letters and the schooling of those who bear young lower births slowly; an ageing people raises smaller levies.'
       removeLabel='Read it anew'
       editTitle='Set the transition'
       note='Fertility is against the usual hundred.'
@@ -455,7 +458,7 @@ function RatioCard({
     <Held
       icon={Scale}
       tone={
-        row.males_per_hundred < 85 || row.males_per_hundred > 118
+        row.begetters_per_hundred < 85 || row.begetters_per_hundred > 118
           ? 'warning'
           : 'success'
       }
@@ -463,16 +466,21 @@ function RatioCard({
       caption='After wars a skewed people marries late, takes several spouses where allowed, and may open its roles.'
       removeLabel='Count it anew'
       editTitle='Set the balance'
-      note='Grown men per hundred grown women.'
+      note='Grown begetters per hundred grown bearers, where the biology has those two.'
       fields={[
         {
-          key: 'males_per_hundred',
-          label: 'Men per hundred women',
+          key: 'begetters_per_hundred',
+          label: 'Begetters per hundred bearers',
           kind: 'number',
           min: 0,
           max: 1000,
         },
-        { key: 'widows', label: 'Widows', kind: 'number', min: 0 },
+        {
+          key: 'bereaved_partners',
+          label: 'Bereaved partners',
+          kind: 'number',
+          min: 0,
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -481,17 +489,28 @@ function RatioCard({
     >
       <div className='grid min-w-0 grid-cols-2 gap-2'>
         <KpiTile
-          label='Men per hundred women'
-          value={row.males_per_hundred}
+          label='Begetters per hundred bearers'
+          value={row.begetters_per_hundred}
           icon={Users}
           tone='info'
         />
         <KpiTile
-          label='Widows'
-          value={row.widows}
+          label='Bereaved partners'
+          value={row.bereaved_partners}
           icon={HeartCrack}
           tone='muted'
         />
+      </div>
+      <div className='flex min-w-0 flex-wrap gap-2'>
+        {row.counts.length === 0 ? (
+          <Muted variant='caption'>No grown folk counted yet.</Muted>
+        ) : (
+          row.counts.map((item) => (
+            <Badge key={item.sex_kind} size='sm' variant='secondary'>
+              {`${SEX_SPEC[item.sex_kind].label}: ${formatInteger(item.count)}`}
+            </Badge>
+          ))
+        )}
       </div>
     </Held>
   )
@@ -507,7 +526,8 @@ function CommunityForge({
   blocked: string | null
 }) {
   const [fertility, setFertility] = useState('100')
-  const [men, setMen] = useState('100')
+  const [begetters, setBegetters] = useState('100')
+  const [bereaved, setBereaved] = useState('0')
   const wrong =
     type !== 'people' && type !== 'settlement'
       ? 'Only a town or people has a demography'
@@ -524,7 +544,8 @@ function CommunityForge({
     'sex_ratio:set',
     (_: void) => ({
       community_id: communityId,
-      males_per_hundred: clamp(men, 1000),
+      begetters_per_hundred: clamp(begetters, 1000),
+      bereaved_partners: clamp(bereaved, 100000),
     }),
     'Set so'
   )
@@ -569,12 +590,20 @@ function CommunityForge({
         onChange={setFertility}
       />
       <NumberField
-        label='Men per hundred women'
-        value={men}
+        label='Begetters per hundred bearers'
+        value={begetters}
         min={0}
         max={1000}
         blocked={busy}
-        onChange={setMen}
+        onChange={setBegetters}
+      />
+      <NumberField
+        label='Bereaved partners'
+        value={bereaved}
+        min={0}
+        max={100000}
+        blocked={busy}
+        onChange={setBereaved}
       />
     </ForgeCard>
   )

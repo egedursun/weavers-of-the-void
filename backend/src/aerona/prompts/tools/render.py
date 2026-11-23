@@ -11,6 +11,7 @@ from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
 from aerona.catalog.equipment import FAMILIES
 from aerona.catalog.interventions import DISASTERS, MIRACLES
 from aerona.catalog.mythic import GEAS_ACTS
+from aerona.catalog.reproduction import TWO_KINDS
 from aerona.catalog.stars import STAR_TYPES
 from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.tenets import TENET_EFFECTS
@@ -21,20 +22,25 @@ from aerona.catalog.weather import SEASON_DOMAIN_WORDS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.db.kind_concepts.society import BUILT_IN_ORGANISATIONS
 from aerona.domain.enums.affliction import Transmission
-from aerona.domain.enums.agrarian import AidKind, KeystoneUse, PerennialKind, PreparednessKind
+from aerona.domain.enums.agrarian import AidKind, CommonsRule, KeystoneUse, NutrientKind, PerennialKind, PreparednessKind
 from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
-from aerona.domain.enums.arts import ClubKind
-from aerona.domain.enums.belonging import IdentityLayer
+from aerona.domain.enums.arts import ClubKind, ForgeryKind
+from aerona.domain.enums.belonging import IdentityLayer, SalienceDriver
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.collective import CollectiveTrigger, DesignComponentKind, DesignKind, StoryletId
+from aerona.domain.enums.climes import CirculationBand
+from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger, CrowdFeeling, DesignComponentKind, DesignKind, StoryletId
 from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.cosmography import DimensionElement
+from aerona.domain.enums.couplings import SealKind
+from aerona.domain.enums.crafts import CatchGround, Gear, RightKind
 from aerona.domain.enums.creature_groups import DriveMeans, GroupAim
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import ArtMode, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
+from aerona.domain.enums.customs import MarkKind, MarkMeaning, RevivalGoal, RevivalWay
 from aerona.domain.enums.cycles import (
     AdoptionKind,
     ChallengeKind,
+    GiftOccasion,
     KinshipDescent,
     KinTermSystem,
     LongPlanKind,
@@ -43,7 +49,7 @@ from aerona.domain.enums.cycles import (
     ResidenceRule,
 )
 from aerona.domain.enums.death_work import RemainsTreatment
-from aerona.domain.enums.demography import FuneralCustom, MartialStyle, Sex
+from aerona.domain.enums.demography import FuneralCustom, MartialStyle
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.disease_agents import CureClass
 from aerona.domain.enums.divine_conceptions import ConceptionAxis, CreatorPlace, DivineCount, DivineNearness, DivinePersonhood
@@ -67,12 +73,15 @@ from aerona.domain.enums.ecology import (
 )
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
-from aerona.domain.enums.evolution import PlagueResponse
+from aerona.domain.enums.environment import CleansingMethod, MovementMode, ScarKind, SoilKind
+from aerona.domain.enums.evolution import PlagueResponse, PlanetaryCycle, SuccessionStage
 from aerona.domain.enums.facets import FacetKind
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath
 from aerona.domain.enums.folkways import ImpuritySource, MishapKind
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
+from aerona.domain.enums.fossil import FossilReading
+from aerona.domain.enums.geology import RockKind, UndergroundStratum
 from aerona.domain.enums.honours import HonourPrivilege
 from aerona.domain.enums.intrigue import PlotKind
 from aerona.domain.enums.law_depth import RegistryKind
@@ -85,6 +94,7 @@ from aerona.domain.enums.operations import EchelonOrder, QuirkKind
 from aerona.domain.enums.place import PlaceKind, SecretKind
 from aerona.domain.enums.polity import CLOSURES, HouseTrait, LawKind
 from aerona.domain.enums.regime import SelectorateKind
+from aerona.domain.enums.region import DangerHarm, DangerSource, RegionMemoryKind, TerrainHazard
 from aerona.domain.enums.sacred import BureauRank, DivinationQuestion, OmenVerdict, PetitionKind, SacramentKind, SacramentProtection
 from aerona.domain.enums.structure import BuildingForm
 from aerona.domain.enums.tongues import LanguagePolicy, SoundChangeKind, SoundEnvironment
@@ -197,12 +207,19 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "language_policies": ", ".join(item.value for item in LanguagePolicy),
         "plague_responses": ", ".join(item.value for item in PlagueResponse),
         "collective_triggers": ", ".join(item.value for item in CollectiveTrigger),
+        "collective_acts": ", ".join(item.value for item in CollectiveActKind),
+        "crowd_feelings": ", ".join(item.value for item in CrowdFeeling),
+        "revival_ways": ", ".join(item.value for item in RevivalWay),
+        "mark_kinds": ", ".join(item.value for item in MarkKind),
+        "mark_meanings": ", ".join(item.value for item in MarkMeaning),
+        "salience_drivers": ", ".join(item.value for item in SalienceDriver),
+        "revival_goals": ", ".join(item.value for item in RevivalGoal),
         "storylet_ids": ", ".join(item.value for item in StoryletId),
         "long_plan_kinds": ", ".join(item.value for item in LongPlanKind),
         "kinship_descents": ", ".join(item.value for item in KinshipDescent),
         "kin_term_systems": ", ".join(item.value for item in KinTermSystem),
         "adoption_kinds": ", ".join(item.value for item in AdoptionKind),
-        "first_sides": ", ".join(item.value for item in Sex),
+        "first_sides": ", ".join(item.value for item in TWO_KINDS),
         "union_forms": ", ".join(item.value for item in UnionForm),
         "union_purposes": ", ".join(item.value for item in UnionPurpose),
         "union_residences": ", ".join(item.value for item in UnionResidence),
@@ -227,6 +244,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "mishap_kinds": ", ".join(item.value for item in MishapKind),
         "plot_kinds": ", ".join(item.value for item in PlotKind),
         "echelon_orders": ", ".join(item.value for item in EchelonOrder),
+        "movement_modes": ", ".join(item.value for item in MovementMode),
+        "soil_kinds": ", ".join(item.value for item in SoilKind),
+        "nutrient_kinds": ", ".join(item.value for item in NutrientKind),
         "bureau_ranks": ", ".join(item.value for item in BureauRank),
         "sacrament_kinds": ", ".join(item.value for item in SacramentKind),
         "sacrament_protections": ", ".join(item.value for item in SacramentProtection),
@@ -236,6 +256,8 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "emotions": ", ".join(item.value for item in Emotion),
         "order_kinds": ", ".join(item.value for item in OrderKind),
         "club_kinds": ", ".join(item.value for item in ClubKind),
+        "forgery_kinds": ", ".join(item.value for item in ForgeryKind),
+        "right_kinds": ", ".join(item.value for item in RightKind),
         "design_kinds": ", ".join(item.value for item in DesignKind),
         "design_components": ", ".join(item.value for item in DesignComponentKind),
         "vehicle_frames": ", ".join(f"{kind} ({spec.label})" for kind, spec in FRAMES.items()),
@@ -283,8 +305,25 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "mortal_media": sorted(medium.value for medium in MORTAL_MEDIA),
         "season_domains": SEASON_DOMAIN_WORDS,
         "cure_classes": [cure.value for cure in CureClass],
+        "gift_occasions": [occasion.value for occasion in GiftOccasion],
         "honour_privileges": [privilege.value for privilege in HonourPrivilege],
         "observation_methods": [method.value for method in ObservationMethod],
+        "scar_kinds": [kind.value for kind in ScarKind],
+        "rock_kinds": [kind.value for kind in RockKind],
+        "seal_kinds": [kind.value for kind in SealKind],
+        "wind_bands": [kind.value for kind in CirculationBand],
+        "commons_rules": [kind.value for kind in CommonsRule],
+        "catch_grounds": [kind.value for kind in CatchGround],
+        "catch_gear": [kind.value for kind in Gear],
+        "planetary_cycles": [kind.value for kind in PlanetaryCycle],
+        "fossil_readings": [kind.value for kind in FossilReading if kind is not FossilReading.UNREAD],
+        "underground_strata": [kind.value for kind in UndergroundStratum],
+        "region_memory_kinds": [kind.value for kind in RegionMemoryKind],
+        "danger_sources": [kind.value for kind in DangerSource],
+        "danger_targets": [kind.value for kind in DangerHarm],
+        "terrain_hazards": [kind.value for kind in TerrainHazard],
+        "succession_stages": [kind.value for kind in SuccessionStage],
+        "cleansing_methods": [method.value for method in CleansingMethod],
         "group_aims": [aim.value for aim in GroupAim],
         "drive_means": [means.value for means in DriveMeans],
         "conception_axes": [axis.value for axis in ConceptionAxis],

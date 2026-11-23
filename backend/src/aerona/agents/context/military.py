@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.made_lines import kit_line
 from aerona.catalog.command import AREAS
 from aerona.catalog.war_terms import CASUS_BELLI_LABELS
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -38,14 +38,14 @@ async def army_sheet(session: AsyncSession, rules: Rules, army_id: int) -> str:
     stacks = list(
         await session.scalars(select(ArmyUnitRow).where(ArmyUnitRow.army_entity_id == army_id, ArmyUnitRow.count > 0).order_by(ArmyUnitRow.count.desc()))
     )
-    makeup = ", ".join(f"{words(row.kind.value)} {row.count} strong" for row in stacks[:TOP_STACKS])
+    makeup = ", ".join(f"{spoken(row.kind)} {row.count} strong" for row in stacks[:TOP_STACKS])
     hired = await session.scalar(
         select(MercenaryContractRow.id).where(MercenaryContractRow.army_entity_id == army_id, MercenaryContractRow.status == ContractStatus.ACTIVE).limit(1)
     )
     tail = "; sworn for pay" if hired is not None else ""
     return (
         f"{army.name}: {several(stat(army, 'size') or 0, 'soldier', 'soldiers')} ({makeup}), morale {stat(army, 'morale') or 0}, cohesion {profile.cohesion}, "
-        f"{several(profile.supply_days, 'day', 'days')} of food, stance {words(profile.stance.value)}{order_line(stacks)}{tail}"
+        f"{several(profile.supply_days, 'day', 'days')} of food, stance {spoken(profile.stance)}{order_line(stacks)}{tail}"
         f"{await works_line(session, rules, army_id, profile, stacks)}{await kit_line(session, army_id)}"
     )
 
@@ -81,7 +81,7 @@ def order_line(stacks: list[ArmyUnitRow]) -> str:
     if soldiers <= 0:
         return ""
     organisation = round(sum(row.organisation * row.count for row in stacks) / soldiers)
-    shaken = sorted({words(row.morale_state.value) for row in stacks if row.morale_state is not MoraleState.STEADY})
+    shaken = sorted({spoken(row.morale_state) for row in stacks if row.morale_state is not MoraleState.STEADY})
     volleys = sum(row.ammunition for row in stacks if row.ammunition > 0)
     missing = sum(row.missing for row in stacks)
     parts = [f"organisation {organisation}"]
@@ -105,16 +105,14 @@ async def war_sheet(session: AsyncSession, rules: Rules, war: WarRow, side_id: i
         works = ", ".join(words(key) for key, value in siege.works.items() if key != "famine" and int(value) >= 100)
         relief = " relief is coming" if siege.relief_army_id is not None else ""
         lines.append(
-            f"siege of {besieged.name if besieged else 'a city'}: {several(siege.supplies, 'day', 'days')} of food, {words(siege.starvation.value)}, "
+            f"siege of {besieged.name if besieged else 'a city'}: {several(siege.supplies, 'day', 'days')} of food, {spoken(siege.starvation)}, "
             f"{several(siege.breaches, 'breach', 'breaches')}{', works: ' + works if works else ''}{relief}"
         )
     last = await session.scalar(select(BattleRow).where(BattleRow.war_id == war.id).order_by(BattleRow.id.desc()).limit(1))
     if last is not None:
         winner = await session.get(EntityRow, last.winner_entity_id)
-        tactics = (
-            f"{words(last.tactics_attacker.value)} against {words(last.tactics_defender.value)}" if last.tactics_attacker and last.tactics_defender else ""
-        )
-        outcome = words(last.outcome_class.value) if last.outcome_class else words(last.outcome.value)
+        tactics = f"{spoken(last.tactics_attacker)} against {spoken(last.tactics_defender)}" if last.tactics_attacker and last.tactics_defender else ""
+        outcome = spoken(last.outcome_class) if last.outcome_class else spoken(last.outcome)
         plan = f"; {tactics}" if tactics else ""
         name = winner.name if winner else "one side"
         field = battle_field(last, {row.id: row.name for row in await field_names(session, last)})
@@ -137,7 +135,7 @@ async def grievance_sheet(session: AsyncSession, community_id: int) -> list[str]
         lines.append(f"casus belli against {target.name if target else 'a rival'}: {CASUS_BELLI_LABELS[row.kind].lower()}, justification {row.justification}")
     line = await session.get(WarProductionRow, community_id)
     if line is not None and line.converted:
-        lines.append(f"workshops turned to {words(line.commodity.value)} for the war, efficiency +{line.efficiency}%")
+        lines.append(f"workshops turned to {spoken(line.commodity)} for the war, efficiency +{line.efficiency}%")
     return lines
 
 
@@ -166,7 +164,7 @@ async def fleet_sheet(session: AsyncSession, community_id: int) -> list[str]:
         if row is None or vessel is None or row.status in {VesselStatus.WRECKED}:
             continue
         lines.append(
-            f"ship {vessel.name}: {words(row.frame.value)}, hull {row.condition}, crew {row.crew}, renown {row.renown}"
+            f"ship {vessel.name}: {spoken(row.frame)}, hull {row.condition}, crew {row.crew}, renown {row.renown}"
             + (f", strange ({stat(vessel, 'strangeness')})" if (stat(vessel, "strangeness") or 0) > 0 else "")
         )
     return lines

@@ -41,6 +41,7 @@ class PlaceSecretRow(Base):
     school: Mapped[MagicSchool | None] = mapped_column(enum_type(MagicSchool, "school"))
     branch: Mapped[KnowledgeBranch | None] = mapped_column(enum_type(KnowledgeBranch, "branch"))
     hidden_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+    subject_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     created_epoch: Mapped[int]
     revealed_epoch: Mapped[int | None]
     revealed_by: Mapped[DiscoveryMode | None] = mapped_column(enum_type(DiscoveryMode, "revealed_by"))

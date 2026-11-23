@@ -10,6 +10,9 @@ S = RuleGroup.SETTLEMENTS
 @dataclass(frozen=True)
 class GeneticsRules:
     mutation_pct: int = rule(1, 0, 20, M, "Chance each locus of a newborn turns to another allele of its own accord (%)")
+    general_aptitude_weight_pct: int = rule(50, 0, 100, M, "How much an aptitude carried in the blood speeds or slows what upbringing adds to its gifts (%)")
+    temperament_weight_pct: int = rule(30, 0, 100, M, "How far a newborn's temper leans toward its parents' through the temperament it inherits (%)")
+    twinning_pct: int = rule(2, 0, 50, M, "Added chance of more than one child at a birth for each parent who carries twinning in the blood (%)")
     sibling_blood_pct: int = rule(50, 0, 100, M, "Inbreeding a child of two siblings carries (%)")
     half_blood_pct: int = rule(25, 0, 100, M, "Inbreeding a child carries for each parent its parents share beyond the first (%)")
     cousin_blood_pct: int = rule(12, 0, 100, M, "Inbreeding a child of two who share a grandparent carries (%)")

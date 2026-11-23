@@ -197,6 +197,7 @@ class BeastProfileRow(Base):
     hoard: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     raids: Mapped[int] = mapped_column(default=0)
     woke_epoch: Mapped[int | None]
+    temper_epoch: Mapped[int | None]
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -204,3 +205,16 @@ class BeastProfileRow(Base):
 register_profile_table(SpeciesRangeRow.__tablename__, "species_entity_id")
 register_profile_table(HerdRow.__tablename__, "community_entity_id")
 register_profile_table(SpeciesHostRow.__tablename__, "species_entity_id")
+
+
+class BeastGrudgeRow(Base):
+    __tablename__ = "beast_grudges"
+    __table_args__ = (between("strength", PERCENT_MIN, PERCENT_MAX), Index("ix_beast_grudges_beast", "beast_entity_id"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    beast_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    target_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    cause_incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
+    strength: Mapped[int] = mapped_column(default=50)
+    since_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)

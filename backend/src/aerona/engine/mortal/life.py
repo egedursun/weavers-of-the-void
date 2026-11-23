@@ -5,13 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.life_stages import LIFE_STAGES
 from aerona.catalog.mind_split import INHERITED_SUMMARIES
+from aerona.catalog.reproduction import SEX_KINDS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.models.entity_stats import MortalStats, revised
 from aerona.engine.body.customs import people_of
@@ -19,7 +20,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.rules.registry import Rules
 
-SEXES = (Sex.FEMALE, Sex.MALE)
+SEXES = (SexKind.BEARER, SexKind.BEGETTER)
 SEX_HASH = 2654435761
 STAGE_ORDER = tuple(LifeStage)
 
@@ -64,33 +65,33 @@ def stage_for(bounds: StageBounds, age: int) -> LifeStage:
     return LifeStage.ANCIENT
 
 
-def sex_of_stats(mortal: EntityRow) -> Sex:
+def sex_of_stats(mortal: EntityRow) -> SexKind:
     stats = mortal.stats
     if isinstance(stats, MortalStats) and stats.sex is not None:
-        return Sex(stats.sex)
+        return SexKind(stats.sex)
     return SEXES[(mortal.id * SEX_HASH) % len(SEXES)]
 
 
-def assign_sex(mortal: EntityRow, sex: Sex | None = None) -> Sex:
+def assign_sex(mortal: EntityRow, sex: SexKind | None = None) -> SexKind:
     chosen = sex or sex_of_stats(mortal)
     if isinstance(mortal.stats, MortalStats) and mortal.stats.sex != chosen.value:
         mortal.stats = revised(mortal.stats, {"sex": chosen.value})
     return chosen
 
 
-def window_end_pct(rules: Rules, sex: Sex) -> int:
-    table = rules.fertility
-    return {Sex.FEMALE: table.female_window_end_pct, Sex.MALE: table.male_window_end_pct, Sex.OTHER: table.other_window_end_pct}[sex]
+def window_end_pct(rules: Rules, sex: SexKind) -> int:
+    window = SEX_KINDS[sex].window
+    return window(rules) if window is not None else 0
 
 
-def fertility_window(rules: Rules, biology: PeopleBiologyRow | None, sex: Sex, lifespan: int) -> tuple[float, float]:
+def fertility_window(rules: Rules, biology: PeopleBiologyRow | None, sex: SexKind, lifespan: int) -> tuple[float, float]:
     span = max(1, lifespan)
     start = float(biology.maturity_years) if biology is not None else span * rules.fertility.window_start_pct / PERCENT
     end = span * window_end_pct(rules, sex) / PERCENT
     return start, max(start + 1, end)
 
 
-def fertility_level(rules: Rules, biology: PeopleBiologyRow | None, sex: Sex, *, age: int, lifespan: int, body: BodyRow | None) -> int:
+def fertility_level(rules: Rules, biology: PeopleBiologyRow | None, sex: SexKind, *, age: int, lifespan: int, body: BodyRow | None) -> int:
     start, end = fertility_window(rules, biology, sex, lifespan)
     if age < start or age >= end:
         return 0

@@ -36,18 +36,22 @@ import {
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
+import { NEED_WORDS } from '@/features/entity/affairs/labels'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { RowAction } from '../actions/RowAction'
 import { loreKeys } from '../api/keys'
 import {
+  CHANGE_SIGNS,
+  CHARMS,
   CURES,
+  FORTUNE_SIGNS,
   PACKAGE_LOOKS,
   STAT_LABELS,
   TRANSMISSIONS,
   VISIBILITY,
 } from '../body/afflictionLabels'
-import { CONDITIONS, FUNCTIONS, named, plain } from '../body/labels'
+import { CONDITIONS, FUNCTIONS, PLANS, named, plain } from '../body/labels'
 
 type Affliction = components['schemas']['BearerAfflictionView']
 type Package = components['schemas']['PackageView']
@@ -91,7 +95,8 @@ function StageEffects({ spec, stage }: { spec: Package; stage: number }) {
   const marks = [
     current.ageless && 'Does not age',
     current.sunlight_harm && 'Burns in sunlight',
-    current.transforms && 'Changes under the moon',
+    current.transforms && 'Changes its form',
+    current.changes_body && 'Changes the body',
     current.recruits && 'Drawn into a hidden cult',
     current.fears_source && 'Dreads its source',
     current.sanity_loss > 0 && `Sanity −${current.sanity_loss} each epoch`,
@@ -114,12 +119,12 @@ function StageEffects({ spec, stage }: { spec: Package; stage: number }) {
       ))}
       {current.needs.map((need) => (
         <Badge key={need} size='sm' variant='outline'>
-          {`Needs ${need.replaceAll('_', ' ')}`}
+          {`Needs ${NEED_WORDS[need].toLowerCase()}`}
         </Badge>
       ))}
       {current.quenches.map((need) => (
         <Badge key={`quench-${need}`} size='sm' variant='outline'>
-          {`No longer needs ${need.replaceAll('_', ' ')}`}
+          {`No longer needs ${NEED_WORDS[need].toLowerCase()}`}
         </Badge>
       ))}
       {current.grants.map((trait) => (
@@ -242,6 +247,7 @@ function AfflictionCard({
         />
       )}
       {!cured && spec && <StageEffects spec={spec} stage={row.stage} />}
+      {!cured && <PackageShape row={row} />}
       {!cured && (
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           {nextIn !== null ? (
@@ -317,6 +323,16 @@ function AfflictionCard({
             since_epoch: row.since_epoch,
             stage_since_epoch: row.stage_since_epoch,
             stage: null,
+            fortune_sign: row.fortune_sign,
+            fortune_strength: row.fortune_strength,
+            transform_plan: row.transform_plan,
+            transform_species_id: row.transform_species_id,
+            transform_substance: row.transform_substance,
+            transform_trigger: row.transform_trigger,
+            transform_mind_kept: row.transform_mind_kept,
+            charm_target_id: row.charm_target_id,
+            charm_kind: row.charm_kind,
+            charm_strength: row.charm_strength,
           }}
           labels={{
             transmission: 'Passed through',
@@ -325,11 +341,36 @@ function AfflictionCard({
             since_epoch: 'Began in epoch',
             stage_since_epoch: 'Stage began in epoch',
             stage: 'Stage',
+            fortune_sign: 'Fortune leans to (1 good, -1 ill)',
+            fortune_strength: 'Fortune strength',
+            transform_plan: 'Changes into a body',
+            transform_species_id: 'Changes into the kind',
+            transform_substance: 'Changes into the substance',
+            transform_trigger: 'Changes again at',
+            transform_mind_kept: 'Keeps its own mind',
+            charm_target_id: 'Charmed toward',
+            charm_kind: 'Charm of',
+            charm_strength: 'Charm strength',
           }}
           choices={{
             transmission: options(TRANSMISSIONS, Object.keys(TRANSMISSIONS)),
+            transform_plan: Object.entries(PLANS).map(([value, item]) => ({
+              value,
+              label: item.label,
+            })),
+            transform_trigger: Object.entries(CHANGE_SIGNS).map(
+              ([value, item]) => ({ value, label: item.label })
+            ),
+            charm_kind: Object.entries(CHARMS).map(([value, item]) => ({
+              value,
+              label: item.label,
+            })),
           }}
-          pickers={{ source_id: { source: 'entity' } }}
+          pickers={{
+            source_id: { source: 'entity' },
+            charm_target_id: { source: 'entity' },
+            transform_species_id: { source: 'entity' },
+          }}
         />
         <RowAction
           path='/api/actions/affliction:delete'
@@ -342,6 +383,90 @@ function AfflictionCard({
         />
       </div>
     </li>
+  )
+}
+
+function PackageShape({ row }: { row: Affliction }) {
+  const lean =
+    row.fortune_sign !== null ? FORTUNE_SIGNS[String(row.fortune_sign)] : null
+  const plan = row.transform_plan ? PLANS[row.transform_plan] : null
+  const sign = row.transform_trigger
+    ? CHANGE_SIGNS[row.transform_trigger]
+    : null
+  const charm = row.charm_kind ? CHARMS[row.charm_kind] : null
+  if (!lean && !plan && !charm) return null
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      {lean && (
+        <StatBar
+          framed
+          label={`${lean.label} at strength ${row.fortune_strength ?? 0}`}
+          value={row.fortune_strength ?? 0}
+          max={100}
+          icon={lean.icon}
+          tone={
+            row.fortune_sign !== null && row.fortune_sign > 0
+              ? 'success'
+              : 'destructive'
+          }
+        />
+      )}
+      {plan && (
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          <Badge size='sm' variant='secondary'>
+            <plan.icon />
+            {`Becomes ${plan.label.toLowerCase()}`}
+          </Badge>
+          {sign && (
+            <Badge size='sm' variant='outline'>
+              <sign.icon />
+              {sign.label}
+            </Badge>
+          )}
+          <Badge
+            size='sm'
+            variant={row.transform_mind_kept ? 'success' : 'warning'}
+          >
+            {row.transform_mind_kept
+              ? 'Keeps its own mind'
+              : 'Loses its own mind'}
+          </Badge>
+          {row.changed_from && (
+            <Muted variant='caption'>{`Changed now, from ${PLANS[row.changed_from].label.toLowerCase()}`}</Muted>
+          )}
+        </div>
+      )}
+      {charm && (
+        <div className='flex min-w-0 flex-col gap-1.5'>
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            <Badge size='sm' variant='warning'>
+              <charm.icon />
+              {`Charm of ${charm.label.toLowerCase()}`}
+            </Badge>
+            {row.charm_target_id !== null && row.charm_target_name && (
+              <>
+                <Muted variant='caption'>toward</Muted>
+                <EntityLink
+                  kind='entity'
+                  id={String(row.charm_target_id)}
+                  showIcon
+                >
+                  {row.charm_target_name}
+                </EntityLink>
+              </>
+            )}
+          </div>
+          <StatBar
+            framed
+            label={`Charm strength ${row.charm_strength ?? 0}`}
+            value={row.charm_strength ?? 0}
+            max={100}
+            icon={charm.icon}
+            tone='warning'
+          />
+        </div>
+      )}
+    </div>
   )
 }
 

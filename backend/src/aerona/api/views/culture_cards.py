@@ -27,6 +27,8 @@ from aerona.db.tables.culture import (
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.domain.enums.entity import EntityType
+from aerona.engine.lore.calendar_slots import SlotState, slot_open
+from aerona.engine.primitives.manual import manual_context
 
 Refs = dict[int, NodeRef]
 
@@ -129,6 +131,15 @@ async def legend_card(session: AsyncSession, entity_id: int) -> LegendCard | Non
     )
 
 
+async def slot_state(session: AsyncSession, row: TraditionProfileRow, holder_id: int | None) -> SlotState | None:
+    if row.calendar_slot is None:
+        return None
+    holder = await session.get(EntityRow, holder_id) if holder_id is not None else None
+    tradition = await session.get(EntityRow, row.tradition_entity_id)
+    world_id = holder.world_id if holder is not None else tradition.world_id if tradition is not None else None
+    return await slot_open(await manual_context(session, "tradition_slot"), world_id, row.calendar_slot, holder_id, row)
+
+
 async def tradition_card(session: AsyncSession, entity_id: int) -> TraditionCard | None:
     row = await session.get(TraditionProfileRow, entity_id)
     if row is None:
@@ -146,10 +157,13 @@ async def tradition_card(session: AsyncSession, entity_id: int) -> TraditionCard
         )
     )
     refs = await node_refs(session, [*(item.community_entity_id for item in keepers), *([row.origin_entity_id] if row.origin_entity_id else [])])
+    state = await slot_state(session, row, keepers[0].community_entity_id if keepers else row.origin_entity_id)
     return TraditionCard(
         kind=row.kind,
         stage=row.stage,
         calendar_slot=row.calendar_slot,
+        slot_open=state.open if state is not None else None,
+        slot_reason=state.reason if state is not None else None,
         season_position=row.season_position,
         calendar_entity_id=row.calendar_entity_id,
         notable_year_id=row.notable_year_id,

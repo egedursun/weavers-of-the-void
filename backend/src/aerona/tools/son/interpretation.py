@@ -34,7 +34,7 @@ async def confuse_tongues(call: SonCall, args: ConfuseTonguesInput) -> str:
         fail(SonResult.TONGUES_REFUSED, why="there is no such exchange between tongues")
     await ensure_in_reach(call, party)
     if held(row.first_party_id) or held(row.second_party_id) or "fault" in (row.locked or []):
-        fail(SonResult.TONGUES_REFUSED, why="a stronger hand holds that exchange as it is")
+        fail(SonResult.TONGUES_REFUSED, why="that exchange is held as it is")
     row.fault, row.fidelity, row.found, row.favoured_party_id = InterpretationFault.LOST_MEANING, row.fidelity // 2, False, None
     call.target(row.second_party_id)
     await call.record("tongue.confused", roles={IncidentRole.SUBJECT: row.first_party_id, IncidentRole.TARGET: row.second_party_id}, facts={"event": row.event})

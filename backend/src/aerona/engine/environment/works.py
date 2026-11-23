@@ -39,6 +39,8 @@ STRUCTURE_WORKS: dict[StructureKind, tuple[str, ...]] = {
     StructureKind.DAM: ("irrigation",),
     StructureKind.CARAVANSERAI: (),
     StructureKind.MARKET: (),
+    StructureKind.TEMPLE: ("wards",),
+    StructureKind.SHRINE: ("wards",),
 }
 
 
@@ -81,7 +83,12 @@ async def region_works(session: AsyncSession, atlas: RegionAtlas, rules: Rules) 
     await structure_works(session, atlas, rules, tallies)
     return {
         region_id: Works(
-            roads=tally["roads"], bridges=tally["bridges"], harbours=tally["harbours"], irrigation=tally["irrigation"], waystations=tally["waystations"]
+            roads=tally["roads"],
+            bridges=tally["bridges"],
+            harbours=tally["harbours"],
+            irrigation=tally["irrigation"],
+            waystations=tally["waystations"],
+            wards=tally["wards"],
         )
         for region_id, tally in tallies.items()
     }

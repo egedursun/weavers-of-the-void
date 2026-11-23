@@ -20,7 +20,7 @@ from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import MoodState
 from aerona.domain.enums.relations import CircleKind, RelationType
 from aerona.engine.mind.book import is_locked, mind_of
-from aerona.engine.mortal.kin import partners_of
+from aerona.engine.mortal.kin import betrothed_of, fosterers_of, fosterlings_of, partners_of, sworn_kin_of
 from aerona.engine.mortal.kinship import close_between
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, connect
@@ -50,6 +50,9 @@ class Facts:
     comrades: set[int] = field(default_factory=set)
     wealth: dict[int, int] = field(default_factory=dict)
     skill: dict[int, int] = field(default_factory=dict)
+    betrothed: set[int] = field(default_factory=set)
+    sworn: set[int] = field(default_factory=set)
+    fostered: set[int] = field(default_factory=set)
 
 
 def mood_of(profile: MortalProfileRow | None) -> int:
@@ -109,6 +112,9 @@ def shift(rules: Rules, row: RelationshipRow, epoch: int, **deltas: float) -> No
 
 async def facts_for(session: AsyncSession, holder_id: int, others: Iterable[int]) -> Facts:
     facts = Facts(spouses=set(await partners_of(session, holder_id)))
+    facts.betrothed = set(await betrothed_of(session, holder_id))
+    facts.sworn = set(await sworn_kin_of(session, holder_id))
+    facts.fostered = {*await fosterers_of(session, holder_id), *await fosterlings_of(session, holder_id)}
     facts.masters = {bond.target_node_id for bond in await active_bonds(session, [BondKind.APPRENTICE_OF], sources=[holder_id])}
     facts.apprentices = {bond.source_node_id for bond in await active_bonds(session, [BondKind.APPRENTICE_OF], targets=[holder_id])}
     halls = select(SocialCircleRow.faction_entity_id).where(SocialCircleRow.kind == CircleKind.DRINKING_CIRCLE)
@@ -212,6 +218,9 @@ def standing_kinds(reading: Reading) -> set[RelationType]:
         R.DRINKING_COMPANION: other in facts.drinking and row.friendship >= 0,
         R.PATRON: warm and riches >= table.patron_gap,
         R.CLIENT: warm and -riches >= table.patron_gap,
+        R.BETROTHED: other in facts.betrothed and other not in facts.spouses,
+        R.SWORN_KIN: other in facts.sworn,
+        R.FOSTER: other in facts.fostered,
     }
     return {kind for kind, met in checks.items() if met}
 

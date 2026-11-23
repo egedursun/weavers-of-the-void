@@ -10,7 +10,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import KindVariantRow, MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mortal import EquipmentSlot, LifeStage
 from aerona.domain.models.entity_stats import MortalStats
@@ -31,7 +31,7 @@ async def mortal_row(session: AsyncSession, mortal_id: int) -> EntityRow:
     return found
 
 
-def sex_of(mortal: EntityRow) -> Sex:
+def sex_of(mortal: EntityRow) -> SexKind:
     return sex_of_stats(mortal)
 
 

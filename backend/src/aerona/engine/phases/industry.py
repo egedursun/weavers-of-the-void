@@ -1,10 +1,14 @@
 from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.write_guard import unheld
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.environment.deep import reached_strata
+from aerona.engine.environment.place_traits import places_by_region
 from aerona.engine.finance.access import gauge_access
 from aerona.engine.industry.energy import gauge, industry_row, leys_by_region, unmet_pct
 from aerona.engine.industry.methods import MethodTally, choose_methods
@@ -51,6 +55,7 @@ from aerona.engine.recording.record import StepDraft, record
     "table.incident_participants",
     "table.incidents",
     "table.intensification",
+    "table.irregular_seasons",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.ley_lines",
@@ -60,6 +65,7 @@ from aerona.engine.recording.record import StepDraft, record
     "table.nodes",
     "table.personality_values",
     "table.place_environment",
+    "table.place_profiles",
     "table.plague_responses",
     "table.plant_profiles",
     "table.polity_members",
@@ -67,6 +73,7 @@ from aerona.engine.recording.record import StepDraft, record
     "table.region_crops",
     "table.region_environment",
     "table.region_pollution",
+    "table.region_underground",
     "table.resource_profiles",
     "table.resource_workers",
     "table.settlement_infrastructure",
@@ -110,11 +117,13 @@ from aerona.engine.recording.record import StepDraft, record
 async def industry_methods(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     leys = await leys_by_region(ctx)
+    falls = await places_by_region(ctx.session, PlaceKind.WATERFALL)
+    magma = await reached_strata(ctx.session, UndergroundStratum.MAGMA_SEA)
     tally = MethodTally()
     banned = await magic_banned(ctx.session, book)
     ctx.count("access_gauged", await gauge_access(ctx, book))
     for community in unheld(book.communities):
-        row = await gauge(ctx, book, community, leys)
+        row = await gauge(ctx, book, community, leys, falls=falls, magma=magma)
         await choose_methods(ctx, book, community, tally, banned=community.id in banned)
         await kindle(ctx, book, community, row)
     ctx.count("network_energy_drawn", await draw_networks(ctx, book))
@@ -188,6 +197,7 @@ async def tell_shortfalls(ctx: TickContext, book: EconomyBook) -> int:
     "table.ideology_tenets",
     "table.incident_participants",
     "table.incidents",
+    "table.irregular_seasons",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.node_births",
@@ -290,6 +300,7 @@ async def industry_aftermath(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.holder_techniques",
     "table.house_profiles",
+    "table.irregular_seasons",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.mind_profiles",

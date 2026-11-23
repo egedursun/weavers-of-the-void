@@ -104,6 +104,11 @@ class MovementCause(StrEnum):
     FRANCHISE = "franchise"
     PEACE = "peace"
     CONSERVATION = "conservation"
+    LABOUR = "labour"
+    FAITH_REFORM = "faith_reform"
+    TEMPERANCE = "temperance"
+    MIND_RIGHTS = "mind_rights"
+    EQUAL_STANDING = "equal_standing"
 
 
 KIND_OF_ENGINE = MappingProxyType(

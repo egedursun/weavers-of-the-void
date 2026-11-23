@@ -62,6 +62,12 @@ async def town_insurer(session: AsyncSession, realm: Realm) -> Ids:
     return {"insurer": faction.id}
 
 
+async def of_the_people(session: AsyncSession, realm: Realm) -> Ids:
+    await connect(session, realm.mortal_id, realm.people_id, BondKind.DESCENDS_FROM)
+    await session.flush()
+    return {"people": realm.people_id}
+
+
 async def people_home(session: AsyncSession, realm: Realm) -> Ids:
     town = await session.get(EntityRow, realm.settlement_id)
     me = await session.get(EntityRow, realm.mortal_id)

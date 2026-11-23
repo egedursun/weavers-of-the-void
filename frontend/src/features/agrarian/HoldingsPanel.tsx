@@ -229,6 +229,27 @@ function CommonCard({
           min: 0,
           max: MANY,
         },
+        {
+          key: 'quota',
+          label: 'Use allowed each epoch',
+          kind: 'number',
+          min: 0,
+          max: 200,
+        },
+        {
+          key: 'licence_price',
+          label: 'Coin a permit costs',
+          kind: 'number',
+          min: 0,
+          max: 1000,
+        },
+        {
+          key: 'officials',
+          label: 'Strength of its officials',
+          kind: 'number',
+          min: 0,
+          max: 100,
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -283,6 +304,9 @@ function CommonCard({
             row.enclosed_epoch !== null ? String(row.enclosed_epoch) : 'never',
           ],
           ['Folk driven off', String(row.dispossessed)],
+          ['Use allowed each epoch', String(row.quota)],
+          ['Coin a permit costs', String(row.licence_price)],
+          ['Strength of its officials', String(row.officials)],
         ]}
       />
     </Held>

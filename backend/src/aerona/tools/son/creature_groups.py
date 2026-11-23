@@ -35,7 +35,7 @@ async def lead_creatures(call: SonCall, args: LeadCreaturesInput) -> str:
         fail(SonResult.CREATURES_REFUSED, why="there is no such group of creatures")
     await ensure_in_reach(call, region)
     if held(group.species_entity_id) or "aim" in group.locked:
-        fail(SonResult.CREATURES_REFUSED, why="a stronger hand holds them unchanged")
+        fail(SonResult.CREATURES_REFUSED, why="they are held unchanged")
     group.aim, group.aim_until_epoch = args.aim, call.tick.epoch + call.rules.creature_groups.aim_epochs
     call.target(group.species_entity_id)
     await call.record("beasts.group_led", roles={IncidentRole.SUBJECT: group.species_entity_id}, facts={"aim": args.aim})

@@ -68,6 +68,8 @@ SKIPPED_TABLES = frozenset(
         "unit_design_equipment",
         "unit_design_techniques",
         "world_maps",
+        "world_seasons",
+        "season_onsets",
     }
 )
 SKIPPED_COLUMNS = frozenset({"id", LOCK_COLUMN, "created_at", "updated_at", "undo"})

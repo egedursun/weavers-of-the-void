@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { EmptyState, KpiTile, Paged, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { TECHNIQUE_WORDS } from '@/features/entity/affairs/labels'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -763,7 +764,7 @@ function GuildCard({ guild, ctx }: { guild: Guild; ctx: Ctx }) {
               key={item}
               className='flex min-w-0 items-center justify-between gap-2'
             >
-              <Text truncate>{item.replaceAll('_', ' ')}</Text>
+              <Text truncate>{TECHNIQUE_WORDS[item]}</Text>
               <Button
                 size='sm'
                 variant='ghost'
@@ -803,7 +804,7 @@ function GuildCard({ guild, ctx }: { guild: Guild; ctx: Ctx }) {
           label='Technique'
           value={technique}
           table={Object.fromEntries(
-            open.map((item) => [item, item.replaceAll('_', ' ')])
+            open.map((item) => [item, TECHNIQUE_WORDS[item]])
           )}
           blocked={busy}
           onPick={setTechnique}

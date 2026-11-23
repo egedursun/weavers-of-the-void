@@ -1,5 +1,8 @@
-from typing import Any
+from typing import Annotated, Any
 
+from pydantic import Field
+
+from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import spoken
 from aerona.db.tables.constructs import ConstructRow
@@ -7,12 +10,16 @@ from aerona.db.tables.contracts import MonsterContractRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.arts import ClubKind
+from aerona.domain.enums.arts import ClubKind, ForgeryKind
 from aerona.domain.enums.constructs import ContractStatus, OrderCondition, OrderKind
+from aerona.domain.enums.crafts import RightKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.arts import control as arts
 from aerona.engine.constructs import control as constructs
 from aerona.engine.constructs.orders import holder_of
+from aerona.engine.crafts import control as crafts
+from aerona.engine.cycles.standing import node_name
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.sacred.places import town_of
 from aerona.prompts import MortalToolId
@@ -27,6 +34,21 @@ FIRST = 1
 
 class ForgeWorkInput(ToolInput):
     original_id: int
+    kind: ForgeryKind | None = None
+
+
+class ReviewWorkInput(ToolInput):
+    artwork_id: int
+
+
+class ClaimRightInput(ToolInput):
+    kind: RightKind
+    name: Annotated[str, Field(min_length=1, max_length=NAME_MAX_LENGTH)]
+    subject_id: int | None = None
+    dish_id: int | None = None
+    technique: Technique | None = None
+    contest_id: int | None = None
+    marriage_id: int | None = None
 
 
 class BuyWorkInput(ToolInput):
@@ -35,6 +57,11 @@ class BuyWorkInput(ToolInput):
 
 class FoundClubInput(ToolInput):
     kind: ClubKind | None = None
+
+
+class FixContestInput(ToolInput):
+    match_id: int
+    side: int
 
 
 class TakeContractInput(ToolInput):
@@ -56,7 +83,7 @@ async def forge_work(call: MortalCall, args: ForgeWorkInput) -> str:
     if original is None or held(original.id):
         fail(MortalResult.FORGERY_DECLINED, why="there is no such thing to copy")
     try:
-        row = await arts.forge_work(call.tick, original.id, call.me.id)
+        row = await arts.forge_work(call.tick, original.id, call.me.id, args.kind)
     except ValidationFailedError as error:
         fail(MortalResult.FORGERY_DECLINED, why=reason_of(error))
     call.target(row.item_entity_id)
@@ -66,6 +93,35 @@ async def forge_work(call: MortalCall, args: ForgeWorkInput) -> str:
         facts={"forgery": row.kind, "skill": row.skill},
     )
     return result(MortalResult.FORGERY_MADE, original=original.name, kind=spoken(row.kind), skill=row.skill)
+
+
+async def review_work(call: MortalCall, args: ReviewWorkInput) -> str:
+    try:
+        verdict = await arts.review_work(call.tick, args.artwork_id, call.me.id)
+    except ValidationFailedError as error:
+        fail(MortalResult.REVIEW_DECLINED, why=reason_of(error))
+    call.target(args.artwork_id)
+    await call.record("tools.mortal.review_work", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: args.artwork_id}, facts={"acclaim": verdict})
+    return result(MortalResult.WORK_REVIEWED, work=await node_name(call.session, args.artwork_id), acclaim=verdict)
+
+
+async def claim_right(call: MortalCall, args: ClaimRightInput) -> str:
+    try:
+        row = await crafts.claim_right(
+            call.tick,
+            call.me.id,
+            args.kind,
+            args.name,
+            subject_id=args.subject_id,
+            dish_id=args.dish_id,
+            technique=args.technique,
+            contest_id=args.contest_id,
+            marriage_id=args.marriage_id,
+        )
+    except ValidationFailedError as error:
+        fail(MortalResult.RIGHT_DECLINED, why=reason_of(error))
+    await call.record("tools.mortal.claim_right", roles={IncidentRole.OWNER: call.me.id}, facts={"right": row.name, "kind": row.kind, "way": row.acquired})
+    return result(MortalResult.RIGHT_CLAIMED, name=row.name, kind=spoken(row.kind), way=spoken(row.acquired))
 
 
 async def buy_work(call: MortalCall, args: BuyWorkInput) -> str:
@@ -99,6 +155,16 @@ async def found_club(call: MortalCall, args: FoundClubInput) -> str:
     return result(MortalResult.CLUB_FOUNDED, town=town.name, kind=spoken(row.kind))
 
 
+async def fix_contest(call: MortalCall, args: FixContestInput) -> str:
+    try:
+        club = await arts.fix_contest(call.tick, call.me.id, args.match_id, args.side)
+    except ValidationFailedError as error:
+        fail(MortalResult.FIXING_DECLINED, why=reason_of(error))
+    call.target(club.faction_entity_id)
+    await call.record("tools.mortal.fix_contest", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.BENEFICIARY: club.faction_entity_id})
+    return result(MortalResult.FIXING_ARRANGED, club=await node_name(call.session, club.faction_entity_id))
+
+
 async def take_contract(call: MortalCall, args: TakeContractInput) -> str:
     row = await call.session.get(MonsterContractRow, args.contract_id)
     if row is None or row.status is not ContractStatus.POSTED:
@@ -107,7 +173,7 @@ async def take_contract(call: MortalCall, args: TakeContractInput) -> str:
     if beast is None or beast.world_id != call.me.world_id:
         fail(MortalResult.CONTRACT_DECLINED, why="its quarry is beyond your world")
     if held(beast.id):
-        fail(MortalResult.CONTRACT_DECLINED, why="a stronger hand holds its quarry")
+        fail(MortalResult.CONTRACT_DECLINED, why="its quarry is held")
     try:
         await constructs.assign_hunter(call.tick, row.id, call.me.id)
     except ValidationFailedError as error:
@@ -122,7 +188,7 @@ async def command_construct(call: MortalCall, args: CommandConstructInput) -> st
     if body is None or await call.session.get(ConstructRow, body.id) is None:
         fail(MortalResult.COMMAND_DECLINED, why="there is no such construct")
     if held(body.id):
-        fail(MortalResult.COMMAND_DECLINED, why="a stronger hand holds it")
+        fail(MortalResult.COMMAND_DECLINED, why="it is held")
     rules = await constructs.rules_of(call.tick, body.id)
     if rules is None or await holder_of(call.tick, rules) != call.me.id:
         fail(MortalResult.COMMAND_DECLINED, why="you do not hold what commands it")
@@ -145,7 +211,10 @@ def specs() -> list[ToolSpec[MortalCall, Any]]:
     return [
         ToolSpec(MortalToolId.FORGE_WORK, mortal, ForgeWorkInput, meta, forge_work),
         ToolSpec(MortalToolId.BUY_WORK, mortal, BuyWorkInput, meta, buy_work),
+        ToolSpec(MortalToolId.REVIEW_WORK, mortal, ReviewWorkInput, meta, review_work),
+        ToolSpec(MortalToolId.CLAIM_RIGHT, mortal, ClaimRightInput, meta, claim_right),
         ToolSpec(MortalToolId.FOUND_CLUB, mortal, FoundClubInput, meta, found_club),
+        ToolSpec(MortalToolId.FIX_CONTEST, mortal, FixContestInput, meta, fix_contest),
         ToolSpec(MortalToolId.TAKE_CONTRACT, mortal, TakeContractInput, meta, take_contract),
         ToolSpec(MortalToolId.COMMAND_CONSTRUCT, mortal, CommandConstructInput, meta, command_construct),
     ]

@@ -1,8 +1,8 @@
 from sqlalchemy import or_, select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.regime import (
@@ -37,11 +37,9 @@ async def tie_lines(scope: Scope, me: EntityRow) -> list[str]:
         .limit(TIE_LINES)
     ):
         if tie.client_entity_id == me.id:
-            found.append(f"your patron is {await named(scope, tie.patron_node_id)}, whom you serve as {an(words(tie.role.value))} client, tie {tie.strength}")
+            found.append(f"your patron is {await named(scope, tie.patron_node_id)}, whom you serve as {an(spoken(tie.role))} client, tie {tie.strength}")
         else:
-            found.append(
-                f"{await named(scope, tie.client_entity_id)} (mortal {tie.client_entity_id}) is your {words(tie.role.value)} client, tie {tie.strength}"
-            )
+            found.append(f"{await named(scope, tie.client_entity_id)} (mortal {tie.client_entity_id}) is your {spoken(tie.role)} client, tie {tie.strength}")
     return found
 
 
@@ -49,10 +47,10 @@ async def standing_lines(scope: Scope, me: EntityRow) -> list[str]:
     session = scope.session
     found: list[str] = []
     for credential in await session.scalars(select(CredentialRow).where(CredentialRow.mortal_entity_id == me.id).order_by(CredentialRow.id)):
-        found.append(f"you hold the credential of {words(credential.kind.value)}")
+        found.append(f"you hold the credential of {spoken(credential.kind)}")
     base = await session.get(PowerBaseRow, me.id)
     if base is not None:
-        found.append(f"your power base weighs {base.total}, a threat of {base.threat} to the ruler; you stand {words(base.stance.value)}")
+        found.append(f"your power base weighs {base.total}, a threat of {base.threat} to the ruler; you stand {spoken(base.stance)}")
     for member in await session.scalars(select(CoalitionMemberRow).where(CoalitionMemberRow.mortal_entity_id == me.id)):
         found.append(f"you sit in the ruling circle of {await named(scope, member.polity_entity_id)}, reward {member.reward}, loyalty {member.loyalty}")
     for membership in await session.scalars(select(SchoolMemberRow).where(SchoolMemberRow.mortal_entity_id == me.id)):
@@ -70,8 +68,8 @@ async def realm_lines(scope: Scope, me: EntityRow) -> list[str]:
     if realm_id is None or regime is None:
         return []
     found = [
-        f"your realm is chosen by its {words(regime.selectorate.value)} ({regime.coalition_size} of {regime.selectorate_size} in the winning circle), "
-        f"spends {regime.public_share}% on public goods, rests on {words(dominant(regime).value)} legitimacy, its ruler's time horizon {regime.horizon}"
+        f"your realm is chosen by its {spoken(regime.selectorate)} ({regime.coalition_size} of {regime.selectorate_size} in the winning circle), "
+        f"spends {regime.public_share}% on public goods, rests on {spoken(dominant(regime))} legitimacy, its ruler's time horizon {regime.horizon}"
     ]
     if await session.get(ExaminationRow, realm_id) is not None:
         found.append("your realm chooses its officials by examination")
@@ -80,7 +78,7 @@ async def realm_lines(scope: Scope, me: EntityRow) -> list[str]:
     )
     for seat in seats:
         if seat.kind not in SEATS_KEPT:
-            found.append(f"the seat of {words(seat.kind.value)} (office {seat.id}) stands empty")
+            found.append(f"the seat of {spoken(seat.kind)} (office {seat.id}) stands empty")
     return found
 
 
@@ -98,8 +96,7 @@ async def throne_lines(scope: Scope, me: EntityRow) -> list[str]:
         .limit(TIE_LINES)
     ):
         found.append(
-            f"{await named(scope, base.mortal_entity_id)} (mortal {base.mortal_entity_id}) stands {words(base.stance.value)} "
-            f"toward your rule, threat {base.threat}"
+            f"{await named(scope, base.mortal_entity_id)} (mortal {base.mortal_entity_id}) stands {spoken(base.stance)} toward your rule, threat {base.threat}"
         )
     return found
 
@@ -120,7 +117,7 @@ async def son_regime_lines(scope: Scope, son: SonRow) -> list[str]:
         .order_by(RegimeRow.polity_entity_id)
         .limit(REALM_LINES)
     ):
-        found.append(f"realm {realm.name} (polity {realm.id}) is torn over its founder's legacy: {words(regime.routinisation.value)}")
+        found.append(f"realm {realm.name} (polity {realm.id}) is torn over its founder's legacy: {spoken(regime.routinisation)}")
     for freedom, house in await session.execute(
         select(AcademicFreedomRow, EntityRow)
         .join(EntityRow, EntityRow.id == AcademicFreedomRow.structure_entity_id)

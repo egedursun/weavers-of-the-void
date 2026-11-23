@@ -25,6 +25,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.collective.embodied import embody
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.nomads import MOVING
+from aerona.engine.environment.columns import carvable, columns_by_region
 from aerona.engine.primitives.folk import homes_for
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.made_names import made_name
@@ -94,6 +95,7 @@ async def cultural_form(ctx: TickContext, origin: EntityRow | None, kind: Struct
     levels = (await known_levels(ctx.session, [origin.id])).get(origin.id, {})
     home = await ctx.session.get(RegionEnvironmentRow, origin.location_id or -1)
     table = ctx.rules.integrity
+    columns = await columns_by_region(ctx.session, [home.entity_id]) if home is not None else {}
     group = STRUCTURES[kind].group
     level = levels.get
     homes = sorted(await homes_for(ctx.session, [origin.id]) | {origin.id})
@@ -105,7 +107,7 @@ async def cultural_form(ctx: TickContext, origin: EntityRow | None, kind: Struct
         (roaming and kind in DWELLING_KINDS | ROAMING_KINDS, BuildingForm.TENT),
         (group is StructureGroup.DEFENCE and level(KnowledgeBranch.WARFARE, 0) >= table.bunker_level, BuildingForm.BUNKER),
         (level(KnowledgeBranch.BIOMANCY, 0) >= table.grown_level, BuildingForm.GROWN),
-        (home is not None and home.dominant_terrain in CARVED_GROUND, BuildingForm.CARVED),
+        (home is not None and (home.dominant_terrain in CARVED_GROUND or carvable(ctx.rules, columns.get(home.entity_id, []))), BuildingForm.CARVED),
         (
             home is not None
             and home.coast_kind is not CoastKind.NONE

@@ -33,6 +33,9 @@ const SEASONS = {
       growth: 70,
       travel: 50,
       campaign: 50,
+      share_pct: 60,
+      warmth: 'warming',
+      water: 'deluge',
       edited: true,
     },
     {
@@ -44,7 +47,21 @@ const SEASONS = {
       growth: 10,
       travel: 30,
       campaign: 20,
+      share_pct: 40,
+      warmth: 'coldest',
+      water: 'arid',
       edited: false,
+    },
+  ],
+  seasons_max: 8,
+  onsets: [
+    {
+      id: 31,
+      year: 12,
+      season_position: 1,
+      onset: 'failed',
+      locked: true,
+      by_node_id: null,
     },
   ],
   calendars: [],
@@ -216,6 +233,7 @@ describe('season calendar', () => {
     await expect
       .poll(() => callsTo('POST', '/api/actions/seasons:release'))
       .toHaveLength(1)
+    await screen.getByRole('button', { name: 'Moons and tides' }).click()
     await screen
       .getByRole('button', { name: 'Let the world decide again' })
       .click()
@@ -259,5 +277,64 @@ describe('season calendar', () => {
     await expect
       .poll(() => callsTo('POST', '/api/actions/ley:dissolve'))
       .toHaveLength(1)
+  })
+
+  it('moves, releases, clears and holds the onset of a season in a year', async () => {
+    serve()
+    onApi('GET', '/api/worlds/1/calendar', CALENDAR)
+    onApi('POST', '/api/actions/seasons:onset', ACCEPTED_ACTION)
+    onApi('POST', '/api/actions/seasons:onset_release', ACCEPTED_ACTION)
+    onApi('POST', '/api/actions/seasons:onset_clear', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<SeasonCalendarPanel data={SEASONS} />)
+    await screen.getByRole('button', { name: 'Season onsets' }).click()
+    await expect.element(screen.getByText('Failed').first()).toBeVisible()
+    await screen.getByRole('button', { name: 'Release' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/seasons:onset_release'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/seasons:onset_release')[0].body
+    ).toEqual({ onset_id: 31 })
+    await screen.getByRole('button', { name: 'Clear' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/seasons:onset_clear'))
+      .toHaveLength(1)
+    const hold = screen.getByRole('button', { name: 'Hold this onset' })
+    await expect.element(hold).toBeDisabled()
+    await expect
+      .element(hold)
+      .toHaveAccessibleDescription('Write the year as a whole number.')
+    await screen
+      .getByRole('spinbutton', { name: 'Year', exact: true })
+      .fill('40')
+    await hold.click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/seasons:onset'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/seasons:onset')[0].body).toEqual({
+      world_id: 1,
+      year: 40,
+      season_position: 0,
+      onset: 'failed',
+    })
+  })
+
+  it('keeps the add-season control disabled with its reason once the year is full', async () => {
+    serve()
+    onApi('GET', '/api/worlds/1/calendar', CALENDAR)
+    const { screen } = await renderApp(
+      <SeasonCalendarPanel
+        data={{ ...(SEASONS as object), seasons_max: 2 } as never}
+      />
+    )
+    await screen.getByRole('button', { name: 'Seasons and moons' }).click()
+    await expect
+      .element(screen.getByText('The wheel of the year'))
+      .toBeVisible()
+    const add = screen.getByRole('button', { name: 'Add the season' })
+    await expect.element(add).toBeDisabled()
+    await expect
+      .element(add)
+      .toHaveAccessibleDescription('A world keeps at most 2 seasons.')
   })
 })

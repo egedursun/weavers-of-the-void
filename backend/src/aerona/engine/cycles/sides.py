@@ -1,11 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.reproduction import TWO_KINDS
 from aerona.core.random import SeededRandom
 from aerona.db.tables.cycles import KinshipSystemRow
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 
-PAIRED = {Sex.FEMALE: Sex.MALE, Sex.MALE: Sex.FEMALE}
-SIDES = (Sex.FEMALE, Sex.MALE)
+PAIRED = {SexKind.BEARER: SexKind.BEGETTER, SexKind.BEGETTER: SexKind.BEARER}
+SIDES = TWO_KINDS
 
 
 def first_sex(system: KinshipSystemRow) -> str:
@@ -13,10 +14,10 @@ def first_sex(system: KinshipSystemRow) -> str:
 
 
 def second_sex(system: KinshipSystemRow) -> str:
-    return PAIRED.get(system.first_side, Sex.OTHER).value
+    return PAIRED.get(system.first_side, SexKind.BOTH).value
 
 
-def drawn_side(people_id: int) -> Sex:
+def drawn_side(people_id: int) -> SexKind:
     return SeededRandom.for_epoch(people_id, 0, "first_side").pick(list(SIDES))
 
 

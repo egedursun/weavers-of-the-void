@@ -165,7 +165,7 @@ async def set_task(scope: PlayerScope, command: SetTask) -> Effect:
         raise ValidationFailedError("Set a task, a target or a diligence.")
     office.locked = held(office.locked, touched, command.hold)
     await scope.session.flush()
-    task = office.task.value.replace("_", " ") if office.task is not None else "no task"
+    task = spoken(office.task) if office.task is not None else "no task"
     return Effect(f"The {spoken(office.kind)} works at {task}, diligence {office.diligence}.", target_node_id=office.polity_entity_id)
 
 

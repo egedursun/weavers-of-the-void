@@ -1,3 +1,4 @@
+from aerona.catalog.movement import FOOT, mode_through
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.db.tables.demography import PeopleCultureRow
@@ -16,6 +17,7 @@ from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.agrarian.book import gap_of
 from aerona.engine.body.customs import culture_of
+from aerona.engine.body.variants import body_modes
 from aerona.engine.context import TickContext
 from aerona.engine.demography.biology import climate_fit, profiles_of
 from aerona.engine.demography.urban import town_pull_factor
@@ -53,12 +55,19 @@ async def is_hungry(ctx: TickContext, community: EntityRow) -> bool:
     return food < effects.hungry_food or (prosperity if prosperity is not None else effects.unknown_prosperity) < effects.famine_prosperity
 
 
-def walkable(ctx: TickContext, ground: EnvironmentBook | None, region_id: int) -> int:
+def walkable(ctx: TickContext, ground: EnvironmentBook | None, region_id: int, modes: frozenset[MovementMode] = FOOT) -> int:
     env = ground.regions.get(region_id) if ground is not None else None
     if ground is None or env is None:
         return PERCENT
     season = ground.travel_season(env.world_id)
-    return ground.footed(ctx.environment.world_seed, ctx.epoch, env, MovementMode.ON_FOOT.value, season=season, slot=f"migration.{region_id}")
+    return max(
+        ground.footed(ctx.environment.world_seed, ctx.epoch, env, mode.value, season=season, slot=f"migration.{region_id}") for mode in sorted(modes or FOOT)
+    )
+
+
+def way_through(ground: EnvironmentBook | None, region_id: int, modes: frozenset[MovementMode]) -> MovementMode:
+    env = ground.regions.get(region_id) if ground is not None else None
+    return mode_through(env.passability if env is not None else {}, modes, PERCENT)
 
 
 async def kin_pull(ctx: TickContext, atlas: RegionAtlas, origin: EntityRow | None, region_id: int) -> float:
@@ -99,7 +108,13 @@ async def town_pull(ctx: TickContext, atlas: RegionAtlas, region_id: int, origin
 
 
 async def greener_region(
-    ctx: TickContext, atlas: RegionAtlas, region: EntityRow, ground: EnvironmentBook | None = None, origin: EntityRow | None = None
+    ctx: TickContext,
+    atlas: RegionAtlas,
+    region: EntityRow,
+    ground: EnvironmentBook | None = None,
+    origin: EntityRow | None = None,
+    *,
+    modes: frozenset[MovementMode] = FOOT,
 ) -> EntityRow | None:
     effects = ctx.rules.world_effects
     own = stat(region, "fertility")
@@ -113,7 +128,7 @@ async def greener_region(
         neighbour = await living_entity(ctx.session, neighbour_id)
         if neighbour is None or neighbour.entity_type is not EntityType.REGION or neighbour.world_id != region.world_id or atlas.is_water(neighbour.id):
             continue
-        passable = walkable(ctx, ground, neighbour.id)
+        passable = walkable(ctx, ground, neighbour.id, modes)
         if passable < ctx.rules.world_effects.migration_passable_min:
             continue
         fertility = stat(neighbour, "fertility")
@@ -181,6 +196,7 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     "table.forced_weather",
     "table.held_identities",
     "table.immunities",
+    "table.irregular_seasons",
     "table.land_rings",
     "table.language_profiles",
     "table.law_jurisdictions",
@@ -248,12 +264,13 @@ async def famine_migration(ctx: TickContext) -> None:
         if not starving or not rng.chance(rules.world_engine.famine_migration_chance * weight):
             continue
         region = await living_entity(ctx.session, atlas.top_region(community.id))
-        target = await greener_region(ctx, atlas, region, ground, community) if region is not None else None
+        modes = await body_modes(ctx.session, community)
+        target = await greener_region(ctx, atlas, region, ground, community, modes=modes) if region is not None else None
         if target is None:
             continue
         with explaining():
             leaving = round_half_up(population * rules.deep_world.famine_migration_share_pct / PERCENT)
-            lost = round_half_up(leaving * (PERCENT - walkable(ctx, ground, target.id)) * effects.migration_road_loss_pct / PERCENT / PERCENT)
+            lost = round_half_up(leaving * (PERCENT - walkable(ctx, ground, target.id, modes)) * effects.migration_road_loss_pct / PERCENT / PERCENT)
             migrants = max(1, leaving - lost)
             if lost:
                 floor, cap = headcount_bounds(rules, community)
@@ -265,7 +282,7 @@ async def famine_migration(ctx: TickContext) -> None:
                 ctx,
                 "migration.famine",
                 roles={IncidentRole.ACTOR: community.id, IncidentRole.DESTINATION: target.id, IncidentRole.PRODUCT: settlement.id},
-                facts={"migrants": migrants, "lost_on_road": lost, "rebuilt": 1 if rebuilt else 0},
+                facts={"migrants": migrants, "lost_on_road": lost, "rebuilt": 1 if rebuilt else 0, "mode": way_through(ground, target.id, modes)},
                 steps=(
                     StepDraft(StepAction.DEPART, actor=community.id, amount=leaving, unit=FactUnit.PEOPLE),
                     StepDraft(StepAction.TRAVEL, actor=community.id, target=target.id, amount=lost or None, unit=FactUnit.PEOPLE if lost else None),

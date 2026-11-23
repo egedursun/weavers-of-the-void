@@ -67,7 +67,7 @@ const VIEW = {
     '2': { occupier_id: 1, name: 'Velmora', control: 60, resistance: 30 },
   },
   holy: [
-    { cult_id: 5, cult: 'The Quiet Order', holding_id: 4, kind: 'shrine' },
+    { cult_id: 5, cult: 'The Quiet Order', holding_id: 4, kind: 'holy_place' },
   ],
   geometry: {
     regions: [
@@ -115,7 +115,7 @@ describe('map hover text', () => {
   it('names other entity types through the catalogue labels', () => {
     expect(text({ kind: 'entity', id: 4 })?.lines).toEqual([
       'Structure',
-      'Holy to The Quiet Order: shrine',
+      'Holy to The Quiet Order: holy place',
     ])
   })
 

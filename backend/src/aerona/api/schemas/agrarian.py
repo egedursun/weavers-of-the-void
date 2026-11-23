@@ -79,6 +79,9 @@ class CommonsView(ApiModel):
     encloser: NodeRef | None
     enclosed_epoch: int | None
     dispossessed: int
+    quota: int
+    licence_price: int
+    officials: int
     since_epoch: int
     locked: list[str]
 

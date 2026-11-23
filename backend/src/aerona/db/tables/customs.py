@@ -8,6 +8,7 @@ from aerona.domain.enums.customs import (
     AgeGrade,
     CoopPurpose,
     EvidenceKind,
+    GradeDuty,
     Intoxicant,
     IntoxicantUse,
     MarkKind,
@@ -17,20 +18,21 @@ from aerona.domain.enums.customs import (
     NamingPattern,
     Naturalisation,
     ReliefKind,
-    RevivalAim,
     RevivalGoal,
     RevivalStage,
+    RevivalWay,
 )
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
 
-REVIVAL_FIELDS = ("aim", "stage", "goal", "strength", "prophet_node_id", "ended_epoch")
+REVIVAL_FIELDS = ("way", "stage", "goal", "strength", "prophet_node_id", "ended_epoch")
 INTOXICANT_FIELDS = ("use", "acceptance")
 MARK_CUSTOM_FIELDS = ("meaning",)
+GRADE_DUTY_FIELDS = ("grade",)
 MARK_FIELDS = ("kind", "meaning", "placed_epoch")
-TIME_FIELDS = ("work", "rest", "worship", "leisure", "travel", "service", "learning", "care", "art", "housework", "sleep")
-NAMING_FIELDS = ("pattern", "secret_names", "taboo_epochs", "rename_on_initiation", "rename_on_marriage", "rename_on_vow")
+TIME_FIELDS = ("work", "rest", "worship", "leisure", "travel", "service", "learning", "care", "art", "housework", "sleep", "civic", "training")
+NAMING_FIELDS = ("pattern", "secret_names", "taboo_epochs", "rename_on_initiation", "rename_on_marriage", "rename_on_vow", "posthumous_names")
 NAME_FORM_FIELDS = ("name", "given_epoch")
 AGE_SET_FIELDS = ("name", "initiated_from", "initiated_to", "grade", "promoted_epoch")
 TAVERN_FIELDS = ("keeper_node_id", "patrons", "brawls", "lodging", "rumours")
@@ -53,7 +55,7 @@ class RevivalRow(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     people_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     dominant_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
-    aim: Mapped[RevivalAim] = mapped_column(enum_type(RevivalAim, "aim"))
+    way: Mapped[RevivalWay] = mapped_column(enum_type(RevivalWay, "way"))
     stage: Mapped[RevivalStage] = mapped_column(enum_type(RevivalStage, "stage"), default=RevivalStage.STRESS)
     goal: Mapped[RevivalGoal] = mapped_column(enum_type(RevivalGoal, "goal"))
     strength: Mapped[int] = mapped_column(default=30)
@@ -91,6 +93,7 @@ class BodyMarkRow(Base):
     holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
     kind: Mapped[MarkKind] = mapped_column(enum_type(MarkKind, "kind"))
     meaning: Mapped[MarkMeaning] = mapped_column(enum_type(MarkMeaning, "meaning"))
+    augment_id: Mapped[int | None] = mapped_column(ForeignKey("augments.id", ondelete="SET NULL"))
     placed_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -115,6 +118,8 @@ class TimeBudgetRow(Base):
     art: Mapped[int] = mapped_column(default=0, server_default="0")
     housework: Mapped[int] = mapped_column(default=0, server_default="0")
     sleep: Mapped[int] = mapped_column(default=0, server_default="0")
+    civic: Mapped[int] = mapped_column(default=0, server_default="0")
+    training: Mapped[int] = mapped_column(default=0, server_default="0")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -129,6 +134,7 @@ class NamingCustomRow(Base):
     rename_on_initiation: Mapped[bool] = mapped_column(default=False)
     rename_on_marriage: Mapped[bool] = mapped_column(default=False)
     rename_on_vow: Mapped[bool] = mapped_column(default=False)
+    posthumous_names: Mapped[bool] = mapped_column(default=False, server_default="0")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -154,6 +160,15 @@ class AgeSetRow(Base):
     initiated_to: Mapped[int | None]
     grade: Mapped[AgeGrade] = mapped_column(enum_type(AgeGrade, "grade"), default=AgeGrade.YOUTHS)
     promoted_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class GradeDutyRow(Base):
+    __tablename__ = "grade_duties"
+
+    people_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    duty: Mapped[GradeDuty] = mapped_column(enum_type(GradeDuty, "duty"), primary_key=True)
+    grade: Mapped[AgeGrade] = mapped_column(enum_type(AgeGrade, "grade"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

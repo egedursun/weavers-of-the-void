@@ -16,6 +16,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.titles import TitleHolderRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import TraditionFunction
@@ -160,6 +161,33 @@ async def festivals(ctx: TickContext) -> list[Occasion]:
         community = await living(ctx, community_id)
         if community is not None and chance(ctx, f"festival.{tradition_id}.{community_id}", ctx.rules.gatherings.over_epoch(ctx.rules.gatherings.festival_pct)):
             found.append(Occasion(G.FESTIVAL, community.id, community.world_id, community.id, tradition_id=tradition_id))
+    return found
+
+
+async def commemorations(ctx: TickContext) -> list[Occasion]:
+    rows = await ctx.session.execute(
+        select(TraditionParticipationRow.tradition_entity_id, TraditionParticipationRow.community_entity_id)
+        .join(TraditionProfileRow, TraditionProfileRow.tradition_entity_id == TraditionParticipationRow.tradition_entity_id)
+        .where(TraditionProfileRow.kind == TraditionFunction.COMMEMORATION, TraditionParticipationRow.last_celebrated_epoch == ctx.epoch)
+        .order_by(TraditionParticipationRow.tradition_entity_id, TraditionParticipationRow.community_entity_id)
+    )
+    found: list[Occasion] = []
+    for tradition_id, community_id in rows:
+        community = await living(ctx, community_id)
+        if community is not None:
+            found.append(Occasion(G.COMMEMORATION, community.id, community.world_id, community.id, tradition_id=tradition_id))
+    return found
+
+
+async def musters(ctx: TickContext) -> list[Occasion]:
+    found: list[Occasion] = []
+    for army in await ctx.session.scalars(
+        select(ArmyRow).where(ArmyRow.raised_epoch == ctx.epoch, ArmyRow.disbanded_epoch.is_(None)).order_by(ArmyRow.entity_id)
+    ):
+        owner = await living(ctx, army.owner_entity_id)
+        if owner is not None:
+            place = owner.id if owner.entity_type is EntityType.SETTLEMENT else owner.location_id
+            found.append(Occasion(G.MUSTER, owner.id, owner.world_id, place, honoured_id=army.entity_id))
     return found
 
 
@@ -379,6 +407,8 @@ async def occasions(ctx: TickContext, atlas: RegionAtlas) -> list[Occasion]:
         *await summits(ctx, ruled, atlas),
         *await councils(ctx, ruled),
         *await festivals(ctx),
+        *await commemorations(ctx),
+        *await musters(ctx),
         *await pilgrimages(ctx),
         *await processions(ctx),
         *await tournaments(ctx, ruled),

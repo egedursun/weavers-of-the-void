@@ -204,6 +204,11 @@ PATTERNS = (
         prose_only=True,
     ),
     Pattern(
+        "a power given a body",
+        re.compile(r"\b(?:stronger|greater|higher|unseen|divine|mightier) hands?\b", re.IGNORECASE),
+        prose_only=True,
+    ),
+    Pattern(
         "a place given a will or a mood",
         re.compile(
             r"\b(?:merciless|pitiless|cruel|angry|brooding|hungry|jealous) (?:sun|sky|sea|land|ground|desert|wind|winter)s?\b|"
@@ -457,6 +462,25 @@ def enum_values(path: Path) -> list[tuple[int, str]]:
     ]
 
 
+MARTIAL_ROLE = "a martial role imposed on an age"
+AGE_ENUMS = re.compile(r"Age|Grade")
+MARTIAL_WORDS = re.compile(r"\b(warriors?|soldiers?|fighters?|braves|spears?|levies)\b")
+
+
+def martial_ages(path: Path) -> list[Finding]:
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    return [
+        Finding(path, item.lineno, MARTIAL_ROLE, item.value.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ClassDef) and AGE_ENUMS.search(node.name)
+        for item in node.body
+        if isinstance(item, ast.Assign)
+        and isinstance(item.value, ast.Constant)
+        and isinstance(item.value.value, str)
+        and MARTIAL_WORDS.search(spaced(item.value.value))
+    ]
+
+
 def spaced(value: str) -> str:
     return value.replace("_", " ").replace(".", " ")
 
@@ -477,6 +501,7 @@ def kind_keys(path: Path) -> list[tuple[int, str]]:
 def enum_findings() -> list[Finding]:
     found: list[Finding] = []
     for path in sorted(ENUMS.glob("*.py")):
+        found.extend(martial_ages(path))
         for line, value in enum_values(path):
             found.extend(matches(path, line, spaced(value), True, False, enum_value=True))
     for path in backend_targets():

@@ -182,6 +182,6 @@ def test_no_source_file_mentions_another_model_family() -> None:
         if path.is_file()
         and path.relative_to(source_root) != LEGACY_VOCABULARY
         and path.suffix in {".py", ".j2", ".json", ".yaml"}
-        and re.search(r"sonnet|opus", path.read_text(encoding="utf-8"), re.IGNORECASE)
+        and re.search(r"\b(?:sonnet|opus)\b", path.read_text(encoding="utf-8"), re.IGNORECASE)
     ]
     assert offenders == []

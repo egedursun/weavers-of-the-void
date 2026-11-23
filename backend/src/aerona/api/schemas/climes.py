@@ -7,6 +7,7 @@ from aerona.domain.enums.mind import ValueAxis
 class RegionWindView(ApiModel):
     region: NodeRef
     band: CirculationBand
+    summer_band: CirculationBand
     wind_from: int
     strength: int
     windward: bool

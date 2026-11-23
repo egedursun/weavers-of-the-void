@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import type { components } from '@/api/generated/schema'
+import { subsystemValues, type components } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,6 +26,7 @@ import {
 import { Medallion, FieldTile } from '@/components/domain'
 import { ChoiceTiles } from '@/components/domain/SettingsKit'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { humanize } from '../actions/schema'
 import { named } from '../environment/labels'
@@ -130,7 +131,7 @@ export function ModifierCard({
             {`${humanize(modifier.key)} ${shiftText(modifier.op, modifier.magnitude)}`}
           </Text>
           <Muted variant='caption' truncate>
-            {`${modifier.reason} · ${humanize(modifier.source_subsystem)}`}
+            {`${modifier.reason} · ${wordOf(subsystemValues, modifier.source_subsystem)}`}
           </Muted>
         </div>
         <Badge size='sm' variant={badgeVariant(spec.tone)}>

@@ -248,7 +248,7 @@ async def thing(call: MortalCall, node_id: int | None, declined: MortalResult, w
     if found.world_id is not None and call.me.world_id is not None and found.world_id != call.me.world_id:
         fail(declined, why=f"that {what} is beyond your world")
     if held(found.id):
-        fail(declined, why="a stronger hand holds it")
+        fail(declined, why="it is held")
     return found
 
 
@@ -525,7 +525,7 @@ async def cut_network(call: MortalCall, args: CutNetworkInput) -> str:
 
 async def intrude_tool(call: MortalCall, args: IntrudeInput) -> str:
     if held(args.target_id):
-        fail(MortalResult.INTRUSION_DECLINED, why="a stronger hand holds it")
+        fail(MortalResult.INTRUSION_DECLINED, why="it is held")
     try:
         row = await intrude(call.tick, Attempt(call.me.id, args.target, args.target_id, IntrusionApproach.TECHNICAL, args.aim))
     except ValidationFailedError as error:
@@ -575,7 +575,7 @@ async def write_record(call: MortalCall, subject_id: int, authenticity: Authenti
         call.tick, town, AccountKind.FOLK_MEMORY, fidelity=80, stances={}, subject_id=subject.id, medium=AccountMedium.BOOK, author_id=call.me.id
     )
     if row is None:
-        fail(declined, why="a stronger hand holds your home")
+        fail(declined, why="your home is held")
     row.authenticity = authenticity
     return subject
 
@@ -797,7 +797,7 @@ async def withdraw_people(call: MortalCall, args: WithdrawInput) -> str:
 async def set_surveillance(call: MortalCall, args: SurveillanceInput) -> str:
     realm = await throne_of(call)
     if held(realm.entity.id):
-        fail(MortalResult.SURVEILLANCE_DECLINED, why="a stronger hand holds your realm")
+        fail(MortalResult.SURVEILLANCE_DECLINED, why="your realm is held")
     row: SurveillanceProfileRow = await profile_for(call.tick, realm.entity.id)
     row.focus = args.focus
     call.target(realm.entity.id)

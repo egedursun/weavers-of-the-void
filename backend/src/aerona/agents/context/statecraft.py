@@ -53,7 +53,7 @@ async def statecraft_lines(session: AsyncSession, me: EntityRow) -> list[str]:
     for row in list(felt)[:SHOWN]:
         found.append(f"your realm feels threat {row.threat} from {await name_of(session, row.subject_entity_id)}")
     for subject in await session.scalars(select(VassalageRow).where(or_(VassalageRow.vassal_entity_id == realm, VassalageRow.overlord_entity_id == realm))):
-        kind = subject.kind.value.replace("_", " ")
+        kind = spoken(subject.kind)
         if subject.vassal_entity_id == realm:
             found.append(f"your realm is {an(kind)} of {await name_of(session, subject.overlord_entity_id)}, wishing for liberty {subject.liberty}")
         else:
@@ -81,7 +81,7 @@ async def affairs_lines(session: AsyncSession, me: EntityRow) -> list[str]:
     if profile is not None:
         found.append(f"corruption in your realm stands at {profile.corruption}")
     for office in await session.scalars(select(OfficeRow).where(OfficeRow.polity_entity_id == realm, OfficeRow.task.is_not(None)).order_by(OfficeRow.id)):
-        task = office.task.value.replace("_", " ") if office.task else "nothing"
+        task = spoken(office.task) if office.task else "nothing"
         found.append(f"office #{office.id} ({spoken(office.kind)}) works at {task}, diligence {office.diligence}")
     for tax in await session.scalars(select(TaxPolicyRow).where(TaxPolicyRow.polity_entity_id == realm, TaxPolicyRow.rate > 0).order_by(TaxPolicyRow.kind)):
         farmed = ", farmed out" if tax.farmed else ""

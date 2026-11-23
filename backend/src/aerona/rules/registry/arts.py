@@ -39,6 +39,15 @@ class ForgeryRules:
     expose_chance: int = rule(10, 0, 100, C, "Chance each epoch that an expert examines a forgery in its land (%)")
     infamy: int = rule(15, 0, 100, C, "Infamy an exposed forger gains")
     sanctity: int = rule(30, 0, 100, C, "Sanctity an exposed forged relic loses")
+    artwork_detect_pct: int = rule(100, 0, 100, C, "How readily a forged work of art is found out, against the base chance (%)")
+    relic_detect_pct: int = rule(80, 0, 100, C, "How readily a forged relic is found out, against the base chance (%)")
+    document_detect_pct: int = rule(100, 0, 100, C, "How readily a forged document is found out, against the base chance (%)")
+    brand_detect_pct: int = rule(100, 0, 100, C, "How readily goods under a false mark are found out, against the base chance (%)")
+    coin_detect_pct: int = rule(100, 0, 100, C, "How readily false coin is found out, against the base chance (%)")
+    lineage_detect_pct: int = rule(70, 0, 100, C, "How readily a forged lineage is found out, against the base chance (%)")
+    seal_detect_pct: int = rule(90, 0, 100, C, "How readily a forged seal is found out, against the base chance (%)")
+    coin_trust_cut: int = rule(5, 0, 100, C, "Trust a currency loses each time false coin of it is made")
+    seal_order_take: int = rule(20, 0, 100000, C, "Coin a forged seal draws from its realm by a false order")
 
 
 @dataclass(frozen=True)

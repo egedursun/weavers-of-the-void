@@ -12,6 +12,7 @@ from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.ecology import HerdRow, SpeciesProductRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.geology import RegionGeologyRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.mind import SkillRow
@@ -59,6 +60,8 @@ class EconomyBook:
     techniques: dict[int, set[Technique]] = field(default_factory=dict)
     designs: dict[int, WorkshopDesignRow] = field(default_factory=dict)
     merchant_danger: dict[int, int] = field(default_factory=dict)
+    worker_danger: dict[int, int] = field(default_factory=dict)
+    rock_columns: dict[int, list[RegionGeologyRow]] = field(default_factory=dict)
     robbers: frozenset[int] = frozenset()
     methods: dict[int, dict[ProcessKind, CommunityMethodRow]] = field(default_factory=dict)
     industry: dict[int, CommunityIndustryRow] = field(default_factory=dict)

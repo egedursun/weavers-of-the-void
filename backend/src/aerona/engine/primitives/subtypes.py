@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.constants.tool_inputs import SUBTYPE_MAX
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 
@@ -39,7 +40,7 @@ STATUS_WORDS = frozenset(
 LEAK = re.compile(r"^(?:g\d+|p\d+|power \d+|\d[\d.,]*\s*(?:soldiers|warriors|men)|epoch \d+|led by .+|second|third)$")
 TYPE_PREFIX = re.compile(r"^([^\W\d_][\w ]*?)\s*[·/]\s*(.+)$")
 PARENTHESES = re.compile(r"^(.*?)\s*\(([^()]*)\)\s*$")
-TYPE_WORDS = frozenset({entity_type.value.replace("_", " ") for entity_type in EntityType} | {spec.label.casefold() for spec in ENTITY_TYPES.values()})
+TYPE_WORDS = frozenset({spoken(entity_type) for entity_type in EntityType} | {spec.label.casefold() for spec in ENTITY_TYPES.values()})
 
 
 def without_status(text: str) -> str:

@@ -8,10 +8,13 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.sea_waves import SeaWaveCoastRow, SeaWaveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import ScarKind, TerrainKind
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sea_waves import WaveOrigin
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.keystones import reef_shield, services_by_region
+from aerona.engine.environment.book import add_scar
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import FactInput, record
@@ -65,10 +68,16 @@ async def strike_coast(ctx: TickContext, atlas: RegionAtlas, wave: SeaWaveRow, r
     row = SeaWaveCoastRow(wave_id=wave.id, region_entity_id=region_id, height=height, delay=hops, warned=await warned(ctx, atlas, region_id), locked=[])
     ctx.session.add(row)
     severity = min(1.0, height * table.harm_per_height / FULL_STRIKE)
+    ground = await ctx.session.get(RegionEnvironmentRow, region_id)
+    if ground is not None and ground.dominant_terrain is TerrainKind.MANGROVE:
+        severity *= 1 - ctx.rules.terrain_depth.mangrove_wave_cut_pct / PERCENT
+    severity *= reef_shield(ctx.rules, (await services_by_region(ctx.session)).get(region_id))
     if row.warned:
         severity *= 1 - table.warning_death_cut_pct / PERCENT
         await record(ctx, "land.wave_warned", roles={IncidentRole.PLACE: region_id}, facts={"height": height})
     impact = await strike(ctx, region, Disaster.FLOOD, severity)
+    if ground is not None and "scar.flooded" not in ground.locked:
+        add_scar(ground, ScarKind.FLOODED, height // 2)
     row.dead = len(getattr(impact, "dead", []))
     if height >= table.salt_height:
         await salt(ctx, row)

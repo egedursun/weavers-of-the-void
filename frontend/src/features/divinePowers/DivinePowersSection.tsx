@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CirclePlus, Trash2, Wand2, X } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
-import { domainValues } from '@/api/generated/schema'
+import { domainHookValues, domainValues } from '@/api/generated/schema'
 import {
   EmptyState,
   LoadingBlock,
@@ -20,6 +20,7 @@ import {
 import { StepButton, TextField } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { words } from '@/features/entity/lore/api'
 import { useMadeAction } from '@/features/minds/api'
 import { ChoiceField, NumberField } from '@/features/wars/military/parts'
@@ -32,7 +33,11 @@ const HOLD = 'Parts you set are held against the engine until you release them.'
 const DOMAINS = Object.fromEntries(
   domainValues.map((value) => [
     value,
-    { label: words(value), icon: Wand2, tone: 'verdigris' as const },
+    {
+      label: wordOf(domainValues, value).toLowerCase(),
+      icon: Wand2,
+      tone: 'verdigris' as const,
+    },
   ])
 )
 
@@ -123,7 +128,9 @@ function Power({
       caption={`${SCOPES[row.scope].label}, ${MODES[row.mode].label.toLowerCase()}, strength ${row.strength}; costs ${row.cost_amount} ${COSTS[row.cost].label.toLowerCase()}, rests ${row.cooldown} epoch${row.cooldown === 1 ? '' : 's'}; granted in epoch ${row.granted_epoch}${row.last_used_epoch !== null ? `, last used in epoch ${row.last_used_epoch}` : ''}`}
     >
       {preset ? (
-        <Chip icon={POWER_ICON}>From the old gift {words(preset)}</Chip>
+        <Chip icon={POWER_ICON}>
+          From the old gift {wordOf(domainHookValues, preset).toLowerCase()}
+        </Chip>
       ) : null}
       <div className='flex min-w-0 flex-wrap gap-2'>
         {shownDomains.visible.map((item) => (

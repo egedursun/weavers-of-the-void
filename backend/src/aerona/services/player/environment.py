@@ -3,18 +3,20 @@ from pydantic import Field
 from aerona.cartography.biomes import Biome
 from aerona.catalog.weather import WEATHER
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import CalendarRow
+from aerona.db.tables.environment import CalendarRow, WorldSeasonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.environment import NotableYearKind, ScarKind, WeatherKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.environment import control
 from aerona.engine.phases.environment import adopt_calendar, write_seasons
 from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.recording.record import FactInput, record
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 FIELD_PATTERN = r"^[a-z][a-z_]*$"
@@ -75,6 +77,7 @@ class EditSeason(Command):
     growth: int | None = Field(default=None, ge=0, le=100)
     travel: int | None = Field(default=None, ge=0, le=100)
     campaign: int | None = Field(default=None, ge=0, le=100)
+    share_pct: int | None = Field(default=None, ge=1, le=100)
 
 
 class SetWorldCalendar(Command):
@@ -131,7 +134,7 @@ async def set_region_scar(scope: PlayerScope, command: SetScar) -> Effect:
     region = await _entity(scope, command.region_id)
     ground = await control.region_ground(scope.session, region.id)
     control.set_scar(ground, command.kind, command.depth, lock=command.lock)
-    label = command.kind.value.replace("_", " ")
+    label = spoken(command.kind)
     message = f"{region.name} bears {label} of depth {command.depth}" if command.depth else f"The {label} of {region.name} is healed"
     message += ", held against time." if command.lock and command.depth else "."
     return Effect(message, target_node_id=region.id)
@@ -143,13 +146,13 @@ async def set_region_mineral(scope: PlayerScope, command: SetMineral) -> Effect:
     ground = await control.region_ground(scope.session, region.id)
     if command.material is not None and command.world_material_id is None:
         key = command.material.value
-        material = command.material.value.replace("_", " ")
+        material = spoken(command.material)
     elif command.world_material_id is not None and command.material is None:
         world_material = await scope.session.get(WorldMaterialRow, command.world_material_id)
         if world_material is None or world_material.world_id != ground.world_id:
             raise NotFoundError("No such material in this region's world.")
         key = control.world_seam(world_material.id)
-        material = world_material.name or (world_material.base_kind.value.replace("_", " ") if world_material.base_kind is not None else "strange stone")
+        material = world_material.name or (spoken(world_material.base_kind) if world_material.base_kind is not None else "strange stone")
     else:
         raise ValidationFailedError("Name either a material or a world material for the seam.")
     control.set_mineral(ground, key, command.richness, lock=command.lock)
@@ -179,13 +182,21 @@ async def set_place_environment(scope: PlayerScope, command: SetPlaceEnvironment
 async def reorder_world_seasons(scope: PlayerScope, command: ReorderSeasons) -> Effect:
     world = await _world(scope, command.world_id)
     seasons = await control.reorder_seasons(scope.session, world.id, command.order)
+    ctx = await scope.context("seasons:reorder")
+    order = ", ".join(season.name for season in seasons)
+    await record(ctx, "season.reordered", roles={IncidentRole.SUBJECT: world.id}, facts={"order": order}, world_id=world.id)
     return Effect(f"The year of {world.name} now runs: {', '.join(season.name for season in seasons)}.", target_node_id=world.id)
 
 
 @player_action("seasons:edit", ActionKind.OTHER)
 async def edit_world_season(scope: PlayerScope, command: EditSeason) -> Effect:
     values = command.model_dump(exclude={"season_id", "name"}, exclude_none=True)
+    before = await scope.session.get(WorldSeasonRow, command.season_id)
+    share_before = before.share_pct if before is not None else 0
     season = await control.edit_season(scope.session, command.season_id, values, command.name)
+    ctx = await scope.context("seasons:edit")
+    facts: dict[str, FactInput] = {"season": season.name, "share_before": share_before, "share_after": season.share_pct}
+    await record(ctx, "season.reshaped", roles={IncidentRole.SUBJECT: season.world_id}, facts=facts, world_id=season.world_id)
     return Effect(f"{season.name} was reshaped.", target_node_id=season.world_id)
 
 
@@ -206,29 +217,29 @@ async def set_world_calendar(scope: PlayerScope, command: SetWorldCalendar) -> E
 
 @player_action("calendar:adopt", ActionKind.OTHER)
 async def adopt_world_calendar(scope: PlayerScope, command: CalendarTarget) -> Effect:
-    record = await control.astronomy_record(scope.session, command.knowledge_id)
-    if await scope.session.get(CalendarRow, record.id) is not None:
-        raise ValidationFailedError(f"{record.name} already keeps a calendar.")
-    knowers = [bond.source_node_id for bond in await active_bonds(scope.session, [BondKind.KNOWS], targets=[record.id])]
+    found = await control.astronomy_record(scope.session, command.knowledge_id)
+    if await scope.session.get(CalendarRow, found.id) is not None:
+        raise ValidationFailedError(f"{found.name} already keeps a calendar.")
+    knowers = [bond.source_node_id for bond in await active_bonds(scope.session, [BondKind.KNOWS], targets=[found.id])]
     if not knowers:
-        raise ValidationFailedError(f"No one knows {record.name}; a calendar needs keepers.")
-    calendar = await adopt_calendar(await scope.context("calendar:adopt"), record, knowers[0])
-    return Effect(f"{record.name} now keeps a calendar of {several(len(calendar.month_names), 'month', 'months')}.", target_node_id=record.id)
+        raise ValidationFailedError(f"No one knows {found.name}; a calendar needs keepers.")
+    calendar = await adopt_calendar(await scope.context("calendar:adopt"), found, knowers[0])
+    return Effect(f"{found.name} now keeps a calendar of {several(len(calendar.month_names), 'month', 'months')}.", target_node_id=found.id)
 
 
 @player_action("calendar:drop", ActionKind.OTHER)
 async def drop_world_calendar(scope: PlayerScope, command: CalendarTarget) -> Effect:
-    record = await control.astronomy_record(scope.session, command.knowledge_id)
-    if not await control.drop_calendar(scope.session, record.id):
-        raise ValidationFailedError(f"{record.name} keeps no calendar.")
-    return Effect(f"{record.name} no longer keeps a calendar.", target_node_id=record.id)
+    found = await control.astronomy_record(scope.session, command.knowledge_id)
+    if not await control.drop_calendar(scope.session, found.id):
+        raise ValidationFailedError(f"{found.name} keeps no calendar.")
+    return Effect(f"{found.name} no longer keeps a calendar.", target_node_id=found.id)
 
 
 @player_action("calendar:rename", ActionKind.OTHER)
 async def rename_calendar_months(scope: PlayerScope, command: RenameMonths) -> Effect:
-    record = await control.astronomy_record(scope.session, command.knowledge_id)
-    calendar = await control.rename_months(scope.session, record.id, command.names)
-    return Effect(f"The months of {record.name} are now {', '.join(calendar.month_names)}.", target_node_id=record.id)
+    found = await control.astronomy_record(scope.session, command.knowledge_id)
+    calendar = await control.rename_months(scope.session, found.id, command.names)
+    return Effect(f"The months of {found.name} are now {', '.join(calendar.month_names)}.", target_node_id=found.id)
 
 
 class LeyTarget(Command):

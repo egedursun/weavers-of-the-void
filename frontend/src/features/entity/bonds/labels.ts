@@ -29,6 +29,7 @@ import {
   Users,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
+import { type CircleKind, type ContestKind, type RelationType } from './api'
 
 export const BONDS_ICON = HeartHandshake
 export const PASSION_ICON = Flame
@@ -37,7 +38,7 @@ export const STANDING_ICON = Crown
 export const CONTEST_ICON = Medal
 export const PERSUASION_ICON = MessageCircle
 
-export const RELATION_TYPES: Record<string, Named> = {
+export const RELATION_TYPES: Record<RelationType, Named> = {
   acquaintance: { label: 'Acquaintance', icon: User, tone: 'muted' },
   friend: { label: 'Friend', icon: Handshake, tone: 'success' },
   close_friend: {
@@ -64,6 +65,9 @@ export const RELATION_TYPES: Record<string, Named> = {
   },
   patron: { label: 'Patron', icon: Landmark, tone: 'gold' },
   client: { label: 'Client', icon: Scale, tone: 'muted' },
+  betrothed: { label: 'Betrothed', icon: Gem, tone: 'warning' },
+  sworn_kin: { label: 'Sworn kin', icon: Shield, tone: 'gold' },
+  foster: { label: 'Foster kin', icon: Home, tone: 'verdigris' },
 }
 
 export const PASSION_KINDS: Record<string, Named> = {
@@ -73,7 +77,7 @@ export const PASSION_KINDS: Record<string, Named> = {
   devotion: { label: 'Devotion', icon: Sparkles, tone: 'verdigris' },
 }
 
-export const CIRCLE_KINDS: Record<string, Named> = {
+export const CIRCLE_KINDS: Record<CircleKind, Named> = {
   drinking_circle: { label: 'Drinking circle', icon: Beer, tone: 'success' },
   poets_circle: { label: "Poets' circle", icon: Feather, tone: 'verdigris' },
   hunting_circle: { label: 'Hunting circle', icon: Trees, tone: 'success' },
@@ -82,6 +86,8 @@ export const CIRCLE_KINDS: Record<string, Named> = {
   prayer_circle: { label: 'Prayer circle', icon: Sparkles, tone: 'gold' },
   music_circle: { label: 'Music circle', icon: Music, tone: 'verdigris' },
   craft_circle: { label: 'Craft circle', icon: Gem, tone: 'warning' },
+  sport_club: { label: 'Sport club', icon: Medal, tone: 'success' },
+  gaming_circle: { label: 'Gaming circle', icon: Puzzle, tone: 'warning' },
 }
 
 export const GROUP_KINDS: Record<string, Named> = {
@@ -92,7 +98,7 @@ export const GROUP_KINDS: Record<string, Named> = {
   crew: { label: 'Crew', icon: Ship, tone: 'info' },
 }
 
-export const CONTEST_KINDS: Record<string, Named> = {
+export const CONTEST_KINDS: Record<ContestKind, Named> = {
   riddle_game: { label: 'Riddle game', icon: Puzzle, tone: 'info' },
   insult_contest: {
     label: 'Contest of insults',
@@ -104,6 +110,8 @@ export const CONTEST_KINDS: Record<string, Named> = {
   trial_of_wisdom: { label: 'Trial of wisdom', icon: BookOpen, tone: 'gold' },
   song_contest: { label: 'Song contest', icon: Music, tone: 'verdigris' },
   storytelling: { label: 'Storytelling', icon: Drama, tone: 'verdigris' },
+  race: { label: 'Race', icon: Target, tone: 'success' },
+  craft_contest: { label: 'Craft contest', icon: Gem, tone: 'gold' },
 }
 
 export const OUTCOMES: Record<string, string> = {

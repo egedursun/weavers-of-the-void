@@ -22,6 +22,7 @@ from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyPro
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, TributeRow, WarRow, WarSideRow
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
+from aerona.domain.enums.customs import GradeDuty
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.life_traits import CaptiveStatusTrait
 from aerona.domain.enums.limits import PERCENT_MAX
@@ -34,7 +35,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.communication.post import herald_war
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.timekeeping import clock_muster
-from aerona.engine.customs.grades import warriors_ready
+from aerona.engine.customs.grades import grade_ready
 from aerona.engine.demography.labour import fighting_age, mobilisation
 from aerona.engine.economy.equipment import equip_army
 from aerona.engine.gods.incitement import held_incitement
@@ -566,7 +567,7 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
     engine_kind, subtype = ARMY_KINDS.get(community.entity_type, PEOPLES_ARMY)
     share = await mobilisation(ctx.session, ctx.rules, community, harvest_share=await harvest_share(ctx, community))
     folk = await people_of(ctx.session, community)
-    if await warriors_ready(ctx.session, folk.id if folk is not None else None):
+    if await grade_ready(ctx.session, folk.id if folk is not None else None, GradeDuty.WAR):
         share *= 1 + ctx.rules.age_sets.warrior_levy_pct / PERCENT
     share *= await clock_muster(ctx.session, ctx.rules, community.id)
     wanted = clamp_int(soldier_count(ctx.rules, strength, community) * share, campaigns.army_min_soldiers, ctx.rules.limits.army_soldier_cap)

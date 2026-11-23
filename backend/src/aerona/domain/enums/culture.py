@@ -52,6 +52,7 @@ class TraditionFunction(StrEnum):
     PURIFICATION = "purification"
     COMMEMORATION = "commemoration"
     COMPETITION = "competition"
+    FAIR = "fair"
 
 
 class RiteStage(StrEnum):
@@ -409,13 +410,32 @@ class CalendarSlot(StrEnum):
     MIDWINTER = "midwinter"
     CAMPAIGN = "campaign"
     HOLY_DAY = "holy_day"
+    NEW_YEAR = "new_year"
+    MIDSUMMER = "midsummer"
+    REMEMBRANCE = "remembrance"
+    MARKET = "market"
+    WILD_HARVEST = "wild_harvest"
+    RAINS = "rains"
+    ASSEMBLY = "assembly"
+    TAX = "tax"
+    PILGRIMAGE = "pilgrimage"
 
 
 class SlotOpening(StrEnum):
-    GROWING = "growing"
+    WARMING_GROWTH = "warming_growth"
+    AFTER_GREENEST = "after_greenest"
     DEAD_OF_WINTER = "dead_of_winter"
+    HEIGHT_OF_SUMMER = "height_of_summer"
     WAR_SEASON = "war_season"
     HOLY = "holy"
+    YEAR = "year"
+    REMEMBERED = "remembered"
+    FAIR = "fair"
+    WILD_PLENTY = "wild_plenty"
+    RAINS_COME = "rains_come"
+    COUNCIL = "council"
+    DUES = "dues"
+    SACRED_ROAD = "sacred_road"
 
 
 class TraditionEffectKind(StrEnum):
@@ -431,6 +451,8 @@ class TraditionEffectKind(StrEnum):
     FOOD_SAVED = "food_saved"
     REST = "rest"
     VIGIL = "vigil"
+    TRADE = "trade"
+    FORAGE = "forage"
 
 
 class RumourChannel(StrEnum):

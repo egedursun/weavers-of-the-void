@@ -3,7 +3,7 @@ from sqlalchemy import select
 from aerona.catalog.art_modes import ART_MODES, IMAGE_MODES, PERFORMED_MODES, VERBAL_MODES
 from aerona.catalog.kinds.motifs import MOTIF_SOURCES
 from aerona.catalog.life.lore import PERFORMERS, TRANSLATE_SKILL_KINDS
-from aerona.catalog.lore import ART_MESSAGES
+from aerona.catalog.lore import ART_MESSAGES, COURT_MESSAGE
 from aerona.catalog.peoples import Style
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -466,7 +466,7 @@ async def commission(ctx: TickContext, realm: PolityProfileRow) -> EntityRow | N
     medium = image_mode(taste)
     loved = await favourite_form(ctx, seat)
     medium = loved if loved is not None else medium
-    message = {ValueAxis.HIERARCHY.value: 5, ValueAxis.HONOUR.value: 2}
+    message = dict(COURT_MESSAGE)
     work = await create_record(
         ctx,
         RecordSpec(

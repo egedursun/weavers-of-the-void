@@ -17,6 +17,10 @@ class DailyLifeRules:
     cleanliness_honour_loss: int = rule(3, 0, 100, S, "Honour a being loses when its means fall short of its people's standard of cleanliness")
     usual_housework: int = rule(10, 0, 100, S, "Share of a year that is the usual share of housework")
     usual_sleep: int = rule(25, 0, 100, S, "Share of a year spent asleep by beings whose biology sleeps")
+    short_sleep_stress_pct: int = rule(
+        20, 0, 100, S, "Stress a being whose biology sleeps gains each epoch for each ten points of sleep below the usual share, in tenths"
+    )
+    housework_stress_pct: int = rule(10, 0, 100, S, "Stress a being gains each epoch for each ten points of housework above the usual share, in tenths")
     heavy_load: int = rule(60, 0, 100, S, "Housework load of a household above which its young lose schooling and its doers gain stress")
     burdened_hire_wealth: int = rule(40, 0, 1000, S, "Household wealth from which a household weighed down by its housework takes on help")
     load_schooling_loss: int = rule(1, 0, 100, S, "Education a young doer of a heavy household loses each epoch")
@@ -26,3 +30,10 @@ class DailyLifeRules:
     tourism_coin_min: int = rule(1, 0, 1000000, S, "Least coin a visit spends before it is told as a season of travellers")
     bound_flight_pct: int = rule(20, 0, 100, S, "Chance each epoch that a servant bound without wage leaves the household of their own choice (%)")
     servant_wage: int = rule(2, 0, 1000, S, "Wage a household pays each epoch to a servant it takes into service")
+    sickcare_recovery_pct: int = rule(20, 0, 100, S, "Share by which a household's care of its sick shortens recovery and lowers deaths among them (%)")
+    household_rites_piety: int = rule(5, 0, 50, S, "Piety a household keeping its rites gains each epoch, and loses when the rites lapse")
+    civic_watch_pct: int = rule(20, 0, 100, S, "Share by which a people's time given to civic duty lowers crime in its towns (%)")
+    training_skill_gain: int = rule(3, 0, 20, S, "Skill a being of a people that gives time to training gains each epoch")
+    storytelling_legend_pct: int = rule(10, 0, 100, S, "Chance each epoch a people that listens to tales spreads an account of its past (%)")
+    leisure_hunt_pressure: int = rule(3, 0, 50, S, "Abundance hunting for pleasure takes each epoch from the game of a people's lands")
+    dance_cohesion: int = rule(1, 0, 20, S, "Cohesion a people gains each epoch for each ten points of its leisure given to dance")

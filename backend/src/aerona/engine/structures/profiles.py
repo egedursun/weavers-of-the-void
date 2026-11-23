@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.demography import GROWN_BANDS
 from aerona.catalog.life.domain import STANDING_STATES
 from aerona.catalog.life.structures import BUILDER_CONDITION, LIVING_ADULTS
 from aerona.catalog.materials import MATERIALS
@@ -14,15 +15,17 @@ from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow, StructureStaffRow
-from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.geology import BuildingGrade
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.structure import BuilderKind, ConstructionState, StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.economy.materials import MaterialProps, from_row, from_spec, set_node_material
+from aerona.engine.environment.columns import columns_by_region, quarry_grade
 from aerona.engine.lore.style import axis_of, style_of
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.structures.integrity import integrity_share
@@ -41,6 +44,14 @@ BUILDER_KINDS = {
 
 
 MADE_ORIGINS = frozenset({MindOrigin.MADE, MindOrigin.GROWN, MindOrigin.TRAINED, MindOrigin.COPIED})
+
+
+async def stone_condition(session: AsyncSession, rules: Rules, structure: EntityRow) -> int:
+    region_id = (await RegionAtlas.load(session)).top_region(structure.id)
+    if region_id is None:
+        return 0
+    grade = quarry_grade((await columns_by_region(session, [region_id])).get(region_id, []))
+    return {BuildingGrade.PLAIN: 0, BuildingGrade.FINE: rules.rocks.fine_condition, BuildingGrade.SPLENDID: rules.rocks.splendid_condition}[grade]
 
 
 async def builder_kind_found(session: AsyncSession, builder: EntityRow | SonRow | None) -> BuilderKind | None:
@@ -151,7 +162,7 @@ async def adults_of(session: AsyncSession, community_id: int, social_class: str)
         select(func.coalesce(func.sum(CohortRow.count), 0)).where(
             CohortRow.community_entity_id == community_id,
             CohortRow.social_class == social_class,
-            CohortRow.age_band == AgeBand.ADULT,
+            CohortRow.age_band.in_(sorted(GROWN_BANDS)),
             CohortRow.condition.in_(LIVING_ADULTS),
         )
     )
@@ -274,13 +285,14 @@ async def ensure_profile(
     if stat(structure, "durability") is None or (standing and material is not None):
         set_stats(structure, durability=durability_from(rules, props))
     built_by = await builder_kind_found(session, builder)
+    stone = await stone_condition(session, rules, structure)
     profile = StructureProfileRow(
         structure_entity_id=structure.id,
         kind=kind,
         design_id=design_id,
         level=level,
         capacity=0,
-        condition=clamp_int(stat_or(structure, "durability", PERCENT) + (BUILDER_CONDITION[built_by] if built_by is not None else 0), 0, PERCENT),
+        condition=clamp_int(stat_or(structure, "durability", PERCENT) + (BUILDER_CONDITION[built_by] if built_by is not None else 0) + stone, 0, PERCENT),
         construction_state=state,
         progress=PERCENT if standing else 0,
         fire_resistance=fire_resistance_from(rules, props),

@@ -4,7 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.relations import WARM
-from aerona.catalog.relations import APPEALS
+from aerona.catalog.relations import APPEALS, DUTY_RELATIONS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -13,17 +13,22 @@ from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.relations import GroupRankRow, PassionRow, PersuasionRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.mind import Facet, SkillKind, ThoughtKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import Attribute, Facet, SkillKind, ThoughtKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.relations import AppealKind, PersuasionAim
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.beliefs import evidence_trust
 from aerona.engine.mind.aspirations import rules_over
 from aerona.engine.mind.book import is_locked, mind_of, skill_level, stored_values, values_for, write_values
-from aerona.engine.mind.split import facets_of
+from aerona.engine.mind.split import attribute, facets_of
 from aerona.engine.mind.thoughts import think
+from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
+from aerona.engine.recording.record import record
+from aerona.engine.relations.book import relation
+from aerona.rules.registry import Rules
 
 FACET_SPAN = 50
 VALUE_SPAN = 100
@@ -31,6 +36,7 @@ HALF = PERCENT // 2
 COUNCIL_VOICES = 3
 COURT_FLOOR = 10**6
 EVIDENCE_TRUST_DIVISOR = 4
+BOUND_KINDS = frozenset(kind.value for kind in DUTY_RELATIONS)
 
 
 @dataclass(frozen=True)
@@ -52,7 +58,9 @@ def facet_lean(facets: dict[Facet, int], appeal: AppealKind) -> float:
     return sum(facets.get(facet, 0) * weight for facet, weight in APPEALS[appeal].facets.items()) / FACET_SPAN
 
 
-async def appeal_fit(session: AsyncSession, speaker: int, target: int, appeal: AppealKind, *, axis: ValueAxis | None, toward: int | None) -> float:
+async def appeal_fit(
+    session: AsyncSession, rules: Rules, speaker: int, target: int, appeal: AppealKind, *, axis: ValueAxis | None, toward: int | None
+) -> float:
     facets = await facets_of(session, target)
     fit = facet_lean(facets, appeal)
     speaking = await session.get(MortalProfileRow, speaker)
@@ -67,7 +75,29 @@ async def appeal_fit(session: AsyncSession, speaker: int, target: int, appeal: A
         fit += (speaking.infamy if speaking is not None else 0) / 2
     elif appeal is AppealKind.SELF_INTEREST:
         fit += (speaking.wealth if speaking is not None else 0) / 4
+    elif appeal is AppealKind.FEELING:
+        fit += await feeling_pull(session, rules, target) * rules.persuasion.feeling_weight / PERCENT
+    elif appeal is AppealKind.BOND:
+        fit += await bond_pull(session, speaker, target) * rules.persuasion.bond_weight / PERCENT
     return fit
+
+
+async def feeling_pull(session: AsyncSession, rules: Rules, target: int) -> float:
+    entity = await session.get(EntityRow, target)
+    empathy = await attribute(session, rules, entity, Attribute.EMPATHY) if entity is not None and entity.entity_type is EntityType.MORTAL else 0
+    profile = await session.get(MortalProfileRow, target)
+    stirred = abs(profile.mood_score) if profile is not None else 0
+    return empathy + stirred / 2
+
+
+async def bond_pull(session: AsyncSession, speaker: int, target: int) -> float:
+    held_bond = await relation(session, target, speaker)
+    kinds = set(held_bond.kinds) if held_bond is not None else set()
+    tied = bool(kinds & BOUND_KINDS) or speaker in await close_kin_of(session, target)
+    warmth = held_bond.friendship if held_bond is not None else 0
+    if not tied and warmth <= 0:
+        return -float(PERCENT)
+    return warmth + (HALF if tied else 0)
 
 
 async def stubbornness(session: AsyncSession, target: int) -> float:
@@ -107,7 +137,7 @@ async def persuade(
     speaker = await voice_of(session, speaker_id)
     listener = await voice_of(session, target_id)
     oratory = await skill_level(session, speaker, SkillKind.ORATORY)
-    fit = await appeal_fit(session, speaker, listener, appeal, axis=axis, toward=toward)
+    fit = await appeal_fit(session, ctx.rules, speaker, listener, appeal, axis=axis, toward=toward)
     stubborn = await stubbornness(session, listener)
     pull = await passion_pull(session, listener, speaker)
     jitter = ctx.rng(seed_of("persuade", speaker, listener, ctx.epoch, aim.value)).integer(-table.jitter, table.jitter) if table.jitter else 0
@@ -124,6 +154,9 @@ async def persuade(
         await sway_belief(ctx, listener, axis, toward or 0)
     if success:
         await think(session, ctx.rules, listener, ThoughtKind.WAS_PERSUADED, ctx.epoch, subject_id=speaker)
+        await record(
+            ctx, "social.persuaded", roles={IncidentRole.ACTOR: speaker, IncidentRole.TARGET: listener}, facts={"appeal": appeal, "aim": aim, "score": score}
+        )
     if write_blocked(listener, "persuasions"):
         return Argument(score, success, None)
     row = PersuasionRow(
@@ -195,3 +228,13 @@ async def envoy_sways(ctx: TickContext, proposer_id: int, others: list[int], tre
         if not argument.success:
             return False
     return ctx.rng(seed_of("envoy", treaty_id, ctx.epoch)).chance(ctx.rules.persuasion.envoy_pct)
+
+
+async def already_won(session: AsyncSession, aim: PersuasionAim, *, target_id: int | None, subject_id: int | None, since: int) -> PersuasionRow | None:
+    statement = select(PersuasionRow).where(PersuasionRow.aim == aim, PersuasionRow.success.is_(True), PersuasionRow.epoch >= since)
+    if target_id is not None:
+        statement = statement.where(PersuasionRow.target_node_id == target_id)
+    if subject_id is not None:
+        statement = statement.where(PersuasionRow.subject_node_id == subject_id)
+    found: PersuasionRow | None = await session.scalar(statement.order_by(PersuasionRow.id.desc()).limit(1))
+    return found

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState, LoadingBlock, Section, StatBar } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { busyOf } from '@/features/entity/lore/model'
 import {
   AdjustPanel,
@@ -20,7 +21,6 @@ import {
 } from '@/features/entity/wilds/parts'
 import { useWorldState } from '@/features/pantheon/api'
 import { useGodGate } from '@/features/pantheon/gate'
-import { humanize } from '@/features/pantheon/labels'
 import { useDivineAction, useLawProfile } from './api'
 import { LAW_EXCEPTIONS, LAW_SCOPES, heldLabel } from './labels'
 import { useGodTable } from './model'
@@ -65,7 +65,7 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
   const effects = Object.fromEntries(
     naturalLawValues
       .filter((value) => value !== 'none')
-      .map((value) => [value, humanize(value)])
+      .map((value) => [value, wordOf(naturalLawValues, value)])
   )
   const scopes = Object.fromEntries(
     lawScopeValues.map((value) => [value, LAW_SCOPES[value].label])

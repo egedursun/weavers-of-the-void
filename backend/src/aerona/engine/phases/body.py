@@ -32,7 +32,9 @@ from aerona.engine.body.customs import SUFFERING_DOMAINS, customs_of, ensure_cus
 from aerona.engine.body.digits import backfill_digits, backfill_plan_counts, replan
 from aerona.engine.body.healing import heal_wounds
 from aerona.engine.body.hits import Harm, weighted
+from aerona.engine.body.package_fixups import backfill_packages
 from aerona.engine.body.state import has_reader, refresh
+from aerona.engine.body.w52_plans import backfill_birth_harm, backfill_capacities, backfill_drowned, backfill_plans
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import sanity_of
 from aerona.engine.gods.queries import community_of
@@ -41,6 +43,7 @@ from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.succession import pass_rule
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
+from aerona.engine.mortal.standing import add_stress
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
@@ -91,6 +94,8 @@ async def at_war(ctx: TickContext, mortal: EntityRow) -> bool:
     "mortal.willpower",
     "table.applied_fixups",
     "table.assistive_aids",
+    "table.augment_effects",
+    "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -109,6 +114,7 @@ async def at_war(ctx: TickContext, mortal: EntityRow) -> bool:
     "table.mortal_equipment",
     "table.nodes",
     "table.prostheses",
+    "table.sense_profiles",
     "table.sons",
     "table.species_profiles",
     "table.tradition_profiles",
@@ -118,6 +124,11 @@ async def body_survey(ctx: TickContext) -> None:
     rules = ctx.rules
     ctx.count("digits_named", await backfill_digits(ctx.session, rules))
     ctx.count("plan_counts_refitted", await backfill_plan_counts(ctx.session))
+    ctx.count("plans_rederived", await backfill_plans(ctx.session))
+    ctx.count("curse_packages_laid", await backfill_packages(ctx, ctx.session))
+    ctx.count("drownings_retyped", await backfill_drowned(ctx.session))
+    ctx.count("birth_harm_retyped", await backfill_birth_harm(ctx.session))
+    ctx.count("capacities_filled", await backfill_capacities(ctx.session, rules))
     known = set(await ctx.session.scalars(select(BodyRow.node_id)))
     for species in await canon(ctx.session, [EntityType.SPECIES]):
         if species.id not in known and not held(species.id):
@@ -306,17 +317,21 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.region_environment",
     "table.routes",
     "table.sacraments",
+    "table.sense_profiles",
     "table.skills",
     "table.sons",
     "table.spirit_profiles",
     "table.stars",
     "table.structure_profiles",
+    "table.theory_adherents",
+    "table.theory_profiles",
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
     "table.transform_prospects",
     "table.war_sides",
     "table.wars",
+    "table.wills",
     "table.world_domain_hooks",
     "table.world_maps",
     "table.worlds",
@@ -439,8 +454,15 @@ async def _addiction(ctx: TickContext, mortal: EntityRow, addicted: dict[int, Ad
                 ctx, mortal, ConditionKind.ADDICTION, HarmCause.POISON, severity=addiction.severity + table.withdrawal_severity, announce=False
             )
         return
-    if ctx.rng(seed_of("condition", mortal.id, ConditionKind.ADDICTION.value)).chance(table.addiction_chance):
+    pained = await condition_of(ctx, mortal.id, ConditionKind.CHRONIC_PAIN) is not None
+    chance = table.addiction_chance * (1 + table.chronic_pain_substance_pct / PERCENT) if pained else table.addiction_chance
+    if ctx.rng(seed_of("condition", mortal.id, ConditionKind.ADDICTION.value)).chance(chance):
         await afflict(ctx, mortal, PackageKind.DRUG_DEPENDENCE, Transmission.INGESTION, source_node_id=row.resource_entity_id)
+
+
+async def _pain(ctx: TickContext, mortal: EntityRow) -> None:
+    if await condition_of(ctx, mortal.id, ConditionKind.CHRONIC_PAIN) is not None:
+        await add_stress(ctx.session, mortal.id, ctx.rules.conditions.chronic_pain_stress, ctx.epoch)
 
 
 async def _marks(ctx: TickContext, mortal: EntityRow, flags: set[EntityFlag]) -> None:
@@ -600,6 +622,7 @@ async def body_conditions(ctx: TickContext) -> None:
         await _marks(ctx, mortal, flags)
         if is_notable(ctx.rules, mortal, flags):
             await _addiction(ctx, mortal, addicted)
+            await _pain(ctx, mortal)
     ctx.count("weather_wounds", exposed)
 
 
@@ -679,14 +702,18 @@ async def body_society(ctx: TickContext) -> None:
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.creativity",
     "mortal.endurance",
     "mortal.hp",
     "mortal.intellect",
     "mortal.lifespan",
+    "mortal.perception",
     "mortal.sanity",
     "mortal.strength",
     "mortal.willpower",
+    "mortal.wisdom",
     "table.afflictions",
+    "table.augment_effects",
     "table.augments",
     "table.bodies",
     "table.body_customs",
@@ -694,6 +721,8 @@ async def body_society(ctx: TickContext) -> None:
     "table.conditions",
     "table.cult_tenets",
     "table.culture_values",
+    "table.deed_claims",
+    "table.deeds",
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
@@ -701,23 +730,38 @@ async def body_society(ctx: TickContext) -> None:
     "table.hero_quests",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incident_participants",
+    "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
     "table.memories",
+    "table.mind_attributes",
+    "table.mind_facets",
     "table.minds",
     "table.mortal_equipment",
+    "table.mortal_profiles",
     "table.needs",
+    "table.node_births",
+    "table.node_materials",
     "table.nodes",
+    "table.offices",
     "table.personality_values",
     "table.powers",
+    "table.professions_of_value",
     "table.prostheses",
+    "table.reputations",
+    "table.skills",
     "table.symbionts",
+    "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
+    "table.world_materials",
     "table.worlds",
 )
 @writes(
+    "mortal.hp",
     "mortal.sanity",
+    "mortal.strength",
     "table.afflictions",
     "table.bodies",
     "table.body_customs",
@@ -725,10 +769,21 @@ async def body_society(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.conditions",
+    "table.deed_claims",
+    "table.deeds",
+    "table.entities",
+    "table.fortune_sources",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
     "table.injuries",
     "table.memories",
+    "table.mortal_profiles",
     "table.needs",
     "table.personality_values",
+    "table.professions_of_value",
+    "table.reputations",
+    "table.thoughts",
     "table.traits",
 )
 async def body_afflictions(ctx: TickContext) -> None:

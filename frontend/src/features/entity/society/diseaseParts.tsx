@@ -12,6 +12,7 @@ import {
   Lock,
   MapPin,
   PawPrint,
+  Route,
   ScrollText,
   ShieldCheck,
   Skull,
@@ -47,18 +48,22 @@ import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import {
-  AFFINITY_SPEC,
+  MOISTURE_SPEC,
+  WARMTH_SPEC,
   AGE_SPEC,
   JOB_ORDER,
   JOB_SPEC,
   STATUS_SPEC,
   TARGET_ORDER,
   TARGET_SPEC,
+  SICKNESS_ROUTE_SPEC,
   VECTOR_SPEC,
   type AgeBand,
-  type ClimateAffinity,
+  type SicknessRoute,
+  type ClimateMoisture,
+  type ClimateWarmth,
   type DiseaseTarget,
-  type DiseaseVector,
+  type Transmission,
   type Job,
   type OutbreakStatus,
   type Spec,
@@ -202,7 +207,7 @@ export function StrikesPanel({ view }: { view: Disease }) {
 }
 
 export function TravelPanel({ view }: { view: Disease }) {
-  const vector = VECTOR_SPEC[view.vector]
+  const vector = VECTOR_SPEC[view.primary_route]
   return (
     <Panel
       title='How it travels'
@@ -770,6 +775,169 @@ export function EndemicControls({
   )
 }
 
+export function RouteControls({
+  view,
+  blocked,
+}: {
+  view: Disease
+  blocked: string | null
+}) {
+  const open = (Object.keys(SICKNESS_ROUTE_SPEC) as SicknessRoute[]).filter(
+    (route) => route !== view.primary_route
+  )
+  const [route, setRoute] = useState<SicknessRoute | null>(
+    (view.routes[0]?.route as SicknessRoute | undefined) ?? open[0] ?? null
+  )
+  const current = view.routes.find((row) => row.route === route)
+  const [share, setShare] = useState(current?.share ?? 20)
+  const [hold, setHold] = useState(current?.held ?? true)
+  const set = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/disease_route:set', {
+          body: {
+            disease_id: view.entity_id,
+            route: route ?? 'contact',
+            share: Math.max(1, Math.min(PERCENT - 1, share)),
+            hold,
+          },
+        })
+      ),
+  })
+  const remove = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/disease_route:remove', {
+          body: { disease_id: view.entity_id, route: route ?? 'contact' },
+        })
+      ),
+  })
+  const busy = blocked ?? (set.isPending || remove.isPending ? WORKING : null)
+  const noRoute = busy ?? (route === null ? 'Choose a route first' : null)
+  const main = VECTOR_SPEC[view.primary_route]
+  return (
+    <EditorGroup title='Every way it passes' icon={Route} pairs>
+      <Panel
+        title='Open a further route'
+        icon={Route}
+        tone='warning'
+        hint='Each route carries its share of the spread; blocking one cuts only that share'
+      >
+        <IconPicker
+          label='Further route'
+          value={route ?? ''}
+          table={Object.fromEntries(
+            open.map((key) => [key, SICKNESS_ROUTE_SPEC[key]])
+          )}
+          blocked={busy}
+          onPick={(value) => {
+            const picked = value as SicknessRoute
+            setRoute(picked)
+            const row = view.routes.find((item) => item.route === picked)
+            if (row) {
+              setShare(row.share)
+              setHold(row.held)
+            }
+          }}
+        />
+        <RangeField
+          label='Share of the spread'
+          icon={Gauge}
+          value={share}
+          min={1}
+          max={PERCENT - 1}
+          level={share >= 50 ? 'Leading' : share >= 20 ? 'Steady' : 'Slight'}
+          lowLabel='Slight'
+          highLabel='Leading'
+          onChange={setShare}
+        />
+        <FieldTile
+          id={`route-hold-${view.entity_id}`}
+          label='Hold its share against the world'
+          className='items-center'
+        >
+          <Switch
+            id={`route-hold-${view.entity_id}`}
+            checked={hold}
+            disabled={busy !== null}
+            onCheckedChange={setHold}
+          />
+        </FieldTile>
+        <div className='mt-auto flex min-w-0 flex-col gap-1.5'>
+          <Button
+            className='self-start'
+            size='sm'
+            variant='outline'
+            disabled={noRoute !== null}
+            disabledReason={noRoute ?? undefined}
+            onClick={() => set.mutate(undefined)}
+          >
+            {hold ? <Lock /> : <Unlock />}
+            {current ? 'Set its share' : 'Open this route'}
+          </Button>
+          <Button
+            className='self-start'
+            size='sm'
+            variant='outline'
+            disabled={noRoute !== null || !current}
+            disabledReason={
+              noRoute ?? (!current ? 'It does not pass that way' : undefined)
+            }
+            onClick={() => remove.mutate(undefined)}
+          >
+            <Trash2 />
+            Close this route
+          </Button>
+        </div>
+      </Panel>
+      <Panel
+        title='Routes it holds'
+        icon={Route}
+        tone='warning'
+        hint='The main route carries whatever the further routes leave'
+      >
+        <ul className='flex min-w-0 flex-col gap-2'>
+          <li className='flex min-w-0 items-center gap-2'>
+            <div className='min-w-0 flex-1'>
+              <StatBar
+                framed
+                label={`${main.label} (main route)`}
+                value={view.primary_share}
+                max={PERCENT}
+                tone={METER_TONE[badTone(view.primary_share)]}
+              />
+            </div>
+          </li>
+          <Paged items={view.routes} as='li'>
+            {(row) => (
+              <li key={row.route} className='flex min-w-0 items-center gap-2'>
+                <div className='min-w-0 flex-1'>
+                  <StatBar
+                    framed
+                    label={VECTOR_SPEC[row.route].label}
+                    value={row.share}
+                    max={PERCENT}
+                    tone={METER_TONE[badTone(row.share)]}
+                  />
+                </div>
+                {row.held && (
+                  <Badge size='sm' variant='default'>
+                    <Lock />
+                    Held
+                  </Badge>
+                )}
+              </li>
+            )}
+          </Paged>
+        </ul>
+        {view.routes.length === 0 && (
+          <Muted>It passes by its main route alone.</Muted>
+        )}
+      </Panel>
+    </EditorGroup>
+  )
+}
+
 export function ImmunityControls({
   view,
   blocked,
@@ -918,8 +1086,9 @@ export function ForgeDisease({
   const [land, setLand] = useState<string | null>(
     landId !== undefined && landId !== null ? String(landId) : null
   )
-  const [vector, setVector] = useState<DiseaseVector>('air')
-  const [affinity, setAffinity] = useState<ClimateAffinity>('any')
+  const [vector, setVector] = useState<Transmission>('inhalation')
+  const [warmth, setWarmth] = useState<ClimateWarmth>('any')
+  const [moisture, setMoisture] = useState<ClimateMoisture>('any')
   const [targets, setTargets] = useState<DiseaseTarget[]>(['breath'])
   const [host, setHost] = useState<string | null>(null)
   const [numbers, setNumbers] = useState<Record<string, number>>(
@@ -938,8 +1107,9 @@ export function ForgeDisease({
             region_id: Number(land),
             name: name.trim() === '' ? null : name.trim(),
             values: {
-              vector,
-              climate_affinity: affinity,
+              primary_route: vector,
+              affinity_warmth: warmth,
+              affinity_moisture: moisture,
               target_functions: targets,
               host_species_id: host === null ? null : Number(host),
               ...numbers,
@@ -975,7 +1145,7 @@ export function ForgeDisease({
           <Text weight='semibold'>Forge a new sickness</Text>
           <Muted variant='caption'>
             Design every trait it carries. Left nameless, the world names it
-            from its vector and its climate.
+            from its route and its climate.
           </Muted>
         </div>
       </div>
@@ -1003,16 +1173,23 @@ export function ForgeDisease({
         <IconPicker
           label='Spreads by'
           value={vector}
-          table={VECTOR_SPEC}
+          table={SICKNESS_ROUTE_SPEC}
           blocked={busy}
-          onPick={(value) => setVector(value as DiseaseVector)}
+          onPick={(value) => setVector(value as Transmission)}
         />
         <IconPicker
-          label='Thrives in'
-          value={affinity}
-          table={AFFINITY_SPEC}
+          label='Warmth it favours'
+          value={warmth}
+          table={WARMTH_SPEC}
           blocked={busy}
-          onPick={(value) => setAffinity(value as ClimateAffinity)}
+          onPick={(value) => setWarmth(value as ClimateWarmth)}
+        />
+        <IconPicker
+          label='Moisture it favours'
+          value={moisture}
+          table={MOISTURE_SPEC}
+          blocked={busy}
+          onPick={(value) => setMoisture(value as ClimateMoisture)}
         />
       </div>
       <Muted variant='caption' className='flex items-center gap-1.5'>

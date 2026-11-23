@@ -199,9 +199,7 @@ export function EthicsSection({ nodeId }: { nodeId: number }) {
           />
           <KpiTile
             label='Honour model'
-            value={
-              view.honour_model ? view.honour_model.replace(/_/g, ' ') : 'None'
-            }
+            value={view.honour_label ?? 'None'}
             icon={HONOUR_ICON}
             tone='gold'
           />

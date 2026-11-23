@@ -4,6 +4,7 @@ from aerona.domain.enums.customs import (
     AgeGrade,
     CoopPurpose,
     EvidenceKind,
+    GradeDuty,
     Intoxicant,
     IntoxicantUse,
     MarkKind,
@@ -13,17 +14,18 @@ from aerona.domain.enums.customs import (
     NamingPattern,
     Naturalisation,
     ReliefKind,
-    RevivalAim,
     RevivalGoal,
     RevivalStage,
+    RevivalWay,
 )
+from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
 
 
 class RevivalView(ApiModel):
     id: int
     dominant: NodeRef | None
-    aim: RevivalAim
+    way: RevivalWay
     stage: RevivalStage
     goal: RevivalGoal
     strength: int
@@ -50,12 +52,20 @@ class BodyMarkView(ApiModel):
     id: int
     kind: MarkKind
     meaning: MarkMeaning
+    augment_id: int | None
     placed_epoch: int
     locked: list[str]
 
 
+class GradeDutyView(ApiModel):
+    duty: GradeDuty
+    grade: AgeGrade
+    held: bool
+
+
 class TimeBudgetView(ApiModel):
     social_class: SocialClass
+    life_stage: LifeStage
     work: int
     rest: int
     worship: int
@@ -65,6 +75,10 @@ class TimeBudgetView(ApiModel):
     learning: int
     care: int
     art: int
+    housework: int
+    sleep: int
+    civic: int
+    training: int
     locked: list[str]
 
 
@@ -75,6 +89,7 @@ class NamingCustomView(ApiModel):
     rename_on_initiation: bool
     rename_on_marriage: bool
     rename_on_vow: bool
+    posthumous_names: bool
     locked: list[str]
 
 
@@ -187,6 +202,7 @@ class CustomsNodeView(ApiModel):
     naming: NamingCustomView | None
     names: list[NameFormView]
     age_sets: list[AgeSetView]
+    grade_duties: list[GradeDutyView]
     age_set_id: int | None
     taverns: list[TavernView]
     welfare: list[WelfareView]

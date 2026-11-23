@@ -54,6 +54,7 @@ import { COMMODITY, type CommodityKind } from '../economy/labels'
 import { BAND, named } from '../environment/labels'
 import { PRESSURE_ICONS, VALUE_ICONS } from '../mind/labels'
 import { MindPicker } from '../mind/parts'
+import { DeathReadingsPanel } from './DeathReadings'
 import { FolkBody, FolkControls, FolkWays, FoundPeoplePanel } from './Folk'
 import { LabourDepth } from './LabourDepth'
 import { useDemography } from './api'
@@ -70,6 +71,7 @@ import {
   JOB_SPEC,
   MARTIAL_SPEC,
   PRESSURE_HINT,
+  SEX_ORDER,
   SEX_SPEC,
   type AgeBand,
   type CohortCondition,
@@ -195,25 +197,32 @@ type Part = { socialClass: SocialClass; count: number }
 function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
   const [ref, measured] = useWidth()
   const width = Math.max(PYRAMID_MIN, measured)
+  const kinds = SEX_ORDER.filter((kind) =>
+    cohorts.some((cohort) => cohort.sex_kind === kind && cohort.count > 0)
+  )
+  const leftKinds: Sex[] = kinds.slice(0, 1)
+  const rightKinds: Sex[] = kinds.slice(1)
   const rows = AGE_ORDER.map((band) => {
     const cells = cohorts.filter((cohort) => cohort.age_band === band)
-    const side = (sex: Sex): Part[] =>
+    const side = (wanted: Sex[]): Part[] =>
       CLASS_ORDER.map((socialClass) => ({
         socialClass,
         count: sum(
           cells.filter(
-            (cell) => cell.sex === sex && cell.social_class === socialClass
+            (cell) =>
+              wanted.includes(cell.sex_kind) &&
+              cell.social_class === socialClass
           ),
           (cell) => cell.count
         ),
       })).filter((part) => part.count > 0)
-    return { band, male: side('male'), female: side('female') }
+    return { band, left: side(leftKinds), right: side(rightKinds) }
   })
   const widest = Math.max(
     1,
     ...rows.flatMap((row) => [
-      sum(row.male, (part) => part.count),
-      sum(row.female, (part) => part.count),
+      sum(row.left, (part) => part.count),
+      sum(row.right, (part) => part.count),
     ])
   )
   const total = Math.max(
@@ -227,26 +236,27 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
       (cohort) => cohort.count
     ),
   })).filter((item) => item.count > 0)
-  const bySex = (sex: Sex) =>
+  const byKinds = (wanted: Sex[]) =>
     sum(
-      cohorts.filter((cohort) => cohort.sex === sex),
+      cohorts.filter((cohort) => wanted.includes(cohort.sex_kind)),
       (cohort) => cohort.count
     )
+  const named = (wanted: Sex[]) =>
+    wanted.map((kind) => SEX_SPEC[kind].label).join(' and ')
   const centre = width / 2
   const half = centre - PYRAMID_LABEL / 2 - PYRAMID_COUNT
   const height = rows.length * (PYRAMID_ROW + PYRAMID_GAP) - PYRAMID_GAP
-  const bar = (parts: Part[], sex: Sex, top: number) => {
+  const bar = (parts: Part[], wanted: Sex[], left: boolean, top: number) => {
     let cursor = 0
     return parts.map((part) => {
       const size = (part.count / widest) * half
-      const x =
-        sex === 'male'
-          ? centre - PYRAMID_LABEL / 2 - cursor - size
-          : centre + PYRAMID_LABEL / 2 + cursor
+      const x = left
+        ? centre - PYRAMID_LABEL / 2 - cursor - size
+        : centre + PYRAMID_LABEL / 2 + cursor
       cursor += size
       return (
         <rect
-          key={`${sex}-${part.socialClass}`}
+          key={`${left ? 'left' : 'right'}-${part.socialClass}`}
           x={x}
           y={top}
           width={Math.max(1, size - 1)}
@@ -254,7 +264,7 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
           rx={3}
           fill={classColor(part.socialClass)}
         >
-          <title>{`${SEX_SPEC[sex].label}, ${CLASS_SPEC[part.socialClass].label.toLowerCase()}: ${formatInteger(part.count)}`}</title>
+          <title>{`${named(wanted)}, ${CLASS_SPEC[part.socialClass].label.toLowerCase()}: ${formatInteger(part.count)}`}</title>
         </rect>
       )
     })
@@ -265,28 +275,30 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
       className='flex min-w-0 flex-col gap-3'
     >
       <div className='flex min-w-0 items-center justify-between gap-3'>
-        {(['male', 'female'] as const).map((sex) => {
-          const spec = SEX_SPEC[sex]
-          return (
-            <div
-              key={sex}
-              className={
-                sex === 'male'
-                  ? 'flex min-w-0 items-center gap-1.5'
-                  : 'flex min-w-0 flex-row-reverse items-center gap-1.5'
-              }
-            >
-              <spec.icon
-                aria-hidden='true'
-                className={`size-icon-sm shrink-0 ${TEXT_TONE[spec.tone ?? 'muted']}`}
-              />
-              <Text as='span' weight='medium'>
-                {spec.label}
-              </Text>
-              <Muted as='span'>{formatInteger(bySex(sex))}</Muted>
-            </div>
-          )
-        })}
+        {[leftKinds, rightKinds]
+          .filter((wanted) => wanted.length > 0)
+          .map((wanted, index) => {
+            const spec = SEX_SPEC[wanted[0]]
+            return (
+              <div
+                key={wanted.join('-')}
+                className={
+                  index === 0
+                    ? 'flex min-w-0 items-center gap-1.5'
+                    : 'flex min-w-0 flex-row-reverse items-center gap-1.5'
+                }
+              >
+                <spec.icon
+                  aria-hidden='true'
+                  className={`size-icon-sm shrink-0 ${TEXT_TONE[spec.tone ?? 'muted']}`}
+                />
+                <Text as='span' weight='medium'>
+                  {named(wanted)}
+                </Text>
+                <Muted as='span'>{formatInteger(byKinds(wanted))}</Muted>
+              </div>
+            )
+          })}
       </div>
       <div ref={ref} className='min-w-0'>
         <svg
@@ -294,14 +306,14 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
           width='100%'
           className='block min-w-0'
           role='img'
-          aria-label='Population by age, sex and class'
+          aria-label='Population by age, sex kind and class'
         >
           {rows.map((row, index) => {
             const top = index * (PYRAMID_ROW + PYRAMID_GAP)
             const middle = top + PYRAMID_ROW / 2
             const spec = AGE_SPEC[row.band]
-            const male = sum(row.male, (part) => part.count)
-            const female = sum(row.female, (part) => part.count)
+            const leftCount = sum(row.left, (part) => part.count)
+            const rightCount = sum(row.right, (part) => part.count)
             const reach = (count: number) => (count / widest) * half
             const textWidth = spec.label.length * PYRAMID_CHAR
             return (
@@ -314,26 +326,26 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
                   rx={4}
                   className='fill-muted/40'
                 />
-                {bar(row.male, 'male', top)}
-                {bar(row.female, 'female', top)}
+                {bar(row.left, leftKinds, true, top)}
+                {bar(row.right, rightKinds, false, top)}
                 <text
-                  x={centre - PYRAMID_LABEL / 2 - reach(male) - 6}
+                  x={centre - PYRAMID_LABEL / 2 - reach(leftCount) - 6}
                   y={middle}
                   textAnchor='end'
                   dominantBaseline='middle'
                   fontSize={LABEL_SIZE}
                   className='fill-foreground tabular-nums'
                 >
-                  {formatInteger(male)}
+                  {formatInteger(leftCount)}
                 </text>
                 <text
-                  x={centre + PYRAMID_LABEL / 2 + reach(female) + 6}
+                  x={centre + PYRAMID_LABEL / 2 + reach(rightCount) + 6}
                   y={middle}
                   dominantBaseline='middle'
                   fontSize={LABEL_SIZE}
                   className='fill-foreground tabular-nums'
                 >
-                  {formatInteger(female)}
+                  {formatInteger(rightCount)}
                 </text>
                 <spec.icon
                   x={centre - (textWidth + SANKEY_ICON + 4) / 2}
@@ -361,7 +373,7 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
                   fontSize={LABEL_SIZE - 1}
                   className='fill-muted-foreground'
                 >
-                  {`${Math.round(((male + female) / total) * PERCENT)}% of all`}
+                  {`${Math.round(((leftCount + rightCount) / total) * PERCENT)}% of all`}
                 </text>
               </g>
             )
@@ -1285,6 +1297,13 @@ export function PeopleProfileSection({
           )}
           {biology && <FolkBody biology={biology} />}
           {culture && <FolkWays culture={culture} />}
+          {culture && (
+            <DeathReadingsPanel
+              peopleId={view.data.people_id ?? view.data.entity_id}
+              culture={culture}
+              blocked={blocked}
+            />
+          )}
           {culture && (
             <Panel
               title='Customs'

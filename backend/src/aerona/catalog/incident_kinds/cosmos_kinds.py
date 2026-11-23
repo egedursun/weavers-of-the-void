@@ -2,6 +2,7 @@ from aerona.catalog.cosmography import DIMENSIONAL_EVENT_LABELS, GALACTIC_EVENT_
 from aerona.catalog.incident_kinds.record_builders import amount, chosen, happening, maybe, named, one, some
 from aerona.catalog.incident_kinds.spec import IncidentKindSpec
 from aerona.catalog.worlds import SKY_EVENT_LABELS
+from aerona.core.grammar import spoken
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind as K
 from aerona.domain.enums.chronicle import FeedCategory as F
@@ -919,7 +920,7 @@ ACTS: tuple[IncidentKindSpec, ...] = (
         happening(
             f"world_end.{end.value}",
             S,
-            "{subject} was " + end.value.replace("_", " ") + " by {cause}: {lives:life ended|lives ended} and {homeless:tie was|ties were} cut abroad.",
+            "{subject} was " + spoken(end) + " by {cause}: {lives:life ended|lives ended} and {homeless:tie was|ties were} cut abroad.",
             roles=(one(R.SUBJECT),),
             facts=(
                 chosen("end", WorldEnd),

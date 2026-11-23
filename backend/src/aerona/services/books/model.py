@@ -28,7 +28,7 @@ from aerona.catalog.rarities import RARITY_LABELS, entity_rarity
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.stats import PASSIONS, STATS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.repositories.chronicle import kept_lines, told_kind
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
@@ -71,6 +71,7 @@ from aerona.services.books.kinds import add_kind_sections
 from aerona.services.books.made import KindArticle, made_kinds
 from aerona.services.books.mapsvg import MapPicture, map_picture
 from aerona.services.books.records import Ledger, add_history_sections, record_tables
+from aerona.services.books.seasons import add_season_sections, festival_plan
 from aerona.services.books.typed import LedgerChange, RecordTable, TypedIndex, TypedSection, title_of
 from aerona.services.codex import CosmicEpoch, TravellerGuide, cosmic_chronicle, traveller_guide
 from aerona.services.images.records import cover_of
@@ -179,6 +180,7 @@ class EntityArticle:
     typed: list[TypedSection] = field(default_factory=list)
     plan: Plan | None = None
     arms: Plan | None = None
+    festivals: Plan | None = None
     made: KindArticle | None = None
 
 
@@ -211,6 +213,7 @@ class WorldArticle:
     picture: MapPicture | None
     facts: list[Labelled] = field(default_factory=list)
     typed: list[TypedSection] = field(default_factory=list)
+    wheel: Markup | None = None
 
 
 EFFECT_LABELS: dict[str, str] = {
@@ -456,6 +459,7 @@ class BookBuilder:
         self.typed = TypedIndex({})
         self.made: dict[int, KindArticle] = {}
         self.ledger = Ledger({})
+        self.wheels: dict[int, Markup] = {}
 
     async def load_common(self) -> None:
         rows = await self.session.execute(select(EntityRow.id, EntityRow.name))
@@ -478,6 +482,7 @@ class BookBuilder:
         self.typed = await TypedIndex.load(self.session, self.names)
         self.made = await made_kinds(self.session, self.names)
         await add_command_areas(self.session, self.typed)
+        self.wheels = await add_season_sections(self.session, self.typed)
         await add_kind_sections(self.session, self.typed)
         self.ledger = await add_history_sections(self.session, self.typed)
 
@@ -487,7 +492,7 @@ class BookBuilder:
         for bond in self.bonds.get(node_id, []):
             if bond.kind in HIDDEN_BOND_KINDS:
                 continue
-            text = f"{bond.kind.value.replace('_', ' ')} {self.names.get(bond.target_node_id, '?')}"
+            text = f"{spoken(bond.kind)} {self.names.get(bond.target_node_id, '?')}"
             if bond.description:
                 text += f" ({clean_lore(bond.description)})"
             (active if bond.state is BondState.ACTIVE else past).append(text)
@@ -523,6 +528,7 @@ class BookBuilder:
             typed=self.typed.of(entity.id),
             plan=await self.plan_of(entity),
             arms=await arms_plan(self.session, entity),
+            festivals=await festival_plan(self.session, entity) if entity.entity_type is EntityType.PEOPLE else None,
             made=self.made.get(entity.id),
         )
 
@@ -843,6 +849,7 @@ class BookBuilder:
             picture=await map_picture(self.session, self.rules, world.id, epoch),
             facts=facts,
             typed=self.typed.of(world.id),
+            wheel=self.wheels.get(world.id),
         )
 
     async def chapters(self) -> list[EpochChapter]:
@@ -878,7 +885,7 @@ class BookBuilder:
                     stats=stats.get(epoch),
                     perspectives=views,
                     councils=list(await self.session.scalars(select(CouncilRow).where(CouncilRow.epoch == epoch).order_by(CouncilRow.id))),
-                    lines=[ChronicleLine(line.kind.value.replace("_", " "), line.year, clean_lore(line.text), line.son_id) for line in lines if line.visible],
+                    lines=[ChronicleLine(spoken(line.kind), line.year, clean_lore(line.text), line.son_id) for line in lines if line.visible],
                     born=[(entity.id, entity.name) for entity in born],
                     raw_lines=[clean_lore(line.text) for line in lines if line.kind is ChronicleKind.ENGINE_RAW],
                 )
@@ -1186,7 +1193,7 @@ async def entry_chronicle(session: AsyncSession, *, son_id: int | None, entity_i
     else:
         statement = statement.where(ChronicleRow.son_id == son_id)
     rows = await session.scalars(statement.order_by(ChronicleRow.id))
-    return [ChronicleLine(told_kind(row).value.replace("_", " "), row.year, clean_lore(row.text), row.son_id) for row in rows]
+    return [ChronicleLine(spoken(told_kind(row)), row.year, clean_lore(row.text), row.son_id) for row in rows]
 
 
 def aspect_words(rows: list[DimensionAspectRow]) -> str:

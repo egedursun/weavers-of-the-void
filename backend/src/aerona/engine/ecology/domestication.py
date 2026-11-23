@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.diets import GRAZERS, MEAT_EATERS
 from aerona.catalog.domestication import HOUSED_STAGES, KEPT_STAGES, WILDISH_STAGES
+from aerona.catalog.evolution import lean
 from aerona.catalog.methods import HERD_PROCESSES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -37,7 +38,7 @@ from aerona.domain.models.entity_stats import SpeciesStats, revised
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.biochemistry import can_live_on
-from aerona.engine.ecology.evolution import inherit_marks
+from aerona.engine.ecology.evolution import docility_of, inherit_marks
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import DEFAULT_QUALITY, GoodsLedger, holding
 from aerona.engine.industry.chosen import method_of
@@ -224,8 +225,18 @@ async def advance(ctx: TickContext, herd: HerdRow, made: int, most: int | None =
         )
     if made >= (table.cap if most is None else most):
         return None
-    tamed = rng.chance(table.domesticate_chance * profile.tameability / PERCENT)
+    eased = taming_ease(ctx.rules, profile.stage) * (1 + lean(await docility_of(ctx.session, species.id)) / 2)
+    tamed = rng.chance(table.domesticate_chance * profile.tameability / PERCENT * eased)
     return await promote(ctx, herd, species, keeper, tamed=tamed, bred=rng.chance(table.breed_chance), tameability=profile.tameability)
+
+
+def taming_ease(rules: Rules, stage: DomesticationStage) -> float:
+    table = rules.domestication_depth
+    if stage is DomesticationStage.COMMENSAL:
+        return 1 + table.commensal_tame_gain / PERCENT
+    if stage is DomesticationStage.FERAL:
+        return 1 + table.feral_retake_gain / PERCENT
+    return 1.0
 
 
 async def promote(ctx: TickContext, herd: HerdRow, species: EntityRow, keeper: EntityRow, *, tamed: bool, bred: bool, tameability: int) -> Advanced | None:

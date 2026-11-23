@@ -4,8 +4,8 @@ from aerona.catalog import diseases
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.disease import DiseaseVector
 from aerona.engine.disease.emergence import name_of, new_strain, plain
 from tests.engine.society.factories import Realm, context
 from tests.engine.society.test_disease_depth import book_of, forge
@@ -28,8 +28,8 @@ async def test_a_disease_breeds_a_strain_that_descends_from_it(realm: Realm) -> 
 
 def test_a_sickness_is_named_by_how_it_spreads_and_where_it_rose_and_nothing_else() -> None:
     region = EntityRow(name="Fenmark")
-    assert name_of(DiseaseVector.AIR, region) == "the airborne sickness of Fenmark"
-    assert name_of(DiseaseVector.CURSE, None) == "the cursed sickness"
-    assert set(diseases.VECTOR_LABELS) == set(DiseaseVector)
+    assert name_of(Transmission.INHALATION, region) == "the airborne sickness of Fenmark"
+    assert name_of(Transmission.CURSE, None) == "the cursed sickness"
+    assert set(diseases.VECTOR_LABELS) == set(Transmission)
     lists = [name for name, value in vars(diseases).items() if name.isupper() and isinstance(value, tuple) and all(isinstance(item, str) for item in value)]
     assert lists == []

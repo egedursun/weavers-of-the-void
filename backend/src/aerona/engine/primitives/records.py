@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import can_contain, entity_type_spec
+from aerona.catalog.relations import INHERITING_RELATIONS
 from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
@@ -13,6 +14,7 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.kin import KinGroupMemberRow
+from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.domain import Domain
@@ -27,6 +29,7 @@ from aerona.domain.enums.entity import (
     LegendCategory,
     MortalRole,
 )
+from aerona.domain.enums.relations import RelationType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic, SocialClass
 from aerona.domain.models.entity_stats import EntityStats
 from aerona.engine.context import TickContext
@@ -278,6 +281,19 @@ async def kin_heir(session: AsyncSession, dead: EntityRow) -> EntityRow | None:
     return None
 
 
+async def bonded_heir(session: AsyncSession, dead: EntityRow) -> EntityRow | None:
+    rows = await session.scalars(
+        select(RelationshipRow).where(RelationshipRow.holder_node_id == dead.id).order_by(RelationshipRow.friendship.desc(), RelationshipRow.id)
+    )
+    for row in rows:
+        if not INHERITING_RELATIONS.intersection(RelationType(kind) for kind in row.kinds):
+            continue
+        candidate = await living_entity(session, row.subject_node_id)
+        if candidate is not None and candidate.entity_type in HEIR_TYPES:
+            return candidate
+    return None
+
+
 async def child_heir(session: AsyncSession, dead: EntityRow, favour_reach: int) -> EntityRow | None:
     cast_out = await disowned_by(session, dead.id)
     chosen = await favoured_by(session, dead.id, favour_reach) if favour_reach and await leaves_a_choice(session, dead) else []
@@ -297,7 +313,7 @@ async def heir_of(session: AsyncSession, dead: EntityRow, *, favour_reach: int =
         candidate = await living_entity(session, bond.source_node_id)
         if candidate is not None and candidate.entity_type in HEIR_TYPES:
             return candidate
-    kin = await kin_heir(session, dead)
+    kin = await kin_heir(session, dead) or await bonded_heir(session, dead)
     if kin is not None:
         return kin
     location = await living_entity(session, dead.location_id)

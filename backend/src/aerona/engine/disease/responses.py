@@ -8,12 +8,15 @@ from aerona.catalog.peoples import FUNERALS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.discovery import TheoryAdherentRow, TheoryProfileRow
 from aerona.db.tables.disease import DiseaseProfileRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import CureResearchRow, PlagueResponseRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.demography import FuneralCustom
+from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.evolution import PlagueResponse
@@ -22,7 +25,9 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.disease.control import quarantine
 from aerona.engine.disease.research import institutions
+from aerona.engine.disease.routes import learn_routes
 from aerona.engine.disease.stigma import values_for
+from aerona.engine.economy.purse import take_coin
 from aerona.engine.faith.judgement import funeral_custom
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
@@ -44,6 +49,7 @@ RESPONSE_KEYS = total(
         PlagueResponse.EXPEL_SICK: "disease.plague_response.expel_sick",
         PlagueResponse.PRAYER: "disease.plague_response.prayer",
         PlagueResponse.SEEK_CURE: "disease.plague_response.seek_cure",
+        PlagueResponse.SANITATION: "disease.plague_response.sanitation",
     },
 )
 
@@ -83,19 +89,58 @@ async def options_for(ctx: TickContext, community: EntityRow) -> list[PlagueResp
         options.append(R.PRAYER)
     if await institutions_in(ctx.session, community.id):
         options.append(R.SEEK_CURE)
+    if await cleaning_backed(ctx, community):
+        options.append(R.SANITATION)
     return options
+
+
+async def cleaning_backed(ctx: TickContext, community: EntityRow) -> bool:
+    belief = await ctx.session.scalar(
+        select(TheoryAdherentRow.theory_entity_id)
+        .join(TheoryProfileRow, TheoryProfileRow.theory_entity_id == TheoryAdherentRow.theory_entity_id)
+        .where(
+            TheoryAdherentRow.adherent_entity_id == community.id,
+            TheoryAdherentRow.strength >= ctx.rules.plague_responses.sanitation_belief,
+            TheoryProfileRow.domain == TheoryDomain.MEDICINE,
+        )
+        .limit(1)
+    )
+    return belief is not None
+
+
+async def build_cleaning(ctx: TickContext, community: EntityRow, disease_id: int) -> None:
+    table = ctx.rules.plague_responses
+    if not await take_coin(ctx.session, ctx.rules, community, table.sanitation_cost):
+        return
+    works = await ctx.session.get(SettlementProfileRow, community.id)
+    if works is not None and "sanitation" not in works.locked:
+        works.sanitation = clamp_int(works.sanitation + table.sanitation_works, 0, PERCENT)
+    await record(
+        ctx,
+        "disease.sanitation_ordered",
+        roles={IncidentRole.ACTOR: community.id, IncidentRole.TARGET: disease_id},
+        facts={"cost": table.sanitation_cost, "sanitation": works.sanitation if works is not None else 0},
+    )
 
 
 async def take_up(ctx: TickContext, community: EntityRow, disease_id: int, response: PlagueResponse, *, strength: int | None = None) -> PlagueResponseRow:
     table = ctx.rules.plague_responses
     row = await ctx.session.get(PlagueResponseRow, (community.id, disease_id, response))
     if row is None:
+        first = await ctx.session.scalar(
+            select(PlagueResponseRow.response)
+            .where(PlagueResponseRow.community_entity_id == community.id, PlagueResponseRow.disease_entity_id == disease_id)
+            .limit(1)
+        )
+        await learn_routes(ctx, community, disease_id, response, first=first is None)
         row = PlagueResponseRow(community_entity_id=community.id, disease_entity_id=disease_id, response=response, since_epoch=ctx.epoch, locked=[])
         ctx.session.add(row)
     if "strength" not in row.locked:
         row.strength = strength if strength is not None else row.strength or PERCENT * 6 // 10
     if "until_epoch" not in row.locked:
         row.until_epoch = ctx.epoch + table.length
+    if response is R.SANITATION and row.since_epoch == ctx.epoch:
+        await build_cleaning(ctx, community, disease_id)
     if response is R.QUARANTINE:
         region = (await RegionAtlas.load(ctx.session)).top_region(community.id)
         if region is not None:

@@ -21,6 +21,7 @@ import {
 } from '@/features/cosmography/parts'
 import { StepButton, TextField } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
+import { MATERIAL_LABEL } from '@/features/entity/economy/labels'
 import { Ref } from '@/features/gatherings/parts'
 import {
   useMadeAction,
@@ -383,7 +384,7 @@ function Source({
               title={`Resisted by ${RESISTANCES[row.resistance].label.toLowerCase()}`}
               caption={
                 row.material
-                  ? `the material ${row.material.replaceAll('_', ' ')}`
+                  ? `the material ${MATERIAL_LABEL[row.material].toLowerCase()}`
                   : 'no material named'
               }
               locked={row.locked}

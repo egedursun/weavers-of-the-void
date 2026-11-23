@@ -185,7 +185,7 @@ async def reset_doctrine(scope: PlayerScope, command: CultTarget) -> Effect:
 async def set_tenet(scope: PlayerScope, command: SetTenet) -> Effect:
     ctx = await scope.context("cult_tenet")
     row = await control.set_tenet(ctx, command.cult_id, command.tenet, held=command.held, target=command.target, son_id=command.son_id, name=command.name)
-    label = (row.name if row is not None and row.name else None) or command.tenet.value.replace("_", " ")
+    label = (row.name if row is not None and row.name else None) or spoken(command.tenet)
     return Effect(f"The faith now holds to {label}." if row is not None else f"The faith casts off {label}.", command.cult_id)
 
 
@@ -195,7 +195,7 @@ async def set_office(scope: PlayerScope, command: SetOffice) -> Effect:
     row = await control.set_office(
         ctx, command.cult_id, command.kind, holder_id=command.holder_id, locked=command.locked, remove=command.remove, vacate=command.vacate
     )
-    label = command.kind.value.replace("_", " ")
+    label = spoken(command.kind)
     return Effect(f"The office of {label} is struck." if row is None else f"The office of {label} is set.", command.cult_id)
 
 

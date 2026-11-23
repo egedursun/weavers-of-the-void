@@ -25,3 +25,15 @@ class DiseaseAgentRules:
     identify_level: int = rule(4, 0, 10, G, "Medicine level at which a community tells what a disease is")
     rite_piety: int = rule(60, 0, 100, G, "Piety above which a community answers a sickness first with rites")
     linger_load: int = rule(20, 0, 100, G, "Load a disease that survives in soil or in a reservoir keeps in its land after an outbreak")
+    affinity_fit_pct: int = rule(150, 0, 500, G, "Spread of a sickness where its warmth and moisture both suit the land (%)")
+    affinity_misfit_pct: int = rule(50, 0, 100, G, "Spread of a sickness where neither its warmth nor its moisture suits the land (%)")
+
+
+@dataclass(frozen=True)
+class CureRules:
+    surgery_death_pct: int = rule(15, 0, 100, G, "Chance a cutting cure kills or fails where healers know nothing of cleanliness (%)")
+    surgery_infection_pct: int = rule(20, 0, 100, G, "Severity a failed cutting cure adds to an outbreak through infection (%)")
+    antiviral_resistance: int = rule(8, 0, 50, G, "Resistance a virus gains when an antiviral is overused against it")
+    antiviral_level: int = rule(7, 0, 10, G, "Medicine level a community needs before it can make an antiviral")
+    surgery_level: int = rule(3, 0, 10, G, "Medicine level a community needs before its healers cut out a sickness")
+    herb_level: int = rule(2, 0, 10, G, "Medicine level a community needs before its healers use herbs")

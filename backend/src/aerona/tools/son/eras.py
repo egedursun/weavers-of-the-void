@@ -37,7 +37,7 @@ async def sabotage_programme(call: SonCall, args: SabotageProgrammeInput) -> str
     if realm is None or realm.world_id != call.son.current_world_id:
         fail(SonResult.PROGRAMME_UNTOUCHED, why="you can hinder only a programme of the world you stand on")
     if held(realm.id) or "progress" in row.locked:
-        fail(SonResult.PROGRAMME_UNTOUCHED, why="a stronger hand holds it")
+        fail(SonResult.PROGRAMME_UNTOUCHED, why="it is held")
     row.progress = clamp_int(row.progress - call.tick.rules.programmes.sabotage_loss * 2, 0, PERCENT)
     row.sabotaged += 1
     call.target(realm.id)

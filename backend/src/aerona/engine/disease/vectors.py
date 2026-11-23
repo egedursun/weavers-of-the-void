@@ -1,17 +1,21 @@
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from aerona.catalog.spread_paths import CONTACT_PATHS
+from aerona.catalog.transmission import ROUTES, main_share
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.domain.enums.disease import DiseaseVector, SpreadPath
+from aerona.domain.enums.affliction import Transmission
+from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.environment import RiverClass, ScarKind
+from aerona.domain.enums.evolution import PlagueResponse
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.emergence import COLD_BANDS, DRY, VOID_SCARS, WARM_BANDS, WET
 from aerona.engine.primitives.stats import stat
 
-CONTACT_PATHS = frozenset({SpreadPath.ROUTE, SpreadPath.ARMY, SpreadPath.JOURNEY, SpreadPath.SIEGE})
 VOID_EXPOSURE = (ScarKind.LEAK_WOUND.value, *VOID_SCARS)
 
 
@@ -95,32 +99,85 @@ class Spot:
     path: SpreadPath
 
 
+def constant(book: DiseaseBook) -> float:
+    return 1.0
+
+
+def ingestion(book: DiseaseBook, spot: Spot) -> float:
+    return (1 + touch(book, spot.path)) / 2
+
+
+def blood(book: DiseaseBook, profile: DiseaseProfileRow, spot: Spot) -> float:
+    return bite(book, profile.disease_entity_id, spot.region_id, spot.ground)
+
+
+def objects(book: DiseaseBook, spot: Spot) -> float:
+    return touch(book, spot.path)
+
+
+Reader = Callable[[DiseaseBook, DiseaseProfileRow, Spot], float]
+READERS: Mapping[Transmission, Reader] = total(
+    Transmission,
+    {
+        Transmission.INHALATION: lambda book, profile, spot: air(book, spot.ground),
+        Transmission.WATER: lambda book, profile, spot: water(book, spot.ground),
+        Transmission.CONTACT: lambda book, profile, spot: touch(book, spot.path),
+        Transmission.BITE: lambda book, profile, spot: bite(book, profile.disease_entity_id, spot.region_id, spot.ground),
+        Transmission.SPIRIT: lambda book, profile, spot: spirit(book, spot.target, spot.ground, spot.region_id),
+        Transmission.VOID: lambda book, profile, spot: void(book, spot.ground),
+        Transmission.CURSE: lambda book, profile, spot: curse(book, book.diseases.get(profile.disease_entity_id)),
+        Transmission.INGESTION: lambda book, profile, spot: ingestion(book, spot),
+        Transmission.BLOOD: blood,
+        Transmission.BIRTH: lambda book, profile, spot: constant(book),
+        Transmission.RITE: lambda book, profile, spot: constant(book),
+        Transmission.GAZE: lambda book, profile, spot: constant(book),
+        Transmission.EXPERIENCE: lambda book, profile, spot: constant(book),
+        Transmission.INTIMATE: lambda book, profile, spot: constant(book),
+        Transmission.OBJECTS: lambda book, profile, spot: objects(book, spot),
+    },
+)
+DRINK_ROUTES = frozenset({Transmission.WATER, Transmission.INGESTION})
+RATE_BASE = 50
+
+
+def blocked(book: DiseaseBook, route: Transmission, profile: DiseaseProfileRow, spot: Spot) -> float:
+    guarded = 1 - book.drink_guard(spot.target.id) if route in DRINK_ROUTES else 0.0
+    taken = book.responses.get((spot.target.id, profile.disease_entity_id), set())
+    cuts = [
+        book.rules.plague_responses.sanitation_cut_pct / PERCENT if response is PlagueResponse.SANITATION else 1.0
+        for response in taken & ROUTES[route].blocked_by
+    ]
+    answered = max(cuts, default=0.0)
+    return max(guarded, answered)
+
+
+def routes_of(book: DiseaseBook, profile: DiseaseProfileRow) -> list[tuple[Transmission, int]]:
+    extra = [(route, share) for route, share in book.routes.get(profile.disease_entity_id, []) if route is not profile.primary_route]
+    return [(profile.primary_route, main_share(share for _route, share in extra)), *extra]
+
+
 def vector_factor(book: DiseaseBook, profile: DiseaseProfileRow, spot: Spot) -> float:
-    readers: dict[DiseaseVector, Callable[[], float]] = {
-        DiseaseVector.AIR: lambda: air(book, spot.ground),
-        DiseaseVector.WATER: lambda: water(book, spot.ground) * book.drink_guard(spot.target.id),
-        DiseaseVector.TOUCH: lambda: touch(book, spot.path),
-        DiseaseVector.BITE: lambda: bite(book, profile.disease_entity_id, spot.region_id, spot.ground),
-        DiseaseVector.SPIRIT: lambda: spirit(book, spot.target, spot.ground, spot.region_id),
-        DiseaseVector.VOID: lambda: void(book, spot.ground),
-        DiseaseVector.CURSE: lambda: curse(book, book.diseases.get(profile.disease_entity_id)),
-    }
-    return readers[profile.vector]()
+    found = 0.0
+    for route, share in routes_of(book, profile):
+        spec = ROUTES[route]
+        cut = 1 - spec.block(book.rules) / PERCENT * blocked(book, route, profile, spot)
+        found += share / PERCENT * READERS[route](book, profile, spot) * spec.rate(book.rules) / RATE_BASE * cut
+    return found
 
 
 def crowd_weight(book: DiseaseBook, profile: DiseaseProfileRow) -> float:
     table = book.rules.epidemiology
-    return pct(table.crowd_spread_pct) * (pct(table.air_crowd_pct) if profile.vector is DiseaseVector.AIR else 1.0)
+    return pct(table.crowd_spread_pct) * (pct(table.air_crowd_pct) if profile.primary_route is Transmission.INHALATION else 1.0)
 
 
 def sanitation_weight(book: DiseaseBook, profile: DiseaseProfileRow) -> float:
     table = book.rules.epidemiology
-    if profile.vector is DiseaseVector.CURSE:
+    if profile.primary_route is Transmission.CURSE:
         return 0.0
-    return pct(table.sanitation_spread_pct) * (pct(table.water_sanitation_pct) if profile.vector is DiseaseVector.WATER else 1.0)
+    return pct(table.sanitation_spread_pct) * (pct(table.water_sanitation_pct) if profile.primary_route is Transmission.WATER else 1.0)
 
 
 def host_factor(book: DiseaseBook, profile: DiseaseProfileRow, region_id: int | None) -> float:
-    if profile.vector is DiseaseVector.BITE or not book.host_bound(profile.disease_entity_id):
+    if profile.primary_route is Transmission.BITE or not book.host_bound(profile.disease_entity_id):
         return 1.0
     return 1 + book.host_abundance(profile.disease_entity_id, region_id) * pct(book.rules.epidemiology.host_spread_pct)

@@ -1,4 +1,5 @@
 from aerona.catalog.kinds.labels import plain
+from aerona.core.grammar import spoken
 from aerona.domain.enums.kind_crafts import (
     ColourFocus,
     ColourMeaning,
@@ -203,4 +204,4 @@ SUBSTANCE_LABELS = plain(
         SubstanceCategory.MEDICINAL: "Medicinal",
     },
 )
-SKILL_LABELS = {skill.value: skill.value.replace("_", " ").capitalize() for skill in SkillKind}
+SKILL_LABELS = {skill.value: spoken(skill).capitalize() for skill in SkillKind}

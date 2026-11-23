@@ -1,7 +1,9 @@
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from aerona.catalog.mind_split import fac, lean
+from aerona.core.total import total
 from aerona.domain.enums.mind import (
     ActKind,
     DreamKind,
@@ -12,9 +14,11 @@ from aerona.domain.enums.mind import (
     MoodState,
     NeedGroup,
     NeedKind,
+    SkillKind,
     ThoughtKind,
     ValueAxis,
 )
+from aerona.rules.registry import Rules
 
 E = Emotion
 T = ThoughtKind
@@ -27,40 +31,70 @@ class EmotionSpec:
     label: str
     valence: int
     amplifiers: MappingProxyType[Facet, int]
+    arousal: int = 50
+    decay: Callable[[Rules], int] = lambda rules: rules.thoughts.decay_pct
+    act_weight: Callable[[Rules], int] | None = None
+    fearful: bool = False
+    wrathful: bool = False
 
 
 def amp(**values: int) -> MappingProxyType[Facet, int]:
     return fac(**values)
 
 
-EMOTIONS: MappingProxyType[Emotion, EmotionSpec] = MappingProxyType(
+EMOTIONS: MappingProxyType[Emotion, EmotionSpec] = total(
+    Emotion,
     {
-        E.JOY: EmotionSpec("Joy", 1, amp(cheerfulness=1)),
-        E.CONTENTMENT: EmotionSpec("Contentment", 1, amp(emotional_stability=1)),
-        E.PRIDE: EmotionSpec("Pride", 1, amp(vanity=1, modesty=-1)),
-        E.LOVE: EmotionSpec("Love", 1, amp(friendliness=1)),
-        E.GRATITUDE: EmotionSpec("Gratitude", 1, amp(gratitude=1)),
-        E.RELIEF: EmotionSpec("Relief", 1, amp(anxiety=1)),
-        E.HOPE: EmotionSpec("Hope", 1, amp(cheerfulness=1, depression=-1)),
-        E.AWE: EmotionSpec("Awe", 1, amp(imagination=1, artistic_inclination=1)),
-        E.AMUSEMENT: EmotionSpec("Amusement", 1, amp(humour=1)),
-        E.FEAR: EmotionSpec("Fear", -1, amp(anxiety=1, vulnerability=1)),
-        E.ANXIETY: EmotionSpec("Anxiety", -1, amp(anxiety=1, emotional_stability=-1)),
-        E.ANGER: EmotionSpec("Anger", -1, amp(anger=1)),
-        E.RAGE: EmotionSpec("Rage", -1, amp(anger=1, emotional_stability=-1)),
-        E.GRIEF: EmotionSpec("Grief", -1, amp(depression=1, emotional_stability=-1)),
-        E.SADNESS: EmotionSpec("Sadness", -1, amp(depression=1, cheerfulness=-1)),
-        E.SHAME: EmotionSpec("Shame", -1, amp(self_consciousness=1)),
-        E.GUILT: EmotionSpec("Guilt", -1, amp(self_consciousness=1, sense_of_duty=1)),
-        E.ENVY: EmotionSpec("Envy", -1, amp(envy=1)),
-        E.JEALOUSY: EmotionSpec("Jealousy", -1, amp(envy=1, trust=-1)),
-        E.DISGUST: EmotionSpec("Disgust", -1, amp(tolerance_of_difference=-1)),
-        E.LONELINESS: EmotionSpec("Loneliness", -1, amp(gregariousness=1)),
-        E.BOREDOM: EmotionSpec("Boredom", -1, amp(excitement_seeking=1, activity_level=1)),
-        E.DESPAIR: EmotionSpec("Despair", -1, amp(depression=1, vulnerability=1)),
-        E.LONGING: EmotionSpec("Longing", -1, amp(imagination=1)),
-    }
+        E.JOY: EmotionSpec("Joy", 1, amp(cheerfulness=1), 60, lambda rules: rules.emotions.joy_decay),
+        E.CONTENTMENT: EmotionSpec("Contentment", 1, amp(emotional_stability=1), 20, lambda rules: rules.emotions.contentment_decay),
+        E.PRIDE: EmotionSpec("Pride", 1, amp(vanity=1, modesty=-1), 50, lambda rules: rules.emotions.pride_decay),
+        E.LOVE: EmotionSpec("Love", 1, amp(friendliness=1), 50, lambda rules: rules.emotions.love_decay),
+        E.GRATITUDE: EmotionSpec("Gratitude", 1, amp(gratitude=1), 30, lambda rules: rules.emotions.gratitude_decay),
+        E.RELIEF: EmotionSpec("Relief", 1, amp(anxiety=1), 30, lambda rules: rules.emotions.relief_decay),
+        E.HOPE: EmotionSpec("Hope", 1, amp(cheerfulness=1, depression=-1), 40, lambda rules: rules.emotions.hope_decay),
+        E.AWE: EmotionSpec("Awe", 1, amp(imagination=1, artistic_inclination=1), 70, lambda rules: rules.emotions.awe_decay),
+        E.AMUSEMENT: EmotionSpec("Amusement", 1, amp(humour=1), 50, lambda rules: rules.emotions.amusement_decay),
+        E.FEAR: EmotionSpec("Fear", -1, amp(anxiety=1, vulnerability=1), 80, lambda rules: rules.emotions.fear_decay, fearful=True),
+        E.ANXIETY: EmotionSpec("Anxiety", -1, amp(anxiety=1, emotional_stability=-1), 60, lambda rules: rules.emotions.anxiety_decay, fearful=True),
+        E.ANGER: EmotionSpec("Anger", -1, amp(anger=1), 80, lambda rules: rules.emotions.anger_decay, wrathful=True),
+        E.RAGE: EmotionSpec("Rage", -1, amp(anger=1, emotional_stability=-1), 95, lambda rules: rules.emotions.rage_decay, wrathful=True),
+        E.GRIEF: EmotionSpec("Grief", -1, amp(depression=1, emotional_stability=-1), 50, lambda rules: rules.emotions.grief_decay),
+        E.SADNESS: EmotionSpec("Sadness", -1, amp(depression=1, cheerfulness=-1), 30, lambda rules: rules.emotions.sadness_decay),
+        E.SHAME: EmotionSpec("Shame", -1, amp(self_consciousness=1), 50, lambda rules: rules.emotions.shame_decay),
+        E.GUILT: EmotionSpec("Guilt", -1, amp(self_consciousness=1, sense_of_duty=1), 40, lambda rules: rules.emotions.guilt_decay),
+        E.ENVY: EmotionSpec("Envy", -1, amp(envy=1), 50, lambda rules: rules.emotions.envy_decay),
+        E.JEALOUSY: EmotionSpec("Jealousy", -1, amp(envy=1, trust=-1), 60, lambda rules: rules.emotions.jealousy_decay),
+        E.DISGUST: EmotionSpec("Disgust", -1, amp(tolerance_of_difference=-1), 60, lambda rules: rules.emotions.disgust_decay),
+        E.LONELINESS: EmotionSpec("Loneliness", -1, amp(gregariousness=1), 30, lambda rules: rules.emotions.loneliness_decay),
+        E.BOREDOM: EmotionSpec("Boredom", -1, amp(excitement_seeking=1, activity_level=1), 10, lambda rules: rules.emotions.boredom_decay),
+        E.DESPAIR: EmotionSpec("Despair", -1, amp(depression=1, vulnerability=1), 40, lambda rules: rules.emotions.despair_decay),
+        E.LONGING: EmotionSpec("Longing", -1, amp(imagination=1), 40, lambda rules: rules.emotions.longing_decay),
+        E.SURPRISE: EmotionSpec(
+            "Surprise", 1, amp(excitement_seeking=1), 90, lambda rules: rules.emotions.surprise_decay, lambda rules: rules.emotions.surprise_act_weight
+        ),
+        E.CURIOSITY: EmotionSpec(
+            "Curiosity", 1, amp(curiosity=1, imagination=1), 60, lambda rules: rules.emotions.curiosity_decay, lambda rules: rules.emotions.curiosity_act_weight
+        ),
+        E.COMPASSION: EmotionSpec(
+            "Compassion",
+            1,
+            amp(altruism=1, friendliness=1),
+            40,
+            lambda rules: rules.emotions.compassion_decay,
+            lambda rules: rules.emotions.compassion_act_weight,
+        ),
+        E.CONTEMPT: EmotionSpec(
+            "Contempt",
+            -1,
+            amp(tolerance_of_difference=-1, vanity=1),
+            40,
+            lambda rules: rules.emotions.contempt_decay,
+            lambda rules: rules.emotions.contempt_act_weight,
+        ),
+    },
 )
+FEARFUL_KEYS = frozenset(kind.value for kind, spec in EMOTIONS.items() if spec.fearful)
+WRATHFUL_KEYS = frozenset(kind.value for kind, spec in EMOTIONS.items() if spec.wrathful)
 
 
 @dataclass(frozen=True)
@@ -227,6 +261,10 @@ THOUGHTS: MappingProxyType[ThoughtKind, ThoughtSpec] = MappingProxyType(
         T.PASSION_STIRRED: th(E.AWE, 60, "Was carried by a passion"),
         T.PASSION_BROKE: th(E.DESPAIR, 65, "Was broken by a passion", {}, {"vulnerability": 3}),
         T.CAUGHT_FEELING: th(E.CONTENTMENT, 20, "Caught the feeling of those around them"),
+        T.WAS_SURPRISED: th(E.SURPRISE, 40, "Was taken by surprise"),
+        T.GREW_CURIOUS: th(E.CURIOSITY, 45, "Grew curious about something unknown", {"knowledge": 2}, {"curiosity": 2}),
+        T.FELT_COMPASSION: th(E.COMPASSION, 45, "Felt for one who suffers", {"mercy": 2}, {"altruism": 2}),
+        T.FELT_CONTEMPT: th(E.CONTEMPT, 45, "Held another in contempt", {"hierarchy": 2}, {"tolerance_of_difference": -2}),
     }
 )
 
@@ -368,3 +406,12 @@ NEED_READINGS: MappingProxyType[NeedGroup, DreamReading] = MappingProxyType(
         G.ACTION: DreamReading.CALL_TO_JOURNEY,
     }
 )
+
+UNEXPECTED = frozenset(
+    {T.SAW_MIRACLE, T.WAS_SAVED, T.BETRAYED, T.RECEIVED_VISITATION, T.TOUCHED_BY_A_GOD, T.SAW_DESECRATION, T.WITNESSED_ATROCITY, T.SENT_BY_THE_CREATOR}
+)
+SUFFERING = frozenset({T.WENT_HUNGRY, T.FELL_ILL, T.WAS_WOUNDED, T.WAS_MAIMED, T.LOST_CHILD, T.LOST_SPOUSE, T.LIVED_IN_SQUALOR, T.WAS_CAPTURED})
+LOWERED = frozenset({T.WAS_SHAMED, T.WAS_PUNISHED, T.FELL_IN_RANK, T.LOST_STANDING, T.KIN_SHAMED})
+CURIOUS_STUDY = (SkillKind.LORE, SkillKind.LANGUAGES, SkillKind.ASTRONOMY)
+COMPASSION_AXES = (ValueAxis.MERCY, ValueAxis.KINSHIP)
+CONTEMPT_AXES = (ValueAxis.HIERARCHY, ValueAxis.PURITY)

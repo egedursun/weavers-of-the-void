@@ -27,7 +27,7 @@ REGION_MECHANICS = (
         fields=("danger", "source", "strength", "held", "origin"),
         tables=(RegionDangerRow.__tablename__,),
         exposure=Exposure.TOOL,
-        tools=("curse_region",),
+        tools=("curse_region", "quell_danger"),
         targets=("region",),
         couplings=(
             Coupling(S.ECOLOGY, "fierce wild kinds and named beasts make the land dangerous", EdgeKind.MODIFIER, "regional_danger.beasts_species_pct"),
@@ -121,6 +121,7 @@ REGION_MECHANICS = (
         backfill=BACKFILL,
         fields=("kind", "magnitude", "held"),
         tables=(RegionMemoryRow.__tablename__,),
+        tools=("mark_land", "commemorate"),
         exposure=Exposure.CONTEXT,
         targets=("region",),
         couplings=(

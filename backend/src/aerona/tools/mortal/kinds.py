@@ -44,7 +44,7 @@ async def own_people(call: MortalCall) -> EntityRow:
     if people is None:
         fail(MortalResult.KIND_DECLINED, why="you belong to no people")
     if held(people.id):
-        fail(MortalResult.KIND_DECLINED, why="a stronger hand holds your people")
+        fail(MortalResult.KIND_DECLINED, why="your people is held")
     return people
 
 
@@ -119,7 +119,7 @@ async def forbid_kind(call: MortalCall, args: KindChoiceInput) -> str:
     if body is None:
         fail(MortalResult.KIND_DECLINED, why="you rule no realm and lead no cult")
     if held(body.id):
-        fail(MortalResult.KIND_DECLINED, why="a stronger hand holds those you lead")
+        fail(MortalResult.KIND_DECLINED, why="those you lead are held")
     await hold_kind(
         call.tick, args.concept, row.id, body.id, stance=KindStance.FORBIDS, strength=call.tick.rules.kinds.adoption_strength, spread=KindSpread.DECREE
     )

@@ -312,6 +312,8 @@ async def erupted(ctx: TickContext, target: EntityRow, severity: int) -> RegionG
         scars.get(ScarKind.BURNED.value, 0) + severity * ctx.rules.geomorphology.eruption_burn_depth_pct // PERCENT, 0, PERCENT
     )
     ground.scars = scars
+    if ground.river_class is not RiverClass.NONE and ctx.rng(f"eruption_shift.{ground.entity_id}.{ctx.epoch}").chance(ctx.rules.rivers.eruption_shift_pct):
+        await shift_river(ctx, ground.entity_id, None, RiverShiftCause.ERUPTION)
     return shape
 
 

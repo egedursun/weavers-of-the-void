@@ -11,7 +11,8 @@ from aerona.rules.registry import Rules
 
 
 def test_every_ground_lies_in_a_medium_and_allows_its_gear() -> None:
-    assert set(grounds_in(CatchMedium.WATER)) | set(grounds_in(CatchMedium.LAND)) == set(CatchGround)
+    assert set().union(*(grounds_in(medium) for medium in CatchMedium)) == set(CatchGround)
+    assert set(grounds_in(CatchMedium.UNDER_WATER)) == {CatchGround.DIVING}
     assert all(spec.gear for spec in GROUNDS.values())
     assert {gear for spec in GROUNDS.values() for gear in spec.gear} == set(Gear)
     assert GEAR[Gear.NETS].rate(Rules()) == Rules().grounds.nets_pct
@@ -19,10 +20,12 @@ def test_every_ground_lies_in_a_medium_and_allows_its_gear() -> None:
 
 def test_market_ranks_keep_their_order_and_reach() -> None:
     rules = Rules()
-    assert by_order() == [CentralityRank.DAILY, CentralityRank.WEEKLY, CentralityRank.RARE]
-    assert higher_markets(CentralityRank.DAILY) == {CentralityRank.WEEKLY, CentralityRank.RARE}
-    assert higher_markets(CentralityRank.RARE) == frozenset()
-    assert widest_reach(rules) == rules.central_places.rare_range
+    order = [CentralityRank.DAILY, CentralityRank.WEEKLY, CentralityRank.SEASONAL, CentralityRank.RARE, CentralityRank.METROPOLITAN]
+    assert by_order() == order
+    assert higher_markets(CentralityRank.DAILY) == set(order[1:])
+    assert higher_markets(CentralityRank.RARE) == {CentralityRank.METROPOLITAN}
+    assert higher_markets(CentralityRank.METROPOLITAN) == frozenset()
+    assert widest_reach(rules) == rules.central_places.metropolitan_range
     assert not RANKS[CentralityRank.DAILY].market
 
 

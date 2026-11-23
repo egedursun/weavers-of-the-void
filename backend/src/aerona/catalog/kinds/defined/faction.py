@@ -35,6 +35,7 @@ FACTION_GOAL_KIND = total(
             "Abolish law",
             checked_by=(
                 "catalog.life.factions.CHOICES",
+                "catalog.movement_causes.LAW_TARGETS",
                 "engine.factions.agenda.goal_target",
                 "engine.factions.agenda.petition_terms",
                 "engine.polity.enactment.faction_reading",
@@ -42,8 +43,8 @@ FACTION_GOAL_KIND = total(
             used_by=(
                 "catalog.life.factions.CHECKED_KEY_FACTION_GOAL_KINDS",
                 "catalog.life.factions.CHOOSE_FACTION_GOAL_KINDS_2",
-                "catalog.life.factions.GOALS",
                 "catalog.life.factions.GOAL_PLANS",
+                "catalog.movement_causes.MOVEMENT_CAUSES",
                 "engine.industry.owners.lobby",
             ),
         ),
@@ -51,6 +52,7 @@ FACTION_GOAL_KIND = total(
             "Enact law",
             checked_by=(
                 "catalog.life.factions.CHOICES",
+                "catalog.movement_causes.ENACTED",
                 "engine.factions.agenda.goal_target",
                 "engine.factions.agenda.petition_terms",
                 "engine.polity.enactment.faction_reading",
@@ -58,8 +60,8 @@ FACTION_GOAL_KIND = total(
             used_by=(
                 "catalog.life.factions.CHECKED_KEY_FACTION_GOAL_KINDS",
                 "catalog.life.factions.CHOOSE_FACTION_GOAL_KINDS_2",
-                "catalog.life.factions.GOALS",
                 "catalog.life.factions.GOAL_PLANS",
+                "catalog.movement_causes.MOVEMENT_CAUSES",
             ),
         ),
         FactionGoalKind.WAR_ON: Defined(
@@ -70,7 +72,7 @@ FACTION_GOAL_KIND = total(
         FactionGoalKind.PEACE_WITH: Defined(
             "Peace with",
             checked_by=("catalog.life.factions.CHOICES",),
-            used_by=("catalog.life.factions.GOALS", "catalog.life.factions.GOAL_PLANS", "catalog.life.factions.REALM_GOAL_FACTION_GOAL_KINDS"),
+            used_by=("catalog.life.factions.GOAL_PLANS", "catalog.life.factions.REALM_GOAL_FACTION_GOAL_KINDS", "catalog.movement_causes.MOVEMENT_CAUSES"),
         ),
         FactionGoalKind.PROTECT_CRAFT: Defined(
             "Protect craft",
@@ -86,12 +88,12 @@ FACTION_GOAL_KIND = total(
         FactionGoalKind.CONVERT_REALM: Defined(
             "Convert realm",
             checked_by=("catalog.life.factions.CHOICES", "engine.factions.agenda.petition_terms", "engine.factions.agenda.realm_goal"),
-            used_by=("catalog.life.factions.CHOOSE_FACTION_GOAL_KINDS_2", "catalog.life.factions.GOALS", "catalog.life.factions.GOAL_PLANS"),
+            used_by=("catalog.life.factions.CHOOSE_FACTION_GOAL_KINDS_2", "catalog.life.factions.GOAL_PLANS", "catalog.movement_causes.MOVEMENT_CAUSES"),
         ),
         FactionGoalKind.INDEPENDENCE: Defined(
             "Independence",
             checked_by=("catalog.life.factions.CHOICES", "engine.factions.agenda.realm_goal"),
-            used_by=("catalog.life.factions.GOALS", "catalog.life.factions.GOAL_PLANS"),
+            used_by=("catalog.life.factions.GOAL_PLANS", "catalog.movement_causes.MOVEMENT_CAUSES"),
         ),
         FactionGoalKind.LOOT: Defined(
             "Loot",

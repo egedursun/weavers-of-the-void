@@ -494,7 +494,7 @@ async def _knowledge_problem(session: AsyncSession, rules: Rules, traveller: Ent
     controller = route.controller_entity_id
     if controller is not None and controller != traveller.id and await BondRepository(session).exists_between(traveller.id, controller, BondKind.TRADES_WITH):
         return None
-    branch = spec.required_branch.value.replace("_", " ")
+    branch = spoken(spec.required_branch)
     return f'{spec.label} requires the "{branch}" knowledge (or trade with the route\'s controller).'
 
 

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.catalog.kinds.labels import spoken_labels
+from aerona.core.grammar import spoken
 from aerona.core.total import partial, total
 from aerona.db.kind_concepts.spec import ConceptSpec, KindProperty
 from aerona.db.tables.society_kinds import OrganisationKindRow, ProfessionKindRow, RankKindRow
@@ -106,10 +107,15 @@ BUILT_IN_JOBS: MappingProxyType[Job, BuiltInProfession] = partial(
         Job.SCHOLARSHIP: BuiltInProfession(PC.LEARNING, 55, 35, 60, 5, 65),
         Job.BUILDING: BuiltInProfession(PC.BUILDING, 30, 35, 45, 45, 40),
         Job.SERVICE: BuiltInProfession(PC.SERVICE, 25, 25, 45, 10, 25),
+        Job.TRANSPORT: BuiltInProfession(PC.TRANSPORT, 25, 35, 45, 40, 25),
+        Job.ADMINISTRATION: BuiltInProfession(PC.RULE_AND_ADMINISTRATION, 50, 50, 55, 5, 50),
+        Job.GATHERING: BuiltInProfession(PC.FOOD_PRODUCTION, 20, 20, 40, 30, 20),
+        Job.INDUSTRY: BuiltInProfession(PC.CRAFTING, 30, 40, 40, 45, 35),
+        Job.ARTS: BuiltInProfession(PC.ART_AND_ENTERTAINMENT, 45, 30, 55, 5, 55),
     },
     without={Job.IDLE},
 )
-JOB_LABELS: dict[str, str] = {job.value: job.value.capitalize() for job in Job}
+JOB_LABELS: dict[str, str] = {job.value: spoken(job).capitalize() for job in Job}
 BUILT_IN_RANKS: MappingProxyType[SocialClass, BuiltInRank] = total(
     SocialClass,
     {

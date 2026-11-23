@@ -12,8 +12,11 @@ from aerona.db.read_memo import memoized
 from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.economy import ProductionRunRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.records import IncidentFactRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
@@ -21,6 +24,7 @@ from aerona.domain.enums.environment import CoastKind, TemperatureBand
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.industry import ProcessKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.body.variants import folk_biology
 from aerona.engine.context import TickContext
@@ -37,6 +41,7 @@ from aerona.engine.industry.pollution import fish_factor, region_id_of
 from aerona.engine.mind.preferences import demand_factor, market_fit
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount
+from aerona.engine.recording.record import record
 from aerona.engine.settlement.storage import capacity_of, storage_room, store_kind
 from aerona.rules.registry import Rules
 
@@ -46,6 +51,8 @@ TENTH = 10
 COLD_LAND = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
 ORCHARD_LAND = frozenset({TemperatureBand.TEMPERATE, TemperatureBand.WARM, TemperatureBand.HOT})
 WOODY = frozenset(commodities_with(CommodityTrait.WOODY))
+
+FIRST_TRADED = "trade.product_first_traded"
 
 
 @dataclass(frozen=True)
@@ -79,7 +86,7 @@ async def harvest_goods(
     ctx: TickContext, book: EconomyBook, community: EntityRow, rate: float, farmer_share: float, *, labour: float = 1.0
 ) -> dict[CommodityKind, int]:
     table = ctx.rules.economy
-    hands = book.hands(community.id, Job.FARMING, Job.HERDING, Job.FISHING)
+    hands = book.hands(community.id, Job.FARMING, Job.HERDING, Job.FISHING, Job.GATHERING)
     farmers = hands if hands is not None else round_half_up(headcount(community) * farmer_share / PERCENT)
     tools = await tools_factor(ctx, community.id, farmers)
     units = farmers * table.farm_units_per_1000_farmers / THOUSAND * rate * tools
@@ -113,6 +120,7 @@ async def harvest_goods(
     for kind, amount in split.items():
         bonus = fishing.quality_bonus if kind is CommodityKind.FISH else farming.quality_bonus
         await goods_of(ctx.session, ctx.epoch).add(community.id, kind, max(0, amount), GoodsFlow.HARVEST, quality=DEFAULT_QUALITY + bonus)
+    await first_harvests(ctx, book, community)
     ctx.session.add(
         ProductionRunRow(
             epoch=ctx.epoch,
@@ -127,6 +135,24 @@ async def harvest_goods(
         )
     )
     return split
+
+
+async def first_harvests(ctx: TickContext, book: EconomyBook, community: EntityRow) -> None:
+    region = book.ground.region_of(community.id)
+    crops = book.crops.fields(region.entity_id) if book.crops is not None and region is not None else []
+    grown = sorted({product.product for crop in crops for product, rate in crop.products if rate > 0})
+    if not grown or held(community.id):
+        return
+    statement = (
+        select(IncidentFactRow.enum_value)
+        .join(IncidentRow, IncidentRow.id == IncidentFactRow.incident_id)
+        .join(IncidentParticipantRow, IncidentParticipantRow.incident_id == IncidentFactRow.incident_id)
+        .where(IncidentRow.kind == FIRST_TRADED, IncidentParticipantRow.node_id == community.id, IncidentFactRow.key == "product")
+    )
+    known = set(await ctx.session.scalars(statement))
+    for product in grown:
+        if product.value not in known:
+            await record(ctx, FIRST_TRADED, roles={IncidentRole.SUBJECT: community.id}, facts={"product": product})
 
 
 def field_goods(ctx: TickContext, book: EconomyBook, community: EntityRow, fields: float) -> dict[CommodityKind, int]:
@@ -199,12 +225,12 @@ async def eat(ctx: TickContext, community: EntityRow, staples: tuple[CommodityKi
         tasted.extend((lot.quality, lot.quantity) for lot in lots)
         eaten[kind] = taken
         left = max(0, left - taken * COMMODITIES[kind].nourishment)
-    held = await holdings(ctx.session, community.id)
+    stock = await holdings(ctx.session, community.id)
     for kind in await substitute_order(ctx, community, order):
         if left <= 0:
             break
         value = COMMODITIES[kind].nourishment
-        units = min(held.get(kind, 0), -(-left // value))
+        units = min(stock.get(kind, 0), -(-left // value))
         if units <= 0:
             continue
         lots = await ledger.take(community.id, kind, units, GoodsFlow.CONSUMPTION, best_first=False)
@@ -308,10 +334,10 @@ async def burn_substitutes(ctx: TickContext, community: EntityRow, short: int) -
 async def enforce_storage(ctx: TickContext, book: EconomyBook, community: EntityRow) -> int:
     population = headcount(community)
     spilled = 0
-    held = await holdings(ctx.session, community.id)
+    stock = await holdings(ctx.session, community.id)
     infrastructure = await ctx.session.get(SettlementInfrastructureRow, community.id)
     for aggregate in Commodity:
-        family = {kind: quantity for kind, quantity in held.items() if COMMODITIES[kind].aggregate is aggregate and quantity > 0}
+        family = {kind: quantity for kind, quantity in stock.items() if COMMODITIES[kind].aggregate is aggregate and quantity > 0}
         stocked = sum(family.values())
         need = aggregate_need(ctx.rules, population, aggregate)
         store = book.workshop(community.id, store_kind(aggregate))

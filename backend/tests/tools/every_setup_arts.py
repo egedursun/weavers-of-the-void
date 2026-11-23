@@ -1,15 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.db.tables.arts import ArtPriceRow, ClubRow, ForgeryRow
+from aerona.db.tables.arts import ArtPriceRow, ClubRow, ForgeryRow, MatchRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
 from aerona.db.tables.contracts import MonsterContractRow
-from aerona.db.tables.culture import ArtworkProfileRow
+from aerona.db.tables.culture import ArtworkProfileRow, HolderTechniqueRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.arts import ClubKind, ForgeryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.constructs import CommandToken, ContractStatus, OrderKind
-from aerona.domain.enums.culture import ArtMode
+from aerona.domain.enums.culture import ArtMode, Technique
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
@@ -29,6 +30,24 @@ async def art_work(session: AsyncSession, realm: Realm) -> Ids:
     session.add(ArtworkProfileRow(artwork_entity_id=work.id, medium=ArtMode.FLAT_IMAGE, author_entity_id=realm.mortal_id, quality=60, locked=[]))
     await session.flush()
     return {"artwork": work.id}
+
+
+async def renowned_critic(session: AsyncSession, realm: Realm) -> Ids:
+    found = await art_work(session, realm)
+    profile = await session.get(MortalProfileRow, realm.mortal_id)
+    if profile is None:
+        session.add(MortalProfileRow(entity_id=realm.mortal_id, renown=80, locked=[]))
+    else:
+        profile.renown = 80
+    session.add(ArtPriceRow(artwork_entity_id=found["artwork"], price=50, locked=[]))
+    await session.flush()
+    return found
+
+
+async def known_technique(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(HolderTechniqueRow(holder_entity_id=realm.mortal_id, technique=next(iter(Technique)), since_epoch=EPOCH))
+    await session.flush()
+    return {}
 
 
 async def sold_work(session: AsyncSession, realm: Realm) -> Ids:
@@ -70,6 +89,14 @@ async def club_of(session: AsyncSession, realm: Realm, name: str) -> int:
 
 async def two_clubs(session: AsyncSession, realm: Realm) -> Ids:
     return {"home": await club_of(session, realm, "Wellbrook Reds"), "away": await club_of(session, realm, "Wellbrook Greys")}
+
+
+async def played_match(session: AsyncSession, realm: Realm) -> Ids:
+    clubs = await two_clubs(session, realm)
+    match = MatchRow(home_entity_id=clubs["home"], away_entity_id=clubs["away"], winner_entity_id=clubs["away"], epoch=EPOCH, locked=[])
+    session.add(match)
+    await session.flush()
+    return {**clubs, "match": match.id}
 
 
 async def wild_beast(session: AsyncSession, realm: Realm) -> Ids:

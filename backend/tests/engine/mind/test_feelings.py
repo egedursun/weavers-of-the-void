@@ -94,7 +94,7 @@ async def test_remembered_deeds_and_weddings_become_thoughts(realm: Realm) -> No
 
 
 async def test_a_spouse_mourns_and_a_grief_that_will_not_heal_leaves_melancholy(realm: Realm) -> None:
-    hard = replace(RULES, grief=replace(RULES.grief, complicated_pct=100, shock_years=50, mourning_years=50))
+    hard = replace(RULES, grief=replace(RULES.grief, complicated_pct=100, shock_years=50, mourning_years=50, anger_years=0))
     ctx = context(realm.session, hard)
     widow = await mortal(realm, "Ula")
     lost = await mortal(realm, "Ren")
@@ -107,6 +107,8 @@ async def test_a_spouse_mourns_and_a_grief_that_will_not_heal_leaves_melancholy(
     await advance(context(realm.session, hard, epoch=ctx.epoch + 1), widow, tally)
     assert grief.stage is GriefStage.MOURNING
     await advance(context(realm.session, hard, epoch=ctx.epoch + 3), widow, tally)
+    assert grief.stage is GriefStage.YEARNING
+    await advance(context(realm.session, hard, epoch=ctx.epoch + 4), widow, tally)
     assert grief.stage is GriefStage.COMPLICATED and TraitKind.MELANCHOLIC in await traits_of(realm.session, widow.id)
 
 

@@ -119,7 +119,7 @@ async def merge_species(call: MortalCall, args: MergeSpeciesInput) -> str:
     call.remember_creation(merged.id)
     call.target(merged.id)
     held_traits = sorted(await EntityRepository(call.session).traits(merged.id))
-    traits = [trait.value.replace("_", " ") for trait in held_traits]
+    traits = [spoken(trait) for trait in held_traits]
     await call.record(
         "tools.mortal.species_merged",
         roles={IncidentRole.MAKER: call.me.id, IncidentRole.PARENT: [first.id, second.id], IncidentRole.PRODUCT: merged.id},

@@ -28,6 +28,7 @@ const EMPTY = {
   naming: null,
   names: [],
   age_sets: [],
+  grade_duties: [],
   age_set_id: null,
   taverns: [],
   welfare: [],
@@ -92,6 +93,53 @@ describe('customs, town life and civics', () => {
       holder_id: 32,
       form: 'deed',
       name: 'Far-Walker',
+    })
+  })
+
+  it('shows each year of a class by its time of life, housework and sleep included', async () => {
+    serveBase()
+    onApi('GET', '/api/customs/of/41', {
+      ...EMPTY,
+      node: FOLK,
+      budgets: [
+        {
+          social_class: 'farmer',
+          life_stage: 'elder',
+          work: 30,
+          rest: 20,
+          worship: 10,
+          leisure: 5,
+          travel: 0,
+          service: 0,
+          learning: 0,
+          care: 0,
+          art: 0,
+          housework: 10,
+          sleep: 25,
+          civic: 0,
+          training: 0,
+          locked: [],
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/time_budget:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CustomsSection nodeId={41} />)
+    await expect.element(screen.getByText('Farmer, elder')).toBeVisible()
+    await expect
+      .element(screen.getByText(/housework 10 · sleep 25/))
+      .toBeVisible()
+    await screen.getByRole('button', { name: 'Year' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/time_budget:set'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/time_budget:set')[0].body
+    ).toMatchObject({
+      people_id: 41,
+      social_class: 'farmer',
+      life_stage: 'adult',
+      housework: 0,
+      sleep: 0,
     })
   })
 
@@ -162,5 +210,136 @@ describe('customs, town life and civics', () => {
     await expect
       .element(screen.getByText(/Before the case of theft against Orla/))
       .toBeVisible()
+  })
+
+  it('shows which grade carries each duty and gives a duty and stirs a movement', async () => {
+    serveBase()
+    onApi('GET', '/api/customs/of/41', {
+      ...EMPTY,
+      node: FOLK,
+      grade_duties: [{ duty: 'war', grade: 'young_adults', held: true }],
+    })
+    onApi('POST', '/api/actions/grade_duty:set', ACCEPTED_ACTION)
+    onApi('POST', '/api/actions/revival:create', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CustomsSection nodeId={41} />)
+    await expect
+      .element(screen.getByText('Carried by the young adults · held'))
+      .toBeVisible()
+    await screen.getByRole('combobox', { name: 'Duty', exact: true }).click()
+    await screen.getByRole('option', { name: 'Labour' }).click()
+    await screen.getByRole('combobox', { name: 'Grade', exact: true }).click()
+    await screen.getByRole('option', { name: 'Youths' }).click()
+    await screen.getByRole('button', { name: 'Give the duty' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/grade_duty:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/grade_duty:set')[0].body).toEqual({
+      people_id: 41,
+      duty: 'labour',
+      grade: 'youths',
+      hold: true,
+    })
+    await screen.getByRole('combobox', { name: 'Way', exact: true }).click()
+    await screen.getByRole('option', { name: 'Live apart' }).click()
+    await screen.getByRole('button', { name: 'Stir it' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/revival:create'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/revival:create')[0].body).toEqual({
+      people_entity_id: 41,
+      way: 'withdraw',
+      goal: 'revive_language',
+    })
+  })
+  it('names an intoxicant and its use, shows civic and training time and gives a custom and a year', async () => {
+    serveBase()
+    onApi('GET', '/api/customs/of/41', {
+      ...EMPTY,
+      node: FOLK,
+      intoxicants: [
+        {
+          intoxicant: 'animal_derived',
+          use: 'hospitality',
+          acceptance: 40,
+          locked: [],
+        },
+      ],
+      budgets: [
+        {
+          social_class: 'farmer',
+          life_stage: 'adult',
+          work: 45,
+          rest: 10,
+          worship: 5,
+          leisure: 5,
+          travel: 2,
+          service: 1,
+          learning: 2,
+          care: 2,
+          art: 0,
+          housework: 5,
+          sleep: 10,
+          civic: 5,
+          training: 8,
+          locked: [],
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/intoxicant_custom:set', ACCEPTED_ACTION)
+    onApi('POST', '/api/actions/time_budget:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CustomsSection nodeId={41} />)
+    await expect.element(screen.getByText('Drawn from beasts')).toBeVisible()
+    await expect
+      .element(screen.getByText('Offered to guests · accepted 40 of 100'))
+      .toBeVisible()
+    await expect.element(screen.getByText(/civic 5 · training 8/)).toBeVisible()
+    expect(screen.container.textContent).not.toContain('animal_derived')
+    await screen
+      .getByRole('combobox', { name: 'Intoxicant', exact: true })
+      .click()
+    await screen.getByRole('option', { name: 'Made substance' }).click()
+    await screen
+      .getByRole('button', { name: 'Intoxicant', exact: true })
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/intoxicant_custom:set'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/intoxicant_custom:set')[0].body
+    ).toEqual({
+      people_id: 41,
+      intoxicant: 'synthetic',
+      use: 'feast',
+      acceptance: 50,
+    })
+    await screen.getByRole('button', { name: 'Year', exact: true }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/time_budget:set'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/time_budget:set')[0].body
+    ).toMatchObject({
+      people_id: 41,
+      social_class: 'farmer',
+      civic: 0,
+      training: 0,
+    })
+  })
+
+  it('says its people keeps no intoxicant and no year and keeps the custom buttons with the reason while locked', async () => {
+    serveBase()
+    onApi('GET', '/api/customs/of/41', { ...EMPTY, node: FOLK })
+    const { screen } = await renderApp(
+      <CustomsSection nodeId={41} readOnlyReason='The world is read only.' />
+    )
+    await expect
+      .element(screen.getByText('Its people keeps no intoxicant custom.'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('No year is set for its classes.'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole('button', { name: 'Year', exact: true }))
+      .toHaveAccessibleDescription('The world is read only.')
   })
 })

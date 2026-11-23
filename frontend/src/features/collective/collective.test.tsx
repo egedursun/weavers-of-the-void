@@ -99,6 +99,7 @@ function serveBase() {
     { kind: 'entity', id: 30, name: 'Varo', type: 'polity', world_id: 1 },
     { kind: 'entity', id: 40, name: 'Aldric', type: 'mortal', world_id: 1 },
     { kind: 'entity', id: 50, name: 'Gull', type: 'vessel', world_id: 1 },
+    { kind: 'entity', id: 60, name: 'Ashfolk', type: 'people', world_id: 1 },
   ])
   onApi('GET', '/api/collective/storylets', [
     {
@@ -127,9 +128,10 @@ describe('crowds, memory, customs and craft', () => {
       ...EMPTY,
       node: TOWN,
       mood: {
-        anger: 80,
-        anxiety: 10,
-        fervour: 5,
+        feelings: [
+          { feeling: 'anger', level: 80, held: true },
+          { feeling: 'hope', level: 30, held: false },
+        ],
         deterrence: 30,
         agitation: 20,
         last_trigger: 'famine',
@@ -536,5 +538,201 @@ describe('crowds, memory, customs and craft', () => {
     )
     await expect.element(screen.getByText('hero')).toBeVisible()
     expect(screen.getByRole('img').elements()).toHaveLength(0)
+  })
+
+  it('sets, holds and frees each crowd feeling', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/20', {
+      ...EMPTY,
+      node: TOWN,
+      mood: {
+        feelings: [
+          { feeling: 'anger', level: 80, held: true },
+          { feeling: 'hope', level: 30, held: false },
+        ],
+        deterrence: 30,
+        agitation: 20,
+        last_trigger: null,
+        locked: [],
+      },
+    })
+    onApi('POST', '/api/actions/crowd_feeling:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CollectiveSection nodeId={20} />)
+    await expect
+      .element(screen.getByText('Hope', { exact: true }))
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole('button', { name: 'Keep held' }))
+      .toBeVisible()
+    await screen.getByRole('spinbutton', { name: 'Set hope' }).fill('55')
+    await screen.getByRole('button', { name: 'Set and hold' }).first().click()
+    await screen.getByRole('button', { name: 'Set free' }).first().click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/crowd_feeling:set'))
+      .toHaveLength(2)
+    expect(
+      callsTo('POST', '/api/actions/crowd_feeling:set').map((call) => call.body)
+    ).toEqual([
+      { town_id: 20, feeling: 'hope', level: 55, hold: true },
+      { town_id: 20, feeling: 'anger', level: 80, hold: false },
+    ])
+  })
+
+  it('stirs a calm town with the one feeling chosen', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/20', { ...EMPTY, node: TOWN })
+    onApi('POST', '/api/actions/crowd_mood:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CollectiveSection nodeId={20} />)
+    await screen.getByRole('combobox', { name: 'Feeling' }).click()
+    await screen.getByRole('option', { name: 'Grief' }).click()
+    await screen.getByRole('button', { name: 'Stir the town' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/crowd_mood:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/crowd_mood:set')[0].body).toEqual({
+      town_id: 20,
+      feelings: { grief: 40 },
+    })
+  })
+
+  it('counts the grown folk by sex kind and sets the balance of a town', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/20', {
+      ...EMPTY,
+      node: TOWN,
+      sex_ratio: {
+        counts: [
+          { sex_kind: 'bearer', count: 400 },
+          { sex_kind: 'begetter', count: 380 },
+        ],
+        begetters_per_hundred: 95,
+        bereaved_partners: 12,
+        locked: [],
+      },
+    })
+    onApi('POST', '/api/actions/sex_ratio:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CollectiveSection nodeId={20} />)
+    await screen.getByRole('tab', { name: /Generations/ }).click()
+    await expect.element(screen.getByText('Bearers: 400')).toBeVisible()
+    await expect.element(screen.getByText('Begetters: 380')).toBeVisible()
+    await screen
+      .getByRole('spinbutton', { name: 'Begetters per hundred bearers' })
+      .last()
+      .fill('90')
+    await screen
+      .getByRole('spinbutton', { name: 'Bereaved partners' })
+      .last()
+      .fill('30')
+    await screen.getByRole('button', { name: 'Set the balance' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/sex_ratio:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/sex_ratio:set')[0].body).toEqual({
+      community_id: 20,
+      begetters_per_hundred: 90,
+      bereaved_partners: 30,
+    })
+  })
+  it('names who may hold a role by the bearing of young and decrees a role for a people', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/60', {
+      ...EMPTY,
+      node: { id: 60, kind: 'entity' as const, name: 'Ashfolk' },
+      roles: [
+        {
+          role: 'combat',
+          eligibility: 'begetters_preferred',
+          min_age: 16,
+          classes: [],
+          stance: 'acceptable',
+          since_epoch: 4,
+          locked: [],
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/role_norm:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CollectiveSection nodeId={60} />)
+    await expect
+      .element(screen.getByText('Fighting: those who beget young first'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('From age 16 · since epoch 4'))
+      .toBeVisible()
+    expect(screen.container.textContent).not.toContain('begetters_preferred')
+    await screen.getByRole('combobox', { name: 'Who may' }).last().click()
+    await screen
+      .getByRole('option', { name: 'Those who bear young only' })
+      .click()
+    await screen.getByRole('button', { name: 'Decree it' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/role_norm:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/role_norm:set')[0].body).toEqual({
+      holder_id: 60,
+      role: 'office',
+      eligibility: 'bearers_only',
+      min_age: 16,
+      classes: [],
+    })
+  })
+
+  it('keeps the role decree for a town disabled with its reason', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/20', { ...EMPTY, node: TOWN })
+    const { screen } = await renderApp(<CollectiveSection nodeId={20} />)
+    await screen.getByRole('tab', { name: /Customs/ }).click()
+    await expect
+      .element(screen.getByRole('button', { name: 'Decree it' }))
+      .toHaveAccessibleDescription('Only a people sets who may hold its roles')
+  })
+
+  it('shows what shaped a generation, a long season among it, and shapes it by contact', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/20', {
+      ...EMPTY,
+      node: TOWN,
+      generations: [
+        {
+          generation_epoch: 3,
+          formative: ['long_season', 'plague'],
+          value_shifts: {},
+          alive: 120,
+          passed_epoch: null,
+          locked: [],
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/generation:shape', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CollectiveSection nodeId={20} />)
+    await screen.getByRole('tab', { name: /Generations/ }).click()
+    await expect
+      .element(screen.getByText('The generation born from epoch 3'))
+      .toBeVisible()
+    await expect.element(screen.getByText('A long season')).toBeVisible()
+    await expect.element(screen.getByText('A plague')).toBeVisible()
+    await expect.element(screen.getByText('120 still living')).toBeVisible()
+    await screen.getByRole('combobox', { name: 'Shaped also by' }).click()
+    await screen.getByRole('option', { name: 'Contact' }).click()
+    await screen.getByRole('button', { name: 'Shape it' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/generation:shape'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/generation:shape')[0].body).toEqual({
+      community_id: 20,
+      generation_epoch: 3,
+      formative: ['long_season', 'plague', 'contact'],
+      axis: null,
+      shift: 10,
+    })
+  })
+
+  it('says no generation is recorded here', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/20', { ...EMPTY, node: TOWN })
+    const { screen } = await renderApp(<CollectiveSection nodeId={20} />)
+    await screen.getByRole('tab', { name: /Generations/ }).click()
+    await expect
+      .element(screen.getByText('No generation is recorded here.'))
+      .toBeVisible()
   })
 })

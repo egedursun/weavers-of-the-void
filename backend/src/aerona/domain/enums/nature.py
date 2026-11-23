@@ -20,11 +20,15 @@ class Dormancy(StrEnum):
     NONE = "none"
     HIBERNATION = "hibernation"
     AESTIVATION = "aestivation"
+    TORPOR = "torpor"
+    CRYPTOBIOSIS = "cryptobiosis"
 
 
 class Thermoregulation(StrEnum):
     ENDOTHERM = "endotherm"
     ECTOTHERM = "ectotherm"
+    HETEROTHERM = "heterotherm"
+    ATHERMIC = "athermic"
 
 
 class SenseKind(StrEnum):
@@ -37,6 +41,8 @@ class SenseKind(StrEnum):
     MAGNETIC = "magnetic"
     SPIRIT_SIGHT = "spirit_sight"
     HEAT = "heat"
+    ELECTRIC = "electric"
+    ULTRAVIOLET = "ultraviolet"
 
 
 class SenseCause(StrEnum):
@@ -49,6 +55,8 @@ class SenseCause(StrEnum):
     MIGRATORY = "migratory"
     SPIRIT_SIGHT = "spirit_sight"
     COLD_HUNTER = "cold_hunter"
+    WATER_HUNTER = "water_hunter"
+    FLOWER_SEEKER = "flower_seeker"
 
 
 class PlantDefence(StrEnum):
@@ -57,3 +65,5 @@ class PlantDefence(StrEnum):
     TOXINS = "toxins"
     ALLELOPATHY = "allelopathy"
     CARNIVOROUS = "carnivorous"
+    STINGING = "stinging"
+    GUARDIANS = "guardians"

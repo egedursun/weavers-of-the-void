@@ -315,6 +315,8 @@ class OceanCurrent(StrEnum):
     NONE = "none"
     WARM = "warm"
     COLD = "cold"
+    UPWELLING = "upwelling"
+    TIDAL = "tidal"
 
 
 class ApocalypseVariant(StrEnum):

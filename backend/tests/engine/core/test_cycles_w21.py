@@ -67,7 +67,7 @@ from aerona.domain.enums.cycles import (
     ReproductiveSystem,
     ResidenceRule,
 )
-from aerona.domain.enums.demography import AgeBand, CohortCondition, InheritanceCustom, Job, MartialStyle, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, InheritanceCustom, Job, MartialStyle, SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionRank
 from aerona.domain.enums.mind import ActKind, EthicalStance, ValueAxis
@@ -398,11 +398,11 @@ async def test_second_line_kin_inherit_through_the_second_line_and_couples_move(
         world.people.id,
         {"descent": KinshipDescent.THROUGH_SECOND_LINE.value, "residence": ResidenceRule.WITH_SECOND_FAMILY.value, "sibling_union_first": True},
     )
-    grand = await mortal(session, "Grand", world, town.id, sex=Sex.FEMALE.value)
-    uncle = await mortal(session, "Uncle", world, town.id, sex=Sex.MALE.value)
-    sister = await mortal(session, "Sister", world, town.id, sex=Sex.FEMALE.value)
-    nephew = await mortal(session, "Nephew", world, town.id, sex=Sex.MALE.value)
-    son = await mortal(session, "Own", world, town.id, sex=Sex.MALE.value)
+    grand = await mortal(session, "Grand", world, town.id, sex=SexKind.BEARER.value)
+    uncle = await mortal(session, "Uncle", world, town.id, sex=SexKind.BEGETTER.value)
+    sister = await mortal(session, "Sister", world, town.id, sex=SexKind.BEARER.value)
+    nephew = await mortal(session, "Nephew", world, town.id, sex=SexKind.BEGETTER.value)
+    son = await mortal(session, "Own", world, town.id, sex=SexKind.BEGETTER.value)
     for parent, child in ((grand, uncle), (grand, sister), (sister, nephew), (uncle, son)):
         await add_parent(session, parent.id, child.id, 0)
     for mortal_row in (grand, uncle, sister, nephew, son):
@@ -411,8 +411,8 @@ async def test_second_line_kin_inherit_through_the_second_line_and_couples_move(
     assert await inheritance_of(session, uncle) is InheritanceCustom.THROUGH_SECOND_LINE
     heirs = await descent_heirs(session, uncle, [son])
     assert [heir.id for heir in heirs] == [nephew.id]
-    bride = await mortal(session, "Bride", world, far.id, sex=Sex.FEMALE.value)
-    groom = await mortal(session, "Groom", world, town.id, sex=Sex.MALE.value)
+    bride = await mortal(session, "Bride", world, far.id, sex=SexKind.BEARER.value)
+    groom = await mortal(session, "Groom", world, town.id, sex=SexKind.BEGETTER.value)
     await BondRepository(session).connect(BondDraft(groom.id, world.people.id, BondKind.MEMBER_OF, 0))
     ctx = await at_epoch(session, 3)
     await marry(session, groom, bride, ctx.epoch)
@@ -424,10 +424,10 @@ async def test_a_first_side_sibling_union_weds_the_widow_to_a_sibling_of_the_dea
     town = await town_of(session, world, "Ashby")
     ctx = await context(session)
     await set_kinship(ctx, world.people.id, {"sibling_union_first": True})
-    elder = await mortal(session, "Elder", world, town.id, sex=Sex.FEMALE.value)
-    dead = await mortal(session, "Fallen", world, town.id, sex=Sex.MALE.value)
-    sibling = await mortal(session, "Sibling", world, town.id, sex=Sex.MALE.value)
-    widow = await mortal(session, "Widow", world, town.id, sex=Sex.FEMALE.value)
+    elder = await mortal(session, "Elder", world, town.id, sex=SexKind.BEARER.value)
+    dead = await mortal(session, "Fallen", world, town.id, sex=SexKind.BEGETTER.value)
+    sibling = await mortal(session, "Sibling", world, town.id, sex=SexKind.BEGETTER.value)
+    widow = await mortal(session, "Widow", world, town.id, sex=SexKind.BEARER.value)
     for child in (dead, sibling):
         await add_parent(session, elder.id, child.id, 0)
     for row in (elder, dead, sibling, widow):
@@ -452,7 +452,7 @@ async def test_marriages_between_lines_build_an_alliance_and_rank(session: Async
     await set_kinship(ctx, world.people.id, {"residence": ResidenceRule.WITH_FIRST_FAMILY.value})
     await set_union(ctx, world.people.id, {"exchange": UnionExchange.FROM_ONE_FAMILY.value, "exchange_value": 10})
     houses = []
-    for name, sex in (("Ward", Sex.FEMALE), ("Vane", Sex.MALE)):
+    for name, sex in (("Ward", SexKind.BEARER), ("Vane", SexKind.BEGETTER)):
         member = await mortal(session, f"{name} heir", world, town.id, sex=sex.value)
         await BondRepository(session).connect(BondDraft(member.id, world.people.id, BondKind.MEMBER_OF, 0))
         house = await entity(session, name, EntityType.HOUSE, HouseStats(), world_id=world.world.id)
@@ -490,16 +490,17 @@ async def test_reproductive_systems_steer_births_castes_and_sexes(session: Async
     assert await breeds(session, first, second)
     assert not await may_wed(session, ctx.rules, first, second)
     rng = ctx.rng("born")
-    assert born_sex(ctx.rules, ReproductiveSystem.CASTE, rng) is Sex.OTHER
+    assert born_sex(ctx.rules, ReproductiveSystem.CASTE, rng) in {SexKind.BEARER, SexKind.BEGETTER}
+    assert born_sex(ctx.rules, ReproductiveSystem.ASEXUAL, rng) is SexKind.NONE
     row = await session.get(PeopleReproductionRow, world.people.id)
     assert row is not None and caste_for(row, rng) in {ReproductiveCaste.BREEDER, ReproductiveCaste.SOLDIER}
     row.system = ReproductiveSystem.SEQUENTIAL
     row.change_age = 30
-    changer = await mortal(session, "Changer", world, town.id, sex=Sex.FEMALE.value, age=30)
+    changer = await mortal(session, "Changer", world, town.id, sex=SexKind.BEARER.value, age=30)
     await BondRepository(session).connect(BondDraft(changer.id, world.people.id, BondKind.MEMBER_OF, 0))
     await session.flush()
     await keep_reproduction(ctx, ReproductionTally())
-    assert isinstance(changer.stats, MortalStats) and changer.stats.sex == Sex.MALE.value
+    assert isinstance(changer.stats, MortalStats) and changer.stats.sex == SexKind.BEGETTER.value
 
 
 async def test_peoples_read_their_ways_of_kin_and_birth_from_their_customs(session: AsyncSession, world: CoreWorld) -> None:
@@ -624,7 +625,7 @@ async def test_bondage_markets_and_the_ways_to_freedom(session: AsyncSession, wo
         CohortRow(
             community_entity_id=town.id,
             age_band=AgeBand.ADULT,
-            sex=Sex.FEMALE,
+            sex_kind=SexKind.BEARER,
             social_class=SocialClass.SERF_OR_SLAVE,
             condition=CohortCondition.ENSLAVED,
             count=200,
@@ -771,7 +772,7 @@ async def test_the_freed_start_low_are_kept_from_office_and_rise_to_equals(sessi
         CohortRow(
             community_entity_id=town.id,
             age_band=AgeBand.ADULT,
-            sex=Sex.FEMALE,
+            sex_kind=SexKind.BEARER,
             social_class=SocialClass.SERF_OR_SLAVE,
             condition=CohortCondition.ENSLAVED,
             count=200,
@@ -843,13 +844,15 @@ async def test_a_son_hears_of_the_troubled_realms_of_its_world(session: AsyncSes
 async def test_sexless_peoples_open_every_role_and_castes_prefer_their_own(session: AsyncSession, world: CoreWorld) -> None:
     town = await town_of(session, world, "Ashby")
     session.add(PeopleReproductionRow(people_entity_id=world.people.id, system=ReproductiveSystem.CASTE, locked=[]))
-    session.add(RoleNormRow(holder_entity_id=world.people.id, role=RoleKind.COMBAT, eligibility=RoleEligibility.MALE_ONLY, min_age=0, classes=[], locked=[]))
+    session.add(
+        RoleNormRow(holder_entity_id=world.people.id, role=RoleKind.COMBAT, eligibility=RoleEligibility.BEGETTERS_ONLY, min_age=0, classes=[], locked=[])
+    )
     soldier = await mortal(session, "Soldier", world, town.id)
     worker = await mortal(session, "Worker", world, town.id)
     session.add(MortalCasteRow(mortal_entity_id=soldier.id, caste=ReproductiveCaste.SOLDIER, locked=[]))
     session.add(MortalCasteRow(mortal_entity_id=worker.id, caste=ReproductiveCaste.WORKER, locked=[]))
     await session.flush()
-    assert await combat_sexes(session, town) == set(Sex)
+    assert await combat_sexes(session, town) == set(SexKind)
     soldier_rank = await role_rank(session, soldier, RoleKind.COMBAT)
     worker_rank = await role_rank(session, worker, RoleKind.COMBAT)
     assert soldier_rank is not None and worker_rank is not None and soldier_rank < worker_rank

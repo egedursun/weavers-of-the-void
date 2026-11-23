@@ -1,6 +1,13 @@
 import { ChevronRight, Printer, Star, StarOff } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import {
+  domainValues,
+  entityOriginValues,
+  entityStatusValues,
+  entityTypeValues,
+  legendCategoryValues,
+} from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,8 +16,8 @@ import { DomainIcon } from '@/components/domain/DomainIcon'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
 import { Label, Muted, PageTitle } from '@/components/typography'
 import { ArmsCrest } from '@/features/collective/ArmsCrest'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
-import { humanize } from '../actions/schema'
 import { useLoreMutation } from '../api/mutations'
 import { useCatalogue, useWorldState } from '../api/queries'
 import { type EntityDetail } from '../api/types'
@@ -43,10 +50,10 @@ export function EntityHero({
   const state = useWorldState()
   const typeLabel =
     catalogue.data?.entity_types.find((item) => item.key === entity.entity_type)
-      ?.label ?? humanize(entity.entity_type)
+      ?.label ?? wordOf(entityTypeValues, entity.entity_type)
   const domainLabel = entity.domain
     ? (catalogue.data?.domains.find((item) => item.key === entity.domain)
-        ?.label ?? humanize(entity.domain))
+        ?.label ?? wordOf(domainValues, entity.domain))
     : null
   const worlds = state.data?.worlds ?? []
   const world = worlds.find((item) => item.id === entity.world_id)
@@ -162,7 +169,7 @@ export function EntityHero({
             <Badge variant='outline'>{`Power ${formatInteger(entity.power_level)}`}</Badge>
             {domainLabel && <Badge variant='outline'>{domainLabel}</Badge>}
             {entity.legend_category && (
-              <Badge variant='outline'>{`A legend of a ${humanize(entity.legend_category).toLowerCase()}`}</Badge>
+              <Badge variant='outline'>{`A legend of a ${wordOf(legendCategoryValues, entity.legend_category).toLowerCase()}`}</Badge>
             )}
             {entity.map_x !== null && entity.map_y !== null && (
               <Badge variant='outline'>{`On the map at ${formatInteger(entity.map_x)}, ${formatInteger(entity.map_y)}`}</Badge>
@@ -170,7 +177,7 @@ export function EntityHero({
             <Badge variant='outline'>{`Epoch ${formatInteger(entity.birth_epoch)}`}</Badge>
             {entity.status !== 'canon' && (
               <Badge variant={STATUS_TONE[entity.status] ?? 'secondary'}>
-                {humanize(entity.status)}
+                {wordOf(entityStatusValues, entity.status)}
               </Badge>
             )}
             {detail.creator_son ? (
@@ -189,7 +196,7 @@ export function EntityHero({
               <Badge variant='outline'>
                 {entity.origin === 'engine'
                   ? "the world's flow"
-                  : humanize(entity.origin)}
+                  : wordOf(entityOriginValues, entity.origin)}
               </Badge>
             )}
             {multiWorld && world && (

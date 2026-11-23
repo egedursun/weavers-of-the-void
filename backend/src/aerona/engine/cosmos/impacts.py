@@ -29,6 +29,7 @@ from aerona.engine.cosmos.climate import cold_snap
 from aerona.engine.cosmos.features import live_features, returned_now, worlds_of
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.economy.deposits import Deposit, open_deposit
+from aerona.engine.environment.long_seasons import impact_spell
 from aerona.engine.environment.places import write_kind
 from aerona.engine.environment.years import world_years
 from aerona.engine.industry.stores import perishables
@@ -335,6 +336,10 @@ async def impact_winters(ctx: TickContext) -> int:
     statement = select(ImpactEventRow).where(ImpactEventRow.outcome == ImpactOutcome.STRUCK, ImpactEventRow.winter_epochs > 0).order_by(ImpactEventRow.id)
     for impact in list(await ctx.session.scalars(statement)):
         if held(impact.world_id) or "winter_epochs" in impact.locked:
+            continue
+        world = await ctx.session.get(WorldRow, impact.world_id)
+        if world is not None and await impact_spell(ctx, world, impact.id, impact.size, impact.winter_epochs) is not None:
+            impact.winter_epochs = 0
             continue
         cooled = await cold_snap(ctx, impact.world_id, ctx.rules.impacts.winter_cold)
         chilled += cooled

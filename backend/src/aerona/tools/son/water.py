@@ -38,13 +38,13 @@ async def move_ice(call: SonCall, args: MoveIceInput) -> str:
         fail(SonResult.ICE_REFUSED, why="there is no such land")
     await ensure_in_reach(call, region)
     if held(region.id):
-        fail(SonResult.ICE_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.ICE_REFUSED, why="it is held")
     most = call.rules.water_and_ice.ice_change_max
     if abs(args.change) > most:
         fail(SonResult.ICE_REFUSED, why=f"no god moves more than {several(most, 'month', 'months')} of ice at once")
     row = await cryosphere_of(call.tick, region.id)
     if "ice_shift" in row.locked:
-        fail(SonResult.ICE_REFUSED, why="a stronger hand holds this ice")
+        fail(SonResult.ICE_REFUSED, why="this ice is held")
     with explaining_alone():
         term("water_and_ice.god_ice", args.change, source_node_id=region.id)
         row.ice_shift = clamp_int(row.ice_shift + args.change, -MONTHS, MONTHS)

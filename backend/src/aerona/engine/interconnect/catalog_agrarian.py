@@ -86,6 +86,7 @@ AGRARIAN_MECHANICS = (
         surface=Surface(drawer=DRAWER, layer="map-layer-nutrients"),
         backfill="agrarian_cycles: every land's stocks start from its natural soil on the first epoch after the upgrade",
         templates=("nutrients.salted", "nutrients.recovered"),
+        tools=("improve_soil",),
         tables=(SoilNutrientRow.__tablename__,),
         exposure=Exposure.CONTEXT,
         targets=("region",),
@@ -95,6 +96,7 @@ AGRARIAN_MECHANICS = (
             Coupling(S.ENVIRONMENT, "floods and eruptions leave minerals", E.FLOW, "nutrients.flood_mineral"),
             Coupling(S.KNOWLEDGE, "rotations return the fixed element", E.FLOW, "nutrients.rotation_fix"),
             Coupling(S.ECOLOGY, "fodder crops return the fixed element and root crops draw minerals", E.FLOW, "nutrients.fodder_fix"),
+            Coupling(S.ECONOMY, "mortals work the soil back toward its stocks, an acid soil most", E.FLOW, "soils.amend_gain"),
         ),
     ),
     Mechanic(
@@ -129,7 +131,7 @@ AGRARIAN_MECHANICS = (
         templates=("commons.enclosed", "commons.council"),
         tables=(CommonsRow.__tablename__,),
         exposure=Exposure.TOOL,
-        tools=("enclose_commons", "rule_commons"),
+        tools=("enclose_commons", "rule_commons", "set_commons_rule"),
         targets=("region", "settlement", "mortal"),
         couplings=(
             Coupling(S.HOUSEHOLD, "enclosure takes the living of those who used the common", E.FLOW, "commons.sol_loss"),

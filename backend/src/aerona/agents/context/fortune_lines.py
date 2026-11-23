@@ -1,8 +1,7 @@
 from sqlalchemy import select
 
-from aerona.agents.context.cycle_lines import words
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import MishapRow
 from aerona.db.tables.fortune import FortuneProfileRow
@@ -28,5 +27,5 @@ async def mortal_fortune_lines(scope: Scope, me: EntityRow) -> list[str]:
     )
     for row in rows:
         who = "you" if row.victim_node_id == me.id else "someone near you"
-        found.append(f"lately {who} suffered {an(words(row.kind.value))}{', and it took a life' if row.died else ''}")
+        found.append(f"lately {who} suffered {an(spoken(row.kind))}{', and it took a life' if row.died else ''}")
     return found

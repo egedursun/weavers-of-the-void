@@ -118,7 +118,7 @@ async def test_a_chaotic_orbit_brings_long_winters_that_starve_the_unprepared_mo
     tally = SeasonTally()
     rules = {"shortest_spell": 1, "longest_spell": 1, "heed_base": 100, "winter_loss_pct": 50, "prepared_share": 20}
     await keep_seasons(await at(session, 3, long_seasons=rules), tally)
-    row = await session.get(IrregularSeasonRow, home.id)
+    row = await session.scalar(select(IrregularSeasonRow).where(IrregularSeasonRow.world_id == home.id))
     assert row is not None and row.cause is SeasonCause.ORBIT
     row.severity = 100
     await session.flush()
@@ -154,12 +154,12 @@ async def test_a_natural_law_makes_seasons_irregular_until_it_is_lifted(session:
     law = await natural_law(session, world, "Long Measure", NaturalLaw.LONG_SEASONS)
     tally = SeasonTally()
     await keep_seasons(await at(session, 3), tally)
-    row = await session.get(IrregularSeasonRow, world.world.id)
+    row = await session.scalar(select(IrregularSeasonRow).where(IrregularSeasonRow.world_id == world.world.id))
     assert row is not None and row.cause is SeasonCause.NATURAL_LAW and row.spell is SeasonSpell.SUMMER
     law.status, law.end_epoch = EntityStatus.DESTROYED, 4
     await session.flush()
     await keep_seasons(await at(session, 4, long_seasons={"longest_spell": 50, "shortest_spell": 50}), tally)
-    assert await session.get(IrregularSeasonRow, world.world.id) is None and tally.settled == 1
+    assert await session.scalar(select(IrregularSeasonRow).where(IrregularSeasonRow.world_id == world.world.id)) is None and tally.settled == 1
 
 
 async def test_a_plan_remakes_the_land_against_its_climate_and_its_folk(session: AsyncSession, world: CoreWorld) -> None:
@@ -429,9 +429,10 @@ async def test_a_long_winter_cuts_the_harvest_of_its_world_by_its_severity(sessi
     season = IrregularSeasonRow(world_id=world.world.id, cause=SeasonCause.ORBIT, spell=SeasonSpell.SUMMER, severity=50, spell_length=3, locked=[])
     session.add(season)
     await session.flush()
-    assert await winter_share(ctx, world.world.id) == 100
+    mild = RegionEnvironmentRow(entity_id=0, world_id=world.world.id, latitude=0, temperature=50, rainfall=60)
+    assert await winter_share(ctx, mild) == 100
     season.spell = SeasonSpell.WINTER
-    assert await winter_share(ctx, world.world.id) == 70
+    assert await winter_share(ctx, mild) == 70
 
 
 async def test_a_turning_age_remakes_every_world_fades_its_lore_and_counts_rightly(session: AsyncSession, world: CoreWorld) -> None:

@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from aerona.catalog.storylets import STORYLETS
+from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.core.grammar import an, spoken
 from aerona.db.base import Base
@@ -33,6 +34,7 @@ from aerona.db.tables.collective import (
     CascadeRow,
     CommemorationRow,
     ComponentWearRow,
+    CrowdFeelingRow,
     CrowdMoodRow,
     DatingSystemRow,
     DemographicTransitionRow,
@@ -62,6 +64,7 @@ from aerona.domain.enums.collective import (
     AccountStance,
     CollectiveActKind,
     CollectiveTrigger,
+    CrowdFeeling,
     DatingSystemKind,
     DesignComponentKind,
     FormativeKind,
@@ -87,6 +90,7 @@ from aerona.engine.collective.accounts import HistoryTally, debunk, expose, keep
 from aerona.engine.collective.crowds import CrowdTally, begin_movement, end_mob, mood_of, spark
 from aerona.engine.collective.designs import apply_design, derive, draw_design
 from aerona.engine.collective.embodied import settle, unmake
+from aerona.engine.collective.feelings import set_feeling
 from aerona.engine.collective.heraldry import sync_emblem
 from aerona.engine.collective.storylets import CASTERS, StoryletTally, begin, conditions_hold, resolve
 from aerona.engine.context import TickContext
@@ -139,11 +143,24 @@ async def remove_row(ctx: TickContext, kind: type[Base], key: object, label: str
     await ctx.session.flush()
 
 
-async def set_mood(ctx: TickContext, town_id: int, values: Values) -> CrowdMoodRow:
+async def set_mood(ctx: TickContext, town_id: int, values: Values, *, feelings: Mapping[CrowdFeeling, int] | None = None) -> CrowdMoodRow:
     await of_type(ctx, town_id, TOWNS, "a town")
     if await ctx.session.get(SettlementProfileRow, town_id) is None:
         raise ValidationFailedError("That town keeps no profile.")
     row = apply(await mood_of(ctx, town_id), allowed(values, MOOD_FIELDS, "town mood"), [])
+    for feeling, level in sorted((feelings or {}).items()):
+        await set_feeling(ctx.session, town_id, feeling, level, hold=None)
+    await ctx.session.flush()
+    return row
+
+
+async def set_crowd_feeling(ctx: TickContext, town_id: int, feeling: CrowdFeeling, level: int, *, hold: bool | None) -> CrowdFeelingRow:
+    await of_type(ctx, town_id, TOWNS, "a town")
+    if await ctx.session.get(SettlementProfileRow, town_id) is None:
+        raise ValidationFailedError("That town keeps no profile.")
+    if not 0 <= level <= PERCENT:
+        raise ValidationFailedError(f"A crowd feeling runs from 0 to {PERCENT}.")
+    row = await set_feeling(ctx.session, town_id, feeling, level, hold=hold)
     await ctx.session.flush()
     return row
 

@@ -246,6 +246,7 @@ ENTITY_FLAG = total(
             "Colony",
             checked_by=(),
             used_by=(
+                "engine.mortal.paths.frontiers",
                 "engine.phases.civilization.colony_independence",
                 "engine.phases.civilization.declare_independence",
                 "engine.phases.civilization.reclaim_colony",
@@ -255,7 +256,7 @@ ENTITY_FLAG = total(
                 "services.player.assignments.ASSIGNABLE_FLAGS",
             ),
         ),
-        EntityFlag.PIONEER: Defined("Pioneer", checked_by=(), used_by=("engine.phases.exploration.pioneers",)),
+        EntityFlag.PIONEER: Defined("Pioneer", checked_by=(), used_by=("engine.mortal.paths.frontiers", "engine.phases.exploration.pioneers")),
         EntityFlag.GOLDEN_AGE: Defined(
             "Golden age",
             checked_by=(),

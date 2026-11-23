@@ -6,6 +6,7 @@ from aerona.domain.enums.crafts import InsuranceCover, NumberMilestone, RightKin
 from aerona.domain.enums.culture import ItemCategory
 from aerona.domain.enums.customs import Naturalisation
 from aerona.domain.enums.cycles import GiftOccasion, LabourRegime, ManumissionPath
+from aerona.domain.enums.ecology import PlantYield, YieldProduct
 from aerona.domain.enums.economy import CommodityKind, MoneyBacking, MoneyForm, TradeMode, WorkshopKind
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.finance import TradePolicyKind
@@ -1850,6 +1851,26 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=ProcessClock.INSTANT,
         terms=True,
         feed=F.WAR,
+    ),
+    IncidentKindSpec(
+        "trade.product_first_traded",
+        G.EXCHANGE,
+        "{subject} first brought {product} of its own fields to market.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("product", FactValue.ENUM, enum=PlantYield),),
+        place=PlaceRule.NONE,
+        clock=ProcessClock.INSTANT,
+        chronicle_kind=K.TRADE,
+    ),
+    IncidentKindSpec(
+        "trade.beast_product_first_traded",
+        G.EXCHANGE,
+        "{subject} first brought {product} from the creatures of its lands to market.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("product", FactValue.ENUM, enum=YieldProduct),),
+        place=PlaceRule.NONE,
+        clock=ProcessClock.INSTANT,
+        chronicle_kind=K.TRADE,
     ),
     IncidentKindSpec(
         "trade.trading_post",

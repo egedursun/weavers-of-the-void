@@ -7,7 +7,15 @@ from aerona.domain.enums.kind_crafts import GameCategory
 
 ROLE_WEIGHT: Mapping[ArtMarketRole, int] = total(
     ArtMarketRole,
-    {ArtMarketRole.COLLECTOR: 1, ArtMarketRole.DEALER: 2, ArtMarketRole.PATRON: 2, ArtMarketRole.CONNOISSEUR: 3},
+    {
+        ArtMarketRole.COLLECTOR: 1,
+        ArtMarketRole.DEALER: 2,
+        ArtMarketRole.PATRON: 2,
+        ArtMarketRole.CONNOISSEUR: 3,
+        ArtMarketRole.CURATOR: 3,
+        ArtMarketRole.CRITIC: 2,
+        ArtMarketRole.FORGER: 0,
+    },
 )
 
 
@@ -18,5 +26,7 @@ FIELD_GAMES = MappingProxyType(
         GameCategory.RACING: ClubKind.RACING,
         GameCategory.COMBAT_SPORT: ClubKind.COMBAT,
         GameCategory.ATHLETIC: ClubKind.ATHLETICS,
+        GameCategory.BOARD: ClubKind.MIND_GAMES,
+        GameCategory.WIT: ClubKind.MIND_GAMES,
     }
 )

@@ -87,6 +87,7 @@ from aerona.db.tables.collective import (
     CascadeRow,
     CommemorationRow,
     ComponentWearRow,
+    CrowdFeelingRow,
     CrowdMoodRow,
     DatingSystemRow,
     DemographicTransitionRow,
@@ -204,6 +205,7 @@ from aerona.db.tables.customs import (
     CommuteRow,
     CooperativeRow,
     EvidenceRow,
+    GradeDutyRow,
     IntoxicantCustomRow,
     MarkCustomRow,
     MeasureStandardRow,
@@ -419,6 +421,7 @@ from aerona.db.tables.fossils import FossilBedRow
 from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
+from aerona.db.tables.geology import RegionGeologyRow, RegionStratumRow
 from aerona.db.tables.governance import InsolvencyCaseRow, OrgCliqueRow, OrgGovernanceRow, OrgMergerRow, OrgResearchRow, OrgSeatRow
 from aerona.db.tables.grave_goods import GraveGoodsRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
@@ -434,7 +437,7 @@ from aerona.db.tables.intimacy import ChildRecognitionRow, IntimacyNormRow, Legi
 from aerona.db.tables.intrigue import BeliefRow, FavourRow, HookRow, IdentityRow, SchemeRow, SecretRow, TrueNameRow
 from aerona.db.tables.job import JobRow
 from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow, LawProposalRow, ProposalStanceRow
-from aerona.db.tables.kin import KinGroupMemberRow, KinGroupRow, KinRoleDutyRow
+from aerona.db.tables.kin import KinGroupMemberRow, KinGroupRow, KinRoleDutyRow, WillHeirRow, WillRow
 from aerona.db.tables.kin_dynamics import ElderSwayRow, KinBlendRow, KinDisowningRow, KinDynamicRow, KinFavourRow, KinRivalryRow
 from aerona.db.tables.kind_crafts import (
     ColourMeaningRow,
@@ -961,6 +964,7 @@ __all__ = [
     "CrisisBackerRow",
     "CrisisRow",
     "CropPestRow",
+    "CrowdFeelingRow",
     "CrowdMoodRow",
     "CuisineRow",
     "CultDoctrineRow",
@@ -1133,6 +1137,7 @@ __all__ = [
     "GodScaleRow",
     "GoodKindRow",
     "GoodsFlowRow",
+    "GradeDutyRow",
     "GraveGoodsRow",
     "GreatPersonRow",
     "GreatPointsRow",
@@ -1490,10 +1495,12 @@ __all__ = [
     "RegionDangerRow",
     "RegionDominionRow",
     "RegionEnvironmentRow",
+    "RegionGeologyRow",
     "RegionGeomorphRow",
     "RegionHazardRow",
     "RegionMemoryRow",
     "RegionPollutionRow",
+    "RegionStratumRow",
     "RegionWindRow",
     "RegionalTensionRow",
     "RegistryRow",
@@ -1715,6 +1722,8 @@ __all__ = [
     "WaveWarningRow",
     "WeatherWorkRow",
     "WelfareRow",
+    "WillHeirRow",
+    "WillRow",
     "WinterForecastRow",
     "WitchHuntRow",
     "WorkerBodyRow",

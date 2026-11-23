@@ -116,13 +116,29 @@ async def think(
     if same is not None:
         same.intensity = max(same.intensity, size)
         return same
-    row = ThoughtRow(
-        holder_node_id=holder_id, kind=kind, emotion=feeling, subject_node_id=subject, intensity=size, epoch=epoch, decay_pct=rules.thoughts.decay_pct
-    )
+    if kind is not ThoughtKind.WAS_SURPRISED and await surprised(session, holder_id, epoch):
+        size = min(PERCENT, round(size * (1 + (EMOTIONS[Emotion.SURPRISE].act_weight or zero_weight)(rules) / PERCENT)))
+    decay = round(EMOTIONS[feeling].decay(rules) * rules.thoughts.decay_pct / NEUTRAL_DECAY)
+    row = ThoughtRow(holder_node_id=holder_id, kind=kind, emotion=feeling, subject_node_id=subject, intensity=size, epoch=epoch, decay_pct=min(PERCENT, decay))
     session.add(row)
     if size >= rules.thoughts.long_term_threshold:
         await take_to_heart(session, rules, holder, row)
     return row
+
+
+NEUTRAL_DECAY = 30
+
+
+def zero_weight(rules: Rules) -> int:
+    del rules
+    return 0
+
+
+async def surprised(session: AsyncSession, holder_id: int, epoch: int) -> bool:
+    found = await session.scalar(
+        select(ThoughtRow.id).where(ThoughtRow.holder_node_id == holder_id, ThoughtRow.epoch == epoch, ThoughtRow.kind == ThoughtKind.WAS_SURPRISED).limit(1)
+    )
+    return found is not None
 
 
 async def take_to_heart(session: AsyncSession, rules: Rules, holder: EntityRow, row: ThoughtRow) -> None:

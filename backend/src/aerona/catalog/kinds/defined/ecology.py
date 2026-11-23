@@ -1,17 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.ecology import Aversion, Cultivation, Habitat, HerdTraining, RangeTrend, Temperament, TissueMaterial
-
-AVERSION = total(
-    Aversion,
-    {
-        Aversion.FIRE: Defined("Fire", checked_by=("engine.ecology.anatomy.repelled",), used_by=()),
-        Aversion.IRON: Defined("Iron", checked_by=("engine.ecology.anatomy.repelled",), used_by=()),
-        Aversion.NOISE: Defined("Noise", checked_by=("engine.ecology.anatomy.repelled",), used_by=()),
-        Aversion.WATER: Defined("Water", checked_by=("engine.ecology.anatomy.repelled",), used_by=()),
-        Aversion.HOLY_GROUND: Defined("Holy ground", checked_by=(), used_by=()),
-    },
-)
+from aerona.domain.enums.ecology import Cultivation, Habitat, HerdTraining, RangeTrend, TissueMaterial
 
 CULTIVATION = total(
     Cultivation,
@@ -29,13 +18,19 @@ HABITAT = total(
     Habitat,
     {
         Habitat.LAND: Defined("Land", checked_by=(), used_by=("db.tables.anatomy.CreatureAnatomyRow", "engine.ecology.anatomy.habitat_of")),
-        Habitat.WATER: Defined("Water", checked_by=(), used_by=("engine.ecology.anatomy.habitat_of",)),
-        Habitat.SKY: Defined("Sky", checked_by=(), used_by=("engine.ecology.anatomy.habitat_of",)),
-        Habitat.DEEP: Defined("Deep", checked_by=(), used_by=("engine.ecology.anatomy.habitat_of",)),
+        Habitat.WATER: Defined("Water", checked_by=(), used_by=("engine.ecology.anatomy.HABITAT_TESTS",)),
+        Habitat.SKY: Defined("Sky", checked_by=(), used_by=("engine.ecology.anatomy.HABITAT_TESTS",)),
+        Habitat.DEEP: Defined("Deep", checked_by=(), used_by=("engine.ecology.anatomy.HABITAT_TESTS",)),
         Habitat.VOID: Defined(
             "Void",
             checked_by=("engine.cosmos.routes.has_beast_mount", "engine.ecology.beast_acts.void_trophy", "engine.ecology.monsters.roam_void"),
-            used_by=("engine.ecology.anatomy.habitat_of",),
+            used_by=("engine.ecology.anatomy.HABITAT_TESTS",),
+        ),
+        Habitat.MAGMA: Defined("Magma", checked_by=("engine.ecology.beast_ways.habitat_ways",), used_by=("engine.ecology.anatomy.HABITAT_TESTS",)),
+        Habitat.ETHEREAL: Defined(
+            "Ethereal",
+            checked_by=("engine.ecology.beast_ways.habitat_ways", "engine.ecology.contracts.reachable"),
+            used_by=("engine.ecology.anatomy.HABITAT_TESTS",),
         ),
     },
 )
@@ -44,7 +39,11 @@ HERD_TRAINING = total(
     HerdTraining,
     {
         HerdTraining.WAR: Defined("War", checked_by=(), used_by=("engine.ecology.domestication.training_for", "engine.military.units.composition")),
-        HerdTraining.HUNTING: Defined("Hunting", checked_by=("engine.ecology.ranges.load_wilds",), used_by=("engine.ecology.domestication.training_for",)),
+        HerdTraining.HUNTING: Defined(
+            "Hunting",
+            checked_by=("engine.ecology.ranges.load_wilds", "engine.ecology.w52_life.backfill_hunting_role"),
+            used_by=("engine.ecology.domestication.training_for",),
+        ),
         HerdTraining.GUARD: Defined("Guard", checked_by=(), used_by=("engine.ecology.domestication.guarded", "engine.ecology.domestication.training_for")),
     },
 )
@@ -81,27 +80,6 @@ RANGE_TREND = total(
     },
 )
 
-TEMPERAMENT = total(
-    Temperament,
-    {
-        Temperament.PLACID: Defined(
-            "Placid",
-            checked_by=(),
-            used_by=(
-                "db.tables.anatomy.CreatureAnatomyRow",
-                "engine.ecology.anatomy.TEMPERAMENTS",
-                "engine.living.backfill.bioships",
-                "engine.living.control.give_life",
-            ),
-        ),
-        Temperament.SKITTISH: Defined("Skittish", checked_by=(), used_by=("engine.ecology.anatomy.TEMPERAMENTS", "engine.ecology.anatomy.temperament_of")),
-        Temperament.CURIOUS: Defined("Curious", checked_by=(), used_by=("engine.ecology.anatomy.TEMPERAMENTS", "engine.living.control.give_life")),
-        Temperament.FIERCE: Defined("Fierce", checked_by=(), used_by=("engine.ecology.anatomy.TEMPERAMENTS", "engine.ecology.anatomy.temperament_of")),
-        Temperament.CUNNING: Defined("Cunning", checked_by=(), used_by=("engine.ecology.anatomy.TEMPERAMENTS",)),
-        Temperament.SEIZES_PREY: Defined("Seizes prey", checked_by=("engine.ecology.beast_acts.is_abductor",), used_by=("engine.ecology.anatomy.generate",)),
-    },
-)
-
 TISSUE_MATERIAL = total(
     TissueMaterial,
     {
@@ -115,7 +93,14 @@ TISSUE_MATERIAL = total(
         TissueMaterial.SHELL: Defined("Shell", checked_by=(), used_by=("catalog.creature_anatomy.PLAN_SKIN", "catalog.creature_anatomy.TISSUES")),
         TissueMaterial.PLUMAGE: Defined("Plumage", checked_by=(), used_by=("catalog.creature_anatomy.PLAN_SKIN", "catalog.creature_anatomy.TISSUES")),
         TissueMaterial.RIGID: Defined(
-            "Rigid", checked_by=(), used_by=("catalog.creature_anatomy.TISSUES", "db.tables.anatomy.CreatureAnatomyRow", "engine.ecology.anatomy.generate")
+            "Rigid",
+            checked_by=(),
+            used_by=(
+                "catalog.creature_anatomy.PLAN_SKIN",
+                "catalog.creature_anatomy.TISSUES",
+                "db.tables.anatomy.CreatureAnatomyRow",
+                "engine.ecology.anatomy.generate",
+            ),
         ),
         TissueMaterial.FIBROUS: Defined(
             "Fibrous", checked_by=(), used_by=("catalog.biology.BIOLOGY_VARIANTS", "catalog.creature_anatomy.PLAN_SKIN", "catalog.creature_anatomy.TISSUES")

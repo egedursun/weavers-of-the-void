@@ -38,13 +38,13 @@ async def shape_biology(call: SonCall, args: ShapeBiologyInput) -> str:
         fail(SonResult.BIOLOGY_REFUSED, why="there is no such people or species")
     await ensure_in_reach(call, holder)
     if held(holder.id):
-        fail(SonResult.BIOLOGY_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.BIOLOGY_REFUSED, why="it is held")
     row = await call.session.get(BiologyRow, holder.id)
     if row is not None and "variants" in row.locked:
         fail(SonResult.BIOLOGY_REFUSED, why=f"the body of {holder.name} is held fast")
     has = row is not None and args.variant.value in row.variants
     if has == args.gain:
-        fail(SonResult.BIOLOGY_REFUSED, why=f"{holder.name} is {'already' if has else 'not'} {args.variant.value.replace('_', ' ')}")
+        fail(SonResult.BIOLOGY_REFUSED, why=f"{holder.name} is {'already' if has else 'not'} {spoken(args.variant)}")
     cost = call.rules.biology_variants.son_cost
     require_essence(call, cost)
     await set_variant(call.tick, holder.id, args.variant, args.gain, hold=False)

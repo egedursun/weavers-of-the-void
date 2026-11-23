@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm.util import identity_key
 
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.read_memo import memo_of, table_names
 from aerona.db.repositories.base import Repository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -57,7 +58,7 @@ class NodeRepository(Repository):
 
     async def load(self, node_id: int) -> NodeRow:
         kind = await self.require_kind(node_id)
-        return await self.require(NODE_TABLES[kind], node_id, kind.value.replace("_", " "))
+        return await self.require(NODE_TABLES[kind], node_id, spoken(kind))
 
     async def name_of(self, node_id: int) -> str | None:
         name: str | None = await self.session.scalar(select(NodeRow.name).where(NodeRow.id == node_id))

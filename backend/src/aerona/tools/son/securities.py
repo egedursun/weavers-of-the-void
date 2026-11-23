@@ -37,7 +37,7 @@ async def stir_market_mood(call: SonCall, args: StirMarketMoodInput) -> str:
         fail(SonResult.SECURITIES_REFUSED, why="there is no such exchange in a living town")
     await ensure_in_reach(call, town)
     if held(town.id) or "mood" in (exchange.locked or []):
-        fail(SonResult.SECURITIES_REFUSED, why="a stronger hand holds that exchange")
+        fail(SonResult.SECURITIES_REFUSED, why="that exchange is held")
     step = call.tick.rules.securities.stir_mood
     exchange.mood = clamp_int(exchange.mood + step * DIRECTION_SIGN[args.direction], MOOD_MIN, MOOD_MAX)
     call.target(town.id)

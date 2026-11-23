@@ -5,14 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified, instance_state
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
-from aerona.catalog.life.demography import APPLY_SHORTFALLS_SHORTFALL_EFFECTS
+from aerona.catalog.life.demography import APPLY_SHORTFALLS_SHORTFALL_EFFECTS, GROWN_BANDS
 from aerona.catalog.needs import SERVE_ORDER, SHORTFALL_EFFECTS, basket_weight
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import ClassStandingRow, CommunityNeedRow
-from aerona.domain.enums.demography import AgeBand, CohortCondition
+from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
@@ -317,7 +317,7 @@ async def sicken(ctx: TickContext, community: EntityRow, short: int) -> int:
     moved = 0
     for key in sorted(rows, key=lambda item: tuple(part.value for part in item)):
         band, sex, social_class, condition = key
-        if band is not AgeBand.ADULT or condition is not CohortCondition.NONE or rows[key].count <= 0:
+        if band not in GROWN_BANDS or condition is not CohortCondition.NONE or rows[key].count <= 0:
             continue
         count = round_half_up(rows[key].count * ctx.rules.consumption.sickness_pct / PERCENT * short / PERCENT)
         if count <= 0:

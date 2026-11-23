@@ -146,6 +146,22 @@ class CareersRules:
     study_level: int = rule(4, 0, 20, G, "Writing level a home needs before its young may go to study")
     trait_weight: int = rule(20, 0, 100, G, "How much a fitting trait draws a mortal to a path")
     skill_weight_pct: int = rule(50, 0, 200, G, "How much skill draws a mortal to a path (%)")
+    stay_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to stay at home (50 is neutral)")
+    army_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to soldiering (50 is neutral)")
+    office_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to office (50 is neutral)")
+    apprentice_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to an apprenticeship (50 is neutral)")
+    vows_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to take vows (50 is neutral)")
+    trade_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to trade (50 is neutral)")
+    wander_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to wander (50 is neutral)")
+    bandit_weight: int = rule(50, 0, 100, G, "How strongly the poor and dishonoured are drawn to banditry (50 is neutral)")
+    study_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to study (50 is neutral)")
+    sea_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to the sea (50 is neutral)")
+    service_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to serve a great house (50 is neutral)")
+    arts_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to the arts (50 is neutral)")
+    settle_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to settle a frontier (50 is neutral)")
+    sea_loss_pct: int = rule(5, 0, 100, G, "Chance each epoch one who lives by the sea is lost to it (%)")
+    settle_found_pct: int = rule(10, 0, 100, G, "Chance each epoch one bound for a frontier moves to a frontier settlement (%)")
+    service_skill_xp: int = rule(30, 0, 500, G, "Practice each epoch on a path gives the skills that path trains")
 
 
 @dataclass(frozen=True)
@@ -411,6 +427,9 @@ class GriefRules(Spanned):
     depression_pct: int = rule(100, 0, 400, G, "How much a gloomy temperament makes grief turn complicated (%)")
     willpower_pct: int = rule(100, 0, 400, G, "How much willpower helps a mourner reach acceptance (%)")
     vengeance_magnitude: int = rule(40, 0, 100, G, "Strength of the grudge complicated grief lays on a killer")
+    anger_vengeance_pct: int = rule(20, 0, 100, G, "Chance each epoch the anger of grief turns into a grudge against whoever is held to blame (%)")
+    anger_years: int = span(1, 0, 50, G, "Years the anger of grief lasts before mourning")
+    yearning_rite_pct: int = rule(20, 0, 100, G, "Chance each epoch a yearning mourner seeks the dead in rites, dreams or keepsakes (%)")
 
     @property
     def shock_epochs(self) -> int:
@@ -478,6 +497,8 @@ class EthicsRules(Spanned):
     war_pct: int = rule(150, 0, 400, G, "How much war makes killing and taking captives easier to accept (%)")
     famine_pct: int = rule(150, 0, 400, G, "How much famine makes theft and hoarding harder to forgive (%)")
     kin_pct: int = rule(150, 0, 400, G, "How much harder an act weighs when the victim is kin (%)")
+    drunkenness_threshold: int = rule(60, 0, 100, G, "Intoxication past which a mortal who takes a drink or a drug is judged drunk (%)")
+    lying_detect_pct: int = rule(20, 0, 100, G, "Chance a lie is seen through, so that onlookers judge the liar and not only the liar's own conscience (%)")
     renown_gain: int = rule(4, 0, 50, G, "Renown a mortal gains at home for an admirable or required act")
     infamy_gain: int = rule(6, 0, 50, G, "Infamy a mortal gains at home for a shameful or unthinkable act")
     legitimacy_loss: int = rule(5, 0, 50, G, "Legitimacy a ruler loses for an act their people find shameful or worse")

@@ -1,6 +1,8 @@
 from pydantic import Field
 
+from aerona.catalog.transmission import ROUTES
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.demography import AgeBand
 from aerona.engine.disease import control
 from aerona.engine.disease.control import DiseaseDesign, ProfileValue
@@ -68,6 +70,18 @@ class Endemic(Command):
     disease_id: int
     load: int = Field(default=20, ge=1, le=100)
     hold: bool | None = None
+
+
+class Route(Command):
+    disease_id: int
+    route: Transmission
+    share: int = Field(default=20, ge=1, le=99)
+    hold: bool | None = None
+
+
+class RouteTarget(Command):
+    disease_id: int
+    route: Transmission
 
 
 class EndemicTarget(Command):
@@ -154,3 +168,15 @@ async def set_endemic(scope: PlayerScope, command: Endemic) -> Effect:
 async def remove_endemic(scope: PlayerScope, command: EndemicTarget) -> Effect:
     removed = await control.remove_endemic(await scope.context("endemic_remove"), command.region_id, command.disease_id)
     return Effect("The land is free of the sickness." if removed else "The sickness did not linger there.", command.region_id)
+
+
+@player_action("disease_route:set", ActionKind.EDIT_RECORD)
+async def set_route(scope: PlayerScope, command: Route) -> Effect:
+    row = await control.set_route(await scope.context("disease_route_set"), command.disease_id, command.route, command.share, hold=command.hold)
+    return Effect(f"The sickness now passes by {ROUTES[row.route].label} for {row.share}% of its spread.", command.disease_id)
+
+
+@player_action("disease_route:remove", ActionKind.EDIT_RECORD)
+async def remove_route(scope: PlayerScope, command: RouteTarget) -> Effect:
+    removed = await control.remove_route(await scope.context("disease_route_remove"), command.disease_id, command.route)
+    return Effect("The sickness no longer passes that way." if removed else "The sickness never passed that way.", command.disease_id)

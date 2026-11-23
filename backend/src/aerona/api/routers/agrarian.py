@@ -120,6 +120,9 @@ def commons_view(row: CommonsRow, refs: dict[int, NodeRef]) -> CommonsView:
         encloser=at(refs, row.encloser_node_id),
         enclosed_epoch=row.enclosed_epoch,
         dispossessed=row.dispossessed,
+        quota=row.quota,
+        licence_price=row.licence_price,
+        officials=row.officials,
         since_epoch=row.since_epoch,
         locked=row.locked,
     )

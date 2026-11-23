@@ -75,7 +75,7 @@ KIND_JOBS = total(
         ExtractionKind.FISHING: Job.FISHING,
         ExtractionKind.HERDING: Job.HERDING,
         ExtractionKind.FARMING: Job.FARMING,
-        ExtractionKind.GATHERING: Job.FARMING,
+        ExtractionKind.GATHERING: Job.GATHERING,
         ExtractionKind.LOGGING: Job.BUILDING,
         ExtractionKind.DRILLING: Job.MINING,
         ExtractionKind.PUMPING: Job.MINING,
@@ -129,6 +129,9 @@ EFFECT_WEIGHT: Mapping[WeatherEffect, Callable[[Rules], int]] = total(
         WeatherEffect.WET: lambda rules: rules.route_dangers.weather_wet_pct,
         WeatherEffect.WIND: lambda rules: rules.route_dangers.weather_wind_pct,
         WeatherEffect.VISIBILITY: lambda rules: rules.route_dangers.weather_visibility_pct,
+        WeatherEffect.LIGHTNING: lambda rules: rules.route_dangers.weather_lightning_pct,
+        WeatherEffect.FLOOD: lambda rules: rules.route_dangers.weather_flood_pct,
+        WeatherEffect.BREATH: lambda rules: rules.route_dangers.weather_breath_pct,
     },
 )
 

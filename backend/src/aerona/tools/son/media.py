@@ -37,7 +37,7 @@ async def sway_outlet(call: SonCall, args: SwayOutletInput) -> str:
         fail(SonResult.MEDIA_REFUSED, why="there is no such outlet")
     await ensure_in_reach(call, seat)
     if held(outlet.owner_node_id) or held(seat.id) or {"stance", "lean"} & set(outlet.locked or []):
-        fail(SonResult.MEDIA_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.MEDIA_REFUSED, why="it is held")
     outlet.stance, outlet.lean = args.stance, args.lean
     call.target(seat.id)
     await call.record(

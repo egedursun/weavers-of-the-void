@@ -35,7 +35,7 @@ async def wake_lore(call: SonCall, args: WakeLoreInput) -> str:
         fail(SonResult.WAKE_REFUSED, why="there is no such ideology, theory or rite")
     await ensure_in_reach(call, lore)
     if held(lore.id):
-        fail(SonResult.WAKE_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.WAKE_REFUSED, why="it is held")
     cost = call.rules.lifecycle_ends.son_cost
     require_essence(call, cost)
     try:

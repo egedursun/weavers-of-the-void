@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Brain, CookingPot, Heart, Plus } from 'lucide-react'
-import { sexValues } from '@/api/generated/schema'
+import { sexKindValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -16,7 +16,7 @@ import { wordTable } from './labels'
 import { numberProblem } from './model'
 import { ListEditor } from './parts'
 
-const SEXES = wordTable(sexValues)
+const SEXES = wordTable(sexKindValues)
 const DECLINE_MAX = 5
 
 export function KitchenPanel({

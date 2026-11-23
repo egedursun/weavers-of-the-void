@@ -69,7 +69,7 @@ function WindCard({ row, blocked }: { row: Wind; blocked: string | null }) {
       icon={band.icon}
       tone={band.tone}
       title={`${band.label} over ${row.region.name}`}
-      caption={`From the ${from} · strength ${row.strength} · read in epoch ${row.read_epoch}`}
+      caption={`From the ${from} · strength ${row.strength} · in summer ${BANDS[row.summer_band].label.toLowerCase()} · read in epoch ${row.read_epoch}`}
       removeLabel='Still the wind'
       editTitle='Set the wind'
       note='The band and its direction come from the turning and light of the world; highlands upwind cast a rain shadow, moist sea wind rains on windward highlands, and the wind carries foul air, ships and fire. A held field keeps the value you give it.'
@@ -77,6 +77,12 @@ function WindCard({ row, blocked }: { row: Wind; blocked: string | null }) {
         {
           key: 'band',
           label: 'Band of winds',
+          kind: 'pick',
+          table: table(BANDS),
+        },
+        {
+          key: 'summer_band',
+          label: 'Band in the warm half of the year',
           kind: 'pick',
           table: table(BANDS),
         },
@@ -162,12 +168,14 @@ export function WindsPanel({
 }) {
   const [land, setLand] = useState<number | null>(data.region?.id ?? null)
   const [band, setBand] = useState('trade')
+  const [summer, setSummer] = useState('trade')
   const [from, setFrom] = useState('2')
   const setting = useClimesAction(
     'region_wind:set',
     (_: void) => ({
       region_id: land ?? 0,
       band: band as Wind['band'],
+      summer_band: summer as Wind['summer_band'],
       wind_from: Math.min(OCTANT_MAX, Number(from)),
     }),
     'The wind turns'
@@ -247,6 +255,14 @@ export function WindsPanel({
           placeholder='Choose'
           blocked={blocked}
           onPick={setBand}
+        />
+        <MindPicker
+          label='Band in summer'
+          value={summer}
+          table={table(BANDS)}
+          placeholder='Choose'
+          blocked={blocked}
+          onPick={setSummer}
         />
         <MindPicker
           label='Blows from'

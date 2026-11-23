@@ -98,7 +98,9 @@ PROFESSION_CATEGORY = total(
         ProfessionCategory.TRADE: Defined(
             "Trade", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_JOBS", "db.kind_concepts.society.BUILT_IN_PROFESSIONS")
         ),
-        ProfessionCategory.TRANSPORT: Defined("Transport", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_PROFESSIONS",)),
+        ProfessionCategory.TRANSPORT: Defined(
+            "Transport", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_JOBS", "db.kind_concepts.society.BUILT_IN_PROFESSIONS")
+        ),
         ProfessionCategory.CARE: Defined("Care", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_PROFESSIONS",)),
         ProfessionCategory.HEALING: Defined("Healing", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_PROFESSIONS",)),
         ProfessionCategory.LEARNING: Defined(
@@ -108,14 +110,16 @@ PROFESSION_CATEGORY = total(
             "Faith", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_JOBS", "db.kind_concepts.society.BUILT_IN_PROFESSIONS")
         ),
         ProfessionCategory.RULE_AND_ADMINISTRATION: Defined(
-            "Rule and administration", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_PROFESSIONS",)
+            "Rule and administration", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_JOBS", "db.kind_concepts.society.BUILT_IN_PROFESSIONS")
         ),
         ProfessionCategory.LAW: Defined("Law", checked_by=(), used_by=()),
         ProfessionCategory.WAR: Defined(
             "War", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_JOBS", "db.kind_concepts.society.BUILT_IN_PROFESSIONS")
         ),
         ProfessionCategory.SECURITY: Defined("Security", checked_by=(), used_by=()),
-        ProfessionCategory.ART_AND_ENTERTAINMENT: Defined("Art and entertainment", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_PROFESSIONS",)),
+        ProfessionCategory.ART_AND_ENTERTAINMENT: Defined(
+            "Art and entertainment", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_JOBS", "db.kind_concepts.society.BUILT_IN_PROFESSIONS")
+        ),
         ProfessionCategory.SERVICE: Defined("Service", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_JOBS",)),
         ProfessionCategory.BUILDING: Defined(
             "Building", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_JOBS", "db.kind_concepts.society.BUILT_IN_PROFESSIONS")

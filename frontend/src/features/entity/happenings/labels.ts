@@ -1,4 +1,5 @@
 import {
+  type LucideIcon,
   Activity,
   Ban,
   Biohazard,
@@ -13,6 +14,7 @@ import {
   Flame,
   Footprints,
   Gem,
+  Hammer,
   Heart,
   Hourglass,
   Landmark,
@@ -32,7 +34,6 @@ import {
   Waves,
   Wheat,
   Wind,
-  type LucideIcon,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Spec } from '../society/labels'
@@ -179,6 +180,11 @@ export const SOIL_SPEC: Record<SoilKind, Spec> = {
   permafrost: { label: 'Permafrost', icon: Snowflake, tone: 'info' },
   regolith: { label: 'Regolith', icon: Mountain, tone: 'muted' },
   artificial: { label: 'Made ground', icon: Building2, tone: 'gold' },
+  humic: { label: 'Humic soil', icon: Sprout, tone: 'success' },
+  leached: { label: 'Leached soil', icon: Droplets, tone: 'muted' },
+  silt: { label: 'Silt', icon: Waves, tone: 'info' },
+  gley: { label: 'Gley', icon: Droplets, tone: 'verdigris' },
+  cracking_clay: { label: 'Cracking clay', icon: CircleDot, tone: 'warning' },
 }
 
 export const RIVER_SPEC: Record<RiverClass, Spec> = {
@@ -193,6 +199,10 @@ export const CAUSE_SPEC: Record<RiverShiftCause, Spec> = {
   quake: { label: 'An earthquake', icon: Activity, tone: 'warning' },
   divine: { label: 'A god', icon: Sparkles, tone: 'gold' },
   player: { label: 'Your hand', icon: Sparkles, tone: 'gold' },
+  silting: { label: 'Its bed silted up', icon: Waves, tone: 'muted' },
+  works: { label: 'The works of a people', icon: Hammer, tone: 'warning' },
+  eruption: { label: 'An eruption', icon: Flame, tone: 'danger' },
+  landslide: { label: 'A landslide', icon: Mountain, tone: 'warning' },
 }
 
 export const FIELD_LABEL: Record<string, string> = {

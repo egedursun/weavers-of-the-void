@@ -25,6 +25,15 @@ class SeasonStep:
 
 SEASON_POSITIONS: tuple[SeasonPosition, ...] = (
     SeasonPosition(
+        "season_onsets",
+        "season_position",
+        False,
+        WorldLink.WORLD,
+        "world_id",
+        SeasonDating.POSITION,
+        ("engine/environment/onsets.py", "engine/environment/time_control.py"),
+    ),
+    SeasonPosition(
         "tradition_profiles",
         "season_position",
         True,

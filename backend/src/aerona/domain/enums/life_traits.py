@@ -17,11 +17,6 @@ class AllocationModeTrait(StrEnum):
     STATE_BUYERS = "state_buyers"
 
 
-class ArcTemplateTrait(StrEnum):
-    CONFRONTING = "confronting"
-    ENDS_IN_DEATH = "ends_in_death"
-
-
 class AssistiveAidTrait(StrEnum):
     GROUND_LENS = "ground_lens"
 
@@ -97,12 +92,6 @@ class CultivationMethodTrait(StrEnum):
     RITE_PATHS = "rite_paths"
 
 
-class DeathCauseTrait(StrEnum):
-    GLORIOUS_DEATHS = "glorious_deaths"
-    SHAMEFUL_DEATHS = "shameful_deaths"
-    VIOLENT = "violent"
-
-
 class DeathRoleTrait(StrEnum):
     HANDLING = "handling"
     SACRED = "sacred"
@@ -117,6 +106,8 @@ class EmotionTrait(StrEnum):
     AFRAID = "afraid"
     ANGRY = "angry"
     STIRRED = "stirred"
+    GRIEVING = "grieving"
+    HOPEFUL = "hopeful"
 
 
 class ExpeditionGroundTrait(StrEnum):
@@ -189,6 +180,7 @@ class InteractionKindTrait(StrEnum):
 
 class IntoxicantTrait(StrEnum):
     DRINKS = "drinks"
+    STIMULATES = "stimulates"
 
 
 class JobTrait(StrEnum):
@@ -343,6 +335,7 @@ class RelationTypeTrait(StrEnum):
 
 class RightKindTrait(StrEnum):
     COPIED = "copied"
+    PORTION = "portion"
 
 
 class RumourDistortionTrait(StrEnum):
@@ -421,6 +414,7 @@ class TaxKindTrait(StrEnum):
 
 class TechniqueTrait(StrEnum):
     ENGINEERING = "engineering"
+    TOOL_METALS = "tool_metals"
     FINANCE = "finance"
     PLACE_VALUE_RECKONING = "place_value_reckoning"
 

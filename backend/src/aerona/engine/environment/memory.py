@@ -1,14 +1,15 @@
 from collections import defaultdict
-from collections.abc import Callable
 from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.land_memory import LAND_MEMORIES, SOURCE_KINDS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
-from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.region import RegionMemoryRow
 from aerona.db.tables.warfare import BattleRow
@@ -50,40 +51,16 @@ class Remembered:
     incident_id: int | None = None
 
 
-DARKNESS: dict[RegionMemoryKind, Callable[[Rules], int]] = {
-    RegionMemoryKind.BATTLE: lambda rules: rules.terrain.battle_darkness,
-    RegionMemoryKind.MASSACRE: lambda rules: rules.terrain.massacre_darkness,
-    RegionMemoryKind.SACK: lambda rules: rules.terrain.sack_darkness,
-    RegionMemoryKind.DISASTER: lambda rules: rules.terrain.disaster_darkness,
-    RegionMemoryKind.PLAGUE: lambda rules: rules.terrain.plague_darkness,
-    RegionMemoryKind.FAMINE: lambda rules: rules.terrain.famine_darkness,
-    RegionMemoryKind.GOD_DEATH: lambda rules: rules.terrain.god_death_darkness,
-    RegionMemoryKind.SAINT_BURIAL: lambda rules: rules.terrain.saint_burial_darkness,
-    RegionMemoryKind.MIRACLE: lambda rules: rules.terrain.miracle_darkness,
-}
-HOLINESS: dict[RegionMemoryKind, Callable[[Rules], int]] = {
-    RegionMemoryKind.BATTLE: lambda rules: rules.terrain.battle_holiness,
-    RegionMemoryKind.MASSACRE: lambda rules: rules.terrain.massacre_holiness,
-    RegionMemoryKind.SACK: lambda rules: rules.terrain.sack_holiness,
-    RegionMemoryKind.DISASTER: lambda rules: rules.terrain.disaster_holiness,
-    RegionMemoryKind.PLAGUE: lambda rules: rules.terrain.plague_holiness,
-    RegionMemoryKind.FAMINE: lambda rules: rules.terrain.famine_holiness,
-    RegionMemoryKind.GOD_DEATH: lambda rules: rules.terrain.god_death_holiness,
-    RegionMemoryKind.SAINT_BURIAL: lambda rules: rules.terrain.saint_burial_holiness,
-    RegionMemoryKind.MIRACLE: lambda rules: rules.terrain.miracle_holiness,
-}
-
-
 def darkness_of(rules: Rules, kind: RegionMemoryKind) -> int:
-    return DARKNESS[kind](rules)
+    return LAND_MEMORIES[kind].darkness(rules)
 
 
 def holiness_of(rules: Rules, kind: RegionMemoryKind) -> int:
-    return HOLINESS[kind](rules)
+    return LAND_MEMORIES[kind].holiness(rules)
 
 
 def fades(rules: Rules, kind: RegionMemoryKind) -> bool:
-    return darkness_of(rules, kind) > holiness_of(rules, kind)
+    return LAND_MEMORIES[kind].weight is not None or darkness_of(rules, kind) > holiness_of(rules, kind)
 
 
 def darkness(rules: Rules, rows: list[RegionMemoryRow]) -> int:
@@ -201,44 +178,74 @@ async def gather(session: AsyncSession, rules: Rules, atlas: RegionAtlas, since_
         world = world_id or (atlas.world_of(region) if region is not None else None)
         if region is not None and world is not None:
             found.append(Remembered(region, world, RegionMemoryKind.MIRACLE, table.memory_miracle, epoch, f"miracle:{incident_id}", text, None, incident_id))
+    found.extend(await happenings(session, rules, atlas, since_epoch))
     return [memory for memory in found if memory.magnitude >= table.memory_min_magnitude]
 
 
-async def remember(session: AsyncSession, rules: Rules, atlas: RegionAtlas, since_epoch: int) -> int:
+async def happenings(session: AsyncSession, rules: Rules, atlas: RegionAtlas, since_epoch: int) -> list[Remembered]:
+    rows = list(
+        await session.scalars(select(IncidentRow).where(IncidentRow.kind.in_(sorted(SOURCE_KINDS)), IncidentRow.epoch >= since_epoch).order_by(IncidentRow.id))
+    )
+    parties: dict[int, list[int]] = defaultdict(list)
+    if rows:
+        for incident_id, node_id in await session.execute(
+            select(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id)
+            .where(IncidentParticipantRow.incident_id.in_([row.id for row in rows]))
+            .order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.position, IncidentParticipantRow.node_id)
+        ):
+            parties[incident_id].append(node_id)
+    found: list[Remembered] = []
+    for row in rows:
+        kind = SOURCE_KINDS[row.kind]
+        spec = LAND_MEMORIES[kind]
+        places = [row.place_entity_id, row.destination_entity_id, row.origin_entity_id, *parties.get(row.id, [])]
+        region = next((top for place in places if place is not None and (top := atlas.top_region(place)) is not None), None)
+        world = row.world_id or (atlas.world_of(region) if region is not None else None)
+        if region is None or world is None:
+            continue
+        weight = spec.weight(rules) if spec.weight is not None else 0
+        subject = next(iter(parties.get(row.id, [])), None)
+        found.append(
+            Remembered(region, world, kind, clamp_int(max(weight, row.magnitude), 0, PERCENT), row.epoch, f"incident:{row.id}", spec.label, subject, row.id)
+        )
+    return found
+
+
+async def remember(session: AsyncSession, rules: Rules, atlas: RegionAtlas, since_epoch: int) -> list[RegionMemoryRow]:
     known = {(region, key) for region, key in await session.execute(select(RegionMemoryRow.region_entity_id, RegionMemoryRow.source_key))}
-    made = 0
+    made: list[RegionMemoryRow] = []
     for memory in await gather(session, rules, atlas, since_epoch):
         if (memory.region_id, memory.source_key) in known or held(memory.region_id):
             continue
-        session.add(
-            RegionMemoryRow(
-                world_id=memory.world_id,
-                region_entity_id=memory.region_id,
-                kind=memory.kind,
-                magnitude=memory.magnitude,
-                epoch=max(0, memory.epoch),
-                source_key=memory.source_key,
-                subject_node_id=memory.subject_id,
-                incident_id=memory.incident_id,
-                title=memory.title,
-                origin=MemoryOrigin.DERIVED,
-            )
+        row = RegionMemoryRow(
+            world_id=memory.world_id,
+            region_entity_id=memory.region_id,
+            kind=memory.kind,
+            magnitude=memory.magnitude,
+            epoch=max(0, memory.epoch),
+            source_key=memory.source_key,
+            subject_node_id=memory.subject_id,
+            incident_id=memory.incident_id,
+            title=memory.title,
+            origin=MemoryOrigin.DERIVED,
         )
+        session.add(row)
+        made.append(row)
         known.add((memory.region_id, memory.source_key))
-        made += 1
     await session.flush()
     return made
 
 
-async def fade_memories(session: AsyncSession, rules: Rules, epoch: int) -> int:
-    faded = 0
+async def fade_memories(session: AsyncSession, rules: Rules, epoch: int) -> list[tuple[int, int, RegionMemoryKind]]:
+    faded: list[tuple[int, int, RegionMemoryKind]] = []
+    kept = set(await session.scalars(select(TraditionProfileRow.origin_incident_id).where(TraditionProfileRow.origin_incident_id.is_not(None))))
     for row in list(await session.scalars(select(RegionMemoryRow).where(RegionMemoryRow.held.is_(False), RegionMemoryRow.epoch < epoch))):
-        if not fades(rules, row.kind):
+        if not fades(rules, row.kind) or (row.incident_id is not None and row.incident_id in kept):
             continue
-        row.magnitude = max(0, row.magnitude - rules.terrain.memory_fade)
+        row.magnitude = max(0, row.magnitude - LAND_MEMORIES[row.kind].fade(rules))
         if row.magnitude <= 0:
             await session.delete(row)
-            faded += 1
+            faded.append((row.region_entity_id, row.world_id, row.kind))
     await session.flush()
     return faded
 
@@ -276,7 +283,10 @@ async def derive_sacredness(
     for region_id, ground in grounds.items():
         if "sacredness" in ground.locked:
             continue
-        value = clamp_int(added.get(region_id, 0) + round_half_up(holiness(rules, memories.get(region_id, [])) * table.sacred_memory_pct / PERCENT), 0, PERCENT)
+        drawn = rules.land_memory.discovery_draw * sum(1 for row in memories.get(region_id, []) if row.kind is RegionMemoryKind.DISCOVERY)
+        value = clamp_int(
+            added.get(region_id, 0) + drawn + round_half_up(holiness(rules, memories.get(region_id, [])) * table.sacred_memory_pct / PERCENT), 0, PERCENT
+        )
         if value != ground.sacredness:
             ground.sacredness = value
             changed += 1

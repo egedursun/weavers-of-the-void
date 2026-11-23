@@ -99,7 +99,7 @@ async def reached(call: SonCall, entity_id: int, refused: SonResult, why: str) -
         fail(refused, why=why)
     await ensure_in_reach(call, entity)
     if held(entity.id):
-        fail(refused, why="a stronger hand holds it")
+        fail(refused, why="it is held")
     return entity
 
 
@@ -205,7 +205,7 @@ async def set_mind_law(call: SonCall, args: MindLawInput) -> str:
     if args.made_minds is None and args.made_mind_souls is None and args.soul_continuity is None:
         fail(SonResult.MIND_LAW_REFUSED, why="name at least one law to set")
     if held(world.id):
-        fail(SonResult.MIND_LAW_REFUSED, why="a stronger hand holds that world")
+        fail(SonResult.MIND_LAW_REFUSED, why="that world is held")
     row = await call.session.get(MindLawRow, world.id)
     if row is None:
         row = default_law(world.id)
@@ -265,7 +265,7 @@ async def halt_replicator(call: SonCall, args: ReplicatorInput) -> str:
     if line is None:
         fail(SonResult.REPLICATOR_HALT_REFUSED, why="there is no such line")
     if line.owner_node_id is not None and held(line.owner_node_id):
-        fail(SonResult.REPLICATOR_HALT_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.REPLICATOR_HALT_REFUSED, why="it is held")
     await control.stop_line(call.tick, line.id)
     await call.record(
         "tools.son.halt_replicator", roles={IncidentRole.ACTOR: call.son.id}, facts={"name": line.name, "reason": args.reason}, kind=ChronicleKind.WORLD
@@ -278,7 +278,7 @@ async def realm_target(call: SonCall, realm_id: int, refused: SonResult) -> Made
     if row is None:
         fail(refused, why="there is no such made realm")
     if held(row.dimension_id):
-        fail(refused, why="a stronger hand holds it")
+        fail(refused, why="it is held")
     return row
 
 

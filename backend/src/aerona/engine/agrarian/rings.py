@@ -10,12 +10,14 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import CentralPlaceRow, LandRingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.gatherings import GatheringRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import CentralityRank, LandUseRing
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass
+from aerona.domain.enums.gathering import GatheringKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.structure import StructureKind
@@ -93,10 +95,12 @@ def catchment(reach: Reach, people_in: dict[int, int], region: int, hops: int) -
     return sum(people_in.get(other, 0) for other in reach.within(region, hops))
 
 
-def rank_for(ctx: TickContext, reach: Reach, people_in: dict[int, int], place: Place, chosen: dict[int, CentralityRank]) -> CentralityRank:
+def rank_for(ctx: TickContext, reach: Reach, people_in: dict[int, int], place: Place, chosen: dict[int, CentralityRank], *, fairs: set[int]) -> CentralityRank:
     ranks = by_order(descending=True)
     for rank in ranks[:-1]:
         spec = RANKS[rank]
+        if (spec.fair and place.town.id not in fairs) or (spec.unique and rank in chosen.values()):
+            continue
         hops = spec.reach(ctx.rules)
         rivals = {region for region, other in chosen.items() if RANKS[other].order >= spec.order}
         if catchment(reach, people_in, place.region, hops) >= spec.threshold(ctx.rules) and not rivals & set(reach.within(place.region, hops)):
@@ -131,9 +135,14 @@ async def rank_world(ctx: TickContext, reach: Reach, places: list[Place], tally:
     }
     chosen: dict[int, CentralityRank] = {}
     ranked: list[tuple[Place, CentralityRank]] = []
+    fairs = set(
+        await ctx.session.scalars(
+            select(GatheringRow.host_node_id).where(GatheringRow.kind == GatheringKind.FAIR, GatheringRow.host_node_id.in_([place.town.id for place in places]))
+        )
+    )
     for place in sorted(places, key=lambda item: (-item.people, item.town.id)):
         row = rows.get(place.town.id)
-        rank = row.rank if row is not None and ("rank" in row.locked or held(place.town.id)) else rank_for(ctx, reach, people_in, place, chosen)
+        rank = row.rank if row is not None and ("rank" in row.locked or held(place.town.id)) else rank_for(ctx, reach, people_in, place, chosen, fairs=fairs)
         if RANKS[rank].market:
             chosen.setdefault(place.region, rank)
         ranked.append((place, rank))
@@ -145,6 +154,8 @@ async def rank_world(ctx: TickContext, reach: Reach, places: list[Place], tally:
             row = CentralPlaceRow(settlement_entity_id=place.town.id, locked=[])
             ctx.session.add(row)
         buyers = catchment(reach, people_in, place.region, range_of(ctx, rank))
+        if row.rank is not None and row.rank is not rank and "rank" not in row.locked:
+            await record(ctx, "market.rank_changed", roles={IncidentRole.SUBJECT: place.town.id}, facts={"rank": rank, "before": row.rank}, place=place.town.id)
         put(row, "rank", rank)
         put(row, "catchment", buyers)
         put(row, "served_by_entity_id", server_of(ctx, reach, place, rank, ranked))

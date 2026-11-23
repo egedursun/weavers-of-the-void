@@ -234,6 +234,8 @@ def test_customs_produce_every_inheritance_and_marriage() -> None:
         customs_of({ValueAxis.HIERARCHY: 30})[0],
         customs_of({ValueAxis.KINSHIP: 60})[0],
         customs_of({ValueAxis.KNOWLEDGE: 30})[0],
+        customs_of({ValueAxis.KINSHIP: 30, ValueAxis.TRADITION: 30})[0],
+        customs_of({ValueAxis.LAW: 30})[0],
         customs_of({ValueAxis.HIERARCHY: -30})[0],
         customs_of({})[0],
     }
@@ -257,6 +259,8 @@ def test_funeral_rites_follow_land_knowledge_and_values() -> None:
         funeral_of(None, {KnowledgeBranch.MAGIC: 3}, {ValueAxis.DEATH: 30}),
         funeral_of(None, {KnowledgeBranch.MAGIC: 2}, {ValueAxis.PIETY: 30}),
         funeral_of(None, {KnowledgeBranch.ARCHITECTURE: 2}, {ValueAxis.HIERARCHY: 30}),
+        funeral_of(ground(rainfall=10), {KnowledgeBranch.MEDICINE: 2}, {ValueAxis.DEATH: 30}),
+        funeral_of(None, {}, {ValueAxis.KINSHIP: 30, ValueAxis.TRADITION: 30}),
         funeral_of(None, {}, {ValueAxis.KINSHIP: 60}),
         funeral_of(None, {}, {ValueAxis.KINSHIP: 30, ValueAxis.MERCY: -60}),
         funeral_of(ground(dominant_terrain=TerrainKind.MOUNTAINS), {}, {}),
@@ -303,16 +307,16 @@ def test_refresh_honours_every_hold() -> None:
 
 def test_marriage_customs_limit_spouses_and_endogamy_blocks_foreign_matches() -> None:
     first_plural = Spousing(UnionForm.PLURAL, PluralSide.FIRST)
-    one = kinship.Terms(1, first_plural, first="male", second="female")
-    assert kinship.may_wed_terms(RULES, (one, "male", 2), (one, "female", 0))
-    assert not kinship.may_wed_terms(RULES, (one, "female", 1), (one, "male", 0))
-    flipped = kinship.Terms(1, first_plural, first="female", second="male")
-    assert kinship.may_wed_terms(RULES, (flipped, "female", 2), (flipped, "male", 0))
+    one = kinship.Terms(1, first_plural, first="begetter", second="bearer")
+    assert kinship.may_wed_terms(RULES, (one, "begetter", 2), (one, "bearer", 0))
+    assert not kinship.may_wed_terms(RULES, (one, "bearer", 1), (one, "begetter", 0))
+    flipped = kinship.Terms(1, first_plural, first="bearer", second="begetter")
+    assert kinship.may_wed_terms(RULES, (flipped, "bearer", 2), (flipped, "begetter", 0))
     mono = kinship.Terms(1, Spousing())
-    assert not kinship.may_wed_terms(RULES, (mono, "male", 1), (mono, "female", 0))
+    assert not kinship.may_wed_terms(RULES, (mono, "begetter", 1), (mono, "bearer", 0))
     closed = kinship.Terms(1, Spousing(endogamy=PartnerScope.PEOPLE))
     stranger = kinship.Terms(2, Spousing())
-    assert not kinship.may_wed_terms(RULES, (closed, "male", 0), (stranger, "female", 0))
+    assert not kinship.may_wed_terms(RULES, (closed, "begetter", 0), (stranger, "bearer", 0))
     assert kinship.match_bonus(RULES, stranger, mono) == RULES.customs.exogamy_match_bonus
     customs = (
         Spousing(),
@@ -321,8 +325,8 @@ def test_marriage_customs_limit_spouses_and_endogamy_blocks_foreign_matches() ->
         Spousing(UnionForm.GROUP),
         Spousing(UnionForm.PLURAL, PluralSide.EITHER),
     )
-    sided = [kinship.Terms(1, custom, first="male", second="female") for custom in customs]
-    limits = {(kinship.spouse_limit(RULES, terms, "male"), kinship.spouse_limit(RULES, terms, "female")) for terms in sided}
+    sided = [kinship.Terms(1, custom, first="begetter", second="bearer") for custom in customs]
+    limits = {(kinship.spouse_limit(RULES, terms, "begetter"), kinship.spouse_limit(RULES, terms, "bearer")) for terms in sided}
     assert len(limits) == len(customs)
     closed_custom = UnionCustomRow(people_entity_id=1, endogamy=PartnerScope.PEOPLE)
     open_custom = UnionCustomRow(people_entity_id=1, endogamy=PartnerScope.NONE)

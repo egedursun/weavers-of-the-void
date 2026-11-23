@@ -9,7 +9,7 @@ from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.economy import TradeFlowRow, WorkshopRow
 from aerona.db.tables.settlement import DistrictDesignRow, DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.warfare import SiegeRow
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import OfficeKind
@@ -332,7 +332,12 @@ async def test_a_starving_merciless_town_abandons_its_old_and_a_merciful_one_doe
     town = await settlement(realm, "Frostgate", population=5000)
     session.add(
         CohortRow(
-            community_entity_id=town.id, age_band=AgeBand.ELDER, sex=Sex.FEMALE, social_class=SocialClass.FARMER, condition=CohortCondition.NONE, count=600
+            community_entity_id=town.id,
+            age_band=AgeBand.ELDER,
+            sex_kind=SexKind.BEARER,
+            social_class=SocialClass.FARMER,
+            condition=CohortCondition.NONE,
+            count=600,
         )
     )
     await session.flush()

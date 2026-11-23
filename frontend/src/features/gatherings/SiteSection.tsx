@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
-import { techniqueValues, skillKindValues } from '@/api/generated/schema'
+import { skillKindValues, techniqueValues } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,7 @@ import {
   RecordEditor,
   RecordRow,
 } from '@/features/cosmography/parts'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import {
   type ContentView,
@@ -53,7 +54,6 @@ import {
   DIG_STATUSES,
   ROOM_KINDS,
   table,
-  words,
 } from './labels'
 import { Ref, ThingPicker } from './parts'
 
@@ -61,10 +61,10 @@ const SPAN = 100
 const DELVERS = ['mortal', 'beast']
 const HOLDERS = undefined
 const SKILLS = Object.fromEntries(
-  skillKindValues.map((value) => [value, words(value)])
+  skillKindValues.map((value) => [value, wordOf(skillKindValues, value)])
 )
 const TECHNIQUES = Object.fromEntries(
-  techniqueValues.map((value) => [value, words(value)])
+  techniqueValues.map((value) => [value, wordOf(techniqueValues, value)])
 )
 
 type Edit = { values: EditValues; release: string[] }
@@ -513,7 +513,7 @@ function StageRow({
       icon={look.icon}
       tone={stage.resolved_epoch === null ? look.tone : 'success'}
       title={look.label}
-      caption={`${words(stage.skill)}${stage.technique ? ` with ${words(stage.technique)}` : ''} · difficulty ${stage.difficulty}${stage.resolved_epoch !== null ? ` · passed in epoch ${stage.resolved_epoch}` : ''}`}
+      caption={`${wordOf(skillKindValues, stage.skill)}${stage.technique ? ` with ${wordOf(techniqueValues, stage.technique)}` : ''} · difficulty ${stage.difficulty}${stage.resolved_epoch !== null ? ` · passed in epoch ${stage.resolved_epoch}` : ''}`}
     >
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         <Chip icon={risk.icon}>{risk.label}</Chip>

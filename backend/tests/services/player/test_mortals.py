@@ -10,7 +10,7 @@ from aerona.db.tables.mind import MemoryRow, SkillRow, TraitRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.domain.enums.body import BodyPart, ConditionKind, InjuryKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
@@ -66,7 +66,7 @@ async def test_a_life_value_is_set_held_released_and_undone(scope: PlayerScope, 
 
 async def test_a_mortal_sex_is_set(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
     mortal_id = await _mortal(session, world, "Brin")
-    await mortals.set_sex(scope, mortals.SetSex(mortal_id=mortal_id, sex=Sex.OTHER))
+    await mortals.set_sex(scope, mortals.SetSex(mortal_id=mortal_id, sex=SexKind.BOTH))
 
 
 async def test_marriages_are_made_forced_ended_and_struck(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:

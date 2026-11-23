@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from enum import StrEnum
 
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.domain.enums.cuisine import CookingMethod
 from aerona.domain.enums.economy import CommodityKind
@@ -13,7 +14,7 @@ def plain[E: StrEnum](kind: type[E], table: Mapping[E, str]) -> dict[str, str]:
 
 
 def spoken_labels[E: StrEnum](kind: type[E]) -> dict[str, str]:
-    return plain(kind, {member: member.value.replace("_and_", " and ").replace("_", " ").capitalize() for member in kind})
+    return plain(kind, {member: spoken(member).capitalize() for member in kind})
 
 
 GOOD_CATEGORY_LABELS = spoken_labels(GoodCategory)

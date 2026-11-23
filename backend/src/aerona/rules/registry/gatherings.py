@@ -10,6 +10,8 @@ H = RuleGroup.RECORDS
 
 @dataclass(frozen=True)
 class GatheringRules(Spanned):
+    muster_desertion_pct: int = rule(5, 0, 100, S, "Share of the soldiers gathered at a muster who slip away before the campaign (%)")
+    commemoration_feeling: int = rule(15, 0, 100, S, "Grief or fervour a commemoration stirs in the crowd of the town that holds it")
     per_world_max: int = rule(40, 0, 100000, M, "Gatherings the engine holds on one world each epoch (base)")
     per_world_communities: int = rule(1, 0, 100000, M, "Gatherings held on one world each epoch grow by 1 for every this many communities there (0: fixed)")
     funeral_renown: int = rule(30, 0, 100, M, "Renown of the dead above which a funeral is held rather than a wake")

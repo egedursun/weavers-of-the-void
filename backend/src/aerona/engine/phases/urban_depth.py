@@ -62,6 +62,7 @@ async def desirability(ctx: TickContext) -> None:
     "table.entities",
     "table.holder_levels",
     "table.land_use_rules",
+    "table.node_births",
     "table.nodes",
     "table.polity_profiles",
     "table.settlement_infrastructure",
@@ -166,6 +167,7 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.convoys",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.disease_routes",
     "table.drink_kinds",
     "table.endemic_diseases",
     "table.entities",
@@ -176,6 +178,7 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.kind_holdings",
     "table.ley_lines",
     "table.lifecycle_states",
+    "table.node_births",
     "table.nodes",
     "table.outbreaks",
     "table.plague_responses",
@@ -195,7 +198,21 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.vehicle_groups",
     "trade_route.capacity",
 )
-@writes("people.population", "settlement.piety", "settlement.population", "table.beliefs", "table.convoys", "table.entities", "table.transport_fleets")
+@writes(
+    "people.population",
+    "settlement.piety",
+    "settlement.population",
+    "table.beliefs",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.convoys",
+    "table.entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.outbreaks",
+    "table.transport_fleets",
+)
 async def convoys(ctx: TickContext) -> None:
     tally = ConvoyTally()
     await run_convoys(ctx, tally)

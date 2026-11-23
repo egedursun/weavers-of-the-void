@@ -303,6 +303,8 @@ EVOLUTION_MECHANICS = (
         surface=Surface(drawer=EVOLUTION_SECTION),
         backfill=f"{MIGRATION}: every world starts its cycles in balance",
         tables=(WorldCycleRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("shape_cycle",),
         targets=("world",),
         couplings=(
             Coupling(S.COSMOS, "the balance of the carbon cycle feeds the greenhouse warmth of the air", EdgeKind.FLOW, "world_cycles.forest_uptake"),

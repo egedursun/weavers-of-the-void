@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from aerona.catalog.modifier_effects import StatEffect, add, scale
 from aerona.core.total import total
-from aerona.domain.enums.body import BodyFunction, Capacity, ConditionKind, InjuryKind, InjuryState, MaimedKind
+from aerona.domain.enums.body import BodyFunction, BodyPart, Capacity, ConditionKind, InjuryKind, InjuryState, MaimedKind
 from aerona.domain.enums.crafts import AssistiveAid
 from aerona.rules.registry.body import CapacityRules, ConditionRules, MaimedRules
 
@@ -41,12 +41,16 @@ class MaimedSpec:
     injury: InjuryKind
     eyes: bool = False
     both_sides: bool = False
+    part: BodyPart | None = None
+    loss: Callable[[MaimedRules], int] = lambda rules: rules.labour_loss_pct
 
 
 @dataclass(frozen=True)
 class StateSpec:
     open: bool
     rank: int
+    fresh: bool = False
+    festering: bool = False
 
 
 CONDITIONS: Mapping[ConditionKind, ConditionSpec] = total(
@@ -156,6 +160,23 @@ CONDITIONS: Mapping[ConditionKind, ConditionSpec] = total(
             "a body wasted by a poor diet",
             lambda rules: {C.MELEE: rules.malnutrition_melee, C.CRAFT: rules.malnutrition_craft, C.FERTILITY: rules.malnutrition_fertility},
         ),
+        K.PARALYSIS: ConditionSpec(
+            "paralysis below a wound",
+            lambda rules: {C.MOBILITY: rules.paralysis_mobility, C.MELEE: rules.paralysis_melee},
+            visible=True,
+            aid=AssistiveAid.CANE,
+        ),
+        K.INFERTILITY: ConditionSpec("infertility", lambda rules: {C.FERTILITY: rules.infertility_fertility}, of_age=True, curable=True),
+        K.CHRONIC_PAIN: ConditionSpec(
+            "a lasting pain",
+            lambda rules: {
+                C.MELEE: rules.chronic_pain_capacity_cut,
+                C.CRAFT: rules.chronic_pain_capacity_cut,
+                C.SCHOLARSHIP: rules.chronic_pain_capacity_cut,
+                C.COMMAND: rules.chronic_pain_capacity_cut,
+            },
+            curable=True,
+        ),
     },
 )
 
@@ -170,6 +191,8 @@ CAPACITIES: Mapping[Capacity, CapacitySpec] = total(
         C.PRESENCE: CapacitySpec("how others see them", alert=False, bedridden=False),
         C.MOBILITY: CapacitySpec("getting about", alert=False, bedridden=True),
         C.FERTILITY: CapacitySpec("bearing children", alert=False, bedridden=False),
+        C.ENDURANCE: CapacitySpec("hard work and long journeys", alert=False, bedridden=True),
+        C.PERCEPTION: CapacitySpec("keeping watch and noticing", alert=True, bedridden=False),
     },
 )
 
@@ -185,22 +208,42 @@ MAIMS: Mapping[MaimedKind, MaimedSpec] = total(
         M.LAME: MaimedSpec("lame", lambda rules: rules.lame, BodyFunction.LOCOMOTION, InjuryKind.CRUSH),
         M.SCARRED: MaimedSpec("disfigured", lambda rules: rules.scarred, BodyFunction.PRESENCE, InjuryKind.BURN),
         M.BROKEN_MINDED: MaimedSpec("broken in mind", lambda rules: rules.broken_minded, BodyFunction.COGNITION, InjuryKind.CRUSH),
+        M.PARALYSED: MaimedSpec(
+            "paralysed",
+            lambda rules: rules.paralysed,
+            BodyFunction.LOCOMOTION,
+            InjuryKind.DESTROYED,
+            part=BodyPart.SPINE,
+            loss=lambda rules: rules.paralysed_loss_pct,
+        ),
+        M.LOST_FINGERS: MaimedSpec(
+            "missing fingers",
+            lambda rules: rules.lost_fingers,
+            BodyFunction.FINE_MANIPULATION,
+            InjuryKind.SEVERED,
+            part=BodyPart.FINGERS,
+            loss=lambda rules: rules.lost_fingers_craft_cut,
+        ),
     },
 )
 
 STATES: Mapping[InjuryState, StateSpec] = total(
     InjuryState,
     {
-        InjuryState.FRESH: StateSpec(open=True, rank=2),
-        InjuryState.INFECTED: StateSpec(open=True, rank=4),
+        InjuryState.FRESH: StateSpec(open=True, rank=2, fresh=True),
+        InjuryState.INFECTED: StateSpec(open=True, rank=4, festering=True),
         InjuryState.HEALING: StateSpec(open=True, rank=1),
         InjuryState.HEALED_SCAR: StateSpec(open=False, rank=0),
         InjuryState.PERMANENT: StateSpec(open=False, rank=3),
-        InjuryState.LETHAL: StateSpec(open=False, rank=5),
+        InjuryState.LETHAL: StateSpec(open=False, rank=6),
+        InjuryState.GANGRENOUS: StateSpec(open=True, rank=5, festering=True),
+        InjuryState.REOPENED: StateSpec(open=True, rank=2, fresh=True),
     },
 )
 
 OPEN_INJURY_STATES = frozenset(state for state, spec in STATES.items() if spec.open)
+FRESH_STATES = frozenset(state for state, spec in STATES.items() if spec.fresh)
+FESTERING = frozenset(state for state, spec in STATES.items() if spec.festering)
 MADNESS_CONDITIONS = tuple(kind for kind, spec in CONDITIONS.items() if spec.madness is not None)
 SENSE_CONDITIONS = (*(kind for kind, spec in CONDITIONS.items() if spec.sense_loss), *MADNESS_CONDITIONS)
 AGE_CONDITIONS = tuple(kind for kind, spec in CONDITIONS.items() if spec.of_age)

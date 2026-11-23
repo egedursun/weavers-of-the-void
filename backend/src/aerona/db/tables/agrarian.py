@@ -25,7 +25,7 @@ CENTRAL_FIELDS = ("rank", "catchment", "served_by_entity_id", "centrality")
 NUTRIENT_FIELDS = ("stock", "trend")
 INTENSITY_FIELDS = ("pressure", "intensity", "research_boost")
 PERENNIAL_FIELDS = ("kind", "species_entity_id", "line_id", "owner_node_id", "area", "maturity", "mature_epochs", "condition")
-COMMONS_FIELDS = ("kind", "rule", "condition", "use", "steward_entity_id", "encloser_node_id", "dispossessed")
+COMMONS_FIELDS = ("kind", "rule", "condition", "use", "steward_entity_id", "encloser_node_id", "dispossessed", "quota", "licence_price", "officials")
 RESERVE_FIELDS = ("holder_node_id", "species_entity_id", "strictness", "poaching", "resentment")
 FAMINE_FIELDS = ("memory", "famine_foods", "storage")
 PREPAREDNESS_FIELDS = ("level", "condition", "averted")
@@ -148,6 +148,9 @@ class CommonsRow(Base):
     encloser_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"), index=True)
     enclosed_epoch: Mapped[int | None]
     dispossessed: Mapped[int] = mapped_column(default=0)
+    quota: Mapped[int] = mapped_column(default=60, server_default="60")
+    licence_price: Mapped[int] = mapped_column(default=0, server_default="0")
+    officials: Mapped[int] = mapped_column(default=0, server_default="0")
     since_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

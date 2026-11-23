@@ -4,8 +4,9 @@ from dataclasses import dataclass
 
 from sqlalchemy import or_, select
 
-from aerona.catalog.collective import ACT_COLLECTION, ANGRY_ACTS, FAITH_ACTS, TRIGGERS
+from aerona.catalog.collective import ACT_COLLECTION, ACTS, ANGRY_ACTS, CROWD_FEELINGS, FAITH_ACTS, TRIGGERS
 from aerona.catalog.life.collective import CONFORMING, TRIGGER_MOOD
+from aerona.catalog.life.factions import GUILDS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
@@ -16,11 +17,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.collective import CascadeOutcome, CollectiveActKind, CollectiveTrigger, MobEnd, MobStatus, MobTarget
+from aerona.domain.enums.collective import CascadeOutcome, CollectiveActKind, CollectiveTrigger, CrowdFeeling, MobEnd, MobStatus, MobTarget
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -28,17 +30,21 @@ from aerona.domain.enums.gathering import CollectionRole
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.society import Commodity
+from aerona.domain.enums.travel import RefugeeCause
 from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.belonging.effects import apart_from_ruler
 from aerona.engine.belonging.mockery import vent
 from aerona.engine.body.hits import Harm
 from aerona.engine.collective.book import population_of, realm_of_town, shift, soldiers_of, towns
+from aerona.engine.collective.feelings import fade_feelings, feelings_of, stir_feelings, strongest
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import psi_of, realm_of
 from aerona.engine.cycles.indenture import indentured_share
 from aerona.engine.history.collections import open_collection
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.split import facets_of
+from aerona.engine.phases.refugees import flee as seek_shelter
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import shift_stock, stock
@@ -91,14 +97,10 @@ class Crowd:
     conformity: float
 
 
-def mood_value(mood: CrowdMoodRow, name: str) -> int:
-    return int(getattr(mood, name))
-
-
 async def mood_of(ctx: TickContext, town_id: int) -> CrowdMoodRow:
     row = await ctx.session.get(CrowdMoodRow, town_id)
     if row is None:
-        row = CrowdMoodRow(settlement_entity_id=town_id, anger=0, anxiety=0, fervour=0, deterrence=0, agitation=0, locked=[])
+        row = CrowdMoodRow(settlement_entity_id=town_id, deterrence=0, agitation=0, locked=[])
         ctx.session.add(row)
         await ctx.session.flush()
     return row
@@ -109,10 +111,42 @@ async def stir(ctx: TickContext, town_id: int | None, trigger: CollectiveTrigger
         return None
     mood = await mood_of(ctx, town_id)
     spec = TRIGGERS[trigger]
-    shift(mood, spec.mood, ctx.rules.collective_behaviour.heat if force is None else force)
+    push = spec.push(ctx.rules) if force is None else force
+    await stir_feelings(ctx, town_id, {feeling: push for feeling in spec.feelings})
     if "last_trigger" not in mood.locked:
         mood.last_trigger = trigger
     return mood
+
+
+def trigger_for(act: CollectiveActKind) -> CollectiveTrigger:
+    direct = next((trigger for trigger, spec in TRIGGERS.items() if spec.act is act), None)
+    if direct is not None:
+        return direct
+    replaced = sorted(ACTS[act].instead_of)
+    return next((trigger for trigger, spec in TRIGGERS.items() if spec.act in replaced), CollectiveTrigger.RUMOUR)
+
+
+async def lead_crowd(ctx: TickContext, town: EntityRow, act: CollectiveActKind, amount: float) -> CascadeRow | None:
+    if held(town.id) or await ctx.session.get(SettlementProfileRow, town.id) is None:
+        return None
+    await stir_feelings(ctx, town.id, {ACTS[act].feeling: amount})
+    return await spark(ctx, town, trigger_for(act), CrowdTally(), act=act)
+
+
+def act_for(ctx: TickContext, base: CollectiveActKind, feelings: Mapping[CrowdFeeling, int], mood: CrowdMoodRow) -> CollectiveActKind:
+    for act, spec in ACTS.items():
+        if base not in spec.instead_of:
+            continue
+        level = spec.threshold(ctx.rules)
+        if spec.daunted and mood.deterrence >= level:
+            return act
+        if (
+            spec.turns_on
+            and max(feelings[feeling] for feeling in spec.turns_on) >= level
+            and max(feelings[feeling] for feeling in spec.turns_on) > feelings[ACTS[base].feeling]
+        ):
+            return act
+    return base
 
 
 async def incident_triggers(ctx: TickContext) -> dict[int, set[CollectiveTrigger]]:
@@ -129,6 +163,43 @@ async def incident_triggers(ctx: TickContext) -> dict[int, set[CollectiveTrigger
         for town in (place, node if node_type is EntityType.SETTLEMENT else None, location if node_type is EntityType.MORTAL else None):
             if town is not None:
                 found[town].add(trigger)
+    return found
+
+
+VICTORIES = ("war.battle.field_victory", "war.battle.great_victory", "war.ended_victory", "war.ended_conquest", "war.ended_tribute")
+VOTES = "vote.held"
+DEATHS = "mortal.death"
+
+
+async def towns_under(ctx: TickContext, node_id: int) -> set[int]:
+    members = set(await ctx.session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == node_id)))
+    return members | {node_id}
+
+
+async def realm_triggers(ctx: TickContext) -> dict[int, set[CollectiveTrigger]]:
+    rows = await ctx.session.execute(
+        select(IncidentRow.kind, IncidentParticipantRow.node_id, IncidentParticipantRow.role)
+        .join(IncidentParticipantRow, IncidentParticipantRow.incident_id == IncidentRow.id)
+        .where(
+            IncidentRow.epoch >= ctx.epoch - 1,
+            or_(IncidentRow.kind.in_(VICTORIES), IncidentRow.kind == VOTES, IncidentRow.kind.startswith(DEATHS)),
+            IncidentParticipantRow.role.in_([IncidentRole.ACTOR, IncidentRole.SUBJECT]),
+        )
+        .order_by(IncidentRow.id, IncidentParticipantRow.node_id)
+    )
+    found: dict[int, set[CollectiveTrigger]] = defaultdict(set)
+    great = ctx.rules.collective.great_funeral_importance
+    for kind, node, role in rows:
+        if kind in VICTORIES and role is IncidentRole.ACTOR:
+            for town in await towns_under(ctx, node):
+                found[town].add(T.VICTORY)
+        elif kind == VOTES and role is IncidentRole.SUBJECT:
+            for town in await towns_under(ctx, node):
+                found[town].add(T.ELECTION)
+        elif kind.startswith(DEATHS) and role is IncidentRole.SUBJECT:
+            figure = await ctx.session.get(EntityRow, node)
+            if figure is not None and (figure.importance or 0) >= great and figure.location_id is not None:
+                found[figure.location_id].add(T.GREAT_FUNERAL)
     return found
 
 
@@ -199,6 +270,7 @@ async def deterrence_of(ctx: TickContext, town: EntityRow, profile: SettlementPr
 def crowd_for(
     ctx: TickContext,
     mood: CrowdMoodRow,
+    feelings: Mapping[CrowdFeeling, int],
     act: CollectiveActKind,
     conformity: float,
     *,
@@ -208,14 +280,14 @@ def crowd_for(
     divided: int = 0,
 ) -> Crowd:
     table = ctx.rules.collective_behaviour
-    spec_mood = TRIGGER_MOOD[act]
-    cut = {"anger": table.anger_cut, "anxiety": table.anxiety_cut, "fervour": table.fervour_cut}[spec_mood] * mood_value(mood, spec_mood) / PERCENT
+    feeling = TRIGGER_MOOD[act]
+    cut = CROWD_FEELINGS[feeling].cut(ctx.rules) * feelings[feeling] / PERCENT
     cut += ctx.rules.structural_demography.threshold_cut * stress / PERCENT
     cut += ctx.rules.labour_regimes.crowd_cut * bound / PERCENT
     cut -= vented
     cut += ctx.rules.identities.revolt_cut * divided / PERCENT
     return Crowd(
-        base=table.base_threshold,
+        base=ACTS[act].threshold(ctx.rules),
         cut=cut,
         deterrence=table.deterrence_lift * mood.deterrence / PERCENT,
         agitation=table.agitation_cut * mood.agitation / PERCENT,
@@ -300,7 +372,7 @@ async def cult_in(ctx: TickContext, town: EntityRow) -> EntityRow | None:
 
 async def raise_mob(ctx: TickContext, town: EntityRow, row: CascadeRow, *, district: DistrictRow | None, size: int) -> MobRow:
     act, trigger = row.act, row.trigger
-    mood = await mood_of(ctx, town.id)
+    feelings = await feelings_of(ctx.session, town.id)
     target = TRIGGERS[trigger].target
     victim = await scapegoat(ctx, town) if target is MobTarget.SCAPEGOAT else None
     if target is MobTarget.SCAPEGOAT and victim is None:
@@ -310,7 +382,7 @@ async def raise_mob(ctx: TickContext, town: EntityRow, row: CascadeRow, *, distr
         district_id=district.id if district is not None else None,
         act=A.LYNCHING if victim is not None and act in ANGRY_ACTS | {A.PROCESSION} else act,
         size=size,
-        anger=clamp_int(max(mood.anger, mood.anxiety, mood.fervour), 10, PERCENT),
+        anger=clamp_int(strongest(feelings), 10, PERCENT),
         target=target,
         target_entity_id=victim.id if victim is not None else None,
         leader_entity_id=await leader_in(ctx, town),
@@ -368,20 +440,25 @@ async def begin_movement(ctx: TickContext, town: EntityRow, act: CollectiveActKi
     return row
 
 
-async def spark(ctx: TickContext, town: EntityRow, trigger: CollectiveTrigger, tally: CrowdTally, *, forced: bool = False) -> CascadeRow | None:
+async def spark(
+    ctx: TickContext, town: EntityRow, trigger: CollectiveTrigger, tally: CrowdTally, *, forced: bool = False, act: CollectiveActKind | None = None
+) -> CascadeRow | None:
     if held(town.id):
         return None
     profile = await ctx.session.get(SettlementProfileRow, town.id)
     if profile is None:
         return None
     mood = await mood_of(ctx, town.id)
+    feelings = await feelings_of(ctx.session, town.id)
     rng = ctx.rng(f"cascade.{town.id}.{trigger.value}.{ctx.epoch}")
-    act = TRIGGERS[trigger].act
+    act = act or act_for(ctx, TRIGGERS[trigger].act, feelings, mood)
     district, district_people = await choose_district(ctx, town, rng)
     bound = await indentured_share(ctx.session, town.id)
     vented = await vent(ctx.session, ctx.rules, await realm_of(ctx.session, town.id), ctx.epoch)
     divided = await apart_from_ruler(ctx.session, ctx.rules, town.id)
-    crowd = crowd_for(ctx, mood, act, await conformity_of(ctx, town), stress=await psi_of(ctx.session, town.id), bound=bound, vented=vented, divided=divided)
+    crowd = crowd_for(
+        ctx, mood, feelings, act, await conformity_of(ctx, town), stress=await psi_of(ctx.session, town.id), bound=bound, vented=vented, divided=divided
+    )
     share = cascade(ctx, crowd, rng)
     outcome = outcome_of(ctx, act, share)
     participants = round_half_up(district_people * share / PERCENT)
@@ -402,13 +479,20 @@ async def spark(ctx: TickContext, town: EntityRow, trigger: CollectiveTrigger, t
     tally.cascades += 1
     if outcome is CascadeOutcome.FIZZLED and not forced:
         return row
+    spec = ACTS[act]
+    if spec.rejoices:
+        act = await rejoice(ctx, town, row, rng)
+    if spec.refuses_trade:
+        await boycott(ctx, town, row)
+    if spec.leaves:
+        await leave_together(ctx, town, row, tally, district_people=district_people)
     if outcome is CascadeOutcome.PANIC:
         await flee(ctx, town, row, tally, district_people=district_people)
         tally.panics += 1
     elif outcome is CascadeOutcome.MOVEMENT:
         await begin_movement(ctx, town, act, trigger, members=participants, share=share)
         tally.movements += 1
-    elif outcome is CascadeOutcome.MOB:
+    elif outcome is CascadeOutcome.MOB and not (spec.rejoices and act is A.JUBILATION) and not spec.leaves:
         await raise_mob(ctx, town, row, district=district, size=participants)
         tally.mobs += 1
     if act is A.CONVERSION and outcome is not CascadeOutcome.FIZZLED:
@@ -450,6 +534,61 @@ async def spark(ctx: TickContext, town: EntityRow, trigger: CollectiveTrigger, t
     return row
 
 
+async def rejoice(ctx: TickContext, town: EntityRow, row: CascadeRow, rng: SeededRandom) -> CollectiveActKind:
+    table = ctx.rules.collective
+    realm = await realm_of_town(ctx, town.id)
+    if realm is not None and not held(realm.polity_entity_id):
+        shift(realm, "legitimacy", table.jubilation_loyalty)
+    set_stats(town, prosperity=clamp_int(stat_or(town, "prosperity", 0) + table.jubilation_spending, 0, PERCENT))
+    if rng.chance(table.jubilation_riot_pct):
+        row.act = A.RIOT
+        await record(ctx, "crowd.revel_turned", roles={IncidentRole.PLACE: town.id}, facts={"participants": row.participants}, place=town.id)
+        return A.RIOT
+    return A.JUBILATION
+
+
+async def boycotted(ctx: TickContext, town: EntityRow) -> EntityRow | None:
+    guild = await ctx.session.scalar(
+        select(EntityRow)
+        .join(FactionProfileRow, FactionProfileRow.faction_entity_id == EntityRow.id)
+        .where(FactionProfileRow.home_entity_id == town.id, FactionProfileRow.kind.in_(list(GUILDS)), EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    return guild
+
+
+async def boycott(ctx: TickContext, town: EntityRow, row: CascadeRow) -> None:
+    cut = ctx.rules.collective.boycott_income_cut_pct
+    guild = await boycotted(ctx, town)
+    target_id: int | None = None
+    if guild is not None and not held(guild.id):
+        set_stats(guild, wealth=max(0, stat_or(guild, "wealth", 0) - stat_or(guild, "wealth", 0) * cut // PERCENT))
+        target_id = guild.id
+    else:
+        realm = await realm_of_town(ctx, town.id)
+        if realm is not None and not held(realm.polity_entity_id) and "treasury" not in realm.locked:
+            realm.treasury = max(0, realm.treasury - realm.treasury * cut // PERCENT)
+            target_id = realm.polity_entity_id
+    if target_id is not None:
+        await record(
+            ctx,
+            "crowd.boycotted",
+            roles={IncidentRole.PLACE: town.id, IncidentRole.TARGET: target_id},
+            facts={"cut": cut, "participants": row.participants},
+            place=town.id,
+        )
+
+
+async def leave_together(ctx: TickContext, town: EntityRow, row: CascadeRow, tally: CrowdTally, *, district_people: float) -> None:
+    leaving = round_half_up(district_people * row.share / PERCENT * ctx.rules.collective.exodus_share_pct / PERCENT)
+    if leaving <= 0:
+        return
+    gone = await seek_shelter(ctx, await RegionAtlas.load(ctx.session), town, leaving, cause=RefugeeCause.DISASTER, destination=None, excluded={town.id})
+    row.fled = leaving if gone is not None else 0
+    tally.fled += row.fled
+
+
 CROWD_STEPS: Mapping[CascadeOutcome, StepAction] = total(
     CascadeOutcome,
     {
@@ -464,26 +603,28 @@ CROWD_STEPS: Mapping[CascadeOutcome, StepAction] = total(
 async def stir_towns(ctx: TickContext, tally: CrowdTally) -> None:
     table = ctx.rules.collective_behaviour
     from_incidents = await incident_triggers(ctx)
+    from_realms = await realm_triggers(ctx)
     for town, profile in await towns(ctx):
         if held(town.id):
             continue
         mood = await mood_of(ctx, town.id)
         if "deterrence" not in mood.locked:
             mood.deterrence = await deterrence_of(ctx, town, profile)
-        triggers = await state_triggers(ctx, town, profile) | from_incidents.get(town.id, set())
+        triggers = await state_triggers(ctx, town, profile) | from_incidents.get(town.id, set()) | from_realms.get(town.id, set())
         for trigger in sorted(triggers):
-            await stir(ctx, town.id, trigger, force=table.heat // 2)
+            await stir(ctx, town.id, trigger, force=TRIGGERS[trigger].push(ctx.rules) // 2)
             tally.stirred += 1
-        shift(mood, "anger", profile.unrest * table.heat / (PERCENT * 2))
+        await stir_feelings(ctx, town.id, {CrowdFeeling.ANGER: profile.unrest * table.heat / (PERCENT * 2)})
+        feelings = await feelings_of(ctx.session, town.id)
         chosen = mood.last_trigger
         if chosen is None and triggers:
-            chosen = max(sorted(triggers), key=lambda trigger: mood_value(mood, TRIGGERS[trigger].mood))
+            chosen = max(sorted(triggers), key=lambda trigger: feelings[TRIGGERS[trigger].mood])
         if chosen is not None and ctx.rng(f"crowd.{town.id}.{ctx.epoch}").chance(table.trigger_pct):
             await spark(ctx, town, chosen, tally)
         if "last_trigger" not in mood.locked:
             mood.last_trigger = None
-        for name in ("anger", "anxiety", "fervour", "agitation"):
-            shift(mood, name, -table.mood_decay)
+        await fade_feelings(ctx, town.id)
+        shift(mood, "agitation", -table.mood_decay)
     await ctx.session.flush()
 
 
@@ -507,7 +648,7 @@ async def lynch(ctx: TickContext, mob: MobRow, town: EntityRow, tally: CrowdTall
 
 async def storm(ctx: TickContext, mob: MobRow, town: EntityRow, tally: CrowdTally) -> None:
     table = ctx.rules.collective_behaviour
-    harm = table.mob_damage_pct * mob.anger / PERCENT
+    harm = 0.0 if ACTS[mob.act].harmless else table.mob_damage_pct * mob.anger / PERCENT
     profile = await ctx.session.get(SettlementProfileRow, town.id)
     if mob.target in {MobTarget.DISTRICT, MobTarget.WORKSHOP} and mob.district_id is not None:
         district = await ctx.session.get(DistrictRow, mob.district_id)
@@ -527,6 +668,8 @@ async def storm(ctx: TickContext, mob: MobRow, town: EntityRow, tally: CrowdTall
         shift(profile, "public_order", -harm)
     elif mob.target is MobTarget.SCAPEGOAT:
         await lynch(ctx, mob, town, tally)
+    if ACTS[mob.act].harmless:
+        return
     if profile is not None and mob.act in ANGRY_ACTS:
         shift(profile, "unrest", harm / 2)
         shift(profile, "public_order", -harm / 2)
@@ -569,9 +712,10 @@ async def rage_mobs(ctx: TickContext, tally: CrowdTally) -> None:
             mob.status = MobStatus.RAMPAGING
         await storm(ctx, mob, town, tally)
         soldiers = await soldiers_of(ctx, profile)
-        if mob.act in ANGRY_ACTS and soldiers * table.force_pct / PERCENT >= mob.size:
-            mood = await mood_of(ctx, town.id)
-            shift(mood, "anger", table.heat / 2)
+        if (mob.act in ANGRY_ACTS or ACTS[mob.act].instead_of) and soldiers * table.force_pct / PERCENT >= mob.size:
+            feelings = await feelings_of(ctx.session, town.id)
+            betrayed = feelings[CrowdFeeling.HOPE] * ctx.rules.collective.betrayed_hope_pct / PERCENT if ACTS[mob.act].turns_on else 0
+            await stir_feelings(ctx, town.id, {CrowdFeeling.ANGER: table.heat / 2 + betrayed, CrowdFeeling.HOPE: -betrayed})
             dead = round_half_up(mob.size * table.trample_per_mille / 1000 * 3)
             set_stats(town, population=max(0, population_of(town) - dead))
             tally.dead += dead
@@ -593,8 +737,7 @@ async def tend_movements(ctx: TickContext, tally: CrowdTally) -> None:
         town = await ctx.session.get(EntityRow, movement.settlement_entity_id)
         if town is None or held(town.id):
             continue
-        mood = await mood_of(ctx, town.id)
-        feeling = mood_value(mood, TRIGGER_MOOD[movement.act])
+        feeling = (await feelings_of(ctx.session, town.id))[TRIGGER_MOOD[movement.act]]
         shift(movement, "strength", feeling * table.heat / (PERCENT * 2) - table.movement_decay)
         if movement.strength <= 0 and "ended_epoch" not in movement.locked:
             movement.ended_epoch = ctx.epoch

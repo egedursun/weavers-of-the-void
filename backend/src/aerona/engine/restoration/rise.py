@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.entities import EntityRow
@@ -98,7 +99,7 @@ async def raise_movement(
         ctx,
         "polity.restoration_begun",
         roles={IncidentRole.SUBJECT: fallen.id, IncidentRole.ACTOR: claimant},
-        facts={"bases": ", ".join(basis.value.replace("_", " ") for basis in bases) or "memory", "memory": row.memory},
+        facts={"bases": ", ".join(spoken(basis) for basis in bases) or "memory", "memory": row.memory},
     )
     return row
 

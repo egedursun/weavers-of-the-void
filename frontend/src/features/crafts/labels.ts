@@ -1,17 +1,21 @@
 import {
+  type LucideIcon,
   Anchor,
   Ban,
-  Clover,
-  TriangleAlert,
   Bird,
   BookOpen,
   Box,
   Brush,
   Building2,
   Clock,
+  Clover,
+  Cog,
   Coins,
+  CookingPot,
+  Crosshair,
   Crown,
   Droplet,
+  Droplets,
   Ear,
   Eye,
   Fish,
@@ -23,27 +27,32 @@ import {
   Hammer,
   Handshake,
   Hash,
+  Heart,
   HeartPulse,
   Hourglass,
   Layers,
   Leaf,
   Link,
-  type LucideIcon,
   Music,
   Orbit,
+  PawPrint,
   PenTool,
   Pill,
   Scale,
   ScanEye,
   Scroll,
   Search,
+  Shell,
   Ship,
   Sparkles,
   Sprout,
   Sun,
   Swords,
   Tag,
+  Target,
   Telescope,
+  TriangleAlert,
+  Trophy,
   Waves,
   Wrench,
   Zap,
@@ -71,6 +80,10 @@ export const GROUNDS: Record<Schema['CatchGround'], Named> = {
     icon: Waves,
     tone: 'danger',
   },
+  game_hunt: { label: 'Hunt of great game', icon: Target, tone: 'warning' },
+  shore_gathering: { label: 'Shore gathering', icon: Shell, tone: 'success' },
+  diving: { label: 'Diving the beds', icon: Gem, tone: 'gold' },
+  fish_ponds: { label: 'Fish ponds', icon: Droplets, tone: 'info' },
 }
 
 export const GEAR: Record<Schema['Gear'], Named> = {
@@ -80,6 +93,14 @@ export const GEAR: Record<Schema['Gear'], Named> = {
   traps: { label: 'Traps', icon: Box, tone: 'warning' },
   snares: { label: 'Snares', icon: Link, tone: 'warning' },
   harpoons: { label: 'Harpoons', icon: Anchor, tone: 'danger' },
+  missiles: { label: 'Bows and spears', icon: Crosshair, tone: 'warning' },
+  trawls: { label: 'Trawls', icon: Ship, tone: 'danger' },
+  poison: { label: 'Poison', icon: FlaskConical, tone: 'danger' },
+  hunting_animals: {
+    label: 'Hunting animals',
+    icon: PawPrint,
+    tone: 'verdigris',
+  },
 }
 
 export const CATCH_RIGHTS: Record<Schema['CatchRight'], Named> = {
@@ -114,6 +135,8 @@ export const RIGHT_KINDS: Record<Schema['RightKind'], Named> = {
   title: { label: 'Title', icon: Crown, tone: 'gold' },
   trademark: { label: 'Mark of a maker', icon: Hammer, tone: 'warning' },
   market_privilege: { label: 'Market privilege', icon: Scale, tone: 'success' },
+  recipe: { label: 'Recipe', icon: CookingPot, tone: 'warning' },
+  technique: { label: 'Technique', icon: Cog, tone: 'info' },
 }
 
 export const ACQUIRED: Record<Schema['RightAcquired'], Named> = {
@@ -123,6 +146,8 @@ export const ACQUIRED: Record<Schema['RightAcquired'], Named> = {
   licensed: { label: 'Licensed', icon: Handshake, tone: 'verdigris' },
   stolen: { label: 'Stolen', icon: Swords, tone: 'danger' },
   granted: { label: 'Granted', icon: Scroll, tone: 'gold' },
+  won: { label: 'Won in a contest', icon: Trophy, tone: 'success' },
+  wed: { label: 'Passed with a union', icon: Heart, tone: 'verdigris' },
 }
 
 export const AIDS: Record<Schema['AssistiveAid'], Named> = {

@@ -47,6 +47,9 @@ TEMPER_WEIGHT: MappingProxyType[BeastTemper, Callable[[Rules], int]] = total(
         BeastTemper.BOUND: lambda rules: rules.route_dangers.beast_bound_pct,
         BeastTemper.TAMED: lambda rules: rules.route_dangers.beast_tamed_pct,
         BeastTemper.COMPANION: lambda rules: rules.route_dangers.beast_tamed_pct,
+        BeastTemper.WOUNDED: lambda rules: rules.route_dangers.beast_enraged_pct,
+        BeastTemper.BROODING: lambda rules: rules.route_dangers.beast_territorial_pct,
+        BeastTemper.COWED: lambda rules: rules.route_dangers.beast_sleeping_pct,
     },
 )
 FALLING_EFFECTS = having(WEATHER_EFFECT_TRAITS, WeatherEffectTrait.FALLING_EFFECTS)

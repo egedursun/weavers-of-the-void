@@ -1,5 +1,10 @@
+import {
+  knowledgeBranchValues,
+  travelMethodValues,
+} from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { type ComboboxOption } from '@/components/domain/RecordCombobox'
+import { wordOf } from '@/features/entity/affairs/labels'
 import {
   type CosmosView,
   type EntityType,
@@ -194,7 +199,7 @@ export function optionsFor(
             value: String(route.id),
             label: name(other),
             hint: joinHint(
-              humanize(route.method),
+              wordOf(travelMethodValues, route.method),
               `${plural(route.duration_epochs, 'epoch', 'epochs')}`
             ),
           }
@@ -212,7 +217,9 @@ export function optionsFor(
           value: String(item.knowledge.id),
           label: item.knowledge.name,
           hint: joinHint(
-            item.branch ? humanize(item.branch) : undefined,
+            item.branch
+              ? wordOf(knowledgeBranchValues, item.branch)
+              : undefined,
             ctx.multiWorld
               ? worldName(data.state, item.knowledge.world_id)
               : undefined

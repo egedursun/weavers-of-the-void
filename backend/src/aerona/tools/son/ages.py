@@ -13,7 +13,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.ages import ArcOutcome, SeasonSpell, SetupKind
+from aerona.domain.enums.ages import ArcOutcome, SeasonSpell, SeasonSpellShape, SetupKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
@@ -35,12 +35,21 @@ LONGEST = 20
 
 class UnsettleSeasonsInput(ToolInput):
     world_id: int
+    shape: SeasonSpellShape = SeasonSpellShape.CYCLING
+    spell: SeasonSpell = SeasonSpell.SUMMER
+    length: int = Field(default=2, ge=1, le=LONGEST)
+    severity: int = Field(default=50, ge=0, le=100)
     reason: Reason
 
 
 class LengthenWinterInput(ToolInput):
-    world_id: int
+    long_season_id: int
     epochs: int = Field(ge=1, le=LONGEST)
+    reason: Reason
+
+
+class EndLongSeasonInput(ToolInput):
+    long_season_id: int
     reason: Reason
 
 
@@ -68,7 +77,7 @@ async def world_in_reach(call: SonCall, world_id: int, refused: SonResult) -> Wo
     if world is None:
         fail(refused, why="there is no such world")
     if held(world.id):
-        fail(refused, why="a stronger hand holds it")
+        fail(refused, why="it is held")
     if call.son.current_world_id != world.id:
         fail(refused, why="you do not walk that world")
     return world
@@ -77,7 +86,8 @@ async def world_in_reach(call: SonCall, world_id: int, refused: SonResult) -> Wo
 async def unsettle_seasons(call: SonCall, args: UnsettleSeasonsInput) -> str:
     world = await world_in_reach(call, args.world_id, SonResult.SEASONS_REFUSED)
     try:
-        row = await control.unsettle_seasons(call.tick, world.id, call.son.id)
+        draft = control.SpellDraft(shape=args.shape, spell=args.spell, length=args.length, severity=args.severity)
+        row = await control.unsettle_seasons(call.tick, world.id, call.son.id, draft)
     except ValidationFailedError as error:
         fail(SonResult.SEASONS_REFUSED, why=reason_of(error))
     call.target(world.id)
@@ -91,11 +101,11 @@ async def unsettle_seasons(call: SonCall, args: UnsettleSeasonsInput) -> str:
 
 
 async def lengthen_winter(call: SonCall, args: LengthenWinterInput) -> str:
-    world = await world_in_reach(call, args.world_id, SonResult.WINTER_REFUSED)
-    row = await call.session.get(IrregularSeasonRow, world.id)
+    row = await call.session.get(IrregularSeasonRow, args.long_season_id)
     if row is None or row.spell is not SeasonSpell.WINTER:
-        fail(SonResult.WINTER_REFUSED, why="no long winter holds that world")
-    await control.edit_record(call.tick, "irregular_season", world.id, {"spell_length": row.spell_length + args.epochs}, [])
+        fail(SonResult.WINTER_REFUSED, why="no such long winter holds a world")
+    world = await world_in_reach(call, row.world_id, SonResult.WINTER_REFUSED)
+    await control.edit_record(call.tick, "irregular_season", row.id, {"spell_length": row.spell_length + args.epochs}, [])
     call.target(world.id)
     await call.record(
         "tools.son.lengthen_winter",
@@ -104,6 +114,23 @@ async def lengthen_winter(call: SonCall, args: LengthenWinterInput) -> str:
         kind=ChronicleKind.CLIMATE,
     )
     return result(SonResult.WINTER_LENGTHENED, world=world.name, epochs=args.epochs)
+
+
+async def end_long_season(call: SonCall, args: EndLongSeasonInput) -> str:
+    row = await call.session.get(IrregularSeasonRow, args.long_season_id)
+    if row is None:
+        fail(SonResult.WINTER_REFUSED, why="no such long season holds a world")
+    world = await world_in_reach(call, row.world_id, SonResult.WINTER_REFUSED)
+    spell = row.spell
+    await control.end_long_season(call.tick, row.id)
+    call.target(world.id)
+    await call.record(
+        "tools.son.end_long_season",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.CLIMATE,
+    )
+    return result(SonResult.LONG_SEASON_ENDED, world=world.name, spell=spoken(spell))
 
 
 async def press_tale(call: SonCall, args: PressTaleInput) -> str:
@@ -115,7 +142,7 @@ async def press_tale(call: SonCall, args: PressTaleInput) -> str:
         fail(SonResult.TALE_REFUSED, why="its subject is gone")
     await ensure_in_reach(call, subject)
     if held(subject.id):
-        fail(SonResult.TALE_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.TALE_REFUSED, why="it is held")
     await control.press_arc(call.tick, arc.id, PERCENT)
     call.target(subject.id)
     told = spoken(arc.template)
@@ -134,7 +161,7 @@ async def foreshadow(call: SonCall, args: ForeshadowInput) -> str:
         fail(SonResult.FORESHADOW_REFUSED, why="there is no such subject")
     await ensure_in_reach(call, subject)
     if held(subject.id):
-        fail(SonResult.FORESHADOW_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.FORESHADOW_REFUSED, why="it is held")
     row = await control.add_setup(call.tick, SetupKind.PORTENT, call.son.id, subject.id)
     call.target(subject.id)
     await call.record(
@@ -151,7 +178,7 @@ async def echo_life(call: SonCall, args: EchoLifeInput) -> str:
     if mortal is None or mortal.entity_type not in MORTALS:
         fail(SonResult.ECHO_REFUSED, why="there is no such mortal")
     if held(mortal.id):
-        fail(SonResult.ECHO_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.ECHO_REFUSED, why="it is held")
     age = await current_age(call.tick)
     if age is None:
         fail(SonResult.ECHO_REFUSED, why="the cosmos does not turn in ages")
@@ -172,6 +199,7 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
     return [
         ToolSpec(SonToolId.UNSETTLE_SEASONS, son, UnsettleSeasonsInput, meta, unsettle_seasons),
         ToolSpec(SonToolId.LENGTHEN_WINTER, son, LengthenWinterInput, meta, lengthen_winter),
+        ToolSpec(SonToolId.END_LONG_SEASON, son, EndLongSeasonInput, meta, end_long_season),
         ToolSpec(SonToolId.PRESS_TALE, son, PressTaleInput, meta, press_tale),
         ToolSpec(SonToolId.FORESHADOW, son, ForeshadowInput, meta, foreshadow),
         ToolSpec(SonToolId.ECHO_LIFE, son, EchoLifeInput, meta, echo_life),

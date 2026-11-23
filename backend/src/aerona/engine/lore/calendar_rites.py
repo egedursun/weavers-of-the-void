@@ -5,6 +5,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.lore import SLEEP_CUSTOMS, SLEEP_TEXTS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import fill
 from aerona.db.tables.bonds import BondRow
@@ -32,7 +33,6 @@ SEASON_HELD = "season_position"
 CALENDAR_HELD = "calendar_entity_id"
 HOLY_DAY_FIXUP = "lore.holy_day_traditions"
 WARM_BANDS = frozenset({TemperatureBand.WARM, TemperatureBand.HOT, TemperatureBand.SEARING})
-SLEEP_CUSTOMS = frozenset({K.REST_CUSTOM, K.VIGIL})
 
 SeasonKey = Callable[[WorldSeasonRow], tuple[int, int]]
 
@@ -223,13 +223,6 @@ async def sleep_custom_kept(session: AsyncSession, community_id: int) -> bool:
     return found is not None
 
 
-SLEEP_NAMES = {K.REST_CUSTOM: "The Midday Rest of {name}", K.VIGIL: "The Long Night Vigil of {name}"}
-SLEEP_BODIES = {
-    K.REST_CUSTOM: "Under a day of {hours:hour|hours} the work stops in the middle of the day and the folk rest.",
-    K.VIGIL: "Through a night of {hours:hour|hours} some keep watch while the rest sleep in turns.",
-}
-
-
 async def found_sleep_customs(ctx: TickContext, atlas: RegionAtlas) -> int:
     table = ctx.rules.seasonal
     worlds = {row.id: row for row in await ctx.session.scalars(select(WorldRow))}
@@ -252,10 +245,10 @@ async def found_sleep_customs(ctx: TickContext, atlas: RegionAtlas) -> int:
         tradition = await create_record(
             ctx,
             RecordSpec(
-                name=SLEEP_NAMES[kind].format(name=community.name),
+                name=SLEEP_TEXTS[kind][0].format(name=community.name),
                 entity_type=EntityType.TRADITION,
                 stats=TraditionStats(spread=PERCENT // 4, rigidity=PERCENT // 3),
-                body=fill(SLEEP_BODIES[kind], hours=hours),
+                body=fill(SLEEP_TEXTS[kind][1], hours=hours),
                 power=1,
                 world_id=community.world_id,
                 location_id=community.id,

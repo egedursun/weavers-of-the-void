@@ -5,6 +5,7 @@ from types import MappingProxyType
 
 from aerona.core.total import total
 from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.couplings import CarrionRest
 from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.demography import FuneralCustom, Job, NaturalTrait
 from aerona.domain.enums.ecology import Diet, SizeClass
@@ -40,6 +41,8 @@ class KinSpec:
     naval_pct: int
     mount: MountFit
     labour: dict[Job, int] = field(default_factory=dict)
+    mounted: bool = False
+    frontless: bool = False
 
 
 @dataclass(frozen=True)
@@ -72,6 +75,9 @@ class FuneralSpec:
     counts_as_rite: bool = True
     seals: bool = False
     cultural: bool = True
+    carrion: CarrionRest | None = None
+    preserves: bool = False
+    second_rite: bool = False
 
 
 KIN: dict[BodyPlan, KinSpec] = {
@@ -94,6 +100,10 @@ KIN: dict[BodyPlan, KinSpec] = {
     BodyPlan.COLOSSAL: KinSpec(120, 130, 110, 40, MountFit.CANNOT, {J.BUILDING: 180, J.MINING: 150, J.CRAFTING: 55}),
     BodyPlan.CONSTRUCT: KinSpec(30, 80, 15, 50, MountFit.CANNOT, {J.MINING: 140, J.BUILDING: 130, J.CRAFTING: 120, J.CLERGY: 50, J.SCHOLARSHIP: 70}),
     BodyPlan.DIVINE_MANIFEST: KinSpec(50, 120, 30, 60, MountFit.FLIES, {J.CLERGY: 200, J.SCHOLARSHIP: 120, J.FARMING: 70}),
+    BodyPlan.TENTACLED: KinSpec(85, 95, 100, 160, MountFit.CANNOT, {J.FISHING: 150, J.CRAFTING: 120, J.FARMING: 60}),
+    BodyPlan.CENTAUROID: KinSpec(160, 150, 100, 60, MountFit.CANNOT, {J.HERDING: 120, J.TRADE: 115, J.CRAFTING: 90}, mounted=True),
+    BodyPlan.RADIAL: KinSpec(55, 75, 90, 140, MountFit.CANNOT, {J.FISHING: 130, J.SCHOLARSHIP: 70}, frontless=True),
+    BodyPlan.COLONIAL: KinSpec(80, 110, 120, 110, MountFit.CANNOT, {J.BUILDING: 120, J.FARMING: 110, J.SCHOLARSHIP: 75}),
 }
 
 SIZES: dict[SizeClass, SizeSpec] = {
@@ -130,6 +140,10 @@ DIETS: Mapping[Diet, DietSpec] = total(
         Diet.SOUL: DietSpec({FoodSource.ESSENCE: 100}, frozenset({CommodityKind.MAGICAL_REAGENTS, CommodityKind.INCENSE})),
         Diet.VOID: DietSpec({FoodSource.ESSENCE: 80}, frozenset({CommodityKind.MAGICAL_REAGENTS})),
         Diet.PHOTOSYNTHETIC: DietSpec({FoodSource.SUN: 100}, frozenset()),
+        Diet.PARASITE: DietSpec({FoodSource.PASTURE: 50}, frozenset({CommodityKind.LIVESTOCK})),
+        Diet.DECOMPOSER: DietSpec({FoodSource.FIELDS: 60}, frozenset({CommodityKind.DUNG, CommodityKind.FODDER})),
+        Diet.CHEMOSYNTHETIC: DietSpec({FoodSource.STONE: 90}, frozenset({CommodityKind.ORE})),
+        Diet.ENERGY: DietSpec({FoodSource.SUN: 80, FoodSource.ESSENCE: 60}, frozenset({CommodityKind.FUEL, CommodityKind.MAGICAL_REAGENTS})),
     },
 )
 
@@ -215,6 +229,10 @@ FUNERALS = total(
         F.SOUL_BINDING: FuneralSpec("Soul binding", "bind the souls of their dead into vessels", 90, 50, -100, 100, binds_spirits=True, body_left=False),
         F.NAMELESS: FuneralSpec("Nameless rite", "put away their dead without their names", 100, 60, 20, 60, seals=True, cultural=False),
         F.NONE: FuneralSpec("No rite", "hold no rite for their dead", 130, 70, 25, 50, counts_as_rite=False, cultural=False),
+        F.MUMMIFICATION: FuneralSpec("Preservation", "preserve the bodies of their dead", 60, 130, -10, 130, carrion=CarrionRest.MUMMIFIED, preserves=True),
+        F.SECONDARY_BURIAL: FuneralSpec(
+            "Second burial", "lay their dead to rest, then gather the bones in a second rite", 105, 120, -5, 140, carrion=CarrionRest.ROTTING, second_rite=True
+        ),
     },
 )
 

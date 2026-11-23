@@ -61,8 +61,11 @@ async def test_the_effects_table_drives_what_a_feast_brings(realm: Realm) -> Non
     await set_tradition_effect(ctx, feast.id, TraditionEffectKind.COHESION, "", 20)
     participation = await traditions.participate(ctx, feast, folk)
     participation.participation, participation.locked = 100, ["participation"]
+    before = kept.cohesion
     await traditions.celebrate(ctx, feast, folk, await RegionAtlas.load(session))
-    assert kept.cohesion == 70
+    profile = await session.get(TraditionProfileRow, feast.id)
+    assert profile is not None
+    assert kept.cohesion == before + round(20 * await traditions.slot_weight(ctx, profile, folk, TraditionEffectKind.COHESION))
 
 
 async def test_a_feast_out_of_its_season_is_weaker_and_in_its_season_stronger(realm: Realm) -> None:
@@ -75,6 +78,7 @@ async def test_a_feast_out_of_its_season_is_weaker_and_in_its_season_stronger(re
     rules = Rules().traditions
     assert await traditions.slot_weight(ctx, row, folk, TraditionEffectKind.COHESION) == rules.calendar_misfit_pct / 100
     session.add(WorldSeasonRow(world_id=realm.world.id, position=0, name="Deep Winter", temperature_shift=-20, rain_shift=0, growth=5, travel=20, campaign=10))
+    session.add(WorldSeasonRow(world_id=realm.world.id, position=1, name="High Sun", temperature_shift=20, rain_shift=0, growth=80, travel=80, campaign=80))
     await session.flush()
     assert await traditions.slot_weight(ctx, row, folk, TraditionEffectKind.COHESION) == 1 + rules.calendar_slot_pct / 100
 

@@ -153,6 +153,7 @@ class Side:
     morale_parts: dict[str, int] = field(default_factory=dict)
     wing_bonus: float = 0.0
     flanking: bool = False
+    frontless: bool = False
     luck: float = 1.0
     fog: bool = False
     baggage_taken: int = 0
@@ -884,7 +885,7 @@ def outflank(rules: Rules, first: Side, second: Side, ground: Field, streams: St
     table = rules.battle_magic
     room = frontage(rules, ground)
     for flanker, line in ((first, second), (second, first)):
-        if streams is not None and anchored(rules, streams, line, ground):
+        if line.frontless or (streams is not None and anchored(rules, streams, line, ground)):
             continue
         wide = flanker.standing * room > line.standing
         swift = swift_speed(flanker) - swift_speed(line) >= table.flank_speed_lead
@@ -1128,7 +1129,7 @@ def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
         if counters(attacker.tactic, defender.tactic)
         else "",
     }
-    summary = f"{attacker.tactic.value.replace('_', ' ')} against {defender.tactic.value.replace('_', ' ')}"
+    summary = f"{spoken(attacker.tactic)} against {spoken(defender.tactic)}"
     phases.append(traced(PhaseLog(BattlePhase.PLAN, 0, 0, summary, details), attacker, defender))
     return None, phases
 

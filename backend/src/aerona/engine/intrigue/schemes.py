@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 
 from aerona.catalog.intrigue import PLOT_STEPS, SCHEMES
 from aerona.catalog.life.intrigue import SECRETS_KEPT_ELSEWHERE, SKILL_SKILL_KINDS
+from aerona.catalog.relations import HOSTILE_KEYS
 from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
@@ -35,7 +36,6 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, DeathCause
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.domain.enums.records import StepAction, StepOutcome
-from aerona.domain.enums.relations import RelationType
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.statecraft import CourtPosition
 from aerona.domain.enums.tongues import LanguageModality
@@ -80,7 +80,6 @@ HIRE_SEEK = 12
 WEALTH = "wealth"
 OPEN = frozenset({SchemePhase.RECRUIT, SchemePhase.PREPARE, SchemePhase.EXECUTE})
 FRIENDS_AT = 30
-RIVALS = frozenset({RelationType.RIVAL.value, RelationType.NEMESIS.value, RelationType.ENEMY.value})
 SWAY = 20
 POISON_PCT = 5
 PHASE = "phase"
@@ -631,7 +630,7 @@ async def rival_of(ctx: TickContext, mortal_id: int) -> EntityRow | None:
         .order_by(RelationshipRow.friendship, RelationshipRow.id)
     )
     for row in rows:
-        if RIVALS & set(row.kinds or []) or row.friendship <= -FRIENDS_AT:
+        if HOSTILE_KEYS & set(row.kinds or []) or row.friendship <= -FRIENDS_AT:
             found = await living_entity(ctx.session, row.subject_node_id)
             if found is not None and found.entity_type is EntityType.MORTAL and not held(found.id):
                 return found

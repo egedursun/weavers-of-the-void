@@ -53,6 +53,7 @@ from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining
 from aerona.engine.relations.persuasion import envoy_sways
+from aerona.engine.relations.ties import foster_hostage
 from aerona.engine.renown.currencies import realm_of_community, ruler_of_realm
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war
@@ -445,6 +446,7 @@ async def keep_hostage(ctx: TickContext, profile: TreatyProfileRow, clause: Trea
             await breach(ctx, profile, clause.obligor_node_id or hostage.id, clause=clause, reason=TreatyBreach.HOSTAGE_TAKEN_BACK)
             return False
         hostage.location_id = clause.beneficiary_node_id
+        await foster_hostage(ctx.session, hostage, clause.beneficiary_node_id, ctx.epoch)
     else:
         hostage.location_id = clause.obligor_node_id
     clause.last_kept_epoch = ctx.epoch

@@ -36,6 +36,8 @@ class GatheringKind(StrEnum):
     MOURNING = "mourning"
     INITIATION = "initiation"
     SPORT_MATCH = "sport_match"
+    COMMEMORATION = "commemoration"
+    MUSTER = "muster"
 
 
 class GatheringStatus(StrEnum):

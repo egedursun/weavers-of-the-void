@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Archive, Church, Link2, RotateCcw, Ship } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { journeyIntentValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
@@ -22,9 +23,9 @@ import {
   Section,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type EntityContext, isLiving } from '../actions/context'
 import { useLoreGate } from '../actions/gate'
-import { humanize } from '../actions/schema'
 import { useJob, useLoreMutation } from '../api/mutations'
 import { useCosmos, useForeignGods } from '../api/queries'
 import { type ArchiveMode } from '../api/types'
@@ -303,7 +304,7 @@ function Voyage({
               className='size-icon-sm text-muted-foreground'
             />
             <Text as='span' className='min-w-0 flex-1'>
-              {`On the road to ${worldName(journey.destination_world_id)} · ${humanize(journey.intent)} · ${journey.epochs_left > 0 ? `arrives in ${plural(journey.epochs_left, 'epoch', 'epochs')}` : 'arrives this epoch'}`}
+              {`On the road to ${worldName(journey.destination_world_id)} · ${wordOf(journeyIntentValues, journey.intent)} · ${journey.epochs_left > 0 ? `arrives in ${plural(journey.epochs_left, 'epoch', 'epochs')}` : 'arrives this epoch'}`}
             </Text>
             <Button
               variant='ghost'

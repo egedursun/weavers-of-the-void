@@ -1,4 +1,5 @@
 import {
+  type LucideIcon,
   ArrowDown,
   ArrowUp,
   Beaker,
@@ -20,13 +21,20 @@ import {
   Flower2,
   Footprints,
   Hand,
+  HandHeart,
   Heart,
+  Hourglass,
+  Layers,
   Leaf,
   Mountain,
   MountainSnow,
   Rabbit,
+  Recycle,
   Ruler,
+  Scale,
+  Shell,
   Shield,
+  ShieldPlus,
   ShieldX,
   Shovel,
   Snowflake,
@@ -38,7 +46,7 @@ import {
   Trees,
   Waves,
   Wheat,
-  type LucideIcon,
+  Wind,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import type { ProgressTone } from '@/components/ui/progress'
@@ -66,6 +74,13 @@ export const TRAITS: Record<Schema['EvolvedTrait'], Named> = {
     tone: 'warning',
   },
   keen_senses: { label: 'Keen senses', icon: Ear, tone: 'info' },
+  disease_resistance: {
+    label: 'Disease resistance',
+    icon: ShieldPlus,
+    tone: 'success',
+  },
+  docility: { label: 'Docility', icon: HandHeart, tone: 'gold' },
+  longevity: { label: 'Longevity', icon: Hourglass, tone: 'info' },
 }
 
 export const KEYSTONES: Record<Schema['KeystoneRole'], Named> = {
@@ -73,6 +88,9 @@ export const KEYSTONES: Record<Schema['KeystoneRole'], Named> = {
   soil_maker: { label: 'Soil-maker', icon: Shovel, tone: 'verdigris' },
   dam_builder: { label: 'Dam-builder', icon: Waves, tone: 'info' },
   scavenger: { label: 'Scavenger', icon: Bird, tone: 'muted' },
+  seed_disperser: { label: 'Seed carrier', icon: Sprout, tone: 'success' },
+  regulator: { label: 'Regulator', icon: Scale, tone: 'warning' },
+  reef_builder: { label: 'Reef builder', icon: Shell, tone: 'info' },
 }
 
 export const LEVELS: Record<Schema['TrophicLevel'], Named> = {
@@ -80,6 +98,7 @@ export const LEVELS: Record<Schema['TrophicLevel'], Named> = {
   herbivore: { label: 'Grazers', icon: Squirrel, tone: 'verdigris' },
   carnivore: { label: 'Hunters', icon: Footprints, tone: 'warning' },
   apex: { label: 'Apex', icon: Crown, tone: 'danger' },
+  decomposer: { label: 'Decomposers', icon: Recycle, tone: 'muted' },
 }
 
 export const RESPONSES: Record<Schema['PlagueResponse'], Named> = {
@@ -93,6 +112,11 @@ export const RESPONSES: Record<Schema['PlagueResponse'], Named> = {
   },
   prayer: { label: 'Prayer', icon: Hand, tone: 'gold' },
   seek_cure: { label: 'Seeking a cure', icon: FlaskConical, tone: 'success' },
+  sanitation: {
+    label: 'Cleaning water and refuse',
+    icon: Droplets,
+    tone: 'info',
+  },
 }
 
 export const STAGES: Record<Schema['SuccessionStage'], Named> = {
@@ -103,6 +127,11 @@ export const STAGES: Record<Schema['SuccessionStage'], Named> = {
   old_forest: { label: 'Old forest', icon: Trees, tone: 'success' },
   marsh: { label: 'Marsh', icon: Droplets, tone: 'info' },
   swamp_forest: { label: 'Swamp forest', icon: TreePine, tone: 'info' },
+  pioneer: { label: 'Pioneer life', icon: Sprout, tone: 'verdigris' },
+  open_water: { label: 'Open water', icon: Waves, tone: 'info' },
+  bog: { label: 'Bog', icon: Layers, tone: 'info' },
+  heath: { label: 'Heath', icon: Flower2, tone: 'gold' },
+  coastal_dune: { label: 'Coastal dune', icon: Wind, tone: 'gold' },
 }
 
 export const LAND_ACTS: Record<Schema['LandAct'], Named> = {
@@ -136,6 +165,8 @@ export const CYCLES: Record<
     tone: 'success',
     meter: 'success',
   },
+  oxygen: { label: 'Breathable air', icon: Wind, tone: 'info', meter: 'info' },
+  rock: { label: 'Rock', icon: Mountain, tone: 'muted', meter: 'warning' },
 }
 
 export const MARK_ICONS = { blessing: Crown, taint: Bug }

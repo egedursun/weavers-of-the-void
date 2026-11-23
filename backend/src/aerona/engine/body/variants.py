@@ -8,12 +8,14 @@ from aerona.catalog.anatomy import Anatomy
 from aerona.catalog.biology import (
     BIOLOGY_VARIANTS,
     CHEMISTRY_VARIANTS,
+    CLASS_VARIANTS,
     FOLK_DIET_VARIANTS,
     PLAN_VARIANTS,
     SOCIALITY_VARIANTS,
     SPECIES_DIET_VARIANTS,
     TRAIT_VARIANTS,
 )
+from aerona.catalog.movement import BODY_MODES, FOOT
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memo_of
 from aerona.db.tables.biology import BIOLOGY_FLAGS, BIOLOGY_SHARE_MAX, BIOLOGY_SHARES, BiologyRow
@@ -27,6 +29,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.biology import BiologyVariant
 from aerona.domain.enums.ecology import TissueMaterial
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.folkways import DecisionBias
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.military import UnitKind
@@ -108,6 +111,7 @@ def species_variants(profile: SpeciesProfileRow) -> list[BiologyVariant]:
         CHEMISTRY_VARIANTS.get(profile.biochemistry),
         SPECIES_DIET_VARIANTS.get(profile.diet),
         SOCIALITY_VARIANTS.get(profile.sociality),
+        CLASS_VARIANTS.get(profile.species_class),
     }
     return list(variants_of(variant.value for variant in found if variant is not None))
 
@@ -151,6 +155,12 @@ async def holder_of(session: AsyncSession, entity: EntityRow | None) -> EntityRo
         kind = beast.species_entity_id if beast is not None else None
         return await session.get(EntityRow, kind) if kind is not None else None
     return await people_of(session, entity)
+
+
+async def body_modes(session: AsyncSession, owner: EntityRow) -> frozenset[MovementMode]:
+    holder = await holder_of(session, owner)
+    biology = await session.get(PeopleBiologyRow, holder.id) if holder is not None else None
+    return BODY_MODES[biology.body_plan] if biology is not None else FOOT
 
 
 async def folk_biology(session: AsyncSession, entity: EntityRow | None) -> BiologyView:

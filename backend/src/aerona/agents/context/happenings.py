@@ -3,7 +3,7 @@ from collections import Counter
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow
@@ -39,5 +39,5 @@ async def event_phase_lines(session: AsyncSession, epoch: int) -> list[str]:
         toll = f"; {dead} dead ({', '.join(f'{band} {count}' for band, count in sorted(tolls.items()))})" if dead else ""
         where = f"; reaches {several(reach, 'land', 'lands')}" if reach > 1 else ""
         years = f" since the year {profile.start_year}" if profile.start_year is not None else ""
-        lines.append(f"{event.name} ({event.engine_kind.value.replace('_', ' ')}{years}): {state}{turned}{toll}{where}")
+        lines.append(f"{event.name} ({spoken(event.engine_kind)}{years}): {state}{turned}{toll}{where}")
     return lines

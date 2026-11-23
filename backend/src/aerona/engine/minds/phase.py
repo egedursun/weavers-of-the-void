@@ -259,7 +259,12 @@ async def keep_archives(ctx: TickContext) -> int:
         if oldest is not None and not oldest.locked and not held(oldest.mind_node_id):
             await ctx.session.delete(oldest)
             lost += 1
-            await record_incident(ctx, "mind.archive_lost", roles={IncidentRole.PLACE: archive.structure_entity_id, IncidentRole.SUBJECT: oldest.mind_node_id})
+            await record_incident(
+                ctx,
+                "mind.archive_lost",
+                roles={IncidentRole.PLACE: archive.structure_entity_id, IncidentRole.SUBJECT: oldest.mind_node_id},
+                place=archive.structure_entity_id,
+            )
     return lost
 
 

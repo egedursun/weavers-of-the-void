@@ -6,6 +6,7 @@ import {
   Handshake,
   Hourglass,
   Landmark,
+  Link2,
   Lock,
   Shovel,
   Sparkles,
@@ -205,16 +206,46 @@ const AGREEMENT_FIELDS: readonly Field[] = [
     max: 100,
   },
 ]
-const SEAL_FIELDS: readonly Field[] = [
-  {
-    key: 'kind',
-    label: 'What holds it',
-    kind: 'pick',
-    table: table(SEAL_KINDS),
-  },
-  { key: 'strength', label: 'Strength', kind: 'number', min: 0, max: 100 },
-  { key: 'decay', label: 'Wear each epoch', kind: 'number', min: 0, max: 100 },
-]
+function choiceTable(rows: readonly { id: number; label: string }[]) {
+  return Object.fromEntries(rows.map((row) => [String(row.id), row.label]))
+}
+
+function sealFields(view: View): readonly Field[] {
+  return [
+    {
+      key: 'kind',
+      label: 'What holds it',
+      kind: 'pick',
+      table: table(SEAL_KINDS),
+    },
+    { key: 'strength', label: 'Strength', kind: 'number', min: 0, max: 100 },
+    {
+      key: 'decay',
+      label: 'Wear each epoch',
+      kind: 'number',
+      min: 0,
+      max: 100,
+    },
+    {
+      key: 'pact_oath_id',
+      label: 'The oath of its pact',
+      kind: 'pick',
+      table: choiceTable(view.oath_choices),
+    },
+    {
+      key: 'power_id',
+      label: 'The power that holds it',
+      kind: 'pick',
+      table: choiceTable(view.power_choices),
+    },
+    {
+      key: 'living_line_id',
+      label: 'The line grown as its barrier',
+      kind: 'pick',
+      table: choiceTable(view.line_choices),
+    },
+  ]
+}
 const NOVELTY_FIELDS: readonly Field[] = [
   { key: 'novelty', label: 'Freshness', kind: 'number', min: 0, max: 100 },
   {
@@ -1203,9 +1234,11 @@ function Agreements({ view, blocked }: Props) {
 
 function Seal({
   row,
+  view,
   blocked,
 }: {
   row: View['seals'][number]
+  view: View
   blocked: string | null
 }) {
   const kind = SEAL_KINDS[row.kind]
@@ -1240,7 +1273,7 @@ function Seal({
       <RecordEditor
         title='Set this seal'
         note='Values you set are held against the engine until you release them.'
-        fields={SEAL_FIELDS}
+        fields={sealFields(view)}
         locked={row.locked}
         busy={why(blocked, editing.isPending)}
         onSave={(values) => editing.mutate({ values, release: [] })}
@@ -1271,20 +1304,36 @@ function Seal({
 function Seals({ view, blocked }: Props) {
   const [kind, setKind] = useState<keyof typeof SEAL_KINDS>('divine')
   const [strength, setStrength] = useState('80')
+  const [link, setLink] = useState('')
+  const linkChoices =
+    kind === 'pact'
+      ? view.oath_choices
+      : kind === 'power'
+        ? view.power_choices
+        : kind === 'living'
+          ? view.line_choices
+          : []
+  const needsLink = kind === 'pact' || kind === 'power' || kind === 'living'
+  const linkId = link === '' ? null : Number(link)
   const sealing = useCouplingAction(
     'deep_seal:seal',
     (_: void) => ({
       place_id: view.node.id,
       kind,
       strength: Math.max(1, Number(strength) || 1),
+      oath_id: kind === 'pact' ? linkId : null,
+      power_id: kind === 'power' ? linkId : null,
+      line_id: kind === 'living' ? linkId : null,
     }),
     'The deep is sealed'
   )
+  const linkMissing =
+    needsLink && linkId === null ? 'Choose what holds the seal first' : null
   return (
     <Section
       id='section-seals'
       title='Seals over the deep'
-      description='Walls, warding rites or a god’s hand hold back what lies below; they wear, are tested and can be dug through.'
+      description='Walls, warding rites, a god’s hand, an innate power, a grown barrier or a pact hold back what lies below; they wear, are tested and can be dug through.'
       icon={Lock}
       tone='info'
     >
@@ -1304,7 +1353,9 @@ function Seals({ view, blocked }: Props) {
       {view.seals.length ? (
         <ul className='flex min-w-0 flex-col gap-2'>
           <Paged items={view.seals} as='li'>
-            {(row) => <Seal key={row.id} row={row} blocked={blocked} />}
+            {(row) => (
+              <Seal key={row.id} row={row} view={view} blocked={blocked} />
+            )}
           </Paged>
         </ul>
       ) : (
@@ -1324,8 +1375,10 @@ function Seals({ view, blocked }: Props) {
         action={
           <Button
             size='sm'
-            disabled={why(blocked, sealing.isPending) !== null}
-            disabledReason={why(blocked, sealing.isPending) ?? undefined}
+            disabled={why(blocked ?? linkMissing, sealing.isPending) !== null}
+            disabledReason={
+              why(blocked ?? linkMissing, sealing.isPending) ?? undefined
+            }
             onClick={() => sealing.mutate()}
           >
             Seal it
@@ -1338,7 +1391,30 @@ function Seals({ view, blocked }: Props) {
           value={kind}
           table={SEAL_KINDS}
           blocked={blocked}
-          onPick={(value) => setKind(value as keyof typeof SEAL_KINDS)}
+          onPick={(value) => {
+            setKind(value as keyof typeof SEAL_KINDS)
+            setLink('')
+          }}
+        />
+        <ChoiceField
+          label='What it is bound to'
+          icon={Lock}
+          value={link}
+          table={Object.fromEntries(
+            linkChoices.map((row) => [
+              String(row.id),
+              { label: row.label, icon: Link2, tone: 'info' as const },
+            ])
+          )}
+          blocked={
+            blocked ??
+            (needsLink
+              ? linkChoices.length === 0
+                ? 'Nothing of that kind exists to bind the seal to'
+                : null
+              : 'Walls, rites and a god’s hand need no binding')
+          }
+          onPick={setLink}
         />
         <NumberField
           label='Strength'

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 W = RuleGroup.COSMOS
 E = RuleGroup.ENVIRONMENT
@@ -24,7 +24,7 @@ class FormationRules:
 
 
 @dataclass(frozen=True)
-class LongSeasonRules:
+class LongSeasonRules(Spanned):
     chaos_eccentricity: int = rule(25, 1, 100, E, "Eccentricity, in hundredths, from which a world's orbit makes its seasons irregular")
     shortest_spell: int = rule(1, 1, 50, E, "Fewest epochs a long summer or winter lasts")
     longest_spell: int = rule(6, 1, 100, E, "Most epochs a long summer or winter lasts")
@@ -38,6 +38,37 @@ class LongSeasonRules:
     heed_base: int = rule(30, 0, 100, E, "Chance a people heeds its scholar's forecast before the scholar's skill (%)")
     heed_per_level: int = rule(8, 0, 100, E, "Chance of heeding a forecast added by each level of the scholar's skill")
     winter_harvest_pct: int = rule(60, 0, 100, E, "Share of a world's harvest a long winter of full severity takes (%)")
+    impact_size_min: int = rule(30, 0, 100, E, "Size of a struck impact from which it brings a long winter instead of a cold snap")
+    impact_severity_per_size_pct: int = rule(80, 0, 200, E, "Severity of an impact winter per point of the impact's size (%)")
+    eruption_strength_min: int = rule(70, 0, 100, E, "Strength of an eruption from which it brings a long winter instead of a cold snap")
+    eruption_world_strength: int = rule(90, 0, 100, E, "Strength of an eruption from which its winter reaches the whole world rather than its half")
+    eruption_years_min: int = span(1, 1, 50, E, "Fewest years an eruption winter lasts")
+    eruption_years_max: int = span(3, 1, 100, E, "Most years an eruption winter lasts")
+    eruption_severity_pct: int = rule(60, 0, 200, E, "Severity of an eruption winter per point of the eruption's strength (%)")
+    far_share_pct: int = rule(25, 0, 100, E, "Share of an eruption winter that regions outside its reach still feel (%)")
+    stellar_dim_pct: int = rule(10, 1, 100, E, "Fall of a star's brightness in an epoch that brings a long winter to the worlds it lights (%)")
+    stellar_bright_pct: int = rule(10, 1, 100, E, "Rise of a star's brightness in an epoch that brings a long summer to the worlds it lights (%)")
+    stacking_share_pct: int = rule(30, 0, 100, E, "Share of each weaker spell of the same kind added to the strongest on one world (%)")
+    summer_harvest_pct: int = rule(30, 0, 100, E, "Share of the harvest a long summer of full severity takes from hot or dry regions (%)")
+    summer_cold_gain_pct: int = rule(15, 0, 100, E, "Harvest a long summer of full severity adds to cold regions (%)")
+    summer_heat_shift: int = rule(10, 0, 50, E, "Warmth a long summer of full severity adds to the regions it reaches")
+    summer_rain_shift: int = rule(10, 0, 50, E, "Rain a long summer of full severity takes from the regions it reaches")
+    summer_sickness_pct: int = rule(10, 0, 100, E, "Rise of the sickness of the season under a long summer of full severity (%)")
+    winter_cold_shift: int = rule(15, 0, 50, E, "Warmth a long winter of full severity takes from the regions it reaches")
+    weather_shift_pct: int = rule(50, 0, 200, E, "Extra weight of cold weather in a long winter, or hot and dry weather in a long summer, at full severity (%)")
+    travel_winter_pct: int = rule(30, 0, 100, E, "Ease of travel a long winter of full severity takes from every season (%)")
+    campaign_winter_pct: int = rule(40, 0, 100, E, "Fitness for war a long winter of full severity takes from every season (%)")
+    forecast_known_source_pct: int = rule(50, 0, 100, E, "Error a forecast loses when its people watched the source of a single spell (%)")
+    ocean_shift_pct: int = rule(2, 0, 100, E, "Chance a turned ocean current brings a long season to its world (%)")
+    made_threshold: int = rule(70, 0, 100, E, "Stock of a world's carbon cycle from which the works of its peoples bring a long summer")
+
+    @property
+    def eruption_length_min(self) -> int:
+        return self.epochs(self.eruption_years_min)
+
+    @property
+    def eruption_length_max(self) -> int:
+        return self.epochs(self.eruption_years_max)
 
 
 @dataclass(frozen=True)
@@ -61,6 +92,25 @@ class AgeRules:
 class ArcRules:
     detect_chance: int = rule(40, 0, 100, F, "Chance each epoch that a pattern in a life is read as the start of an arc (%)")
     arcs_per_epoch: int = rule(6, 0, 1000, F, "Arcs that may start across the cosmos in one epoch")
+    rise_and_fall_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of rise and fall (50 is neutral)")
+    rags_to_riches_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of rags to riches (50 is neutral)")
+    revenge_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of revenge (50 is neutral)")
+    redemption_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of redemption (50 is neutral)")
+    quest_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of quest (50 is neutral)")
+    tragedy_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of tragedy (50 is neutral)")
+    forbidden_love_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of forbidden love (50 is neutral)")
+    rivalry_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of rivalry (50 is neutral)")
+    mentor_and_heir_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of mentor and heir (50 is neutral)")
+    exile_and_return_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of exile and return (50 is neutral)")
+    corruption_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of corruption (50 is neutral)")
+    coming_of_age_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of coming of age (50 is neutral)")
+    fall_of_a_house_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of fall of a house (50 is neutral)")
+    founding_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of founding (50 is neutral)")
+    apotheosis_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of apotheosis (50 is neutral)")
+    overcoming_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of overcoming (50 is neutral)")
+    reconciliation_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of reconciliation (50 is neutral)")
+    sacrifice_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of sacrifice (50 is neutral)")
+    discovery_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of discovery (50 is neutral)")
     open_arcs: int = rule(3, 1, 20, F, "Open arcs one subject may carry at once")
     beats_per_epoch: int = rule(3, 1, 20, F, "Beats an arc may take in one epoch, one for each happening its subject and figures share since its last beat")
     stall_epochs: int = rule(3, 1, 100, F, "Epochs without a beat after which an arc stalls and the drama manager presses it")

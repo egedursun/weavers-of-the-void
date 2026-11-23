@@ -4,8 +4,11 @@ from sqlalchemy import select
 
 from aerona.catalog.kinds.resolves import RESOLVES
 from aerona.catalog.life_traits import EXPEDITION_GROUND_TRAITS, having
+from aerona.catalog.movement import mode_through
 from aerona.catalog.operations import AFFLICTIONS, QUIRK_ORIGINS, VIRTUES
 from aerona.constants.units import PERCENT
+from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -13,15 +16,17 @@ from aerona.db.tables.faith import AfterlifeStratumRow
 from aerona.db.tables.operations import STRESS_MAX, ExpeditionLogRow, ExpeditionMemberRow, ExpeditionRow, QuirkRow
 from aerona.db.tables.sites import SiteRoomRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.environment import MovementMode, TemperatureBand
 from aerona.domain.enums.life_traits import ExpeditionGroundTrait
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import ExpeditionEvent, ExpeditionGround, ExpeditionRole, ExpeditionStatus, QuirkKind, ResolveKind
+from aerona.engine.body.book import factor
 from aerona.engine.body.hits import Harm
+from aerona.engine.body.variants import body_modes
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -30,7 +35,7 @@ from aerona.engine.mortal.standing import add_renown
 from aerona.engine.operations.expedition_record import log_entry
 from aerona.engine.operations.fields import keep
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int, scaled_cap
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.recording.record import record
 from aerona.engine.sites.rooms import Walk, delve, layout_of, rooms_of
 from aerona.rules.registry.operations import ExpeditionRules
@@ -165,11 +170,35 @@ def stress(ctx: TickContext, party: Party, member: ExpeditionMemberRow, amount: 
     keep(member, "stress", clamp_int(member.stress + amount, 0, STRESS_MAX))
 
 
+async def way_of(ctx: TickContext, leader: EntityRow, target: EntityRow, mode: MovementMode | None, *, carried: bool = False) -> tuple[MovementMode, int]:
+    modes = await body_modes(ctx.session, leader)
+    if mode is not None and mode not in modes and not carried:
+        raise ValidationFailedError(f"{leader.name} cannot travel {spoken(mode)}.")
+    region_id = (await RegionAtlas.load(ctx.session)).top_region(target.id)
+    land = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
+    passability = land.passability if land is not None else {}
+    chosen = mode if mode is not None else mode_through(passability, modes, PERCENT)
+    return chosen, clamp_int(passability.get(chosen.value, PERCENT), 0, PERCENT)
+
+
+def hard_way(table: ExpeditionRules, legs: int, passage: int) -> int:
+    return legs + round_half_up(legs * (PERCENT - passage) * table.hard_way_legs_pct / PERCENT / PERCENT)
+
+
 async def launch(
-    ctx: TickContext, leader: EntityRow, target: EntityRow, companions: list[EntityRow], *, sponsor_id: int | None, tally: ExpeditionTally
+    ctx: TickContext,
+    leader: EntityRow,
+    target: EntityRow,
+    companions: list[EntityRow],
+    *,
+    sponsor_id: int | None,
+    tally: ExpeditionTally,
+    mode: MovementMode | None = None,
+    carried: bool = False,
 ) -> ExpeditionRow:
     table = ctx.rules.expeditions
     ground = await ground_of(ctx, target)
+    way, passage = await way_of(ctx, leader, target, mode, carried=carried)
     knows = Q.KNOWS_WAYS in await quirks_of(ctx, leader.id)
     roles: list[ExpeditionRole] = []
     for mortal in [leader, *companions]:
@@ -181,7 +210,7 @@ async def launch(
         sponsor_node_id=sponsor_id,
         target_entity_id=target.id,
         ground=ground,
-        legs_total=max(1, legs_for(ctx, ground) - (1 if knows else 0)),
+        legs_total=max(1, hard_way(table, legs_for(ctx, ground), passage) - (1 if knows else 0)),
         provisions=table.provisions_per_member * len(roles) + table.porter_provisions * porters,
         light=table.light_stock if ground in DARK_GROUNDS else 0,
         started_epoch=ctx.epoch,
@@ -202,7 +231,7 @@ async def launch(
             IncidentRole.MEMBER: [mortal.id for mortal in companions],
             IncidentRole.PATRON: sponsor_id,
         },
-        facts={"ground": ground, "companions": len(companions), "legs": row.legs_total, "provisions": row.provisions, "light": row.light},
+        facts={"ground": ground, "companions": len(companions), "legs": row.legs_total, "provisions": row.provisions, "light": row.light, "mode": way},
         place=target.id,
         cause=row.incident_id,
     )
@@ -310,7 +339,8 @@ async def expose(ctx: TickContext, party: Party, land: RegionEnvironmentRow | No
         relief = table.healer_relief if healer else 0
         keep(member, "cold", clamp_int(member.cold + (table.cold_per_leg * scale // PERCENT if cold else 0) - relief, 0, PERCENT))
         keep(member, "wet", clamp_int(member.wet + (table.wet_per_leg * scale // PERCENT if rain else 0) - relief, 0, PERCENT))
-        keep(member, "fatigue", clamp_int(member.fatigue + table.leg_fatigue * scale // PERCENT, 0, PERCENT))
+        hardy = await factor(ctx.session, member.mortal_entity_id, Capacity.ENDURANCE) * ctx.rules.body_capacities.endurance_labour_pct / PERCENT
+        keep(member, "fatigue", clamp_int(member.fatigue + round(table.leg_fatigue * scale / PERCENT / max(0.25, hardy)), 0, PERCENT))
         if max(member.cold, member.wet, member.hunger, member.fatigue) >= table.exposure_harm:
             await log(ctx, party, E.EXPOSURE, member_entity_id=member.mortal_entity_id)
             await harm(ctx, party, member, table.exposure_hp, cause=HarmCause.EXPOSURE, reason="died of exposure on an expedition", tally=tally)

@@ -1,9 +1,9 @@
 from sqlalchemy import select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.catalog.kinds.crafts_labels import GAME_LABELS, MEANING_LABELS
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.crafts import (
     AssistiveAidRow,
     ChemicalWorksRow,
@@ -60,36 +60,36 @@ async def mortal_crafts_lines(scope: Scope, me: EntityRow) -> list[str]:
     session = scope.session
     found: list[str] = []
     for aid in await session.scalars(select(AssistiveAidRow).where(AssistiveAidRow.holder_node_id == me.id).order_by(AssistiveAidRow.kind)):
-        found.append(f"you have {words(aid.kind.value)}")
+        found.append(f"you have {spoken(aid.kind)}")
     for right in await session.scalars(
         select(IncorporealRightRow).where(IncorporealRightRow.holder_node_id == me.id).order_by(IncorporealRightRow.id).limit(LIST_LINES)
     ):
-        found.append(f"you hold the right to {right.name} ({words(right.kind.value)})")
+        found.append(f"you hold the right to {right.name} ({spoken(right.kind)})")
     for policy in await session.scalars(
         select(InsurancePolicyRow).where(InsurancePolicyRow.holder_node_id == me.id, InsurancePolicyRow.active.is_(True)).order_by(InsurancePolicyRow.id)
     ):
-        found.append(f"your {words(policy.cover.value)} is insured with {await named(scope, policy.insurer_entity_id)}")
+        found.append(f"your {spoken(policy.cover)} is insured with {await named(scope, policy.insurer_entity_id)}")
     for link in await session.scalars(
         select(SympatheticLinkRow).where(SympatheticLinkRow.holder_node_id == me.id).order_by(SympatheticLinkRow.id).limit(LIST_LINES)
     ):
-        found.append(f"you hold {words(link.token.value)} that links you to {await named(scope, link.target_node_id)}")
+        found.append(f"you hold {spoken(link.token)} that links you to {await named(scope, link.target_node_id)}")
     folk = await people_of(session, me)
     if folk is not None:
         found += await people_lines(scope, folk.id)
     if me.location_id is not None:
         clock = await session.get(PublicClockRow, me.location_id)
         if clock is not None:
-            found.append(f"your town keeps its hours by {an('public ' + words(clock.kind.value))}")
+            found.append(f"your town keeps its hours by {an('public ' + spoken(clock.kind))}")
         for works in await session.scalars(
             select(ChemicalWorksRow).where(ChemicalWorksRow.settlement_entity_id == me.location_id).order_by(ChemicalWorksRow.product)
         ):
-            found.append(f"your town has works for {words(works.product.value)}")
+            found.append(f"your town has works for {spoken(works.product)}")
     region = (await RegionAtlas.load(session)).top_region(me.id)
     if region is not None:
         for spirit in await session.scalars(
             select(EmotionSpiritRow).where(EmotionSpiritRow.region_entity_id == region).order_by(EmotionSpiritRow.id).limit(LIST_LINES)
         ):
-            found.append(f"a spirit of {words(spirit.emotion.value)} roams your land")
+            found.append(f"a spirit of {spoken(spirit.emotion)} roams your land")
     return found
 
 
@@ -104,5 +104,5 @@ async def son_crafts_lines(scope: Scope, son: SonRow) -> list[str]:
         .order_by(EmotionSpiritRow.strength.desc(), EmotionSpiritRow.id)
         .limit(LIST_LINES)
     ):
-        found.append(f"a spirit of {words(spirit.emotion.value)} in {await named(scope, spirit.region_entity_id)} (strength {spirit.strength})")
+        found.append(f"a spirit of {spoken(spirit.emotion)} in {await named(scope, spirit.region_entity_id)} (strength {spirit.strength})")
     return found

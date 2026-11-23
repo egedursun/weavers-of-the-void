@@ -8,14 +8,16 @@ from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.errors import AeronaError
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.happening import RiverShiftCause
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.region import DangerOrigin, DangerSource
+from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource, RegionMemoryKind
 from aerona.engine.environment import region_control
+from aerona.engine.environment.dangers import ease_danger, reaches
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
@@ -34,6 +36,22 @@ class SanctifyInput(ToolInput):
 
 
 class CurseRegionInput(ToolInput):
+    region_id: int
+    danger: DangerSource
+    strength: int = Field(ge=1, le=100)
+    targets: list[DangerHarm] = Field(default_factory=list)
+    reason: Reason
+
+
+class MarkLandInput(ToolInput):
+    region_id: int
+    memory: RegionMemoryKind
+    magnitude: int = Field(ge=1, le=100)
+    title: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
+    reason: Reason
+
+
+class QuellDangerInput(ToolInput):
     region_id: int
     danger: DangerSource
     strength: int = Field(ge=1, le=100)
@@ -77,9 +95,21 @@ async def curse_region(call: SonCall, args: CurseRegionInput) -> str:
     require_essence(call, cost)
     region = await _region(call, args.region_id)
     strength = min(args.strength, call.rules.terrain.curse_strength_max)
+    reachable = set(reaches(call.rules, args.danger))
+    if any(target not in reachable for target in args.targets):
+        fail(SonResult.DANGER_CANNOT_REACH, danger=DANGERS[args.danger].label, reachable=", ".join(sorted(harm.value for harm in reachable)))
     call.target(region.id)
     await region_control.set_danger(
-        call.session, call.rules, region.id, args.danger, strength, epoch=call.tick.epoch, held=False, origin=DangerOrigin.DIVINE, son_id=call.son.id
+        call.session,
+        call.rules,
+        region.id,
+        args.danger,
+        strength,
+        epoch=call.tick.epoch,
+        held=False,
+        origin=DangerOrigin.DIVINE,
+        son_id=call.son.id,
+        targets=args.targets,
     )
     call.spend_essence(cost)
     label = DANGERS[args.danger].label
@@ -92,6 +122,49 @@ async def curse_region(call: SonCall, args: CurseRegionInput) -> str:
         world_id=region.world_id,
     )
     return result(SonResult.REGION_CURSED, danger=label, name=region.name, strength=strength)
+
+
+async def mark_land(call: SonCall, args: MarkLandInput) -> str:
+    cost = call.rules.son_tools.mark_land_essence
+    require_essence(call, cost)
+    region = await _region(call, args.region_id)
+    if held(region.id):
+        fail(SonResult.LAND_UNCHANGED, name=region.name)
+    row = await region_control.add_memory(
+        call.session, region.id, args.memory, args.magnitude, args.title, epoch=call.tick.epoch, held=False, subject_id=call.son.id
+    )
+    call.target(region.id)
+    call.spend_essence(cost)
+    await call.record(
+        "memory.written",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id},
+        facts={"memory": args.memory, "magnitude": row.magnitude},
+        place=region.id,
+        world_id=region.world_id,
+    )
+    return result(SonResult.LAND_MARKED, name=region.name, title=args.title, memory=spoken(args.memory))
+
+
+async def quell_danger(call: SonCall, args: QuellDangerInput) -> str:
+    cost = call.rules.terrain.quell_essence
+    require_essence(call, cost)
+    region = await _region(call, args.region_id)
+    label = DANGERS[args.danger].label
+    if held(region.id):
+        fail(SonResult.DANGER_ABSENT, danger=label.lower(), name=region.name)
+    eased = await ease_danger(call.session, call.rules, region.id, args.danger, args.strength)
+    if eased <= 0:
+        fail(SonResult.DANGER_ABSENT, danger=label.lower(), name=region.name)
+    call.target(region.id)
+    call.spend_essence(cost)
+    await call.record(
+        "tools.son.quell_danger",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id},
+        facts={"danger": args.danger, "eased": eased, "reason": args.reason},
+        place=region.id,
+        world_id=region.world_id,
+    )
+    return result(SonResult.DANGER_QUELLED, eased=eased, danger=label.lower(), name=region.name)
 
 
 async def redirect_river(call: SonCall, args: RedirectRiverInput) -> str:
@@ -121,11 +194,25 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
     rare = gate(Gate.RARE_TOOLS)
     return [
         ToolSpec(
+            SonToolId.MARK_LAND,
+            son,
+            MarkLandInput,
+            ToolMeta(ActionKind.MIRACLE, son_standard_action, essence_cost=lambda rules: rules.son_tools.mark_land_essence),
+            mark_land,
+        ),
+        ToolSpec(
             SonToolId.SANCTIFY_REGION,
             son,
             SanctifyInput,
             ToolMeta(ActionKind.MIRACLE, son_standard_action, essence_cost=lambda rules: rules.terrain.sanctify_essence, rarity_gate=rare),
             sanctify_region,
+        ),
+        ToolSpec(
+            SonToolId.QUELL_DANGER,
+            son,
+            QuellDangerInput,
+            ToolMeta(ActionKind.MIRACLE, son_standard_action, essence_cost=lambda rules: rules.terrain.quell_essence),
+            quell_danger,
         ),
         ToolSpec(
             SonToolId.CURSE_REGION,

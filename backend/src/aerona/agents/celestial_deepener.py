@@ -102,7 +102,7 @@ async def _world_lines(scope: Scope, world: WorldRow) -> tuple[list[str], list[s
         f"Known to the gods: {DISCOVERY_LABELS[world.discovery]}",
     ]
     if world.climate_era is not None:
-        details.append(f"Climate: {world.climate_era.value.replace('_', ' ')}")
+        details.append(f"Climate: {spoken(world.climate_era)}")
     if world.description:
         details.append(f"Description: {world.description}")
     neighbours: list[str] = []

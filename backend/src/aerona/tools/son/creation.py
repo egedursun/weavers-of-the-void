@@ -13,6 +13,7 @@ from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
 from aerona.catalog.gates import CREATION_GATE_RULES
 from aerona.catalog.knowledge import branch_label
 from aerona.catalog.rarities import name_similarity_policy
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository
@@ -24,7 +25,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole, ThreadStatus
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.ecology import AttackRange
 from aerona.domain.enums.entity import AGENT_TYPES, LIVING_CREATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitKind, TraitSource
@@ -194,7 +195,7 @@ async def _source_might(call: SonCall, plan: CreationPlan) -> None:
 
 
 def story_tags(tags: list[str]) -> list[str]:
-    mechanical = {flag.value.replace("_", " ") for flag in EntityFlag} | {trait.value.replace("_", " ") for trait in CreatureTrait}
+    mechanical = {spoken(flag) for flag in EntityFlag} | {spoken(trait) for trait in CreatureTrait}
     kept = [tag.strip() for tag in tags if tag.strip() and TAG_SEPARATOR not in tag and tag.strip().casefold().replace("_", " ") not in mechanical]
     return list(dict.fromkeys(kept))
 
@@ -470,7 +471,7 @@ def _foreign_sounds(name: str, phonology: Phonology | None) -> str | None:
 async def _mortal_nature(call: SonCall, args: CreationInput, created: EntityRow) -> None:
     sex = args.option("sex")
     if sex is not None and isinstance(created.stats, MortalStats):
-        created.stats = revised(created.stats, {"sex": Sex(sex).value})
+        created.stats = revised(created.stats, {"sex": SexKind(sex).value})
     for trait in args.option("traits") or []:
         await add_trait(call.session, created.id, TraitKind(trait), TraitSource.BIRTH, call.epoch)
 

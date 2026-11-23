@@ -23,7 +23,7 @@ async def gathering_lines(session: AsyncSession, rules: Rules, me: EntityRow, ep
         .order_by(GatheringRow.epoch.desc(), GatheringRow.id.desc())
         .limit(rules.gatherings.guests_max)
     ):
-        kind = row.kind.value.replace("_", " ")
+        kind = spoken(row.kind)
         when = f"epoch {row.epoch}" if row.year is None else f"epoch {row.epoch}, year {row.year}"
         if row.status is GatheringStatus.PLANNED:
             found.append(

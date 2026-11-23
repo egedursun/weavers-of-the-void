@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionMemberRow, CollectionRow
@@ -80,7 +81,7 @@ async def open_reckoning(
         ctx,
         "reckoning.opened",
         roles={IncidentRole.ACTOR: by, IncidentRole.SUBJECT: realm.id, IncidentRole.PREDECESSOR: fallen},
-        facts={"measures": ", ".join(measure.value.replace("_", " ") for measure in dict(measures))},
+        facts={"measures": ", ".join(spoken(measure) for measure in dict(measures))},
     )
     return row
 

@@ -101,7 +101,7 @@ async def reached(call: SonCall, entity_id: int | None, kinds: frozenset[EntityT
         fail(refused, why=why)
     await ensure_in_reach(call, entity)
     if held(entity.id):
-        fail(refused, why="a stronger hand holds it")
+        fail(refused, why="it is held")
     return entity
 
 

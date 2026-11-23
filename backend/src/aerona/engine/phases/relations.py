@@ -9,11 +9,12 @@ from aerona.engine.phase import Phase
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.relations.affairs import AffairTally, flag_lovers, tend_affairs
 from aerona.engine.relations.book import refresh_kinds
-from aerona.engine.relations.circles import CircleTally, tend_circles
+from aerona.engine.relations.circles import CircleTally, match_clubs, tend_circles
 from aerona.engine.relations.contests import ContestTally, tend_contests
 from aerona.engine.relations.interactions import SocialTally, fade, feel_changes, living_mortals_by_place, socialise
 from aerona.engine.relations.passions import PassionTally, tend_passions
 from aerona.engine.relations.pecking import PeckingTally, tend_pecking
+from aerona.engine.relations.ties import keep_ties, tell_ties
 
 
 async def social_mortals(ctx: TickContext) -> list[EntityRow]:
@@ -92,6 +93,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.mortal_profiles",
     "table.needs",
     "table.network_nodes",
+    "table.node_births",
     "table.nodes",
     "table.passions",
     "table.personality_values",
@@ -100,6 +102,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.relationships",
     "table.reputations",
     "table.secrets",
+    "table.sense_profiles",
     "table.skills",
     "table.social_norms",
     "table.sons",
@@ -108,6 +111,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
+    "table.treaty_clauses",
     "table.wants",
     "table.war_sides",
     "table.wars",
@@ -116,15 +120,21 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 )
 @writes(
     "mortal.hp",
+    "table.applied_fixups",
     "table.beliefs",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.deed_claims",
     "table.deeds",
     "table.entities",
     "table.favours",
     "table.hooks",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
     "table.injuries",
     "table.memories",
     "table.mind_facets",
@@ -148,10 +158,13 @@ async def relations_social(ctx: TickContext) -> None:
             met |= scene.met
     ids = [mortal.id for mortal in mortals]
     ctx.count("relations_faded", await fade(ctx, ids, met))
+    ties = await keep_ties(ctx)
     for mortal in mortals:
         for row, before, after in await refresh_kinds(ctx.session, ctx.rules, mortal.id, ctx.epoch):
             await feel_changes(ctx, row, before, after)
+            await tell_ties(ctx, row, before, after, ties)
             affairs.begun += await flag_lovers(ctx, row)
+    count(ctx, "tie", ties)
     await tend_affairs(ctx, affairs)
     count(ctx, "social", tally)
     count(ctx, "affair", affairs)
@@ -159,8 +172,23 @@ async def relations_social(ctx: TickContext) -> None:
 
 @reads(
     "faction.wealth",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.intellect",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
+    "table.augment_effects",
+    "table.augments",
+    "table.beast_profiles",
     "table.bonds",
+    "table.charms",
     "table.creator",
+    "table.deed_claims",
+    "table.deeds",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
@@ -172,23 +200,31 @@ async def relations_social(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.minds",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.node_births",
     "table.nodes",
+    "table.passions",
     "table.personality_values",
     "table.polity_members",
     "table.preferences",
     "table.relationships",
+    "table.reputations",
     "table.routes",
+    "table.skills",
     "table.social_circles",
     "table.sons",
     "table.stars",
+    "table.thoughts",
     "table.worlds",
 )
 @writes(
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.contests",
+    "table.deed_claims",
+    "table.deeds",
     "table.entities",
     "table.faction_memberships",
     "table.faction_profiles",
@@ -196,10 +232,13 @@ async def relations_social(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incident_steps",
     "table.incidents",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.node_births",
     "table.relationships",
+    "table.reputations",
     "table.social_circles",
+    "table.thoughts",
 )
 async def relations_circles(ctx: TickContext) -> None:
     tally = CircleTally()
@@ -207,6 +246,7 @@ async def relations_circles(ctx: TickContext) -> None:
         place = await living_entity(ctx.session, place_id)
         if place is not None:
             await tend_circles(ctx, place, group, tally)
+    await match_clubs(ctx, tally)
     count(ctx, "circle", tally)
 
 
@@ -279,6 +319,7 @@ async def relations_passions(ctx: TickContext) -> None:
     "table.mortal_profiles",
     "table.needs",
     "table.network_nodes",
+    "table.node_births",
     "table.nodes",
     "table.offices",
     "table.personality_values",
@@ -299,11 +340,16 @@ async def relations_passions(ctx: TickContext) -> None:
     "mortal.hp",
     "table.bodies",
     "table.body_customs",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.deed_claims",
     "table.deeds",
     "table.entities",
     "table.faction_profiles",
     "table.group_ranks",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
     "table.injuries",
     "table.memories",
     "table.mortal_profiles",
@@ -329,6 +375,7 @@ async def relations_pecking(ctx: TickContext) -> None:
     "mortal.wisdom",
     "table.augment_effects",
     "table.augments",
+    "table.beast_profiles",
     "table.bonds",
     "table.captives",
     "table.charms",
@@ -344,6 +391,7 @@ async def relations_pecking(ctx: TickContext) -> None:
     "table.group_ranks",
     "table.incident_participants",
     "table.incidents",
+    "table.incorporeal_rights",
     "table.incubating_ideas",
     "table.mind_attributes",
     "table.mind_facets",
@@ -376,6 +424,7 @@ async def relations_pecking(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incident_steps",
     "table.incidents",
+    "table.incorporeal_rights",
     "table.memories",
     "table.mortal_profiles",
     "table.name_registry",

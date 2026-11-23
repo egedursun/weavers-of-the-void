@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.life.domain import RESTING
 from aerona.catalog.life.military import ENTRENCH_STANCES, FEED_STANCES, FEED_STANCES_2
+from aerona.catalog.movement import FOOT, best_passage, fastest, mode_through
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -24,7 +25,7 @@ from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.military import CommandArea, MoraleState, MutinyOutcome, Stance
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.agrarian.book import fell_plantings
-from aerona.engine.body.variants import fear_of
+from aerona.engine.body.variants import body_modes, fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import unfit_for_land_war, view_of
 from aerona.engine.economy.stocks import goods_of, holding
@@ -87,6 +88,7 @@ class Season:
     eaten_out: bool = False
     plundered: bool = False
     works: str | None = None
+    mode: MovementMode | None = None
 
 
 @dataclass(frozen=True)
@@ -98,10 +100,10 @@ class March:
     attacking: bool
 
 
-def passable(rules: Rules, region: RegionEnvironmentRow | None) -> bool:
+def passable(rules: Rules, region: RegionEnvironmentRow | None, modes: frozenset[MovementMode] = FOOT) -> bool:
     if region is None:
         return True
-    return region.passability.get(MovementMode.ON_FOOT.value, PERCENT) >= rules.logistics.passability_floor
+    return best_passage(region.passability, modes, PERCENT) >= rules.logistics.passability_floor
 
 
 def step_towards(
@@ -121,6 +123,7 @@ def step_towards(
     heavy: bool = False,
     pace: int = PERCENT,
     borne: int = 0,
+    modes: frozenset[MovementMode] = FOOT,
 ) -> int:
     profile = march.profile
     if march.goal is None or profile.region_entity_id is None or profile.region_entity_id == march.goal:
@@ -148,12 +151,12 @@ def step_towards(
         heavy=heavy,
     )
     world = ground.worlds.get(here.world_id) if here is not None else None
-    budget = round_half_up(budget * gravity_speed_pct(rules, world) / PERCENT)
+    budget = round_half_up(budget * gravity_speed_pct(rules, world) / PERCENT * fastest(rules, modes) / PERCENT)
     moved = 0
     for region_id in path[1:]:
         region = ground.regions.get(region_id)
-        cost = step_cost(rules, region, season, pontoon=pontoon)
-        if not passable(rules, region) or cost > budget:
+        cost = step_cost(rules, region, season, pontoon=pontoon, modes=modes)
+        if not passable(rules, region, modes) or cost > budget:
             break
         budget -= cost
         profile.region_entity_id = region_id
@@ -428,6 +431,7 @@ async def advance(
         pontoon = engineers(ctx.rules, rows)
         hardy = await ctx.hook_pct(march.owner.id, DomainHook.COLD_ENDURANCE) * ctx.rules.domains.cold_share_pct / PERCENT / PERCENT
         laws = await ctx.laws()
+        modes = await body_modes(ctx.session, march.owner)
         log.moved = step_towards(
             ctx.rules,
             atlas,
@@ -444,7 +448,10 @@ async def advance(
             heavy=laws.has(NaturalLaw.GRAVITY_SHIFT, march.army.world_id),
             pace=await pace_pct(ctx.session, ctx.rules, march.army.id, sum(row.count for row in rows)),
             borne=await borne_baggage(ctx.session, ctx.rules, march.army.id),
+            modes=modes,
         )
+        reached = ground.regions.get(profile.region_entity_id) if profile.region_entity_id is not None else None
+        log.mode = mode_through(reached.passability if reached is not None else {}, modes, PERCENT) if log.moved else None
     if enemy is not None:
         log.raided = raid_supply(ctx.rules, profile, enemy.profile) > 0 or log.raided
     wandering = await navigate(ctx, march.army, march.owner, profile.region_entity_id, origin, charted=charted)

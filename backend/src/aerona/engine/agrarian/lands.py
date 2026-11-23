@@ -262,7 +262,12 @@ def bestow(row: CommonsRow, town: EntityRow, profile: SettlementProfileRow | Non
 
 def wear_share(ctx: TickContext, rule: CommonsRule) -> int:
     table = ctx.rules.commons
-    return {CommonsRule.COUNCIL: table.council_pct, CommonsRule.ENCLOSED: table.enclosed_pct}.get(rule, PERCENT)
+    return {
+        CommonsRule.COUNCIL: table.council_pct,
+        CommonsRule.ENCLOSED: table.enclosed_pct,
+        CommonsRule.STATE: table.state_pct,
+        CommonsRule.LICENSED: table.licensed_pct,
+    }.get(rule, PERCENT)
 
 
 async def seed_commons(ctx: TickContext, lands: Holdings, rows: list[CommonsRow]) -> None:
@@ -360,15 +365,22 @@ async def keep_commons(ctx: TickContext, lands: Holdings, tally: LandsTally) -> 
             continue
         tally.commons += 1
         put(row, "use", clamp_int(pressure.get(row.region_entity_id, HALF), 0, PERCENT * 2))
+        if row.rule in QUOTA_RULES:
+            put(row, "use", await held_to_quota(ctx, row))
         if row.use > table.sustainable:
             shift(row, "condition", -(row.use - table.sustainable) * table.degrade_pct / PERCENT * wear_share(ctx, row.rule) / PERCENT)
         else:
             shift(row, "condition", table.regrow)
         if row.rule is not CommonsRule.ENCLOSED:
-            for town in lands.towns.get(row.region_entity_id, []):
+            towns = lands.towns.get(row.region_entity_id, [])
+            for town in towns:
                 if not held(town.id):
-                    shift_stat(town, "prosperity", (row.condition - HALF) / HALF * table.prosperity_weight)
+                    share = 1 - table.licence_concentration_pct / PERCENT if row.rule is CommonsRule.LICENSED and town.id != row.steward_entity_id else 1.0
+                    shift_stat(town, "prosperity", (row.condition - HALF) / HALF * table.prosperity_weight * share)
                     bestow(row, town, lands.profiles.get(town.id))
+                    if row.rule is CommonsRule.STATE:
+                        aggrieve(table.state_grievance, lands.profiles.get(town.id))
+            await pay_realm(ctx, row, book)
         steward = lands.profiles.get(row.steward_entity_id) if row.steward_entity_id is not None else None
         if (
             row.rule in (CommonsRule.OPEN, CommonsRule.CUSTOMARY)
@@ -394,6 +406,71 @@ async def keep_commons(ctx: TickContext, lands: Holdings, tally: LandsTally) -> 
                 await give_coin(ctx.session, ctx.rules, owner, round_half_up(table.enclosed_coin * row.condition / PERCENT))
 
 
+QUOTA_RULES = frozenset({CommonsRule.STATE, CommonsRule.LICENSED})
+
+
+async def held_to_quota(ctx: TickContext, row: CommonsRow) -> int:
+    over = max(0, row.use - row.quota)
+    if over <= 0:
+        return row.use
+    if row.rule is CommonsRule.LICENSED:
+        return row.quota
+    slipped = round_half_up(over * (PERCENT - row.officials) / PERCENT)
+    if slipped > 0 and ctx.rng(f"commons.poach.{row.id}.{ctx.epoch}").chance(ctx.rules.commons.poaching_pct):
+        await record(
+            ctx,
+            "commons.poaching",
+            roles={IncidentRole.SUBJECT: row.steward_entity_id},
+            facts={"common": row.kind, "poached": slipped},
+            place=row.steward_entity_id,
+        )
+        return row.quota + slipped
+    return row.quota
+
+
+def aggrieve(grievance: int, profile: SettlementProfileRow | None) -> None:
+    if profile is not None and "public_order" not in profile.locked:
+        profile.public_order = clamp_int(profile.public_order - grievance, 0, PERCENT)
+
+
+async def pay_realm(ctx: TickContext, row: CommonsRow, book: RealmBook) -> None:
+    if row.rule not in QUOTA_RULES or row.steward_entity_id is None:
+        return
+    realm_id = book.member_of.get(row.steward_entity_id)
+    realm = book.realms.get(realm_id) if realm_id is not None else None
+    if realm is None or held(realm.entity.id):
+        return
+    table = ctx.rules.commons
+    coin = table.state_coin * row.condition // PERCENT if row.rule is CommonsRule.STATE else row.quota * row.licence_price // PERCENT
+    if coin > 0:
+        await give_coin(ctx.session, ctx.rules, realm.entity, coin)
+    if row.rule is CommonsRule.LICENSED and coin > 0:
+        await record(
+            ctx,
+            "commons.licences_sold",
+            roles={IncidentRole.SUBJECT: row.steward_entity_id},
+            facts={"common": row.kind, "coin": coin},
+            place=row.steward_entity_id,
+        )
+
+
+async def take_common(ctx: TickContext, row: CommonsRow, rule: CommonsRule) -> None:
+    table = ctx.rules.commons
+    before = row.rule
+    put(row, "rule", rule)
+    if rule is CommonsRule.STATE:
+        put(row, "officials", table.state_enforcement)
+    if rule is CommonsRule.LICENSED:
+        put(row, "licence_price", table.licence_price)
+    await record(
+        ctx,
+        "commons.rule_changed",
+        roles={IncidentRole.SUBJECT: row.steward_entity_id},
+        facts={"common": row.kind, "rule": rule, "before": before},
+        place=row.steward_entity_id,
+    )
+
+
 async def maybe_enclose(ctx: TickContext, row: CommonsRow, *, rows: list[CommonsRow], book: RealmBook, orders: dict[int, int]) -> None:
     table = ctx.rules.commons
     if row.rule is CommonsRule.ENCLOSED or "rule" in row.locked or row.steward_entity_id is None:
@@ -408,6 +485,13 @@ async def maybe_enclose(ctx: TickContext, row: CommonsRow, *, rows: list[Commons
     tenure = await law_param(ctx.session, row.steward_entity_id, LawKind.LAND_TENURE, "tenure")
     law = {FREEHOLD: table.freehold_pct, COMMUNAL: table.communal_pct}.get(str(tenure), PERCENT) / PERCENT
     if ctx.rng(f"commons.enclose.{row.id}.{ctx.epoch}").chance(table.enclose_pct * eager * profit * law):
+        roll = ctx.rng(f"commons.take.{row.id}.{ctx.epoch}").below(PERCENT)
+        if roll < table.state_take_pct and row.rule not in QUOTA_RULES:
+            await take_common(ctx, row, CommonsRule.STATE)
+            return
+        if roll < table.state_take_pct + table.licensed_take_pct and row.rule not in QUOTA_RULES:
+            await take_common(ctx, row, CommonsRule.LICENSED)
+            return
         order = await issue(ctx, realm, MandateKind.ENCLOSURE, settlement_id=row.steward_entity_id)
         if order is not None and order.issuer_node_id is not None:
             orders[row.steward_entity_id] = order.issuer_node_id

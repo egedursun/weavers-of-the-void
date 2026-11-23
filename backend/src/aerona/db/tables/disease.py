@@ -3,8 +3,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.demography import AgeBand
-from aerona.domain.enums.disease import ClimateAffinity, CureSource, DiseaseVector, OutbreakStatus, SpreadPath
+from aerona.domain.enums.disease import ClimateMoisture, ClimateWarmth, CureSource, OutbreakStatus, SpreadPath
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
 
@@ -23,7 +24,7 @@ class DiseaseProfileRow(Base):
     )
 
     disease_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
-    vector: Mapped[DiseaseVector] = mapped_column(enum_type(DiseaseVector, "vector"))
+    primary_route: Mapped[Transmission] = mapped_column(enum_type(Transmission, "primary_route"))
     virulence: Mapped[int]
     lethality: Mapped[int]
     chronic_rate: Mapped[int]
@@ -31,7 +32,8 @@ class DiseaseProfileRow(Base):
     designed_line_id: Mapped[int | None] = mapped_column(ForeignKey("living_lines.id", ondelete="SET NULL"))
     target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     target_functions: Mapped[list[str]] = mapped_column(JSON, default=list)
-    climate_affinity: Mapped[ClimateAffinity] = mapped_column(enum_type(ClimateAffinity, "climate_affinity"))
+    affinity_warmth: Mapped[ClimateWarmth] = mapped_column(enum_type(ClimateWarmth, "affinity_warmth"), default=ClimateWarmth.ANY)
+    affinity_moisture: Mapped[ClimateMoisture] = mapped_column(enum_type(ClimateMoisture, "affinity_moisture"), default=ClimateMoisture.ANY)
     host_species_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     immunity_epochs: Mapped[int]
     cold_tolerance: Mapped[int] = mapped_column(default=50, server_default="50")
@@ -118,3 +120,13 @@ class QuarantineRow(Base):
     until_epoch: Mapped[int]
     ordered_by_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     ordered_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+
+
+class DiseaseRouteRow(Base):
+    __tablename__ = "disease_routes"
+    __table_args__ = (between("share", PERCENT_MIN, PERCENT_MAX),)
+
+    disease_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    route: Mapped[Transmission] = mapped_column(enum_type(Transmission, "route"), primary_key=True)
+    share: Mapped[int] = mapped_column(default=20)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)

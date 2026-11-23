@@ -16,6 +16,7 @@ import {
   UserPlus,
   Wrench,
 } from 'lucide-react'
+import type { components } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile, PagedList } from '@/components/domain'
@@ -27,6 +28,7 @@ import { YES_NO } from '@/features/cycles/labels'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
+import { MODES } from '@/features/entity/environment/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { Ref } from '@/features/gatherings/parts'
 import { Tag } from '@/features/wars/military/parts'
@@ -54,6 +56,7 @@ type Expedition = OperationsNodeView['expeditions'][number]
 type Member = Expedition['members'][number]
 type Entry = Expedition['log'][number]
 type Quirk = OperationsNodeView['quirks'][number]
+type MovementMode = components['schemas']['MovementMode']
 
 const NOT_MORTAL = 'Only a mortal bears quirks'
 const NOT_LEADER = 'Only a mortal leads an expedition'
@@ -509,6 +512,12 @@ function ExpeditionCard({
   )
 }
 
+const BEST_WAY = 'best'
+const WAY_TABLE = {
+  [BEST_WAY]: 'The way with the best passage',
+  ...table(MODES),
+}
+
 function ExpeditionForge({
   nodeId,
   kind,
@@ -526,6 +535,7 @@ function ExpeditionForge({
   )
   const [first, setFirst] = useState<number | null>(null)
   const [second, setSecond] = useState<number | null>(null)
+  const [way, setWay] = useState(BEST_WAY)
   const sending = useOperationsAction(
     'expedition:create',
     (_: void) => ({
@@ -534,6 +544,7 @@ function ExpeditionForge({
       companion_ids: [first, second].filter(
         (item): item is number => item !== null
       ),
+      mode: way === BEST_WAY ? null : (way as MovementMode),
     }),
     'The expedition sets out'
   )
@@ -551,7 +562,8 @@ function ExpeditionForge({
       icon={Compass}
       tone='success'
       title='Send an expedition'
-      note='Choose a mortal to lead it, where it goes and up to two companions. Its ground (a site, the wilds, an underworld or another realm), legs, provisions and light follow from where it goes and who it takes.'
+      note='Choose a mortal to lead it, where it goes, how it travels and up to two companions. Its ground (a site, the wilds, an underworld or another realm), legs, provisions and light follow from where it goes and who it takes; a way of travel that finds little passage there adds legs, and your hand carries them by a way their bodies could not take alone.'
+
       columns={4}
       action={
         <Button
@@ -578,6 +590,14 @@ function ExpeditionForge({
         onChange={setTarget}
         blocked={blocked}
         types={ANY_PLACE}
+      />
+      <MindPicker
+        label='Way of travel'
+        value={way}
+        table={WAY_TABLE}
+        placeholder='Choose'
+        blocked={blocked}
+        onPick={setWay}
       />
       <NodePicker
         label='A companion'

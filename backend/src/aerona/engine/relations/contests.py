@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life_traits import CONTEST_STAKE_TRAITS, having
+from aerona.catalog.mind import COMBAT_SKILLS
 from aerona.catalog.relations import CONTESTS
 from aerona.catalog.renown import CONTEST_RENOWN
 from aerona.constants.units import PERCENT
@@ -19,37 +20,46 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.relations import ContestRow, GroupRankRow, RelationshipRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.life_traits import ContestStakeTrait
-from aerona.domain.enums.mind import PreferenceKind, SkillKind, ThoughtKind, ValueHolder
+from aerona.domain.enums.mind import Attribute, PreferenceKind, SkillKind, ThoughtKind, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.relations import ContestEnd, ContestKind, ContestStake, GroupKind, RelationType
 from aerona.domain.enums.war import CaptiveStatus
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.rights import win_right
+from aerona.engine.ecology.beasts import mounted_power
 from aerona.engine.lifecycle.aging import is_notable
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.art import commission_work
 from aerona.engine.mind.book import best_skill, skill_level, stored_values
 from aerona.engine.mind.split import attribute
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kin import partners_of
+from aerona.engine.mortal.kinship import close_between
 from aerona.engine.mortal.standing import add_infamy, add_renown
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.primitives.queries import active_bonds, living_entity
+from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import ensure_relation, relation, shift
 from aerona.engine.relations.interactions import alignment
 from aerona.engine.relations.passions import strongest_against
 from aerona.engine.renown.deeds import acclaim_deed
+from aerona.engine.renown.lore import grant, holdings
 from aerona.engine.services.war import release_captive
 
 LEARNED_AT = 40
 VALUE_SPAN = 100
 NOTED = having(CONTEST_STAKE_TRAITS, ContestStakeTrait.NOTED)
+LAND_TYPES = frozenset({EntityType.REGION, EntityType.SETTLEMENT})
 
 
 @dataclass
@@ -77,6 +87,10 @@ async def prowess(ctx: TickContext, mortal: EntityRow, kind: ContestKind) -> flo
     gifts = [await attribute(ctx.session, ctx.rules, mortal, which) for which in spec.attributes]
     profile = await ctx.session.get(MortalProfileRow, mortal.id)
     conviction = profile.conviction if profile is not None else PERCENT // 2
+    if spec.races:
+        lean = ctx.rules.contests.race_endurance_pct / PERCENT
+        carried = (max(skills) * (1 - lean) + sum(gifts) / len(gifts) * lean) * await mounted_power(ctx, mortal.id)
+        return carried * 2 + conviction / 5
     return sum(skills) / len(skills) + sum(gifts) / len(gifts) + conviction / 5
 
 
@@ -159,6 +173,58 @@ async def win_favour(ctx: TickContext, bout: Bout, winner: EntityRow, loser: Ent
             set_stats(cult, followers=round(followers * (1 + ctx.rules.contests.favour_followers_pct / PERCENT)))
 
 
+@STAKES.on(ContestStake.LAND)
+async def win_land(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
+    holding = bout.stake_node_id
+    if holding is None:
+        owned = await active_bonds(ctx.session, [BondKind.OWNS, BondKind.RULES], sources=[loser.id])
+        lands = [bond.target_node_id for bond in owned if await is_land(ctx, bond.target_node_id)]
+        holding = lands[0] if lands else None
+    if holding is None or held(holding):
+        return
+    moved = await close_between(ctx.session, loser.id, holding, (BondKind.OWNS, BondKind.RULES), epoch=ctx.epoch, reason="lost in a contest")
+    if not moved:
+        return
+    await connect(ctx.session, winner.id, holding, BondKind.OWNS, ctx.epoch, description="won in a contest")
+    await paid(ctx, bout, winner, loser, holding)
+
+
+async def is_land(ctx: TickContext, node_id: int) -> bool:
+    entity = await living_entity(ctx.session, node_id)
+    return entity is not None and entity.entity_type in LAND_TYPES
+
+
+@STAKES.on(ContestStake.FREEDOM)
+async def win_own_freedom(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
+    row = await ctx.session.scalar(
+        select(CaptiveRow).where(CaptiveRow.captive_entity_id == winner.id, CaptiveRow.status == CaptiveStatus.HELD).order_by(CaptiveRow.id).limit(1)
+    )
+    if row is None:
+        return
+    await release_captive(ctx, row, CaptiveStatus.RELEASED)
+    await paid(ctx, bout, winner, loser, winner.id)
+
+
+@STAKES.on(ContestStake.KNOWLEDGE)
+async def win_knowledge(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
+    for kind in KnowledgeKind:
+        mine = await holdings(ctx.session, winner.id, kind)
+        for key, subject in sorted(await holdings(ctx.session, loser.id, kind) - mine, key=lambda item: (item[0], item[1] or 0)):
+            if await grant(ctx, winner, (kind, key, subject)):
+                await paid(ctx, bout, winner, loser, subject)
+                return
+
+
+async def paid(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow, stake_node_id: int | None) -> None:
+    await record(
+        ctx,
+        "contest.stake_paid",
+        roles={IncidentRole.ACTOR: winner.id, IncidentRole.OPPONENT: loser.id, IncidentRole.SUBJECT: stake_node_id},
+        facts={"stake": bout.stake},
+        place=bout.place_id or winner.location_id,
+    )
+
+
 @STAKES.on(ContestStake.HONOUR)
 async def win_honour(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
     await add_renown(ctx.session, winner.id, ctx.rules.contests.renown / 2, ctx.epoch, rules=ctx.rules)
@@ -217,6 +283,27 @@ async def famed(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRo
     return work.id
 
 
+async def masterwork(ctx: TickContext, bout: Bout, winner: EntityRow) -> int | None:
+    spec = CONTESTS[bout.kind]
+    if not spec.crafted or not ctx.rng(seed_of("contest_masterwork", winner.id, ctx.epoch)).chance(ctx.rules.contests.craft_masterwork_pct):
+        return None
+    try:
+        work = await commission_work(
+            ctx,
+            winner.id,
+            name=f"The {spec.label} work of {winner.name}",
+            medium=ArtMode.SOLID_IMAGE,
+            author_id=winner.id,
+            subject_id=None,
+            message=None,
+            paid=False,
+        )
+    except AeronaError:
+        return None
+    await think(ctx.session, ctx.rules, winner.id, ThoughtKind.MADE_MASTERWORK, ctx.epoch)
+    return work.id
+
+
 async def hold_contest(ctx: TickContext, bout: Bout, tally: ContestTally) -> ContestRow | None:
     if held(bout.challenger.id) or held(bout.defender.id) or bout.challenger.id == bout.defender.id:
         return None
@@ -246,6 +333,13 @@ async def hold_contest(ctx: TickContext, bout: Bout, tally: ContestTally) -> Con
     return row
 
 
+async def sport_harm(ctx: TickContext, bout: Bout, loser: EntityRow) -> None:
+    rough = any(skill in COMBAT_SKILLS for skill in CONTESTS[bout.kind].skills) or Attribute.STRENGTH in CONTESTS[bout.kind].attributes
+    if not rough or not ctx.rng(f"contest.harm.{loser.id}.{ctx.epoch}.{bout.kind.value}").chance(ctx.rules.harm.sport_harm_pct):
+        return
+    await apply_hits(ctx, loser, Harm(ctx.rules.harm.sport_hp, HarmCause.SPORT, "hurt in a contest", source_node_id=bout.challenger.id))
+
+
 async def settle(ctx: TickContext, bout: Bout, row: ContestRow, winner: EntityRow, loser: EntityRow, *, margin: int, tally: ContestTally) -> None:
     table = ctx.rules.contests
     await add_renown(ctx.session, winner.id, table.renown, ctx.epoch, rules=ctx.rules)
@@ -256,12 +350,22 @@ async def settle(ctx: TickContext, bout: Bout, row: ContestRow, winner: EntityRo
     if sore is not None:
         shift(ctx.rules, sore, ctx.epoch, rivalry=table.renown, familiarity=3)
     await STAKES[bout.stake](ctx, bout, winner, loser)
+    await sport_harm(ctx, bout, loser)
+    await win_right(ctx, row.id, row.stake_node_id, winner.id, loser.id)
     axis, skill = CONTEST_RENOWN[bout.kind]
     await acclaim_deed(ctx, winner.id, axis, ctx.rules.local_renown.contest_magnitude, place_id=bout.place_id or winner.location_id, skill=skill)
-    row.work_node_id = await famed(ctx, bout, winner, loser, margin)
+    row.work_node_id = await famed(ctx, bout, winner, loser, margin) or await masterwork(ctx, bout, winner)
     row.famous = row.work_node_id is not None
     if row.famous:
         tally.famous += 1
+    if not (row.famous or bout.stake in NOTED):
+        await record(
+            ctx,
+            "contest.held",
+            roles={IncidentRole.ACTOR: winner.id, IncidentRole.OPPONENT: loser.id},
+            facts={"contest": bout.kind, "margin": margin},
+            place=bout.place_id or winner.location_id,
+        )
     if row.famous or bout.stake in NOTED:
         await record(
             ctx,
@@ -318,9 +422,23 @@ async def rival_bouts(ctx: TickContext, place_id: int, ids: list[int]) -> list[B
             (profile.wealth if profile else 0) >= ctx.rules.contests.wager_wealth
             for profile in [await ctx.session.get(MortalProfileRow, side.id) for side in (first, second)]
         )
-        stake = ContestStake.WAGER if rich else ContestStake.HONOUR
+        stake = await stake_between(ctx, first, second, rich=rich)
         bouts.append(Bout(await best_kind(ctx, first, second), stake, first, second, judge_id=await judge_of(ctx.session, place_id), place_id=place_id))
     return bouts
+
+
+async def landed(ctx: TickContext, mortal: EntityRow) -> bool:
+    owned = await active_bonds(ctx.session, [BondKind.OWNS, BondKind.RULES], sources=[mortal.id])
+    return any([await is_land(ctx, bond.target_node_id) for bond in owned])
+
+
+async def stake_between(ctx: TickContext, first: EntityRow, second: EntityRow, *, rich: bool) -> ContestStake:
+    if await landed(ctx, first) and await landed(ctx, second):
+        return ContestStake.LAND
+    learned = [await skill_level(ctx.session, side.id, SkillKind.LORE) >= LEARNED_AT for side in (first, second)]
+    if all(learned):
+        return ContestStake.KNOWLEDGE
+    return ContestStake.WAGER if rich else ContestStake.HONOUR
 
 
 async def suitor_bouts(ctx: TickContext, place_id: int, ids: list[int]) -> list[Bout]:
@@ -348,8 +466,9 @@ async def captive_bouts(ctx: TickContext) -> list[Bout]:
     bouts = []
     for row in await ctx.session.scalars(select(CaptiveRow).where(CaptiveRow.status == CaptiveStatus.HELD).order_by(CaptiveRow.id)):
         captive = await living_entity(ctx.session, row.captive_entity_id)
-        if captive is None or captive.entity_type is not EntityType.MORTAL or await skill_level(ctx.session, captive.id, SkillKind.LORE) < LEARNED_AT:
+        if captive is None or captive.entity_type is not EntityType.MORTAL:
             continue
+        learned = await skill_level(ctx.session, captive.id, SkillKind.LORE) >= LEARNED_AT
         captor = await living_entity(ctx.session, row.captor_entity_id)
         keeper = (
             captor
@@ -358,7 +477,8 @@ async def captive_bouts(ctx: TickContext) -> list[Bout]:
         )
         if keeper is None or not ctx.rng(seed_of("riddle", row.id, ctx.epoch)).chance(ctx.rules.contests.captive_pct):
             continue
-        bouts.append(Bout(ContestKind.RIDDLE_GAME, ContestStake.CAPTIVE, captive, keeper, judge_id=keeper.id, place_id=keeper.location_id))
+        kind, stake = (ContestKind.RIDDLE_GAME, ContestStake.CAPTIVE) if learned else (await best_kind(ctx, captive, keeper), ContestStake.FREEDOM)
+        bouts.append(Bout(kind, stake, captive, keeper, judge_id=keeper.id, place_id=keeper.location_id))
     return bouts
 
 

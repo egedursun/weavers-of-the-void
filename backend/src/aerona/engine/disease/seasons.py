@@ -28,6 +28,7 @@ def region_factor(ctx: TickContext, book: EnvironmentBook, ground: RegionEnviron
         weather = book.weather(ctx.environment.world_seed, ctx.epoch, ground, season, f"disease.{ground.entity_id}.{year.year}")
         total += year_factor(ctx, ground, season, weather.effect(WeatherEffect.WET), weather.effect(WeatherEffect.HEAT))
     mean = total / len(years) if years else 1.0
+    mean *= 1 + book.spell_pull(ground).summer * ctx.rules.long_seasons.summer_sickness_pct / PERCENT / PERCENT
     return max(table.disease_season_floor_pct / PERCENT, min(table.disease_season_cap_pct / PERCENT, mean))
 
 

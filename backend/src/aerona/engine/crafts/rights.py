@@ -4,12 +4,15 @@ from sqlalchemy import select
 
 from aerona.catalog.art_modes import ART_MODES
 from aerona.catalog.life_traits import RIGHT_KIND_TRAITS, having
+from aerona.core.grammar import spoken
 from aerona.db.tables.crafts import IncorporealRightRow
-from aerona.db.tables.culture import ArtworkProfileRow, RiteProfileRow
+from aerona.db.tables.cuisine import DishRow
+from aerona.db.tables.culture import ArtworkProfileRow, HolderTechniqueRow, RiteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import HouseMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.crafts import RightAcquired, RightKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.life_traits import RightKindTrait
 from aerona.domain.enums.mind import MemoryKind
@@ -21,12 +24,14 @@ from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import ruler_of
 from aerona.engine.services.community_relations import change_relation
 
 MEDIUM_RIGHTS = {mode: spec.right for mode, spec in ART_MODES.items()}
 COPIED = having(RIGHT_KIND_TRAITS, RightKindTrait.COPIED)
+PORTIONS = having(RIGHT_KIND_TRAITS, RightKindTrait.PORTION)
 
 
 @dataclass
@@ -34,6 +39,8 @@ class RightsTally:
     claimed: int = 0
     infringed: int = 0
     licensed: int = 0
+    recipes: int = 0
+    techniques: int = 0
 
 
 async def house_of(ctx: TickContext, maker_id: int) -> int:
@@ -181,9 +188,19 @@ async def infringe(ctx: TickContext, row: IncorporealRightRow, tally: RightsTall
                     subject_node_id=row.subject_node_id,
                     name=row.name,
                     acquired=RightAcquired.STOLEN,
+                    dish_id=row.dish_id,
+                    technique=row.technique,
                     since_epoch=ctx.epoch,
                     locked=[],
                 )
+            )
+            await record(
+                ctx,
+                "right.stolen",
+                roles={IncidentRole.ACTOR: culprit.id, IncidentRole.VICTIM: row.holder_node_id},
+                facts={"right": row.name, "kind": row.kind},
+                steps=(StepDraft(StepAction.COPY, actor=culprit.id, target=row.holder_node_id),),
+                place=town,
             )
     await record(
         ctx,
@@ -197,7 +214,7 @@ async def infringe(ctx: TickContext, row: IncorporealRightRow, tally: RightsTall
 async def collect_licence(ctx: TickContext, row: IncorporealRightRow, tally: RightsTally) -> None:
     if row.licensed_to_node_id is None:
         return
-    fee = ctx.rules.incorporeal.licence_fee
+    fee = ctx.rules.rights.technique_license_fee if row.kind is RightKind.TECHNIQUE else ctx.rules.incorporeal.licence_fee
     licensee = await ctx.session.get(EntityRow, row.licensed_to_node_id)
     holder = await ctx.session.get(EntityRow, row.holder_node_id)
     if licensee is None or holder is None or held(licensee.id):
@@ -241,14 +258,122 @@ async def licensed_copy(ctx: TickContext, row: IncorporealRightRow, licensee_id:
                 subject_node_id=row.subject_node_id,
                 name=row.name,
                 acquired=RightAcquired.LICENSED,
+                dish_id=row.dish_id,
+                technique=row.technique,
                 since_epoch=ctx.epoch,
                 locked=[],
             )
         )
 
 
+async def made(ctx: TickContext, row: IncorporealRightRow) -> IncorporealRightRow:
+    ctx.session.add(row)
+    await ctx.session.flush()
+    await record(
+        ctx,
+        "right.made",
+        roles={IncidentRole.OWNER: row.holder_node_id},
+        facts={"right": row.name, "kind": row.kind},
+        steps=(StepDraft(StepAction.PROCLAIM, actor=row.holder_node_id),),
+    )
+    return row
+
+
+async def claim_recipes(ctx: TickContext, tally: RightsTally) -> None:
+    claimed = set(await ctx.session.scalars(select(IncorporealRightRow.dish_id).where(IncorporealRightRow.dish_id.is_not(None))))
+    dishes = await ctx.session.scalars(select(DishRow).where(DishRow.origin_node_id.is_not(None)).order_by(DishRow.id))
+    for dish in list(dishes):
+        if dish.id in claimed or dish.origin_node_id is None or held(dish.origin_node_id):
+            continue
+        if not ctx.rng(f"right.recipe.{dish.id}.{ctx.epoch}").chance(ctx.rules.rights.recipe_claim_pct):
+            continue
+        holder = await house_of(ctx, dish.origin_node_id)
+        await made(
+            ctx,
+            IncorporealRightRow(
+                holder_node_id=holder, kind=RightKind.RECIPE, name=dish.name, dish_id=dish.id, acquired=RightAcquired.CREATED, since_epoch=ctx.epoch, locked=[]
+            ),
+        )
+        tally.recipes += 1
+
+
+async def claim_techniques(ctx: TickContext, tally: RightsTally) -> None:
+    claimed = set(await ctx.session.scalars(select(IncorporealRightRow.technique).where(IncorporealRightRow.technique.is_not(None))))
+    first: dict[Technique, HolderTechniqueRow] = {}
+    for row in await ctx.session.scalars(select(HolderTechniqueRow).order_by(HolderTechniqueRow.since_epoch, HolderTechniqueRow.holder_entity_id)):
+        first.setdefault(row.technique, row)
+    for technique, holder_row in sorted(first.items(), key=lambda item: item[0].value):
+        if technique in claimed or held(holder_row.holder_entity_id) or await living_entity(ctx.session, holder_row.holder_entity_id) is None:
+            continue
+        if not ctx.rng(f"right.technique.{technique.value}.{ctx.epoch}").chance(ctx.rules.rights.technique_claim_pct):
+            continue
+        await made(
+            ctx,
+            IncorporealRightRow(
+                holder_node_id=holder_row.holder_entity_id,
+                kind=RightKind.TECHNIQUE,
+                name=spoken(technique),
+                technique=technique,
+                acquired=RightAcquired.CREATED,
+                since_epoch=ctx.epoch,
+                locked=[],
+            ),
+        )
+        tally.techniques += 1
+
+
+async def passed(ctx: TickContext, row: IncorporealRightRow, giver: int, taker: int, way: RightAcquired) -> None:
+    row.holder_node_id = taker
+    row.acquired = way
+    row.since_epoch = ctx.epoch
+    row.licensed_to_node_id = None
+    await record(
+        ctx,
+        "right.passed",
+        roles={IncidentRole.GIVER: giver, IncidentRole.RECEIVER: taker},
+        facts={"right": row.name, "kind": row.kind, "way": way},
+        steps=(StepDraft(StepAction.GIVE, actor=giver, target=taker),),
+    )
+
+
+async def wed_portion(ctx: TickContext, payer: int, payee: int, marriage_id: int) -> IncorporealRightRow | None:
+    if held(payer, payee) or not ctx.rng(f"right.wed.{marriage_id}").chance(ctx.rules.rights.wed_pct):
+        return None
+    row = await ctx.session.scalar(
+        select(IncorporealRightRow)
+        .where(
+            IncorporealRightRow.holder_node_id == payer, IncorporealRightRow.kind.in_(list(PORTIONS)), IncorporealRightRow.acquired != RightAcquired.LICENSED
+        )
+        .order_by(IncorporealRightRow.id)
+        .limit(1)
+    )
+    if row is None or "holder_node_id" in row.locked:
+        return None
+    row.marriage_id = marriage_id
+    await passed(ctx, row, payer, payee, RightAcquired.WED)
+    return row
+
+
+async def win_right(ctx: TickContext, contest_id: int, stake_id: int | None, winner: int, loser: int) -> IncorporealRightRow | None:
+    if stake_id is None or held(winner, loser):
+        return None
+    row = await ctx.session.scalar(
+        select(IncorporealRightRow)
+        .where(IncorporealRightRow.holder_node_id == loser, IncorporealRightRow.subject_node_id == stake_id)
+        .order_by(IncorporealRightRow.id)
+        .limit(1)
+    )
+    if row is None or "holder_node_id" in row.locked:
+        return None
+    row.contest_id = contest_id
+    await passed(ctx, row, loser, winner, RightAcquired.WON)
+    return row
+
+
 async def keep_rights(ctx: TickContext, tally: RightsTally) -> None:
     await claim_works(ctx, tally)
+    await claim_recipes(ctx, tally)
+    await claim_techniques(ctx, tally)
     await ctx.session.flush()
     for row in list(await ctx.session.scalars(select(IncorporealRightRow).order_by(IncorporealRightRow.id))):
         if held(row.holder_node_id):

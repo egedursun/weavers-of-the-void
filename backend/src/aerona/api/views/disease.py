@@ -109,7 +109,7 @@ async def afflictions(session: AsyncSession, community_id: int) -> list[Afflicti
         AfflictionView(
             disease_id=profile.disease_entity_id,
             disease=name,
-            vector=profile.vector,
+            primary_route=profile.primary_route,
             target_functions=[DiseaseTarget(item) for item in profile.target_functions if item in DiseaseTarget._value2member_map_],
             severity=outbreak.severity,
             status=outbreak.status,

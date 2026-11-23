@@ -9,6 +9,7 @@ from aerona.domain.enums.collective import (
     CascadeOutcome,
     CollectiveActKind,
     CollectiveTrigger,
+    CrowdFeeling,
     DatingSystemKind,
     FormativeKind,
     MobEnd,
@@ -21,7 +22,7 @@ from aerona.domain.enums.collective import (
 from aerona.domain.enums.concealment import SeekerAim
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import CustomCatalog, LanguageRegister
-from aerona.domain.enums.customs import AgeGrade, CoopPurpose, RevivalAim, RevivalGoal
+from aerona.domain.enums.customs import AgeGrade, CoopPurpose, RevivalGoal, RevivalWay
 from aerona.domain.enums.cycles import LegacyKind, ManumissionPath
 from aerona.domain.enums.ecology import AnimalRole
 from aerona.domain.enums.economy import CommodityKind
@@ -547,8 +548,10 @@ KINDS: tuple[IncidentKindSpec, ...] = (
                 FactSpec("beast", FactValue.NODE, required=False),
                 FactSpec("treaties", FactValue.NUMBER, FactUnit.COUNT, required=False),
                 FactSpec("gifts_found", FactValue.NUMBER, FactUnit.COUNT, required=False),
+                FactSpec("deserted", FactValue.NUMBER, FactUnit.PEOPLE, required=False),
+                FactSpec("feeling", FactValue.ENUM, enum=CrowdFeeling, required=False),
             ),
-            steps=frozenset({A.HOST, A.SERVE_FOOD, A.QUARREL, A.COURT, A.STRIKE, A.COMPETE, A.WIN, A.MEET_DANGER, A.SIGN, A.TEST, A.PERFORM}),
+            steps=frozenset({A.HOST, A.SERVE_FOOD, A.QUARREL, A.COURT, A.STRIKE, A.COMPETE, A.WIN, A.MEET_DANGER, A.SIGN, A.TEST, A.PERFORM, A.FLEE}),
             place=PlaceRule.WHEN_KNOWN,
             clock=C.INSTANT,
         ),
@@ -886,7 +889,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         G.SOCIAL,
         "Pressed by {opponent}, {actor} began a movement to {goal}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.OPPONENT, required=False), RoleSpec(R.LEADER, required=False)),
-        facts=(FactSpec("aim", FactValue.ENUM, enum=RevivalAim), FactSpec("goal", FactValue.ENUM, enum=RevivalGoal)),
+        facts=(FactSpec("way", FactValue.ENUM, enum=RevivalWay), FactSpec("goal", FactValue.ENUM, enum=RevivalGoal)),
         steps=frozenset({A.BEGIN}),
         place=PlaceRule.WHEN_KNOWN,
         clock=C.SEASON,
@@ -906,7 +909,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         G.SOCIAL,
         "The movement of {actor} settled into a new way of life.",
         roles=(RoleSpec(R.ACTOR),),
-        facts=(FactSpec("aim", FactValue.ENUM, enum=RevivalAim), FactSpec("goal", FactValue.ENUM, enum=RevivalGoal)),
+        facts=(FactSpec("way", FactValue.ENUM, enum=RevivalWay), FactSpec("goal", FactValue.ENUM, enum=RevivalGoal)),
         steps=frozenset({A.SETTLE}),
         place=PlaceRule.WHEN_KNOWN,
         clock=C.SEASON,
@@ -916,7 +919,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         G.SOCIAL,
         "The movement of {victim} was put down by {actor}.",
         roles=(RoleSpec(R.VICTIM), RoleSpec(R.ACTOR)),
-        facts=(FactSpec("aim", FactValue.ENUM, enum=RevivalAim), FactSpec("goal", FactValue.ENUM, enum=RevivalGoal)),
+        facts=(FactSpec("way", FactValue.ENUM, enum=RevivalWay), FactSpec("goal", FactValue.ENUM, enum=RevivalGoal)),
         steps=frozenset({A.PUNISH}),
         place=PlaceRule.WHEN_KNOWN,
         clock=C.SEASON,
@@ -929,7 +932,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         facts=(
             FactSpec("role", FactValue.ENUM, enum=RoleKind),
             FactSpec("eligibility", FactValue.ENUM, enum=RoleEligibility),
-            FactSpec("males_per_hundred", FactValue.NUMBER, FactUnit.COUNT),
+            FactSpec("begetters_per_hundred", FactValue.NUMBER, FactUnit.COUNT),
         ),
         steps=frozenset({A.DECREE}),
         place=PlaceRule.WHEN_KNOWN,
@@ -1288,6 +1291,16 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         steps=frozenset({A.FIND_EVIDENCE, A.INVESTIGATE}),
     ),
     IncidentKindSpec(
+        "tools.mortal.lead_revival",
+        G.SOCIAL,
+        "{leader} rose to lead the movement of {subject} by the way of {way} to {goal}.",
+        roles=(RoleSpec(R.LEADER), RoleSpec(R.SUBJECT)),
+        facts=(FactSpec("way", FactValue.ENUM, enum=RevivalWay), FactSpec("goal", FactValue.ENUM, enum=RevivalGoal)),
+        chronicle_kind=K.CULTURE,
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
         "tools.mortal.join_cooperative",
         G.SOCIAL,
         "{member} pooled their means in {target}.",
@@ -1417,6 +1430,16 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         facts=(FactSpec("cause", FactValue.ENUM, enum=DriftCause), FactSpec("causes", FactValue.NUMBER, FactUnit.COUNT)),
         chronicle_kind=K.CIVILIZATION,
         place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.stir_crowd",
+        G.SOCIAL,
+        "{leader} called the folk of {place} to {act:an}, and {participants:person|people} answered.",
+        roles=(RoleSpec(R.LEADER), RoleSpec(R.PLACE)),
+        facts=(FactSpec("act", FactValue.ENUM, enum=CollectiveActKind), FactSpec("participants", FactValue.NUMBER, FactUnit.PEOPLE)),
+        chronicle_kind=K.WORLD,
+        place=PlaceRule.WHEN_KNOWN,
         clock=C.INSTANT,
     ),
     IncidentKindSpec(

@@ -14,6 +14,7 @@ from aerona.db.tables.divine_conceptions import DivineConceptionRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import CurrencyRow, LoanRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.faith import CultOfficeRow
 from aerona.db.tables.fertility_means import FertilityMeansRow
@@ -38,6 +39,7 @@ from aerona.db.tables.referendums import ReferendumRow
 from aerona.db.tables.restoration import RestorationRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.securities import IssuedSecurityRow, SecurityHoldingRow, StockExchangeRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.agentless_conditions import ConditionCause
 from aerona.domain.enums.body import ConditionKind, HarmCause
@@ -50,6 +52,7 @@ from aerona.domain.enums.demography import Job
 from aerona.domain.enums.departures import DepartureKind
 from aerona.domain.enums.economy import CommodityKind, CurrencyIssuer, LoanStatus, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.environment import RiverClass
 from aerona.domain.enums.faction import FactionKind, FactionRank
 from aerona.domain.enums.faith import ClergyFunction
 from aerona.domain.enums.fertility_means import FertilityMeans
@@ -66,12 +69,16 @@ from aerona.domain.enums.records import IncidentTier
 from aerona.domain.enums.referendums import ReferendumSubject
 from aerona.domain.enums.restoration import RestorationStage
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.models.entity_stats import ArmyStats, HouseStats, ItemStats, LeagueStats, MortalStats, PolityStats, RegionStats, SettlementStats
 from aerona.engine.body.customs import people_of
+from aerona.engine.cosmos.maps import refresh_world_maps
 from aerona.engine.economy.purse import shift_points
 from aerona.engine.lore.research import holder_levels, techniques_of
 from aerona.engine.lore.research_depth import open_techniques
+from aerona.engine.phases.environment import environment_survey
+from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats
 from tests.engine.core.factories import region_record
 from tests.tools.every_setup import led_faction, ruled_realm, ruler, second_mortal
@@ -680,6 +687,31 @@ async def a_coast(session: AsyncSession, realm: Realm) -> Ids:
     session.add(ObservationMethodRow(people_entity_id=realm.people_id, domain=FolkDomain.WATERS, method=ObservationMethod.SIGHT, accuracy=50, locked=[]))
     await session.flush()
     return {"region": realm.cosmos.region_id, "sea": water.id}
+
+
+CANAL_EPOCH = 3
+
+
+async def a_canal_river(session: AsyncSession, realm: Realm) -> Ids:
+    lowland = await make_entity(session, "Lowmere", EntityType.REGION, world_id=realm.cosmos.world_id, stats=RegionStats())
+    land = region_record(realm.cosmos.region_id, [lowland.id]).model_dump(mode="json")
+    low = region_record(lowland.id, [realm.cosmos.region_id]).model_dump(mode="json")
+    existing = await session.scalar(select(WorldMapRow).where(WorldMapRow.world_id == realm.cosmos.world_id))
+    if existing is None:
+        session.add(WorldMapRow(world_id=realm.cosmos.world_id, generator_version=1, epoch=1, geometry={"regions": [land, low]}))
+    else:
+        existing.geometry = {"regions": [land, low]}
+    await session.flush()
+    context = await manual_context(session, "canal")
+    await refresh_world_maps(session, context.rules, CANAL_EPOCH)
+    await environment_survey(context)
+    ground = await session.get(RegionEnvironmentRow, realm.cosmos.region_id)
+    assert ground is not None
+    ground.river_class = RiverClass.RIVER
+    canal = await make_entity(session, "The Long Cut", EntityType.STRUCTURE, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)
+    session.add(StructureProfileRow(structure_entity_id=canal.id, kind=StructureKind.CANAL, host_entity_id=realm.settlement_id))
+    await session.flush()
+    return {"region": realm.cosmos.region_id, "lowland": lowland.id}
 
 
 async def a_creature_group(session: AsyncSession, realm: Realm) -> Ids:

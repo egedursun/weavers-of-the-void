@@ -22,7 +22,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow, HazardKind
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.environment import TerrainTrait
+from aerona.domain.enums.environment import ScarKind, TerrainTrait
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.industry import MethodKind
@@ -48,6 +48,8 @@ from aerona.engine.dominion.effects import step_here
 from aerona.engine.ecology.domestication import draught
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
+from aerona.engine.environment.book import add_scar
+from aerona.engine.environment.columns import rock_cut
 from aerona.engine.environment.years import world_years
 from aerona.engine.eras.effects import channel_value
 from aerona.engine.industry.energy import scale_by_energy
@@ -57,6 +59,7 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.means.water import flooded_yield
 from aerona.engine.nature.effects import cold_work
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -130,6 +133,17 @@ async def keep_methods(ctx: TickContext, rows: list[tuple[EntityRow, ResourcePro
 
 def abundance_of(profile: ResourceProfileRow) -> int:
     return clamp_int(round_half_up(profile.reserve * PERCENT / max(1, profile.initial_reserve)), 0, PERCENT)
+
+
+async def mine_out(ctx: TickContext, resource: EntityRow) -> None:
+    region_id = (await RegionAtlas.load(ctx.session)).top_region(resource.id)
+    ground = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
+    if ground is None or held(ground.entity_id) or "scar.mined_out" in ground.locked:
+        return
+    add_scar(ground, ScarKind.MINED_OUT, PERCENT // 2)
+    await record(
+        ctx, "scar.made", roles={IncidentRole.PLACE: ground.entity_id}, facts={"scar": ScarKind.MINED_OUT, "depth": PERCENT // 2}, place=ground.entity_id
+    )
 
 
 def write_reserve(resource: EntityRow, profile: ResourceProfileRow, reserve: int, *, force: bool = False) -> None:
@@ -444,6 +458,15 @@ async def byproduct(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
         region.erosion = clamp_int(region.erosion + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
 
 
+def perilous_work(rules: Rules, book: EconomyBook, resource: EntityRow, community_id: int, output: int) -> int:
+    region = book.ground.region_of(resource.id)
+    if region is None:
+        return output
+    lost = book.worker_danger.get(region.entity_id, 0) * rules.regional_danger.workers_harm_pct / PERCENT / PERCENT
+    stone = rock_cut(rules, book.rock_columns.get(region.entity_id, []), book.techniques.get(community_id, set()))
+    return round_half_up(output * (1 - lost) * (1 - stone))
+
+
 async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, profile: ResourceProfileRow, tally: ExtractionTally) -> int:
     reconcile(resource, profile)
     if not profile.revealed or (profile.sealed_until_epoch is not None and profile.sealed_until_epoch >= ctx.epoch):
@@ -467,6 +490,7 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
         else:
             row.workers = workers
         output = await output_of(ctx, book, resource, profile, community, workers=workers)
+        output = perilous_work(ctx.rules, book, resource, community.id, output)
         if kind is ExtractionKind.MINING:
             output = await flooded_yield(ctx, community.id, profile.extraction_difficulty, output)
         if output <= 0:
@@ -474,6 +498,8 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
                 tally.gated += 1
             continue
         write_reserve(resource, profile, profile.reserve - output)
+        if profile.reserve <= 0 and profile.regeneration <= 0:
+            await mine_out(ctx, resource)
         material = profile.material if profile.world_material_id is None else None
         await goods_of(ctx.session, ctx.epoch).add(
             community.id,

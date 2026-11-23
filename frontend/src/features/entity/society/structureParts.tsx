@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EntityLink, Medallion, MiniStat, StatBar } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { COMMODITIES } from '@/features/entity/affairs/labels'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { CLASS_SPEC } from './labels'
 import { Pips } from './parts'
@@ -338,7 +339,7 @@ export function UpkeepLine({ view }: { view: StructureView }) {
       />
       <MiniStat
         icon={Hammer}
-        label={`${view.upkeep_commodity.replaceAll('_', ' ')} each age`}
+        label={`${COMMODITIES[view.upkeep_commodity]} each age`}
         value={formatInteger(view.upkeep_goods)}
         tone='warning'
       />

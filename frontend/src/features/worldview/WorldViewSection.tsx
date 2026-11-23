@@ -1,4 +1,5 @@
 import { RotateCcw } from 'lucide-react'
+import { worldTypeValues } from '@/api/generated/schema'
 import { EmptyState, LoadingBlock, Section } from '@/components/domain'
 import { table } from '@/features/arcana/labels'
 import {
@@ -9,8 +10,8 @@ import {
 } from '@/features/cosmography/parts'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { Ref } from '@/features/gatherings/parts'
-import { humanize } from '@/features/pantheon/labels'
 import { PREHISTORY_KINDS } from '@/features/prehistory/labels'
 import { Bars } from '@/features/sacred/parts'
 import {
@@ -212,7 +213,7 @@ export function WorldViewSection({
                 [
                   'Kind of world',
                   query.data.world_type
-                    ? humanize(query.data.world_type)
+                    ? wordOf(worldTypeValues, query.data.world_type)
                     : 'none',
                 ],
                 [

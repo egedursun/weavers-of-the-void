@@ -1,12 +1,16 @@
+from collections.abc import Awaitable, Callable, Mapping
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.beast_tempers import DRAWN_TEMPERAMENTS
 from aerona.catalog.creature_anatomy import EXOTIC_TISSUES, HOARDED, LIFE_SKIN, PLAN_LIMBS, PLAN_SKIN, TISSUES, TRAIT_ATTACKS, TRAIT_SKIN, AttackSpec
 from aerona.catalog.life.domain import GROWN
 from aerona.catalog.life.ecology import ATTACK_SPECS_ATTACK_RANGES, BONE_OF, CLOSE_DELIVERIES, GENERATE_PACKAGE_KINDS, TOWN_DELIVERIES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.core.random import RandomKey, SeededRandom
+from aerona.core.total import total
 from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -37,6 +41,7 @@ from aerona.engine.body.book import beast_plan, wild_plan
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.economy.stocks import holding
+from aerona.engine.nature.seasons import COLD
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -46,23 +51,21 @@ BEAST_BODIES_FIXUP = "creature_anatomy.beast_bodies"
 MIND_EFFECTS = (AttackEffect.FEAR, AttackEffect.STILLNESS, AttackEffect.SLEEP, AttackEffect.CONFUSION, AttackEffect.CHARM)
 FLYERS = frozenset({BodyPlan.AVIAN})
 HOLY_KINDS = frozenset({StructureKind.TEMPLE, StructureKind.SHRINE, StructureKind.MONASTERY})
-TEMPERAMENTS = (Temperament.PLACID, Temperament.SKITTISH, Temperament.CURIOUS, Temperament.FIERCE, Temperament.CUNNING)
 
 
-def words(value: str) -> str:
-    return value.replace("_", " ")
+HabitatTest = Callable[[BodyPlan, set[CreatureTrait], Biochemistry, bool], bool]
+HABITAT_TESTS: tuple[tuple[HabitatTest, Habitat], ...] = (
+    (lambda _plan, _traits, life, _deep: life is Biochemistry.VOID, Habitat.VOID),
+    (lambda _plan, _traits, life, _deep: life is Biochemistry.SPIRIT, Habitat.ETHEREAL),
+    (lambda _plan, _traits, life, deep: deep and life is Biochemistry.SILICON, Habitat.MAGMA),
+    (lambda _plan, traits, _life, deep: deep or T.BURROWING in traits, Habitat.DEEP),
+    (lambda plan, traits, _life, _deep: T.AQUATIC in traits or plan is BodyPlan.AQUATIC, Habitat.WATER),
+    (lambda plan, traits, _life, _deep: T.FLYING in traits or plan in FLYERS, Habitat.SKY),
+)
 
 
 def habitat_of(plan: BodyPlan, traits: set[CreatureTrait], biochemistry: Biochemistry, *, deep: bool) -> Habitat:
-    if biochemistry is Biochemistry.VOID:
-        return Habitat.VOID
-    if deep or T.BURROWING in traits:
-        return Habitat.DEEP
-    if T.AQUATIC in traits or plan is BodyPlan.AQUATIC:
-        return Habitat.WATER
-    if T.FLYING in traits or plan in FLYERS:
-        return Habitat.SKY
-    return Habitat.LAND
+    return next((habitat for test, habitat in HABITAT_TESTS if test(plan, traits, biochemistry, deep)), Habitat.LAND)
 
 
 def temperament_of(rng: SeededRandom, aggression: int, fear: int) -> Temperament:
@@ -70,7 +73,7 @@ def temperament_of(rng: SeededRandom, aggression: int, fear: int) -> Temperament
         return Temperament.FIERCE
     if fear >= PERCENT * 2 // 3:
         return Temperament.SKITTISH
-    return rng.pick(list(TEMPERAMENTS))
+    return rng.pick(list(DRAWN_TEMPERAMENTS))
 
 
 def generate(
@@ -295,24 +298,63 @@ async def body_might(session: AsyncSession, rules: Rules, node_id: int) -> float
     return harm_factor(rules, anatomy, await plan_limbs(session, node_id), attacks) * guard
 
 
-async def repelled(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, aversion: Aversion | None) -> bool:
-    if aversion is None:
-        return False
-    if aversion is Aversion.FIRE:
-        return await holding(ctx.session, town.id, CommodityKind.FUEL) > 0
-    if aversion is Aversion.IRON:
-        return await holding(ctx.session, town.id, CommodityKind.WEAPONS) > 0
-    if aversion is Aversion.NOISE:
-        return (stat(town, "population") or 0) >= ctx.rules.creature_anatomy.noise_population
-    if aversion is Aversion.WATER:
-        region = atlas.top_region(town.id)
-        land = await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None
-        return land is not None and (land.coast_kind is not CoastKind.NONE or land.river_class is not RiverClass.NONE)
+async def by_fire(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> bool:
+    return await holding(ctx.session, town.id, CommodityKind.FUEL) > 0
+
+
+async def by_iron(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> bool:
+    return await holding(ctx.session, town.id, CommodityKind.WEAPONS) > 0
+
+
+async def by_noise(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> bool:
+    return (stat(town, "population") or 0) >= ctx.rules.creature_anatomy.noise_population
+
+
+async def land_of(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> RegionEnvironmentRow | None:
+    region = atlas.top_region(town.id)
+    return await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None
+
+
+async def by_water(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> bool:
+    land = await land_of(ctx, atlas, town)
+    return land is not None and (land.coast_kind is not CoastKind.NONE or land.river_class is not RiverClass.NONE)
+
+
+async def by_holy_ground(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> bool:
     holy = select(StructureProfileRow.structure_entity_id).join(EntityRow, EntityRow.id == StructureProfileRow.structure_entity_id)
     found = await ctx.session.scalar(
         holy.where(EntityRow.location_id == town.id, EntityRow.status == EntityStatus.CANON, StructureProfileRow.kind.in_(list(HOLY_KINDS))).limit(1)
     )
     return found is not None
+
+
+async def by_light(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> bool:
+    lit = await by_fire(ctx, atlas, town) or await by_noise(ctx, atlas, town)
+    return lit and ctx.rng(f"ward.light.{town.id}.{ctx.epoch}").chance(ctx.rules.aversions.light_ward_pct)
+
+
+async def by_cold(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> bool:
+    land = await land_of(ctx, atlas, town)
+    return land is not None and land.temperature_band in COLD and ctx.rng(f"ward.cold.{town.id}.{ctx.epoch}").chance(ctx.rules.aversions.cold_ward_pct)
+
+
+Ward = Callable[[TickContext, RegionAtlas, EntityRow], Awaitable[bool]]
+WARDS: Mapping[Aversion, Ward] = total(
+    Aversion,
+    {
+        Aversion.FIRE: by_fire,
+        Aversion.IRON: by_iron,
+        Aversion.NOISE: by_noise,
+        Aversion.WATER: by_water,
+        Aversion.HOLY_GROUND: by_holy_ground,
+        Aversion.LIGHT: by_light,
+        Aversion.COLD: by_cold,
+    },
+)
+
+
+async def repelled(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, aversion: Aversion | None) -> bool:
+    return aversion is not None and await WARDS[aversion](ctx, atlas, town)
 
 
 async def anatomy_lines(session: AsyncSession, node_id: int) -> list[str]:
@@ -324,20 +366,20 @@ async def anatomy_lines(session: AsyncSession, node_id: int) -> list[str]:
         parts.append(f"{several(row.wings, 'wing', 'wings')}")
     if row.tails:
         parts.append("a tail")
-    lines = [f"body: {', '.join(parts)}; skin of {words(row.skin.value)}, bones of {words(row.bone.value)}; lives in the {words(row.habitat.value)}"]
+    lines = [f"body: {', '.join(parts)}; skin of {spoken(row.skin)}, bones of {spoken(row.bone)}; lives in the {spoken(row.habitat)}"]
     attacks = await session.scalars(select(CreatureAttackRow).where(CreatureAttackRow.node_id == node_id).order_by(CreatureAttackRow.id))
     weapons = [
-        *(f"{words(item.delivery.value)} of {words(item.effect.value)}, reaching {words(item.range.value)}" for item in attacks),
-        f"its bite carries {words(row.bite.value)}" if row.bite else "",
+        *(f"{spoken(item.delivery)} of {spoken(item.effect)}, reaching {spoken(item.range)}" for item in attacks),
+        f"its bite carries {spoken(row.bite)}" if row.bite else "",
     ]
     if any(weapons):
         lines.append(f"attacks: {'; '.join(item for item in weapons if item)}")
-    nature = [f"temperament {words(row.temperament.value)}"]
+    nature = [f"temperament {spoken(row.temperament)}"]
     if row.hoards:
-        nature.append(f"hoards {words(row.hoards.value)}")
+        nature.append(f"hoards {spoken(row.hoards)}")
     if row.hates:
-        nature.append(f"shuns {words(row.hates.value)}")
+        nature.append(f"shuns {spoken(row.hates)}")
     if row.awakening:
-        nature.append(f"wakes to {words(row.awakening.value)}")
+        nature.append(f"wakes to {spoken(row.awakening)}")
     lines.append("nature: " + ", ".join(nature))
     return lines

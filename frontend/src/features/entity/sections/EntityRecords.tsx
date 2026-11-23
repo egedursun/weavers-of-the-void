@@ -1,4 +1,9 @@
 import { ArrowDown } from 'lucide-react'
+import {
+  actorKindValues,
+  entityTypeValues,
+  partOfSpeechValues,
+} from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
@@ -19,8 +24,8 @@ import {
   Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type EntityContext } from '../actions/context'
-import { humanize } from '../actions/schema'
 import { useLanguageViews } from '../api/queries'
 import { type BondView, type NodeRef } from '../api/types'
 
@@ -111,7 +116,7 @@ function LexiconTable({
                     <Muted
                       as='span'
                       variant='caption'
-                    >{` · ${humanize(word.part_of_speech)}`}</Muted>
+                    >{` · ${wordOf(partOfSpeechValues, word.part_of_speech)}`}</Muted>
                   )}
                   {word.example && (
                     <Muted
@@ -125,7 +130,7 @@ function LexiconTable({
                   <Muted as='span' variant='caption'>
                     {word.etymology ??
                       word.added_by?.name ??
-                      humanize(word.added_by_kind)}
+                      wordOf(actorKindValues, word.added_by_kind)}
                   </Muted>
                 </TableCell>
               </TableRow>
@@ -231,7 +236,7 @@ export function EntityRecords({ ctx }: { ctx: EntityContext }) {
             {(item) => (
               <li className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2.5 py-1.5'>
                 <Badge size='sm' variant='outline'>
-                  {humanize(item.entity_type)}
+                  {wordOf(entityTypeValues, item.entity_type)}
                 </Badge>
                 <EntityLink kind='entity' id={String(item.id)}>
                   {item.name}

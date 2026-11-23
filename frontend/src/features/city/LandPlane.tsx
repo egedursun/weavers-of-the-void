@@ -17,8 +17,14 @@ import { EmptyState, KpiTile, PagedList } from '@/components/domain'
 import { Text } from '@/components/typography'
 import { Facts, RecordRow } from '@/features/cosmography/parts'
 import { hasWebGL2 } from '@/features/cosmos/useCosmosViewSettings'
+import {
+  COAST_WORDS,
+  TEMPERATURE_WORDS,
+  TERRAIN_WORDS,
+} from '@/features/entity/affairs/labels'
 import { COMMODITY } from '@/features/entity/economy/labels'
 import { TERRAIN } from '@/features/entity/environment/labels'
+import { RIVER_SPEC } from '@/features/entity/happenings/labels'
 import { KIND_SPEC } from '@/features/entity/society/structureLabels'
 import { Ref } from '@/features/gatherings/parts'
 import {
@@ -55,7 +61,7 @@ function Legend({ scene }: { scene: LandScene }) {
         </span>
       ))}
       <Text as='span' variant='caption' tone='muted'>
-        {`River: ${scene.river.replaceAll('_', ' ')} · coast: ${scene.coast.replaceAll('_', ' ')}`}
+        {`River: ${RIVER_SPEC[scene.river].label.toLowerCase()} · coast: ${COAST_WORDS[scene.coast].toLowerCase()}`}
       </Text>
     </div>
   )
@@ -236,10 +242,9 @@ function LandBody({
             items={[
               [
                 'Terrain',
-                TERRAIN[scene.terrain]?.label ??
-                  scene.terrain.replaceAll('_', ' '),
+                TERRAIN[scene.terrain]?.label ?? TERRAIN_WORDS[scene.terrain],
               ],
-              ['Climate', scene.temperature.replaceAll('_', ' ')],
+              ['Climate', TEMPERATURE_WORDS[scene.temperature]],
               ['Roughness', scene.roughness],
               ['Soil fertility', scene.soil_fertility],
               ['Magic density', scene.magic_density],

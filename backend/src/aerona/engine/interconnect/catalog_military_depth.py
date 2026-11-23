@@ -116,13 +116,16 @@ MILITARY_DEPTH_MECHANICS = (
         phases=(*CAMPAIGN, *UPKEEP),
         surface=Surface(drawer="ArmyOrders", layer="map-layer-military"),
         backfill="none",
-        templates=("war.mutiny.",),
+        templates=("war.mutiny.", "travel.mode_used"),
         fields=("fodder_days", "mutiny", "drill", "cohesion", "baggage", "loot", "plundered"),
         targets=("army", "region"),
         couplings=(
             Coupling(S.SOCIAL, "bitter classes desert", E.FLOW, "campaign_depth.satisfaction_desertion_pct"),
             Coupling(S.ENVIRONMENT, "plundered lands yield less", E.MODIFIER, "campaign_depth.plunder_harvest_pct"),
             Coupling(S.LAW, "a standing army law drills the troops", E.RULE_SWITCH, "campaign_depth.drill_gain"),
+            Coupling(
+                S.BODY, "an army moves by the ways its people's bodies allow, choosing the one with the best passage", E.MODIFIER, "logistics.passability_floor"
+            ),
         ),
     ),
     Mechanic(

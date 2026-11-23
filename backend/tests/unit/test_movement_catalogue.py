@@ -52,7 +52,7 @@ def test_works_help_only_the_modes_that_take_them() -> None:
 def test_the_medium_picks_the_water_and_trade_readers() -> None:
     assert by_water("boat") and not by_water("on_foot")
     assert MOVEMENT[MovementMode.FLYING].medium is MovementMedium.AIR
-    assert trade_modes() == (MovementMode.ON_FOOT, MovementMode.WHEELED, MovementMode.BOAT)
+    assert trade_modes() == (MovementMode.ON_FOOT, MovementMode.WHEELED, MovementMode.BOAT, MovementMode.SUBMERGED)
 
 
 def test_an_old_terrain_base_override_reaches_every_ground_passage() -> None:

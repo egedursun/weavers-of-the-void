@@ -1,6 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.demography import FIGHTING_BANDS
+from aerona.catalog.transmission import DISEASE_ROUTES
 from aerona.db.tables.body import ConditionRow, InjuryRow, MaimedCohortRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import CohortRow
@@ -10,10 +12,11 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTraitRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.body import BodyFunction, Capacity, ConditionKind, HarmCause, InjuryKind, MaimedKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Job
-from aerona.domain.enums.disease import DiseaseTarget, DiseaseVector, OutbreakStatus, SpreadPath
+from aerona.domain.enums.disease import DiseaseTarget, OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind, TemperatureBand
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
@@ -82,49 +85,49 @@ async def host_species(realm: Realm, name: str, abundance: int, *, bearer: bool 
 
 
 async def test_a_forged_disease_keeps_its_design_its_locks_and_its_origin(realm: Realm) -> None:
-    disease = await forge(realm, vector="water", target_functions=["breath", "sight"], incubation=4, climate_affinity="wet")
+    disease = await forge(realm, primary_route="water", target_functions=["breath", "sight"], incubation=4, affinity_moisture="wet")
     profile = await realm.session.get(DiseaseProfileRow, disease.id)
     assert profile is not None
-    assert profile.vector is DiseaseVector.WATER and profile.incubation == 4
+    assert profile.primary_route is Transmission.WATER and profile.incubation == 4
     assert profile.target_functions == ["breath", "sight"]
-    assert set(profile.locked) == {"virulence", "lethality", "vector", "target_functions", "incubation", "climate_affinity"}
+    assert set(profile.locked) == {"virulence", "lethality", "primary_route", "target_functions", "incubation", "affinity_moisture"}
     incident = await realm.session.get(IncidentRow, profile.origin_incident_id or 0)
     assert incident is not None and incident.kind in {"disease.loosed", "disease.loosed_host"}
-    await edit_disease(context(realm.session), disease.id, {}, release=["vector"])
-    assert "vector" not in profile.locked
+    await edit_disease(context(realm.session), disease.id, {}, release=["primary_route"])
+    assert "primary_route" not in profile.locked
 
 
 async def test_each_vector_branches_on_its_own_ground(realm: Realm) -> None:
     town = await settlement(realm, "Well", population=4000)
-    rows = {vector: await forge(realm, vector=vector.value, target_functions=["vital"]) for vector in DiseaseVector}
+    rows = {vector: await forge(realm, primary_route=vector.value, target_functions=["vital"]) for vector in DISEASE_ROUTES}
     book = await book_of(realm)
 
-    def factor(vector: DiseaseVector, land: RegionEnvironmentRow, path: SpreadPath = SpreadPath.ORIGIN) -> float:
+    def factor(vector: Transmission, land: RegionEnvironmentRow, path: SpreadPath = SpreadPath.ORIGIN) -> float:
         return vector_factor(book, book.profiles[rows[vector].id], Spot(town, land, realm.region.id, path))
 
-    assert factor(DiseaseVector.WATER, ground(river_class=RiverClass.GREAT_RIVER)) > factor(DiseaseVector.WATER, ground())
-    assert factor(DiseaseVector.AIR, ground(temperature_band=TemperatureBand.COLD)) > factor(DiseaseVector.AIR, ground())
-    assert factor(DiseaseVector.TOUCH, ground(), SpreadPath.ROUTE) > factor(DiseaseVector.TOUCH, ground(), SpreadPath.ORIGIN)
-    assert factor(DiseaseVector.VOID, ground(scars={ScarKind.LEAK_WOUND.value: 80})) > factor(DiseaseVector.VOID, ground())
-    assert factor(DiseaseVector.SPIRIT, ground(magic_density=90)) > factor(DiseaseVector.SPIRIT, ground())
+    assert factor(Transmission.WATER, ground(river_class=RiverClass.GREAT_RIVER)) > factor(Transmission.WATER, ground())
+    assert factor(Transmission.INHALATION, ground(temperature_band=TemperatureBand.COLD)) > factor(Transmission.INHALATION, ground())
+    assert factor(Transmission.CONTACT, ground(), SpreadPath.ROUTE) > factor(Transmission.CONTACT, ground(), SpreadPath.ORIGIN)
+    assert factor(Transmission.VOID, ground(scars={ScarKind.LEAK_WOUND.value: 80})) > factor(Transmission.VOID, ground())
+    assert factor(Transmission.SPIRIT, ground(magic_density=90)) > factor(Transmission.SPIRIT, ground())
     book.ley.add(realm.region.id)
-    assert factor(DiseaseVector.SPIRIT, ground()) > 1.0 * RULES.epidemiology.spirit_faith_pct / 100
-    hostless = factor(DiseaseVector.BITE, ground())
-    book.hosts[rows[DiseaseVector.BITE].id] = {999}
+    assert factor(Transmission.SPIRIT, ground()) > 1.0 * RULES.epidemiology.spirit_faith_pct / 100
+    hostless = factor(Transmission.BITE, ground())
+    book.hosts[rows[Transmission.BITE].id] = {999}
     book.ranges[(999, realm.region.id)] = 100
-    assert factor(DiseaseVector.BITE, ground()) > hostless * 10
-    unbound = factor(DiseaseVector.CURSE, ground())
+    assert factor(Transmission.BITE, ground()) > hostless * 10
+    unbound = factor(Transmission.CURSE, ground())
     god = await son(realm.session, "Hexer", realm.world.id)
-    rows[DiseaseVector.CURSE].creator_son_id = god.id
+    rows[Transmission.CURSE].creator_son_id = god.id
     book.living_sons.add(god.id)
-    assert factor(DiseaseVector.CURSE, ground()) > unbound
+    assert factor(Transmission.CURSE, ground()) > unbound
 
 
 async def test_sanitation_matters_most_against_water_and_not_at_all_against_a_curse(realm: Realm) -> None:
     town = await settlement(realm, "Clean", population=4000)
-    water = await forge(realm, vector="water", target_functions=["vital"])
-    curse = await forge(realm, vector="curse", target_functions=["vital"])
-    air = await forge(realm, vector="air", target_functions=["breath"])
+    water = await forge(realm, primary_route="water", target_functions=["vital"])
+    curse = await forge(realm, primary_route="curse", target_functions=["vital"])
+    air = await forge(realm, primary_route="inhalation", target_functions=["breath"])
     book = await book_of(realm)
     land = ground()
     dirty = {disease.id: spread_factor(book, disease.id, town, land, source_region=None) for disease in (water, curse, air)}
@@ -136,7 +139,7 @@ async def test_sanitation_matters_most_against_water_and_not_at_all_against_a_cu
 
 async def test_herd_immunity_stops_spread_and_quarantine_holds_it_back(realm: Realm) -> None:
     town = await settlement(realm, "Herd", population=4000)
-    disease = await forge(realm, vector="air", target_functions=["breath"], incubation=0)
+    disease = await forge(realm, primary_route="inhalation", target_functions=["breath"], incubation=0)
     book = await book_of(realm)
     free = spread_factor(book, disease.id, town, ground(), source_region=None)
     book.quarantines[realm.region.id] = QuarantineRow(region_entity_id=realm.region.id, started_epoch=1, until_epoch=9)
@@ -149,7 +152,7 @@ async def test_herd_immunity_stops_spread_and_quarantine_holds_it_back(realm: Re
 
 async def test_incubation_spreads_unseen_past_a_quarantine(realm: Realm) -> None:
     town = await settlement(realm, "Unseen", population=4000)
-    hidden = await forge(realm, vector="air", target_functions=["breath"], incubation=8)
+    hidden = await forge(realm, primary_route="inhalation", target_functions=["breath"], incubation=8)
     book = await book_of(realm)
     book.quarantines[realm.region.id] = QuarantineRow(region_entity_id=realm.region.id, started_epoch=1, until_epoch=9)
     share = book.hidden_share(hidden.id)
@@ -162,8 +165,8 @@ async def test_incubation_spreads_unseen_past_a_quarantine(realm: Realm) -> None
 async def test_incubation_delays_the_first_toll(realm: Realm) -> None:
     quick_town = await settlement(realm, "Quick", population=20000)
     slow_town = await settlement(realm, "Slow", population=20000, location_id=realm.far_region.id)
-    quick = await forge(realm, vector="air", target_functions=["breath"], incubation=0)
-    slow = await forge(realm, vector="air", target_functions=["breath"], incubation=8)
+    quick = await forge(realm, primary_route="inhalation", target_functions=["breath"], incubation=0)
+    slow = await forge(realm, primary_route="inhalation", target_functions=["breath"], incubation=8)
     ctx = context(realm.session)
     await strike_plague(ctx, quick_town, 60, disease=quick)
     await strike_plague(ctx, slow_town, 60, disease=slow)
@@ -180,7 +183,7 @@ async def test_route_chance_scales_with_trade_volume_and_army_spread_with_size()
 
 
 async def test_target_functions_wound_the_matching_organ_and_leave_a_matching_weakness(realm: Realm) -> None:
-    disease = await forge(realm, vector="air", target_functions=["breath"], chronic_rate=60)
+    disease = await forge(realm, primary_route="inhalation", target_functions=["breath"], chronic_rate=60)
     profile = await realm.session.get(DiseaseProfileRow, disease.id)
     patient = await mortal(realm, "Coughing Ane")
     ctx = context(realm.session)
@@ -209,7 +212,7 @@ async def test_sick_cohorts_work_and_fight_by_the_function_struck() -> None:
 
 async def test_outbreaks_lay_cohorts_sick_the_sick_die_first_and_cohorts_sum_to_population(realm: Realm) -> None:
     town = await settlement(realm, "Fevered", population=10000)
-    disease = await forge(realm, vector="air", target_functions=["breath"], virulence=80)
+    disease = await forge(realm, primary_route="inhalation", target_functions=["breath"], virulence=80)
     ctx = context(realm.session)
     await seed(realm.session, RULES, town, 3)
     book = await book_of(realm)
@@ -220,7 +223,7 @@ async def test_outbreaks_lay_cohorts_sick_the_sick_die_first_and_cohorts_sum_to_
     assert fell == sick > 0
     assert total(rows) == stat(town, "population")
     adults = await fighting_age(realm.session, town.id, RULES)
-    assert adults is not None and adults < sum(row.count for key, row in rows.items() if key[0] is AgeBand.ADULT)
+    assert adults is not None and adults < sum(row.count for key, row in rows.items() if key[0] in FIGHTING_BANDS)
     await apply_flow(realm.session, RULES, town, -500, category=FlowCategory.PLAGUE, epoch=3)
     after = await cohorts_of(realm.session, town.id)
     lost_sick = sick - sum(row.count for key, row in after.items() if key[3] is CohortCondition.SICK)
@@ -280,7 +283,7 @@ async def test_a_host_species_carries_its_disease_and_its_death_starves_it(realm
     rules = tuned(epidemiology={"host_emergence_pct": 100})
     chosen = await host_for(context(realm.session, rules), book, realm.region.id)
     assert chosen is not None and chosen.id == rats.id
-    disease = await forge(realm, vector="bite", target_functions=["vital"], host_species_id=rats.id)
+    disease = await forge(realm, primary_route="bite", target_functions=["vital"], host_species_id=rats.id)
     assert await realm.session.get(SpeciesHostRow, (rats.id, disease.id)) is not None
     book = await book_of(realm)
     carried = spread_factor(book, disease.id, town, ground(), source_region=None)
@@ -301,7 +304,7 @@ async def test_a_host_species_carries_its_disease_and_its_death_starves_it(realm
 
 async def test_a_held_outbreak_status_is_kept_by_the_course(realm: Realm) -> None:
     await settlement(realm, "Held", population=4000)
-    disease = await forge(realm, vector="air", target_functions=["breath"])
+    disease = await forge(realm, primary_route="inhalation", target_functions=["breath"])
     ctx = context(realm.session, epoch=3)
     book = await book_of(realm)
     outbreak = await open_outbreak(ctx, book, disease, realm.region.id, path=SpreadPath.ORIGIN, severity=50)
@@ -315,7 +318,7 @@ async def test_a_held_outbreak_status_is_kept_by_the_course(realm: Realm) -> Non
 async def test_endemic_disease_repels_settlers_who_never_met_it(realm: Realm) -> None:
     home = await settlement(realm, "Home", population=3000, location_id=realm.far_region.id)
     immune = await settlement(realm, "Immune", population=3000, location_id=realm.far_region.id)
-    disease = await forge(realm, vector="water", target_functions=["vital"])
+    disease = await forge(realm, primary_route="water", target_functions=["vital"])
     realm.session.add(EndemicDiseaseRow(region_entity_id=realm.region.id, disease_entity_id=disease.id, load=60, since_epoch=1, locked=False))
     realm.session.add(ImmunityRow(community_entity_id=immune.id, disease_entity_id=disease.id, age_band=AgeBand.ADULT, immune_pct=50, since_epoch=1))
     await realm.session.flush()
@@ -348,7 +351,7 @@ async def test_past_plagues_become_diseases_outbreaks_and_immunity_once(realm: R
 
 async def test_army_and_journey_spread_respect_size_and_path(realm: Realm) -> None:
     home = await settlement(realm, "Barracks", population=4000)
-    touch = await forge(realm, vector="touch", target_functions=["skin"])
+    touch = await forge(realm, primary_route="contact", target_functions=["skin"])
     book = await book_of(realm)
     marched = spread_factor(book, touch.id, home, ground(), source_region=realm.far_region.id, path=SpreadPath.ARMY)
     walked = spread_factor(book, touch.id, home, ground(), source_region=realm.far_region.id, path=SpreadPath.JOURNEY)
@@ -359,7 +362,7 @@ async def test_army_and_journey_spread_respect_size_and_path(realm: Realm) -> No
 async def test_a_living_curse_god_feeds_on_outbreaks(realm: Realm, session: AsyncSession) -> None:
     god = await son(session, "Pestis", realm.world.id)
     ctx = context(session)
-    disease = await create_disease(ctx, realm.region.id, DiseaseDesign(values={"vector": "curse", "target_functions": ["vital"]}), son_id=god.id)
+    disease = await create_disease(ctx, realm.region.id, DiseaseDesign(values={"primary_route": "curse", "target_functions": ["vital"]}), son_id=god.id)
     assert disease.creator_son_id == god.id
     before = god.essence
     book = await book_of(realm)
@@ -374,7 +377,7 @@ async def test_conditions_with_a_part_are_read_as_function_loss() -> None:
 
 async def test_pins_on_the_sick_hold_a_community(realm: Realm) -> None:
     town = await settlement(realm, "Pinned", population=6000)
-    disease = await forge(realm, vector="air", target_functions=["breath"], virulence=80)
+    disease = await forge(realm, primary_route="inhalation", target_functions=["breath"], virulence=80)
     ctx = context(realm.session)
     await seed(realm.session, RULES, town, 3)
     await add_modifier(realm.session, ModifierDraft(town.id, "sick", ModifierOp.ADD, 0, ModifierSource.PIN, "test.pin", start_epoch=1))

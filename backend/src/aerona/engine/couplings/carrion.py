@@ -2,18 +2,21 @@ from collections import Counter
 
 from sqlalchemy import select
 
-from aerona.catalog.couplings import KEEPING_RESTS, WORLD_RESTS
+from aerona.catalog.couplings import CARRION_RESTS, KEEPING_RESTS, WORLD_RESTS
+from aerona.catalog.terrain import TERRAIN
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.couplings import CarrionPulseRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.fossils import FossilBedRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.couplings import CarrionRest
 from aerona.domain.enums.ecology import Diet
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.environment import ScarKind, TerrainTrait
+from aerona.domain.enums.fossil import FossilSource
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import SpiritStats
 from aerona.engine.context import TickContext
@@ -75,14 +78,23 @@ async def feed_scavengers(
     row.scavenged += eaten
     if "preserved" not in row.locked:
         row.preserved = False
-    if "rest" not in row.locked:
-        row.rest = await rest_of(ctx, region, ground)
+    await settle_rest(ctx, row, region, ground)
+    draw = CARRION_RESTS[row.rest].scavenger(ctx.rules)
     for found in ranges:
         if "abundance" not in found.locked and not held(found.species_entity_id):
-            found.abundance = clamp_percent(found.abundance + table.scavenger_boom)
+            found.abundance = clamp_percent(found.abundance + table.scavenger_boom * draw // PERCENT)
     if ground is not None and "disease_load" not in ground.locked:
         ground.disease_load = clamp_percent(ground.disease_load + table.vermin_disease)
     set_stats(region, danger=clamp_percent(stat_or(region, "danger", 0) + table.predators_drawn))
+
+
+async def settle_rest(ctx: TickContext, row: CarrionPulseRow, region: EntityRow, ground: RegionEnvironmentRow | None, rest: CarrionRest | None = None) -> None:
+    if "rest" in row.locked:
+        return
+    was = row.rest
+    row.rest = rest or await rest_of(ctx, region, ground)
+    if row.rest is not was:
+        await record(ctx, "carrion.laid", roles={IncidentRole.PLACE: region.id}, facts={"rest": row.rest, "dead": row.carrion}, place=region.id)
 
 
 async def rest_of(ctx: TickContext, region: EntityRow, ground: RegionEnvironmentRow | None) -> CarrionRest:
@@ -90,6 +102,10 @@ async def rest_of(ctx: TickContext, region: EntityRow, ground: RegionEnvironment
     world = await ctx.session.get(WorldRow, region.world_id) if region.world_id is not None else None
     if world is not None and world.world_type in WORLD_RESTS:
         return WORLD_RESTS[world.world_type]
+    if ground is not None and ground.burned_epoch is not None and ground.burned_epoch >= ctx.epoch:
+        return CarrionRest.BURNED
+    if ground is not None and TerrainTrait.WATERY in TERRAIN[ground.dominant_terrain].traits:
+        return CarrionRest.SUNK
     if ground is not None and abs(ground.latitude) >= table.frozen_latitude:
         return CarrionRest.FROZEN
     if ground is not None and ground.moisture <= table.dry_moisture:
@@ -99,18 +115,43 @@ async def rest_of(ctx: TickContext, region: EntityRow, ground: RegionEnvironment
 
 async def lie_unscavenged(ctx: TickContext, row: CarrionPulseRow, ground: RegionEnvironmentRow | None, region: EntityRow) -> None:
     table = ctx.rules.carrion
-    if "rest" not in row.locked:
-        row.rest = await rest_of(ctx, region, ground)
+    await settle_rest(ctx, row, region, ground)
     if "preserved" not in row.locked:
         row.preserved = row.rest in KEEPING_RESTS
-    if row.rest is CarrionRest.DRIFTING:
+    spec = CARRION_RESTS[row.rest]
+    if ground is not None and "disease_load" not in ground.locked:
+        ground.disease_load = clamp_percent(ground.disease_load + spec.disease(ctx.rules))
+    if ground is not None and spec.soil and "soil_fertility" not in ground.locked:
+        ground.soil_fertility = clamp_percent(ground.soil_fertility + spec.soil)
+    await lay_remains(ctx, row, region)
+    if CARRION_RESTS[row.rest].gone:
         row.carrion = 0
-    elif row.rest is CarrionRest.ROTTING and ground is not None and "disease_load" not in ground.locked:
-        ground.disease_load = clamp_percent(ground.disease_load + table.vermin_disease)
     elif row.rest is CarrionRest.FLOATING:
         set_stats(region, danger=clamp_percent(stat_or(region, "danger", 0) + table.floating_hazard))
         if ground is not None:
             add_scar(ground, ScarKind.HAUNTED, table.haunting)
+
+
+async def lay_remains(ctx: TickContext, row: CarrionPulseRow, region: EntityRow) -> None:
+    chance = CARRION_RESTS[row.rest].fossil(ctx.rules)
+    if chance <= 0 or not ctx.rng(f"carrion.fossil.{region.id}.{ctx.epoch}").chance(chance):
+        return
+    laid = await ctx.session.scalar(
+        select(FossilBedRow.id).where(FossilBedRow.region_entity_id == region.id, FossilBedRow.source == FossilSource.BURIED_DEAD).limit(1)
+    )
+    if laid is not None:
+        return
+    ctx.session.add(
+        FossilBedRow(
+            region_entity_id=region.id,
+            world_id=region.world_id,
+            source=FossilSource.BURIED_DEAD,
+            richness=ctx.rules.fossils.richness,
+            frozen=row.rest is CarrionRest.FROZEN,
+            laid_epoch=ctx.epoch,
+            locked=[],
+        )
+    )
 
 
 UNBURIED = "unburied dead"
@@ -131,7 +172,8 @@ async def restless(ctx: TickContext, row: CarrionPulseRow, ground: RegionEnviron
     if ground is not None:
         add_scar(ground, ScarKind.HAUNTED, table.haunting)
     mass = per_living(table.restless_dead, living)
-    if row.carrion < mass or not ctx.rng(f"carrion.restless.{region.id}.{ctx.epoch}").chance(table.restless_chance):
+    chance = table.restless_chance * CARRION_RESTS[row.rest].restless(ctx.rules) // PERCENT
+    if row.carrion < mass or not ctx.rng(f"carrion.restless.{region.id}.{ctx.epoch}").chance(chance):
         return
     strength = clamp_percent(row.carrion // mass * 10)
     unrest = clamp_percent(table.unburied_unrest_base + row.carrion // mass * table.unburied_unrest_per)
@@ -192,6 +234,7 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
     "table.dimensions",
     "table.entities",
     "table.foreign_gods",
+    "table.fossil_beds",
     "table.galaxies",
     "table.galaxy_clusters",
     "table.incident_participants",
@@ -214,6 +257,7 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
+    "table.fossil_beds",
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
@@ -253,6 +297,9 @@ async def carrion(ctx: TickContext) -> None:
             buried = min(row.carrion, table.burial * living[region_id] // PER_MILLE)
             row.carrion -= buried
             await mourn_cost(ctx, region_id)
+            if buried > row.carrion:
+                await settle_rest(ctx, row, region, ground, CarrionRest.BURIED)
+                await lay_remains(ctx, row, region)
         if row.carrion:
             await restless(ctx, row, ground, region, living[region_id])
         if not row.carrion and not row.kept:

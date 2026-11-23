@@ -25,6 +25,7 @@ import {
   Swords,
   Trophy,
   Unlink,
+  UserX,
   Users,
   UtensilsCrossed,
   Wheat,
@@ -179,6 +180,9 @@ export const EVENT_SPEC: Record<MobilityEvent, Spec> = {
   enslaved: { label: 'Enslaved', icon: Link, tone: 'danger' },
   freed: { label: 'Freed', icon: Unlink, tone: 'success' },
   ruined: { label: 'Ruined', icon: Flame, tone: 'warning' },
+  enriched: { label: 'Risen by wealth', icon: Coins, tone: 'gold' },
+  ordained: { label: 'Ordained', icon: Church, tone: 'verdigris' },
+  outcast: { label: 'Cast out', icon: UserX, tone: 'danger' },
 }
 
 export const STANDING_LABEL: Record<string, string> = {

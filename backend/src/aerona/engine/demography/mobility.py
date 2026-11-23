@@ -1,23 +1,28 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.demography import GROWN_BANDS
+from aerona.catalog.mobility import MOBILITY_EVENTS
 from aerona.constants.units import PERCENT
 from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import CohortRow, PeopleCultureRow
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.law_depth import OutlawRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.cycles import ManumissionPath
-from aerona.domain.enums.demography import AgeBand, CohortCondition
+from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.economy import LoanStatus
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society_depth import MobilityEvent
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.collective.demography import diaspora_pull
 from aerona.engine.context import TickContext
@@ -25,16 +30,17 @@ from aerona.engine.cycles.book import at_war
 from aerona.engine.cycles.indenture import freed_class, indentured_in, manumission_path, record_manumission
 from aerona.engine.demography.bound import BOUND, bound_share, move_people, sync_bound_share
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for
-from aerona.engine.demography.events import ennobled, enslaved, freed, ruined
+from aerona.engine.demography.events import ennobled, enslaved, freed, moved_class, ruined
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.law.prisons import imprison
 from aerona.engine.military.units import resize
+from aerona.engine.mind.book import values_for
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import held_captive, take_captive
@@ -159,7 +165,7 @@ async def bitter_emigration(ctx: TickContext, community: EntityRow, rows: dict[C
     leaving = sum(
         round_half_up(row.count * table.desertion_pct / PERCENT)
         for key, row in rows.items()
-        if key[2] in bitter and key[0] is AgeBand.ADULT and key[3] is CohortCondition.NONE
+        if key[2] in bitter and key[0] in GROWN_BANDS and key[3] is CohortCondition.NONE
     )
     population = stat(community, "population") or 0
     leaving = min(max(0, leaving - await indentured_in(ctx.session, community.id)), population // 10)
@@ -187,6 +193,28 @@ async def ennoble_heroes(ctx: TickContext) -> int:
         raised += 1
         await ennobled(ctx, hero, await living_entity(ctx.session, army.owner_entity_id))
     return raised
+
+
+async def shift_classes(ctx: TickContext) -> int:
+    table = ctx.rules.mobility
+    moved = 0
+    mortals = await ctx.session.scalars(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+    )
+    outlaws = set(await ctx.session.scalars(select(OutlawRow.mortal_entity_id)))
+    enriching = MOBILITY_EVENTS[MobilityEvent.ENRICHED].from_classes
+    for mortal in list(mortals):
+        if held(mortal.id):
+            continue
+        if mortal.id in outlaws and mortal.social_class is not SocialClass.OUTCAST:
+            moved += await moved_class(ctx, mortal, MobilityEvent.OUTCAST, cause="declared an outlaw")
+        elif mortal.mortal_role is MortalRole.PRIEST and mortal.social_class not in (SocialClass.PRIEST, SocialClass.MONASTIC):
+            moved += await moved_class(ctx, mortal, MobilityEvent.ORDAINED, cause="took up the service of a faith")
+        elif mortal.social_class in enriching and stat_or(mortal, "wealth", 0) >= table.enrich_threshold:
+            hierarchy = (await values_for(ctx.session, mortal.location_id or mortal.id)).get(ValueAxis.HIERARCHY, 0)
+            if hierarchy <= table.enrich_hierarchy_max:
+                moved += await moved_class(ctx, mortal, MobilityEvent.ENRICHED, cause="grew rich")
+    return moved
 
 
 async def debtors_prison(ctx: TickContext, lender: EntityRow, member: EntityRow) -> None:

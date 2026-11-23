@@ -67,7 +67,7 @@ CLASS_DWELLING: dict[SocialClass, str] = {
     SocialClass.SCRIBE: "townhouse",
     SocialClass.ARTISAN: "townhouse",
     SocialClass.WARRIOR: "longhouse",
-    SocialClass.FARMER: "longhouse",
+    SocialClass.FARMER: "farmstead",
     SocialClass.MONASTIC: "tower",
     SocialClass.SERF_OR_SLAVE: "hut",
     SocialClass.OUTCAST: "hut",

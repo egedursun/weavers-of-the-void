@@ -1,8 +1,9 @@
+import { entityTypeValues } from '@/api/generated/schema'
 import { formatDecimal } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { EntityLink, PagedList, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
-import { humanize } from '../actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type SimilarRecord } from '../api/types'
 
 export function EntityRelated({ similar }: { similar: SimilarRecord[] }) {
@@ -32,7 +33,8 @@ export function EntityRelated({ similar }: { similar: SimilarRecord[] }) {
             </div>
             <Muted variant='caption' truncate={2}>
               {[
-                item.entity.subtype ?? humanize(item.entity.entity_type),
+                item.entity.subtype ??
+                  wordOf(entityTypeValues, item.entity.entity_type),
                 ...item.reasons,
               ].join(' · ')}
             </Muted>

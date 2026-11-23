@@ -20,6 +20,9 @@ class RelationType(StrEnum):
     DRINKING_COMPANION = "drinking_companion"
     PATRON = "patron"
     CLIENT = "client"
+    BETROTHED = "betrothed"
+    SWORN_KIN = "sworn_kin"
+    FOSTER = "foster"
 
 
 class InteractionKind(StrEnum):
@@ -44,6 +47,9 @@ class InteractionKind(StrEnum):
     CONFIDE_SECRET = "confide_secret"
     THREATEN = "threaten"
     BRAWL = "brawl"
+    APOLOGISE = "apologise"
+    SHARE_MEAL = "share_meal"
+    ASK_COUNSEL = "ask_counsel"
 
 
 class CircleKind(StrEnum):
@@ -55,6 +61,8 @@ class CircleKind(StrEnum):
     PRAYER_CIRCLE = "prayer_circle"
     MUSIC_CIRCLE = "music_circle"
     CRAFT_CIRCLE = "craft_circle"
+    SPORT_CLUB = "sport_club"
+    GAMING_CIRCLE = "gaming_circle"
 
 
 class PassionKind(StrEnum):
@@ -88,6 +96,8 @@ class AppealKind(StrEnum):
     AUTHORITY = "authority"
     EVIDENCE = "evidence"
     FEAR = "fear"
+    FEELING = "feeling"
+    BOND = "bond"
 
 
 class PersuasionAim(StrEnum):
@@ -96,6 +106,8 @@ class PersuasionAim(StrEnum):
     FAITH = "faith"
     VOTE = "vote"
     TREATY = "treaty"
+    SURRENDER = "surrender"
+    CONFESSION = "confession"
 
 
 class GroupKind(StrEnum):
@@ -117,6 +129,8 @@ class ContestKind(StrEnum):
     TRIAL_OF_WISDOM = "trial_of_wisdom"
     SONG_CONTEST = "song_contest"
     STORYTELLING = "storytelling"
+    RACE = "race"
+    CRAFT_CONTEST = "craft_contest"
 
 
 class ContestStake(StrEnum):
@@ -126,6 +140,9 @@ class ContestStake(StrEnum):
     OFFICE = "office"
     CAPTIVE = "captive"
     DIVINE_FAVOUR = "divine_favour"
+    LAND = "land"
+    FREEDOM = "freedom"
+    KNOWLEDGE = "knowledge"
 
 
 class ContestEnd(StrEnum):

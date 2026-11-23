@@ -33,9 +33,16 @@ class ClimateLine(ContextItem):
 
 
 class SeasonLine(ContextItem):
+    id: int
     position: int
     name: str
+    share_pct: int
+    warmth: str
+    water: str
+    temperature_shift: int
+    rain_shift: int
     growth: int
+    travel: int
     campaign: int
 
 
@@ -310,6 +317,13 @@ class LanguageLinesContext(PromptContext):
     languages: list[LanguageLine]
 
 
+class GroundBeneath(ContextItem):
+    top: list[str] = Field(default_factory=list)
+    deepest_reached: str | None = None
+    veins_reached: list[str] = Field(default_factory=list)
+    depths_reached: list[str] = Field(default_factory=list)
+
+
 class RegionGeography(ContextItem):
     id: int
     name: str
@@ -323,6 +337,9 @@ class RegionGeography(ContextItem):
     climate: str | None = None
     river: str | None = None
     scars: list[str] = Field(default_factory=list)
+    growth: str | None = None
+    hazards: list[str] = Field(default_factory=list)
+    beneath: GroundBeneath | None = None
     harvest: str | None = None
     ley: list[NamedRecord] = Field(default_factory=list)
     use: str | None = None
@@ -335,6 +352,8 @@ class RegionGeography(ContextItem):
     sacredness: int | None = None
     memories: list[str] = Field(default_factory=list)
     mapped_by: list[str] = Field(default_factory=list)
+    passage: list[str] = Field(default_factory=list)
+    named_years: list[str] = Field(default_factory=list)
 
 
 class GeographyLinesContext(PromptContext):
@@ -342,6 +361,7 @@ class GeographyLinesContext(PromptContext):
     regions: list[RegionGeography]
     seasons: list[str] = Field(default_factory=list)
     long_days: str | None = None
+    named_years: list[str] = Field(default_factory=list)
 
 
 class SummarySection(StrEnum):

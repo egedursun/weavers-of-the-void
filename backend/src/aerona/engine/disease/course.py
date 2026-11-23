@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
+from aerona.catalog.life.demography import MINOR_BANDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.disease import EndemicDiseaseRow, ImmunityRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
@@ -9,8 +10,9 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.routes import JourneyRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.demography import AgeBand
-from aerona.domain.enums.disease import DiseaseVector, OutbreakStatus, SpreadPath
+from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.loops import BalanceLoop
@@ -181,7 +183,7 @@ async def run_course(ctx: TickContext, book: DiseaseBook) -> None:
 
 def host_gone(book: DiseaseBook, outbreak: OutbreakRow) -> bool:
     profile = book.profiles.get(outbreak.disease_entity_id)
-    if profile is None or not book.host_bound(profile.disease_entity_id) or profile.vector is not DiseaseVector.BITE:
+    if profile is None or not book.host_bound(profile.disease_entity_id) or profile.primary_route is not Transmission.BITE:
         return False
     return book.host_abundance(profile.disease_entity_id, outbreak.region_entity_id) <= 0
 
@@ -196,8 +198,8 @@ def fade_immunity(ctx: TickContext, book: DiseaseBook) -> None:
         for band, row in rows.items():
             if row.locked:
                 continue
-            kept = row.immune_pct * keep * (1 - table.child_immunity_loss_pct / PERCENT if band is AgeBand.CHILD else 1)
-            row.immune_pct = clamp_int(max(kept, endemic if band is not AgeBand.CHILD else endemic / 2), 0, PERCENT)
+            kept = row.immune_pct * keep * (1 - table.child_immunity_loss_pct / PERCENT if band in MINOR_BANDS else 1)
+            row.immune_pct = clamp_int(max(kept, endemic if band not in MINOR_BANDS else endemic / 2), 0, PERCENT)
 
 
 async def settle_endemic(ctx: TickContext, book: DiseaseBook) -> None:
@@ -227,7 +229,7 @@ async def settle_endemic(ctx: TickContext, book: DiseaseBook) -> None:
                             community_entity_id=community_id,
                             disease_entity_id=row.disease_entity_id,
                             age_band=band,
-                            immune_pct=row.load if band is not AgeBand.CHILD else row.load // 2,
+                            immune_pct=row.load if band not in MINOR_BANDS else row.load // 2,
                             since_epoch=ctx.epoch,
                         )
                         ctx.session.add(immune)

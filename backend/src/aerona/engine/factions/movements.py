@@ -3,31 +3,40 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.estates import CAUSE_LABELS
-from aerona.catalog.life.factions import ENACTED, GOALS, LAW_TARGETS
+from aerona.catalog.movement_causes import CAUSE_LABELS, ENACTED, GOALS, LAW_TARGETS, MOVEMENT_CAUSES
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
+from aerona.db.repositories.bonds import BondRepository
+from aerona.db.tables.customs import IntoxicantCustomRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import EstatePrivilegeRow, EstateProfileRow, MovementProfileRow, MovementSupportRow
 from aerona.db.tables.factions import FactionGoalRow, FactionProfileRow
+from aerona.db.tables.folkways import PurityRankRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import PolityLoyaltyRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.demography import Job
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind, MovementCause
+from aerona.domain.enums.labour import WorkerBodyForm
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DecisionRule, LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause, WarStatus
-from aerona.domain.models.entity_stats import FactionStats
+from aerona.domain.models.entity_stats import CultStats, FactionStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.customs.revival import rule_push
 from aerona.engine.cycles.book import stress_factor
 from aerona.engine.cycles.indenture import indentured_share, revolts_in
+from aerona.engine.labour.founding import found_body
 from aerona.engine.mind.book import values_for
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
@@ -36,6 +45,7 @@ from aerona.engine.polity.regard import value_distance
 from aerona.engine.polity.standing import secede
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat_or
@@ -120,6 +130,7 @@ async def independence(ctx: TickContext, ground: Ground) -> float:
         + grievances * table.separatism_grievance_pct / PERCENT
         - autonomy * table.separatism_autonomy_pct / PERCENT
         - privileges * table.separatism_privilege
+        + await rule_push(ctx.session, ctx.rules, folk.id)
     )
 
 
@@ -175,6 +186,55 @@ async def conservation(ctx: TickContext, ground: Ground) -> float:
     return await loss_of_wild(ctx, ground.community) - ground.shares.get(SocialClass.FARMER, 0.0) / 2
 
 
+@PRESSURES.on(MovementCause.LABOUR)
+async def labour(ctx: TickContext, ground: Ground) -> float:
+    unpaid = await ctx.session.scalar(
+        select(FactionProfileRow.faction_entity_id).where(FactionProfileRow.home_entity_id == ground.community.id, FactionProfileRow.unpaid_epochs > 0).limit(1)
+    )
+    workers = ground.shares.get(SocialClass.WORKER, 0.0) + ground.shares.get(SocialClass.ARTISAN, 0.0) / 2
+    return max(0.0, workers - ground.values.get(ValueAxis.HIERARCHY, 0) / 4 + (HALF if unpaid is not None else 0))
+
+
+@PRESSURES.on(MovementCause.FAITH_REFORM)
+async def faith_reform(ctx: TickContext, ground: Ground) -> float:
+    if stat_or(ground.community, "piety", 0) < HALF // 2:
+        return 0.0
+    return max(0.0, (ground.values.get(ValueAxis.TRUTH, 0) + ground.values.get(ValueAxis.KNOWLEDGE, 0) - ground.values.get(ValueAxis.TRADITION, 0)) / 2)
+
+
+@PRESSURES.on(MovementCause.TEMPERANCE)
+async def temperance(ctx: TickContext, ground: Ground) -> float:
+    folk = await people_of(ctx.session, ground.community)
+    if folk is None:
+        return 0.0
+    accepted = list(await ctx.session.scalars(select(IntoxicantCustomRow.acceptance).where(IntoxicantCustomRow.people_entity_id == folk.id)))
+    if not accepted:
+        return 0.0
+    return max(0.0, ground.values.get(ValueAxis.PURITY, 0) / 2 + (sum(accepted) / len(accepted) - HALF) / 2)
+
+
+@PRESSURES.on(MovementCause.MIND_RIGHTS)
+async def mind_rights(ctx: TickContext, ground: Ground) -> float:
+    made = await ctx.session.scalar(
+        select(EntityRow.id)
+        .join(MindProfileRow, MindProfileRow.node_id == EntityRow.id)
+        .where(EntityRow.location_id == ground.community.id, MindProfileRow.origin != MindOrigin.BORN, EntityRow.status == EntityStatus.CANON)
+        .limit(1)
+    )
+    if made is None:
+        return 0.0
+    return max(0.0, HALF + ground.values.get(ValueAxis.MERCY, 0) / 2 - ground.values.get(ValueAxis.HIERARCHY, 0) / 2)
+
+
+@PRESSURES.on(MovementCause.EQUAL_STANDING)
+async def equal_standing(ctx: TickContext, ground: Ground) -> float:
+    folk = await people_of(ctx.session, ground.community)
+    ranked = folk is not None and await ctx.session.scalar(select(PurityRankRow.id).where(PurityRankRow.people_entity_id == folk.id).limit(1)) is not None
+    if not ranked and not ground.shares.get(SocialClass.OUTCAST, 0.0):
+        return 0.0
+    return max(0.0, HALF - ground.values.get(ValueAxis.HIERARCHY, 0) / 2 + ground.shares.get(SocialClass.OUTCAST, 0.0))
+
+
 async def ground_of(ctx: TickContext, community: EntityRow, realm: Realm, laws: LawBook) -> Ground:
     society = await ctx.session.get(CommunitySocietyRow, community.id)
     content = society.satisfaction(SocialClass.FARMER) if society is not None else HALF
@@ -224,6 +284,13 @@ async def found_movement(ctx: TickContext, realm: Realm, cause: MovementCause, h
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await record_incident(
+        ctx,
+        "movement.founded",
+        roles={IncidentRole.PRODUCT: faction.id, IncidentRole.PLACE: home.id, IncidentRole.AUTHORITY: realm.entity.id},
+        facts={"cause": cause},
+        place=home.id,
+    )
     return row
 
 
@@ -245,8 +312,47 @@ async def protest(ctx: TickContext, community: EntityRow, share: int) -> bool:
     return True
 
 
+async def reform_faith(ctx: TickContext, row: MovementProfileRow, home: EntityRow) -> None:
+    god = await BondRepository(ctx.session).patron(home.id)
+    if god is None:
+        return
+    cult = await create_record(
+        ctx,
+        RecordSpec(
+            entity_type=EntityType.CULT,
+            name=f"The reformed faith of {home.name}",
+            body=f"A reform of its faith that a movement carried through in {home.name}.",
+            stats=CultStats(followers=max(1, stat_or(home, "population", 0) // 10), zeal=PERCENT * 3 // 5, influence=PERCENT // 5),
+            power=1,
+            world_id=home.world_id,
+            location_id=home.id if home.entity_type is EntityType.SETTLEMENT else home.location_id,
+            subtype="reformed faith",
+        ),
+    )
+    await connect(ctx.session, cult.id, god, BondKind.WORSHIPS, ctx.epoch, description="the faith it reformed")
+    await connect(ctx.session, row.faction_entity_id, cult.id, BondKind.SOURCE_OF, ctx.epoch, description="carried the reform")
+
+
+async def curb_intoxicants(ctx: TickContext, home: EntityRow) -> None:
+    folk = await people_of(ctx.session, home)
+    if folk is None or held(folk.id):
+        return
+    for custom in await ctx.session.scalars(
+        select(IntoxicantCustomRow).where(IntoxicantCustomRow.people_entity_id == folk.id).order_by(IntoxicantCustomRow.intoxicant)
+    ):
+        if "acceptance" not in custom.locked:
+            custom.acceptance = clamp_int(custom.acceptance - ctx.rules.movements.temperance_cut, 0, PERCENT)
+
+
 async def rise(ctx: TickContext, realm: Realm, row: MovementProfileRow, strongest: EntityRow, *, tally: MovementTally, book: RealmBook) -> None:
-    if row.cause is MovementCause.PEACE:
+    spec = MOVEMENT_CAUSES[row.cause]
+    if spec.founds_union:
+        await found_body(ctx, strongest, [Job.CRAFTING], WorkerBodyForm.GENERAL_UNION)
+    elif spec.reforms_faith:
+        await reform_faith(ctx, row, strongest)
+    elif spec.curbs_intoxicants:
+        await curb_intoxicants(ctx, strongest)
+    elif row.cause is MovementCause.PEACE:
         await press_for_peace(ctx, realm)
     elif row.cause is MovementCause.CONSERVATION:
         await protect_for_movement(ctx, realm, row)
@@ -289,7 +395,8 @@ async def tend_realm(ctx: TickContext, realm: Realm, laws: LawBook, book: RealmB
     members = [found for member in realm.members if (found := await ctx.session.get(EntityRow, member)) is not None and found.status is EntityStatus.CANON]
     grounds = {member.id: await ground_of(ctx, member, realm, laws) for member in members}
     for cause in MovementCause:
-        aims = {member.id: await PRESSURES[cause](ctx, grounds[member.id]) for member in members}
+        weight = MOVEMENT_CAUSES[cause].weight(ctx.rules) / PERCENT
+        aims = {member.id: await PRESSURES[cause](ctx, grounds[member.id]) * weight for member in members}
         row = movements.get((realm.entity.id, cause))
         mean = sum(aims.values()) / len(aims) if aims else 0.0
         if row is None:
@@ -328,3 +435,6 @@ async def tend_movements(ctx: TickContext, tally: MovementTally) -> None:
     for realm in list(book.realms.values()):
         if not held(realm.entity.id) and realm.members:
             await tend_realm(ctx, realm, laws, book, tally, movements=movements)
+
+
+PRESSURES.seal()

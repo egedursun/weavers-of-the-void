@@ -7,12 +7,28 @@ from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission
+from aerona.domain.enums.affliction import ChangeSign, CharmKind, CureKind, PackageKind, Transmission
+from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.material import MaterialKind
 from aerona.engine.body.afflictions import STAGE_HOLD, active, afflict, bearable, cure, enter_stage, revert, spec_of
+from aerona.engine.body.packages_w52 import Shape
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 
-class GiveAffliction(Command):
+class PackageFields(Command):
+    fortune_sign: int | None = Field(default=None, ge=-1, le=1)
+    fortune_strength: int | None = Field(default=None, ge=0, le=100)
+    transform_plan: BodyPlan | None = None
+    transform_species_id: int | None = None
+    transform_substance: MaterialKind | None = None
+    transform_trigger: ChangeSign | None = None
+    transform_mind_kept: bool | None = None
+    charm_target_id: int | None = None
+    charm_kind: CharmKind | None = None
+    charm_strength: int | None = Field(default=None, ge=0, le=100)
+
+
+class GiveAffliction(PackageFields):
     bearer_id: int
     package: PackageKind
     transmission: Transmission
@@ -24,13 +40,46 @@ class AfflictionTarget(Command):
     affliction_id: int
 
 
-class EditAffliction(AfflictionTarget):
+class EditAffliction(PackageFields):
+    affliction_id: int
     stage: int | None = Field(default=None, ge=0)
     transmission: Transmission | None = None
     source_id: int | None = None
     clear_source: bool = False
     since_epoch: int | None = Field(default=None, ge=0)
     stage_since_epoch: int | None = Field(default=None, ge=0)
+
+
+def shape_of(command: PackageFields) -> Shape:
+    if command.fortune_sign == 0:
+        raise ValidationFailedError("A fortune leans one way or the other: give it a sign of 1 or -1.")
+    return Shape(
+        fortune_sign=command.fortune_sign,
+        fortune_strength=command.fortune_strength,
+        transform_plan=command.transform_plan,
+        transform_species_id=command.transform_species_id,
+        transform_substance=command.transform_substance,
+        transform_trigger=command.transform_trigger,
+        transform_mind_kept=command.transform_mind_kept,
+        charm_target_node_id=command.charm_target_id,
+        charm_kind=command.charm_kind,
+    )
+
+
+async def reshape(scope: PlayerScope, row: AfflictionRow, command: PackageFields) -> None:
+    shape = shape_of(command)
+    if command.charm_target_id is not None:
+        await source_of(scope, command.charm_target_id)
+    for key in ("fortune_strength", "transform_plan", "transform_species_id", "transform_substance", "transform_trigger", "transform_mind_kept", "charm_kind"):
+        value = getattr(shape, key)
+        if value is not None:
+            setattr(row, key, value)
+    if shape.fortune_sign is not None:
+        row.fortune_sign = shape.fortune_sign
+    if shape.charm_target_node_id is not None:
+        row.charm_target_node_id = shape.charm_target_node_id
+    if command.charm_strength is not None:
+        row.charm_strength = command.charm_strength
 
 
 class HoldAffliction(AfflictionTarget):
@@ -78,7 +127,9 @@ async def give(scope: PlayerScope, command: GiveAffliction) -> Effect:
     if any(row.package is command.package for row in await active(scope.session, bearer.id)):
         raise ValidationFailedError(f"{bearer.name} already bears {PACKAGES[command.package].label.lower()}.")
     ctx = await scope.context("affliction_give")
-    row = await afflict(ctx, bearer, command.package, command.transmission, source_node_id=await source_of(scope, command.source_id))
+    if command.charm_target_id is not None:
+        await source_of(scope, command.charm_target_id)
+    row = await afflict(ctx, bearer, command.package, command.transmission, source_node_id=await source_of(scope, command.source_id), shape=shape_of(command))
     if row is None:
         raise ValidationFailedError(f"{bearer.name} is shielded from afflictions.")
     if command.stage is not None and command.stage != row.stage:
@@ -99,6 +150,7 @@ async def edit(scope: PlayerScope, command: EditAffliction) -> Effect:
         row.source_node_id = await source_of(scope, command.source_id)
     if command.since_epoch is not None:
         row.since_epoch = command.since_epoch
+    await reshape(scope, row, command)
     if command.stage is not None and command.stage != row.stage:
         if row.cured_epoch is not None:
             raise ValidationFailedError("A cured affliction has no stage to move; give it again instead.")

@@ -10,7 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.structures import ConstructionRow, StructureProfileRow, StructureStaffRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Job, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, Job, SexKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -52,7 +52,7 @@ async def staffed_town(session: AsyncSession, world: CoreWorld, *classes: Social
             CohortRow(
                 community_entity_id=town.id,
                 age_band=AgeBand.ADULT,
-                sex=Sex.MALE,
+                sex_kind=SexKind.BEGETTER,
                 social_class=social_class,
                 condition=CohortCondition.NONE,
                 count=CLASS_COUNT,

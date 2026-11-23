@@ -1,4 +1,5 @@
 import { Bot } from 'lucide-react'
+import { turnCounterValues } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { RARITY_LABEL } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
@@ -18,7 +19,7 @@ import {
   FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
-import { humanize } from '../actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { useEntityAgentContext } from '../api/queries'
 
 export function EntityAgentContext({
@@ -49,7 +50,7 @@ export function EntityAgentContext({
               <Paged items={data.counters}>
                 {(counter) => (
                   <Badge key={counter.counter} variant='outline'>
-                    {`${humanize(counter.counter)}: ${counter.value}`}
+                    {`${wordOf(turnCounterValues, counter.counter)}: ${counter.value}`}
                   </Badge>
                 )}
               </Paged>

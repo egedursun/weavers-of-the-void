@@ -1,34 +1,43 @@
 import {
+  type LucideIcon,
+  ArrowDown,
+  ArrowUp,
   Ban,
   Bell,
   BookOpen,
   CircleCheck,
   CircleDot,
   CircleX,
+  Crosshair,
   Crown,
   DoorOpen,
   Droplets,
   Eye,
+  Factory,
   Flag,
   Flame,
+  Globe,
   GraduationCap,
   HandHeart,
+  Handshake,
   Heart,
   HeartCrack,
   Hourglass,
   Infinity as InfinityIcon,
   Landmark,
-  type LucideIcon,
   MapPin,
+  Minus,
   Moon,
-  MoveRight,
   Mountain,
+  MoveRight,
   Orbit,
   RefreshCcw,
-  Scale,
+  Repeat,
   Route,
+  Scale,
   Scroll,
   ScrollText,
+  Search,
   Shield,
   Shuffle,
   Skull,
@@ -40,9 +49,11 @@ import {
   Swords,
   Target,
   Telescope,
+  Timer,
   TrendingDown,
   TrendingUp,
   Undo2,
+  Waves,
   Zap,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
@@ -82,6 +93,24 @@ export const SEASON_CAUSES: Record<Schema['SeasonCause'], Named> = {
   orbit: { label: 'A chaotic orbit', icon: Orbit, tone: 'info' },
   natural_law: { label: 'A natural law', icon: Scale, tone: 'warning' },
   divine: { label: 'A god', icon: Sparkles, tone: 'gold' },
+  impact: { label: 'An impact', icon: Crosshair, tone: 'danger' },
+  eruption: { label: 'An eruption', icon: Mountain, tone: 'danger' },
+  stellar: { label: 'Its star', icon: Star, tone: 'warning' },
+  ocean_shift: { label: 'A turned current', icon: Waves, tone: 'info' },
+  made: { label: 'Works of peoples', icon: Factory, tone: 'warning' },
+}
+
+export const SPELL_SHAPES: Record<Schema['SeasonSpellShape'], Named> = {
+  cycling: { label: 'Cycling', icon: Repeat, tone: 'info' },
+  single: { label: 'A single spell', icon: Timer, tone: 'warning' },
+}
+
+export const SPELL_REACHES: Record<Schema['LongSeasonReach'], Named> = {
+  world: { label: 'The whole world', icon: Globe, tone: 'gold' },
+  north: { label: 'The northern half', icon: ArrowUp, tone: 'info' },
+  south: { label: 'The southern half', icon: ArrowDown, tone: 'info' },
+  equator: { label: 'The equator', icon: Minus, tone: 'warning' },
+  poles: { label: 'The poles', icon: Snowflake, tone: 'info' },
 }
 
 export const SPELLS: Record<Schema['SeasonSpell'], Named> = {
@@ -122,6 +151,14 @@ export const TEMPLATES: Record<Schema['ArcTemplate'], Named> = {
   fall_of_a_house: { label: 'Fall of a house', icon: Landmark, tone: 'muted' },
   founding: { label: 'Founding', icon: Flag, tone: 'gold' },
   apotheosis: { label: 'Apotheosis', icon: Star, tone: 'gold' },
+  overcoming: { label: 'Overcoming', icon: Shield, tone: 'success' },
+  reconciliation: {
+    label: 'Reconciliation',
+    icon: Handshake,
+    tone: 'verdigris',
+  },
+  sacrifice: { label: 'Sacrifice', icon: Flame, tone: 'gold' },
+  discovery: { label: 'Discovery', icon: Search, tone: 'info' },
 }
 
 export const STAGES: Record<Schema['ArcStage'], Named> = {

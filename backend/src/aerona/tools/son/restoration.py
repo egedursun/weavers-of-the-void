@@ -35,12 +35,12 @@ async def stir_memory(call: SonCall, args: StirMemoryInput) -> str:
         fail(SonResult.RESTORATION_REFUSED, why="only a realm that has fallen is remembered")
     await ensure_in_reach(call, fallen)
     if held(fallen.id):
-        fail(SonResult.RESTORATION_REFUSED, why="a stronger hand holds that realm as it is")
+        fail(SonResult.RESTORATION_REFUSED, why="that realm is held as it is")
     row = await open_for(call.tick, fallen.id) or await raise_movement(
         call.tick, fallen, claimant=None, bases=[RestorationBasis.MEMORY], territories=[], tally=RestorationTally()
     )
     if "memory" in (row.locked or []):
-        fail(SonResult.RESTORATION_REFUSED, why="a stronger hand holds its memory as it is")
+        fail(SonResult.RESTORATION_REFUSED, why="its memory is held as it is")
     row.memory = clamp_int(row.memory + call.tick.rules.restoration.stir_memory, 0, PERCENT)
     call.target(fallen.id)
     await call.record("polity.memory_stirred", roles={IncidentRole.SUBJECT: fallen.id}, facts={"memory": row.memory})

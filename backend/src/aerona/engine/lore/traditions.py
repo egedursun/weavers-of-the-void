@@ -1,15 +1,21 @@
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.calendar_slots import SLOTS
-from aerona.catalog.lore import TRADITIONS, tradition_spec
+from aerona.catalog.lore import ABSORBABLE, FUNCTIONS, SLOT_NAMED, TRADITIONS, slot_fit, tradition_spec
+from aerona.catalog.named_years import NAMED_YEARS
 from aerona.constants.units import PERCENT
+from aerona.core.dispatch import Handlers
 from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.collective import CommemorationRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import TraditionEffectRow, TraditionParticipationRow, TraditionProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
 from aerona.db.tables.faith import SpiritProfileRow
@@ -17,14 +23,16 @@ from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import CustomCatalog, Technique, TraditionEffectKind, TraditionFunction
+from aerona.domain.enums.culture import CalendarSlot, CustomCatalog, Technique, TraditionEffectKind, TraditionFunction
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.region import DangerSource
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.domain.models.entity_stats import TraditionStats
@@ -47,6 +55,7 @@ from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, set_stats, shift_stat, stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 K = TraditionFunction
@@ -67,8 +76,6 @@ class Keeping:
     in_season: bool | None = None
 
 
-FEASTS = frozenset({K.FESTIVAL, K.ANCESTRAL_RITE, K.SEASONAL_RITE, K.RITE_OF_PASSAGE})
-GIFTS = frozenset({K.OFFERING, K.PILGRIMAGE})
 SCARRING = frozenset({K.BODY_MARKING})
 AXES = frozenset(axis.value for axis in ValueAxis)
 CLASSES = frozenset(item.value for item in SocialClass)
@@ -86,14 +93,12 @@ SPEC_EFFECTS = {
     "vigil": E.VIGIL,
 }
 
+CLOSED_SLOTS = "closed_slots"
+
 
 def cost_for(ctx: TickContext, kind: TraditionFunction) -> dict[str, int]:
-    table = ctx.rules.traditions
-    if kind in FEASTS:
-        return {"food": table.festival_food}
-    if kind in GIFTS:
-        return {"goods": table.offering_cost}
-    return {}
+    amount = FUNCTIONS[kind].cost(ctx.rules)
+    return {resource: amount for resource in TRADITIONS[kind].cost} if amount else {}
 
 
 def default_magnitude(ctx: TickContext, effect: TraditionEffectKind) -> int:
@@ -111,6 +116,8 @@ def default_magnitude(ctx: TickContext, effect: TraditionEffectKind) -> int:
         E.VALUE: table.value_push,
         E.REST: table.rest_pct,
         E.VIGIL: table.vigil_pct,
+        E.TRADE: table.fair_trade_pct,
+        E.FORAGE: table.forage_food_pct,
     }[effect]
 
 
@@ -152,8 +159,8 @@ async def apply_custom_kind(ctx: TickContext, row: TraditionProfileRow) -> None:
 
 
 async def taboo_good(ctx: TickContext, tradition: EntityRow) -> str | None:
-    held = await holdings(ctx.session, tradition.location_id) if tradition.location_id is not None else {}
-    goods = sorted(commodity.value for commodity, amount in held.items() if amount > 0)
+    stores = await holdings(ctx.session, tradition.location_id) if tradition.location_id is not None else {}
+    goods = sorted(commodity.value for commodity, amount in stores.items() if amount > 0)
     return ctx.rng(f"taboo.{tradition.id}").pick(goods) if goods else None
 
 
@@ -165,8 +172,8 @@ async def profile_of(ctx: TickContext, tradition: EntityRow, kind: TraditionFunc
     row = TraditionProfileRow(
         tradition_entity_id=tradition.id,
         kind=kind,
-        calendar_slot=None,
-        cost={**cost_for(ctx, kind), **spec.cost},
+        calendar_slot=slot_fit(kind, None),
+        cost=cost_for(ctx, kind),
         effects=dict(spec.effects),
         taboo_target=await taboo_good(ctx, tradition) if kind is K.TABOO else None,
         updated_epoch=ctx.epoch,
@@ -304,6 +311,37 @@ async def bless_harvest(ctx: TickContext, community: EntityRow, atlas: RegionAtl
     return True
 
 
+async def hold_fair(ctx: TickContext, community: EntityRow, amount: int) -> None:
+    if amount <= 0 or held(community.id):
+        return
+    shift_stat(community, "prosperity", amount, 0)
+    town = await ctx.session.get(SettlementProfileRow, community.id)
+    if town is not None and "treasury" not in town.locked:
+        town.treasury = max(0, town.treasury + town.treasury * amount // PERCENT)
+    await record(ctx, "tradition.fair_held", roles={IncidentRole.SUBJECT: community.id}, facts={"lift": amount}, place=community.id)
+
+
+async def forage(ctx: TickContext, community: EntityRow, atlas: RegionAtlas, amount: int) -> None:
+    region_id = atlas.top_region(community.id)
+    if region_id is None or amount <= 0:
+        return
+    ranges = list(
+        await ctx.session.scalars(select(SpeciesRangeRow).where(SpeciesRangeRow.region_entity_id == region_id).order_by(SpeciesRangeRow.species_entity_id))
+    )
+    wild = max((row.abundance for row in ranges), default=0)
+    food = round_half_up(amount * min(PERCENT, wild) / PERCENT)
+    if food <= 0:
+        return
+    await shift_stock(ctx.session, ctx.rules, community.id, Commodity.FOOD, food, epoch=ctx.epoch, flow=GoodsFlow.HARVEST)
+    pressure = ctx.rules.traditions.forage_pressure
+    for row in ranges:
+        if "hunted" not in row.locked and not held(row.species_entity_id):
+            row.hunted = row.hunted + pressure
+    await record(
+        ctx, "tradition.forage_taken", roles={IncidentRole.SUBJECT: community.id, IncidentRole.PLACE: region_id}, facts={"food": food}, place=region_id
+    )
+
+
 async def wed(ctx: TickContext, community: EntityRow, pct: float) -> int:
     population = headcount(community)
     born = round_half_up(population * pct / PERCENT / PERCENT)
@@ -357,44 +395,81 @@ async def synchronised(ctx: TickContext, row: TraditionProfileRow) -> int:
     return min(ctx.rules.traditions.sync_max, max(0, int(keepers or 0) - 1))
 
 
+async def note_closed(ctx: TickContext, row: TraditionProfileRow, community: EntityRow, reason: str | None) -> None:
+    noted: set[tuple[int, int]] = ctx.session.sync_session.info.setdefault(CLOSED_SLOTS, set())
+    key = (row.tradition_entity_id, community.id)
+    if key in noted:
+        return
+    noted.add(key)
+    await record(
+        ctx,
+        "tradition.slot_closed",
+        roles={IncidentRole.SUBJECT: row.tradition_entity_id, IncidentRole.ACTOR: community.id},
+        facts={"reason": reason or "its time does not come"},
+        place=community.id,
+    )
+
+
 async def slot_weight(ctx: TickContext, row: TraditionProfileRow, community: EntityRow, effect: TraditionEffectKind) -> float:
     if row.calendar_slot is None:
         return 1.0
     table = ctx.rules.traditions
-    if not (await slot_open(ctx, community.world_id, row.calendar_slot, community.id)).open:
+    state = await slot_open(ctx, community.world_id, row.calendar_slot, community.id, row)
+    if not state.open:
+        await note_closed(ctx, row, community, state.reason)
         return table.calendar_misfit_pct / PERCENT
-    return 1 + table.calendar_slot_pct / PERCENT if effect in SLOTS[row.calendar_slot].effects else 1.0
+    strength = SLOTS[row.calendar_slot].strength(ctx.rules) / PERCENT
+    return 1 + table.calendar_slot_pct / PERCENT * strength if effect in SLOTS[row.calendar_slot].effects else 1.0
+
+
+@dataclass(frozen=True)
+class Keep:
+    ctx: TickContext
+    community: EntityRow
+    effect: TraditionEffectRow
+    share: float
+    atlas: RegionAtlas
+
+    @property
+    def amount(self) -> int:
+        return round_half_up(self.effect.magnitude * self.share)
+
+
+async def keep_value(keep: Keep) -> object:
+    if keep.effect.target not in AXES:
+        return False
+    await push_values(keep.ctx, keep.community, {ValueAxis(keep.effect.target): keep.effect.magnitude}, keep.share)
+    return True
+
+
+async def keep_food(keep: Keep) -> object:
+    return await shift_stock(keep.ctx.session, keep.ctx.rules, keep.community.id, Commodity.FOOD, keep.amount, epoch=keep.ctx.epoch, flow=GoodsFlow.PRODUCTION)
+
+
+EFFECT_KEEPERS: Handlers[TraditionEffectKind, Callable[[Keep], Awaitable[object]]] = Handlers(TraditionEffectKind)
+EFFECT_KEEPERS.update(
+    {
+        E.REST: lambda keep: rest(keep.ctx, keep.community, keep.share * keep.effect.magnitude / PERCENT),
+        E.VIGIL: lambda keep: keep_vigil(keep.ctx, keep.community, keep.share * keep.effect.magnitude / PERCENT),
+        E.COHESION: lambda keep: cohere(keep.ctx, keep.community, keep.amount),
+        E.SATISFACTION: lambda keep: gladden(keep.ctx, keep.community, keep.amount, keep.effect.target),
+        E.PIETY: lambda keep: push_values(keep.ctx, keep.community, {ValueAxis.PIETY: keep.effect.magnitude}, keep.share),
+        E.MARTIAL: lambda keep: push_values(keep.ctx, keep.community, {ValueAxis.MARTIAL: keep.effect.magnitude}, keep.share),
+        E.VALUE: keep_value,
+        E.FOOD_SAVED: keep_food,
+        E.FERTILITY: lambda keep: wed(keep.ctx, keep.community, keep.effect.magnitude * keep.share),
+        E.PLACATION: lambda keep: placate(keep.ctx, keep.community, keep.amount),
+        E.HARVEST: lambda keep: bless_harvest(keep.ctx, keep.community, keep.atlas, keep.amount),
+        E.SAFETY: lambda keep: welcome(keep.ctx, keep.community, keep.atlas, keep.amount),
+        E.TRADE: lambda keep: hold_fair(keep.ctx, keep.community, keep.amount),
+        E.FORAGE: lambda keep: forage(keep.ctx, keep.community, keep.atlas, keep.amount),
+    }
+)
+EFFECT_KEEPERS.seal()
 
 
 async def apply_effect(ctx: TickContext, community: EntityRow, effect: TraditionEffectRow, share: float, atlas: RegionAtlas) -> bool:
-    amount = round_half_up(effect.magnitude * share)
-    kind = effect.effect
-    rhythm = {E.REST: rest, E.VIGIL: keep_vigil}.get(kind)
-    if rhythm is not None:
-        await rhythm(ctx, community, share * effect.magnitude / PERCENT)
-    elif kind is E.COHESION:
-        await cohere(ctx, community, amount)
-    elif kind is E.SATISFACTION:
-        await gladden(ctx, community, amount, effect.target)
-    elif kind is E.PIETY:
-        await push_values(ctx, community, {ValueAxis.PIETY: effect.magnitude}, share)
-    elif kind is E.MARTIAL:
-        await push_values(ctx, community, {ValueAxis.MARTIAL: effect.magnitude}, share)
-    elif kind is E.VALUE and effect.target in AXES:
-        await push_values(ctx, community, {ValueAxis(effect.target): effect.magnitude}, share)
-    elif kind is E.FOOD_SAVED:
-        await shift_stock(ctx.session, ctx.rules, community.id, Commodity.FOOD, amount, epoch=ctx.epoch, flow=GoodsFlow.PRODUCTION)
-    elif kind is E.FERTILITY:
-        await wed(ctx, community, effect.magnitude * share)
-    elif kind is E.PLACATION:
-        await placate(ctx, community, amount)
-    elif kind is E.HARVEST:
-        await bless_harvest(ctx, community, atlas, amount)
-    elif kind is E.SAFETY:
-        await welcome(ctx, community, atlas, amount)
-    else:
-        return False
-    return True
+    return await EFFECT_KEEPERS[effect.effect](Keep(ctx, community, effect, share, atlas)) is not False
 
 
 async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow, atlas: RegionAtlas, keeping: Keeping | None = None) -> str | None:
@@ -413,12 +488,54 @@ async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow
         if await apply_effect(ctx, community, effect, share * await slot_weight(ctx, row, community, effect.effect), atlas):
             ctx.count(f"tradition_effect_{effect.effect.value}")
     together = await synchronised(ctx, row)
-    if together and row.calendar_slot is not None and (await slot_open(ctx, community.world_id, row.calendar_slot, community.id)).open:
+    if together and row.calendar_slot is not None and (await slot_open(ctx, community.world_id, row.calendar_slot, community.id, row)).open:
         await cohere(ctx, community, round_half_up(together * ctx.rules.traditions.sync_cohesion * share))
         ctx.count("festivals_synchronised")
     if row.kind in SCARRING:
         await scar_youths(ctx, community, tradition)
+    if row.kind is K.COMMEMORATION:
+        await observe_commemorations(ctx, community)
+    await record(
+        ctx,
+        "tradition.kept",
+        roles={IncidentRole.PRODUCT: tradition.id, IncidentRole.PLACE: community.id},
+        facts={"function": row.kind, "share": round_half_up(share * PERCENT)},
+        place=community.id,
+    )
     return row.kind.value
+
+
+async def observe_commemorations(ctx: TickContext, community: EntityRow) -> None:
+    for row in await ctx.session.scalars(
+        select(CommemorationRow).where(CommemorationRow.holder_entity_id == community.id).order_by(CommemorationRow.collection_id)
+    ):
+        if "last_observed_epoch" not in row.locked:
+            row.last_observed_epoch = ctx.epoch
+
+
+FUNCTIONS_FIXUP = "traditions.w52_functions"
+
+
+def kind_slot(kind: TraditionFunction) -> CalendarSlot | None:
+    return FUNCTIONS[kind].slot
+
+
+async def backfill_functions(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, FUNCTIONS_FIXUP) is not None:
+        return 0
+    moved = 0
+    for row in list(await ctx.session.scalars(select(TraditionProfileRow).order_by(TraditionProfileRow.tradition_entity_id))):
+        if held(row.tradition_entity_id) or "kind" in row.locked:
+            continue
+        named = next((kind for kind in SLOT_NAMED if FUNCTIONS[kind].slot is row.calendar_slot and FUNCTIONS[row.kind].slot is not kind_slot(kind)), None)
+        if named is not None:
+            row.kind = named
+            moved += 1
+        if row.calendar_slot is None and "calendar_slot" not in row.locked:
+            row.calendar_slot = slot_fit(row.kind, row.stage)
+    ctx.session.add(AppliedFixupRow(key=FUNCTIONS_FIXUP, result={"traditions": moved}))
+    await ctx.session.flush()
+    return moved
 
 
 async def taboos(ctx: TickContext, community_id: int) -> set[str]:
@@ -452,8 +569,8 @@ async def _taboos(ctx: TickContext, community_id: int) -> set[str]:
 
 
 async def resent_taboo(ctx: TickContext, community_id: int) -> int:
-    held = {commodity for commodity in CommodityKind if commodity.value in await taboos(ctx, community_id)}
-    if not held:
+    forbidden = {commodity for commodity in CommodityKind if commodity.value in await taboos(ctx, community_id)}
+    if not forbidden:
         return 0
     resented = 0
     roads = await ctx.session.scalars(
@@ -465,7 +582,7 @@ async def resent_taboo(ctx: TickContext, community_id: int) -> int:
     )
     for road in list(roads):
         partner = road.other_end(community_id)
-        if any([await holding(ctx.session, partner, commodity) > 0 for commodity in held]):
+        if any([await holding(ctx.session, partner, commodity) > 0 for commodity in forbidden]):
             await change_relation(ctx, community_id, partner, -ctx.rules.traditions.taboo_infamy, MemoryKind.ILL_WILL, note="trades in what is taboo")
             resented += 1
     return resented
@@ -540,7 +657,7 @@ async def commemorate(ctx: TickContext, event: EntityRow) -> EntityRow | None:
     if await commemorated(ctx, incident) or not ctx.rng(f"commemoration.{event.id}").chance(ctx.rules.traditions.commemoration_chance):
         return None
     kind = K.MOURNING if event.engine_kind in MOURNED else K.FESTIVAL
-    word = "Mourning" if kind is K.MOURNING else "Feast"
+    word = "Mourning" if kind is K.MOURNING else "Festival"
     keepers = list(
         await ctx.session.scalars(
             select(EntityRow.id).where(
@@ -571,30 +688,29 @@ async def communities_in(ctx: TickContext, atlas: RegionAtlas, world_id: int, re
 
 async def remember_years(ctx: TickContext, atlas: RegionAtlas) -> list[EntityRow]:
     founded: list[EntityRow] = []
-    years = await ctx.session.scalars(
-        select(NotableYearRow)
-        .where(NotableYearRow.epoch == ctx.epoch, NotableYearRow.magnitude >= ctx.rules.deep_life.legend_event_min_severity)
-        .order_by(NotableYearRow.id)
-    )
+    years = await ctx.session.scalars(select(NotableYearRow).where(NotableYearRow.epoch == ctx.epoch).order_by(NotableYearRow.id))
     for year in list(years):
-        if await commemorated(ctx, year.incident_id) or not ctx.rng(f"commemoration.year.{year.id}").chance(ctx.rules.traditions.commemoration_chance):
+        if year.magnitude < NAMED_YEARS[year.kind].remembered(ctx.rules) or await commemorated(ctx, year.incident_id):
+            continue
+        if not ctx.rng(f"commemoration.year.{year.id}").chance(ctx.rules.traditions.commemoration_chance):
             continue
         land = await communities_in(ctx, atlas, year.world_id, year.region_entity_id)
         keepers = ctx.rng(f"commemoration.keepers.{year.id}").shuffled(land)[: -(-len(land) * ctx.rules.traditions.commemoration_keepers // PERCENT)]
         if not keepers:
             continue
-        founded.append(
-            await found_commemoration(
-                ctx,
-                name=f"The Remembrance of {year.name}",
-                kind=K.MOURNING,
-                world_id=year.world_id,
-                place_id=keepers[0],
-                keepers=keepers,
-                origin=None,
-                incident=year.incident_id,
-            )
+        tradition = await found_commemoration(
+            ctx,
+            name=f"The Remembrance of {year.name}",
+            kind=K.COMMEMORATION,
+            world_id=year.world_id,
+            place_id=keepers[0],
+            keepers=keepers,
+            origin=None,
+            incident=year.incident_id,
         )
+        profile = await profile_of(ctx, tradition, K.COMMEMORATION)
+        profile.calendar_slot, profile.notable_year_id = CalendarSlot.REMEMBRANCE, year.id
+        founded.append(tradition)
     return founded
 
 
@@ -616,7 +732,7 @@ async def remember_miracles(ctx: TickContext) -> list[EntityRow]:
         founded.append(
             await found_commemoration(
                 ctx,
-                name=f"The Feast of the Wonder at {target.name}",
+                name=f"The Festival of the Wonder at {target.name}",
                 kind=K.FESTIVAL,
                 world_id=target.world_id,
                 place_id=target.id,
@@ -645,7 +761,7 @@ async def absorb_festivals(ctx: TickContext, community: EntityRow, converter_id:
         BondRow.source_node_id == community.id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE
     )
     rows = await ctx.session.scalars(
-        select(TraditionProfileRow).where(TraditionProfileRow.tradition_entity_id.in_(kept_by), TraditionProfileRow.kind.in_(list(FEASTS)))
+        select(TraditionProfileRow).where(TraditionProfileRow.tradition_entity_id.in_(kept_by), TraditionProfileRow.kind.in_(list(ABSORBABLE)))
     )
     for row in list(rows):
         tradition = await ctx.session.get(EntityRow, row.tradition_entity_id)

@@ -3,15 +3,17 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.transmission import ROUTES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
+from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, DiseaseRouteRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.living import LivingLineRow
 from aerona.db.tables.node import NodeRow
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.demography import AgeBand
-from aerona.domain.enums.disease import ClimateAffinity, CureSource, DiseaseTarget, DiseaseVector, OutbreakStatus, SpreadPath
+from aerona.domain.enums.disease import ClimateMoisture, ClimateWarmth, CureSource, DiseaseTarget, OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
@@ -34,7 +36,8 @@ PROFILE_NUMBERS = {
     "heat_tolerance": (0, PERCENT),
     "resistance": (0, PERCENT),
 }
-PROFILE_CHOICES = {"vector": DiseaseVector, "climate_affinity": ClimateAffinity}
+ROUTE_KEY = "primary_route"
+PROFILE_CHOICES = {ROUTE_KEY: Transmission, "affinity_warmth": ClimateWarmth, "affinity_moisture": ClimateMoisture}
 PROFILE_LINKS = ("host_species_id", "origin_incident_id", "origin_region_id", "designed_line_id", "target_node_id")
 TARGETS_KEY = "target_functions"
 PROFILE_FIELDS = (*PROFILE_NUMBERS, *PROFILE_CHOICES, TARGETS_KEY, *PROFILE_LINKS)
@@ -107,6 +110,8 @@ async def apply_value(ctx: TickContext, profile: DiseaseProfileRow, key: str, va
             setattr(profile, key, PROFILE_CHOICES[key](str(value)))
         except ValueError as error:
             raise ValidationFailedError(f"{value} is not a known {key.replace('_', ' ')}.") from error
+        if key == ROUTE_KEY and not ROUTES[profile.primary_route].disease:
+            raise ValidationFailedError(f"A sickness cannot pass by {ROUTES[profile.primary_route].label}; that route belongs to afflictions.")
     elif key == TARGETS_KEY:
         profile.target_functions = targets(value)
     elif key in PROFILE_LINKS:
@@ -313,6 +318,35 @@ async def set_endemic(ctx: TickContext, region_id: int, disease_id: int, load: i
 
 async def remove_endemic(ctx: TickContext, region_id: int, disease_id: int) -> bool:
     row = await ctx.session.get(EndemicDiseaseRow, (region_id, disease_id))
+    if row is None:
+        return False
+    await ctx.session.delete(row)
+    await ctx.session.flush()
+    return True
+
+
+async def set_route(ctx: TickContext, disease_id: int, route: Transmission, share: int, *, hold: bool | None) -> DiseaseRouteRow:
+    await living(ctx, disease_id, frozenset({EntityType.DISEASE}), "disease")
+    if not ROUTES[route].disease:
+        raise ValidationFailedError(f"A sickness cannot pass by {ROUTES[route].label}; that route belongs to afflictions.")
+    if not 1 <= share < PERCENT:
+        raise ValidationFailedError(f"A further route carries 1 to {PERCENT - 1} of the spread.")
+    profile = await ctx.session.get(DiseaseProfileRow, disease_id)
+    if profile is not None and profile.primary_route is route:
+        raise ValidationFailedError("That is already the sickness's main route.")
+    row = await ctx.session.get(DiseaseRouteRow, (disease_id, route))
+    if row is None:
+        row = DiseaseRouteRow(disease_entity_id=disease_id, route=route, share=share, locked=[])
+        ctx.session.add(row)
+    row.share = share
+    if hold is not None:
+        row.locked = ["share"] if hold else []
+    await ctx.session.flush()
+    return row
+
+
+async def remove_route(ctx: TickContext, disease_id: int, route: Transmission) -> bool:
+    row = await ctx.session.get(DiseaseRouteRow, (disease_id, route))
     if row is None:
         return False
     await ctx.session.delete(row)

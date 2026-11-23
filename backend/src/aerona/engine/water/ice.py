@@ -1,10 +1,13 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
 from aerona.catalog.life_traits import TRADE_MODE_TRAITS, having
 from aerona.catalog.nature_kinds50 import CARRIERS, COAST_FORMS, LOCAL_CAUSES, SEDIMENTS
+from aerona.catalog.terrain import terrains
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -14,10 +17,10 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import CoastKind, RiverClass, TerrainKind
+from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TerrainKind, TerrainTrait
 from aerona.domain.enums.life_traits import TradeModeTrait
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.water import CoastForm, LocalClimateCause, SedimentCarrier
+from aerona.domain.enums.water import CoastForm, LocalClimateCause, SedimentCarrier, SedimentKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
@@ -25,21 +28,30 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining_alone, term
+from aerona.engine.water.courses import keep_courses
 from aerona.rules.registry import Rules
 from aerona.rules.registry.water import WaterAndIceRules
 
-COAST_OF_KIND: dict[CoastKind, CoastForm] = {
-    CoastKind.CLIFF: CoastForm.CLIFF,
-    CoastKind.BEACH: CoastForm.BEACH,
-    CoastKind.HARBOUR_SITE: CoastForm.LAGOON,
-    CoastKind.REEF: CoastForm.REEF,
-}
+COAST_OF_KIND: Mapping[CoastKind, CoastForm] = partial(
+    CoastKind,
+    {
+        CoastKind.CLIFF: CoastForm.CLIFF,
+        CoastKind.BEACH: CoastForm.BEACH,
+        CoastKind.HARBOUR_SITE: CoastForm.LAGOON,
+        CoastKind.REEF: CoastForm.REEF,
+    },
+    without=(CoastKind.NONE,),
+)
 WATER_MODES = having(TRADE_MODE_TRAITS, TradeModeTrait.WATER_MODES)
 THOUSAND = 1000
 ROUGH = 60
 HIGH = 70
 WOODED = 50
 DESERT = frozenset({TerrainKind.DESERT})
+DRY_LANDS = terrains(TerrainTrait.ARID)
+WARM_SEA = 70
+STILL_WATER = 60
+FILL_BASE = 50
 
 
 @dataclass
@@ -52,6 +64,8 @@ class WaterTally:
     lost: int = 0
     grew: int = 0
     glaciers: int = 0
+    courses: int = 0
+    soils: int = 0
 
 
 def ice_months_of(rules: Rules, land: RegionEnvironmentRow, shift: int) -> int:
@@ -175,6 +189,49 @@ def carried_by(table: WaterAndIceRules, land: RegionEnvironmentRow, frozen_below
     return carrier, table.wind_load if carrier is not None else 0
 
 
+def sediment_kind(land: RegionEnvironmentRow, sink: RegionEnvironmentRow | None, carrier: SedimentCarrier) -> SedimentKind:
+    if carrier is SedimentCarrier.RIVER and land.dominant_terrain in DRY_LANDS:
+        return SedimentKind.EVAPORITE
+    if carrier is SedimentCarrier.WAVE and sink is not None and (sink.coast_kind is CoastKind.REEF or sink.temperature >= WARM_SEA):
+        return SedimentKind.CARBONATE
+    if carrier in (SedimentCarrier.RIVER, SedimentCarrier.WAVE) and sink is not None and sink.wetland >= STILL_WATER:
+        return SedimentKind.CLAY
+    return CARRIERS[carrier].kind
+
+
+async def lay_soils(ctx: TickContext, lands: dict[int, RegionEnvironmentRow], flows: list[SedimentFlowRow]) -> int:
+    table = ctx.rules.sediment
+    loads: dict[tuple[int, SedimentKind], int] = {}
+    for flow in flows:
+        loads[flow.sink_region_id, flow.kind] = loads.get((flow.sink_region_id, flow.kind), 0) + flow.load
+    laid = 0
+    for (region_id, kind), load in sorted(loads.items()):
+        land = lands.get(region_id)
+        soil = SEDIMENTS[kind].soil
+        if land is None or held(region_id) or "soil" in land.locked or land.soil is soil or load < table.soil_lay_load:
+            continue
+        if ctx.rng(f"sediment_soil.{region_id}.{kind.value}.{ctx.epoch}").chance(table.soil_lay_pct):
+            land.soil = soil
+            laid += 1
+            await record(
+                ctx, "land.sediment_laid", roles={IncidentRole.PLACE: region_id}, facts={"sediment": kind, "load": clamp_int(load, 0, PERCENT)}, place=region_id
+            )
+    for land in lands.values():
+        dry = land.dominant_terrain in DRY_LANDS and land.farmed > 0 and land.river_class is not RiverClass.NONE
+        open_soil = not held(land.entity_id) and "soil" not in land.locked and land.soil is not SoilKind.SALINE
+        if dry and open_soil and ctx.rng(f"salt_irrigation.{land.entity_id}.{ctx.epoch}").chance(table.salt_irrigation_pct):
+            land.soil = SoilKind.SALINE
+            laid += 1
+            await record(
+                ctx,
+                "land.sediment_laid",
+                roles={IncidentRole.PLACE: land.entity_id},
+                facts={"sediment": SedimentKind.EVAPORITE, "load": land.farmed},
+                place=land.entity_id,
+            )
+    return laid
+
+
 async def seed_flows(ctx: TickContext, land: RegionEnvironmentRow, atlas: RegionAtlas, lands: dict[int, RegionEnvironmentRow], sources: set[int]) -> None:
     table = ctx.rules.water_and_ice
     if land.entity_id in sources:
@@ -185,13 +242,22 @@ async def seed_flows(ctx: TickContext, land: RegionEnvironmentRow, atlas: Region
     sink = shores[0] if carrier is SedimentCarrier.WAVE and shores else below[0][1] if below and below[0][0] <= land.elevation_mean else None
     if carrier is None or sink is None:
         return
-    ctx.session.add(SedimentFlowRow(source_region_id=land.entity_id, sink_region_id=sink, carrier=carrier, kind=CARRIERS[carrier].kind, load=load, locked=[]))
+    kind = sediment_kind(land, lands.get(sink), carrier)
+    ctx.session.add(SedimentFlowRow(source_region_id=land.entity_id, sink_region_id=sink, carrier=carrier, kind=kind, load=load, locked=[]))
+
+
+def coast_form(land: RegionEnvironmentRow) -> CoastForm:
+    if land.dominant_terrain is TerrainKind.MANGROVE:
+        return CoastForm.MANGROVE
+    if land.river_class in (RiverClass.RIVER, RiverClass.GREAT_RIVER):
+        return CoastForm.ESTUARY
+    return COAST_OF_KIND[land.coast_kind]
 
 
 async def coast_of(ctx: TickContext, land: RegionEnvironmentRow) -> CoastRow | None:
     row = await ctx.session.get(CoastRow, land.entity_id)
     if row is None and land.coast_kind in COAST_OF_KIND:
-        row = CoastRow(region_entity_id=land.entity_id, form=COAST_OF_KIND[land.coast_kind], locked=[])
+        row = CoastRow(region_entity_id=land.entity_id, form=coast_form(land), locked=[])
         ctx.session.add(row)
     return row
 
@@ -206,10 +272,14 @@ async def shape_coast(ctx: TickContext, land: RegionEnvironmentRow, sediment: tu
         term("water_and_ice.sediment", inflow, source_node_id=land.entity_id)
         if "rate" not in row.locked:
             spec = COAST_FORMS[row.form]
-            wear = table.coast_wear_per_epoch * spec.wear_pct // PERCENT
-            row.rate = clamp_int(inflow * table.delta_growth_per_epoch // PERCENT * 10 - wear, -PERCENT, PERCENT)
+            wear = table.coast_wear_per_epoch * spec.wear(ctx.rules) // PERCENT
+            build = inflow * table.delta_growth_per_epoch // PERCENT * 10 * (PERCENT + spec.build(ctx.rules)) // PERCENT
+            row.rate = clamp_int(build - wear, -PERCENT, PERCENT)
         if "progress" not in row.locked:
             row.progress = clamp_int(row.progress + row.rate, -PERCENT, PERCENT)
+        shifted = row.form is CoastForm.BARRIER_ISLAND and ctx.rng(f"barrier.{land.entity_id}.{ctx.epoch}").chance(ctx.rules.coasts.barrier_shift_pct)
+        if shifted and "progress" not in row.locked:
+            row.progress = clamp_int(row.progress - PERCENT // 4, -PERCENT, PERCENT)
         if "harbour_silting" not in row.locked:
             laid = inflow * table.silting_per_epoch * COAST_FORMS[row.form].silting_pct // PERCENT // PERCENT
             row.harbour_silting = clamp_int(row.harbour_silting + laid, 0, PERCENT)
@@ -305,12 +375,15 @@ async def keep_water(ctx: TickContext, tally: WaterTally) -> None:
     await ctx.session.flush()
     inflow: dict[int, int] = {}
     worth: dict[int, int] = {}
-    for flow in await ctx.session.scalars(select(SedimentFlowRow).order_by(SedimentFlowRow.id)):
-        inflow[flow.sink_region_id] = inflow.get(flow.sink_region_id, 0) + flow.load
-        worth[flow.sink_region_id] = worth.get(flow.sink_region_id, 0) + flow.load * SEDIMENTS[flow.kind].fertility_pct
+    flows = list(await ctx.session.scalars(select(SedimentFlowRow).order_by(SedimentFlowRow.id)))
+    for flow in flows:
+        inflow[flow.sink_region_id] = inflow.get(flow.sink_region_id, 0) + flow.load * SEDIMENTS[flow.kind].fill(ctx.rules) // FILL_BASE
+        worth[flow.sink_region_id] = worth.get(flow.sink_region_id, 0) + flow.load * SEDIMENTS[flow.kind].fertility(ctx.rules)
     for land in lands.values():
         if not held(land.entity_id):
             came = inflow.get(land.entity_id, 0)
             await shape_coast(ctx, land, (clamp_int(came, 0, PERCENT), worth.get(land.entity_id, 0) // max(1, came)), atlas, tally)
+    tally.courses += await keep_courses(ctx, lands, inflow)
+    tally.soils += await lay_soils(ctx, lands, flows)
     await warm_towns(ctx, atlas)
     await ctx.session.flush()

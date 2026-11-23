@@ -10,9 +10,15 @@ class CirculationBand(StrEnum):
     SINGLE_CELL = "single_cell"
     TERMINATOR = "terminator"
     STILL = "still"
+    DOLDRUMS = "doldrums"
+    SUBTROPICAL_CALM = "subtropical_calm"
+    BANDED = "banded"
+    SUPER_ROTATION = "super_rotation"
 
 
 class OscillationPhase(StrEnum):
     NEUTRAL = "neutral"
     WARM = "warm"
     COLD = "cold"
+    STRONG_WARM = "strong_warm"
+    STRONG_COLD = "strong_cold"

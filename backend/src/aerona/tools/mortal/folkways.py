@@ -40,7 +40,7 @@ async def purify_self(call: MortalCall, args: PurifySelfInput) -> str:
     if row.state is PurityState.PURE:
         fail(MortalResult.PURIFY_DECLINED, why="no impurity is on you")
     if "state" in row.locked:
-        fail(MortalResult.PURIFY_DECLINED, why="a stronger hand holds your state")
+        fail(MortalResult.PURIFY_DECLINED, why="your state is held")
     folk = await people_of(call.session, call.me)
     methods = await methods_of(call.tick, folk.id) if folk is not None else []
     if not methods:
@@ -61,7 +61,7 @@ async def accuse_of_witchcraft(call: MortalCall, args: AccuseOfWitchcraftInput) 
     if accused is None or accused.entity_type is not EntityType.MORTAL or accused.id == call.me.id or accused.location_id != call.me.location_id:
         fail(MortalResult.WITCH_ACCUSATION_DECLINED, why="no such neighbour lives beside you")
     if held(accused.id):
-        fail(MortalResult.WITCH_ACCUSATION_DECLINED, why="a stronger hand holds them")
+        fail(MortalResult.WITCH_ACCUSATION_DECLINED, why="they are held")
     row = await accuse(call.tick, town, call.me, WitchTally(), named=accused)
     if row is None:
         fail(MortalResult.WITCH_ACCUSATION_DECLINED, why="no court would hear it")

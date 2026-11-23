@@ -11,6 +11,7 @@ class HarmCauseSpec:
     heat_rule: str
     pierce: InjuryKind
     mix: tuple[tuple[DamageType, str], ...]
+    noted: bool = False
 
 
 D = DamageType
@@ -22,6 +23,9 @@ HARM_CAUSES: Mapping[HarmCause, HarmCauseSpec] = total(
             "fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "battle_cut"), (D.PIERCE, "battle_pierce"), (D.BLUNT, "battle_blunt"), (D.FIRE, "battle_fire"))
         ),
         H.DUEL: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "duel_cut"), (D.PIERCE, "duel_pierce"), (D.BLUNT, "duel_blunt"))),
+        H.CHILDBIRTH: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "childbirth_tear"),), noted=True),
+        H.CRIME: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "crime_cut"), (D.PIERCE, "crime_pierce"), (D.BLUNT, "crime_blunt")), noted=True),
+        H.SPORT: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.BLUNT, "sport_blunt"), (D.CUT, "sport_cut")), noted=True),
         H.PUNISHMENT: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "punishment_cut"), (D.BLUNT, "punishment_blunt"), (D.FIRE, "punishment_fire"))),
         H.TORTURE: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "torture_cut"), (D.BLUNT, "torture_blunt"), (D.FIRE, "torture_fire"))),
         H.ACCIDENT: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.BLUNT, "accident_blunt"), (D.CUT, "accident_cut"), (D.FIRE, "accident_fire"))),
@@ -61,7 +65,9 @@ HARM_CAUSES: Mapping[HarmCause, HarmCauseSpec] = total(
         ),
         H.CRASH: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.BLUNT, "crash_blunt"), (D.CUT, "crash_cut"), (D.FIRE, "crash_fire"))),
         H.RADIATION: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.RADIATION, "radiation_radiation"),)),
-        H.DECOMPRESSION: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.COLD, "decompression_cold"), (D.BLUNT, "decompression_blunt"))),
+        H.DECOMPRESSION: HarmCauseSpec(
+            "fire_heat", InjuryKind.PUNCTURE, ((D.COLD, "decompression_cold"), (D.BLUNT, "decompression_blunt"), (D.ASPHYXIA, "decompression_asphyxia"))
+        ),
         H.EXPERIMENT: HarmCauseSpec(
             "fire_heat",
             InjuryKind.PUNCTURE,
@@ -105,6 +111,9 @@ HARM_DEATHS: Mapping[HarmCause, DeathCause] = total(
         HarmCause.EXPERIMENT: DeathCause.EXPERIMENT,
         HarmCause.POWER: DeathCause.MAGIC,
         HarmCause.BODY: DeathCause.DISEASE,
+        HarmCause.CHILDBIRTH: DeathCause.CHILDBIRTH,
+        HarmCause.CRIME: DeathCause.MURDER,
+        HarmCause.SPORT: DeathCause.SPORT,
     },
 )
 HONOURED_CAUSES = frozenset({HarmCause.BATTLE, HarmCause.DUEL, HarmCause.MONSTER, HarmCause.QUEST})

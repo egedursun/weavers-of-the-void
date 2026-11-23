@@ -113,7 +113,7 @@ def secret_behaviours() -> tuple[Mechanic, ...]:
         Mechanic(
             key=f"place_secret_{kind.value}",
             spec_item="S6.2",
-            title=f"Secret: {kind.value.replace('_', ' ')}",
+            title=f"Secret: {spoken(kind)}",
             subsystem=S.ENVIRONMENT,
             phases=("place_secrets",),
             surface=Surface(drawer=PLACE_SECTION),

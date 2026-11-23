@@ -6,11 +6,18 @@ class CatchGround(StrEnum):
     TRAPPING = "trapping"
     FOWLING = "fowling"
     MARINE_HUNT = "marine_hunt"
+    GAME_HUNT = "game_hunt"
+    SHORE_GATHERING = "shore_gathering"
+    DIVING = "diving"
+    FISH_PONDS = "fish_ponds"
 
 
 class CatchMedium(StrEnum):
     WATER = "water"
     LAND = "land"
+    SHORE = "shore"
+    UNDER_WATER = "under_water"
+    POND = "pond"
 
 
 class Gear(StrEnum):
@@ -20,6 +27,10 @@ class Gear(StrEnum):
     TRAPS = "traps"
     SNARES = "snares"
     HARPOONS = "harpoons"
+    MISSILES = "missiles"
+    TRAWLS = "trawls"
+    POISON = "poison"
+    HUNTING_ANIMALS = "hunting_animals"
 
 
 class CatchRight(StrEnum):
@@ -54,6 +65,8 @@ class RightKind(StrEnum):
     TITLE = "title"
     TRADEMARK = "trademark"
     MARKET_PRIVILEGE = "market_privilege"
+    RECIPE = "recipe"
+    TECHNIQUE = "technique"
 
 
 class RightAcquired(StrEnum):
@@ -63,6 +76,8 @@ class RightAcquired(StrEnum):
     LICENSED = "licensed"
     STOLEN = "stolen"
     GRANTED = "granted"
+    WON = "won"
+    WED = "wed"
 
 
 class AssistiveAid(StrEnum):

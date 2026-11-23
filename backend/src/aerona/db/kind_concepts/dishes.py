@@ -1,10 +1,11 @@
 from aerona.catalog.kinds.labels import MEAL_SLOT_LABELS, METHOD_LABELS
+from aerona.core.grammar import spoken
 from aerona.db.kind_concepts.spec import ConceptSpec, KindProperty
 from aerona.db.tables.cuisine import FLAVOURS, DishRow
 from aerona.domain.enums.cuisine import DishCourse
 from aerona.domain.enums.kinds import KindConcept, MealSlot
 
-COURSE_OPTIONS = {course.value: course.value.capitalize() for course in DishCourse}
+COURSE_OPTIONS = {course.value: spoken(course).capitalize() for course in DishCourse}
 FLAVOUR_HINT = "How strongly the dish tastes of this, for those whose bodies can taste it"
 
 SPEC = ConceptSpec(

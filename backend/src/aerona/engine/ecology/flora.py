@@ -161,6 +161,10 @@ class CropBook:
         return found
 
 
+def product_worth(rules: Rules, product: PlantProduct) -> float:
+    return product.worth(rules) / PERCENT
+
+
 def split_fields(rules: Rules, fields: float, crops: list[CropField]) -> dict[CommodityKind, float]:
     total = sum(crop.share for crop in crops)
     found: dict[CommodityKind, float] = defaultdict(float)
@@ -172,11 +176,11 @@ def split_fields(rules: Rules, fields: float, crops: list[CropField]) -> dict[Co
         food = [(product, rate) for product, rate in crop.products if product.food]
         weight = sum(rate for _, rate in food)
         for product, rate in food:
-            found[product.commodity] += land * rate / weight
+            found[product.commodity] += land * rate / weight * product_worth(rules, product)
         side = table.side_yield_pct if food else table.sole_yield_pct
         for product, rate in crop.products:
             if not product.food:
-                found[product.commodity] += land * rate * side / PERCENT
+                found[product.commodity] += land * rate * side / PERCENT * product_worth(rules, product)
     return found
 
 

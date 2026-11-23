@@ -29,6 +29,7 @@ import {
   type ContestStake,
   type PassionKind,
   type PassionSource,
+  type PersuasionAim,
   type Rank,
   type ValueAxis,
 } from './api'
@@ -50,6 +51,7 @@ import {
 const SPAN = 100
 const WORKING = 'Working on it.'
 const MORTALS = ['mortal']
+const TOWNS = ['settlement']
 const ANYTHING = [
   'mortal',
   'settlement',
@@ -1059,7 +1061,11 @@ export function ContestsCard({
 export function PersuasionsCard({ view, blocked }: Props) {
   const [target, setTarget] = useState<number | null>(null)
   const [appeal, setAppeal] = useState<string>('belief')
+  const [aim, setAim] = useState<string>('belief')
   const [axis, setAxis] = useState<string>('knowledge')
+  const [town, setTown] = useState<number | null>(null)
+  const believes = aim === 'belief'
+  const besieges = aim === 'surrender'
   const axes = Object.fromEntries(
     Object.entries(VALUE_ICONS).map(([key, spec]) => [key, spec.label])
   )
@@ -1071,9 +1077,10 @@ export function PersuasionsCard({ view, blocked }: Props) {
             speaker_id: view.node_id,
             target_id: target ?? 0,
             appeal: appeal as AppealKind,
-            aim: 'belief',
-            axis: axis as ValueAxis,
+            aim: aim as PersuasionAim,
+            axis: believes ? (axis as ValueAxis) : null,
             toward: SPAN,
+            subject_id: besieges ? town : null,
           },
         })
       ),
@@ -1091,7 +1098,7 @@ export function PersuasionsCard({ view, blocked }: Props) {
     <MindCard
       title='Arguments'
       icon={PERSUASION_ICON}
-      hint='Appeals to belief, self-interest, authority, evidence or fear; oratory and fit against stubbornness and passions.'
+      hint='An appeal of any kind toward any aim; oratory and fit against stubbornness and passions. A bond appeal fails where no bond ties them.'
       wide
     >
       {view.persuasions.length === 0 ? (
@@ -1108,7 +1115,7 @@ export function PersuasionsCard({ view, blocked }: Props) {
               icon={PERSUASION_ICON}
               tone={item.success ? 'success' : 'muted'}
               title={`${item.speaker?.name ?? 'Someone'} to ${item.target?.name ?? 'someone'}`}
-              meta={`${item.appeal_label} · ${item.aim_label.toLowerCase()}${item.axis ? ` (${named(VALUE_ICONS, item.axis).label.toLowerCase()})` : ''} · epoch ${item.epoch}`}
+              meta={`${item.appeal_label} · ${item.aim_label.toLowerCase()}${item.axis ? ` (${named(VALUE_ICONS, item.axis).label.toLowerCase()})` : ''}${item.subject ? ` · at ${item.subject.name}` : ''} · epoch ${item.epoch}`}
               badges={
                 <Badge
                   variant={item.success ? 'default' : 'outline'}
@@ -1130,9 +1137,16 @@ export function PersuasionsCard({ view, blocked }: Props) {
         action={
           <Button
             size='sm'
-            disabled={busy !== null || target === null}
+            disabled={
+              busy !== null || target === null || (besieges && town === null)
+            }
             disabledReason={
-              busy ?? (target === null ? 'Pick who to argue with.' : undefined)
+              busy ??
+              (target === null
+                ? 'Pick who to argue with.'
+                : besieges && town === null
+                  ? 'Pick the besieged town.'
+                  : undefined)
             }
             onClick={() => argue.mutate()}
           >
@@ -1156,11 +1170,30 @@ export function PersuasionsCard({ view, blocked }: Props) {
           onPick={setAppeal}
         />
         <MindPicker
+          label='Aim'
+          value={aim}
+          table={table(view.aims)}
+          blocked={busy}
+          onPick={setAim}
+        />
+        <MindPicker
           label='Belief'
           value={axis}
           table={axes}
-          blocked={busy}
+          blocked={
+            busy ??
+            (believes ? null : 'Only an argument about a belief names one.')
+          }
           onPick={setAxis}
+        />
+        <NodePicker
+          label='Besieged town'
+          types={TOWNS}
+          value={town}
+          onChange={setTown}
+          blocked={
+            busy ?? (besieges ? null : 'Only a call to surrender names a town.')
+          }
         />
       </AddBar>
     </MindCard>

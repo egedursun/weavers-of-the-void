@@ -130,6 +130,8 @@ SOLE_HEIR: Mapping[InheritanceCustom, Callable[[list[EntityRow], str | None], En
         InheritanceCustom.THROUGH_SECOND_LINE: eldest_of_second_line,
         InheritanceCustom.BY_MERIT: lambda by_age, _: max(by_age, key=lambda child: (merit(child), -child.id)),
         InheritanceCustom.ELECTIVE: lambda by_age, _: max(by_age, key=lambda child: (charisma(child), -child.id)),
+        InheritanceCustom.SENIORITY: lambda by_age, _: by_age[0],
+        InheritanceCustom.DESIGNATED: lambda by_age, _: by_age[0],
     },
     without={InheritanceCustom.EQUAL_SHARES},
 )

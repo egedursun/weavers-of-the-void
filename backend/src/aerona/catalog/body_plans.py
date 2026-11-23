@@ -82,6 +82,10 @@ PLANS: dict[BodyPlan, PlanSpec] = {
             BodyBuild.HEAVY,
         ),
         PlanSpec(BodyPlan.DIVINE_MANIFEST, "a god's manifest form", HeightClass.TALL, BodyBuild.AVERAGE),
+        PlanSpec(BodyPlan.TENTACLED, "many soft arms round a head and a beak", HeightClass.AVERAGE, BodyBuild.AVERAGE),
+        PlanSpec(BodyPlan.CENTAUROID, "an upright body with arms set on four legs", HeightClass.TALL, BodyBuild.HEAVY),
+        PlanSpec(BodyPlan.RADIAL, "arms set round a centre, with no front and no head", HeightClass.SHORT, BodyBuild.SLIGHT),
+        PlanSpec(BodyPlan.COLONIAL, "one body made of many living members", HeightClass.AVERAGE, BodyBuild.AVERAGE),
     )
 }
 
@@ -134,8 +138,8 @@ PLAN_TRAITS = {
     BodyPlan.INSECTOID: CreatureTrait.ARMOURED,
 }
 LAYERS = frozenset({BodyPlan.AVIAN, BodyPlan.SERPENTINE, BodyPlan.AQUATIC, BodyPlan.INSECTOID})
-COLD_PLANS = frozenset({BodyPlan.SERPENTINE, BodyPlan.INSECTOID, BodyPlan.AQUATIC})
-BUDDING_PLANS = frozenset({BodyPlan.AMORPHOUS, BodyPlan.CONSTRUCT})
+COLD_PLANS = frozenset({BodyPlan.SERPENTINE, BodyPlan.INSECTOID, BodyPlan.AQUATIC, BodyPlan.TENTACLED, BodyPlan.RADIAL})
+BUDDING_PLANS = frozenset({BodyPlan.AMORPHOUS, BodyPlan.CONSTRUCT, BodyPlan.COLONIAL})
 PLAN_TEXT = {
     BodyPlan.HUMANOID: "stands and grips like the peoples and is wounded as they are",
     BodyPlan.QUADRUPED: "runs on four legs and yields what its body gives",
@@ -149,5 +153,12 @@ PLAN_TEXT = {
     BodyPlan.COLOSSAL: "stands colossal",
     BodyPlan.CONSTRUCT: "eats stone and ore",
     BodyPlan.DIVINE_MANIFEST: "is a god's own shape",
+    BodyPlan.TENTACLED: "grips and moves with many soft arms and loses them one by one, not all at once",
+    BodyPlan.CENTAUROID: "moves as a rider moves and fights with both hands",
+    BodyPlan.RADIAL: "has no front and cannot be taken from the flank",
+    BodyPlan.COLONIAL: "loses members to harm and grows them back, dying only when too few remain",
 }
 MINED_PLANS = (BodyPlan.COLOSSAL, BodyPlan.INSECTOID)
+FALLBACK_PLANS = frozenset({BodyPlan.QUADRUPED, BodyPlan.AQUATIC})
+ATHERMIC_PLANS = frozenset({BodyPlan.CONSTRUCT})
+CHANGEABLE_PLANS = tuple(plan for plan in BodyPlan if plan not in (BodyPlan.INCORPOREAL, BodyPlan.DIVINE_MANIFEST))

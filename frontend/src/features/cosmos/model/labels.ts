@@ -187,6 +187,8 @@ export const CLIMATE_LABEL: Record<ClimateEra, string> = {
   snowball: 'Snowball',
   variable: 'Variable',
   wet_cold: 'Wet cold',
+  warming: 'Warming age',
+  cooling: 'Cooling age',
 }
 
 export const JOURNEY_INTENT_LABEL: Record<JourneyIntent, string> = {

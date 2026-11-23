@@ -11,7 +11,7 @@ from aerona.db.record_context import current_scope
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow
-from aerona.domain.enums.demography import AgeBand, Sex
+from aerona.domain.enums.demography import AgeBand, SexKind
 from aerona.domain.enums.entity import LOCATION_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.modifier import IncidentRole
@@ -98,7 +98,7 @@ async def create_event(ctx: TickContext, draft: EventDraft) -> tuple[EntityRow, 
             power=ctx.rules.events.event_power,
             world_id=where.world_id,
             location_id=where.id if where.entity_type in LOCATION_TYPES else where.location_id,
-            subtype=draft.kind.value.replace("_", " "),
+            subtype=spoken(draft.kind),
             engine_kind=draft.kind,
         ),
     )
@@ -200,7 +200,7 @@ async def set_footprint(ctx: TickContext, event_id: int, region_id: int, *, pres
 class CohortToll:
     community_id: int
     age_band: AgeBand
-    sex: Sex
+    sex: SexKind
     social_class: SocialClass
     phase: EventPhase
     count: int
@@ -222,7 +222,7 @@ async def set_casualties(ctx: TickContext, event_id: int, toll: CohortToll) -> i
                 event_entity_id=event_id,
                 community_entity_id=toll.community_id,
                 age_band=toll.age_band,
-                sex=toll.sex,
+                sex_kind=toll.sex,
                 social_class=toll.social_class,
                 phase=toll.phase,
                 count=toll.count,

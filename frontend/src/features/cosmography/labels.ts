@@ -1,5 +1,7 @@
 import {
+  type LucideIcon,
   Activity,
+  ArrowUpFromLine,
   Ban,
   CircleDashed,
   CircleDot,
@@ -11,7 +13,6 @@ import {
   Hourglass,
   Layers,
   Link2,
-  type LucideIcon,
   Moon,
   Orbit,
   Repeat,
@@ -231,6 +232,8 @@ export const CURRENTS: Record<Schema['OceanCurrent'], Named> = {
   none: { label: 'No current', icon: CircleDashed, tone: 'muted' },
   warm: { label: 'Warm current', icon: Waves, tone: 'warning' },
   cold: { label: 'Cold current', icon: Waves, tone: 'info' },
+  upwelling: { label: 'Upwelling', icon: ArrowUpFromLine, tone: 'success' },
+  tidal: { label: 'Tidal stream', icon: Moon, tone: 'verdigris' },
 }
 
 export const CLIMATE_TURNS = {

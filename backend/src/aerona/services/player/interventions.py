@@ -455,7 +455,7 @@ async def verb_act(act: Act) -> Effect:
     spent = guards.charge(creator, scope.rules.intervention_costs.verb_act, "intervention_costs.verb_act")
     amount = VERB_SIGN[verb] * scope.rules.intervention_costs.verb_strength
     await APPLIERS[command.object](ctx, target, command.object_key, amount, creator.id)
-    named = command.object.value.replace("_", " ") + (f" ({command.object_key.replace('_', ' ')})" if command.object_key else "")
+    named = spoken(command.object) + (f" ({command.object_key.replace('_', ' ')})" if command.object_key else "")
     message = (
         await record(
             ctx,

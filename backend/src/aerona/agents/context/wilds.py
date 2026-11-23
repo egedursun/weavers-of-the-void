@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProductRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
@@ -27,7 +28,7 @@ async def crop_lines(session: AsyncSession, region: int | None) -> list[str]:
         .where(RegionCropRow.region_entity_id == region, EntityRow.status == EntityStatus.CANON)
         .order_by(RegionCropRow.share.desc(), EntityRow.name)
     )
-    return [f"{name} ({share}% of the fields{', ' + words(cultivation.value) if cultivation is not None else ''})" for name, share, cultivation in rows]
+    return [f"{name} ({share}% of the fields{', ' + spoken(cultivation) if cultivation is not None else ''})" for name, share, cultivation in rows]
 
 
 async def wild_lines(session: AsyncSession, home: EntityRow, region: int | None) -> tuple[list[str], list[str], list[str]]:
@@ -40,9 +41,9 @@ async def wild_lines(session: AsyncSession, home: EntityRow, region: int | None)
             .where(SpeciesRangeRow.region_entity_id == region, EntityRow.status == EntityStatus.CANON, SpeciesRangeRow.abundance > 0)
             .order_by(SpeciesRangeRow.abundance.desc())
         )
-        wild = [f"{name} ({words(diet.value)}, {abundance} strong)" for name, abundance, diet in rows]
+        wild = [f"{name} ({spoken(diet)}, {abundance} strong)" for name, abundance, diet in rows]
     herds = [
-        f"{name} ({head} head, {words(stage.value)}{f'; {trained} trained for {words(training.value)}' if training is not None and trained else ''})"
+        f"{name} ({head} head, {spoken(stage)}{f'; {trained} trained for {spoken(training)}' if training is not None and trained else ''})"
         for name, head, stage, training, trained in await session.execute(
             select(EntityRow.name, HerdRow.head, HerdRow.stage, HerdRow.training, HerdRow.trained)
             .join(EntityRow, EntityRow.id == HerdRow.species_entity_id)
@@ -56,7 +57,7 @@ async def wild_lines(session: AsyncSession, home: EntityRow, region: int | None)
     ):
         lair = row.lair_place_id or beast.location_id
         if lair is not None and region is not None and atlas.top_region(lair) == region:
-            beasts.append(f"{beast.name} ({words(row.temper.value)}, terror {stat(beast, 'terror') or 0})")
+            beasts.append(f"{beast.name} ({spoken(row.temper)}, terror {stat(beast, 'terror') or 0})")
     return wild, herds, beasts
 
 
@@ -70,12 +71,12 @@ async def species_nature(session: AsyncSession, species: EntityRow) -> list[str]
         return []
     habits = ", ".join(
         [
-            words(row.species_class.value),
-            f"{words(row.biochemistry.value)} life",
-            words(row.size_class.value),
-            words(row.body_plan.value),
-            words(row.diet.value),
-            words(row.sociality.value),
+            spoken(row.species_class),
+            f"{spoken(row.biochemistry)} life",
+            spoken(row.size_class),
+            spoken(row.body_plan),
+            spoken(row.diet),
+            spoken(row.sociality),
             *flags_of(row),
         ]
     )
@@ -91,7 +92,7 @@ async def species_nature(session: AsyncSession, species: EntityRow) -> list[str]
         )
     )
     sacred = await session.get(EntityRow, row.sacred_to_node_id) if row.sacred_to_node_id is not None else None
-    lines = [f"nature: {habits}; {words(row.stage.value)}; tameability {row.tameability}, aggression {row.aggression}"]
+    lines = [f"nature: {habits}; {spoken(row.stage)}; tameability {row.tameability}, aggression {row.aggression}"]
     if products:
         lines.append(f"yields: {products}")
     if prey:
@@ -105,7 +106,7 @@ async def plant_lines(session: AsyncSession, species: EntityRow, row: SpeciesPro
     plant = await session.get(PlantProfileRow, species.id)
     lines: list[str] = []
     if plant is not None:
-        cycle, cultivation = words(plant.growth_cycle.value), words(plant.cultivation.value)
+        cycle, cultivation = spoken(plant.growth_cycle), spoken(plant.cultivation)
         lines.append(f"grows: {cycle}, needs {plant.growing_seasons} growing seasons and soil of {plant.soil_need}; {cultivation}")
     sown = list(
         await session.scalars(
@@ -154,7 +155,7 @@ async def beast_nature(session: AsyncSession, beast: EntityRow) -> list[str]:
         )
     )
     lines = [
-        f"beast: {words(row.size_class.value)}, {words(row.temper.value)}, endurance {row.endurance}, perception {row.perception}, "
+        f"beast: {spoken(row.size_class)}, {spoken(row.temper)}, endurance {row.endurance}, perception {row.perception}, "
         f"willpower {row.willpower}, intelligence {row.intelligence}, age {row.age} of {row.lifespan}"
     ]
     if hoard or treasures:
@@ -181,4 +182,4 @@ async def pet_lines(session: AsyncSession, me: EntityRow) -> list[str]:
         .where(BondRow.target_node_id == me.id, BondRow.kind == BondKind.PET_OF, BondRow.state == BondState.ACTIVE, EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.name)
     )
-    return [f"{name} ({words(size.value)})" for name, size in pets]
+    return [f"{name} ({spoken(size)})" for name, size in pets]

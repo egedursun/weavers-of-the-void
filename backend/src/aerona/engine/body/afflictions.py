@@ -25,7 +25,8 @@ from aerona.db.tables.powers import PowerRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import HeroQuestRow
-from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission, Visibility
+from aerona.db.write_guard import held as frozen
+from aerona.domain.enums.affliction import ChangeSign, CureKind, PackageKind, Transmission, Visibility
 from aerona.domain.enums.body import HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
@@ -42,6 +43,19 @@ from aerona.domain.enums.war import HeroQuestStatus
 from aerona.engine.body.book import ensure_body
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.hits import Harm
+from aerona.engine.body.packages_w52 import (
+    Shape,
+    bind_charm,
+    broken_charm,
+    change_body,
+    fortune_turns,
+    line_chance,
+    meet_fortunes,
+    pull_charm,
+    restore_body,
+    shape_row,
+    trigger_came,
+)
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -111,6 +125,8 @@ async def revert(ctx: TickContext, bearer: EntityRow, row: AfflictionRow) -> Non
     stage = stage_of(row)
     if stage is not None and stage.condition is not None:
         await end_condition(ctx, bearer, stage.condition, announce=False)
+    if stage is not None and stage.changes_body:
+        await restore_body(ctx, bearer, row)
 
 
 async def enter_stage(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, number: int) -> None:
@@ -131,6 +147,10 @@ async def enter_stage(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, n
         body.traits = sorted({*body.traits, *fresh})
         applied |= {f"{TRAIT_PREFIX}{trait}": 1 for trait in fresh}
     row.applied = applied
+    if stage.changes_body:
+        await change_body(ctx, bearer, row)
+    if stage.lucky:
+        await fortune_turns(ctx, bearer, row, stage)
     if stage.values:
         values = dict(await stored_values(ctx.session, ValueHolder.PERSONAL, bearer.id))
         for axis, delta in stage.values.items():
@@ -149,12 +169,22 @@ async def enter_stage(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, n
 
 
 async def afflict(
-    ctx: TickContext, bearer: EntityRow | None, package: PackageKind, transmission: Transmission, *, source_node_id: int | None = None
+    ctx: TickContext,
+    bearer: EntityRow | None,
+    package: PackageKind,
+    transmission: Transmission,
+    *,
+    source_node_id: int | None = None,
+    shape: Shape | None = None,
 ) -> AfflictionRow | None:
     if bearer is None or not bearable(bearer) or blocked(bearer.id, AFFLICTION_KEY):
         return None
     for row in await active(ctx.session, bearer.id):
         if row.package is package:
+            if package is PackageKind.FORTUNE:
+                sign = (shape.fortune_sign if shape is not None else None) or (-1 if transmission is Transmission.CURSE else 1)
+                strength = shape.fortune_strength if shape is not None and shape.fortune_strength is not None else ctx.rules.packages.fortune_strength
+                await meet_fortunes(ctx, bearer, row, sign, strength)
             return row
     spec = PACKAGES[package]
     row = AfflictionRow(
@@ -170,6 +200,9 @@ async def afflict(
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await shape_row(ctx, row, shape)
+    if package is PackageKind.CHARM:
+        await bind_charm(ctx, bearer, row)
     if spec.onset <= 0:
         await enter_stage(ctx, bearer, row, 1)
     if spec.visibility is not Visibility.HIDDEN:
@@ -207,7 +240,10 @@ def cure_steps(bearer_id: int, row: AfflictionRow, how: CureKind | None) -> tupl
 
 async def cure(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, how: CureKind | None) -> None:
     await revert(ctx, bearer, row)
+    await restore_body(ctx, bearer, row)
     row.cured_epoch = ctx.epoch
+    if row.package is PackageKind.CHARM:
+        await broken_charm(ctx, bearer, row, found=how is not None and how is not CureKind.TIME)
     spec = spec_of(row)
     if spec.visibility is not Visibility.HIDDEN or how is not None:
         facts: dict[str, FactInput] = {"package": row.package, "stage": row.stage}
@@ -394,11 +430,35 @@ async def stage_effects(ctx: TickContext, bearer: EntityRow, row: AfflictionRow,
         await feed(ctx, bearer, row)
     if stage.recruits:
         await join_outer_cult(ctx, bearer)
+    await package_turns(ctx, bearer, row, stage)
     if Transmission.CONTACT in spec_of(row).contagion:
         rng = ctx.rng(f"affliction.{row.id}.contact")
         for other in await neighbours(ctx, bearer):
             if rng.chance(table.contact_pct):
                 await afflict(ctx, other, row.package, Transmission.CONTACT, source_node_id=bearer.id)
+
+
+async def package_turns(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, stage: StageSpec) -> None:
+    if stage.lucky and row.stage_since_epoch != ctx.epoch:
+        await fortune_turns(ctx, bearer, row, stage)
+    if stage.binds and await pull_charm(ctx, bearer, row, stage):
+        await cure(ctx, bearer, row, CureKind.TIME)
+        return
+    if row.package is PackageKind.TRANSFORMATION:
+        await transformation_turns(ctx, bearer, row)
+
+
+async def transformation_turns(ctx: TickContext, bearer: EntityRow, row: AfflictionRow) -> None:
+    if STAGE_HOLD in row.locked:
+        return
+    if row.stage == 1 and (row.transform_trigger or ChangeSign.NONE) is ChangeSign.NONE:
+        row.stage_since_epoch = ctx.epoch
+        return
+    moon = await first_moon(ctx, bearer.world_id)
+    bright = moon is not None and stat_or(moon, "brightness", PERCENT // 2) >= PERCENT // 2
+    recurs = ctx.rng(f"transform.recur.{row.id}.{ctx.epoch}").chance(ctx.rules.packages.transform_recur_pct)
+    if row.stage == len(spec_of(row).stages) and await trigger_came(ctx, bearer, row, bright) and recurs:
+        await enter_stage(ctx, bearer, row, 1)
 
 
 async def spread_by_bite(ctx: TickContext) -> int:
@@ -424,8 +484,9 @@ async def inherit(ctx: TickContext, child: EntityRow, parents: list[int]) -> int
     gained = 0
     for parent_id in parents:
         for row in await active(ctx.session, parent_id):
-            passes = row.package in hereditary and ctx.rng(f"inherit.{child.id}.{row.package.value}").chance(ctx.rules.effect_packages.birth_pct)
-            if passes and await afflict(ctx, child, row.package, Transmission.BIRTH, source_node_id=row.source_node_id) is not None:
+            passes = row.package in hereditary and ctx.rng(f"inherit.{child.id}.{row.package.value}").chance(line_chance(ctx, row.package))
+            shape = Shape(fortune_sign=row.fortune_sign, fortune_strength=row.fortune_strength)
+            if passes and await afflict(ctx, child, row.package, Transmission.BIRTH, source_node_id=row.source_node_id, shape=shape) is not None:
                 gained += 1
     return gained
 
@@ -448,11 +509,17 @@ async def desecrator_of(ctx: TickContext, node_id: int) -> EntityRow | None:
 async def desecration_curse(ctx: TickContext, shrine: EntityRow, desecrator_id: int) -> AfflictionRow | None:
     god_id = await shrine_god(ctx, shrine)
     god = await ctx.session.get(SonRow, god_id) if god_id is not None else None
-    if god is None or Domain.HUNT not in (god.domain_primary, god.domain_secondary):
+    if god is None:
         return None
     if not ctx.rng(f"desecration.{shrine.id}.{desecrator_id}").chance(ctx.rules.effect_packages.desecration_pct):
         return None
-    return await afflict(ctx, await desecrator_of(ctx, desecrator_id), PackageKind.LYCANTHROPY, Transmission.CURSE, source_node_id=god.id)
+    package = vengeance_package(ctx, god)
+    return await afflict(ctx, await desecrator_of(ctx, desecrator_id), package, Transmission.CURSE, source_node_id=god.id)
+
+
+def vengeance_package(ctx: TickContext, god: SonRow) -> PackageKind:
+    domains = ".".join(sorted(domain.value for domain in (god.domain_primary, god.domain_secondary) if domain is not None))
+    return ctx.rng(f"vengeance.{god.id}.{domains}").pick(sorted(PackageKind, key=lambda kind: kind.value))
 
 
 async def shrine_god(ctx: TickContext, shrine: EntityRow) -> int | None:
@@ -496,7 +563,7 @@ async def progress(ctx: TickContext) -> dict[str, int]:
     rows = list(await ctx.session.scalars(select(AfflictionRow).where(AfflictionRow.cured_epoch.is_(None)).order_by(AfflictionRow.id)))
     for row in rows:
         bearer = await living_entity(ctx.session, row.bearer_node_id)
-        if bearer is None:
+        if bearer is None or frozen(bearer.id):
             continue
         spec = spec_of(row)
         held = STAGE_HOLD in row.locked

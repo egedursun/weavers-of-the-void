@@ -1,16 +1,17 @@
 import { Sunrise } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { sonDeathCauseValues } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityLink, Section, StatBar, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { type SonRecord } from '@/features/pantheon/api'
 import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { humanize } from '@/features/pantheon/labels'
 import { SiblingSchemes } from './SiblingSchemes'
 import { useResurrection } from './api'
 
@@ -49,7 +50,7 @@ export function DeadSonPanel({ son }: { son: SonRecord }) {
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         {deathCause && (
           <Badge size='sm' variant='destructive'>
-            {humanize(deathCause)}
+            {wordOf(sonDeathCauseValues, deathCause)}
           </Badge>
         )}
         {rite.data && rite.data.earliest_return_epoch !== null && (

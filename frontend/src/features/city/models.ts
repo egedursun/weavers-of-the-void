@@ -868,6 +868,16 @@ const PLACE_LOOK: Record<Schema['PlaceKind'], Part> = {
   canyon: { model: nature('rock_single_D'), scale: 1.3 },
   oasis: { model: nature('trees_A_small') },
   geyser: { model: nature('cloud_small'), scale: 0.5 },
+  waterfall: { model: nature('rock_single_C'), scale: 1.1 },
+  delta: { model: nature('waterplant_B') },
+  plateau: { model: nature('hill_single_C'), scale: 1.1 },
+  sinkhole: { model: nature('rock_single_E'), scale: 0.9 },
+  hot_spring: { model: nature('cloud_small'), scale: 0.4 },
+  mesa: { model: nature('hill_single_A'), scale: 1.2 },
+  natural_arch: { model: spooky('arch_gate'), scale: SPOOKY },
+  tar_pit: { model: nature('rock_single_B'), scale: 0.7 },
+  meadow: { model: nature('hill_single_B'), scale: 0.5 },
+  isthmus: { model: nature('hills_A'), scale: 0.4 },
 }
 
 const SACRED: Part = { model: spooky('shrine_candles'), scale: SPOOKY }

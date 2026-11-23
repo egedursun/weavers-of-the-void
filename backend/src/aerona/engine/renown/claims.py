@@ -3,10 +3,12 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.renown import DeedClaimRow, DeedRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.relations import ContestEnd, ContestKind, ContestStake
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus
 from aerona.engine.context import TickContext
+from aerona.engine.mind.hooks import committed
 from aerona.engine.mortal.justice import code_punishment, sentence
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import living_entity
@@ -41,7 +43,10 @@ async def tend_claims(ctx: TickContext, tally: DeedTally) -> None:
     for deed in list(await ctx.session.scalars(select(DeedRow).where(DeedRow.epoch == ctx.epoch).order_by(DeedRow.id))):
         tally.recorded += 1
         await share_deeds(ctx, deed, tally)
-        await claim_falsely(ctx, deed, tally)
+        liar = await claim_falsely(ctx, deed, tally)
+        if liar is not None:
+            seen = ctx.rng(seed_of("lie.seen", deed.id, liar)).chance(ctx.rules.ethics.lying_detect_pct)
+            await committed(ctx, liar, ActKind.LYING, deed.doer_node_id, seen=seen)
     standing = await ctx.session.scalars(
         select(DeedClaimRow).where(DeedClaimRow.kind == ClaimKind.FALSE, DeedClaimRow.status == ClaimStatus.STANDING).order_by(DeedClaimRow.id)
     )

@@ -1,7 +1,8 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.total import total
 from aerona.domain.enums.kin import KinRole
 from aerona.engine.mortal.kin import children_of, fosterers_of, fosterlings_of, godparents_of, parents_of, siblings_of, spouses_of, sworn_kin_of
 
@@ -69,29 +70,37 @@ async def co_spouses(session: AsyncSession, mortal_id: int) -> list[int]:
     return await of_each(session, await spouses_of(session, mortal_id), spouses_of)
 
 
-async def chosen_kin(session: AsyncSession, mortal_id: int) -> list[int]:
+async def foster_kin(session: AsyncSession, mortal_id: int) -> list[int]:
     return sorted(set(await fosterers_of(session, mortal_id)) | set(await fosterlings_of(session, mortal_id)))
 
 
-RESOLVERS: dict[KinRole, Lookup] = {
-    KinRole.PARENT: parents_of,
-    KinRole.CHILD: children_of,
-    KinRole.SIBLING: siblings_of,
-    KinRole.GRANDPARENT: grandparents,
-    KinRole.GRANDCHILD: grandchildren,
-    KinRole.PARENT_SIBLING_FIRST_LINE: first_line_kin,
-    KinRole.PARENT_SIBLING_SECOND_LINE: second_line_kin,
-    KinRole.SIBLING_CHILD: sibling_children,
-    KinRole.COUSIN_PARALLEL: parallel_cousins,
-    KinRole.COUSIN_CROSS: cross_cousins,
-    KinRole.PARENT_IN_LAW: parents_in_law,
-    KinRole.CHILD_IN_LAW: children_in_law,
-    KinRole.SIBLING_IN_LAW: siblings_in_law,
-    KinRole.CO_SPOUSE: co_spouses,
-    KinRole.CHOSEN_KIN: chosen_kin,
-    KinRole.GODPARENT: godparents_of,
-    KinRole.SWORN_KIN: sworn_kin_of,
-}
+async def chosen_kin(session: AsyncSession, mortal_id: int) -> list[int]:
+    return sorted(set(await foster_kin(session, mortal_id)) | set(await godparents_of(session, mortal_id)))
+
+
+RESOLVERS: Mapping[KinRole, Lookup] = total(
+    KinRole,
+    {
+        KinRole.PARENT: parents_of,
+        KinRole.CHILD: children_of,
+        KinRole.SIBLING: siblings_of,
+        KinRole.GRANDPARENT: grandparents,
+        KinRole.GRANDCHILD: grandchildren,
+        KinRole.PARENT_SIBLING_FIRST_LINE: first_line_kin,
+        KinRole.PARENT_SIBLING_SECOND_LINE: second_line_kin,
+        KinRole.SIBLING_CHILD: sibling_children,
+        KinRole.COUSIN_PARALLEL: parallel_cousins,
+        KinRole.COUSIN_CROSS: cross_cousins,
+        KinRole.PARENT_IN_LAW: parents_in_law,
+        KinRole.CHILD_IN_LAW: children_in_law,
+        KinRole.SIBLING_IN_LAW: siblings_in_law,
+        KinRole.CO_SPOUSE: co_spouses,
+        KinRole.CHOSEN_KIN: chosen_kin,
+        KinRole.GODPARENT: godparents_of,
+        KinRole.SWORN_KIN: sworn_kin_of,
+        KinRole.FOSTER_KIN: foster_kin,
+    },
+)
 
 
 async def kin_by_role(session: AsyncSession, mortal_id: int, role: KinRole) -> list[int]:

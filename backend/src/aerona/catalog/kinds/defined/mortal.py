@@ -6,7 +6,9 @@ MARRIAGE_END = total(
     MarriageEnd,
     {
         MarriageEnd.DEATH: Defined(
-            "Death", checked_by=("engine.cycles.kinship.keep_kinship",), used_by=("engine.mortal.kinship.backfill_kin", "engine.mortal.kinship.widow")
+            "Death",
+            checked_by=("engine.collective.demography.bereaved_among", "engine.cycles.kinship.keep_kinship"),
+            used_by=("engine.mortal.kinship.backfill_kin", "engine.mortal.kinship.widow"),
         ),
         MarriageEnd.DIVORCE: Defined(
             "Divorce",

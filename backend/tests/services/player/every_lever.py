@@ -63,6 +63,7 @@ from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.interpretation import InterpretationRow
 from aerona.db.tables.interworld import InterworldCampaignRow, InterworldMigrationRow, OrbitalControlRow
 from aerona.db.tables.intimacy import RestraintCustomRow
+from aerona.db.tables.intrigue import IdentityRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.kin import KinGroupRow
 from aerona.db.tables.kin_dynamics import ElderSwayRow, KinBlendRow, KinDisowningRow, KinDynamicRow, KinFavourRow, KinRivalryRow
@@ -156,6 +157,7 @@ from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.rifts import open_rift
 from aerona.engine.economy.route_control import route_of
+from aerona.engine.economy.routes import load_routes
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.phases.heroes import load_hero_world
 from aerona.engine.phases.society_support.quests import quest_options
@@ -506,6 +508,30 @@ HOME_NEIGHBOUR = Computed(lambda session: first_world_mortal(session, 1))
 
 REALM = EntityType.POLITY
 TOWN = EntityType.SETTLEMENT
+
+
+async def route_of_first_towns(session: AsyncSession) -> int | None:
+    ends = frozenset((await pick(session, TOWN, 0), await pick(session, TOWN, 1)))
+    for route in await load_routes(await manual_context(session, "harness.route"), live_only=False):
+        if frozenset(route.ends) == ends and route.entity.status is EntityStatus.CANON:
+            return route.entity.id
+    return await pick(session, EntityType.TRADE_ROUTE, 0)
+
+
+async def unmasked_mortal(session: AsyncSession) -> int | None:
+    masked = select(IdentityRow.mortal_node_id)
+    return await session.scalar(
+        select(EntityRow.id)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(masked))
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+
+
+async def masked_mortal(session: AsyncSession) -> int | None:
+    return await session.scalar(select(IdentityRow.mortal_node_id).where(IdentityRow.false_name == "Wren").order_by(IdentityRow.mortal_node_id).limit(1))
+
+
 MORTAL = EntityType.MORTAL
 TONGUE = EntityType.LANGUAGE
 SOUND = ("sound_change:add", {"language_id": Pick(TONGUE), "kind": "shift", "source": "a", "target": "e"})
@@ -1116,9 +1142,9 @@ HUNT = ("mole_hunt:order", {"polity_id": Computed(spied_realm)})
 DEFECT = ("defection:make", {"mortal_id": Pick(MORTAL, 2), "to_id": Pick(REALM), "protected": True})
 KILLING = ("killing:add", {"victim_id": Pick(MORTAL, 2), "method": "poison", "recognised": True})
 PLAY = ("market_play:set", {"holder_id": Newest(EntityType.FACTION), "settlement_id": Pick(TOWN), "commodity": "grain", "play": "corner"})
-TRAIT = ("species_trait:set", {"species_id": Pick(EntityType.SPECIES), "region_id": Pick(EntityType.REGION), "trait": "speed", "mean": 60})
+TRAIT = ("species_trait:set", {"species_id": Pick(EntityType.SPECIES), "region_id": Pick(EntityType.REGION), "trait": "docility", "mean": 60})
 LINE = ("lineage:mark", {"species_id": Pick(EntityType.SPECIES), "package": "divine_blessing", "blessing": True})
-SERVICE = ("ecosystem_service:set", {"region_id": Pick(EntityType.REGION), "role": "pollinator", "strength": 50})
+SERVICE = ("ecosystem_service:set", {"region_id": Pick(EntityType.REGION), "role": "seed_disperser", "strength": 50})
 HERD = ("herd:edit", {"community_id": Pick(TOWN), "species_id": Pick(EntityType.SPECIES), "values": {"head": 10}})
 CARRIER = ("carrier:add", {"mortal_id": Pick(MORTAL), "disease_id": Newest(EntityType.DISEASE)})
 RESPONSE = ("plague_response:set", {"community_id": Pick(TOWN), "disease_id": Newest(EntityType.DISEASE), "response": "prayer"})
@@ -1340,7 +1366,14 @@ LEVERS: dict[str, Lever] = {
         name: after(DISEASE, disease_id=Newest(EntityType.DISEASE), region_id=Pick(EntityType.REGION))
         for name in ("disease:cure", "disease:edit", "disease:immunity", "endemic:set", "endemic:remove", "disease:quarantine")
     },
+    "disease_route:set": after(DISEASE, disease_id=Newest(EntityType.DISEASE), route="objects", share=25),
+    "disease_route:remove": after(
+        DISEASE, ("disease_route:set", {"disease_id": Newest(EntityType.DISEASE), "route": "objects"}), disease_id=Newest(EntityType.DISEASE), route="objects"
+    ),
     "dispatch:send": given(sender_id=Pick(TOWN), recipient_id=Pick(TOWN, 1)),
+    "mobility:move": given(mortal_id=Pick(MORTAL), event="ordained"),
+    "will:set": given(testator_id=Pick(MORTAL), heirs=[{"heir_id": Pick(MORTAL, 1), "share": 100}], hold=True),
+    "will:remove": after(("will:set", {"testator_id": Pick(MORTAL), "heirs": [{"heir_id": Pick(MORTAL, 1), "share": 100}]}), testator_id=Pick(MORTAL)),
     **{
         name: after(("dispatch:send", {"sender_id": Pick(TOWN), "recipient_id": Pick(TOWN, 1)}), message_id=Newest("message"))
         for name in ("dispatch:delete", "dispatch:hold")
@@ -1372,6 +1405,19 @@ LEVERS: dict[str, Lever] = {
     "epoch:edit": Lever(values={"epoch": 1, "name": "The First Age"}, setup=first_epoch),
     **{name: after(("estate:found", {"realm_id": Pick(REALM)}), estate_id=Newest(EntityType.FACTION)) for name in ("estate:privilege", "estate:remove")},
     "estate:edit": after(("estate:found", {"realm_id": Pick(REALM)}), estate_id=Newest(EntityType.FACTION), loyalty=60),
+    "death_reading:create": given(people_id=Pick(EntityType.PEOPLE), cause="drowning", reading="cursed", hold=True),
+    "death_reading:edit": after(
+        ("death_reading:create", {"people_id": Pick(EntityType.PEOPLE), "cause": "sport", "reading": "plain"}),
+        people_id=Pick(EntityType.PEOPLE),
+        cause="sport",
+        reading="glorious",
+        hold=False,
+    ),
+    "death_reading:delete": after(
+        ("death_reading:create", {"people_id": Pick(EntityType.PEOPLE), "cause": "duel", "reading": "honourable"}),
+        people_id=Pick(EntityType.PEOPLE),
+        cause="duel",
+    ),
     "ethics:honour": given(holder_id=Pick(EntityType.PEOPLE)),
     "ethics:set": given(holder_id=Pick(EntityType.PEOPLE)),
     "fact:add": given(object_text="the old river"),
@@ -1406,7 +1452,7 @@ LEVERS: dict[str, Lever] = {
     "household:hold": given(fields=["wealth"]),
     "household_aggregate:edit": given(community_id=Pick(TOWN), wealth=60),
     **{
-        name: after(("identity:assume", {"mortal_id": Pick(MORTAL), "false_name": "Wren"}), mortal_id=Pick(MORTAL))
+        name: after(("identity:assume", {"mortal_id": Computed(unmasked_mortal), "false_name": "Wren"}), mortal_id=Computed(masked_mortal))
         for name in ("identity:delete", "identity:edit", "identity:unmask")
     },
     "indicator:edit": given(output=60),
@@ -1700,7 +1746,7 @@ LEVERS: dict[str, Lever] = {
     },
     "title:edit": given(emblem="a white tower"),
     "trade_policy:remove": after(("trade_policy:set", {"issuer_id": Pick(REALM), "rate_pct": 10}), policy_id=Newest("trade_policy")),
-    "trade_route:found": after(("trade_route:delete", {"route_id": Pick(EntityType.TRADE_ROUTE)}), first_id=Pick(TOWN), second_id=Pick(TOWN, 1)),
+    "trade_route:found": after(("trade_route:delete", {"route_id": Computed(route_of_first_towns)}), first_id=Pick(TOWN), second_id=Pick(TOWN, 1)),
     "trade_route:open": after(("trade_route:close", {"route_id": Pick(EntityType.TRADE_ROUTE)}), route_id=Pick(EntityType.TRADE_ROUTE)),
     **{name: given(route_id=Pick(EntityType.TRADE_ROUTE)) for name in ("trade_route:close", "trade_route:delete", "trade_route:edit")},
     "trade_route:toll_stop": given(route_id=Pick(EntityType.TRADE_ROUTE), region_id=Computed(route_region), controller_id=Pick(TOWN), rate=5),
@@ -1852,7 +1898,8 @@ LEVERS: dict[str, Lever] = {
     "holy_order:remove": after(*HOLY, ("holy_order:edit", {"order_id": Newest(EntityType.FACTION), "tithe_share": 10}), order_id=Newest(EntityType.FACTION)),
     "horror:suppress_cult": after(("horror:cult", {"entity_id": Pick(TOWN)}), cult_id=Newest(EntityType.CULT)),
     "house:merge": given(house_id=Pick(EntityType.HOUSE), into_id=Pick(EntityType.HOUSE, 1)),
-    "identity:edit": after(("identity:assume", {"mortal_id": Pick(MORTAL), "false_name": "Wren"}), mortal_id=Pick(MORTAL), exposure=20),
+    "identity:edit": after(("identity:assume", {"mortal_id": Computed(unmasked_mortal), "false_name": "Wren"}), mortal_id=Computed(masked_mortal), exposure=20),
+    "identity:assume": given(mortal_id=Computed(unmasked_mortal), false_name="Wren"),
     "incident:unlink_cause": after(
         ("incident:link_cause", {"incident_id": Newest("incident"), "cause_incident_id": Pick("incident")}), incident_id=Newest("incident")
     ),
@@ -2020,6 +2067,16 @@ LEVERS: dict[str, Lever] = {
     "creation:reward": Lever(values={"entity_id": Pick(MORTAL), "taken_back_pct": 50}, setup=rewarded),
     "species:spare_prey": Lever(values={"species_id": Pick(EntityType.SPECIES)}, setup=hunted),
     "seasons:release": after(("seasons:edit", {"season_id": Pick("world_season"), "growth": 60}), season_id=Pick("world_season")),
+    "seasons:edit": given(season_id=Pick("world_season"), share_pct=30, temperature_shift=5),
+    "seasons:remove": given(season_id=Pick("world_season")),
+    "seasons:onset": given(world_id=Where("world_seasons", "world_id"), year=10, season_position=0, onset="failed"),
+    **{
+        name: after(
+            ("seasons:onset", {"world_id": Where("world_seasons", "world_id"), "year": 10, "season_position": 0, "onset": "late"}),
+            onset_id=Newest("season_onset"),
+        )
+        for name in ("seasons:onset_release", "seasons:onset_clear")
+    },
     "creed:found": after(("mind:values", {"node_id": Pick(MORTAL), "values": {"martial": 95}})),
     "federation": given(member_ids=[Pick(TOWN), Pick(TOWN, 1)], name="The Concord"),
     "resolution:propose": after(FEDERATION, assembly_id=ASSEMBLY),
@@ -2276,16 +2333,16 @@ LEVERS: dict[str, Lever] = {
     **{name: after(DEFECT, defection_id=Newest("defection")) for name in ("defection:edit", "defection:delete")},
     "killing:add": given(victim_id=Pick(MORTAL, 2), method="poison", recognised=True),
     **{name: after(KILLING, killing_id=Newest("assassination")) for name in ("killing:edit", "killing:delete")},
-    "species_trait:set": given(species_id=Pick(EntityType.SPECIES), region_id=Pick(EntityType.REGION), trait="speed", mean=60),
+    "species_trait:set": given(species_id=Pick(EntityType.SPECIES), region_id=Pick(EntityType.REGION), trait="longevity", mean=60),
     **{
-        name: after(TRAIT, species_id=Pick(EntityType.SPECIES), region_id=Pick(EntityType.REGION), trait="speed")
+        name: after(TRAIT, species_id=Pick(EntityType.SPECIES), region_id=Pick(EntityType.REGION), trait="docility")
         for name in ("species_trait:edit", "species_trait:delete")
     },
     "lineage:mark": given(species_id=Pick(EntityType.SPECIES), package="divine_blessing", blessing=True, source_node_id=Pick("son")),
     **{name: after(LINE, species_id=Pick(EntityType.SPECIES), package="divine_blessing") for name in ("lineage:edit", "lineage:delete")},
     "species_ecology:edit": given(species_id=Pick(EntityType.SPECIES)),
-    "ecosystem_service:set": given(region_id=Pick(EntityType.REGION), role="pollinator", strength=50, species_id=Pick(EntityType.SPECIES)),
-    **{name: after(SERVICE, region_id=Pick(EntityType.REGION), role="pollinator") for name in ("ecosystem_service:edit", "ecosystem_service:delete")},
+    "ecosystem_service:set": given(region_id=Pick(EntityType.REGION), role="regulator", strength=50, species_id=Pick(EntityType.SPECIES)),
+    **{name: after(SERVICE, region_id=Pick(EntityType.REGION), role="seed_disperser") for name in ("ecosystem_service:edit", "ecosystem_service:delete")},
     "herd:release": after(HERD, community_id=Pick(TOWN), species_id=Pick(EntityType.SPECIES)),
     "carrier:add": after(DISEASE, mortal_id=Pick(MORTAL), disease_id=Newest(EntityType.DISEASE)),
     **{name: after(DISEASE, CARRIER, mortal_id=Pick(MORTAL), disease_id=Newest(EntityType.DISEASE)) for name in ("carrier:edit", "carrier:delete")},
@@ -2384,7 +2441,7 @@ LEVERS: dict[str, Lever] = {
 }
 
 EDITS: Mapping[str, Mapping[str, Any]] = {
-    "crowd_mood:edit": {"anger": 70, "anxiety": 20, "fervour": 10, "deterrence": 30, "agitation": 15, "last_trigger": "famine"},
+    "crowd_mood:edit": {"deterrence": 30, "agitation": 15, "last_trigger": "famine"},
     "mob:edit": {
         "act": "riot",
         "size": 200,
@@ -2422,8 +2479,8 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "generation:edit": {"alive": 120},
     "diaspora:edit": {"population": 300, "ties": 40, "remittance": 10, "home_entity_id": Pick(TOWN, 1)},
     "transition:edit": {"fertility_pct": 80, "elder_share": 20, "urban_share": 40, "literacy": 30},
-    "sex_ratio:edit": {"males_per_hundred": 90, "widows": 10},
-    "role_norm:edit": {"eligibility": "female_preferred", "min_age": 18, "stance": "frowned_upon", "classes": ["noble", "priest"]},
+    "sex_ratio:edit": {"begetters_per_hundred": 90, "bereaved_partners": 10},
+    "role_norm:edit": {"eligibility": "bearers_preferred", "min_age": 18, "stance": "frowned_upon", "classes": ["noble", "priest"]},
     "dating_system:edit": {
         "kind": "regnal",
         "anchor_year": 12,
@@ -2470,7 +2527,15 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "trade_route:edit": {"danger_bandits": 30, "capacity": 50, "length": 3, "chokepoint": True},
     "structure:edit": {"condition": 80, "anchor": True, "splendor": 60},
     "structure_design:edit": {"cost_pct": 110, "form": "dome", "storeys": 3, "material": "stone"},
-    "species:edit": {"litter_size": 2},
+    "species:edit": {
+        "litter_size": 2,
+        "sociality": "swarm",
+        "diet": "decomposer",
+        "stage": "commensal",
+        "biochemistry": "carbon_methane",
+        "dormancy": "torpor",
+        "thermoregulation": "heterotherm",
+    },
     "species:range": {"abundance": 40},
     "herd:edit": {"head": 40},
     "beast:edit": {"age": 10},
@@ -2491,7 +2556,7 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "people:edit": {"cohesion": 60},
     "people:found": {"cohesion": 60},
     "class:standing": {"fed_pct": 70, "wealth": 30},
-    "disease:edit": {"lethality": 20, "incubation": 2},
+    "disease:edit": {"lethality": 20, "incubation": 2, "affinity_warmth": "warm", "affinity_moisture": "wet"},
     "disease:create": {"lethality": 20},
     "outbreak:edit": {"severity": 30},
     "settlement:edit": {"crime": 20, "sewers": True},
@@ -2565,12 +2630,12 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "divine_tongue:edit": {"language_entity_id": Pick(TONGUE, 1)},
     "species_trait:edit": {"mean": 70, "variance": 20},
     "lineage:edit": {"blessing": False, "source_node_id": Pick("son")},
-    "species_ecology:edit": {"keystone": "pollinator", "feral_epoch": 2},
+    "species_ecology:edit": {"keystone": "reef_builder", "feral_epoch": 2},
     "ecosystem_service:edit": {"strength": 70, "species_entity_id": Pick(EntityType.SPECIES)},
     "carrier:edit": {"identified": True, "seeded": 2},
     "plague_response:edit": {"strength": 80, "until_epoch": 9},
     "cure_research:edit": {"points": 40, "specimens": 3},
-    "world_cycle:edit": {"carbon": 60, "water": 40, "nutrients": 55},
+    "world_cycle:edit": {"carbon": 60, "water": 40, "nutrients": 55, "oxygen": 45, "rock": 50},
     "district_urban:edit": {"housing": "townhouse", "desirability": 70, "land_value": 60},
     "town_urban:edit": {"morphology": "planned", "homeless": 40},
     "district_service:edit": {"coverage": 80},
@@ -2609,7 +2674,7 @@ TOWN_MOOD = Computed(profiled_town)
 EVENT = Computed(any_collection)
 VESSEL = Computed(any_vessel)
 PEOPLE = EntityType.PEOPLE
-MOOD = ("crowd_mood:set", {"town_id": TOWN_MOOD, "anger": 60})
+MOOD = ("crowd_mood:set", {"town_id": TOWN_MOOD, "feelings": {"anger": 60}})
 SPARK = ("cascade:spark", {"town_id": TOWN_MOOD, "trigger": "famine"})
 MOB = ("mob:raise", {"town_id": TOWN_MOOD, "act": "riot", "target": "district", "size": 100, "anger": 60})
 MOVEMENT = ("popular_movement:found", {"town_id": TOWN_MOOD})
@@ -2656,7 +2721,8 @@ DESIGN = ("design:draw", {"owner_id": Pick(REALM), "frame": "carrack"})
 WEAR = ("component_wear:set", {"vessel_id": VESSEL, "component": "hull", "wear": 20})
 LEVERS.update(
     {
-        "crowd_mood:set": given(town_id=TOWN_MOOD, anger=60),
+        "crowd_mood:set": given(town_id=TOWN_MOOD, feelings={"anger": 60}),
+        "crowd_feeling:set": given(town_id=TOWN_MOOD, feeling="hope", level=40, hold=True),
         **{name: after(MOOD, town_id=TOWN_MOOD) for name in ("crowd_mood:edit", "crowd_mood:delete")},
         "cascade:spark": given(town_id=TOWN_MOOD, trigger="famine"),
         "cascade:delete": after(SPARK, cascade_id=Newest("cascade")),
@@ -2735,7 +2801,7 @@ PLAN = ("plan:create", {"holder_id": Pick(REALM), "kind": "wonder", "name": "The
 GIFT = ("gift:give", {"giver_id": Pick(REALM), "receiver_id": Pick(REALM, 1), "value": 10})
 CIRCUIT = ("circuit:create", {"name": "The First Round", "stops": [Pick(TOWN), Pick(TOWN, 1)]})
 DEBT = ("debt:set", {"god_id": Pick("son"), "community_id": Pick(TOWN)})
-KIN = ("kinship:set", {"people_id": Pick(PEOPLE), "first_side": "male"})
+KIN = ("kinship:set", {"people_id": Pick(PEOPLE), "first_side": "begetter"})
 ALLIANCE = ("alliance:set", {"giver_id": Pick(EntityType.HOUSE), "taker_id": Pick(EntityType.HOUSE, 1)})
 BIRTHS = ("reproduction:set", {"people_id": Pick(PEOPLE)})
 CASTE = ("caste:set", {"mortal_id": Pick(MORTAL), "caste": "soldier"})
@@ -2773,7 +2839,7 @@ CYCLE_EDITS: Mapping[str, Mapping[str, Any]] = {
         "exposed": True,
         "status": "active",
     },
-    "gift:edit": {"value": 25, "occasion": "feast", "item_entity_id": Pick(EntityType.ITEM), "state": "returned", "due_epoch": 5},
+    "gift:edit": {"value": 25, "occasion": "amends", "item_entity_id": Pick(EntityType.ITEM), "state": "exceeded", "due_epoch": 5, "circuit_id": None},
     "circuit:edit": {"name": "The Second Round", "item_entity_id": Pick(EntityType.ITEM), "position": 1, "passes": 3},
     "debt:edit": {"offered": 50, "answered": 20},
     "union:edit": {
@@ -2795,7 +2861,7 @@ CYCLE_EDITS: Mapping[str, Mapping[str, Any]] = {
         "descent_group": "clan",
         "kin_terms": "bifurcate_merging",
         "adoption": "chosen_kin",
-        "first_side": "female",
+        "first_side": "bearer",
         "sibling_union_first": True,
         "sibling_union_second": True,
     },
@@ -2831,13 +2897,13 @@ LEVERS.update(
         "plan:create": given(holder_id=Pick(REALM), kind="wonder", name="The Long Work", target_id=Pick(TOWN)),
         **{name: after(PLAN, plan_id=Newest("long_plan")) for name in ("plan:edit", "plan:advance", "plan:expose", "plan:delete")},
         "gift:give": setup_then(full_treasuries, giver_id=Pick(REALM), receiver_id=Pick(REALM, 1), value=10),
-        **{name: setup_then(full_treasuries, GIFT, gift_id=GIFT_ID) for name in ("gift:return", "gift:refuse", "gift:edit", "gift:delete")},
+        **{name: setup_then(full_treasuries, GIFT, gift_id=GIFT_ID) for name in ("gift:return", "gift:refuse", "gift:release", "gift:edit", "gift:delete")},
         "circuit:create": given(name="The First Round", stops=[Pick(TOWN), Pick(TOWN, 1)]),
         "circuit:route": after(CIRCUIT, circuit_id=Newest("circuit"), stops=[Pick(TOWN, 1), Pick(TOWN, 2)]),
         **{name: after(CIRCUIT, circuit_id=Newest("circuit")) for name in ("circuit:edit", "circuit:pass", "circuit:delete")},
         "debt:set": given(god_id=Pick("son"), community_id=Pick(TOWN)),
         **{name: after(DEBT, god_id=Pick("son"), community_id=Pick(TOWN)) for name in ("debt:edit", "debt:delete")},
-        "kinship:set": given(people_id=Pick(PEOPLE), first_side="female"),
+        "kinship:set": given(people_id=Pick(PEOPLE), first_side="bearer"),
         "union:set": given(people_id=Pick(PEOPLE), form="contract", purpose="love", descent="by_house_rule", exchange="mutual", exogamy="house"),
         **{name: after(("union:set", {"people_id": Pick(PEOPLE)}), people_id=Pick(PEOPLE)) for name in ("union:edit", "union:delete")},
         **{name: after(KIN, people_id=Pick(PEOPLE)) for name in ("kinship:edit", "kinship:delete")},
@@ -3064,6 +3130,9 @@ AGRARIAN_EDITS: Mapping[str, Mapping[str, Any]] = {
         "steward_entity_id": Pick(TOWN),
         "encloser_node_id": Pick(MORTAL),
         "dispossessed": 3,
+        "quota": 55,
+        "licence_price": 12,
+        "officials": 30,
     },
     "game_reserve:edit": {"holder_node_id": Pick(MORTAL, 1), "species_entity_id": Pick(EntityType.SPECIES), "strictness": 40, "poaching": 20, "resentment": 10},
     "famine_lore:edit": {"memory": 60, "famine_foods": False, "storage": 30},
@@ -3194,7 +3263,7 @@ MADE_KIND_EDITS: Mapping[str, Mapping[str, Any]] = {
 EDITS = {**EDITS, **MADE_KIND_EDITS}
 LEVERS.update(
     {
-        "mortal:attraction": given(mortal_id=Pick(MORTAL), drawn_to=["female", "other"], attraction=60),
+        "mortal:attraction": given(mortal_id=Pick(MORTAL), drawn_to=["bearer", "both"], attraction=60),
         "design_section:set": after(VTYPE, design_id=VTYPE_ID, section="tracks"),
         "design_section:delete": after(VTYPE, SECTION_SET, design_id=VTYPE_ID, section="tracks"),
         "design_mount:add": after(VTYPE, design_id=VTYPE_ID, mount="deck"),
@@ -3738,9 +3807,9 @@ REMADE_UP = ("remade:create", {"mortal_id": Pick(MORTAL, 3)})
 CONTRACT_UP = ("monster_contract:create", {"town_id": Pick(TOWN), "beast_id": Newest(EntityType.BEAST), "bounty": 30})
 SIGN_UP = ("birth_sign:create", {"mortal_id": Pick(MORTAL, 4)})
 ARTS_EDITS: Mapping[str, Mapping[str, Any]] = {
-    "art_price:edit": {"price": 90, "provenance": 3, "interest": 40, "last_buyer_node_id": Pick(MORTAL, 1)},
+    "art_price:edit": {"price": 90, "provenance": 3, "interest": 40, "acclaim": -15, "last_buyer_node_id": Pick(MORTAL, 1)},
     "art_sale:edit": {"seller_node_id": Pick(MORTAL), "buyer_node_id": Pick(MORTAL, 1), "price": 12, "fair_place_entity_id": Pick(TOWN)},
-    "collector:edit": {"role": "connoisseur", "taste_form_entity_id": None, "connoisseurship": 80},
+    "collector:edit": {"role": "critic", "taste_form_entity_id": None, "connoisseurship": 80},
     "forgery:edit": {
         "kind": "artwork",
         "forger_entity_id": Pick(MORTAL),
@@ -3763,9 +3832,19 @@ ARTS_EDITS: Mapping[str, Mapping[str, Any]] = {
         "line_entity_id": Pick(TOWN),
         "leverage": 45,
         "bought_by_entity_id": Pick(REALM),
+        "fixed_by_entity_id": Pick(MORTAL),
+        "fixed_winner_entity_id": CLUB,
     },
     "league:edit": {"polity_entity_id": Pick(REALM), "champion_entity_id": CLUB, "season_epoch": 2},
-    "match:edit": {"home_entity_id": CLUB, "away_entity_id": OTHER_CLUB, "winner_entity_id": OTHER_CLUB, "stake": 9, "riot": True},
+    "match:edit": {
+        "home_entity_id": CLUB,
+        "away_entity_id": OTHER_CLUB,
+        "winner_entity_id": OTHER_CLUB,
+        "stake": 9,
+        "riot": True,
+        "fixed_by_entity_id": Pick(MORTAL),
+        "fixing_exposed": True,
+    },
     "bet:edit": {"club_entity_id": CLUB, "stake": 4, "won": False},
     "construct:edit": {
         "material": "iron",
@@ -3865,7 +3944,7 @@ ECO_PLAN = ("plan:create", {"holder_id": Pick(REALM), "kind": "ecological_transf
 ECO_UP = ("eco_transformation:set", {"plan_id": Newest("long_plan"), "target_moisture": 70})
 SEASON_UP = ("irregular_season:create", {"world_id": WORLD})
 FORMATION_UP = ("formation:read", {"world_id": WORLD, "reshape": False})
-FORECAST_UP = ("winter_forecast:set", {"world_id": WORLD, "people_id": Pick(EntityType.PEOPLE), "predicted_end_epoch": 9})
+FORECAST_UP = ("winter_forecast:set", {"long_season_id": Newest("irregular_season"), "people_id": Pick(EntityType.PEOPLE), "predicted_end_epoch": 9})
 CYCLE_UP = ("age:cycle", {"cycle": "cyclic"})
 TURN_UP: tuple[str, dict[str, Any]] = ("age:turn", {})
 ECHO_UP = ("age_echo:create", {"age_id": Newest("age"), "template": "quest", "source_id": Pick(MORTAL), "weight": 50})
@@ -3883,7 +3962,15 @@ AGES_EDITS: Mapping[str, Mapping[str, Any]] = {
         "water_delivered": 70,
         "exotic_delivered": 10,
     },
-    "irregular_season:edit": {"cause": "divine", "spell": "winter", "spell_started_epoch": 2, "spell_length": 4, "severity": 80},
+    "irregular_season:edit": {
+        "cause": "divine",
+        "shape": "single",
+        "spell": "winter",
+        "spell_started_epoch": 2,
+        "spell_length": 4,
+        "severity": 80,
+        "reach": "north",
+    },
     "winter_forecast:edit": {"scholar_entity_id": Pick(MORTAL), "predicted_end_epoch": 12, "heeded": False},
     "eco_transformation:edit": {"target_moisture": 40, "target_forest": 30, "target_fertility": 50, "regions_changed": 2, "resistance": 20, "sabotage": 1},
     "age:edit": {"number": 3, "began_epoch": 1, "ended_epoch": 4, "variant": "ruin", "carried": 25},
@@ -3898,10 +3985,15 @@ LEVERS.update(
     {
         "formation:read": given(world_id=WORLD, reshape=True),
         **{name: after(FORMATION_UP, world_id=WORLD) for name in ("formation:reshape", "formation:edit", "formation:delete")},
-        "irregular_season:create": given(world_id=WORLD),
-        **{name: after(SEASON_UP, world_id=WORLD) for name in ("irregular_season:forecast", "irregular_season:edit", "irregular_season:delete")},
-        "winter_forecast:set": given(world_id=WORLD, people_id=Pick(EntityType.PEOPLE), predicted_end_epoch=8, heeded=True),
-        **{name: after(FORECAST_UP, forecast_id=Newest("winter_forecast")) for name in ("winter_forecast:edit", "winter_forecast:delete")},
+        "irregular_season:create": given(world_id=WORLD, cause="divine", shape="single", spell="winter", length=3, severity=60, reach="south"),
+        **{
+            name: after(SEASON_UP, long_season_id=Newest("irregular_season"))
+            for name in ("irregular_season:forecast", "irregular_season:edit", "irregular_season:delete")
+        },
+        "winter_forecast:set": after(
+            SEASON_UP, long_season_id=Newest("irregular_season"), people_id=Pick(EntityType.PEOPLE), predicted_end_epoch=8, heeded=True
+        ),
+        **{name: after(SEASON_UP, FORECAST_UP, forecast_id=Newest("winter_forecast")) for name in ("winter_forecast:edit", "winter_forecast:delete")},
         "eco_transformation:set": after(ECO_PLAN, plan_id=Newest("long_plan"), target_moisture=80, target_forest=60, target_fertility=70),
         **{name: after(ECO_PLAN, ECO_UP, plan_id=Computed(newest_eco_plan)) for name in ("eco_transformation:edit", "eco_transformation:delete")},
         "age:cycle": given(cycle="cyclic"),
@@ -4009,7 +4101,19 @@ MARKC_UP = ("mark_custom:set", {"people_id": Pick(PEOPLE), "kind": "scar", "mean
 MARK_UP = ("body_mark:create", {"holder_node_id": Pick(MORTAL), "kind": "tattoo", "meaning": "clan"})
 BUDGET_UP = (
     "time_budget:set",
-    {"people_id": Pick(PEOPLE), "social_class": "farmer", "work": 60, "rest": 20, "worship": 10, "leisure": 5, "travel": 3, "service": 2},
+    {
+        "people_id": Pick(PEOPLE),
+        "social_class": "farmer",
+        "life_stage": "elder",
+        "work": 40,
+        "rest": 20,
+        "worship": 10,
+        "leisure": 5,
+        "travel": 3,
+        "service": 2,
+        "housework": 10,
+        "sleep": 10,
+    },
 )
 NAMING_UP = ("naming_custom:set", {"people_id": Pick(PEOPLE), "pattern": "clan", "secret_names": True, "taboo_epochs": 1})
 NAME_UP = ("name_form:set", {"holder_id": Pick(MORTAL), "form": "deed", "name": "The Unbowed"})
@@ -4027,7 +4131,7 @@ RELIEF_UP = ("poor_relief:set", {"polity_id": Pick(REALM), "kind": "granary", "b
 MEASURE_UP = ("measure_standard:set", {"polity_id": Pick(REALM), "standard": True, "fraud": 5})
 CUSTOMS_EDITS: Mapping[str, Mapping[str, Any]] = {
     "revival:edit": {
-        "aim": "synthesise",
+        "way": "synthesis",
         "stage": "revitalisation",
         "goal": "restore_god",
         "strength": 40,
@@ -4036,8 +4140,20 @@ CUSTOMS_EDITS: Mapping[str, Mapping[str, Any]] = {
     },
     "intoxicant_custom:edit": {"use": "rite", "acceptance": 70},
     "mark_custom:edit": {"meaning": "mourning"},
+    "grade_duty:edit": {"grade": "junior_elders"},
     "body_mark:edit": {"kind": "scar", "meaning": "deed", "placed_epoch": 2},
-    "time_budget:edit": {"work": 50, "rest": 25, "worship": 10, "leisure": 10, "travel": 3, "service": 2},
+    "time_budget:edit": {
+        "work": 30,
+        "rest": 25,
+        "worship": 10,
+        "leisure": 10,
+        "travel": 3,
+        "service": 2,
+        "housework": 7,
+        "sleep": 7,
+        "civic": 3,
+        "training": 3,
+    },
     "naming_custom:edit": {
         "pattern": "parent",
         "secret_names": False,
@@ -4047,7 +4163,7 @@ CUSTOMS_EDITS: Mapping[str, Mapping[str, Any]] = {
         "rename_on_vow": False,
     },
     "name_form:edit": {"name": "The Steadfast", "given_epoch": 3},
-    "age_set:edit": {"name": "The Bold Set", "initiated_from": 1, "initiated_to": 3, "grade": "warriors", "promoted_epoch": 3},
+    "age_set:edit": {"name": "The Bold Set", "initiated_from": 1, "initiated_to": 3, "grade": "young_adults", "promoted_epoch": 3},
     "age_set_member:edit": {"age_set_id": Newest("age_set")},
     "tavern:edit": {"keeper_node_id": Pick(MORTAL), "patrons": 30, "brawls": 2, "lodging": 10, "rumours": 4},
     "welfare_house:edit": {"patron_node_id": Pick(MORTAL), "inmates": 12, "upkeep": 6},
@@ -4066,8 +4182,11 @@ LEVERS.update(
         **{name: after(REVIVAL_UP, record_id=Newest("revival")) for name in ("revival:edit", "revival:delete")},
         **{name: after(INTOX_UP, people_id=Pick(PEOPLE), intoxicant="wine") for name in ("intoxicant_custom:edit", "intoxicant_custom:delete")},
         **{name: after(MARKC_UP, people_id=Pick(PEOPLE), kind="scar") for name in ("mark_custom:edit", "mark_custom:delete")},
+        "grade_duty:set": given(people_id=Pick(PEOPLE), duty="council", grade="senior_elders"),
+        "grade_duty:edit": after(("grade_duty:set", {"people_id": Pick(PEOPLE), "duty": "labour"}), people_id=Pick(PEOPLE), duty="labour"),
+        "grade_duty:delete": after(("grade_duty:set", {"people_id": Pick(PEOPLE), "duty": "herding"}), people_id=Pick(PEOPLE), duty="herding"),
         **{name: after(MARK_UP, record_id=Newest("body_mark")) for name in ("body_mark:edit", "body_mark:delete")},
-        **{name: after(BUDGET_UP, people_id=Pick(PEOPLE), social_class="farmer") for name in ("time_budget:edit", "time_budget:delete")},
+        **{name: after(BUDGET_UP, people_id=Pick(PEOPLE), social_class="farmer", life_stage="elder") for name in ("time_budget:edit", "time_budget:delete")},
         **{name: after(NAMING_UP, people_id=Pick(PEOPLE)) for name in ("naming_custom:edit", "naming_custom:delete")},
         **{name: after(NAME_UP, holder_id=Pick(MORTAL), form="deed") for name in ("name_form:edit", "name_form:delete")},
         **{name: after(SET_UP, record_id=Newest("age_set")) for name in ("age_set:edit", "age_set:delete")},
@@ -4129,6 +4248,7 @@ CRAFTS_EDITS: Mapping[str, Mapping[str, Any]] = {
         "collapsed": False,
         "last_catch": 4,
         "first_stock": 80,
+        "stock": 70,
     },
     "chemical_works:edit": {"output": 60, "hazard": 15, "pollution": 20, "accidents": 1},
     "insurer:edit": {"pool": 50, "risk_belief": 30, "premium_pct": 8, "ruined": False, "claims_seen": 2},
@@ -4140,6 +4260,10 @@ CRAFTS_EDITS: Mapping[str, Mapping[str, Any]] = {
         "name": "The Knotted Border",
         "acquired": "bought",
         "licensed_to_node_id": Pick(MORTAL, 1),
+        "dish_id": None,
+        "technique": "phalanx_drill",
+        "contest_id": None,
+        "marriage_id": None,
     },
     "assistive_aid:edit": {"quality": 80},
     "public_clock:edit": {"kind": "mechanical", "precision": 70, "built_epoch": 1},
@@ -4193,7 +4317,16 @@ WINDOW_UP = ("launch_window:set", {"from_world_id": Pick("world", 1), "to_world_
 ROAD_UP = ("cosmopolitan_culture:create", {"route_id": Pick("route"), "name": "The Folk of the Long Road", "lingua_franca_entity_id": None, "strength": 20})
 ROAD_MEMBER_UP = ("cosmopolitan_member:set", {"culture_id": Newest("cosmopolitan_culture"), "community_id": Pick(TOWN), "share": 30})
 CLIMES_EDITS: Mapping[str, Mapping[str, Any]] = {
-    "region_wind:edit": {"band": "polar", "wind_from": 2, "strength": 40, "windward": True, "shadow": 10, "monsoon": 20, "upwelling": True},
+    "region_wind:edit": {
+        "band": "polar",
+        "summer_band": "westerly",
+        "wind_from": 2,
+        "strength": 40,
+        "windward": True,
+        "shadow": 10,
+        "monsoon": 20,
+        "upwelling": True,
+    },
     "monsoon_season:edit": {"strength": 40, "failed": True},
     "climate_oscillation:edit": {"phase": "cold", "period": 8, "step": 2, "strength": 15},
     "launch_window:edit": {"synodic": 6, "offset": 2, "open": True},
@@ -4317,7 +4450,7 @@ BOND_UP = (
     "species_relation:create",
     {"first_species_id": Pick(EntityType.SPECIES), "second_species_id": Pick(EntityType.SPECIES, 1), "kind": "mutualism", "strength": 40},
 )
-SENSE_UP = ("sense:set", {"holder_id": Pick(EntityType.PEOPLE), "sense": "smell", "acuity": 60})
+SENSE_UP = ("sense:set", {"holder_id": Pick(EntityType.PEOPLE), "sense": "electric", "acuity": 60})
 NATURE_EDITS: Mapping[str, Mapping[str, Any]] = {
     "soil_microbiota:edit": {"life": 30, "sterile_epochs": 1},
     "ferment_culture:edit": {"holder_entity_id": Pick(TOWN), "kind": "mould", "quality": 50, "lost_epoch": None},
@@ -4339,7 +4472,7 @@ LEVERS.update(
         "species_relation:create": given(**BOND_UP[1]),
         **{name: after(BOND_UP, record_id=Newest("species_relation")) for name in ("species_relation:edit", "species_relation:delete")},
         "sense:set": given(**SENSE_UP[1]),
-        **{name: after(SENSE_UP, holder_id=Pick(EntityType.PEOPLE), sense="smell") for name in ("sense:edit", "sense:delete")},
+        **{name: after(SENSE_UP, holder_id=Pick(EntityType.PEOPLE), sense="electric") for name in ("sense:edit", "sense:delete")},
     }
 )
 LEVERS.update(
@@ -4507,7 +4640,9 @@ LEVERS.update(
 )
 LEVERS.update(
     {
-        "biology:edit": given(holder_id=Pick(EntityType.PEOPLE), values={"food_need_pct": 80, "breathes": False, "storm_harm_pct": 150}, release=[]),
+        "biology:edit": given(
+            holder_id=Pick(EntityType.PEOPLE), values={"food_need_pct": 80, "breathes": False, "storm_harm_pct": 150, "partner_species_id": None}, release=[]
+        ),
         "biology_variant:add": given(holder_id=Pick(EntityType.PEOPLE), variant="aquatic"),
         "biology_variant:remove": given(holder_id=Pick(EntityType.PEOPLE), variant="aquatic"),
         "biology:reset": given(holder_id=Pick(EntityType.PEOPLE)),
@@ -4703,7 +4838,7 @@ FASHIONED = ("novelty:set", {"holder_id": Newest(EntityType.ART_FORM), "values":
 COUPLING_EDITS: Mapping[str, Mapping[str, Any]] = {
     "sociolect:edit": {"kind": "court", "prestige": 20, "secret": True, "salience": 50, "faded_epoch": 3},
     "sign_origin:edit": {"cause": "silence_vow"},
-    "carrion:edit": {"carrion": 40, "scavenged": 10, "preserved": True, "rest": "frozen", "kept": False},
+    "carrion:edit": {"carrion": 40, "scavenged": 10, "preserved": True, "rest": "buried", "kept": False},
     "teaching:edit": {"kind": "account", "fidelity": 50, "state": "sold", "price": 5},
     "field_agreement:edit": {"kind": "truce", "state": "ended", "term_epoch": 9, "honour": 10},
     "deep_seal:edit": {"kind": "rite", "strength": 60, "decay": 2},
@@ -6372,12 +6507,12 @@ LEVERS.update(
             "plant_anatomy",
             {"species_entity_id": FIRST_PLANT, "form": "tree", "reproduction": "animal_seed", "lifespan_years": 100},
             {"species_entity_id": FIRST_PLANT},
-            {"form": "shrub", "growth_months": 8},
+            {"form": "epiphyte", "growth_months": 8},
         ),
         **row_levers(
             "plant_part",
             "plant_parts",
-            {"species_entity_id": FIRST_PLANT, "part": "tuber", "commodity": "tubers", "share": 30},
+            {"species_entity_id": FIRST_PLANT, "part": "resin", "commodity": "incense", "share": 30},
             {"id": newest_row(PlantPartRow, "id")},
             {"share": 50, "commodity": "fodder"},
         ),

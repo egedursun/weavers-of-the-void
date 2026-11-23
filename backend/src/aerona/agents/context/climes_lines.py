@@ -1,6 +1,6 @@
 from sqlalchemy import or_, select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.core.grammar import an, spoken
 from aerona.db.tables.celestial import WorldRow
@@ -52,7 +52,7 @@ async def wind_line(scope: Scope, region_id: int) -> list[str]:
         *([f"it lies in a rain shadow ({wind.shadow}%)"] if wind.shadow else []),
         *(["cold water rises off its coast"] if wind.upwelling else []),
     ]
-    told = f"the {words(wind.band.value)} wind of your land blows from the {DIRECTIONS[wind.wind_from]}"
+    told = f"the {spoken(wind.band)} wind of your land blows from the {DIRECTIONS[wind.wind_from]}"
     return [f"{told}{(', ' + ', '.join(marks)) if marks else ''}"]
 
 

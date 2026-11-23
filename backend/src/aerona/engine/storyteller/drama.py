@@ -3,8 +3,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.arcs import CONFRONTING
 from aerona.catalog.life.storyteller import ADVANCED_BY, OPPOSED
-from aerona.catalog.life_traits import ARC_TEMPLATE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.db.repositories.nodes import NodeRepository
@@ -19,15 +19,12 @@ from aerona.domain.enums.ages import ArcOutcome, PayoffKind, SetupKind
 from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.collective import StoryletId
 from aerona.domain.enums.culture import ProphecyState
-from aerona.domain.enums.life_traits import ArcTemplateTrait
 from aerona.domain.enums.mind import DreamReading
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import ForesightStatus
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import record as record_incident
-
-CONFRONTING = having(ARC_TEMPLATE_TRAITS, ArcTemplateTrait.CONFRONTING)
 
 
 @dataclass

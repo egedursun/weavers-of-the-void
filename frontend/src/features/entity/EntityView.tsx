@@ -67,6 +67,7 @@ import { EventSection } from './happenings/EventCard'
 import { EventsHereSection } from './happenings/EventsHere'
 import { LandShapeSection } from './happenings/LandShape'
 import { EraSection } from './lore/EraSection'
+import { FestivalYearSection } from './lore/FestivalYearSection'
 import { LearningSection } from './lore/LearningSection'
 import { LoreSection } from './lore/LoreSection'
 import { isLoreKind } from './lore/model'
@@ -184,6 +185,7 @@ const SECTION_LINKS = [
   { id: 'section-demography', label: 'Population' },
   { id: 'section-labour', label: 'Work' },
   { id: 'section-people-profile', label: 'Folk' },
+  { id: 'section-festival-year', label: 'Festivals' },
   { id: 'section-needs', label: 'Needs' },
   { id: 'section-class-wealth', label: 'Wealth' },
   { id: 'section-culture-drift', label: 'Drift' },
@@ -362,7 +364,10 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     present.delete('section-organisation-kinds')
   if (!trading && entity.entity_type !== 'mortal')
     present.delete('section-mobility')
-  if (entity.entity_type !== 'people') present.delete('section-people-profile')
+  if (entity.entity_type !== 'people') {
+    present.delete('section-people-profile')
+    present.delete('section-festival-year')
+  }
   if (entity.entity_type !== 'settlement') {
     present.delete('section-settlement-plan')
     present.delete('section-treasury')
@@ -589,6 +594,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
             peopleId={entity.id}
             readOnlyReason={readOnly}
           />
+        )}
+        {entity.entity_type === 'people' && (
+          <FestivalYearSection peopleId={entity.id} readOnlyReason={readOnly} />
         )}
         {trading && (
           <NeedsSection communityId={entity.id} readOnlyReason={readOnly} />

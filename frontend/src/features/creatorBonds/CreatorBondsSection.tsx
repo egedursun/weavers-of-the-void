@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CirclePlus, Crown, Trash2 } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
-import { domainValues } from '@/api/generated/schema'
+import { creatorSignKindValues, domainValues } from '@/api/generated/schema'
 import {
   EmptyState,
   KpiTile,
@@ -20,7 +20,7 @@ import {
 } from '@/features/cosmography/parts'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
-import { words } from '@/features/entity/lore/api'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { useMadeAction } from '@/features/minds/api'
 import { ChoiceField, NumberField } from '@/features/wars/military/parts'
 import {
@@ -45,7 +45,10 @@ const HOLD =
 const NOT_PEOPLE =
   'Only a people holds a view of the Creator, pictures it and keeps covenants'
 const ASPECTS = Object.fromEntries(
-  domainValues.map((value) => [value, words(value)])
+  domainValues.map((value) => [
+    value,
+    wordOf(domainValues, value).toLowerCase(),
+  ])
 )
 
 type Edit = { values: EditValues; release: string[] }
@@ -120,7 +123,7 @@ function Covenant({
       icon={state.icon}
       tone={state.tone ?? 'info'}
       title={`${DUTIES[row.duty].label} for ${PROMISES[row.promise].label.toLowerCase()}: ${state.label.toLowerCase()}`}
-      caption={`since epoch ${row.since_epoch}${row.until_epoch !== null ? `, until epoch ${row.until_epoch}` : ', with no end set'}; ${row.breaches} breach${row.breaches === 1 ? '' : 'es'}; sealed by a sign of ${words(row.seal_sign)}`}
+      caption={`since epoch ${row.since_epoch}${row.until_epoch !== null ? `, until epoch ${row.until_epoch}` : ', with no end set'}; ${row.breaches} breach${row.breaches === 1 ? '' : 'es'}; sealed by a sign of ${wordOf(creatorSignKindValues, row.seal_sign).toLowerCase()}`}
     >
       <RecordEditor
         title='Set the covenant'
@@ -254,7 +257,7 @@ function PeopleBonds({
         }
         caption={
           view.depiction
-            ? `${NATURES[view.depiction.nature].label}${view.depiction.aspect ? `, stressing ${words(view.depiction.aspect)}` : ''}`
+            ? `${NATURES[view.depiction.nature].label}${view.depiction.aspect ? `, stressing ${wordOf(domainValues, view.depiction.aspect).toLowerCase()}` : ''}`
             : 'Set it below or wait for the next epoch'
         }
       >

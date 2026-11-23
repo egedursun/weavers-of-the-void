@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.body_plans import COLD_PLANS, LAYERS, PLAN_DIETS, PLAN_TRAITS
+from aerona.catalog.body_plans import ATHERMIC_PLANS, COLD_PLANS, LAYERS, PLAN_DIETS, PLAN_TRAITS
 from aerona.catalog.diets import GRAZERS, MEAT_EATERS, MEATLESS
-from aerona.catalog.domestication import SOCIALITIES
+from aerona.catalog.domestication import ATHERMIC_BIOCHEMISTRY, SOCIALITIES
 from aerona.catalog.flora import DEFAULT_YIELDS, PLANT_PRODUCTS
 from aerona.catalog.life.domain import GROWN
 from aerona.catalog.life.ecology import LIFESPAN, LITTER, METABOLISM, PLANT_DIETS, PLANT_PLANS, USES_OF_SIZE_CLASSS
@@ -74,6 +74,12 @@ EGGS = Product("eggs", CommodityKind.EGGS, None, 1)
 FEATHERS = Product("feathers", CommodityKind.LUXURIES, None, 1)
 REAGENTS = Product("magic reagents", CommodityKind.MAGICAL_REAGENTS, None, 1)
 GREAT_BONE = Product("great_beast_tissue", CommodityKind.WEAPONS, MaterialKind.GREAT_BEAST_TISSUE, 1)
+BLOOD = Product("blood", CommodityKind.MEDICINE, None, 1)
+ORGANS = Product("organs", CommodityKind.MEDICINE, None, 1)
+FAT = Product("fat", CommodityKind.FUEL, None, 1)
+SCENT = Product("scent", CommodityKind.INCENSE, None, 1)
+HONEY = Product("honey", CommodityKind.BREW_BASE, None, 1)
+WAX = Product("wax", CommodityKind.LUXURIES, None, 1)
 PRODUCTS = {
     YieldProduct.MEAT: MEAT,
     YieldProduct.HIDE: HIDE,
@@ -88,6 +94,12 @@ PRODUCTS = {
     YieldProduct.MAGIC_REAGENTS: REAGENTS,
     YieldProduct.GREAT_BEAST_TISSUE: GREAT_BONE,
     YieldProduct.EGGS: EGGS,
+    YieldProduct.BLOOD: BLOOD,
+    YieldProduct.ORGANS: ORGANS,
+    YieldProduct.FAT: FAT,
+    YieldProduct.SCENT: SCENT,
+    YieldProduct.HONEY: HONEY,
+    YieldProduct.WAX: WAX,
 }
 PEST_HUNTERS = MEAT_EATERS
 
@@ -179,6 +191,10 @@ def sociality_of(diet: Diet, traits: set[CreatureTrait], parent: SpeciesProfileR
         return Sociality.HIVE
     if T.PACK_HUNTER in traits:
         return Sociality.PACK
+    if T.SWARM_BREEDER in traits:
+        return Sociality.SWARM
+    if diet is Diet.PISCIVORE and T.FLYING in traits:
+        return Sociality.COLONY
     if parent is not None:
         return parent.sociality
     return Sociality.HERD if diet in GRAZERS else Sociality.SOLITARY
@@ -196,18 +212,38 @@ def class_of(spec: SpeciesSpec, traits: set[CreatureTrait], parent: SpeciesProfi
     return SpeciesClass.ANIMAL
 
 
-def biochemistry_of(spec: SpeciesSpec, plan: BodyPlan, diet: Diet, parent: SpeciesProfileRow | None, native: tuple[Biochemistry, ...]) -> Biochemistry:
-    if spec.biochemistry is not None:
-        return spec.biochemistry
-    if parent is not None:
-        return parent.biochemistry
+def bodily_chemistry(plan: BodyPlan, diet: Diet) -> Biochemistry | None:
     if diet is Diet.VOID:
         return Biochemistry.VOID
     if diet is Diet.SOUL or plan is P.INCORPOREAL:
         return Biochemistry.SPIRIT
     if diet is Diet.MINERAL or plan is P.CONSTRUCT:
         return Biochemistry.SILICON
+    return None
+
+
+def native_chemistry(native: tuple[Biochemistry, ...]) -> Biochemistry:
+    if Biochemistry.CARBON_METHANE in native and Biochemistry.CARBON_WATER not in native:
+        return Biochemistry.CARBON_METHANE
     return Biochemistry.CARBON_WATER if not native or Biochemistry.CARBON_WATER in native else native[0]
+
+
+def biochemistry_of(
+    spec: SpeciesSpec,
+    plan: BodyPlan,
+    diet: Diet,
+    parent: SpeciesProfileRow | None,
+    native: tuple[Biochemistry, ...],
+    *,
+    kind: SpeciesClass = SpeciesClass.ANIMAL,
+) -> Biochemistry:
+    if spec.biochemistry is not None:
+        return spec.biochemistry
+    if parent is not None:
+        return parent.biochemistry
+    if kind is SpeciesClass.ENERGY or (diet is Diet.ENERGY and Biochemistry.PLASMA in native):
+        return Biochemistry.PLASMA
+    return bodily_chemistry(plan, diet) or native_chemistry(native)
 
 
 async def nature_of(
@@ -221,7 +257,7 @@ async def nature_of(
     sociality = spec.sociality or sociality_of(diet, traits, parent)
     nocturnal = spec.nocturnal if spec.nocturnal is not None else parent.nocturnal if parent is not None else T.ECHOLOCATION in traits
     migratory = spec.migratory if spec.migratory is not None else parent.migratory if parent is not None else False
-    return Nature(plan, size, diet, sociality, nocturnal, migratory, kind, biochemistry_of(spec, plan, diet, parent, native))
+    return Nature(plan, size, diet, sociality, nocturnal, migratory, kind, biochemistry_of(spec, plan, diet, parent, native, kind=kind))
 
 
 def yields_of(nature: Nature, traits: set[CreatureTrait], might: int, mighty: int, extra: tuple[YieldProduct, ...]) -> list[Product]:
@@ -241,6 +277,14 @@ def yields_of(nature: Nature, traits: set[CreatureTrait], might: int, mighty: in
         found.append(EGGS)
     if might >= mighty:
         found.append(REAGENTS)
+    if MEAT in found:
+        found.extend((BLOOD, ORGANS))
+    if size in GREAT or (diet in GRAZERS and size in KEPT_SIZES):
+        found.append(FAT)
+    if diet in MEAT_EATERS and T.CAMOUFLAGE in traits:
+        found.append(SCENT)
+    if nature.sociality is Sociality.HIVE and plan is P.INSECTOID:
+        found.extend((HONEY, WAX))
     found.extend(PRODUCTS[item] for item in extra)
     return list({item.product: item for item in found}.values())
 
@@ -303,6 +347,12 @@ async def inherited_products(session: AsyncSession, species_id: int) -> tuple[Yi
     return tuple(item for item, product in PRODUCTS.items() if product.product in names)
 
 
+def born_regulation(biochemistry: Biochemistry, plan: BodyPlan) -> Thermoregulation:
+    if biochemistry in ATHERMIC_BIOCHEMISTRY or plan in ATHERMIC_PLANS:
+        return Thermoregulation.ATHERMIC
+    return Thermoregulation.ECTOTHERM if plan in COLD_PLANS else Thermoregulation.ENDOTHERM
+
+
 async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | None = None) -> SpeciesProfileRow:
     row = await ctx.session.get(SpeciesProfileRow, species.id)
     if row is not None:
@@ -358,7 +408,7 @@ async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | N
         nocturnal=nature.nocturnal,
         migratory=nature.migratory,
         dormancy=chosen.dormancy or sleep,
-        thermoregulation=chosen.thermoregulation or (Thermoregulation.ECTOTHERM if nature.plan in COLD_PLANS else Thermoregulation.ENDOTHERM),
+        thermoregulation=chosen.thermoregulation or born_regulation(nature.biochemistry, nature.plan),
         migration_path=[],
         aggression=clamp_int(danger, 0, PERCENT),
         territoriality=clamp_int(danger // 2 + table.territory_base, 0, PERCENT),

@@ -1,4 +1,4 @@
-from aerona.engine.belonging.identities import IdentityTally, keep_identities
+from aerona.engine.belonging.identities import IdentityTally, backfill_layers, keep_identities
 from aerona.engine.belonging.peers import PeerTally, keep_peers
 from aerona.engine.belonging.sanctuary import SanctuaryTally, keep_sanctuaries
 from aerona.engine.belonging.satire import SatireTally, keep_satire
@@ -26,6 +26,7 @@ from aerona.engine.phases.dominion import count
     "table.bonds",
     "table.charms",
     "table.coalition_members",
+    "table.commemorations",
     "table.community_cohorts",
     "table.districts",
     "table.entities",
@@ -36,13 +37,19 @@ from aerona.engine.phases.dominion import count
     "table.house_members",
     "table.incubating_ideas",
     "table.kind_holdings",
+    "table.language_policies",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.marriages",
+    "table.matches",
     "table.mind_attributes",
     "table.mind_facets",
+    "table.mind_profiles",
     "table.mortal_profiles",
+    "table.movement_profiles",
+    "table.movement_support",
     "table.movements",
+    "table.node_births",
     "table.nodes",
     "table.notable_years",
     "table.peer_groups",
@@ -50,13 +57,29 @@ from aerona.engine.phases.dominion import count
     "table.polity_members",
     "table.polity_profiles",
     "table.purity_ranks",
+    "table.referendums",
     "table.skills",
     "table.war_sides",
     "table.wars",
 )
-@writes("table.bonds", "table.held_identities", "table.mind_facets", "table.peer_groups", "table.peer_members", "table.relationships", "table.skills")
+@writes(
+    "table.applied_fixups",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.held_identities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.mind_facets",
+    "table.peer_groups",
+    "table.peer_members",
+    "table.relationships",
+    "table.skills",
+)
 async def belonging(ctx: TickContext) -> None:
     identities, peers = IdentityTally(), PeerTally()
+    ctx.count("identity_layers_backfilled", await backfill_layers(ctx))
     await keep_identities(ctx, identities)
     await keep_peers(ctx, peers)
     count(ctx, "identities", identities)
@@ -74,6 +97,7 @@ async def belonging(ctx: TickContext) -> None:
     "table.entities",
     "table.nodes",
     "table.outlaws",
+    "table.personality_values",
     "table.polity_members",
     "table.relationships",
     "table.reputations",

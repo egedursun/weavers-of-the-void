@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.grief import GRIEF_STAGES
 from aerona.catalog.life.mind import OPEN_STAGES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -14,6 +15,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import RiteStage, TraditionFunction
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.mind import Attribute, Facet, GriefStage, MemoryKind, ThoughtKind, TraitKind, TraitSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import community_of
 from aerona.engine.mind.book import add_trait, is_locked, locked_for, mind_of
@@ -23,6 +25,7 @@ from aerona.engine.mind.thoughts import think, thinker
 from aerona.engine.mortal.kin import close_kin_of, parents_of, partners_of, spouses_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 GRIEF_LOCK = "griefs"
@@ -148,22 +151,64 @@ async def resolve(ctx: TickContext, mourner: EntityRow, row: GriefRow) -> GriefS
     return GriefStage.COMPLICATED
 
 
+async def grieve_by_stage(ctx: TickContext, mourner: EntityRow, row: GriefRow) -> None:
+    table = ctx.rules.grief
+    spec = GRIEF_STAGES[row.stage]
+    rng = ctx.rng(f"grief.stage.{row.id}.{ctx.epoch}")
+    if spec.angry and rng.chance(table.anger_vengeance_pct):
+        blamed = await killer_of(ctx.session, row.deceased_node_id)
+        living = await ctx.session.get(EntityRow, blamed) if blamed is not None else None
+        if living is not None and living.status is EntityStatus.CANON and living.id != mourner.id:
+            await remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=mourner.id,
+                subject_id=living.id,
+                kind=MemoryKind.KILLED_KIN,
+                magnitude=-table.vengeance_magnitude * row.strength / PERCENT,
+                epoch=ctx.epoch,
+                note="the anger of grief",
+            )
+    if spec.yearning and rng.chance(table.yearning_rite_pct):
+        await think(ctx.session, ctx.rules, mourner.id, ThoughtKind.DREAMED_OF_LONGING, ctx.epoch, subject_id=row.deceased_node_id)
+        await remember(
+            ctx.session,
+            ctx.rules,
+            holder_id=mourner.id,
+            subject_id=row.deceased_node_id,
+            kind=MemoryKind.LAMENTED,
+            magnitude=row.strength // 4,
+            epoch=ctx.epoch,
+        )
+
+
 async def advance(ctx: TickContext, mourner: EntityRow, tally: GriefTally) -> None:
     if is_locked(await mind_of(ctx.session, mourner.id), GRIEF_LOCK) or write_blocked(mourner.id, GRIEFS_KEY):
         return
     table = ctx.rules.grief
     rows = await ctx.session.scalars(select(GriefRow).where(GriefRow.mourner_node_id == mourner.id, GriefRow.stage.in_(OPEN_STAGES)).order_by(GriefRow.id))
     for row in list(rows):
+        before = row.stage
         if row.stage is GriefStage.SHOCK and ctx.epoch - row.stage_epoch >= table.shock_epochs:
+            row.stage, row.stage_epoch = GriefStage.ANGER, ctx.epoch
+        if row.stage is GriefStage.ANGER and ctx.epoch - row.stage_epoch >= table.epochs(table.anger_years):
             row.stage, row.stage_epoch = GriefStage.MOURNING, ctx.epoch
         if row.stage is GriefStage.MOURNING and ctx.epoch - row.stage_epoch >= row.length_epochs:
+            row.stage, row.stage_epoch = GriefStage.YEARNING, ctx.epoch
+        elif row.stage is GriefStage.YEARNING and ctx.epoch > row.stage_epoch:
             row.stage = await resolve(ctx, mourner, row)
             row.stage_epoch = ctx.epoch
             if row.stage is GriefStage.ACCEPTANCE:
                 tally.accepted += 1
             else:
                 tally.complicated += 1
+        if row.stage is not before:
+            await record(
+                ctx, "mind.grief_stage", roles={IncidentRole.SUBJECT: mourner.id, IncidentRole.TARGET: row.deceased_node_id}, facts={"stage": row.stage}
+            )
+        if not GRIEF_STAGES[row.stage].open:
             continue
+        await grieve_by_stage(ctx, mourner, row)
         await think(ctx.session, ctx.rules, mourner.id, ThoughtKind.MOURNED, ctx.epoch, subject_id=row.deceased_node_id, intensity=row.strength)
         tally.mourning += 1
     await ctx.session.flush()

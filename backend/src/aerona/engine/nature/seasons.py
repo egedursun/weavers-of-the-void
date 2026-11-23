@@ -1,7 +1,11 @@
+from collections.abc import Mapping
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.thermoregulation import UNTOUCHED, WARM_KEEPING
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
@@ -13,6 +17,16 @@ from aerona.rules.registry import Rules
 
 COLD = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
 HEAT = frozenset({TemperatureBand.HOT, TemperatureBand.SEARING})
+SLEEP_BANDS: Mapping[Dormancy, frozenset[TemperatureBand]] = total(
+    Dormancy,
+    {
+        Dormancy.NONE: frozenset(),
+        Dormancy.HIBERNATION: COLD,
+        Dormancy.AESTIVATION: HEAT,
+        Dormancy.TORPOR: frozenset(),
+        Dormancy.CRYPTOBIOSIS: frozenset({TemperatureBand.FROZEN, TemperatureBand.SEARING}),
+    },
+)
 CHAIN_DEPTH = 8
 
 
@@ -51,16 +65,18 @@ async def band_at(session: AsyncSession, rules: Rules, epoch: int, node_id: int 
 
 
 def asleep(dormancy: Dormancy, band: TemperatureBand | None) -> bool:
-    return (dormancy is Dormancy.HIBERNATION and band in COLD) or (dormancy is Dormancy.AESTIVATION and band in HEAT)
+    return band in SLEEP_BANDS[dormancy]
 
 
 def chilled(thermoregulation: Thermoregulation, band: TemperatureBand | None) -> bool:
-    return thermoregulation is Thermoregulation.ENDOTHERM and band in COLD
+    return thermoregulation in WARM_KEEPING and band in COLD
 
 
 def activity(rules: Rules, thermoregulation: Thermoregulation, band: TemperatureBand | None) -> float:
-    if thermoregulation is Thermoregulation.ENDOTHERM or band is None:
+    if thermoregulation in UNTOUCHED or band is None:
         return 1.0
+    if thermoregulation is Thermoregulation.HETEROTHERM:
+        return 1.0 if band not in COLD else 1 - (1 - activity(rules, Thermoregulation.ECTOTHERM, band)) * rules.thermoregulation.heterotherm_switch / PERCENT
     table = rules.thermoregulation
     shares = {
         TemperatureBand.FROZEN: table.frozen_pct,

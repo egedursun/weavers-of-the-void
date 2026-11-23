@@ -4,6 +4,7 @@ from typing import NoReturn
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.prompts import PromptId, render
@@ -20,7 +21,7 @@ STATE_KINDS = {
 
 
 def label_of(value: StrEnum) -> str:
-    return value.value.replace("_", " ")
+    return spoken(value)
 
 
 def fail(template: StrEnum, **values: object) -> NoReturn:

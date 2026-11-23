@@ -67,7 +67,7 @@ async def my_power(call: MortalCall, power_id: int, declined: MortalResult) -> P
     if power is None or power.holder_node_id != call.me.id:
         fail(declined, why="you hold no such power")
     if held(call.me.id):
-        fail(declined, why="a stronger hand holds you")
+        fail(declined, why="your own course is held")
     return power
 
 

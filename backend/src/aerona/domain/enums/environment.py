@@ -25,6 +25,17 @@ class TerrainKind(StrEnum):
     RUIN_FIELD = "ruin_field"
     URBAN = "urban"
     SEA = "sea"
+    TAIGA = "taiga"
+    SAVANNA = "savanna"
+    MANGROVE = "mangrove"
+    EVAPORITE_FLAT = "evaporite_flat"
+    KARST = "karst"
+    REGOLITH_PLAIN = "regolith_plain"
+    CLOUD_DECK = "cloud_deck"
+    BADLANDS = "badlands"
+    MOOR = "moor"
+    SCRUBLAND = "scrubland"
+    FLOODPLAIN = "floodplain"
 
 
 class SoilKind(StrEnum):
@@ -42,6 +53,11 @@ class SoilKind(StrEnum):
     PERMAFROST = "permafrost"
     REGOLITH = "regolith"
     ARTIFICIAL = "artificial"
+    HUMIC = "humic"
+    LEACHED = "leached"
+    SILT = "silt"
+    GLEY = "gley"
+    CRACKING_CLAY = "cracking_clay"
 
 
 class TemperatureBand(StrEnum):
@@ -81,6 +97,19 @@ class ScarKind(StrEnum):
     EARTHWORKS = "earthworks"
     MILITARY_ROAD = "military_road"
     BRIDGE_DOWN = "bridge_down"
+    FLOODED = "flooded"
+    POISONED = "poisoned"
+    MINED_OUT = "mined_out"
+    ERODED = "eroded"
+    DEFORESTED = "deforested"
+    DRAINED = "drained"
+    OVERGRAZED = "overgrazed"
+
+
+class CleansingMethod(StrEnum):
+    WORKS = "works"
+    RITE = "rite"
+    POWER = "power"
 
 
 class MovementMode(StrEnum):
@@ -90,6 +119,10 @@ class MovementMode(StrEnum):
     BOAT = "boat"
     FLYING = "flying"
     BURROWING = "burrowing"
+    SUBMERGED = "submerged"
+    INCORPOREAL = "incorporeal"
+    SWIMMING = "swimming"
+    CLIMBING = "climbing"
 
 
 class WorldLink(StrEnum):
@@ -103,9 +136,35 @@ class SeasonDating(StrEnum):
     DAY = "day"
 
 
+class SeasonWarmth(StrEnum):
+    COLDEST = "coldest"
+    COLD = "cold"
+    COOLING = "cooling"
+    EVEN = "even"
+    WARMING = "warming"
+    WARM = "warm"
+    WARMEST = "warmest"
+
+
+class SeasonWater(StrEnum):
+    ARID = "arid"
+    DRY = "dry"
+    EVEN = "even"
+    WET = "wet"
+    DELUGE = "deluge"
+
+
+class SeasonOnset(StrEnum):
+    EARLY = "early"
+    ON_TIME = "on_time"
+    LATE = "late"
+    FAILED = "failed"
+
+
 class MovementMedium(StrEnum):
     GROUND = "ground"
     WATER_SURFACE = "water_surface"
+    UNDER_WATER = "under_water"
     AIR = "air"
     THROUGH_MATTER = "through_matter"
 
@@ -142,6 +201,14 @@ class WeatherKind(StrEnum):
     VOID_RAIN = "void_rain"
     ECLIPSE_DARK = "eclipse_dark"
     AURORA = "aurora"
+    FROST = "frost"
+    ICE_STORM = "ice_storm"
+    DRIZZLE = "drizzle"
+    SLEET = "sleet"
+    FREEZING_FOG = "freezing_fog"
+    THUNDERSTORM = "thunderstorm"
+    TORNADO = "tornado"
+    CYCLONE = "cyclone"
 
 
 class TerrainTrait(StrEnum):
@@ -161,6 +228,9 @@ class TerrainTrait(StrEnum):
     CONFINED = "confined"
     SLIPPERY = "slippery"
     NON_MINERAL_GROUND = "non_mineral_ground"
+    AIRLESS = "airless"
+    GASEOUS = "gaseous"
+    FERTILE = "fertile"
 
 
 class WeatherDraw(StrEnum):
@@ -177,6 +247,10 @@ class WeatherDraw(StrEnum):
     ASH = "ash"
     VOID = "void"
     ECLIPSE = "eclipse"
+    FREEZING_CLEAR = "freezing_clear"
+    FREEZING_WET = "freezing_wet"
+    WET_HOT = "wet_hot"
+    WARM_SEA = "warm_sea"
 
 
 class WeatherTrait(StrEnum):
@@ -192,6 +266,7 @@ class WeatherTrait(StrEnum):
     SLOWING = "slowing"
     HEAVY = "heavy"
     EXTREME = "extreme"
+    ICY = "icy"
 
 
 class WeatherEffect(StrEnum):
@@ -203,6 +278,9 @@ class WeatherEffect(StrEnum):
     WIND = "wind"
     MORALE = "morale"
     GROWTH = "growth"
+    LIGHTNING = "lightning"
+    FLOOD = "flood"
+    BREATH = "breath"
 
 
 class NotableYearKind(StrEnum):
@@ -214,6 +292,8 @@ class NotableYearKind(StrEnum):
     DISCOVERY = "discovery"
     CONTACT = "contact"
     OMEN = "omen"
+    PEACE = "peace"
+    FOUNDING = "founding"
 
 
 class PlaceCover(StrEnum):

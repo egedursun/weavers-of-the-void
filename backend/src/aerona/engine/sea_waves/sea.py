@@ -15,7 +15,19 @@ from aerona.engine.primitives.distance import RegionAtlas
 C = CoastForm
 SHAPE_PCT = total(
     CoastForm,
-    {C.CLIFF: 50, C.BEACH: 100, C.DELTA: 130, C.MARSH: 120, C.REEF: 60, C.ICE_SHELF: 40, C.FJORD: 150, C.LAGOON: 80},
+    {
+        C.CLIFF: 50,
+        C.BEACH: 100,
+        C.DELTA: 130,
+        C.MARSH: 120,
+        C.REEF: 60,
+        C.ICE_SHELF: 40,
+        C.FJORD: 150,
+        C.LAGOON: 80,
+        C.ESTUARY: 140,
+        C.MANGROVE: 40,
+        C.BARRIER_ISLAND: 60,
+    },
 )
 WATCHING = (FolkDomain.WATERS, FolkDomain.LAND)
 

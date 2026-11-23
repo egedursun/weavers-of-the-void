@@ -14,8 +14,6 @@ class RevivalRules(Spanned):
         30, 0, 1000, C, "Culture drift a people suffers from rulers, conquerors and neighbours within the memory of a movement before it answers with one"
     )
     memory_years: int = span(30, 1, 1250, C, "Years back a people counts the drift pressed on it")
-    restore_from: int = rule(20, -100, 100, C, "Tradition from which a people answers pressure by restoring its old ways")
-    adopt_from: int = rule(20, -100, 100, C, "Love of the foreign from which a people answers pressure by adopting the ways pressed on it")
     stage_gain: int = rule(15, 0, 100, C, "Strength a movement gains each epoch; a stage passes each time it fills")
     language_gain: int = rule(5, 0, 100, C, "Standing a movement to revive its language gives the language each epoch")
     value_pull_pct: int = rule(10, 0, 100, C, "Share of the gap to the old or the pressed values that a movement closes each epoch (%)")
@@ -43,12 +41,16 @@ class IntoxicationRules:
 
 
 @dataclass(frozen=True)
-class MarkRules:
+class MarkRules(Spanned):
     customs_per_people: int = rule(3, 0, 8, C, "Kinds of body mark a people gives meaning to when first read")
     renown_per_deed: int = rule(2, 0, 100, C, "Renown a mark of deeds adds where it is read")
     calm_per_charm: int = rule(3, 0, 100, C, "Stress a protective mark takes off its bearer each epoch")
     belonging_per_mark: int = rule(3, 0, 100, C, "Loyalty to their community a mark of clan, marriage or age-set gives its bearer")
     shame_per_brand: int = rule(5, 0, 100, C, "Honour a brand of crime takes from its bearer where it is read")
+    faith_per_mark: int = rule(4, 0, 100, C, "Loyalty to their god a mark of faith gives its bearer where it is read")
+    beauty_per_mark: int = rule(2, 0, 100, C, "Renown a mark the culture finds beautiful adds to its bearer")
+    hair_years: int = span(2, 1, 1000, C, "Years a mark of the hair lasts before it is cut or changed")
+    persecuted_faith_stress: int = rule(5, 0, 100, C, "Stress a mark of faith brings its bearer where the realm persecutes that faith")
 
 
 @dataclass(frozen=True)
@@ -78,6 +80,7 @@ class NamingCustomRules(Spanned):
     secret_chance: int = rule(40, 0, 100, C, "Chance a people that names is one that also gives a secret name (%)")
     taboo_years: int = span(20, 0, 1250, C, "Years the names of the dead go unspoken where a people keeps such a taboo")
     rename_chance: int = rule(30, 0, 100, C, "Chance a people renames its folk at each turn of life it marks (%)")
+    posthumous_chance: int = rule(30, 0, 100, C, "Chance a people that names is one that gives its dead a new name at the funeral (%)")
 
     @property
     def taboo_epochs(self) -> int:
@@ -89,7 +92,11 @@ class AgeSetRules(Spanned):
     from_tradition: int = rule(30, -100, 100, S, "Tradition from which a people binds its folk in age-sets")
     span_years: int = span(7, 1, 1250, S, "Years of initiation one age-set gathers before the next opens")
     grade_years: int = span(15, 1, 1250, S, "Years an age-set spends in a grade before it is promoted")
-    warrior_levy_pct: int = rule(20, 0, 100, S, "Share added to a town's mobilisation by an age-set in the warrior grade (%)")
+    warrior_levy_pct: int = rule(20, 0, 100, S, "Share added to a town's mobilisation by an age-set in the grade its people sends to war (%)")
+    war_duty_from: int = rule(30, -100, 100, S, "Love of war from which a people gives one of its grades the duty of war")
+    herding_duty_from: int = rule(20, -100, 100, S, "Love of nature from which a people gives one of its grades the duty of herding")
+    labour_duty_from: int = rule(0, -100, 100, S, "Perseverance from which a people gives one of its grades the duty of labour")
+    council_duty_from: int = rule(20, -100, 100, S, "Tradition from which a people gives its eldest grade the duty of council")
     mates_bond: int = rule(5, 0, 100, S, "Friendship age-mates gain with one another when their set is promoted")
 
     @property

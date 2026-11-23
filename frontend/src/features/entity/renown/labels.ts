@@ -5,6 +5,7 @@ import {
   Gem,
   HandCoins,
   HandHeart,
+  HeartHandshake,
   Megaphone,
   Scale,
   ScrollText,
@@ -17,13 +18,14 @@ import {
   Zap,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
+import { type ReputationAxis } from './api'
 
 export const RENOWN_ICON = Megaphone
 export const STANDING_ICON = Crown
 export const DEED_ICON = Trophy
 export const LORE_ICON = ScrollText
 
-export const AXES: Record<string, Named> = {
+export const AXES: Record<ReputationAxis, Named> = {
   heroism: { label: 'Heroism', icon: Swords, tone: 'gold' },
   honour: { label: 'Honour', icon: Shield, tone: 'gold' },
   cruelty: { label: 'Cruelty', icon: Skull, tone: 'danger' },
@@ -33,6 +35,8 @@ export const AXES: Record<string, Named> = {
   trickery: { label: 'Trickery', icon: Theater, tone: 'warning' },
   skill_renown: { label: 'Renown for a skill', icon: Gem, tone: 'gold' },
   troublemaker: { label: 'Troublemaking', icon: Zap, tone: 'danger' },
+  mercy: { label: 'Mercy', icon: HeartHandshake, tone: 'success' },
+  justice: { label: 'Justice', icon: Scale, tone: 'gold' },
 }
 
 export const CURRENCIES: Record<string, Named> = {

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from aerona.core.total import total
 from aerona.domain.enums.cosmography import DimensionKind
 from aerona.domain.enums.faith import StratumActivity, StratumAdmission, StratumContact, StratumKind, StratumPermanence, StratumValence
+from aerona.domain.enums.geology import UndergroundStratum
 
 
 @dataclass(frozen=True)
@@ -72,3 +73,29 @@ ADMISSION_PRIORITY: Mapping[StratumAdmission, int] = total(
 
 def hosts_for(valence: StratumValence, activity: StratumActivity) -> tuple[DimensionKind, ...]:
     return ACTIVITY_HOSTS[activity] or VALENCE_HOSTS[valence]
+
+
+@dataclass(frozen=True)
+class StratumSpec:
+    label: str
+    depth: int
+    watery: bool
+    bored: bool = False
+    vents: bool = False
+    caves: bool = False
+
+
+STRATA: Mapping[UndergroundStratum, StratumSpec] = total(
+    UndergroundStratum,
+    {
+        UndergroundStratum.AQUIFER: StratumSpec("Aquifer", 0, True, bored=True),
+        UndergroundStratum.RESERVOIR: StratumSpec("Reservoir", 1, False, bored=True),
+        UndergroundStratum.UNDER_OCEAN: StratumSpec("Ocean under the ice", 1, True, bored=True, vents=True),
+        UndergroundStratum.CAVERN_UPPER: StratumSpec("Upper caverns", 2, False, caves=True),
+        UndergroundStratum.CAVERN_MIDDLE: StratumSpec("Middle caverns", 3, False, caves=True),
+        UndergroundStratum.CAVERN_DEEP: StratumSpec("Deep caverns", 4, False, caves=True),
+        UndergroundStratum.MAGMA_SEA: StratumSpec("Magma sea", 5, False, vents=True),
+        UndergroundStratum.HOLLOW_INTERIOR: StratumSpec("Hollow interior", 6, False),
+        UndergroundStratum.DEEP_UNDERWORLD: StratumSpec("Deep underworld", 7, False),
+    },
+)

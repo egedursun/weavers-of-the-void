@@ -1,13 +1,14 @@
 from collections.abc import Mapping
 
+from aerona.catalog.grief import OPEN_GRIEF_STAGES
 from aerona.core.total import total
-from aerona.domain.enums.mind import GriefStage, MemoryKind, NeedKind, RelationComponent, ThoughtKind
+from aerona.domain.enums.mind import MemoryKind, NeedKind, RelationComponent, ThoughtKind
 from aerona.domain.enums.mortal import DeathCause
 
-OPEN_GRIEF = (GriefStage.SHOCK, GriefStage.MOURNING)
+OPEN_GRIEF = OPEN_GRIEF_STAGES
 
 
-OPEN_STAGES = (GriefStage.SHOCK, GriefStage.MOURNING)
+OPEN_STAGES = OPEN_GRIEF_STAGES
 
 
 REMEMBERED: Mapping[RelationComponent, tuple[MemoryKind, ...]] = total(

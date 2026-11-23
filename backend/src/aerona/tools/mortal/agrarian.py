@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Annotated, Any
 
 from pydantic import Field
 from sqlalchemy import select
@@ -22,6 +22,7 @@ from aerona.engine.agrarian.resilience import most_level, per_thousand
 from aerona.engine.collective.book import shift
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.mind.hooks import judged
+from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.queries import living_entity, top_region
 from aerona.engine.primitives.stats import stat_or
@@ -47,6 +48,13 @@ class EncloseCommonsInput(ToolInput):
 
 class RuleCommonsInput(ToolInput):
     commons_id: int
+
+
+class SetCommonsRuleInput(ToolInput):
+    commons_id: int
+    rule: CommonsRule
+    quota: Annotated[int, Field(ge=0, le=200)] = 60
+    licence_price: Annotated[int, Field(ge=0, le=1000)] = 0
 
 
 class ReserveGameInput(ToolInput):
@@ -91,7 +99,7 @@ async def common_here(call: MortalCall, commons_id: int, refused: MortalResult) 
     if row is None or land is None or row.region_entity_id != land.id:
         fail(refused, why="there is no such common in your land")
     if held(row.region_entity_id):
-        fail(refused, why="a stronger hand holds the land")
+        fail(refused, why="the land is held")
     return row
 
 
@@ -163,7 +171,7 @@ async def poach_game(call: MortalCall, args: PoachGameInput) -> str:
     if row.holder_node_id == call.me.id:
         fail(MortalResult.POACH_REFUSED, why="the game is yours to hunt")
     if held(land.id):
-        fail(MortalResult.POACH_REFUSED, why="a stronger hand holds the land")
+        fail(MortalResult.POACH_REFUSED, why="the land is held")
     shift(row, "poaching", CATCH_POACHING)
     await give_coin(call.session, call.tick.rules, call.me, CATCH_COIN)
     if row.holder_node_id is not None:
@@ -258,12 +266,39 @@ async def prepare_town(call: MortalCall, args: PrepareTownInput) -> str:
     return result(MortalResult.TOWN_PREPARED, kind=spoken(args.kind), level=level)
 
 
+async def set_commons_rule(call: MortalCall, args: SetCommonsRuleInput) -> str:
+    row = await call.session.get(CommonsRow, args.commons_id)
+    if row is None or row.steward_entity_id is None:
+        fail(MortalResult.COMMONS_RULE_REFUSED, why="there is no such common")
+    book = await RealmBook.load(call.session)
+    realm_id = book.member_of.get(row.steward_entity_id)
+    realm = book.realms.get(realm_id) if realm_id is not None else None
+    if realm is None or realm.ruler_id != call.me.id:
+        fail(MortalResult.COMMONS_RULE_REFUSED, why="only the ruler of the realm that holds the common sets its rule")
+    if held(row.region_entity_id):
+        fail(MortalResult.COMMONS_RULE_REFUSED, why="the land is held")
+    values = {"rule": args.rule.value, "quota": args.quota, "licence_price": args.licence_price}
+    if args.rule is CommonsRule.STATE:
+        values["officials"] = call.rules.commons.state_enforcement
+    before = row.rule
+    await control.edit_record(call.tick, "commons", row.id, values, [])
+    call.target(row.region_entity_id)
+    await call.record(
+        "commons.rule_changed",
+        roles={IncidentRole.SUBJECT: row.steward_entity_id},
+        facts={"common": row.kind, "rule": args.rule, "before": before},
+        place=row.steward_entity_id,
+    )
+    return result(MortalResult.COMMONS_RULE_SET, kind=spoken(row.kind), rule=spoken(args.rule))
+
+
 def specs() -> list[ToolSpec[MortalCall, Any]]:
     mortal = AgentKind.MORTAL
     meta = ToolMeta(ActionKind.INFLUENCE, mortal_standard_action)
     return [
         ToolSpec(MortalToolId.ENCLOSE_COMMONS, mortal, EncloseCommonsInput, meta, enclose_commons),
         ToolSpec(MortalToolId.RULE_COMMONS, mortal, RuleCommonsInput, meta, rule_commons),
+        ToolSpec(MortalToolId.SET_COMMONS_RULE, mortal, SetCommonsRuleInput, meta, set_commons_rule),
         ToolSpec(MortalToolId.RESERVE_GAME, mortal, ReserveGameInput, meta, reserve_game),
         ToolSpec(MortalToolId.POACH_GAME, mortal, PoachGameInput, meta, poach_game),
         ToolSpec(MortalToolId.PLANT_PERENNIAL, mortal, PlantPerennialInput, meta, plant_perennial),

@@ -8,10 +8,11 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.couplings import SealKind, TeachingKind
+from aerona.domain.enums.couplings import SealKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.engine.couplings.deep import active_seal, seal_deep
+from aerona.engine.couplings.deep import SealLinks, active_seal, missing_link, seal_deep
 from aerona.engine.couplings.teachers import lesson
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -28,12 +29,16 @@ TEACHERS = frozenset({EntityType.SPIRIT, EntityType.BEAST})
 class SendTeacherInput(ToolInput):
     teacher_id: int
     learner_id: int
-    kind: TeachingKind
+    kind: KnowledgeKind
     reason: Reason
 
 
 class SealBreachInput(ToolInput):
     place_id: int
+    kind: SealKind = SealKind.DIVINE
+    oath_id: int | None = None
+    power_id: int | None = None
+    line_id: int | None = None
     reason: Reason
 
 
@@ -49,7 +54,7 @@ async def send_teacher(call: SonCall, args: SendTeacherInput) -> str:
     if learner is None or learner.entity_type not in COMMUNITY_TYPES:
         fail(SonResult.TEACHER_REFUSED, why="only a living community can be taught")
     if held(teacher.id, learner.id):
-        fail(SonResult.TEACHER_REFUSED, why="a stronger hand holds them")
+        fail(SonResult.TEACHER_REFUSED, why="they are held")
     await ensure_in_reach(call, learner)
     row = await lesson(call.tick, teacher, learner, kinds=(args.kind,))
     if row is None:
@@ -69,11 +74,14 @@ async def seal_breach(call: SonCall, args: SealBreachInput) -> str:
     if place is None:
         fail(SonResult.BREACH_REFUSED, why="there is no such place")
     if held(place.id):
-        fail(SonResult.BREACH_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.BREACH_REFUSED, why="it is held")
     await ensure_in_reach(call, place)
     if await active_seal(call.session, place.id) is not None:
         fail(SonResult.BREACH_REFUSED, why="it is already sealed")
-    row = await seal_deep(call.tick, place.id, SealKind.DIVINE, call.son.id)
+    links = SealLinks(oath_id=args.oath_id, power_id=args.power_id, line_id=args.line_id)
+    if missing_link(args.kind, links):
+        fail(SonResult.BREACH_REFUSED, why=f"a seal of that kind names its {missing_link(args.kind, links)}")
+    row = await seal_deep(call.tick, place.id, args.kind, call.son.id, links=links)
     call.target(place.id)
     await call.record(
         "tools.son.seal_breach",

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, Link2, Plus, Scissors } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { debtStatusValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,7 @@ import { PageControls } from '@/components/domain/PageControls'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
 import { drawerKindOf } from '@/features/chronicle/linkTargets'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type EntityContext } from '../actions/context'
 import { humanize } from '../actions/schema'
 import { useLoreMutation } from '../api/mutations'
@@ -131,7 +133,7 @@ function DebtCard({ bond, selfName }: { bond: BondView; selfName: string }) {
       )}
       {bond.debt_status && !overdue && bond.debt_status !== 'open' && (
         <Badge size='sm' variant='secondary'>
-          {humanize(bond.debt_status)}
+          {wordOf(debtStatusValues, bond.debt_status)}
         </Badge>
       )}
     </li>

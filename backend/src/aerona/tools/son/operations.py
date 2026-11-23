@@ -13,6 +13,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import QuirkKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
@@ -41,6 +42,7 @@ POLITIES = frozenset({EntityType.POLITY})
 class SendExpeditionInput(ToolInput):
     leader_id: int
     target_id: int
+    mode: MovementMode | None = None
     reason: Reason
 
 
@@ -76,7 +78,7 @@ async def reached(call: SonCall, entity_id: int, kinds: frozenset[EntityType], r
         fail(refused, why=why)
     await ensure_in_reach(call, entity)
     if held(entity.id):
-        fail(refused, why="a stronger hand holds it")
+        fail(refused, why="it is held")
     return entity
 
 
@@ -90,7 +92,7 @@ async def send_expedition(call: SonCall, args: SendExpeditionInput) -> str:
         fail(SonResult.EXPEDITION_REFUSED, why=f"{leader.name} is already on an expedition")
     companions = await companions_for(call.tick, leader, away)
     try:
-        row = await control.send_expedition(call.tick, leader.id, target.id, [mortal.id for mortal in companions], call.son.id)
+        row = await control.send_expedition(call.tick, leader.id, target.id, [mortal.id for mortal in companions], call.son.id, mode=args.mode)
     except ValidationFailedError as error:
         fail(SonResult.EXPEDITION_REFUSED, why=str(error).rstrip("."))
     call.target(leader.id)

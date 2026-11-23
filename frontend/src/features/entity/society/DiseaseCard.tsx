@@ -62,6 +62,7 @@ import { useNames } from '../api/queries'
 import { useDisease } from './api'
 import {
   EndemicControls,
+  RouteControls,
   ForgeDisease,
   HostsPanel,
   ImmunityControls,
@@ -73,12 +74,14 @@ import {
   TravelPanel,
 } from './diseaseParts'
 import {
-  AFFINITY_SPEC,
+  MOISTURE_SPEC,
+  WARMTH_SPEC,
   AGE_SPEC,
   CURE_SPEC,
   PATH_SPEC,
   STATUS_SPEC,
   TARGET_SPEC,
+  SICKNESS_ROUTE_SPEC,
   VECTOR_SPEC,
   fieldLabel,
 } from './labels'
@@ -477,20 +480,29 @@ function NatureControls({
         <ChoiceEditor
           label='Spreads by'
           hint='How it passes from one to the next'
-          value={view.vector}
-          table={VECTOR_SPEC}
-          held={view.locked.includes('vector')}
+          value={view.primary_route}
+          table={SICKNESS_ROUTE_SPEC}
+          held={view.locked.includes('primary_route')}
           blocked={busy}
-          onPick={(value) => edit.mutate({ key: 'vector', value })}
+          onPick={(value) => edit.mutate({ key: 'primary_route', value })}
         />
         <ChoiceEditor
-          label='Thrives in'
-          hint='Where it spreads fastest'
-          value={view.climate_affinity}
-          table={AFFINITY_SPEC}
-          held={view.locked.includes('climate_affinity')}
+          label='Warmth it favours'
+          hint='Where it spreads fastest by warmth'
+          value={view.affinity_warmth}
+          table={WARMTH_SPEC}
+          held={view.locked.includes('affinity_warmth')}
           blocked={busy}
-          onPick={(value) => edit.mutate({ key: 'climate_affinity', value })}
+          onPick={(value) => edit.mutate({ key: 'affinity_warmth', value })}
+        />
+        <ChoiceEditor
+          label='Moisture it favours'
+          hint='Where it spreads fastest by moisture'
+          value={view.affinity_moisture}
+          table={MOISTURE_SPEC}
+          held={view.locked.includes('affinity_moisture')}
+          blocked={busy}
+          onPick={(value) => edit.mutate({ key: 'affinity_moisture', value })}
         />
         {numbers(SPREAD_KEYS)}
       </EditorGroup>
@@ -755,8 +767,9 @@ export function DiseaseSection({
   const raging = data
     ? data.outbreaks.filter((item) => item.status !== 'ended').length
     : 0
-  const vector = data ? VECTOR_SPEC[data.vector] : null
-  const affinity = data ? AFFINITY_SPEC[data.climate_affinity] : null
+  const vector = data ? VECTOR_SPEC[data.primary_route] : null
+  const warmth = data ? WARMTH_SPEC[data.affinity_warmth] : null
+  const moisture = data ? MOISTURE_SPEC[data.affinity_moisture] : null
   const origin = data?.outbreaks.find(
     (item) => item.region_id === data.origin_region_id
   )
@@ -776,7 +789,7 @@ export function DiseaseSection({
           description={view.error.message}
         />
       )}
-      {data && vector && affinity && (
+      {data && vector && warmth && moisture && (
         <div
           data-surface='DiseaseCard'
           className='@container/sick flex min-w-0 flex-col gap-4'
@@ -793,8 +806,12 @@ export function DiseaseSection({
                   {`Spreads by ${vector.label.toLowerCase()}`}
                 </Badge>
                 <Badge size='sm' variant='secondary'>
-                  <affinity.icon />
-                  {`Thrives in ${affinity.label.toLowerCase()}`}
+                  <warmth.icon />
+                  {`Thrives in ${warmth.label.toLowerCase()}`}
+                </Badge>
+                <Badge size='sm' variant='secondary'>
+                  <moisture.icon />
+                  {`Thrives in ${moisture.label.toLowerCase()}`}
                 </Badge>
                 {data.target_functions.map((item) => {
                   const spec = TARGET_SPEC[item]
@@ -963,6 +980,7 @@ export function DiseaseSection({
             <NatureControls view={data} blocked={blocked} />
             <ShapeControls view={data} blocked={blocked} />
             <OutbreakControls view={data} blocked={blocked} />
+            <RouteControls view={data} blocked={blocked} />
             <EndemicControls view={data} blocked={blocked} />
             <Levers view={data} blocked={blocked} />
             <EditorGroup title='Resistance by age' icon={ShieldCheck} pairs>

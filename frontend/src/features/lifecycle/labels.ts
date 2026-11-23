@@ -1,7 +1,8 @@
 import {
+  type LucideIcon,
   Archive,
-  BookOpen,
   Bone,
+  BookOpen,
   Bug,
   CircleOff,
   Cloud,
@@ -13,19 +14,21 @@ import {
   Flower2,
   Gem,
   Ghost,
+  Hammer,
   Hourglass,
   Landmark,
   Leaf,
-  type LucideIcon,
   Moon,
   Mountain,
   Orbit,
   Palette,
   PawPrint,
+  Pill,
   RefreshCcw,
   RotateCcw,
   Scroll,
   ShieldOff,
+  Shovel,
   Skull,
   Snowflake,
   Sparkles,
@@ -39,7 +42,7 @@ import {
 } from 'lucide-react'
 import { type components, worldTypeValues } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
-import { humanize } from '@/features/pantheon/labels'
+import { wordOf } from '@/features/entity/affairs/labels'
 
 type Schema = components['schemas']
 
@@ -123,6 +126,8 @@ export const FOSSIL_SOURCES: Record<Schema['FossilSource'], Named> = {
     icon: Skull,
     tone: 'muted',
   },
+  god: { label: 'A god that died', icon: Crown, tone: 'gold' },
+  buried_dead: { label: 'The buried dead', icon: Shovel, tone: 'muted' },
 }
 
 export const FOSSIL_READINGS: Record<Schema['FossilReading'], Named> = {
@@ -130,6 +135,8 @@ export const FOSSIL_READINGS: Record<Schema['FossilReading'], Named> = {
   legend: { label: 'Remains of legend', icon: BookOpen, tone: 'gold' },
   relic: { label: 'Sacred relics', icon: Cross, tone: 'verdigris' },
   deep_time: { label: 'Evidence of deep time', icon: Hourglass, tone: 'info' },
+  material: { label: 'A substance to work', icon: Hammer, tone: 'warning' },
+  medicine: { label: 'A remedy', icon: Pill, tone: 'success' },
 }
 
 export const FOSSIL_PRESERVATIONS: Record<Schema['Preservation'], Named> = {
@@ -170,6 +177,10 @@ export const GARDEN_KINDS: Record<Schema['GardenKind'], Named> = {
 export const WORLD_KINDS: Record<string, Named> = Object.fromEntries(
   worldTypeValues.map((value) => [
     value,
-    { label: humanize(value), icon: Orbit, tone: 'info' } satisfies Named,
+    {
+      label: wordOf(worldTypeValues, value),
+      icon: Orbit,
+      tone: 'info',
+    } satisfies Named,
   ])
 )

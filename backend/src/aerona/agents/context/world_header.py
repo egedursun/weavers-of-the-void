@@ -6,6 +6,7 @@ from aerona.catalog.climate import CLIMATES
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.genesis import TECHNOLOGY_MEANINGS, TECHNOLOGY_PHRASES
 from aerona.catalog.law_grammar import LEGACY_GRAMMAR, Grammar, working_text
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -13,6 +14,7 @@ from aerona.db.tables.environment import WorldSeasonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.law_grammar import LawCondition
 from aerona.domain.enums.society import NaturalLaw
+from aerona.engine.environment.season_shape import season_phase
 from aerona.engine.eras.effects import COMMUNITIES, era_of, era_order, techniques_by_holder, world_start
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import AgeStar, ClimateLine, CreatorMood, EpicSummary, LawLine, SeasonLine, WorldHeaderContext
@@ -27,8 +29,24 @@ def target_world(scope: Scope, world_id: int | None) -> WorldRow | None:
 async def season_lines(scope: Scope, world: WorldRow | None) -> list[SeasonLine]:
     if world is None:
         return []
-    rows = await scope.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id).order_by(WorldSeasonRow.position))
-    return [SeasonLine(position=row.position, name=row.name, growth=row.growth, campaign=row.campaign) for row in rows]
+    rows = list(await scope.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id).order_by(WorldSeasonRow.position)))
+    phases = season_phase(rows)
+    return [
+        SeasonLine(
+            id=row.id,
+            position=row.position,
+            name=row.name,
+            share_pct=row.share_pct,
+            warmth=spoken(phases[row.position].warmth),
+            water=spoken(phases[row.position].water),
+            temperature_shift=row.temperature_shift,
+            rain_shift=row.rain_shift,
+            growth=row.growth,
+            travel=row.travel,
+            campaign=row.campaign,
+        )
+        for row in rows
+    ]
 
 
 def climate_line(world: WorldRow | None) -> ClimateLine | None:

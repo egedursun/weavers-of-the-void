@@ -33,17 +33,21 @@ import { NodeChips, NodeListPicker, StepButton, TextField } from './parts'
 
 type Debt = CyclesView['debts'][number]
 
-const OWED = new Set(['open', 'destroyed'])
-
 export function GiftCard({
   nodeId,
   row,
+  circuits,
   blocked,
 }: {
   nodeId: number | null
   row: GiftView
+  circuits: CircuitView[]
   blocked: string | null
 }) {
+  const circuit = circuits.find((item) => item.id === row.circuit_id)
+  const circuitTable = Object.fromEntries(
+    circuits.map((item) => [String(item.id), item.name])
+  )
   const action = useRow(
     'gift:edit',
     'gift:delete',
@@ -62,9 +66,15 @@ export function GiftCard({
     blocked,
     'The gift is refused'
   )
+  const releasing = useStep(
+    'gift:release',
+    { gift_id: row.id },
+    blocked,
+    'The debt is released'
+  )
   const state = GIFT_STATES[row.state]
   const occasion = OCCASIONS[row.occasion]
-  const owed = OWED.has(row.state)
+  const owed = row.owed
   const closed = owed ? null : 'The gift is settled'
   const direction =
     nodeId === null
@@ -80,7 +90,7 @@ export function GiftCard({
       caption={`${direction}${row.giver.id === nodeId ? row.receiver.name : row.giver.name} · epoch ${row.epoch}`}
       removeLabel='Strike from the ledger'
       editTitle='Set the gift'
-      note='A gift binds its receiver to answer in kind and in time; a refusal is an insult, an unanswered gift costs face, and a rank-claiming gift must be answered with more.'
+      note='The occasion sets what a gift owes back: a refusal is an insult, an unanswered gift costs face, an answer of far more puts the first giver in debt, and a giver may release a debt by grace.'
       fields={[
         { key: 'value', label: 'Worth', kind: 'number', min: 0 },
         {
@@ -102,6 +112,12 @@ export function GiftCard({
           table: table(GIFT_STATES),
         },
         { key: 'due_epoch', label: 'Due by epoch', kind: 'number', min: 0 },
+        {
+          key: 'circuit_id',
+          label: 'Circuit it travels',
+          kind: 'pick',
+          table: circuitTable,
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -124,11 +140,18 @@ export function GiftCard({
             'Thing given',
             <Ref key='item' node={row.item} empty='coin alone' />,
           ],
+          ['Owed back', owed ? `${row.owed_back}` : 'nothing'],
           [
             'Due by',
             row.due_epoch !== null
               ? `epoch ${row.due_epoch}`
-              : 'no return owed',
+              : owed
+                ? "at the giver's own need"
+                : 'no return owed',
+          ],
+          [
+            'Circuit',
+            circuit !== undefined ? circuit.name : 'not on a circuit',
           ],
           [
             'Settled',
@@ -150,6 +173,12 @@ export function GiftCard({
           label='Refuse it'
           busy={closed ?? refusing.busy}
           onClick={refusing.run}
+        />
+        <StepButton
+          icon={HandHeart}
+          label='Release the debt'
+          busy={closed ?? releasing.busy}
+          onClick={releasing.run}
         />
       </div>
     </Held>
@@ -544,10 +573,10 @@ export function GiftLedger({
   blocked: string | null
 }) {
   const owed = data.gifts.filter(
-    (gift) => OWED.has(gift.state) && gift.receiver.id === nodeId
+    (gift) => gift.owed && gift.receiver.id === nodeId
   ).length
   const owing = data.gifts.filter(
-    (gift) => OWED.has(gift.state) && gift.giver.id === nodeId
+    (gift) => gift.owed && gift.giver.id === nodeId
   ).length
   const isStop =
     kind !== null && (STOP_TYPES as readonly string[]).includes(kind)
@@ -582,7 +611,14 @@ export function GiftLedger({
         noun={['gift', 'gifts']}
         itemKey={(item) => item.id}
       >
-        {(item) => <GiftCard nodeId={nodeId} row={item} blocked={blocked} />}
+        {(item) => (
+          <GiftCard
+            nodeId={nodeId}
+            row={item}
+            circuits={data.circuits}
+            blocked={blocked}
+          />
+        )}
       </Listed>
       <GiftForge nodeId={nodeId} blocked={blocked} />
       <Listed

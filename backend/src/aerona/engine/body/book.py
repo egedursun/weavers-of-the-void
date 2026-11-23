@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import Anatomy, anatomy_of
-from aerona.catalog.body_plans import BEING_PLANS, BUILD_RANK, HEIGHT_RANK, HUNGER_PLANS, PLANS, WHOLE_PLANS
+from aerona.catalog.body_plans import BEING_PLANS, BUILD_RANK, FALLBACK_PLANS, HEIGHT_RANK, HUNGER_PLANS, PLANS, WHOLE_PLANS
 from aerona.catalog.body_words import BODY_WORDS
 from aerona.catalog.conditions import BEDRIDDEN_LOSSES, OPEN_INJURY_STATES
 from aerona.catalog.creature_anatomy import MONSTER_PLANS
@@ -36,12 +36,13 @@ from aerona.domain.enums.body import (
     TreatmentStep,
 )
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.ecology import SpeciesClass
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
-from aerona.engine.body.capacities import BearerStats, BodyState, capacities, function_percents, perception_factor
+from aerona.engine.body.capacities import BearerStats, BodyState, capacities, function_percents
 from aerona.engine.body.digits import effective_counts, fill_counts, handedness_for
 from aerona.engine.body.functions import Wound
 from aerona.engine.body.hits import Armour
@@ -115,6 +116,8 @@ async def typed_plan(session: AsyncSession, species: EntityRow, traits: set[Crea
     if EntityFlag.MEGAFAUNA in await EntityRepository(session).flags(species.id):
         return BodyPlan.COLOSSAL
     profile = await session.get(SpeciesProfileRow, species.id)
+    if profile is not None and profile.species_class is SpeciesClass.COLONIAL:
+        return BodyPlan.COLONIAL
     if profile is not None and profile.body_plan in BODY_PLAN_VALUES:
         return BodyPlan(profile.body_plan)
     home = await living_entity(session, species.location_id)
@@ -123,7 +126,7 @@ async def typed_plan(session: AsyncSession, species: EntityRow, traits: set[Crea
 
 async def recorded_plan(session: AsyncSession, species: EntityRow, traits: set[CreatureTrait]) -> BodyPlan:
     typed = await typed_plan(session, species, traits)
-    if typed is not BodyPlan.QUADRUPED:
+    if typed not in FALLBACK_PLANS:
         return typed
     worded = legacy_plan_from_words(" ".join(part for part in (species.name, species.subtype or "", species.description or "") if part))
     return worded or typed
@@ -449,7 +452,7 @@ async def perception_of(session: AsyncSession, rules: Rules, mortal: EntityRow) 
     body = await session.get(BodyRow, mortal.id)
     if body is None:
         return float(base)
-    return base * perception_factor(rules.capacities, body.hearing, body.sight)
+    return base * body.perception / PERCENT * rules.body_capacities.perception_watch_pct / PERCENT
 
 
 def bedridden(rules: Rules, bearer: object) -> bool:

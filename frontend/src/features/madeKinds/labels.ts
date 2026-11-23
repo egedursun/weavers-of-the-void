@@ -95,6 +95,7 @@ import {
   vehicleSectionValues,
 } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
+import { wordOf } from '@/features/entity/affairs/labels'
 
 type Schema = components['schemas']
 export type VehicleFamily = Schema['VehicleFamily']
@@ -429,10 +430,6 @@ export function sectionLabel(section: string): string {
   return words(section)
 }
 
-export function familyLabel(family: string): string {
-  return words(family)
-}
-
 export function frameTable(
   frames: readonly {
     frame: VehicleFrame
@@ -448,7 +445,7 @@ export function frameTable(
       return [
         frame,
         {
-          label: spec?.label ?? words(frame),
+          label: spec?.label ?? wordOf(vehicleFrameValues, frame),
           icon: family.icon,
           tone: family.tone,
         },

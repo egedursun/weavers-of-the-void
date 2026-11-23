@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.climate import climate_profile
+from aerona.catalog.wind_belts import CURRENTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -22,9 +23,11 @@ SHIFT_LIMIT = PERCENT
 COLD_ERAS = frozenset({ClimateEra.ICE_AGE})
 
 
+CURRENT_HEAT_BASE = 4
+
+
 def current_heat(rules: Rules, current: OceanCurrent) -> int:
-    heat = rules.world_life.current_heat
-    return {OceanCurrent.NONE: 0, OceanCurrent.WARM: heat, OceanCurrent.COLD: -heat}[current]
+    return CURRENTS[current].temperature(rules) * rules.world_life.current_heat // CURRENT_HEAT_BASE
 
 
 def band_of(rules: Rules, star: StarRow | None) -> tuple[float, float] | None:

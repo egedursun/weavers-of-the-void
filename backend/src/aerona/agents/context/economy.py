@@ -34,7 +34,7 @@ PROFITS_SHOWN = 3
 async def job_of(session: AsyncSession, rules: Rules, me: EntityRow, home: EntityRow) -> str:
     parts: list[str] = []
     if me.mortal_role is not None:
-        parts.append(me.mortal_role.value.replace("_", " "))
+        parts.append(spoken(me.mortal_role))
     if me.social_class is not None:
         shares = jobs_for(rules, me.social_class)
         work = max(shares, key=lambda job: (shares[job], job.value))
@@ -155,5 +155,5 @@ async def resource_yield(session: AsyncSession, resource_id: int) -> str:
     profile = await session.get(ResourceProfileRow, resource_id)
     if profile is None:
         return ""
-    material = profile.material.value.replace("_", " ") + " " if profile.material is not None else ""
+    material = spoken(profile.material) + " " if profile.material is not None else ""
     return f"{material}{COMMODITIES[profile.commodity].label.lower()}, reserve {profile.reserve}"

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.kinds.world_bodies import WORLD_BODIES
 from aerona.catalog.life.cosmos import AIR, GRAVITY_G
 from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
+from aerona.constants.calendar import SEASONS_MAX
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.physics import CosmicFeatureRow, StarPhysicsRow, StarSystemRow, WorldPhysicsRow
@@ -17,7 +18,7 @@ from aerona.domain.enums.world import Atmosphere, Gravity, WorldType
 from aerona.engine.cosmos.climate import band_heat
 from aerona.engine.cosmos.star_types import star_heat, star_mechanics
 from aerona.engine.cosmos.stellar import hundredths, luminosity_of, typical_mass
-from aerona.engine.environment.seasons import SEASON_SHAPES, season_count_for
+from aerona.engine.environment.seasons import season_count_for
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.rules.registry import Rules
 
@@ -369,7 +370,7 @@ def apply_to_world(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, sky:
         if count == 1 and physics.eccentricity * PERCENT >= rules.orbits.global_season_eccentricity_pct and not physics.tidally_locked:
             count = 2
         if not physics.circumbinary and not physics.tidally_locked and sky.companion_share * PERCENT >= rules.orbits.binary_season_share_pct:
-            count = min(max(SEASON_SHAPES), count * 2)
+            count = min(SEASONS_MAX, count * 2)
         if world.season_count != count:
             world.season_count = count
             changed.append("season_count")

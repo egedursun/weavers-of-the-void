@@ -19,16 +19,16 @@ from aerona.domain.enums.crafts import (
     RightAcquired,
     RightKind,
 )
-from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.culture import MagicSchool, Technique
 from aerona.domain.enums.kind_crafts import GameCategory
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import Emotion, SkillKind
 
-GROUND_FIELDS = ("ground", "gear", "right", "owner_node_id", "effort", "collapse_at", "collapsed", "last_catch", "first_stock")
+GROUND_FIELDS = ("ground", "gear", "right", "owner_node_id", "effort", "collapse_at", "collapsed", "last_catch", "first_stock", "stock")
 WORKS_FIELDS = ("output", "hazard", "pollution", "accidents")
 INSURER_FIELDS = ("pool", "risk_belief", "premium_pct", "ruined", "claims_seen")
 POLICY_FIELDS = ("insurer_entity_id", "cover", "premium", "sum_insured", "active", "claims")
-RIGHT_FIELDS = ("holder_node_id", "kind", "subject_node_id", "name", "acquired", "licensed_to_node_id")
+RIGHT_FIELDS = ("holder_node_id", "kind", "subject_node_id", "name", "acquired", "licensed_to_node_id", "dish_id", "technique", "contest_id", "marriage_id")
 AID_FIELDS = ("quality",)
 CLOCK_FIELDS = ("kind", "precision", "built_epoch")
 NUMBER_FIELDS = ("base", "notation", "zero", "numeracy")
@@ -58,6 +58,7 @@ class CatchGroundRow(Base):
     collapsed: Mapped[bool] = mapped_column(default=False)
     last_catch: Mapped[int] = mapped_column(default=0)
     first_stock: Mapped[int] = mapped_column(default=100, server_default="100")
+    stock: Mapped[int] = mapped_column(default=100, server_default="100")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -120,6 +121,10 @@ class IncorporealRightRow(Base):
     name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
     acquired: Mapped[RightAcquired] = mapped_column(enum_type(RightAcquired, "acquired"), default=RightAcquired.CREATED)
     licensed_to_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    dish_id: Mapped[int | None] = mapped_column(ForeignKey("dishes.id", ondelete="SET NULL"))
+    technique: Mapped[Technique | None] = mapped_column(enum_type(Technique, "technique"))
+    contest_id: Mapped[int | None] = mapped_column(ForeignKey("contests.id", ondelete="SET NULL"))
+    marriage_id: Mapped[int | None] = mapped_column(ForeignKey("marriages.id", ondelete="SET NULL"))
     since_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

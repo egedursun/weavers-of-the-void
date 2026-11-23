@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.cosmography import BEING_MODEL, EMBODIED, PHENOMENON_MODEL, SCOPE_SPREAD, SENSE_REACH
 from aerona.catalog.life.environment import WORLD_SOIL
 from aerona.catalog.preservation import PRESERVATION
+from aerona.catalog.soils import SOILS
 from aerona.catalog.travel import TRAVEL_MODEL, medium_of
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cosmography import PhenomenonProfileRow
@@ -28,7 +29,6 @@ from aerona.engine.economy.cargo import spoilage
 from aerona.engine.economy.control_depth import MoneyShape, NewCoin, check_money, create_currency, reshape_currency
 from aerona.engine.economy.convoys import preservation_for
 from aerona.engine.economy.money import strain
-from aerona.engine.environment.profile import SOIL_FERTILITY
 from aerona.engine.phases.travel import MEDIUM_EVENTS
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import set_stats
@@ -162,9 +162,9 @@ async def test_money_not_made_of_metal_is_issued_counterfeited_and_broken_into(s
 
 
 def test_every_soil_has_a_fertility_and_the_new_soils_are_reached(rules: Rules) -> None:
-    assert set(SOIL_FERTILITY) == set(SoilKind)
+    assert set(SOILS) == set(SoilKind)
     reached = set(WORLD_SOIL.values())
     for soil in (SoilKind.LATERITE, SoilKind.PERMAFROST, SoilKind.REGOLITH, SoilKind.ARTIFICIAL):
         assert soil in reached
-        assert 0 <= SOIL_FERTILITY[soil](rules) <= 100
+        assert 0 <= SOILS[soil].fertility(rules) <= 100
     assert WORLD_SOIL[WorldType.ICE] is SoilKind.PERMAFROST

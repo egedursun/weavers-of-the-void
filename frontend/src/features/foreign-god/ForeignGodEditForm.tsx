@@ -24,6 +24,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { FormRow, Section, FieldTile } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { type Domain } from '@/features/pantheon/api'
 import { RELATION_SCALE, STAT_SCALE } from '@/features/pantheon/constants'
@@ -32,7 +33,6 @@ import { useGodAction } from '@/features/pantheon/godAction'
 import {
   FOREIGN_STATUS_LABEL,
   STATS,
-  humanize,
   useLabels,
 } from '@/features/pantheon/labels'
 import {
@@ -465,7 +465,7 @@ export function ForeignGodEditForm({ detail }: { detail: ForeignGodDetail }) {
                       <SelectItem value={NONE}>Not set</SelectItem>
                       {existenceModeValues.map((item) => (
                         <SelectItem key={item} value={item}>
-                          {humanize(item)}
+                          {wordOf(existenceModeValues, item)}
                         </SelectItem>
                       ))}
                     </SelectContent>

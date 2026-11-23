@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Play } from 'lucide-react'
 import { toast } from 'sonner'
+import { actionGroupValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -25,6 +26,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { FormRow, PagedList, FieldTile } from '@/components/domain'
 import { Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { toastWithUndo } from '@/features/ledger/undoToast'
 import { type ActionItem, useRunAction } from './api'
 import {
@@ -193,7 +195,9 @@ function ActionForm({
       }}
     >
       <div className='flex min-w-0 flex-wrap gap-2'>
-        <Badge variant='outline'>{humanizeName(action.group)}</Badge>
+        <Badge variant='outline'>
+          {wordOf(actionGroupValues, action.group)}
+        </Badge>
         <Badge variant='secondary'>{action.cost}</Badge>
         {action.mode === 'job' && (
           <Badge variant='outline'>Runs as a job</Badge>

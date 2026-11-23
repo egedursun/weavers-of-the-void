@@ -11,12 +11,13 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import type { components } from '@/api/generated/schema'
+import { subsystemValues, type components } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Medallion, TimelineItem, Paged } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { named } from '@/features/entity/environment/labels'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { INCIDENT_ROLE } from '@/features/records/labels'
@@ -230,7 +231,7 @@ export function ActingMechanics({
                   </Muted>
                 </div>
                 <Badge size='sm' variant='secondary'>
-                  {humanize(mechanic.subsystem)}
+                  {wordOf(subsystemValues, mechanic.subsystem)}
                 </Badge>
                 {mechanic.suppressed && (
                   <Badge size='sm' variant='warning'>
@@ -244,7 +245,7 @@ export function ActingMechanics({
                   <Paged items={mechanic.affects}>
                     {(item) => (
                       <Badge key={item} size='sm' variant='outline'>
-                        {humanize(item)}
+                        {wordOf(subsystemValues, item)}
                       </Badge>
                     )}
                   </Paged>

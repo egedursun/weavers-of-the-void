@@ -13,9 +13,9 @@ from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, Regi
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import RiverClass, WaterSource
 from aerona.domain.enums.happening import RiverShiftCause
-from aerona.domain.enums.region import DangerOrigin, DangerSource, MemoryOrigin, RegionMemoryKind
+from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource, MemoryOrigin, RegionMemoryKind
 from aerona.engine.environment.control import hold, region_ground
-from aerona.engine.environment.dangers import sync_stat
+from aerona.engine.environment.dangers import reaches, sync_stat
 from aerona.engine.environment.geomorph import shape_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
@@ -50,6 +50,7 @@ async def set_danger(
     held: bool,
     origin: DangerOrigin = DangerOrigin.PLAYER,
     son_id: int | None = None,
+    targets: list[DangerHarm] | None = None,
 ) -> RegionDangerRow:
     region = await region_entity(session, region_id)
     ground = await region_ground(session, region.id)
@@ -58,6 +59,8 @@ async def set_danger(
         row = RegionDangerRow(world_id=ground.world_id, region_entity_id=region.id, source=source, since_epoch=epoch)
         session.add(row)
     row.strength = clamp_int(strength, 0, PERCENT)
+    if targets is not None:
+        row.harmed = allowed_targets(rules, source, targets)
     row.origin = origin
     row.son_id = son_id
     row.held = held
@@ -73,8 +76,27 @@ async def danger_row(session: AsyncSession, danger_id: int) -> RegionDangerRow:
     return row
 
 
-async def edit_danger(session: AsyncSession, rules: Rules, danger_id: int, *, strength: int | None, held: bool | None, epoch: int) -> RegionDangerRow:
+def allowed_targets(rules: Rules, source: DangerSource, targets: list[DangerHarm]) -> list[str]:
+    allowed = set(reaches(rules, source))
+    refused = sorted(harm.value for harm in targets if harm not in allowed)
+    if refused:
+        raise ValidationFailedError(f"That danger cannot reach {', '.join(refused)}.")
+    return sorted({harm.value for harm in targets})
+
+
+async def edit_danger(
+    session: AsyncSession,
+    rules: Rules,
+    danger_id: int,
+    *,
+    strength: int | None,
+    held: bool | None,
+    epoch: int,
+    targets: list[DangerHarm] | None = None,
+) -> RegionDangerRow:
     row = await danger_row(session, danger_id)
+    if targets is not None:
+        row.harmed = allowed_targets(rules, row.source, targets)
     if strength is not None:
         row.strength = clamp_int(strength, 0, PERCENT)
         if row.origin is DangerOrigin.DERIVED:

@@ -42,7 +42,7 @@ async def reveal_nature(call: SonCall, args: RevealNatureInput) -> str:
         fail(SonResult.CONCEPTION_REFUSED, why=f"{args.stance} is no way to hold the {spoken(args.axis)} of the divine")
     row = await call.session.get(DivineConceptionRow, faith.id) or await conceive(call.tick, faith)
     if held(faith.id) or args.axis.value in row.locked:
-        fail(SonResult.CONCEPTION_REFUSED, why="a stronger hand holds that faith unchanged")
+        fail(SonResult.CONCEPTION_REFUSED, why="that faith is held unchanged")
     await set_axis(call.tick, row, args.axis, value, by=call.son.id)
     call.target(faith.id)
     return result(SonResult.NATURE_REVEALED, faith=faith.name, axis=spoken(args.axis), value=spoken(value))

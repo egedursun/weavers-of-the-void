@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lightbulb, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { knowledgeBranchValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import {
   EntityLink,
@@ -14,9 +15,9 @@ import {
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type EntityContext, isThinking } from '../actions/context'
 import { optionsFor } from '../actions/pickers'
-import { humanize } from '../actions/schema'
 import { usePickerData } from '../actions/usePickerData'
 import { useLoreMutation } from '../api/mutations'
 import { useKnowledge } from '../api/queries'
@@ -92,7 +93,7 @@ export function KnowledgeLawPanel({
           items={[
             {
               label: 'Branch',
-              value: `${own.branch ? humanize(own.branch) : 'Unsorted'}${own.level !== null ? ` · level ${own.level}` : ''}`,
+              value: `${own.branch ? wordOf(knowledgeBranchValues, own.branch) : 'Unsorted'}${own.level !== null ? ` · level ${own.level}` : ''}`,
             },
             ...(own.spread !== null
               ? [{ label: 'Spread', value: `${own.spread}` }]

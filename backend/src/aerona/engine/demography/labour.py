@@ -5,7 +5,16 @@ from dataclasses import dataclass, field, replace
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.life.demography import AGE_WORK, ALLOCATE_COHORT_CONDITIONS, CLASS_JOBS, CONDITION_WORK, CORVEE_JOBS
+from aerona.catalog.life.demography import (
+    AGE_WORK,
+    ALLOCATE_COHORT_CONDITIONS,
+    CLASS_JOBS,
+    CONDITION_WORK,
+    CORVEE_JOBS,
+    FIGHTING_BANDS,
+    MINOR_BANDS,
+    NEW_TRADES,
+)
 from aerona.catalog.life.economy import KIND_JOBS
 from aerona.catalog.life_traits import JOB_TRAITS, having
 from aerona.catalog.needs import GATED_JOBS, JOB_GOODS, MOVABLE_JOBS, WORKSHOP_JOBS
@@ -19,7 +28,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import CorveeRow, LabourReasonRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Job, Sex
+from aerona.domain.enums.demography import CohortCondition, Job, SexKind
 from aerona.domain.enums.disease import DiseaseTarget
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EntityType
@@ -74,7 +83,13 @@ def jobs_for(rules: Rules, social_class: SocialClass) -> dict[Job, float]:
     if social_class is C.OUTCAST:
         idle = table.idle_outcast_pct / PERCENT
         return {J.IDLE: idle, J.MINING: (1 - idle) / 2, J.BUILDING: (1 - idle) / 2}
-    return dict(CLASS_JOBS[social_class])
+    found = dict(CLASS_JOBS[social_class])
+    for job, trade in NEW_TRADES.items():
+        if social_class in trade.classes and found.get(trade.source, 0.0) > 0:
+            moved = found[trade.source] * trade.share(rules) / PERCENT
+            found[trade.source] -= moved
+            found[job] = found.get(job, 0.0) + moved
+    return found
 
 
 def split_food(region: RegionEnvironmentRow | None) -> dict[Job, float]:
@@ -299,7 +314,7 @@ async def allocate(
     food = split_food(region)
     children_work = await law_param(ctx.session, community.id, LawKind.LABOUR_LAW, "child_labour") is not False
     for (band, _sex, social_class, condition), row in rows.items():
-        hands = row.count * (AGE_WORK[band] if children_work or band is not AgeBand.CHILD else 0.0)
+        hands = row.count * (AGE_WORK[band] if children_work or band not in MINOR_BANDS else 0.0)
         bound = social_class is C.SERF_OR_SLAVE or condition in ALLOCATE_COHORT_CONDITIONS
         mood = satisfaction_factor(rules, society, social_class)
         for job, share in jobs_for(rules, C.SERF_OR_SLAVE if bound else social_class).items():
@@ -373,11 +388,11 @@ async def fighting_age(session: AsyncSession, community_id: int, rules: Rules | 
     if not rows:
         return None
     community = await session.get(EntityRow, community_id)
-    fighters = await combat_sexes(session, community) if community is not None else set(Sex)
+    fighters = await combat_sexes(session, community) if community is not None else set(SexKind)
     adults = [
         (condition, row.count)
         for (band, sex, _social, condition), row in rows.items()
-        if band is AgeBand.ADULT and condition is not CohortCondition.MAIMED and sex in fighters
+        if band in FIGHTING_BANDS and condition is not CohortCondition.MAIMED and sex in fighters
     ]
     fit = sum(count for condition, count in adults if condition is not CohortCondition.SICK)
     sick = sum(count for condition, count in adults if condition is CohortCondition.SICK)

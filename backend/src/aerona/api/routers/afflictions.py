@@ -38,6 +38,10 @@ def package_view(spec: PackageSpec) -> PackageView:
                 transforms=stage.transforms,
                 recruits=stage.recruits,
                 fears_source=stage.fears_source,
+                changes_body=stage.changes_body,
+                lucky=stage.lucky,
+                binds=stage.binds,
+                fades=stage.fades,
             )
             for index, stage in enumerate(spec.stages, start=1)
         ],
@@ -76,7 +80,7 @@ async def afflictions_of(services: ServicesDep, node_id: int = Path(ge=1)) -> Af
                 select(AfflictionRow).where(AfflictionRow.bearer_node_id == node_id).order_by(AfflictionRow.cured_epoch.is_not(None), AfflictionRow.id.desc())
             )
         )
-        names = await nodes_of(session, [row.source_node_id for row in rows])
+        names = await nodes_of(session, [node for row in rows for node in (row.source_node_id, row.charm_target_node_id)])
         return AfflictionsView(
             node_id=bearer.id,
             name=bearer.name,
@@ -101,6 +105,18 @@ async def afflictions_of(services: ServicesDep, node_id: int = Path(ge=1)) -> Af
                     cured_epoch=row.cured_epoch,
                     applied=dict(row.applied),
                     held=STAGE_HOLD in row.locked,
+                    fortune_sign=row.fortune_sign,
+                    fortune_strength=row.fortune_strength,
+                    transform_plan=row.transform_plan,
+                    transform_species_id=row.transform_species_id,
+                    transform_substance=row.transform_substance,
+                    transform_trigger=row.transform_trigger,
+                    transform_mind_kept=row.transform_mind_kept,
+                    changed_from=row.transform_from_plan,
+                    charm_target_id=row.charm_target_node_id,
+                    charm_target_name=name_in(names, row.charm_target_node_id),
+                    charm_kind=row.charm_kind,
+                    charm_strength=row.charm_strength,
                 )
                 for row in rows
             ],

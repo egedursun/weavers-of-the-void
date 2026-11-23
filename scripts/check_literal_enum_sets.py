@@ -59,6 +59,8 @@ FAMILIES = (
             "RockKind",
             "UndergroundStratum",
             "SedimentKind",
+            "CoastForm",
+            "SealKind",
         ),
         ("catalog/",),
         2,
@@ -532,6 +534,7 @@ FAMILIES = (
             "TradeMode",
             "TradePolicyKind",
             "TradeRouteStatus",
+            "TraditionFunction",
             "TraditionKind",
             "TransformTrigger",
             "TreatyKind",
@@ -611,10 +614,16 @@ def aliases_of(tree: ast.Module, owners: dict[str, str]) -> dict[str, str]:
     return names
 
 
+def unwrapped(item: ast.expr | None) -> ast.expr | None:
+    if isinstance(item, ast.Attribute) and item.attr == "value" and isinstance(item.value, ast.Attribute):
+        return item.value
+    return item
+
+
 def members(items: list[ast.expr | None], names: dict[str, str]) -> Counter[str]:
     return Counter(
         names[item.value.id]
-        for item in items
+        for item in map(unwrapped, items)
         if isinstance(item, ast.Attribute)
         and isinstance(item.value, ast.Name)
         and item.value.id in names

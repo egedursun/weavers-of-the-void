@@ -1,3 +1,4 @@
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.leagues import LeagueMemberRow, PolityLeagueRow
@@ -82,6 +83,6 @@ async def found_league(
         ctx,
         "league.founded",
         roles={IncidentRole.PRODUCT: league.id, IncidentRole.MEMBER: [polity.id for polity in polities]},
-        facts={"aims": ", ".join(aim.value.replace("_", " ") for aim in aims), "basis": vote_basis},
+        facts={"aims": ", ".join(spoken(aim) for aim in aims), "basis": vote_basis},
     )
     return league

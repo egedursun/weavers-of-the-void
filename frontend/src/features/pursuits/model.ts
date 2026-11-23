@@ -33,8 +33,15 @@ export const FORGED_TYPES = [
   'law',
   'treaty',
   'settlement',
+  'polity',
 ] as const
 export const OWNER_TYPES = ['beast', 'army'] as const
+export const FIXER_TYPES = [
+  'mortal',
+  'polity',
+  'faction',
+  'settlement',
+] as const
 export const TOKEN_TYPES = ['item', 'polity'] as const
 export const GOD_KINDS = ['son', 'foreign_god'] as const
 export const LINE_TYPES = ['settlement', 'cult'] as const

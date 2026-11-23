@@ -69,6 +69,7 @@ async def return_maimed(ctx: TickContext, community: EntityRow, lost: int) -> in
         row.veterans += share
         row.updated_epoch = ctx.epoch
         placed += share
+        await record(ctx, "body.maimed", roles={IncidentRole.SUBJECT: community.id}, facts={"maim": kind, "count": share})
     ctx.count("maimed_returned", placed)
     return placed
 
@@ -102,7 +103,17 @@ async def war_appetite(ctx: TickContext, community: EntityRow) -> float:
 
 
 async def labour_factor(ctx: TickContext, community: EntityRow) -> float:
-    return max(0.0, 1 - await share_of(ctx, community) * ctx.rules.maimed.labour_loss_pct / PERCENT)
+    rows = await cohorts_of(ctx, community.id)
+    whole = sum(row.count for row in rows)
+    if whole <= 0:
+        return 1.0
+    loss = sum(row.count * MAIMS[row.kind].loss(ctx.rules.maimed) for row in rows) / whole
+    return max(0.0, 1 - maimed_share(ctx.rules, community, rows) * loss / PERCENT)
+
+
+async def shooting_factor(ctx: TickContext, community: EntityRow) -> int:
+    rows = [row for row in await cohorts_of(ctx, community.id) if row.kind is MaimedKind.LOST_FINGERS]
+    return round(maimed_share(ctx.rules, community, rows) * ctx.rules.maimed.lost_fingers_missile_cut)
 
 
 async def healer_demand(ctx: TickContext, community: EntityRow) -> float:

@@ -40,12 +40,12 @@ async def move_population_policy(call: SonCall, args: MovePopulationPolicyInput)
         fail(SonResult.POPULATION_REFUSED, why="that holds no numbers to steer")
     await ensure_in_reach(call, holder)
     if held(holder.id):
-        fail(SonResult.POPULATION_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.POPULATION_REFUSED, why="it is held")
     policy = await call.session.scalar(
         select(PopulationPolicyRow).where(PopulationPolicyRow.holder_node_id == holder.id).order_by(PopulationPolicyRow.id).limit(1)
     )
     if policy is not None and "aim" in (policy.locked or []):
-        fail(SonResult.POPULATION_REFUSED, why="a stronger hand holds its aim")
+        fail(SonResult.POPULATION_REFUSED, why="its aim is held")
     if policy is None:
         policy = PopulationPolicyRow(holder_node_id=holder.id, since_epoch=call.tick.epoch, reviewed_epoch=call.tick.epoch, locked=[])
         call.session.add(policy)

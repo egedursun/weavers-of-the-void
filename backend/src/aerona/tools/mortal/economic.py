@@ -53,7 +53,7 @@ async def ruled_realm(call: MortalCall, polity_id: int, refused: MortalResult) -
     if realm is None or realm.entity_type is not EntityType.POLITY:
         fail(refused, why="there is no such realm")
     if held(realm.id):
-        fail(refused, why="a stronger hand holds that realm")
+        fail(refused, why="that realm is held")
     if await ruler_of(call.session, realm.id) != call.me.id:
         fail(refused, why=f"you do not rule {realm.name}")
     return realm
@@ -104,7 +104,7 @@ async def change_money(call: MortalCall, args: ChangeMoneyInput) -> str:
     if call.me.location_id is None:
         fail(MortalResult.CHANGING_REFUSED, why="you stand at no market")
     if held(call.me.location_id):
-        fail(MortalResult.CHANGING_REFUSED, why="a stronger hand holds this market")
+        fail(MortalResult.CHANGING_REFUSED, why="this market is held")
     rates = list(await call.session.scalars(select(ExchangeRateRow).where(ExchangeRateRow.market_entity_id == call.me.location_id)))
     taken = [row for row in rates if "changer_node_id" not in row.locked]
     if not taken:

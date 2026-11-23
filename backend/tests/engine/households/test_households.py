@@ -10,7 +10,7 @@ from aerona.db.tables.mind import CultureEthicRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.society_depth import ClassStandingRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.genetics import HouseholdDecision, HouseholdRole
 from aerona.domain.enums.mind import ActKind, EthicalStance, NeedKind
@@ -147,7 +147,12 @@ async def test_cohorts_become_anonymous_households_and_hunger_reads_what_was_eat
     town = await settlement(realm, "Grainholm")
     realm.session.add(
         CohortRow(
-            community_entity_id=town.id, age_band=AgeBand.ADULT, sex=Sex.FEMALE, social_class=SocialClass.FARMER, condition=CohortCondition.NONE, count=500
+            community_entity_id=town.id,
+            age_band=AgeBand.ADULT,
+            sex_kind=SexKind.BEARER,
+            social_class=SocialClass.FARMER,
+            condition=CohortCondition.NONE,
+            count=500,
         )
     )
     await realm.session.flush()

@@ -38,7 +38,7 @@ async def bless_works(call: SonCall, args: BlessWorksInput) -> str:
         fail(SonResult.WORKS_REFUSED, why="their builder is gone")
     await ensure_in_reach(call, builder)
     if held(works.polity_entity_id) or held(works.place_node_id) or "quality" in (works.locked or []):
-        fail(SonResult.WORKS_REFUSED, why="a stronger hand holds them")
+        fail(SonResult.WORKS_REFUSED, why="they are held")
     works.quality = clamp_int(works.quality + call.rules.public_works.blessing_quality, 0, PERCENT)
     if works.status is WorksStatus.FINISHED and "condition" not in (works.locked or []):
         works.condition = PERCENT

@@ -4,7 +4,6 @@ from aerona.domain.enums.life_traits import (
     ActKindTrait,
     AgeGradeTrait,
     AllocationModeTrait,
-    ArcTemplateTrait,
     AssistiveAidTrait,
     AttackRangeTrait,
     BiologyVariantTrait,
@@ -22,7 +21,6 @@ from aerona.domain.enums.life_traits import (
     CoopPurposeTrait,
     CouncilMotionTrait,
     CultivationMethodTrait,
-    DeathCauseTrait,
     DeathRoleTrait,
     DuelContextTrait,
     EmotionTrait,
@@ -131,18 +129,6 @@ ALLOCATION_MODE_TRAIT = total(
             "State buyers",
             checked_by=(),
             used_by=("catalog.life_traits.ALLOCATION_MODE_TRAITS", "engine.competition.structure.STATE_BUYERS", "engine.orders.pressures.PLANNED"),
-        ),
-    },
-)
-
-ARC_TEMPLATE_TRAIT = total(
-    ArcTemplateTrait,
-    {
-        ArcTemplateTrait.CONFRONTING: Defined(
-            "Confronting", checked_by=(), used_by=("catalog.life_traits.ARC_TEMPLATE_TRAITS", "engine.storyteller.drama.CONFRONTING")
-        ),
-        ArcTemplateTrait.ENDS_IN_DEATH: Defined(
-            "Ends in death", checked_by=(), used_by=("catalog.life_traits.ARC_TEMPLATE_TRAITS", "engine.storyteller.arcs.ENDS_IN_DEATH")
         ),
     },
 )
@@ -303,19 +289,6 @@ CULTIVATION_METHOD_TRAIT = total(
     },
 )
 
-DEATH_CAUSE_TRAIT = total(
-    DeathCauseTrait,
-    {
-        DeathCauseTrait.GLORIOUS_DEATHS: Defined(
-            "Glorious deaths", checked_by=(), used_by=("catalog.life_traits.DEATH_CAUSE_TRAITS", "engine.mortal.death.GLORIOUS_DEATHS")
-        ),
-        DeathCauseTrait.SHAMEFUL_DEATHS: Defined(
-            "Shameful deaths", checked_by=(), used_by=("catalog.life_traits.DEATH_CAUSE_TRAITS", "engine.mortal.death.SHAMEFUL_DEATHS")
-        ),
-        DeathCauseTrait.VIOLENT: Defined("Violent", checked_by=(), used_by=("catalog.life_traits.DEATH_CAUSE_TRAITS", "engine.folkways.mishaps.VIOLENT")),
-    },
-)
-
 DEATH_ROLE_TRAIT = total(
     DeathRoleTrait,
     {
@@ -337,9 +310,11 @@ DUEL_CONTEXT_TRAIT = total(
 EMOTION_TRAIT = total(
     EmotionTrait,
     {
-        EmotionTrait.AFRAID: Defined("Afraid", checked_by=(), used_by=("catalog.life_traits.EMOTION_TRAITS", "engine.feeling_spread.moods.AFRAID")),
-        EmotionTrait.ANGRY: Defined("Angry", checked_by=(), used_by=("catalog.life_traits.EMOTION_TRAITS", "engine.feeling_spread.moods.ANGRY")),
-        EmotionTrait.STIRRED: Defined("Stirred", checked_by=(), used_by=("catalog.life_traits.EMOTION_TRAITS", "engine.feeling_spread.moods.STIRRED")),
+        EmotionTrait.AFRAID: Defined("Afraid", checked_by=(), used_by=("catalog.collective.CROWD_FEELINGS", "catalog.life_traits.EMOTION_TRAITS")),
+        EmotionTrait.ANGRY: Defined("Angry", checked_by=(), used_by=("catalog.collective.CROWD_FEELINGS", "catalog.life_traits.EMOTION_TRAITS")),
+        EmotionTrait.STIRRED: Defined("Stirred", checked_by=(), used_by=("catalog.collective.CROWD_FEELINGS", "catalog.life_traits.EMOTION_TRAITS")),
+        EmotionTrait.GRIEVING: Defined("Grieving", checked_by=(), used_by=("catalog.collective.CROWD_FEELINGS", "catalog.life_traits.EMOTION_TRAITS")),
+        EmotionTrait.HOPEFUL: Defined("Hopeful", checked_by=(), used_by=("catalog.collective.CROWD_FEELINGS", "catalog.life_traits.EMOTION_TRAITS")),
     },
 )
 
@@ -499,6 +474,9 @@ INTOXICANT_TRAIT = total(
     IntoxicantTrait,
     {
         IntoxicantTrait.DRINKS: Defined("Drinks", checked_by=(), used_by=("catalog.life_traits.INTOXICANT_TRAITS", "engine.customs.intoxicants.DRINKS")),
+        IntoxicantTrait.STIMULATES: Defined(
+            "Stimulates", checked_by=(), used_by=("catalog.life_traits.INTOXICANT_TRAITS", "engine.customs.intoxicants.STIMULATING")
+        ),
     },
 )
 
@@ -783,7 +761,9 @@ POWER_STATE_TRAIT = total(
     PowerStateTrait,
     {
         PowerStateTrait.QUIET: Defined("Quiet", checked_by=(), used_by=("catalog.life_traits.POWER_STATE_TRAITS", "engine.powers.phase.QUIET")),
-        PowerStateTrait.USABLE: Defined("Usable", checked_by=(), used_by=("catalog.life_traits.POWER_STATE_TRAITS", "engine.powers.use.USABLE")),
+        PowerStateTrait.USABLE: Defined(
+            "Usable", checked_by=(), used_by=("catalog.life_traits.POWER_STATE_TRAITS", "engine.couplings.deep.USABLE_POWERS", "engine.powers.use.USABLE")
+        ),
     },
 )
 
@@ -841,6 +821,7 @@ RIGHT_KIND_TRAIT = total(
     RightKindTrait,
     {
         RightKindTrait.COPIED: Defined("Copied", checked_by=(), used_by=("catalog.life_traits.RIGHT_KIND_TRAITS", "engine.crafts.rights.COPIED")),
+        RightKindTrait.PORTION: Defined("Portion", checked_by=(), used_by=("catalog.life_traits.RIGHT_KIND_TRAITS", "engine.crafts.rights.PORTIONS")),
     },
 )
 
@@ -1000,6 +981,9 @@ TECHNIQUE_TRAIT = total(
         TechniqueTrait.ENGINEERING: Defined(
             "Engineering", checked_by=(), used_by=("catalog.life_traits.TECHNIQUE_TRAITS", "engine.phases.factions.ENGINEERING")
         ),
+        TechniqueTrait.TOOL_METALS: Defined(
+            "Tool metals", checked_by=(), used_by=("catalog.life_traits.TECHNIQUE_TRAITS", "engine.environment.columns.TOOL_TECHNIQUES")
+        ),
         TechniqueTrait.FINANCE: Defined("Finance", checked_by=(), used_by=("catalog.life_traits.TECHNIQUE_TRAITS", "engine.phases.factions.FINANCE")),
         TechniqueTrait.PLACE_VALUE_RECKONING: Defined(
             "Place value reckoning", checked_by=(), used_by=("catalog.life_traits.TECHNIQUE_TRAITS", "engine.crafts.numbers.PLACE_VALUE_RECKONING")
@@ -1094,7 +1078,9 @@ WAR_ENDING_TRAIT = total(
     WarEndingTrait,
     {
         WarEndingTrait.SIGNED_ENDINGS: Defined(
-            "Signed endings", checked_by=(), used_by=("catalog.life_traits.WAR_ENDING_TRAITS", "engine.services.war_resolution.SIGNED_ENDINGS")
+            "Signed endings",
+            checked_by=(),
+            used_by=("catalog.life_traits.WAR_ENDING_TRAITS", "engine.environment.notable.SIGNED_ENDINGS", "engine.services.war_resolution.SIGNED_ENDINGS"),
         ),
     },
 )
@@ -1178,7 +1164,9 @@ WORLD_TYPE_TRAIT = total(
             "Two season worlds", checked_by=(), used_by=("catalog.life_traits.WORLD_TYPE_TRAITS", "engine.environment.seasons.TWO_SEASON_WORLDS")
         ),
         WorldTypeTrait.VOLCANIC_WORLDS: Defined(
-            "Volcanic worlds", checked_by=(), used_by=("catalog.life_traits.WORLD_TYPE_TRAITS", "engine.environment.geomorph.VOLCANIC_WORLDS")
+            "Volcanic worlds",
+            checked_by=(),
+            used_by=("catalog.life_traits.WORLD_TYPE_TRAITS", "engine.environment.geology.MOLTEN_WORLDS", "engine.environment.geomorph.VOLCANIC_WORLDS"),
         ),
     },
 )

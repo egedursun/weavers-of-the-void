@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PER_MILLE, PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.agrarian import BrandRow, KeystoneResourceRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -297,7 +298,7 @@ async def keep_brands(ctx: TickContext, tally: StaplesTally) -> None:
                 workshop_id=workshop.id,
                 community_entity_id=community.id,
                 owner_node_id=workshop.owner_node_id or community.id,
-                name=f"{community.name} {workshop.kind.value.replace('_', ' ')}",
+                name=f"{community.name} {spoken(workshop.kind)}",
                 quality=run.quality,
                 since_epoch=ctx.epoch,
                 locked=[],

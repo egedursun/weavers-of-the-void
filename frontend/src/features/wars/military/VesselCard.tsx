@@ -18,7 +18,11 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import type { components } from '@/api/generated/schema'
+import {
+  equipmentFamilyValues,
+  vehicleSectionValues,
+  type components,
+} from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -31,14 +35,10 @@ import {
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { DAMAGE } from '@/features/entity/body/labels'
 import { useFrames } from '@/features/madeKinds/api'
-import {
-  MOUNT,
-  familyLabel,
-  frameTable,
-  sectionLabel,
-} from '@/features/madeKinds/labels'
+import { MOUNT, frameTable } from '@/features/madeKinds/labels'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { ReportSteps } from '@/features/records/ReportSteps'
@@ -237,11 +237,11 @@ function Weapons({ weapons }: { weapons: Weapon[] }) {
           >
             <Tag item={nameOf(MOUNT, weapon.mount)} />
             <Text as='span' variant='caption'>
-              {`${weapon.count} × ${weapon.model_name} (${familyLabel(weapon.family)}, ${DAMAGE[weapon.damage_type]})`}
+              {`${weapon.count} × ${weapon.model_name} (${wordOf(equipmentFamilyValues, weapon.family)}, ${DAMAGE[weapon.damage_type]})`}
             </Text>
             {weapon.section && (
               <Muted variant='caption'>
-                on the {sectionLabel(weapon.section)}
+                on the {wordOf(vehicleSectionValues, weapon.section)}
               </Muted>
             )}
           </div>

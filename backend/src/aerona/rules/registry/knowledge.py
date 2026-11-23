@@ -6,6 +6,24 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class KnowledgeRules:
+    song_value: int = rule(100, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a song against ordinary knowledge (%)")
+    art_form_value: int = rule(100, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing an art form against ordinary knowledge (%)")
+    rite_value: int = rule(100, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a rite against ordinary knowledge (%)")
+    technique_value: int = rule(150, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a technique against ordinary knowledge (%)")
+    true_name_value: int = rule(400, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a true name against ordinary knowledge (%)")
+    prophecy_value: int = rule(200, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a prophecy against ordinary knowledge (%)")
+    treasure_value: int = rule(300, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing where a treasure lies against ordinary knowledge (%)")
+    language_value: int = rule(100, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a language against ordinary knowledge (%)")
+    account_value: int = rule(100, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing an account of what happened against ordinary knowledge (%)")
+    site_value: int = rule(200, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a hidden site against ordinary knowledge (%)")
+    map_value: int = rule(100, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing knowledge of a land against ordinary knowledge (%)")
+    weakness_value: int = rule(350, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a weakness against ordinary knowledge (%)")
+    pattern_value: int = rule(150, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a pattern of a made thing against ordinary knowledge (%)")
+    source_value: int = rule(300, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing where a source of power lies against ordinary knowledge (%)")
+    secret_value: int = rule(
+        250, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of knowing a secret of a person, house or realm against ordinary knowledge (%)"
+    )
+    secret_hook_strength: int = rule(30, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Strength of the hold that knowing a secret gives over the one it concerns")
     diffusion_chance: int = rule(18, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Knowledge spreads along trade and rule links (%)")
     diffusion_cap: int = rule(
         4, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum knowledge spreading along links per epoch (base; grows with the community count)"

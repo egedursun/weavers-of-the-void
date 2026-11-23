@@ -1,8 +1,9 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.mind import LabelView
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.mind import ActKind, SkillKind
-from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LoreKind, LorePrice, ReputationAxis
+from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LorePrice, ReputationAxis
 
 
 class LocalReputationView(ApiModel):
@@ -60,7 +61,7 @@ class LoreTradeView(ApiModel):
     id: int
     seller: NodeRef | None
     buyer: NodeRef | None
-    kind: LoreKind
+    kind: KnowledgeKind
     kind_label: str
     key: str
     subject: NodeRef | None

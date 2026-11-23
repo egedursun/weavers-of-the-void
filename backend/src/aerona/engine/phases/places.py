@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.life.phases import EXPLORER_SKILLS, SEER_SKILLS
 from aerona.catalog.place_terrain import BATTLEFIELD_FROM, DEBRIS_FROM, MEGA_RUIN_FROM, WRECK_FROM, kind_spec
+from aerona.catalog.stats import PERCENT
 from aerona.catalog.structures import MEGASTRUCTURES
 from aerona.catalog.vehicles import FRAMES
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -16,9 +17,10 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.place import DiscoveryMode, PlaceKind, SecretOrigin
+from aerona.domain.enums.place import DiscoveryMode, PlaceKind, SecretKind, SecretOrigin
 from aerona.domain.enums.structure import ConstructionState
 from aerona.engine.context import TickContext
+from aerona.engine.environment.place_traits import bathe, collapse_sinkhole, trap_beasts
 from aerona.engine.environment.places import (
     KIND_LOCK,
     SACREDNESS_LOCK,
@@ -30,7 +32,7 @@ from aerona.engine.environment.places import (
     temples_at,
     write_kind,
 )
-from aerona.engine.environment.secrets import find_chance, hide, miner_chance, release, release_chance, reveal, seeded_draft
+from aerona.engine.environment.secrets import find_chance, hide, miner_chance, release, release_chance, reveal, seeded_draft, subject_for
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import best_skill
 from aerona.engine.phase import Phase
@@ -178,11 +180,18 @@ async def place_profiles(ctx: TickContext) -> None:
         if profile.pilgrims:
             pilgrims += profile.pilgrims
             await send_pilgrims(ctx, atlas, place, region_id, communities)
+        if profile.kind is PlaceKind.SINKHOLE:
+            await collapse_sinkhole(ctx, place)
+        elif profile.kind is PlaceKind.HOT_SPRING:
+            await bathe(ctx, place)
+        elif profile.kind is PlaceKind.TAR_PIT:
+            await trap_beasts(ctx, place, region_id)
         if not profile.secrets_seeded:
             profile.secrets_seeded = True
             draft = seeded_draft(rules, ctx.rng(f"secret.{place.id}"), profile, stat_or(place, "mystery", 0), regions.get(region_id) if region_id else None)
             if draft is not None:
-                hide(ctx, place.id, draft, SecretOrigin.LAND)
+                row = hide(ctx, place.id, draft, SecretOrigin.LAND)
+                row.subject_entity_id = await subject_for(ctx, draft.kind, region_id)
                 seeded += 1
     await ctx.session.flush()
     ctx.count("battlefields", turned)
@@ -209,7 +218,7 @@ async def search(ctx: TickContext, secret: PlaceSecretRow, place: EntityRow, sea
     for mortal in searchers:
         seer = mortal.mortal_role in SEER_ROLES
         skill = await best_skill(ctx.session, mortal.id, SEER_SKILLS if seer else EXPLORER_SKILLS)
-        chance = find_chance(ctx.rules, skill=skill, mystery=mystery, strength=secret.strength, called=mortal.mortal_role in CALLED)
+        chance = find_chance(ctx.rules, skill=skill, mystery=mystery, strength=secret.strength, called=mortal.mortal_role in CALLED, kind=secret.kind)
         if ctx.rng(f"search.{secret.id}.{mortal.id}").chance(chance):
             return mortal, DiscoveryMode.SEER if seer else DiscoveryMode.EXPLORER
     return None
@@ -301,6 +310,14 @@ async def place_secrets(ctx: TickContext) -> None:
         profile = profiles.get(place.id)
         deep = profile is not None and kind_spec(profile.kind).deep
         mined = region.mined if region is not None and deep else 0
+        if (
+            secret.revealed_epoch is None
+            and secret.kind is SecretKind.SLEEPING_BEAST
+            and ctx.rng(f"wake.{secret.id}.{ctx.epoch}").chance(ctx.rules.secrets.sleeping_beast_wake_pct + mined * ctx.rules.places.miner_pct / PERCENT)
+        ):
+            await reveal(ctx, secret, DiscoveryMode.MINER if mined else DiscoveryMode.MYSTERY, None, region)
+            revealed += 1
+            continue
         if secret.revealed_epoch is None:
             found = await search(ctx, secret, place, searchers.get(region_id, []) if region_id is not None else [])
             if found is None and ctx.rng(f"dig.{secret.id}").chance(miner_chance(ctx.rules, mined, secret.strength)):

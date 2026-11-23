@@ -28,3 +28,7 @@ class RiverShiftCause(StrEnum):
     QUAKE = "quake"
     DIVINE = "divine"
     PLAYER = "player"
+    SILTING = "silting"
+    WORKS = "works"
+    ERUPTION = "eruption"
+    LANDSLIDE = "landslide"

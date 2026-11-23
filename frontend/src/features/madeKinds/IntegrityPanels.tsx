@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Gauge, Hammer, Orbit, Zap } from 'lucide-react'
-import { structureSectionValues } from '@/api/generated/schema'
+import {
+  structureSectionValues,
+  vehicleSectionValues,
+} from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
@@ -8,6 +11,7 @@ import { Held, Listed } from '@/features/collective/parts'
 import { ForgeCard } from '@/features/cosmography/parts'
 import { SPAN } from '@/features/cycles/model'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { useWorldMaterials } from '@/features/entity/economy/api'
 import { MATERIAL_LABEL } from '@/features/entity/economy/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
@@ -23,7 +27,6 @@ import {
   SECTION_STATE,
   STRUCTURE_SECTIONS,
   namedTable,
-  sectionLabel,
   wordTable,
 } from './labels'
 import { useKindRow, useKindStep } from './model'
@@ -57,7 +60,7 @@ function VesselPartCard({
     <Held
       icon={state.icon}
       tone={state.tone ?? 'muted'}
-      title={sectionLabel(row.section)}
+      title={wordOf(vehicleSectionValues, row.section)}
       caption={`${CRITICALITY[row.criticality].label} · ${state.label} · condition ${row.condition}${row.laid ? '' : ' · never struck'}`}
       removeLabel='Make it whole'
       editTitle='Set the section'
@@ -171,7 +174,7 @@ function StructurePartCard({
         row.criticality === 'critical' ? CRITICALITY.critical.icon : role.icon
       }
       tone={state.tone ?? 'muted'}
-      title={sectionLabel(row.section)}
+      title={wordOf(structureSectionValues, row.section)}
       caption={`${role.label} · ${CRITICALITY[row.criticality].label} · ${state.label} · condition ${row.condition}`}
       removeLabel='Take it away'
       editTitle='Set the section'

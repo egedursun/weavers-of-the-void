@@ -22,6 +22,7 @@ class SenseSpec:
     purposes: Mapping[str, float] = field(default_factory=dict)
     people_base: bool = False
     people_trait: NaturalTrait | None = None
+    told: bool = False
 
 
 SENSES: Mapping[SenseKind, SenseSpec] = total(
@@ -36,9 +37,14 @@ SENSES: Mapping[SenseKind, SenseSpec] = total(
         S.MAGNETIC: SenseSpec(C.MIGRATORY, {NAVIGATION: 0.7}),
         S.SPIRIT_SIGHT: SenseSpec(C.SPIRIT_SIGHT, {AGENTS: 0.2, SPIRITS: 1.0}),
         S.HEAT: SenseSpec(C.COLD_HUNTER, {NIGHT: 0.2, TRACKING: 0.15}),
+        S.ELECTRIC: SenseSpec(C.WATER_HUNTER, {AGENTS: 0.3, AMBUSH: 0.4}, told=True),
+        S.ULTRAVIOLET: SenseSpec(C.FLOWER_SEEKER, {TRACKING: 0.3, NAVIGATION: 0.1}, told=True),
     },
 )
 
-PURPOSES: Mapping[str, Mapping[SenseKind, float]] = {
+RAW_PURPOSES: Mapping[str, Mapping[SenseKind, float]] = {
     purpose: {sense: spec.purposes[purpose] for sense, spec in SENSES.items() if purpose in spec.purposes} for purpose in SENSE_PURPOSES
+}
+PURPOSES: Mapping[str, Mapping[SenseKind, float]] = {
+    purpose: {sense: weight / sum(weights.values()) for sense, weight in weights.items()} for purpose, weights in RAW_PURPOSES.items()
 }

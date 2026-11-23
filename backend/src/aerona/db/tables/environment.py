@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
+from aerona.constants.calendar import SHARE_TOTAL
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
@@ -12,6 +13,7 @@ from aerona.domain.enums.environment import (
     NotableYearKind,
     PlaceCover,
     RiverClass,
+    SeasonOnset,
     SoilKind,
     TemperatureBand,
     TerrainKind,
@@ -133,6 +135,7 @@ class WorldSeasonRow(Base):
         between("growth", PERCENT_MIN, PERCENT_MAX),
         between("travel", PERCENT_MIN, PERCENT_MAX),
         between("campaign", PERCENT_MIN, PERCENT_MAX),
+        between("share_pct", 1, SHARE_TOTAL),
         UniqueConstraint("world_id", "position", name="one_season_per_position"),
     )
 
@@ -145,7 +148,24 @@ class WorldSeasonRow(Base):
     growth: Mapped[int]
     travel: Mapped[int]
     campaign: Mapped[int]
+    share_pct: Mapped[int] = mapped_column(default=SHARE_TOTAL)
     edited: Mapped[bool] = mapped_column(default=False)
+
+
+class SeasonOnsetRow(Base):
+    __tablename__ = "season_onsets"
+    __table_args__ = (
+        at_least("season_position", 0),
+        Index("ix_season_onsets_world_year", "world_id", "year"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
+    year: Mapped[int]
+    season_position: Mapped[int]
+    onset: Mapped[SeasonOnset] = mapped_column(enum_type(SeasonOnset, "onset"))
+    by_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    locked: Mapped[bool] = mapped_column(default=False)
 
 
 class NotableYearRow(CreatedAtMixin, Base):

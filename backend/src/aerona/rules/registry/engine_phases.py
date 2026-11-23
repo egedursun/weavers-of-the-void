@@ -802,6 +802,13 @@ class EnginePhasesRules:
         RuleGroup.ENGINE_PHASES,
         "Run the engine step: every disease is typed by what it is; communities try the cures their healers hold, which work only by class, and overused cures breed resistance",
     )
+    disease_paths: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: host kinds, migrants, crowds at gatherings and rivers carry a sickness into new lands",
+    )
     water_and_ice: int = rule(
         1,
         0,

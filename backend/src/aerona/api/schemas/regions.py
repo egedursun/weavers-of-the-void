@@ -1,5 +1,6 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.environment import RiverClass
+from aerona.domain.enums.geology import BuildingGrade, RockKind, UndergroundStratum
 from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource, HazardSeason, MemoryOrigin, RegionMemoryKind, TerrainHazard
 
 
@@ -15,6 +16,8 @@ class RegionDangerView(ApiModel):
     son_id: int | None
     since_epoch: int
     harms: dict[DangerHarm, int]
+    targets: list[DangerHarm]
+    reachable: list[DangerHarm]
 
 
 class RegionMemoryView(ApiModel):
@@ -94,3 +97,40 @@ class RegionTerrainView(ApiModel):
     exposure: list[HazardExposure]
     river_class: RiverClass
     river_neighbours: list[RiverNeighbour]
+
+
+class RockLayerView(ApiModel):
+    id: int
+    depth_order: int
+    rock: RockKind
+    thickness: int
+    top: int
+    veins: dict[str, int]
+    reached_epoch: int | None
+    hardness: int
+    porosity: int
+    solubility: int
+    workability: int
+    grade: BuildingGrade
+    locked: list[str]
+
+
+class DepthStratumView(ApiModel):
+    id: int
+    stratum: UndergroundStratum
+    depth: int
+    volume: int
+    pressure: int
+    reached_epoch: int | None
+    breached_epoch: int | None
+    tapped_epoch: int | None
+    locked: list[str]
+
+
+class BeneathView(ApiModel):
+    region_id: int
+    mined_depth: int
+    quarry_grade: BuildingGrade
+    carvable: bool
+    layers: list[RockLayerView]
+    strata: list[DepthStratumView]

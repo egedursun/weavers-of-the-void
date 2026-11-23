@@ -116,6 +116,7 @@ async def keep_the_dead(ctx: TickContext) -> int:
             "mind.archived_at_death",
             roles={IncidentRole.SUBJECT: entity.id, IncidentRole.PLACE: archive.structure_entity_id},
             facts={"fidelity": row.fidelity_pct},
+            place=archive.structure_entity_id,
         )
         kept += 1
     return kept

@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -22,10 +23,6 @@ class DepthLines:
     labour: list[str] = field(default_factory=list)
 
 
-def words(value: str) -> str:
-    return value.replace("_", " ")
-
-
 async def need_lines(session: AsyncSession, home: EntityRow, social: SocialClass | None) -> list[str]:
     if social is None:
         return []
@@ -35,7 +32,7 @@ async def need_lines(session: AsyncSession, home: EntityRow, social: SocialClass
             continue
         got = min(row.wanted, held_got(row.wanted, row.got, row.held_pct))
         if got < row.wanted:
-            lines.append(f"{words(commodity.value)} {round(got * PERCENT / row.wanted)}% met")
+            lines.append(f"{spoken(commodity)} {round(got * PERCENT / row.wanted)}% met")
     return lines
 
 
@@ -63,9 +60,7 @@ async def loyalty_line(session: AsyncSession, home: EntityRow) -> str:
 async def labour_lines(session: AsyncSession, home: EntityRow) -> list[str]:
     rows = list(await session.scalars(select(LabourRow).where(LabourRow.community_entity_id == home.id, LabourRow.workers > 0)))
     lines = [
-        f"{row.workers} at {words(row.job.value)}{' (held)' if row.held else ''}"
-        for row in sorted(rows, key=lambda item: -item.workers)
-        if row.job is not Job.IDLE
+        f"{row.workers} at {spoken(row.job)}{' (held)' if row.held else ''}" for row in sorted(rows, key=lambda item: -item.workers) if row.job is not Job.IDLE
     ]
     corvee = await session.get(CorveeRow, home.id)
     if corvee is not None:

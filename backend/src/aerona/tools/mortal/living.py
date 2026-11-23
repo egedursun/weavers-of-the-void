@@ -137,7 +137,7 @@ async def attempt[T](declined: MortalResult, step: Awaitable[T]) -> T:
 
 def unheld(call: MortalCall, declined: MortalResult) -> None:
     if held(call.me.id):
-        fail(declined, why="a stronger hand holds you")
+        fail(declined, why="your own course is held")
 
 
 async def my_line(call: MortalCall, line_id: int, declined: MortalResult) -> LivingLineRow:

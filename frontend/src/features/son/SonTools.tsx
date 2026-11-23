@@ -1,6 +1,7 @@
 import { RotateCcw, Wrench } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { turnCounterValues } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { RARITY_LABEL } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
@@ -13,10 +14,10 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Section, ToolList, toolTitle, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { humanize } from '@/features/pantheon/labels'
 import { type SonToolsView, sonKeys, useSonTools } from './api'
 
 const BLOCK_REASON: Record<SonToolsView['blocked'][number]['reason'], string> =
@@ -73,7 +74,7 @@ export function SonTools({ sonId, name }: { sonId: number; name: string }) {
                   <Paged items={data.counters}>
                     {(counter) => (
                       <Badge key={counter.counter} variant='secondary'>
-                        {`${humanize(counter.counter)}: ${counter.value}`}
+                        {`${wordOf(turnCounterValues, counter.counter)}: ${counter.value}`}
                       </Badge>
                     )}
                   </Paged>

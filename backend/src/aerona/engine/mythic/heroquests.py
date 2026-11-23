@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from aerona.catalog.life.mythic import QUEST_SKILLS
 from aerona.catalog.mythic import ARCHETYPE_REALMS, ARCHETYPE_SKILLS, REALM_PHRASES, trial_at
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.culture import LegendProfileRow, RiteProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -231,7 +231,7 @@ async def bestow(ctx: TickContext, row: HeroquestRow, quester: EntityRow) -> Non
                 await cure(ctx, quester, affliction, None)
     elif boon is HeroquestBoon.TITLE:
         legend = await ctx.session.get(LegendProfileRow, row.legend_entity_id) if row.legend_entity_id is not None else None
-        await entitle(ctx, quester, legend.archetype.value.replace("_", " ") if legend is not None else row.realm.value.replace("_", " "))
+        await entitle(ctx, quester, spoken(legend.archetype) if legend is not None else spoken(row.realm))
     elif boon is HeroquestBoon.TRUE_NAME and row.god_node_id is not None:
         name = await ctx.session.get(TrueNameRow, row.god_node_id)
         if name is not None and quester.id not in name.known_by and "known_by" not in name.locked:

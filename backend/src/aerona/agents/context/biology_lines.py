@@ -2,11 +2,12 @@ from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityStatus
-from aerona.engine.body.variants import BiologyView, folk_biology, view_from
+from aerona.engine.body.variants import BiologyView, folk_biology, holder_of, view_from
 
 SHARES = (
     ("food_need_pct", "food needed"),
@@ -22,14 +23,20 @@ SHARES = (
 def biology_lines(view: BiologyView) -> list[str]:
     found = []
     if view.variants:
-        found.append(f"in body {', '.join(variant.value.replace('_', ' ') for variant in view.variants)}")
+        found.append(f"in body {', '.join(spoken(variant) for variant in view.variants)}")
     found.extend(f"{label} at {getattr(view, key)}% of an ordinary body" for key, label in SHARES if getattr(view, key) != PERCENT)
     found.extend(text for flag, text in ((view.breathes, "needs no air"), (view.drinks, "needs no water"), (view.ages, "does not age")) if not flag)
     return found
 
 
 async def mortal_biology_lines(scope: Scope, me: EntityRow) -> list[str]:
-    return biology_lines(await folk_biology(scope.session, me))
+    found = biology_lines(await folk_biology(scope.session, me))
+    holder = await holder_of(scope.session, me)
+    row = await scope.session.get(BiologyRow, holder.id) if holder is not None else None
+    partner = await scope.session.get(EntityRow, row.partner_species_id) if row is not None and row.partner_species_id is not None else None
+    if partner is not None:
+        found.append(f"your kind lives joined to {partner.name}, and their fate binds yours")
+    return found
 
 
 async def son_biology_lines(scope: Scope, son: SonRow) -> list[str]:

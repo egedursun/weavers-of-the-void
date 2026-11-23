@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
-from aerona.domain.enums.demography import AgeBand, Sex
+from aerona.domain.enums.demography import AgeBand, SexKind
 from aerona.domain.enums.environment import RiverClass
 from aerona.domain.enums.happening import EventPhase, RiverShiftCause
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
@@ -51,7 +51,7 @@ class EventCasualtyRow(Base):
     event_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     community_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     age_band: Mapped[AgeBand] = mapped_column(enum_type(AgeBand, "age_band"), primary_key=True)
-    sex: Mapped[Sex] = mapped_column(enum_type(Sex, "sex"), primary_key=True)
+    sex_kind: Mapped[SexKind] = mapped_column(enum_type(SexKind, "sex_kind"), primary_key=True)
     social_class: Mapped[SocialClass] = mapped_column(enum_type(SocialClass, "social_class"), primary_key=True)
     phase: Mapped[EventPhase] = mapped_column(enum_type(EventPhase, "phase"), primary_key=True)
     count: Mapped[int] = mapped_column(default=0)

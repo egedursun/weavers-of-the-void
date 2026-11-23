@@ -1,11 +1,14 @@
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionParticipationRow, TraditionProfileRow
+from aerona.db.tables.cycles import GiftRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import TraditionFunction
+from aerona.domain.enums.cycles import GiftOccasion
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -82,7 +85,7 @@ async def violated(ctx: TickContext, actor_id: int, act: ActKind) -> int:
     actor = await ctx.session.get(EntityRow, actor_id)
     for tradition_id in await kept(ctx.session, home, TraditionFunction.TABOO, act):
         keepers = await keepers_of(ctx.session, tradition_id)
-        label = act.value.replace("_", " ")
+        label = spoken(act)
         found = await shame(ctx, actor_id, keepers, ctx.rules.traditions.taboo_infamy, f"broke the taboo on {label}")
         shamed += found
         if found and actor is not None:
@@ -116,8 +119,41 @@ async def guest_of(session: AsyncSession, victim: EntityRow) -> bool:
     return travelling is not None or bool(homes - {victim.location_id})
 
 
+async def guest_gift_between(session: AsyncSession, first: int, second: int) -> bool:
+    found = await session.scalar(
+        select(GiftRow.id)
+        .where(
+            GiftRow.occasion == GiftOccasion.HOSPITALITY,
+            or_(
+                and_(GiftRow.giver_node_id == first, GiftRow.receiver_node_id == second),
+                and_(GiftRow.giver_node_id == second, GiftRow.receiver_node_id == first),
+            ),
+        )
+        .limit(1)
+    )
+    return found is not None
+
+
+async def guest_right_broken(ctx: TickContext, killer_id: int, victim: EntityRow) -> int:
+    keepers = sorted({place for place in (victim.location_id, *await homes_of_guest(ctx.session, victim)) if place is not None})
+    shamed = await shame(ctx, killer_id, keepers, ctx.rules.gifts.guest_right_infamy, f"killed {victim.name} after they shared guest gifts")
+    killer = await ctx.session.get(EntityRow, killer_id)
+    await record(
+        ctx,
+        "lore.guest_killing",
+        roles={IncidentRole.VICTIM: victim.id, IncidentRole.SUBJECT: [*[killer_id, victim.id, *keepers]]},
+        facts={"detail": str(killer.name if killer else "A host")},
+    )
+    ctx.count("guests_killed")
+    return shamed
+
+
 async def guest_killed(ctx: TickContext, killer_id: int | None, victim: EntityRow) -> int:
-    if killer_id is None or killer_id == victim.id or not await guest_of(ctx.session, victim):
+    if killer_id is None or killer_id == victim.id:
+        return 0
+    if await guest_gift_between(ctx.session, killer_id, victim.id):
+        return await guest_right_broken(ctx, killer_id, victim)
+    if not await guest_of(ctx.session, victim):
         return 0
     host = victim.location_id
     laws = await kept(ctx.session, host, TraditionFunction.HOSPITALITY)

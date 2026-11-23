@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.thin_lines import mortal_thin_lines, son_thin_lines
 from aerona.core.grammar import spoken
@@ -30,7 +30,7 @@ async def body_lines(scope: Scope, me: EntityRow) -> list[str]:
     found: list[str] = []
     score = await scope.session.get(NutritionScoreRow, me.id)
     if score is not None:
-        lack = f", short of {words(score.deficiency.value)}" if score.deficiency is not None else ""
+        lack = f", short of {spoken(score.deficiency)}" if score.deficiency is not None else ""
         found.append(f"your nutrition: {score.score} of 100{lack}")
     purity = await scope.session.get(PurityRow, me.id)
     if purity is not None:
@@ -38,7 +38,7 @@ async def body_lines(scope: Scope, me: EntityRow) -> list[str]:
         if rank is not None:
             found.append(f"your rank: {rank.name}")
         if purity.state is not PurityState.PURE:
-            source = f" by {words(purity.source.value)}" if purity.source is not None else ""
+            source = f" by {spoken(purity.source)}" if purity.source is not None else ""
             found.append(f"your purity: {spoken(purity.state)}{source}; gatherings and unions are closed to you until you purify")
     return found
 
@@ -64,8 +64,8 @@ async def luck_lines(scope: Scope, me: EntityRow) -> list[str]:
         for mishap in await scope.session.scalars(
             select(MishapRow).where(MishapRow.settlement_entity_id == town.id).order_by(MishapRow.id.desc()).limit(LIST_LINES)
         ):
-            blamed = f", blamed on {words(mishap.attribution.value)}" if mishap.attribution is not None else ""
-            found.append(f"{town.name} suffered {words(mishap.kind.value)} in epoch {mishap.epoch}{blamed}")
+            blamed = f", blamed on {spoken(mishap.attribution)}" if mishap.attribution is not None else ""
+            found.append(f"{town.name} suffered {spoken(mishap.kind)} in epoch {mishap.epoch}{blamed}")
     accused = await scope.session.scalar(
         select(AccusationRow).where(AccusationRow.accused_node_id == me.id, AccusationRow.outcome == AccusationOutcome.PENDING).limit(1)
     )
@@ -83,7 +83,7 @@ async def son_folkways_lines(scope: Scope, son: SonRow) -> list[str]:
     for row in await scope.session.scalars(select(BiasWeightRow).where(BiasWeightRow.holder_node_id == son.id).order_by(BiasWeightRow.bias)):
         if abs(row.weight - MIDDLE) >= STRONG:
             lean = "strong" if row.weight > MIDDLE else "faint"
-            found.append(f"your {words(row.bias.value)} runs {lean} ({row.weight})")
+            found.append(f"your {spoken(row.bias)} runs {lean} ({row.weight})")
     found.extend(await son_thin_lines(scope, son))
     if son.current_world_id is None:
         return found
@@ -98,6 +98,6 @@ async def son_folkways_lines(scope: Scope, son: SonRow) -> list[str]:
         .order_by(MishapRow.id.desc())
         .limit(LIST_LINES)
     ):
-        blamed = f"; its folk blame {words(mishap.attribution.value)}" if mishap.attribution is not None else ""
-        found.append(f"misfortune {mishap.id}: {await named(scope, mishap.settlement_entity_id)} suffered {words(mishap.kind.value)}{blamed}")
+        blamed = f"; its folk blame {spoken(mishap.attribution)}" if mishap.attribution is not None else ""
+        found.append(f"misfortune {mishap.id}: {await named(scope, mishap.settlement_entity_id)} suffered {spoken(mishap.kind)}{blamed}")
     return found

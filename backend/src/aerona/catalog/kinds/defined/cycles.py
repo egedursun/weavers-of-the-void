@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.cycles import ChallengeKind, ChallengeResponse, DescentGroup, GiftOccasion, KinTermSystem, LegacyKind, ManumissionPath
+from aerona.domain.enums.cycles import ChallengeKind, ChallengeResponse, DescentGroup, KinTermSystem, LegacyKind, ManumissionPath
 
 CHALLENGE_KIND = total(
     ChallengeKind,
@@ -58,28 +58,6 @@ DESCENT_GROUP = total(
         DescentGroup.HOUSE: Defined(
             "Houses", checked_by=("engine.cycles.lineage.line_of",), used_by=("engine.cycles.lineage.line_of", "engine.cycles.seeding.group_for")
         ),
-    },
-)
-
-GIFT_OCCASION = total(
-    GiftOccasion,
-    {
-        GiftOccasion.COURTESY: Defined(
-            "Courtesy",
-            checked_by=(),
-            used_by=("db.tables.cycles.GiftRow", "engine.cycles.gifts.divine_gift", "services.player.cycles.GiftDraft", "tools.mortal.cycles.bestow_gift"),
-        ),
-        GiftOccasion.FEAST: Defined(
-            "A rank-claiming feast",
-            checked_by=(),
-            used_by=("engine.cycles.gifts.COMPETITIVE", "engine.cycles.gifts.potlatch", "engine.cycles.gifts.return_gift"),
-        ),
-        GiftOccasion.CIRCUIT: Defined("A ceremonial circuit", checked_by=(), used_by=("engine.cycles.gifts.pass_circuit",)),
-        GiftOccasion.OFFERING: Defined("An offering", checked_by=("tools.son.cycles.answer_offerings",), used_by=("tools.mortal.cycles.make_offering",)),
-        GiftOccasion.MARRIAGE: Defined("A marriage gift", checked_by=(), used_by=("engine.cycles.gifts.marriage_payments", "engine.cycles.gifts.pay_union")),
-        GiftOccasion.RETURN: Defined("A return gift", checked_by=(), used_by=("engine.cycles.gifts.return_gift",)),
-        GiftOccasion.ALLIANCE: Defined("Between allies", checked_by=(), used_by=("engine.cycles.gifts.courtesy",)),
-        GiftOccasion.RELIEF: Defined("Aid in a stricken hour", checked_by=(), used_by=("engine.agrarian.resilience.aid_from",)),
     },
 )
 

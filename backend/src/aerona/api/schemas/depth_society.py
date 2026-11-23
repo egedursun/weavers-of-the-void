@@ -1,5 +1,6 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.catalog.peoples import MountFit
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.death_work import RemainsTreatment
 from aerona.domain.enums.demography import (
@@ -11,13 +12,14 @@ from aerona.domain.enums.demography import (
     MartialStyle,
     MotifSource,
     NaturalTrait,
-    Sex,
+    SexKind,
 )
-from aerona.domain.enums.disease import ClimateAffinity, CureSource, DiseaseTarget, DiseaseVector, OutbreakStatus, SpreadPath
+from aerona.domain.enums.disease import ClimateMoisture, ClimateWarmth, CureSource, DiseaseTarget, OutbreakStatus, SpreadPath
 from aerona.domain.enums.ecology import Biochemistry, Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.mind import PressureKind, ValueAxis
+from aerona.domain.enums.mortal import DeathCause, DeathReading
 from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import SocialClass
@@ -25,7 +27,7 @@ from aerona.domain.enums.society import SocialClass
 
 class PopulationCohortView(ApiModel):
     age_band: AgeBand
-    sex: Sex
+    sex_kind: SexKind
     social_class: SocialClass
     condition: CohortCondition
     count: int
@@ -97,6 +99,13 @@ class MartialRecordView(ApiModel):
     losses: int
 
 
+class DeathReadingView(ApiModel):
+    cause: DeathCause
+    reading: DeathReading
+    authored: bool
+    held: bool
+
+
 class CultureView(ApiModel):
     cohesion: int
     literacy: int
@@ -116,6 +125,7 @@ class CultureView(ApiModel):
     funeral_rite: FuneralCustom
     remains_treatment: RemainsTreatment
     funeral_tradition: LinkedRecord | None
+    death_readings: list[DeathReadingView]
     martial_record: list[MartialRecordView]
     martial_net: int
     locked: list[str]
@@ -141,6 +151,7 @@ class ClassMood(ApiModel):
 class DemographyView(ApiModel):
     entity_id: int
     people_id: int | None
+    sex_kinds: list[SexKind]
     cohorts: list[PopulationCohortView]
     labour: list[LabourView]
     flows: list[LabourFlowView]
@@ -160,7 +171,7 @@ class DemographyView(ApiModel):
 class AfflictionView(ApiModel):
     disease_id: int
     disease: str
-    vector: DiseaseVector
+    primary_route: Transmission
     target_functions: list[DiseaseTarget]
     severity: int
     status: OutbreakStatus
@@ -229,16 +240,25 @@ class CureView(ApiModel):
     since_epoch: int
 
 
+class DiseaseRouteView(ApiModel):
+    route: Transmission
+    share: int
+    held: bool
+
+
 class DiseaseView(ApiModel):
     entity_id: int
     name: str
-    vector: DiseaseVector
+    primary_route: Transmission
+    primary_share: int
+    routes: list[DiseaseRouteView]
     virulence: int
     lethality: int
     chronic_rate: int
     incubation: int
     target_functions: list[DiseaseTarget]
-    climate_affinity: ClimateAffinity
+    affinity_warmth: ClimateWarmth
+    affinity_moisture: ClimateMoisture
     host_species_id: int | None
     immunity_epochs: int
     mutation_rate: int

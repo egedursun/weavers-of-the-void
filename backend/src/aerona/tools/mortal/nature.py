@@ -30,7 +30,7 @@ async def tend_culture(call: MortalCall, args: TendCultureInput) -> str:
     if town is None or town.entity_type is not EntityType.SETTLEMENT:
         fail(MortalResult.CULTURE_REFUSED, why="you must live in a town")
     if held(town.id):
-        fail(MortalResult.CULTURE_REFUSED, why="a stronger hand holds your town")
+        fail(MortalResult.CULTURE_REFUSED, why="your town is held")
     table = call.tick.rules.fermentation
     row = next((item for item in await live_cultures(call.session, [town.id]) if item.kind is args.kind), None)
     if row is None:

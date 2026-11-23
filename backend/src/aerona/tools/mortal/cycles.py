@@ -13,12 +13,12 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.cycles import GiftOccasion, LongPlanKind, ManumissionPath
+from aerona.domain.enums.cycles import GiftOccasion, GiftState, LongPlanKind, ManumissionPath
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.structure import ConstructionStatus
 from aerona.engine.cycles import control
-from aerona.engine.cycles.gifts import OBLIGING, give, offer, refuse, return_gift
+from aerona.engine.cycles.gifts import OBLIGING, give, offer, refuse, release_gift_debt, return_gift
 from aerona.engine.cycles.standing import node_name
 from aerona.engine.demography.society_control import set_corvee
 from aerona.engine.economy.purse import take_coin
@@ -40,6 +40,11 @@ class GiveGiftInput(ToolInput):
     receiver_id: int
     value: int = Field(ge=1, le=MANY)
     item_id: int | None = None
+    occasion: GiftOccasion = GiftOccasion.COURTESY
+
+
+class ReleaseDebtInput(ToolInput):
+    gift_id: int
 
 
 class GiftInput(ToolInput):
@@ -98,7 +103,7 @@ async def bestow_gift(call: MortalCall, args: GiveGiftInput) -> str:
         fail(MortalResult.GIFT_REFUSED, why="there is nobody of that name to give to")
     if args.item_id is not None and await call.session.get(EntityRow, args.item_id) is None:
         fail(MortalResult.GIFT_REFUSED, why="you hold no such thing")
-    gift = await give(call.tick, call.me.id, receiver.id, args.value, GiftOccasion.COURTESY, item_id=args.item_id)
+    gift = await give(call.tick, call.me.id, receiver.id, args.value, args.occasion, item_id=args.item_id, tell=True)
     if gift is None:
         fail(MortalResult.GIFT_REFUSED, why="you cannot afford it")
     call.target(receiver.id)
@@ -108,8 +113,10 @@ async def bestow_gift(call: MortalCall, args: GiveGiftInput) -> str:
         facts={"value": gift.value},
         kind=ChronicleKind.WORLD,
     )
-    if gift.state not in OBLIGING:
+    if gift.state is GiftState.REFUSED:
         return result(MortalResult.GIFT_SPURNED, name=receiver.name)
+    if gift.state not in OBLIGING:
+        return result(MortalResult.GIFT_FREE, name=receiver.name, value=gift.value, id=gift.id)
     return result(MortalResult.GIFT_GIVEN, name=receiver.name, value=gift.value, id=gift.id, due=gift.due_epoch)
 
 
@@ -197,6 +204,18 @@ async def lay_corvee(call: MortalCall, args: CorveeInput) -> str:
     return result(MortalResult.CORVEE_LAID, share=args.share, name=town.name, work=work.name)
 
 
+async def release_debt(call: MortalCall, args: ReleaseDebtInput) -> str:
+    gift = await call.session.get(GiftRow, args.gift_id)
+    if gift is None or gift.giver_node_id != call.me.id or gift.state not in OBLIGING:
+        fail(MortalResult.GIFT_ANSWER_REFUSED, why="nobody owes you a return for such a gift")
+    if not await release_gift_debt(call.tick, gift):
+        fail(MortalResult.GIFT_ANSWER_REFUSED, why="a god holds that gift")
+    debtor = await node_name(call.session, gift.receiver_node_id)
+    call.target(gift.receiver_node_id)
+    await call.record("tools.mortal.release_debt", roles={IncidentRole.ACTOR: call.me.id}, facts={"debtor_detail": debtor}, kind=ChronicleKind.WORLD)
+    return result(MortalResult.DEBT_RELEASED, name=debtor, value=gift.value)
+
+
 async def begin_realm_plan(call: MortalCall, args: RealmPlanInput) -> str:
     realm = await ruled_realm(call)
     if realm is None or held(realm.id):
@@ -230,6 +249,7 @@ def specs() -> list[ToolSpec[MortalCall, Any]]:
         ToolSpec(MortalToolId.BESTOW_GIFT, mortal, GiveGiftInput, meta, bestow_gift),
         ToolSpec(MortalToolId.ANSWER_GIFT, mortal, GiftInput, meta, answer_gift),
         ToolSpec(MortalToolId.REFUSE_GIFT, mortal, RefuseGiftInput, meta, refuse_gift),
+        ToolSpec(MortalToolId.RELEASE_DEBT, mortal, ReleaseDebtInput, meta, release_debt),
         ToolSpec(MortalToolId.MAKE_OFFERING, mortal, OfferingInput, meta, make_offering),
         ToolSpec(MortalToolId.FREE_BOUND, mortal, FreeBoundInput, meta, free_bound),
         ToolSpec(MortalToolId.LAY_CORVEE, mortal, CorveeInput, meta, lay_corvee),

@@ -244,6 +244,7 @@ CORE_MECHANICS = (
         backfill="environment_survey: every region is profiled from its stored map; soil is solved so the derived fertility equals the stored stat",
         fields=("fertility", "danger"),
         tables=(RegionEnvironmentRow.__tablename__, PlaceEnvironmentRow.__tablename__),
+        tools=("wound_land", "heal_land", "cleanse_land"),
         exposure=Exposure.CONTEXT,
         targets=("region", "place"),
         couplings=(
@@ -375,7 +376,7 @@ CORE_MECHANICS = (
         fields=("desertification", "desertified", "river_course", "volcanic", "volcanic_pressure", "soil"),
         tables=(RegionGeomorphRow.__tablename__, RiverShiftRow.__tablename__),
         exposure=Exposure.TOOL,
-        tools=("reshape_land", "send_disaster"),
+        tools=("reshape_land", "send_disaster", "divert_river"),
         targets=("region", "place"),
         couplings=(
             Coupling(

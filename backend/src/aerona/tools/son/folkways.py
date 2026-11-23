@@ -74,7 +74,7 @@ async def reached(call: SonCall, node_id: int, kinds: frozenset[EntityType], ref
         fail(refused, why=missing)
     await ensure_in_reach(call, found)
     if held(found.id):
-        fail(refused, why="a stronger hand holds it")
+        fail(refused, why="it is held")
     return found
 
 
@@ -82,7 +82,7 @@ async def nudge_bias(call: SonCall, args: NudgeBiasInput) -> str:
     mortal = await reached(call, args.mortal_id, MORTALS, SonResult.BIAS_REFUSED, "there is no such mortal")
     row = await call.session.get(BiasWeightRow, (mortal.id, args.bias))
     if row is not None and "weight" in row.locked:
-        fail(SonResult.BIAS_REFUSED, why="a stronger hand holds that leaning")
+        fail(SonResult.BIAS_REFUSED, why="that leaning is held")
     await control.set_bias(call.tick, mortal.id, args.bias, args.weight)
     call.target(mortal.id)
     told = spoken(args.bias)
@@ -133,7 +133,7 @@ async def send_misfortune(call: SonCall, args: SendMisfortuneInput) -> str:
         if victim is None or victim.location_id != town.id:
             fail(SonResult.MISFORTUNE_REFUSED, why="no such mortal lives in that town")
         if held(victim.id):
-            fail(SonResult.MISFORTUNE_REFUSED, why="a stronger hand holds that life")
+            fail(SonResult.MISFORTUNE_REFUSED, why="that life is held")
     row = await control.add_mishap(call.tick, town.id, args.kind, args.victim_id, call.son.id)
     call.target(town.id)
     told = spoken(args.kind)

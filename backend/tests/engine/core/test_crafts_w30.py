@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.catch import GEAR
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.ages import IrregularSeasonRow, WinterForecastRow
 from aerona.db.tables.body import ConditionRow
@@ -118,7 +119,8 @@ async def test_a_fishing_ground_takes_its_catch_from_gear_and_collapses_when_wor
     tally = GroundTally()
     await keep_grounds(await at(session, 4), tally)
     assert ground.collapsed and tally.collapsed == 1 and await catch_factor(session, rules, water.id) == 0
-    assert await regrowth_scale(session, rules, water.id) == rules.grounds.collapsed_regrowth_pct / 100
+    pressed = 1 - GEAR[ground.gear].depletion(rules) / 100 / 2
+    assert await regrowth_scale(session, rules, water.id) == pressed * rules.grounds.collapsed_regrowth_pct / 100
     profile.reserve = 60
     await keep_grounds(await at(session, 5), tally)
     assert not ground.collapsed and tally.recovered == 1

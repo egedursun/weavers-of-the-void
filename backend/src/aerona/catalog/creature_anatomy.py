@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import AttackDelivery, AttackEffect, AttackRange, Biochemistry, SizeClass, TissueMaterial
 from aerona.domain.enums.material import MaterialKind
@@ -32,7 +33,8 @@ class AttackSpec:
     permanent: bool = False
 
 
-PLAN_LIMBS: MappingProxyType[BodyPlan, int] = MappingProxyType(
+PLAN_LIMBS: MappingProxyType[BodyPlan, int] = total(
+    BodyPlan,
     {
         P.HUMANOID: 4,
         P.QUADRUPED: 4,
@@ -46,9 +48,14 @@ PLAN_LIMBS: MappingProxyType[BodyPlan, int] = MappingProxyType(
         P.COLOSSAL: 4,
         P.CONSTRUCT: 4,
         P.DIVINE_MANIFEST: 4,
-    }
+        P.TENTACLED: 8,
+        P.CENTAUROID: 6,
+        P.RADIAL: 5,
+        P.COLONIAL: 0,
+    },
 )
-PLAN_SKIN: MappingProxyType[BodyPlan, TissueMaterial] = MappingProxyType(
+PLAN_SKIN: MappingProxyType[BodyPlan, TissueMaterial] = total(
+    BodyPlan,
     {
         P.HUMANOID: T.SOFT_TISSUE,
         P.QUADRUPED: T.HIDE,
@@ -62,7 +69,11 @@ PLAN_SKIN: MappingProxyType[BodyPlan, TissueMaterial] = MappingProxyType(
         P.COLOSSAL: T.HIDE,
         P.CONSTRUCT: T.MINERAL,
         P.DIVINE_MANIFEST: T.SOFT_TISSUE,
-    }
+        P.TENTACLED: T.SOFT_TISSUE,
+        P.CENTAUROID: T.HIDE,
+        P.RADIAL: T.RIGID,
+        P.COLONIAL: T.SOFT_TISSUE,
+    },
 )
 LIFE_SKIN: MappingProxyType[Biochemistry, TissueMaterial] = MappingProxyType(
     {Biochemistry.SILICON: T.MINERAL, Biochemistry.CRYSTAL: T.CRYSTALLINE, Biochemistry.VOID: T.INSUBSTANTIAL, Biochemistry.CARBON_AMMONIA: T.FROZEN}

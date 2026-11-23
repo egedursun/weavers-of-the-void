@@ -9,9 +9,10 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.renown import DeedClaimRow, LoreTradeRow, ReputationRow, RulerCurrencyRow
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.polity import OfficeKind
-from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LoreKind, LorePrice, ReputationAxis
+from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LorePrice, ReputationAxis
 from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.phases.renown import fade_and_sum
@@ -119,7 +120,7 @@ async def test_lore_is_worth_less_the_more_hold_it_and_trading_pays(realm: Realm
     seller, buyer = await settlement(realm, "Keld"), await settlement(realm, "Lyme")
     realm.session.add(HolderTechniqueRow(holder_entity_id=seller.id, technique=next(iter(Technique)), since_epoch=1, secret=True))
     await realm.session.flush()
-    item = (LoreKind.TECHNIQUE, next(iter(Technique)).value, None)
+    item = (KnowledgeKind.TECHNIQUE, next(iter(Technique)).value, None)
     before = await value_of(ctx, item)
     row = await trade(ctx, seller, buyer, item, value=before)
     assert row is not None and row.price is LorePrice.RENOWN

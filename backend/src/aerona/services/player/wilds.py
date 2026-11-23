@@ -288,7 +288,7 @@ async def set_yield(scope: PlayerScope, command: SpeciesYield) -> Effect:
 @player_action("species:use", ActionKind.EDIT_RECORD)
 async def set_use(scope: PlayerScope, command: Use) -> Effect:
     row = await control.set_use(await scope.context("species_use"), command.species_id, command.use, held=command.held)
-    label = command.use.value.replace("_", " ")
+    label = spoken(command.use)
     return Effect(f"It serves for {label}." if row is not None else f"It no longer serves for {label}.", command.species_id)
 
 

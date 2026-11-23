@@ -1,7 +1,8 @@
 from sqlalchemy import select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyShareRow
 from aerona.db.tables.made import (
@@ -36,18 +37,16 @@ async def own_mind_lines(scope: Scope, me: EntityRow) -> list[str]:
     mind = await scope.session.get(MindProfileRow, me.id)
     if mind is not None and (mind.seat not in PLAIN_SEATS or mind.origin is not MindOrigin.BORN or mind.dormant):
         place = f" in {await named(scope, mind.seat_node_id)}" if mind.seat_node_id not in {None, me.id} else ""
-        found.append(f"your mind runs {words(mind.seat.value)}{place}, {words(mind.origin.value)}, will {words(mind.will.value)}, stability {mind.stability}")
+        found.append(f"your mind runs {spoken(mind.seat)}{place}, {spoken(mind.origin)}, will {spoken(mind.will)}, stability {mind.stability}")
     for state in await scope.session.scalars(
         select(MindStateRow).where(MindStateRow.owner_node_id == me.id).order_by(MindStateRow.id.desc()).limit(LIST_LINES)
     ):
         found.append(f"you hold a saved mind of {await named(scope, state.mind_node_id)} from epoch {state.taken_epoch} (state {state.id})")
     made = select(MindProfileRow).where(MindProfileRow.made_by_node_id == me.id).order_by(MindProfileRow.node_id).limit(LIST_LINES)
     for row in await scope.session.scalars(made):
-        found.append(
-            f"you made the mind of {await named(scope, row.node_id)} (mind {row.node_id}): will {words(row.will.value)}, bond with you {row.maker_bond}"
-        )
+        found.append(f"you made the mind of {await named(scope, row.node_id)} (mind {row.node_id}): will {spoken(row.will)}, bond with you {row.maker_bond}")
     for augment in await scope.session.scalars(select(AugmentRow).where(AugmentRow.bearer_node_id == me.id).order_by(AugmentRow.id).limit(LIST_LINES)):
-        found.append(f"you bear an augment (augment {augment.id}): {words(augment.kind.value)}, integration {augment.integration}, strain {augment.strain}")
+        found.append(f"you bear an augment (augment {augment.id}): {spoken(augment.kind)}, integration {augment.integration}, strain {augment.strain}")
     shares = select(CompanyShareRow).where(CompanyShareRow.holder_node_id == me.id).order_by(CompanyShareRow.company_entity_id).limit(LIST_LINES)
     for share in await scope.session.scalars(shares):
         found.append(f"you hold {share.share} of 100 parts of {await named(scope, share.company_entity_id)} (company {share.company_entity_id})")
@@ -75,7 +74,7 @@ async def home_lines(scope: Scope, town: EntityRow) -> list[str]:
     ):
         found.append(
             f"{await named(scope, relic.thing_node_id)} (relic {relic.thing_node_id}) is a relic of a lost making, "
-            f"{words(relic.function_state.value)}, understood {relic.understood_pct}"
+            f"{spoken(relic.function_state)}, understood {relic.understood_pct}"
         )
     for site in await scope.session.scalars(
         select(SalvageSiteRow).where(SalvageSiteRow.site_entity_id.in_(things), SalvageSiteRow.yield_left > 0).limit(LIST_LINES)
@@ -86,10 +85,10 @@ async def home_lines(scope: Scope, town: EntityRow) -> list[str]:
         for line in await scope.session.scalars(
             select(ReplicatorLineRow).where(ReplicatorLineRow.id.in_(here), ReplicatorLineRow.stage.in_(LIVE_LINES)).limit(LIST_LINES)
         ):
-            found.append(f"a self-making line, {line.name} (line {line.id}), is {words(line.stage.value)} in your land, containment {line.containment}")
+            found.append(f"a self-making line, {line.name} (line {line.id}), is {spoken(line.stage)} in your land, containment {line.containment}")
     kept = select(MadeRealmRow).where(MadeRealmRow.host_node_id == town.id).limit(LIST_LINES)
     for realm in await scope.session.scalars(kept):
-        found.append(f"a made realm (realm {realm.dimension_id}) runs on your home for {words(realm.realm_purpose.value)}{', sealed' if realm.sealed else ''}")
+        found.append(f"a made realm (realm {realm.dimension_id}) runs on your home for {spoken(realm.realm_purpose)}{', sealed' if realm.sealed else ''}")
     return found
 
 
@@ -107,8 +106,8 @@ async def son_minds_lines(scope: Scope, son: SonRow) -> list[str]:
     law = await session.get(MindLawRow, world)
     if law is not None:
         found.append(
-            f"on this world made minds may have {words(law.made_minds.value)}, their souls are {words(law.made_mind_souls.value)}, "
-            f"and a soul on copying {words(law.soul_continuity.value)}"
+            f"on this world made minds may have {spoken(law.made_minds)}, their souls are {spoken(law.made_mind_souls)}, "
+            f"and a soul on copying {spoken(law.soul_continuity)}"
         )
     willed = (
         select(MindProfileRow)
@@ -121,7 +120,7 @@ async def son_minds_lines(scope: Scope, son: SonRow) -> list[str]:
     )
     for row in await session.scalars(willed):
         found.append(
-            f"the made mind of {await named(scope, row.node_id)} (mind {row.node_id}) has {words(row.will.value)} will, bond with its maker {row.maker_bond}"
+            f"the made mind of {await named(scope, row.node_id)} (mind {row.node_id}) has {spoken(row.will)} will, bond with its maker {row.maker_bond}"
         )
     networks = select(NetworkProfileRow).join(EntityRow, EntityRow.id == NetworkProfileRow.network_entity_id).where(EntityRow.world_id == world)
     for network in await session.scalars(networks.order_by(NetworkProfileRow.capacity.desc()).limit(LIST_LINES)):
@@ -129,5 +128,5 @@ async def son_minds_lines(scope: Scope, son: SonRow) -> list[str]:
         found.append(f"{await named(scope, network.network_entity_id)} (network {network.network_entity_id}) is {state}, capacity {network.capacity}")
     lines = select(ReplicatorLineRow).where(ReplicatorLineRow.stage.in_((ReplicatorStage.SPREADING, ReplicatorStage.RUNAWAY))).order_by(ReplicatorLineRow.id)
     for line in await session.scalars(lines.limit(LIST_LINES)):
-        found.append(f"the self-making line {line.name} (line {line.id}) is {words(line.stage.value)}, containment {line.containment}")
+        found.append(f"the self-making line {line.name} (line {line.id}) is {spoken(line.stage)}, containment {line.containment}")
     return found

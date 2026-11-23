@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.text import replace_name
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.rarities import name_similarity_policy
+from aerona.core.grammar import spoken
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
@@ -105,6 +106,6 @@ def type_named_subtype(subtype: str, entity_type: EntityType) -> str | None:
     label = ENTITY_TYPES[entity_type].label.casefold()
     match = PARENTHESIZED.match(cleaned)
     head = (match.group(1) if match else cleaned).strip().casefold()
-    if head not in {label, entity_type.value.replace("_", " ")}:
+    if head not in {label, spoken(entity_type)}:
         return cleaned
     return match.group(2).strip() if match else None

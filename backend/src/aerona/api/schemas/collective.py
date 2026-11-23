@@ -10,6 +10,7 @@ from aerona.domain.enums.collective import (
     ChargeArrangement,
     CollectiveActKind,
     CollectiveTrigger,
+    CrowdFeeling,
     DatingSystemKind,
     DesignComponentKind,
     DesignKind,
@@ -33,16 +34,21 @@ from aerona.domain.enums.collective import (
     SupporterPose,
     Tincture,
 )
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.made import Authenticity
 from aerona.domain.enums.mind import EthicalStance, ValueAxis
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.vehicles import VehicleFrame
 
 
+class CrowdFeelingView(ApiModel):
+    feeling: CrowdFeeling
+    level: int
+    held: bool
+
+
 class MoodView(ApiModel):
-    anger: int
-    anxiety: int
-    fervour: int
+    feelings: list[CrowdFeelingView]
     deterrence: int
     agitation: int
     last_trigger: CollectiveTrigger | None
@@ -253,9 +259,15 @@ class TransitionView(ApiModel):
     locked: list[str]
 
 
+class SexCountView(ApiModel):
+    sex_kind: SexKind
+    count: int
+
+
 class SexRatioView(ApiModel):
-    males_per_hundred: int
-    widows: int
+    counts: list[SexCountView]
+    begetters_per_hundred: int
+    bereaved_partners: int
     locked: list[str]
 
 

@@ -10,6 +10,7 @@ import {
   Users,
   Wrench,
 } from 'lucide-react'
+import { vehicleSectionValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Held, Listed } from '@/features/collective/parts'
@@ -17,6 +18,7 @@ import { Chip, ForgeCard } from '@/features/cosmography/parts'
 import { SPAN } from '@/features/cycles/model'
 import { why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
 import { Ref } from '@/features/gatherings/parts'
@@ -33,7 +35,6 @@ import {
   VEHICLE_FAMILY,
   VEHICLE_STATUS,
   namedTable,
-  sectionLabel,
 } from './labels'
 import { HOLDER_TYPES, numberProblem, useKindRow, worst } from './model'
 import { vehicleZone } from './zones'
@@ -69,7 +70,7 @@ function GroupSectionCard({
             ? 'warning'
             : 'danger'
       }
-      title={sectionLabel(row.section)}
+      title={wordOf(vehicleSectionValues, row.section)}
       caption={`${row.damaged} damaged · ${row.disabled} disabled · ${row.destroyed} destroyed of ${group.count}`}
       removeLabel='Make it whole'
       editTitle='Set the damage of this section'
@@ -169,7 +170,7 @@ function GroupCard({
   const sections = Object.fromEntries(
     (design?.sections ?? [])
       .filter((item) => !damage.has(item.section))
-      .map((item) => [item.section, sectionLabel(item.section)])
+      .map((item) => [item.section, wordOf(vehicleSectionValues, item.section)])
   )
   return (
     <Held

@@ -1,5 +1,5 @@
 from aerona.api.schemas.common import ApiModel
-from aerona.domain.enums.demography import AgeBand, Sex
+from aerona.domain.enums.demography import AgeBand, SexKind
 from aerona.domain.enums.entity import EngineKind
 from aerona.domain.enums.environment import RiverClass, SoilKind, TerrainKind
 from aerona.domain.enums.happening import EventPhase, RiverShiftCause
@@ -26,7 +26,7 @@ class EventCasualtyView(ApiModel):
     community_id: int
     community: str
     age_band: AgeBand
-    sex: Sex
+    sex_kind: SexKind
     social_class: SocialClass
     phase: EventPhase
     count: int

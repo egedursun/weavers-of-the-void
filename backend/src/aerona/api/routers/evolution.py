@@ -25,7 +25,7 @@ from aerona.api.schemas.evolution import (
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
-from aerona.catalog.evolution import STAGE_COVER, trophic_level
+from aerona.catalog.evolution import ADVANCE, STAGE_COVER, trophic_level
 from aerona.catalog.planetary_cycles import CYCLES, SOURCE_LABELS, CycleFlow, cycle_label
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import NotFoundError
@@ -47,6 +47,7 @@ from aerona.db.tables.evolution import (
 )
 from aerona.engine.cosmos.cycles import BALANCE
 from aerona.engine.disease.research import institutions
+from aerona.engine.environment.succession import stage_path
 from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["evolution"])
@@ -167,7 +168,7 @@ def ecology_view(profile: SpeciesProfileRow | None) -> SpeciesEcologyView | None
     )
 
 
-def land_view(ground: RegionEnvironmentRow | None) -> SuccessionView | None:
+def land_view(rules: Rules, ground: RegionEnvironmentRow | None) -> SuccessionView | None:
     if ground is None:
         return None
     return SuccessionView(
@@ -175,6 +176,8 @@ def land_view(ground: RegionEnvironmentRow | None) -> SuccessionView | None:
         succession_progress=ground.succession_progress,
         burned_epoch=ground.burned_epoch,
         stage_cover=STAGE_COVER[ground.succession],
+        stage_path=list(stage_path(ground)),
+        advance_epochs=ADVANCE[ground.succession](rules),
         locked=[key for key in ground.locked if key in ("succession", "succession_progress")],
     )
 
@@ -258,7 +261,7 @@ async def node_evolution(services: ServicesDep, node_id: NodeId) -> NodeEvolutio
                 TrophicView(level=row.level, biomass=row.biomass, cap=row.cap, epoch=row.epoch)
                 for row in await session.scalars(select(TrophicLevelRow).where(TrophicLevelRow.region_entity_id == node_id))
             ],
-            land=land_view(await session.get(RegionEnvironmentRow, node_id)) if entity is not None else None,
+            land=land_view(services.rules.current, await session.get(RegionEnvironmentRow, node_id)) if entity is not None else None,
             herds=await herd_views(session, list(await session.scalars(herds.order_by(HerdRow.community_entity_id, HerdRow.species_entity_id)))),
             pathogen=pathogen_view(await session.get(DiseaseProfileRow, node_id)),
             carriers=await carrier_views(session, list(await session.scalars(carriers.order_by(CarrierRow.mortal_entity_id, CarrierRow.disease_entity_id)))),

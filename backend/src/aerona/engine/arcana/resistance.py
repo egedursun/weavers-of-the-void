@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.catalog.arcana import IRON_DISRUPTED
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.arcana import LawUpkeepRow, RiteGrammarRow
 from aerona.db.tables.bonds import BondRow
@@ -77,7 +78,7 @@ async def break_curses(ctx: TickContext, target: EntityRow, force: int) -> list[
         if row.transmission not in DISPELLED_BY or "stage" in row.locked or force < (row.stage + 1) * PERCENT // 4:
             continue
         await cure(ctx, target, row, None)
-        broken.append(row.package.value.replace("_", " "))
+        broken.append(spoken(row.package))
     return broken
 
 

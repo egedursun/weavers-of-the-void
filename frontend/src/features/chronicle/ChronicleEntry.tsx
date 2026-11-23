@@ -1,12 +1,14 @@
+import { chronicleKindValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { ChronicleKindIcon } from '@/components/domain/ChronicleKindIcon'
 import { MentionText } from '@/components/domain/MentionText'
 import { Label, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type ChronicleLine } from '@/features/entity/api/types'
 import { NodeAvatar } from '@/features/images/NodeAvatar'
 import { ChronicleLineMenu } from './ChronicleLineMenu'
-import { humanKind, kindTone } from './chronicleKinds'
+import { kindTone } from './chronicleKinds'
 import { useLinkTargets } from './linkTargets'
 
 const CAST_SHOWN = 4
@@ -64,7 +66,9 @@ export function ChronicleEntry({
       </span>
       <div className='flex min-w-0 flex-1 flex-col gap-1'>
         <div className='flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5'>
-          <Label variant='overline'>{kindLabel ?? humanKind(line.kind)}</Label>
+          <Label variant='overline'>
+            {kindLabel ?? wordOf(chronicleKindValues, line.kind)}
+          </Label>
           {when && <Label>{when}</Label>}
         </div>
         <Text>

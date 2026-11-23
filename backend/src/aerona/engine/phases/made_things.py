@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.culture import CurseKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -10,6 +11,7 @@ from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.mind import MemoryKind, TraitKind, TraitSource, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.hits import Harm
+from aerona.engine.body.package_fixups import curse_package
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.economy.materials import MaterialBook
@@ -106,6 +108,7 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     table = ctx.rules.item_curses
     strength = stat_or(item, "curse", PERCENT // 2)
     mortal = bearer if bearer.entity_type is EntityType.MORTAL else None
+    await curse_package(ctx, item, bearer, row.curse, strength)
     if row.curse is CurseKind.WASTING and mortal is not None:
         harm = Harm(
             damage=strength * table.wasting_pct / PERCENT,
@@ -152,6 +155,7 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     "mortal.wisdom",
     "settlement.defense",
     "settlement.prosperity",
+    "table.afflictions",
     "table.applied_fixups",
     "table.assistive_aids",
     "table.bodies",
@@ -219,6 +223,7 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     "mortal.hp",
     "settlement.defense",
     "settlement.prosperity",
+    "table.afflictions",
     "table.applied_fixups",
     "table.bodies",
     "table.body_customs",
@@ -228,6 +233,7 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     "table.community_stocks",
     "table.conditions",
     "table.entities",
+    "table.fortune_sources",
     "table.goods_flows",
     "table.house_profiles",
     "table.incident_facts",
@@ -318,6 +324,8 @@ async def artwork_cycles(ctx: TickContext) -> None:
         for key, value in (await art.art_year(ctx, work)).items():
             ctx.count(f"art_{key}", value)
     for realm in list(await ctx.session.scalars(select(PolityProfileRow).order_by(PolityProfileRow.polity_entity_id))):
+        if held(realm.polity_entity_id):
+            continue
         raised = await art.commission(ctx, realm)
         if raised is not None:
             ctx.count("propaganda_works")

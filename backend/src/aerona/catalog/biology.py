@@ -2,10 +2,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.biology import BiologyVariant
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.demography import NaturalTrait
-from aerona.domain.enums.ecology import Biochemistry, Diet, Sociality, TissueMaterial
+from aerona.domain.enums.ecology import Biochemistry, Diet, Sociality, SpeciesClass, TissueMaterial
 from aerona.domain.enums.folkways import DecisionBias
 
 V = BiologyVariant
@@ -32,9 +33,15 @@ class BiologySpec:
     tissue: TissueMaterial | None = None
     shifts: Mapping[DecisionBias, int] = field(default_factory=dict)
     damped: frozenset[DecisionBias] = frozenset()
+    skyless: bool = False
+    burns: bool = False
+    buds: bool = False
+    needs_source: bool = False
+    needs_partner: bool = False
 
 
-BIOLOGY_VARIANTS: MappingProxyType[BiologyVariant, BiologySpec] = MappingProxyType(
+BIOLOGY_VARIANTS: Mapping[BiologyVariant, BiologySpec] = total(
+    V,
     {
         V.INCORPOREAL: BiologySpec(
             food_need_pct=0,
@@ -50,9 +57,9 @@ BIOLOGY_VARIANTS: MappingProxyType[BiologyVariant, BiologySpec] = MappingProxyTy
             infects=False,
             material=False,
         ),
-        V.AQUATIC: BiologySpec(fertility_pct=140, death_pct=110, disease_pct=120, storm_harm_pct=80, drinks=False),
+        V.AQUATIC: BiologySpec(fertility_pct=140, death_pct=110, disease_pct=120, storm_harm_pct=80, drinks=False, skyless=True),
         V.AERIAL: BiologySpec(food_need_pct=130, fertility_pct=90, storm_harm_pct=150),
-        V.SUBTERRANEAN: BiologySpec(food_need_pct=80, disease_pct=110, storm_harm_pct=40),
+        V.SUBTERRANEAN: BiologySpec(food_need_pct=80, disease_pct=110, storm_harm_pct=40, skyless=True),
         V.HIVE: BiologySpec(
             fertility_pct=160,
             death_pct=120,
@@ -119,8 +126,26 @@ BIOLOGY_VARIANTS: MappingProxyType[BiologyVariant, BiologySpec] = MappingProxyTy
             infects=False,
             shifts={B.LITERALISM: 20, B.AUTHORITY_DEFERENCE: 20},
         ),
-    }
+        V.FUNGAL: BiologySpec(food_need_pct=60, fertility_pct=150, death_pct=90, disease_pct=80, storm_harm_pct=60, skyless=True, burns=True),
+        V.COLONIAL: BiologySpec(fertility_pct=60, death_pct=70, morale_loss_pct=60, buds=True, shifts={B.GROUPTHINK: 40}),
+        V.ENERGY: BiologySpec(
+            food_need_pct=0,
+            fertility_pct=50,
+            death_pct=60,
+            disease_pct=0,
+            fire_harm_pct=0,
+            breathes=False,
+            drinks=False,
+            bleeds=False,
+            infects=False,
+            material=False,
+            needs_source=True,
+        ),
+        V.SYMBIOTIC: BiologySpec(food_need_pct=80, fertility_pct=90, disease_pct=110, needs_partner=True, shifts={B.LOSS_AVERSION: 20}),
+    },
 )
+SKYLESS_VARIANTS = frozenset(variant for variant, spec in BIOLOGY_VARIANTS.items() if spec.skyless)
+BURNING_VARIANTS = frozenset(variant for variant, spec in BIOLOGY_VARIANTS.items() if spec.burns)
 
 PLAN_VARIANTS: MappingProxyType[BodyPlan, BiologyVariant] = MappingProxyType(
     {
@@ -128,12 +153,14 @@ PLAN_VARIANTS: MappingProxyType[BodyPlan, BiologyVariant] = MappingProxyType(
         BodyPlan.CONSTRUCT: V.CONSTRUCT,
         BodyPlan.AQUATIC: V.AQUATIC,
         BodyPlan.AVIAN: V.AERIAL,
+        BodyPlan.COLONIAL: V.COLONIAL,
     }
 )
 CHEMISTRY_VARIANTS: MappingProxyType[Biochemistry, BiologyVariant] = MappingProxyType(
     {
         Biochemistry.CRYSTAL: V.CRYSTALLINE,
         Biochemistry.SPIRIT: V.INCORPOREAL,
+        Biochemistry.PLASMA: V.ENERGY,
     }
 )
 TRAIT_VARIANTS: MappingProxyType[NaturalTrait, BiologyVariant] = MappingProxyType(
@@ -143,6 +170,13 @@ TRAIT_VARIANTS: MappingProxyType[NaturalTrait, BiologyVariant] = MappingProxyTyp
         NaturalTrait.HIVE_MINDED: V.HIVE,
     }
 )
-FOLK_DIET_VARIANTS: MappingProxyType[Diet, BiologyVariant] = MappingProxyType({Diet.PHOTOSYNTHETIC: V.PLANT_LIKE})
-SPECIES_DIET_VARIANTS: MappingProxyType[Diet, BiologyVariant] = MappingProxyType({Diet.PHOTOSYNTHETIC: V.PLANT_LIKE})
+FOLK_DIET_VARIANTS: MappingProxyType[Diet, BiologyVariant] = MappingProxyType(
+    {Diet.PHOTOSYNTHETIC: V.PLANT_LIKE, Diet.DECOMPOSER: V.FUNGAL, Diet.ENERGY: V.ENERGY}
+)
+SPECIES_DIET_VARIANTS: MappingProxyType[Diet, BiologyVariant] = MappingProxyType(
+    {Diet.PHOTOSYNTHETIC: V.PLANT_LIKE, Diet.DECOMPOSER: V.FUNGAL, Diet.ENERGY: V.ENERGY}
+)
 SOCIALITY_VARIANTS: MappingProxyType[Sociality, BiologyVariant] = MappingProxyType({Sociality.HIVE: V.HIVE})
+CLASS_VARIANTS: MappingProxyType[SpeciesClass, BiologyVariant] = MappingProxyType(
+    {SpeciesClass.FUNGUS: V.FUNGAL, SpeciesClass.COLONIAL: V.COLONIAL, SpeciesClass.ENERGY: V.ENERGY}
+)

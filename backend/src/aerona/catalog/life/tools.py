@@ -1,6 +1,5 @@
 from aerona.domain.enums.childhood import SocializationTechnique
 from aerona.domain.enums.civilization import TierCapability
-from aerona.domain.enums.customs import RevivalAim, RevivalGoal
 from aerona.domain.enums.happening import LandAct
 from aerona.domain.enums.mind import SkillKind, ValueAxis
 from aerona.domain.enums.polity import OfficeKind
@@ -67,14 +66,6 @@ VESSEL_ROUTES = {
     VehicleKind.SHIP: TravelMethod.LIGHT_SAIL,
     VehicleKind.MOUNT: TravelMethod.CARRIER_MOUNT,
     VehicleKind.BRIDGE: TravelMethod.DIVINE_BRIDGE,
-}
-
-
-AIMS = {
-    RevivalGoal.REVIVE_LANGUAGE: RevivalAim.RESTORE,
-    RevivalGoal.RESTORE_GOD: RevivalAim.RESTORE,
-    RevivalGoal.EXPEL_FOREIGNERS: RevivalAim.RESTORE,
-    RevivalGoal.ADOPT_WAYS: RevivalAim.ADOPT,
 }
 
 

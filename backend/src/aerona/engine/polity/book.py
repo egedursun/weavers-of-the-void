@@ -10,12 +10,13 @@ from aerona.db.read_memo import memo_of, table_names, touched_rows
 from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, VassalageRow
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.models.entity_stats import MortalStats, revised
 from aerona.engine.primitives.distance import RegionAtlas
 
-SEXES = ("female", "male")
+SEXES = (SexKind.BEARER.value, SexKind.BEGETTER.value)
 BOOK_TABLES = table_names((PolityProfileRow, PolityMemberRow, PolityTerritoryRow, OfficeRow, VassalageRow, WorldMapRow))
 REALM_SHAPE = "aerona.realm_book.shape"
 REALM_COLUMNS = ("entity_type", "status")

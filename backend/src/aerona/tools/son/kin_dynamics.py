@@ -64,7 +64,7 @@ async def stir_kin(call: SonCall, args: StirKinInput) -> str:
         fail(SonResult.KIN_STIR_REFUSED, why="there is no such house with a head")
     await ensure_in_reach(call, house)
     if held(house.id) or not await stir(call, house, profile.head_entity_id, args.kind):
-        fail(SonResult.KIN_STIR_REFUSED, why=f"nothing in that family can be stirred toward {spoken(args.kind)}, or a stronger hand holds it")
+        fail(SonResult.KIN_STIR_REFUSED, why=f"nothing in that family can be stirred toward {spoken(args.kind)}, or it is held")
     call.target(house.id)
     await call.record("kin.stirred", roles={IncidentRole.SUBJECT: house.id}, facts={"kind": args.kind})
     return result(SonResult.KIN_STIRRED, house=house.name, kind=spoken(args.kind))

@@ -1,23 +1,33 @@
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.scope import Scope
 from aerona.cartography.model import RegionRecord
-from aerona.catalog.dangers import DANGERS, MEMORY_LABELS
+from aerona.catalog.dangers import DANGERS, HAZARDS
+from aerona.catalog.land_memory import LAND_MEMORIES
+from aerona.catalog.named_years import NAMED_YEARS
+from aerona.catalog.rocks import ROCKS
+from aerona.catalog.scars import SCARS
+from aerona.catalog.strata import STRATA
+from aerona.catalog.weather import WEATHER
 from aerona.constants.agents import LARGE_REGION_RATIO, SMALL_REGION_RATIO
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.environment import NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.geology import RegionGeologyRow, RegionStratumRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.region import PolityMapKnowledgeRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import LandUse, RiverClass
+from aerona.domain.enums.environment import LandUse, MovementMode, RiverClass, ScarKind
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.columns import columns_by_region, deepest_reached
 from aerona.engine.environment.dangers import dangers_by_region
+from aerona.engine.environment.hazards import exposed
 from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.environment.memory import memories_by_region
 from aerona.engine.environment.profile import Works
@@ -50,16 +60,59 @@ def environment_facts(rules: Rules, ground: RegionEnvironmentRow | None) -> dict
     elif ground.harvest_pct > settings.harvest_rich_above_pct:
         harvest = "rich harvests lately"
     return {
-        "land": words(ground.dominant_terrain.value),
-        "soil": words(ground.soil.value),
+        "land": spoken(ground.dominant_terrain),
+        "soil": f"{spoken(ground.soil)} (fertility {ground.soil_fertility})",
         "climate": f"{spoken(ground.temperature_band)}, rainfall {ground.rainfall}",
-        "river": f"{words(ground.river_class.value)}" if ground.river_class is not RiverClass.NONE else None,
-        "scars": [words(kind) for kind, depth in sorted(ground.scars.items()) if depth >= settings.scar_shown_depth],
+        "river": f"{spoken(ground.river_class)}" if ground.river_class is not RiverClass.NONE else None,
+        "scars": [f"{SCARS[ScarKind(kind)].label.lower()} {depth}" for kind, depth in sorted(ground.scars.items()) if depth >= settings.scar_shown_depth],
+        "growth": spoken(ground.succession),
+        "hazards": [f"{spec.label.lower()} in the {spoken(spec.season)} season" for hazard, spec in HAZARDS.items() if exposed(rules, hazard, spec, ground)],
         "harvest": harvest,
         "use": land_words(ground),
+        "passage": [f"{spoken(mode)} {passage}" for mode, passage in passages(ground)],
     }
 
 
+def passages(ground: RegionEnvironmentRow) -> list[tuple[MovementMode, int]]:
+    found = [(mode, ground.passability.get(mode.value, 0)) for mode in MovementMode]
+    return sorted([item for item in found if item[1] > 0], key=lambda item: (-item[1], item[0].value))
+
+
+NAMED_YEARS_SHOWN = 5
+
+
+def named_year_words(row: NotableYearRow, kept: list[str]) -> str:
+    kind = NAMED_YEARS[row.kind]
+    source = WEATHER[row.weather].label.lower() if row.weather is not None else kind.sources
+    remembered = f"; remembered by {', '.join(kept)}" if kept else ""
+    return f"{row.name} (year {row.year}, {kind.label.lower()} from {source}, magnitude {row.magnitude}{remembered})"
+
+
+async def named_years(scope: Scope, world_id: int) -> dict[int | None, list[str]]:
+    rows = list(
+        await scope.session.scalars(
+            select(NotableYearRow).where(NotableYearRow.world_id == world_id).order_by(NotableYearRow.magnitude.desc(), NotableYearRow.year, NotableYearRow.id)
+        )
+    )
+    kept: dict[int, list[str]] = {}
+    statement = (
+        select(TraditionProfileRow.notable_year_id, EntityRow.name)
+        .join(EntityRow, EntityRow.id == TraditionProfileRow.tradition_entity_id)
+        .where(TraditionProfileRow.notable_year_id.in_([row.id for row in rows]), EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.name)
+    )
+    for year_id, name in await scope.session.execute(statement):
+        if year_id is not None:
+            kept.setdefault(year_id, []).append(name)
+    found: dict[int | None, list[str]] = {}
+    for row in rows:
+        shown = found.setdefault(row.region_entity_id, [])
+        if len(shown) < NAMED_YEARS_SHOWN:
+            shown.append(named_year_words(row, kept.get(row.id, [])))
+    return found
+
+
+BENEATH_TOP = 3
 CONTEXT_WEATHER_SLOT = "context"
 
 
@@ -97,14 +150,14 @@ async def nexus_names(scope: Scope, region_ids: set[int]) -> dict[int, str]:
 
 
 def place_words(place: EntityRow, profile: PlaceProfileRow, known: list[PlaceSecretRow], rules: Rules) -> str:
-    parts = [words(profile.kind.value)]
+    parts = [spoken(profile.kind)]
     if profile.sacredness >= rules.places.pilgrimage_threshold:
         parts.append(f"sacred {profile.sacredness}")
     if profile.pilgrims:
         parts.append(f"{several(profile.pilgrims, 'pilgrim', 'pilgrims')}")
     for secret in known:
         state = ", still sealed" if secret.sealed else ""
-        parts.append(f"found {words(secret.kind.value)}{state}")
+        parts.append(f"found {spoken(secret.kind)}{state}")
     return f"#{place.id} {place.name} ({', '.join(parts)})"
 
 
@@ -176,11 +229,33 @@ async def long_day_words(scope: Scope, world_id: int) -> str | None:
     return f"A day lasts {several(world.day_length_hours, 'hour', 'hours')}."
 
 
+def beneath_words(rows: list[RegionGeologyRow], depths: list[RegionStratumRow]) -> dict[str, Any] | None:
+    if not rows:
+        return None
+    deepest = deepest_reached(rows)
+    veins = sorted({material for row in rows if row.reached_epoch is not None for material in row.veins})
+    return {
+        "top": [ROCKS[row.rock].label.lower() for row in rows[:BENEATH_TOP]],
+        "deepest_reached": ROCKS[deepest.rock].label.lower() if deepest is not None else None,
+        "veins_reached": [words(vein) for vein in veins],
+        "depths_reached": [STRATA[row.stratum].label.lower() for row in depths if row.reached_epoch is not None],
+    }
+
+
+async def depths_by_region(session: AsyncSession, region_ids: list[int]) -> dict[int, list[RegionStratumRow]]:
+    found: dict[int, list[RegionStratumRow]] = {}
+    for row in await session.scalars(select(RegionStratumRow).where(RegionStratumRow.region_entity_id.in_(region_ids)).order_by(RegionStratumRow.id)):
+        found.setdefault(row.region_entity_id, []).append(row)
+    return found
+
+
 async def terrain_facts(scope: Scope, region_ids: set[int], grounds: dict[int, RegionEnvironmentRow]) -> dict[int, dict[str, Any]]:
     settings = scope.rules.context
     terrain = scope.rules.terrain
     dangers = await dangers_by_region(scope.session, region_ids)
     memories = await memories_by_region(scope.session)
+    columns = await columns_by_region(scope.session, sorted(region_ids))
+    depths = await depths_by_region(scope.session, sorted(region_ids))
     names = {
         row.id: row.name
         for row in await scope.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.POLITY, EntityRow.status == EntityStatus.CANON))
@@ -197,17 +272,18 @@ async def terrain_facts(scope: Scope, region_ids: set[int], grounds: dict[int, R
         sacred = ground.sacredness if ground is not None and ground.sacredness >= terrain.pilgrim_sacred_min else None
         found[region_id] = {
             "dangers": [
-                f"{DANGERS[row.source].label.lower()} {row.strength}"
+                f"{DANGERS[row.source].label.lower()} {row.strength}" + (f" (harms {', '.join(words(harm) for harm in row.harmed)})" if row.harmed else "")
                 for row in sorted(dangers.get(region_id, []), key=lambda item: -item.strength)
                 if row.strength >= settings.scar_shown_depth
             ],
             "sacredness": sacred,
             "memories": [
-                f"{row.title} ({MEMORY_LABELS[row.kind].lower()})"
+                f"{row.title} ({LAND_MEMORIES[row.kind].label.lower()})"
                 for row in sorted(memories.get(region_id, []), key=lambda item: -item.magnitude)
                 if row.magnitude >= settings.scar_shown_depth
             ],
             "mapped_by": mapped.get(region_id, []),
+            "beneath": beneath_words(columns.get(region_id, []), depths.get(region_id, [])),
         }
     return found
 
@@ -233,11 +309,12 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
     places = await place_lines(scope, set(regions))
     works = await region_works(scope.session, book.atlas, scope.rules)
     terrain = await terrain_facts(scope, set(regions), grounds)
+    years = await named_years(scope, world_id)
     lines = [
         RegionGeography(
             id=record.id,
             name=regions[record.id].name,
-            elevation_label=record.elevation_class.value.replace("_", " "),
+            elevation_label=spoken(record.elevation_class),
             coastal=record.coastal,
             size_label=size_label(record.size, mean),
             terrain=[f"{share.share_pct}% {share.name}" for share in sorted(record.climate, key=lambda share: (-share.share_pct, share.name))],
@@ -249,11 +326,16 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
             places=places.get(record.id, []),
             works=works_words(works.get(record.id)),
             drying=drying_words(scope.rules, grounds.get(record.id)),
+            named_years=years.get(record.id, []),
             **terrain[record.id],
         )
         for record in known
     ]
     context = GeographyLinesContext(
-        known_regions=len(lines), regions=lines, seasons=await season_words(scope, world_id), long_days=await long_day_words(scope, world_id)
+        known_regions=len(lines),
+        regions=lines,
+        seasons=await season_words(scope, world_id),
+        long_days=await long_day_words(scope, world_id),
+        named_years=years.get(None, []),
     )
     return render(PromptId.GEOGRAPHY_LINES, context)

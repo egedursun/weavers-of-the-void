@@ -1,8 +1,17 @@
 import {
   BookOpen,
   CalendarHeart,
+  CalendarPlus,
+  CloudRain,
+  Coins,
+  Fish,
+  Footprints,
+  Gavel,
+  Landmark,
   Snowflake,
   Sprout,
+  Store,
+  Sun,
   Swords,
   Wheat,
 } from 'lucide-react'
@@ -16,6 +25,7 @@ import {
   magicSourceValues,
   prophecyPredicateValues,
   traditionFunctionValues,
+  type components,
 } from '@/api/generated/schema'
 import { ACTS } from '../cultureLabels'
 import { ART_DISCIPLINES, THEORY_DOMAINS } from '../discoveryLabels'
@@ -75,15 +85,30 @@ function named<T extends string>(
   )
 }
 
-export const CALENDAR_SLOTS: Record<string, LoreNamed> = {
+type CalendarSlot = components['schemas']['CalendarSlot']
+
+export const CALENDAR_SLOTS: Record<CalendarSlot, LoreNamed> = {
   sowing: { label: 'At the sowing', icon: Sprout, tone: 'verdigris' },
   harvest: { label: 'At the harvest', icon: Wheat, tone: 'gold' },
   midwinter: { label: 'In the dead of winter', icon: Snowflake, tone: 'info' },
+  midsummer: { label: 'At the height of summer', icon: Sun, tone: 'gold' },
   campaign: { label: 'In the season of war', icon: Swords, tone: 'danger' },
   holy_day: {
     label: 'On a holy day in the sky',
     icon: CalendarHeart,
     tone: 'warning',
+  },
+  new_year: { label: 'At the new year', icon: CalendarPlus, tone: 'info' },
+  remembrance: { label: 'In remembrance', icon: Landmark, tone: 'muted' },
+  market: { label: 'At the market or fair', icon: Store, tone: 'warning' },
+  wild_harvest: { label: 'At the wild harvest', icon: Fish, tone: 'success' },
+  rains: { label: 'With the first rains', icon: CloudRain, tone: 'info' },
+  assembly: { label: 'When the council sits', icon: Gavel, tone: 'verdigris' },
+  tax: { label: 'When dues are gathered', icon: Coins, tone: 'warning' },
+  pilgrimage: {
+    label: 'On the pilgrimage',
+    icon: Footprints,
+    tone: 'verdigris',
   },
 }
 const BRANCHES = Object.fromEntries(

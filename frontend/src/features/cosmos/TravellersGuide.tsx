@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { BookOpen, Compass, MapPinned, Mountain, Users } from 'lucide-react'
+import { entityTypeValues } from '@/api/generated/schema'
 import { formatCompact, formatDecimal } from '@/lib/format'
 import { agree, plural } from '@/lib/units'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -18,6 +19,7 @@ import {
 } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { DialectDetails } from './DialectDetails'
 import { RouteStatusChips } from './RouteStatusChips'
 import { useCosmos, useWorldGuide } from './api'
@@ -194,7 +196,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
                 </EntityLink>
                 <Muted as='span' variant='caption'>
                   {[
-                    humanize(people.entity_type),
+                    wordOf(entityTypeValues, people.entity_type),
                     `${formatCompact(people.population)} ${agree(people.population, 'soul', 'souls')}`,
                     people.language,
                     people.god ? `worships ${people.god}` : null,

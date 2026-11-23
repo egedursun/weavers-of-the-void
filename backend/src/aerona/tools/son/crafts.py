@@ -46,7 +46,7 @@ async def wake_spirit(call: SonCall, args: WakeSpiritInput) -> str:
         fail(SonResult.SPIRIT_REFUSED, why="there is no such land")
     await ensure_in_reach(call, region)
     if held(region.id):
-        fail(SonResult.SPIRIT_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.SPIRIT_REFUSED, why="it is held")
     table = call.tick.rules.emotion_spirits
     await control.set_record(
         call.tick,
@@ -74,7 +74,7 @@ async def lay_affinity(call: SonCall, args: LayAffinityInput) -> str:
     if profile.world_material_id is None:
         fail(SonResult.AFFINITY_REFUSED, why="its stuff is of no material of this world's own")
     if held(resource.id):
-        fail(SonResult.AFFINITY_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.AFFINITY_REFUSED, why="it is held")
     await control.set_record(
         call.tick, "material_affinity", {"material_id": profile.world_material_id, "school": args.school}, {"mode": args.mode, "power": 50}
     )

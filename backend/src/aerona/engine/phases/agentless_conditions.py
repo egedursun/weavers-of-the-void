@@ -22,6 +22,8 @@ from aerona.engine.phase import Phase
     "people.prosperity",
     "settlement.prosperity",
     "table.agentless_conditions",
+    "table.augment_effects",
+    "table.augments",
     "table.body_systems",
     "table.bonds",
     "table.conditions",
@@ -39,6 +41,7 @@ from aerona.engine.phase import Phase
     "table.nodes",
     "table.prostheses",
     "table.region_pollution",
+    "table.thoughts",
     "table.worlds",
 )
 @writes(

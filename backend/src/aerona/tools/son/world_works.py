@@ -10,6 +10,7 @@ from aerona.core.errors import AeronaError
 from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -25,6 +26,7 @@ from aerona.domain.enums.world import Discovery
 from aerona.engine.cosmos.routes import RouteSpec
 from aerona.engine.cosmos.routes import open_route as engine_open_route
 from aerona.engine.dominion import control as dominion
+from aerona.engine.environment.control import edit_season as engine_edit_season
 from aerona.engine.environment.control import forge_ley
 from aerona.engine.environment.time_control import add_season as engine_add_season
 from aerona.engine.faith import control as faith
@@ -68,6 +70,16 @@ class AddSeasonInput(ToolInput):
     growth: Share = 50
     travel: Share = 50
     campaign: Share = 50
+    share_pct: Annotated[int, Field(ge=1, le=100)] | None = None
+    position: Annotated[int, Field(ge=0, le=7)] | None = None
+
+
+class ReshapeSeasonInput(ToolInput):
+    season_id: int
+    share_pct: Annotated[int, Field(ge=1, le=100)] | None = None
+    temperature_shift: Shift | None = None
+    rain_shift: Shift | None = None
+    reason: Reason
 
 
 class OpenRoadInput(ToolInput):
@@ -156,19 +168,46 @@ async def add_season(call: SonCall, args: AddSeasonInput) -> str:
     require_essence(call, cost)
     values = args.model_dump(include={"temperature_shift", "rain_shift", "growth", "travel", "campaign"})
     try:
-        season = await engine_add_season(call.session, world.id, " ".join(args.name.split()), values, None)
+        season = await engine_add_season(call.session, world.id, " ".join(args.name.split()), values, args.position, share_pct=args.share_pct)
     except AeronaError as error:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(world.id)
     await call.record(
-        "tools.son.add_season",
-        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
-        facts={"season": str(season.name)},
-        kind=ChronicleKind.COSMIC,
+        "season.added",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: world.id},
+        facts={"season": str(season.name), "share": season.share_pct},
         world_id=world.id,
     )
     return result(SonResult.SEASON_ADDED, season=season.name, world=world.name)
+
+
+async def reshape_season(call: SonCall, args: ReshapeSeasonInput) -> str:
+    if not {call.son.domain_primary, call.son.domain_secondary} & SEASON_DOMAINS:
+        fail(SonResult.SEASONS_NOT_YOURS, domains=SEASON_DOMAIN_WORDS)
+    season = await call.session.get(WorldSeasonRow, args.season_id)
+    if season is None:
+        fail(SonResult.NO_SUCH_SEASON, season_id=args.season_id)
+    world = await world_in_hand(call, season.world_id)
+    values = args.model_dump(include={"share_pct", "temperature_shift", "rain_shift"}, exclude_none=True)
+    if not values:
+        fail(SonResult.WORK_REFUSED, reason="name the share, warmth or rain to change")
+    cost = call.rules.son_tools.reorder_seasons_essence
+    require_essence(call, cost)
+    before = season.share_pct
+    try:
+        await engine_edit_season(call.session, season.id, values, None)
+    except AeronaError as error:
+        fail(SonResult.WORK_REFUSED, reason=error.message)
+    call.spend_essence(cost)
+    call.target(world.id)
+    await call.record(
+        "season.reshaped",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: world.id},
+        facts={"season": season.name, "share_before": before, "share_after": season.share_pct},
+        world_id=world.id,
+    )
+    return result(SonResult.SEASON_RESHAPED, season=season.name, world=world.name, share=season.share_pct)
 
 
 async def open_road(call: SonCall, args: OpenRoadInput) -> str:
@@ -402,6 +441,18 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
                 rarity_gate=gate(Gate.RARE_TOOLS),
             ),
             add_season,
+        ),
+        ToolSpec(
+            SonToolId.RESHAPE_SEASON,
+            son,
+            ReshapeSeasonInput,
+            ToolMeta(
+                ActionKind.REORDER_SEASONS,
+                lambda rules: rules.son_tools.reorder_seasons_ap,
+                essence_cost=lambda rules: rules.son_tools.reorder_seasons_essence,
+                rarity_gate=gate(Gate.RARE_TOOLS),
+            ),
+            reshape_season,
         ),
         ToolSpec(
             SonToolId.OPEN_ROAD,

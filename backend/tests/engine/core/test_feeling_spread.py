@@ -7,9 +7,11 @@ from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.mind import ThoughtRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.collective import CrowdFeeling
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.mind import Emotion, ThoughtKind
+from aerona.engine.collective.feelings import feelings_of
 from aerona.engine.context import TickContext
 from aerona.engine.feeling_spread.lean import mood_lean
 from aerona.engine.feeling_spread.moods import MoodTally, spread_along_bonds, spread_in_households, spread_in_places, tend_moods
@@ -45,8 +47,7 @@ async def test_a_place_gathers_a_mood_its_people_catch_that_feeds_its_crowd_and_
     await spread_in_places(ctx, tally)
     mood = await session.scalar(select(FeelingSpreadRow).where(FeelingSpreadRow.settlement_entity_id == town.id))
     assert mood is not None and mood.leading is Emotion.FEAR and tally.spread == 1
-    crowd = await session.get(CrowdMoodRow, town.id)
-    assert crowd is not None and crowd.anxiety > 0
+    assert (await feelings_of(session, town.id))[CrowdFeeling.FEAR] > 0
     assert await caught(session, calm.id) is not None
     assert await mood_lean(session, town.id, BiasedDecision.PEACE) > 1 > await mood_lean(session, town.id, BiasedDecision.WAR)
     assert await session.scalar(select(IncidentRow.id).where(IncidentRow.kind == "mood.spread")) is not None

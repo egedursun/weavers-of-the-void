@@ -20,12 +20,25 @@ import {
   Thermometer,
   Users,
 } from 'lucide-react'
+import {
+  climateEraValues,
+  cosmosShapeValues,
+  cosmosSizeValues,
+  dimensionKindValues,
+  genesisTemplateValues,
+  languageTextureValues,
+  loreLanguageValues,
+  storytellerProfileValues,
+  technologyEraValues,
+  worldAgeValues,
+  worldTypeValues,
+} from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, MiniStat, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { FAMILIES } from '@/features/technology/labels'
 import {
   type SavedGenesis,
@@ -82,23 +95,24 @@ function GenesisBody({
   const settings = saved.settings
   const template = settings?.template
     ? (options?.templates.find((item) => item.key === settings.template)
-        ?.name ?? humanize(settings.template))
+        ?.name ?? wordOf(genesisTemplateValues, settings.template))
     : 'None'
   const worldKind = settings?.world_type
     ? (options?.world_types.find(
         (item) => item.world_type === settings.world_type
-      )?.label ?? humanize(settings.world_type))
+      )?.label ?? wordOf(worldTypeValues, settings.world_type))
     : SEED_CHOSE
   const climate = settings?.climate_era
     ? (options?.climate_eras.find((item) => item.era === settings.climate_era)
-        ?.label ?? humanize(settings.climate_era))
+        ?.label ?? wordOf(climateEraValues, settings.climate_era))
     : SEED_CHOSE
   const age = settings?.world_age
-    ? (options?.world_ages[settings.world_age] ?? humanize(settings.world_age))
+    ? (options?.world_ages[settings.world_age] ??
+      wordOf(worldAgeValues, settings.world_age))
     : SEED_CHOSE
   const shape = settings
     ? (options?.shapes.find((item) => item.shape === settings.cosmos_shape)
-        ?.label ?? humanize(settings.cosmos_shape))
+        ?.label ?? wordOf(cosmosShapeValues, settings.cosmos_shape))
     : ''
   const layer =
     settings?.cosmos_shape !== 'layered'
@@ -106,7 +120,7 @@ function GenesisBody({
       : settings.layer_kind
         ? (options?.layer_kinds.find(
             (item) => item.kind === settings.layer_kind
-          )?.label ?? humanize(settings.layer_kind))
+          )?.label ?? wordOf(dimensionKindValues, settings.layer_kind))
         : SEED_CHOSE
   return (
     <div className='flex min-w-0 flex-col gap-3'>
@@ -126,7 +140,7 @@ function GenesisBody({
         <MiniStat
           icon={Languages}
           label='Lore language'
-          value={humanize(saved.lore_language)}
+          value={wordOf(loreLanguageValues, saved.lore_language)}
           tone='gold'
         />
         {settings && (
@@ -152,7 +166,7 @@ function GenesisBody({
             <MiniStat
               icon={Cog}
               label='Technology'
-              value={humanize(settings.technology)}
+              value={wordOf(technologyEraValues, settings.technology)}
               tone='muted'
             />
             <MiniStat
@@ -164,7 +178,7 @@ function GenesisBody({
             <MiniStat
               icon={AudioLines}
               label='Language texture'
-              value={humanize(settings.language_texture)}
+              value={wordOf(languageTextureValues, settings.language_texture)}
               tone='verdigris'
             />
             <MiniStat
@@ -208,7 +222,7 @@ function GenesisBody({
             <MiniStat
               icon={Orbit}
               label='Cosmos size'
-              value={humanize(settings.cosmos_size)}
+              value={wordOf(cosmosSizeValues, settings.cosmos_size)}
               tone='info'
             />
             <MiniStat
@@ -226,7 +240,7 @@ function GenesisBody({
             <MiniStat
               icon={Activity}
               label='Storyteller'
-              value={humanize(settings.storyteller)}
+              value={wordOf(storytellerProfileValues, settings.storyteller)}
               tone='warning'
             />
             <MiniStat

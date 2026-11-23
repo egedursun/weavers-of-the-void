@@ -20,6 +20,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
+from aerona.engine.arts.market_roles import appoint_critics, appoint_curators, backfill_curators, keep_reviews, show_collections
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -44,6 +45,8 @@ class MarketTally:
     sales: int = 0
     coin: int = 0
     lured: int = 0
+    reviews: int = 0
+    shown: int = 0
 
 
 async def owner_of(ctx: TickContext, artwork_id: int) -> int | None:
@@ -141,6 +144,7 @@ async def appraise(ctx: TickContext, artwork: EntityRow, profile: ArtworkProfile
     price *= 1 + (table.canon_pct / PERCENT if canon else 0)
     price *= 1 + table.provenance_pct * row.provenance / PERCENT
     price *= 1 + table.interest_pct * row.interest / PERCENT / PERCENT
+    price *= max(0.0, 1 + (row.acclaim or 0) / PERCENT)
     if "price" not in row.locked:
         row.price = max(0, round_half_up(price))
     row.updated_epoch = ctx.epoch
@@ -313,8 +317,17 @@ async def court_patronage(ctx: TickContext, tally: MarketTally) -> None:
         )
 
 
+async def keep_roles(ctx: TickContext, tally: MarketTally) -> None:
+    await backfill_curators(ctx)
+    tally.collectors += await appoint_curators(ctx) + await appoint_critics(ctx)
+    tally.reviews += await keep_reviews(ctx)
+    tally.shown += await show_collections(ctx)
+    await ctx.session.flush()
+
+
 async def keep_market(ctx: TickContext, tally: MarketTally) -> None:
     await gather_collectors(ctx, tally)
+    await keep_roles(ctx, tally)
     await trade_works(ctx, tally)
     await court_patronage(ctx, tally)
     await ctx.session.flush()

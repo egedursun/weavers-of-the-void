@@ -1,9 +1,11 @@
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
+from aerona.db.tables.customs import GradeDutyRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.customs import (
     AgeGrade,
     CoopPurpose,
     EvidenceKind,
+    GradeDuty,
     Intoxicant,
     IntoxicantUse,
     MarkKind,
@@ -14,8 +16,8 @@ from aerona.domain.enums.customs import (
     NamingPattern,
     Naturalisation,
     ReliefKind,
-    RevivalAim,
     RevivalGoal,
+    RevivalWay,
 )
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
@@ -37,7 +39,7 @@ class RunNow(Command):
 
 class RevivalDraft(Command):
     people_entity_id: int
-    aim: RevivalAim = RevivalAim.RESTORE
+    way: RevivalWay = RevivalWay.RESTORE
     goal: RevivalGoal = RevivalGoal.REVIVE_LANGUAGE
 
 
@@ -70,6 +72,23 @@ class MarkCustomDraft(Command):
     people_id: int
     kind: MarkKind
     meaning: MarkMeaning = MarkMeaning.STATUS
+
+
+class GradeDutyDraft(Command):
+    people_id: int
+    duty: GradeDuty
+    grade: AgeGrade = AgeGrade.YOUNG_ADULTS
+    hold: bool = True
+
+
+class GradeDutyTarget(Command):
+    people_id: int
+    duty: GradeDuty
+
+
+class GradeDutyEdit(Edited):
+    people_id: int
+    duty: GradeDuty
 
 
 class MarkCustomTarget(Command):
@@ -111,6 +130,8 @@ class TimeBudgetDraft(Command):
     art: int = 0
     housework: int = 0
     sleep: int = 0
+    civic: int = 0
+    training: int = 0
 
 
 class TimeBudgetTarget(Command):
@@ -327,7 +348,7 @@ class MeasureStandardEdit(Edited):
 @player_action("revival:create", ActionKind.EDIT_RECORD)
 async def revival_create(scope: PlayerScope, command: RevivalDraft) -> Effect:
     row = await control.set_record(
-        await scope.context("revival_create"), "revival", {}, {"people_entity_id": command.people_entity_id, "aim": command.aim, "goal": command.goal}
+        await scope.context("revival_create"), "revival", {}, {"people_entity_id": command.people_entity_id, "way": command.way, "goal": command.goal}
     )
     return Effect("A movement rises among the people.", values={"record_id": getattr(row, "id", 0)})
 
@@ -367,6 +388,28 @@ async def intoxicant_custom_edit(scope: PlayerScope, command: IntoxicantCustomEd
 async def intoxicant_custom_delete(scope: PlayerScope, command: IntoxicantCustomTarget) -> Effect:
     await control.delete_record(await scope.context("intoxicant_custom_delete"), "intoxicant_custom", (command.people_id, command.intoxicant))
     return Effect("The custom is struck.")
+
+
+@player_action("grade_duty:set", ActionKind.EDIT_RECORD)
+async def grade_duty_set(scope: PlayerScope, command: GradeDutyDraft) -> Effect:
+    row = await control.set_record(
+        await scope.context("grade_duty_set"), "grade_duty", {"people_entity_id": command.people_id, "duty": command.duty}, {"grade": command.grade}
+    )
+    if command.hold is not None and isinstance(row, GradeDutyRow):
+        row.locked = ["grade"] if command.hold else []
+    return Effect(f"The {spoken(command.grade)} now carry the duty of {spoken(command.duty)}.", command.people_id)
+
+
+@player_action("grade_duty:edit", ActionKind.EDIT_RECORD)
+async def grade_duty_edit(scope: PlayerScope, command: GradeDutyEdit) -> Effect:
+    await control.edit_record(await scope.context("grade_duty_edit"), "grade_duty", (command.people_id, command.duty), command.values, command.release)
+    return Effect("The duty is set so.", command.people_id)
+
+
+@player_action("grade_duty:delete", ActionKind.EDIT_RECORD)
+async def grade_duty_delete(scope: PlayerScope, command: GradeDutyTarget) -> Effect:
+    await control.delete_record(await scope.context("grade_duty_delete"), "grade_duty", (command.people_id, command.duty))
+    return Effect(f"No grade carries the duty of {spoken(command.duty)} any more.", command.people_id)
 
 
 @player_action("mark_custom:set", ActionKind.EDIT_RECORD)
@@ -427,6 +470,8 @@ async def time_budget_set(scope: PlayerScope, command: TimeBudgetDraft) -> Effec
             "art": command.art,
             "housework": command.housework,
             "sleep": command.sleep,
+            "civic": command.civic,
+            "training": command.training,
         },
     )
     return Effect("The year of the class is set.", values={"record_id": getattr(row, "id", 0)})

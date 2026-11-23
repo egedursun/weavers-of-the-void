@@ -10,7 +10,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.engine.body.customs import people_of
 from aerona.engine.customs.time_budgets import budget_of
 
-BUDGET_KEYS = ("work", "housework", "care", "rest", "sleep", "worship", "learning", "leisure", "travel", "service", "art")
+BUDGET_KEYS = ("work", "housework", "care", "rest", "sleep", "worship", "learning", "leisure", "travel", "service", "art", "civic", "training")
 
 
 async def budget_line(scope: Scope, me: EntityRow) -> str | None:

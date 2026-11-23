@@ -37,3 +37,4 @@ class OutageCause(StrEnum):
     POWER = "power"
     SHORTAGE = "shortage"
     DIVINE = "divine"
+    ICE_STORM = "ice_storm"

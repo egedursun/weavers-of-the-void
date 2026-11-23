@@ -40,7 +40,7 @@ async def bind_league(call: SonCall, args: BindLeagueInput) -> str:
     seat = await call.session.get(EntityRow, cores[0]) if cores else None
     await ensure_in_reach(call, seat if seat is not None else league)
     if held(league.id) or not args.strength_change:
-        fail(SonResult.LEAGUE_REFUSED, why="a stronger hand holds that league, or nothing would change")
+        fail(SonResult.LEAGUE_REFUSED, why="that league is held, or nothing would change")
     strength = clamp_int(stat_or(league, "strength", 0) + args.strength_change, 0, PERCENT)
     set_stats(league, strength=strength)
     call.target(league.id)

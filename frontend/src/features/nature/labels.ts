@@ -1,32 +1,35 @@
 import {
+  type LucideIcon,
   Bean,
   Bug,
   CircleSlash,
   Compass,
+  Drama,
   Droplets,
   Ear,
+  Egg,
   Eye,
   Flame,
   FlaskConical,
   Ghost,
   Handshake,
+  Hourglass,
   Leaf,
-  type LucideIcon,
   Moon,
   MoonStar,
   Radar,
   Shield,
+  ShieldCheck,
   Skull,
   Snowflake,
   Sprout,
   Sun,
+  SunDim,
   Thermometer,
   Vibrate,
   Wheat,
   Wind,
   Zap,
-  Drama,
-  Egg,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -54,11 +57,27 @@ export const SLEEP: Record<Schema['Dormancy'], Named> = {
     icon: Flame,
     tone: 'warning',
   },
+  torpor: { label: 'Slows in daily torpor', icon: Moon, tone: 'verdigris' },
+  cryptobiosis: {
+    label: 'Lies near lifeless for years',
+    icon: Hourglass,
+    tone: 'muted',
+  },
 }
 
 export const WARMTH: Record<Schema['Thermoregulation'], Named> = {
   endotherm: { label: 'Warm-blooded', icon: Flame, tone: 'gold' },
   ectotherm: { label: 'Cold-blooded', icon: Snowflake, tone: 'info' },
+  heterotherm: {
+    label: 'Warm and cold by turns',
+    icon: Thermometer,
+    tone: 'verdigris',
+  },
+  athermic: {
+    label: 'Untouched by heat or cold',
+    icon: CircleSlash,
+    tone: 'muted',
+  },
 }
 
 export const SENSES: Record<Schema['SenseKind'], Named> = {
@@ -71,6 +90,8 @@ export const SENSES: Record<Schema['SenseKind'], Named> = {
   magnetic: { label: 'Sense of direction', icon: Compass, tone: 'verdigris' },
   spirit_sight: { label: 'Spirit sight', icon: Ghost, tone: 'gold' },
   heat: { label: 'Sensing heat', icon: Thermometer, tone: 'warning' },
+  electric: { label: 'Electric sense', icon: Zap, tone: 'info' },
+  ultraviolet: { label: 'Ultraviolet sight', icon: SunDim, tone: 'gold' },
 }
 
 export const BONDS: Record<Schema['SymbiosisKind'], Named> = {
@@ -97,6 +118,12 @@ export const DEFENCES: Record<Schema['PlantDefence'], Named> = {
     tone: 'warning',
   },
   carnivorous: { label: 'Eats flesh', icon: Skull, tone: 'danger' },
+  stinging: { label: 'Stinging hairs', icon: Bug, tone: 'warning' },
+  guardians: {
+    label: 'Guarded by allies',
+    icon: ShieldCheck,
+    tone: 'verdigris',
+  },
 }
 
 export const FERMENTS: Record<Schema['FermentKind'], Named> = {

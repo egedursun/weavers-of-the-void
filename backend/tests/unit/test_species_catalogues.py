@@ -11,19 +11,25 @@ def test_diet_traits_keep_their_memberships() -> None:
     assert {Diet.HERBIVORE, Diet.OMNIVORE, Diet.FILTER} == GRAZERS
     assert {Diet.CARNIVORE, Diet.OMNIVORE} == MEAT_EATERS
     assert {Diet.CARNIVORE, Diet.OMNIVORE, Diet.SCAVENGER} == FLESH_SEEKERS
-    assert {Diet.VOID, Diet.MINERAL} == INEDIBLE
-    assert {Diet.MINERAL, Diet.VOID, Diet.PHOTOSYNTHETIC} == MEATLESS
+    assert {Diet.VOID, Diet.MINERAL, Diet.ENERGY} == INEDIBLE
+    assert {Diet.MINERAL, Diet.VOID, Diet.PHOTOSYNTHETIC, Diet.CHEMOSYNTHETIC, Diet.DECOMPOSER, Diet.ENERGY} == MEATLESS
     assert all(spec.needs and spec.text for spec in DIETS.values())
 
 
 def test_stages_socialities_and_biochemistries_keep_their_memberships() -> None:
     assert {DomesticationStage.HERDED, DomesticationStage.DOMESTICATED, DomesticationStage.BREED} == KEPT_STAGES
     assert {DomesticationStage.DOMESTICATED, DomesticationStage.BREED} == HOUSED_STAGES
-    assert {DomesticationStage.WILD, DomesticationStage.TAMED, DomesticationStage.HERDED} == WILDISH_STAGES
-    assert {kind for kind, spec in SOCIALITIES.items() if spec.keeps_numbers} == {Sociality.HERD, Sociality.HIVE}
+    assert {
+        DomesticationStage.WILD,
+        DomesticationStage.TAMED,
+        DomesticationStage.HERDED,
+        DomesticationStage.COMMENSAL,
+        DomesticationStage.FERAL,
+    } == WILDISH_STAGES
+    assert {kind for kind, spec in SOCIALITIES.items() if spec.keeps_numbers} == {Sociality.HERD, Sociality.HIVE, Sociality.COLONY, Sociality.SWARM}
     assert SOCIALITIES[Sociality.PACK].trait is CreatureTrait.PACK_HUNTER
-    assert {Biochemistry.VOID, Biochemistry.SPIRIT} == UNBOUND_BIOCHEMISTRY
-    assert {Biochemistry.CRYSTAL, Biochemistry.SILICON} == CHARGED_BIOCHEMISTRY
+    assert {Biochemistry.VOID, Biochemistry.SPIRIT, Biochemistry.PLASMA} == UNBOUND_BIOCHEMISTRY
+    assert {Biochemistry.CRYSTAL, Biochemistry.SILICON, Biochemistry.PLASMA} == CHARGED_BIOCHEMISTRY
 
 
 def test_every_purpose_weighs_its_senses_to_one() -> None:

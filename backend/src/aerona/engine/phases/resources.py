@@ -2,11 +2,15 @@ from aerona.catalog.life_traits import EXTRACTION_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.life_traits import ExtractionKindTrait
+from aerona.domain.enums.region import DangerHarm
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.catch import regrowth_scale
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import ExtractionTally, extract, extraction_kind, keep_methods, reconcile, regrow
 from aerona.engine.economy.stocks import sync_aggregates
+from aerona.engine.environment.columns import columns_by_region
+from aerona.engine.environment.dangers import weighted_dangers
+from aerona.engine.environment.deep import deepen
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import clamp_int
@@ -40,6 +44,9 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "people.population",
     "people.prosperity",
     "people.wealth",
+    "region.danger",
+    "region.fertility",
+    "region.magic",
     "resource.abundance",
     "resource.value",
     "settlement.population",
@@ -69,17 +76,25 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.irregular_seasons",
+    "table.language_profiles",
+    "table.lexemes",
     "table.maimed_cohorts",
+    "table.name_registry",
     "table.node_births",
     "table.nodes",
     "table.place_environment",
+    "table.place_profiles",
     "table.plague_responses",
     "table.plant_profiles",
     "table.polity_profiles",
     "table.public_clocks",
     "table.region_crops",
+    "table.region_dangers",
     "table.region_environment",
+    "table.region_geology",
     "table.region_pollution",
+    "table.region_underground",
     "table.resource_profiles",
     "table.resource_workers",
     "table.salvage_sites",
@@ -108,24 +123,34 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "resource.abundance",
     "settlement.population",
     "settlement.prosperity",
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_industry",
     "table.community_societies",
     "table.community_stocks",
     "table.entities",
+    "table.entity_flags",
     "table.goods_flows",
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.language_profiles",
     "table.maimed_cohorts",
+    "table.name_registry",
+    "table.node_births",
+    "table.place_environment",
+    "table.place_profiles",
     "table.production_runs",
     "table.region_environment",
+    "table.region_geology",
     "table.resource_profiles",
     "table.resource_workers",
 )
 async def resource_economy(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
+    book.worker_danger = await weighted_dangers(ctx.session, ctx.rules, DangerHarm.WORKERS)
+    book.rock_columns = await columns_by_region(ctx.session)
     tally = ExtractionTally()
     pairs = [(resource, book.profiles[resource.id]) for resource in book.resources() if resource.id in book.profiles]
     ctx.count("extraction_methods_moved", await keep_methods(ctx, pairs))
@@ -142,6 +167,12 @@ async def resource_economy(ctx: TickContext) -> None:
     ctx.count("output", tally.output)
     ctx.count("hazards", tally.hazards)
     ctx.count("knowledge_gated", tally.gated)
+    deep = await deepen(ctx)
+    ctx.count("layers_reached", deep.layers)
+    ctx.count("veins_found", deep.veins)
+    ctx.count("strata_reached", deep.strata)
+    ctx.count("gas_fires", deep.fires)
+    ctx.count("reservoirs_tapped", deep.tapped)
 
 
 @reads(
@@ -159,6 +190,7 @@ async def resource_economy(ctx: TickContext) -> None:
     "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.irregular_seasons",
     "table.nodes",
     "table.place_environment",
     "table.plague_responses",

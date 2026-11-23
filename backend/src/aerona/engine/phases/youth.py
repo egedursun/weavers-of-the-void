@@ -18,6 +18,7 @@ from aerona.engine.youth.seed import seed_youth
     "table.faction_memberships",
     "table.faction_profiles",
     "table.mortal_profiles",
+    "table.node_births",
     "table.nodes",
     "table.personality_values",
     "table.polity_members",

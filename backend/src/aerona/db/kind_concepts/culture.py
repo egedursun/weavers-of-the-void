@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from aerona.catalog.aspirations import FEARS, GOALS
 from aerona.catalog.mind_split import IDEAS, IDEOLOGY_IDEAS, TENET_IDEAS
 from aerona.catalog.thoughts import READING_LABELS, READINGS
+from aerona.core.grammar import spoken
 from aerona.db.kind_concepts.spec import ConceptSpec, KindProperty
 from aerona.db.tables.culture_kinds import AimKindRow, FearKindRow, ReadingKindRow, TenetKindRow
 from aerona.domain.enums.culture import IdeologyTenet
@@ -15,12 +16,8 @@ from aerona.domain.enums.mind import DreamReading, Facet, FearKind, IdeaKind, Li
 BAD_THOUGHTS = frozenset({ThoughtKind.HAD_NIGHTMARE})
 
 
-def words(value: str) -> str:
-    return value.replace("_", " ").capitalize()
-
-
 def options(values: type[ValueAxis] | type[Facet] | type[NeedKind]) -> Mapping[str, str]:
-    return {item.value: words(item.value) for item in values}
+    return {item.value: spoken(item).capitalize() for item in values}
 
 
 @dataclass(frozen=True)
@@ -45,8 +42,8 @@ def tenet_row(key: str, name: str, scope: TenetScope, idea: IdeaKind | None) -> 
 
 def built_in_tenets() -> list[BuiltIn]:
     rows = [tenet_row(f"idea.{idea.value}", spec.label, TenetScope.IDEA, idea) for idea, spec in IDEAS.items()]
-    rows += [tenet_row(f"ideology.{tenet.value}", words(tenet.value), TenetScope.IDEOLOGY, IDEOLOGY_IDEAS.get(tenet)) for tenet in IdeologyTenet]
-    rows += [tenet_row(f"doctrine.{tenet.value}", words(tenet.value), TenetScope.DOCTRINE, TENET_IDEAS.get(tenet)) for tenet in TenetKind]
+    rows += [tenet_row(f"ideology.{tenet.value}", spoken(tenet).capitalize(), TenetScope.IDEOLOGY, IDEOLOGY_IDEAS.get(tenet)) for tenet in IdeologyTenet]
+    rows += [tenet_row(f"doctrine.{tenet.value}", spoken(tenet).capitalize(), TenetScope.DOCTRINE, TENET_IDEAS.get(tenet)) for tenet in TenetKind]
     return rows
 
 
@@ -83,7 +80,7 @@ TENET_SPEC = ConceptSpec(
     hint="What a doctrine, an ideology or an idea holds; its holders' values move by its deltas",
     table=TenetKindRow,
     category=TenetScope,
-    category_labels={scope.value: words(scope.value) for scope in TenetScope},
+    category_labels={scope.value: spoken(scope).capitalize() for scope in TenetScope},
     properties=(
         KindProperty("value_axis", "First value", "The value its holders come to weigh more or less", options=options(ValueAxis)),
         KindProperty("value_delta", "Pull on the first value", "How far it moves that value each epoch, at full strength", -50, 50),

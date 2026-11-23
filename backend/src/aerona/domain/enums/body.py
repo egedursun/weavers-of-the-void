@@ -14,6 +14,10 @@ class BodyPlan(StrEnum):
     COLOSSAL = "colossal"
     CONSTRUCT = "construct"
     DIVINE_MANIFEST = "divine_manifest"
+    TENTACLED = "tentacled"
+    CENTAUROID = "centauroid"
+    RADIAL = "radial"
+    COLONIAL = "colonial"
 
 
 class HeightClass(StrEnum):
@@ -75,6 +79,7 @@ class DamageType(StrEnum):
     CHEMICAL = "chemical"
     SONIC = "sonic"
     PSYCHIC = "psychic"
+    ASPHYXIA = "asphyxia"
 
 
 class InjuryKind(StrEnum):
@@ -102,11 +107,16 @@ class InjuryKind(StrEnum):
     CHEMICAL_BURN = "chemical_burn"
     RADIATION_SICKNESS = "radiation_sickness"
     MIND_SCAR = "mind_scar"
+    ASPHYXIA = "asphyxia"
+    DISLOCATION = "dislocation"
+    INTERNAL_BLEEDING = "internal_bleeding"
 
 
 class InjuryState(StrEnum):
     FRESH = "fresh"
     INFECTED = "infected"
+    GANGRENOUS = "gangrenous"
+    REOPENED = "reopened"
     HEALING = "healing"
     HEALED_SCAR = "healed_scar"
     PERMANENT = "permanent"
@@ -140,6 +150,9 @@ class HarmCause(StrEnum):
     EXPERIMENT = "experiment"
     POWER = "power"
     BODY = "body"
+    CHILDBIRTH = "childbirth"
+    CRIME = "crime"
+    SPORT = "sport"
 
 
 class ConditionKind(StrEnum):
@@ -161,6 +174,9 @@ class ConditionKind(StrEnum):
     COMATOSE = "comatose"
     COGNITIVE_DECLINE = "cognitive_decline"
     MALNUTRITION = "malnutrition"
+    PARALYSIS = "paralysis"
+    INFERTILITY = "infertility"
+    CHRONIC_PAIN = "chronic_pain"
 
 
 class MedicineTier(StrEnum):
@@ -189,6 +205,8 @@ class Capacity(StrEnum):
     PRESENCE = "presence"
     MOBILITY = "mobility"
     FERTILITY = "fertility"
+    ENDURANCE = "endurance"
+    PERCEPTION = "perception"
 
 
 class BodyReading(StrEnum):
@@ -208,6 +226,8 @@ class MaimedKind(StrEnum):
     LAME = "lame"
     SCARRED = "scarred"
     BROKEN_MINDED = "broken_minded"
+    PARALYSED = "paralysed"
+    LOST_FINGERS = "lost_fingers"
 
 
 class StrikeStyle(StrEnum):
@@ -273,6 +293,10 @@ class BodyPart(StrEnum):
     TORSO = "torso"
     VENOM_GLAND = "venom_gland"
     WINGS = "wings"
+    SPINE = "spine"
+    TENTACLES = "tentacles"
+    CARAPACE = "carapace"
+    BEAK = "beak"
 
 
 class TissueKind(StrEnum):
@@ -320,3 +344,6 @@ class TreatmentStep(StrEnum):
     CAUTERISE = "cauterise"
     CRUTCH = "crutch"
     TRACTION = "traction"
+    DRAIN = "drain"
+    BLEED = "bleed"
+    MEDICATE = "medicate"

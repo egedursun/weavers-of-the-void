@@ -6,15 +6,16 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held, unheld
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction
+from aerona.engine.body.afflictions import has_role_near
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.promotion import dormant_ids
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.mortal.acts import accumulate_stress, blasphemy, bribe, choose_path, convert, plot, repay, stress_break, update_loyalty
+from aerona.engine.mortal.acts import accumulate_stress, blasphemy, bribe, choose_path, come_back, convert, plot, repay, stress_break, update_loyalty, withdrawn
 from aerona.engine.mortal.course import (
     backfill_deaths,
     betroth_children,
@@ -30,6 +31,7 @@ from aerona.engine.mortal.course import (
 from aerona.engine.mortal.equipment import auto_equip
 from aerona.engine.mortal.kinship import backfill_kin
 from aerona.engine.mortal.learning import learn
+from aerona.engine.mortal.paths import walk_path
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.phase import Phase
 from aerona.engine.polity.book import RealmBook
@@ -97,7 +99,7 @@ async def mortal_survey(ctx: TickContext) -> None:
     ctx.count("kin_backfilled", sum((await backfill_kin(ctx.session, ctx.epoch)).values()))
     created = 0
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
-        if mortal.status is not EntityStatus.CANON:
+        if mortal.status is not EntityStatus.CANON or held(mortal.id):
             continue
         created += 1 if await seed_mortal(ctx, mortal) else 0
         await auto_equip(ctx.session, mortal.id)
@@ -362,6 +364,7 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.genomes",
     "table.held_identities",
     "table.holder_levels",
+    "table.house_profiles",
     "table.incident_participants",
     "table.incidents",
     "table.incubating_ideas",
@@ -422,7 +425,10 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.injuries",
     "table.memories",
     "table.mortal_profiles",
+    "table.needs",
+    "table.offices",
     "table.passions",
+    "table.skills",
     "table.thoughts",
     "table.traits",
 )
@@ -437,6 +443,10 @@ async def mortal_minds(ctx: TickContext) -> None:
             counts[f"break_{broke.value}"] += 1
         if mortal.status is not EntityStatus.CANON:
             continue
+        if withdrawn(ctx, profile):
+            cared = await has_role_near(ctx, mortal, MortalRole.HEALER)
+            counts["withdrawals_ended"] += 1 if await come_back(ctx, mortal, profile, cared) else 0
+            continue
         counts["gratitude"] += 1 if await repay(ctx, mortal) else 0
         counts["plots"] += 1 if await plot(ctx, mortal, profile) else 0
         counts["conversions"] += 1 if await convert(ctx, mortal, profile) else 0
@@ -444,6 +454,9 @@ async def mortal_minds(ctx: TickContext) -> None:
         path = await choose_path(ctx, mortal, profile)
         if path is not None:
             counts[f"career_{path.value}"] += 1
+        walked = await walk_path(ctx, mortal, profile) if mortal.status is EntityStatus.CANON else None
+        if walked is not None:
+            counts[f"path_{walked}"] += 1
     for key, value in counts.items():
         ctx.count(key, value)
 

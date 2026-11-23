@@ -10,7 +10,11 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import type { components } from '@/api/generated/schema'
+import {
+  disasterValues,
+  miracleValues,
+  type components,
+} from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog, FormRow, Section, Paged } from '@/components/domain'
@@ -20,6 +24,7 @@ import { ForgeCard } from '@/features/cosmography/parts'
 import { StepButton } from '@/features/cycles/parts'
 import { OBJECTS, VERBS } from '@/features/divinePowers/labels'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { ChoiceField } from '@/features/wars/military/parts'
 import { CostChip } from '../actions/ActionCard'
 import { type EntityContext, isThinking } from '../actions/context'
@@ -151,7 +156,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
                   onClick={() => run('miracle', miracle)}
                 >
                   <HandHeart />
-                  {humanize(miracle)}
+                  {wordOf(miracleValues, miracle)}
                 </Button>
               )
             }}
@@ -179,7 +184,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
                     }
                   >
                     <CloudLightning />
-                    {humanize(disaster)}
+                    {wordOf(disasterValues, disaster)}
                   </Button>
                 )
               }}

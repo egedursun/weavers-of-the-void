@@ -1,10 +1,7 @@
 import {
-  Wrench,
-  Split,
-  Languages,
-  Eye,
-  AlertTriangle,
+  type LucideIcon,
   Activity,
+  AlertTriangle,
   ArrowDownUp,
   Baby,
   Ban,
@@ -16,6 +13,8 @@ import {
   CloudLightning,
   Coins,
   Crown,
+  DoorOpen,
+  Eye,
   Flame,
   Flower2,
   Footprints,
@@ -23,16 +22,16 @@ import {
   GitBranch,
   GitFork,
   GitMerge,
-  Handshake,
   HandHeart,
+  Handshake,
   HardHat,
   Heart,
   HeartHandshake,
   Hourglass,
   Landmark,
+  Languages,
   Lightbulb,
   Link,
-  type LucideIcon,
   Mountain,
   Network,
   Orbit,
@@ -46,6 +45,7 @@ import {
   Shield,
   ShieldAlert,
   Sparkles,
+  Split,
   Sprout,
   Swords,
   Tent,
@@ -56,6 +56,7 @@ import {
   Wallet,
   Wheat,
   Wind,
+  Wrench,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -189,6 +190,15 @@ export const OCCASIONS: Record<Schema['GiftOccasion'], Named> = {
   return: { label: 'A return gift', icon: Undo2, tone: 'success' },
   alliance: { label: 'Between allies', icon: Handshake, tone: 'info' },
   relief: { label: 'Aid in a stricken hour', icon: HandHeart, tone: 'success' },
+  birth: { label: 'At a birth', icon: Baby, tone: 'success' },
+  funeral: { label: 'To the bereaved', icon: Flower2, tone: 'muted' },
+  amends: { label: 'Amends for a wrong', icon: Scale, tone: 'warning' },
+  patronage: { label: 'From a patron', icon: Crown, tone: 'gold' },
+  hospitality: {
+    label: 'Between host and guest',
+    icon: DoorOpen,
+    tone: 'info',
+  },
 }
 
 export const GIFT_STATES: Record<Schema['GiftState'], Named> = {
@@ -201,6 +211,21 @@ export const GIFT_STATES: Record<Schema['GiftState'], Named> = {
     tone: 'gold',
   },
   lapsed: { label: 'Unanswered, face lost', icon: TrendingDown, tone: 'muted' },
+  exceeded: {
+    label: 'Answered with more, the giver now owes',
+    icon: TrendingUp,
+    tone: 'gold',
+  },
+  passed_on: {
+    label: 'Passed on along a circuit',
+    icon: Repeat,
+    tone: 'verdigris',
+  },
+  released: {
+    label: 'Debt released by grace',
+    icon: HandHeart,
+    tone: 'success',
+  },
 }
 
 export const DESCENTS: Record<Schema['KinshipDescent'], Named> = {
@@ -307,10 +332,16 @@ export const ADOPTIONS: Record<Schema['AdoptionKind'], Named> = {
   },
 }
 
-export const FIRST_SIDES: Record<Schema['Sex'], Named> = {
-  female: { label: 'The female side is first', icon: Users, tone: 'verdigris' },
-  male: { label: 'The male side is first', icon: Users, tone: 'info' },
-  other: { label: 'Neither side by sex', icon: Users, tone: 'muted' },
+export const FIRST_SIDES: Record<Schema['SexKind'], Named> = {
+  bearer: {
+    label: 'The bearing side is first',
+    icon: Users,
+    tone: 'verdigris',
+  },
+  begetter: { label: 'The begetting side is first', icon: Users, tone: 'info' },
+  both: { label: 'Not a side', icon: Users, tone: 'muted' },
+  neither: { label: 'Not a side', icon: Users, tone: 'muted' },
+  none: { label: 'Not a side', icon: Users, tone: 'muted' },
 }
 
 export const SYSTEMS: Record<Schema['ReproductiveSystem'], Named> = {

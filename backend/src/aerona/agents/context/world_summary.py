@@ -13,6 +13,7 @@ from aerona.agents.context.thread_lines import thread_lines
 from aerona.agents.context.world_header import world_header
 from aerona.agents.context.world_line import world_line
 from aerona.catalog.domains import DOMAIN_LABELS
+from aerona.core.grammar import spoken
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
@@ -60,7 +61,7 @@ async def route_lines(scope: Scope) -> list[RouteLine]:
             id=route.id,
             world_a=scope.world_name(route.world_a_id),
             world_b=scope.world_name(route.world_b_id),
-            method_label=route.method.value.replace("_", " "),
+            method_label=spoken(route.method),
             duration=route.duration_epochs,
         )
         for route in routes

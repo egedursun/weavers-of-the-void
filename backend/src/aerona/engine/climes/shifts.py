@@ -1,12 +1,12 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.life.climes import SKY_READING
+from aerona.catalog.life.climes import PHASE_SIGN, SKY_READING
+from aerona.catalog.wind_belts import BELTS, CURRENTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.climes import ClimateOscillationRow, MonsoonSeasonRow, RegionWindRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.domain.enums.climes import OscillationPhase
 from aerona.domain.enums.cosmography import OceanCurrent
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind
@@ -16,9 +16,9 @@ from aerona.rules.registry import Rules
 
 
 def oscillation_shift(rules: Rules, row: ClimateOscillationRow | None, env: RegionEnvironmentRow) -> tuple[int, int]:
-    if row is None or row.phase is OscillationPhase.NEUTRAL or abs(env.latitude) > rules.oscillations.latitude_reach:
+    if row is None or PHASE_SIGN[row.phase] == 0 or abs(env.latitude) > rules.oscillations.latitude_reach:
         return 0, 0
-    sign = 1 if row.phase is OscillationPhase.WARM else -1
+    sign = PHASE_SIGN[row.phase]
     coastal = env.coast_kind is not CoastKind.NONE
     rain = -sign * row.strength if coastal else sign * row.strength // 2
     return rain, sign * row.strength // 2
@@ -33,6 +33,8 @@ async def clime_shifts(session: AsyncSession, rules: Rules, epoch: int) -> dict[
         wind = winds.get(env.entity_id)
         rain, heat = oscillation_shift(rules, oscillations.get(env.world_id), env)
         if wind is not None:
+            rain += BELTS[wind.band].rain_pct(rules) * rules.winds.band_rain_points // PERCENT
+            rain -= rain * rules.currents.upwelling_rain_cut_pct // PERCENT if env.current is OceanCurrent.UPWELLING and rain > 0 else 0
             rain += rules.winds.windward_rain if wind.windward else 0
             rain -= wind.shadow
             if wind.monsoon:
@@ -51,7 +53,13 @@ async def prevailing(session: AsyncSession, region_id: int | None) -> int | None
 
 async def upwelling(session: AsyncSession, rules: Rules, region_id: int) -> float:
     row = await session.get(RegionWindRow, region_id)
-    return 1 + rules.currents.upwelling_catch_pct / PERCENT if row is not None and row.upwelling else 1.0
+    if row is None or not row.upwelling:
+        return 1.0
+    env = await session.get(RegionEnvironmentRow, region_id)
+    oscillation = await session.get(ClimateOscillationRow, env.world_id) if env is not None else None
+    warm = oscillation is not None and PHASE_SIGN[oscillation.phase] > 0
+    gain = (rules.currents.upwelling_catch_pct + rules.currents.upwelling_fish_pct) / PERCENT
+    return 1 + gain * (1 - rules.currents.warm_phase_upwelling_cut_pct / PERCENT if warm else 1.0)
 
 
 async def monsoon_sailing(session: AsyncSession, rules: Rules, env: RegionEnvironmentRow, epoch: int) -> float | None:
@@ -66,6 +74,7 @@ async def monsoon_sailing(session: AsyncSession, rules: Rules, env: RegionEnviro
 
 async def sea_navigation(session: AsyncSession, rules: Rules, ends: tuple[int, int], epoch: int) -> float:
     seasons: list[float] = []
+    belts: list[float] = []
     warm = False
     for end in ends:
         town = await session.get(EntityRow, end)
@@ -76,7 +85,11 @@ async def sea_navigation(session: AsyncSession, rules: Rules, ends: tuple[int, i
         season = await monsoon_sailing(session, rules, env, epoch)
         if season is not None:
             seasons.append(season)
-    return max(seasons, default=1.0) * (1 - rules.currents.current_speed_pct / PERCENT if warm else 1.0)
+        wind = await session.get(RegionWindRow, env.entity_id)
+        belts.append(1 - BELTS[wind.band].sailing_pct(rules) / PERCENT if wind is not None else 1.0)
+        belts.append(1 - CURRENTS[env.current].sailing_pct(rules) / PERCENT)
+    sailing = max(belts, default=1.0)
+    return max(seasons, default=1.0) * sailing * (1 - rules.currents.current_speed_pct / PERCENT if warm else 1.0)
 
 
 async def fire_wind(session: AsyncSession, rules: Rules, region_id: int) -> float:

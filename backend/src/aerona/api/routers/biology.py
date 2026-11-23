@@ -60,13 +60,15 @@ async def node_biology(services: ServicesDep, node_id: NodeId) -> BiologyNodeVie
                 derived=None,
                 leanings=[],
                 body=None,
+                partner=None,
                 seeded=False,
                 updated_epoch=None,
                 locked=[],
                 absent_reason=NO_BODY,
             )
-        refs = await node_refs(session, [holder.id])
         row = await session.get(BiologyRow, holder.id)
+        partner_id = row.partner_species_id if row is not None else None
+        refs = await node_refs(session, [holder.id, *([partner_id] if partner_id is not None else [])])
         shown = await body_variants(session, holder.id)
         variants = variants_of(row.variants) if row is not None else tuple(shown)
         derived = derived_effects(variants)
@@ -79,6 +81,7 @@ async def node_biology(services: ServicesDep, node_id: NodeId) -> BiologyNodeVie
             derived=effects_of(derived),
             leanings=leanings(variants),
             body=body_of(variants),
+            partner=refs.get(partner_id) if partner_id is not None else None,
             seeded=row is not None,
             updated_epoch=row.updated_epoch if row is not None else None,
             locked=list(row.locked) if row is not None else [],

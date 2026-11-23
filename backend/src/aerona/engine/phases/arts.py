@@ -31,6 +31,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.community_stocks",
     "table.courts",
     "table.creator",
+    "table.currencies",
     "table.dimensions",
     "table.entities",
     "table.foreign_gods",
@@ -39,20 +40,27 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.galaxy_clusters",
     "table.gatherings",
     "table.holder_levels",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.mortal_profiles",
+    "table.museum_collections",
     "table.name_registry",
     "table.node_births",
     "table.node_materials",
     "table.nodes",
+    "table.offices",
     "table.polity_members",
+    "table.polity_profiles",
     "table.relics",
     "table.resource_profiles",
+    "table.skills",
     "table.sons",
     "table.stars",
     "table.world_materials",
     "table.worlds",
 )
 @writes(
+    "table.applied_fixups",
     "table.art_prices",
     "table.art_sales",
     "table.bonds",
@@ -60,6 +68,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.chronicle_entities",
     "table.collectors",
     "table.courts",
+    "table.crime_cases",
     "table.entities",
     "table.forgeries",
     "table.incident_facts",
@@ -74,6 +83,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.node_materials",
     "table.polity_profiles",
     "table.relics",
+    "table.settlement_profiles",
 )
 async def art_market(ctx: TickContext) -> None:
     market, forgeries = MarketTally(), ForgeryTally()
@@ -160,6 +170,7 @@ async def monster_contracts(ctx: TickContext) -> None:
     "table.entities",
     "table.node_births",
     "table.nodes",
+    "table.world_seasons",
 )
 @writes("mortal.perception", "mortal.willpower", "table.birth_signs", "table.entities")
 async def birth_signs(ctx: TickContext) -> None:

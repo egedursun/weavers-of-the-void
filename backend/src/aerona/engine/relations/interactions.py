@@ -8,7 +8,7 @@ from aerona.catalog.ethics import STANCE_READINGS
 from aerona.catalog.life.relations import CONFORMING, GAIN_THOUGHTS, LOSS_THOUGHTS, WEIGHT_INTERACTION_KINDS, WEIGHT_INTERACTION_KINDS_2
 from aerona.catalog.life_traits import INTERACTION_KIND_TRAITS, having
 from aerona.catalog.norms import GATHERING_SITUATIONS, INTERACTION_BEHAVIOUR
-from aerona.catalog.relations import INTERACTIONS
+from aerona.catalog.relations import INTERACTIONS, NOTABLE_INTERACTIONS, TUNING
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.random import SeededRandom
@@ -38,6 +38,7 @@ from aerona.domain.enums.mind import (
     ValueHolder,
     WantKind,
 )
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.relations import AppealKind, InteractionKind, PersuasionAim, RelationType
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.engine.body.decline import too_forgetful
@@ -59,10 +60,11 @@ from aerona.engine.mortal.attraction import drawn, pull
 from aerona.engine.mortal.kin import children_of, parents_of, partners_of, siblings_of
 from aerona.engine.mortal.kinship import betroth, marriage_between
 from aerona.engine.mortal.life import adult
-from aerona.engine.mortal.standing import add_stress
+from aerona.engine.mortal.standing import add_renown, add_stress
 from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import spoken_language
+from aerona.engine.recording.record import record
 from aerona.engine.relations.book import RELATIONS_KEY, ensure_relation, mood_of, relation, shift
 from aerona.engine.relations.persuasion import persuade
 from aerona.engine.renown.deeds import acclaim_deed
@@ -80,6 +82,7 @@ BRAWL_BELOW = -20
 CONFIDE_AT = 40
 FAVOUR_AT = 20
 SUPERIOR_GAP = 30
+TUNED = 50
 
 
 @dataclass
@@ -250,6 +253,9 @@ def allowed(scene: Scene, actor: int, target: int, kind: InteractionKind, *, row
         K.CONFIDE_SECRET: friendship >= CONFIDE_AT,
         K.ASK_FAVOUR: friendship >= FAVOUR_AT,
         K.GIFT: (scene.profiles[actor].wealth if actor in scene.profiles else 0) >= scene.ctx.rules.social.gift_wealth,
+        K.APOLOGISE: back is not None and back.friendship < 0,
+        K.SHARE_MEAL: (scene.profiles[actor].wealth if actor in scene.profiles else 0) >= scene.ctx.rules.social.gift_wealth,
+        K.ASK_COUNSEL: skill_of(scene, target, None) > skill_of(scene, actor, None) and target not in scene.forgetful,
     }
     return checks.get(kind, True)
 
@@ -272,6 +278,7 @@ def weight(scene: Scene, actor: int, target: int, kind: InteractionKind, row: Re
         result *= table.foreign_tongue_pct / PERCENT
     if spec.wants & scene.wants.get(actor, set()):
         result *= 1 + table.want_weight_pct / PERCENT
+    result *= TUNING[kind].weight(scene.ctx.rules) / TUNED
     events = table.event_weight_pct / PERCENT
     if scene.war and kind in WEIGHT_INTERACTION_KINDS:
         result *= 1 + events
@@ -476,6 +483,52 @@ async def confide_lore(scene: Scene, actor: int, target: int) -> None:
         scene.ctx.count("secrets_confided")
 
 
+@EFFECTS.on(InteractionKind.APOLOGISE)
+async def apologise(scene: Scene, actor: int, target: int) -> None:
+    ctx = scene.ctx
+    table = ctx.rules.interactions
+    standing = (scene.profiles[actor].renown if actor in scene.profiles else 0) / PERCENT
+    temper = 1 - scene.facets.get(target, {}).get(Facet.ANGER, 0) / (2 * FACET_SPAN)
+    restored = table.apology_grievance * (1 + standing) * max(0.0, temper)
+    heard = await relation(ctx.session, target, actor)
+    if heard is not None:
+        shift(ctx.rules, heard, ctx.epoch, friendship=restored, rivalry=-restored / 2)
+    await remember(ctx.session, ctx.rules, holder_id=target, subject_id=actor, kind=MemoryKind.GOODWILL, magnitude=restored, epoch=ctx.epoch)
+
+
+@EFFECTS.on(InteractionKind.SHARE_MEAL)
+async def share_meal(scene: Scene, actor: int, target: int) -> None:
+    ctx = scene.ctx
+    welcome = ctx.rules.interactions.meal_opinion
+    if STANCE_READINGS[stance_in(scene.norms.get(target, {}), NormSituation.HOSPITALITY, INTERACTION_BEHAVIOUR[InteractionKind.SHARE_MEAL])] > 0:
+        welcome *= 2
+    heard = await relation(ctx.session, target, actor)
+    if heard is not None:
+        shift(ctx.rules, heard, ctx.epoch, friendship=welcome)
+    await remember(ctx.session, ctx.rules, holder_id=target, subject_id=actor, kind=MemoryKind.GOODWILL, magnitude=welcome, epoch=ctx.epoch)
+    await gossip(scene, actor, target)
+
+
+@EFFECTS.on(InteractionKind.ASK_COUNSEL)
+async def ask_counsel(scene: Scene, actor: int, target: int) -> None:
+    ctx = scene.ctx
+    await add_renown(ctx.session, target, ctx.rules.interactions.counsel_standing, ctx.epoch, rules=ctx.rules)
+    await think(ctx.session, ctx.rules, target, ThoughtKind.ROSE_IN_STANDING, ctx.epoch, subject_id=actor)
+    theirs = scene.skills.get(target, {})
+    if theirs:
+        best = max(theirs, key=lambda skill: (theirs[skill], skill))
+        await practise(ctx.session, ctx.rules, actor, SkillKind(best), ctx.rules.skills.teach_xp / 2, epoch=ctx.epoch)
+    await remember(
+        ctx.session,
+        ctx.rules,
+        holder_id=actor,
+        subject_id=target,
+        kind=MemoryKind.TAUGHT_ME,
+        magnitude=ctx.rules.interactions.counsel_standing,
+        epoch=ctx.epoch,
+    )
+
+
 async def lands(scene: Scene, actor: int, target: int, kind: InteractionKind, rng: SeededRandom) -> bool:
     spec = INTERACTIONS[kind]
     if spec.hostile:
@@ -495,14 +548,23 @@ async def interact(scene: Scene, actor: int, target: int, kind: InteractionKind,
     heard = await ensure_relation(ctx.session, target, actor, ctx.epoch)
     spoke = await ensure_relation(ctx.session, actor, target, ctx.epoch)
     success = await lands(scene, actor, target, kind, rng)
+    scale = TUNING[kind].effect(ctx.rules) / TUNED
     if success:
         if heard is not None:
             kindled = spec.romance * await ctx.hook_factor(target, DomainHook.KINDLING_LOVE) if spec.romance > 0 else spec.romance
             if kindled > 0:
                 kindled *= pull(scene.profiles.get(target), sex_of(scene.mortals[actor])) if actor in scene.mortals else 0.0
-            shift(ctx.rules, heard, ctx.epoch, friendship=spec.friendship, romance=kindled, familiarity=spec.familiarity, rivalry=spec.rivalry)
+            shift(
+                ctx.rules,
+                heard,
+                ctx.epoch,
+                friendship=spec.friendship * scale,
+                romance=kindled * scale,
+                familiarity=spec.familiarity,
+                rivalry=spec.rivalry * scale,
+            )
         if spoke is not None:
-            share = 1 if spec.mutual else 0.5
+            share = (1 if spec.mutual else 0.5) * scale
             shift(ctx.rules, spoke, ctx.epoch, friendship=spec.friendship * share, familiarity=spec.familiarity, rivalry=spec.rivalry * share)
         if spec.thought is not None:
             await think(ctx.session, ctx.rules, target, spec.thought, ctx.epoch, subject_id=actor)
@@ -511,6 +573,10 @@ async def interact(scene: Scene, actor: int, target: int, kind: InteractionKind,
         effect = EFFECTS.get(kind)
         if effect is not None:
             await effect(scene, actor, target)
+        if kind in NOTABLE_INTERACTIONS:
+            await record(
+                ctx, "social.interaction", roles={IncidentRole.ACTOR: actor, IncidentRole.TARGET: target}, facts={"interaction": kind}, place=scene.place_id
+            )
     elif heard is not None:
         shift(ctx.rules, heard, ctx.epoch, friendship=-abs(spec.friendship) / 2, familiarity=1)
     if spec.skill is not None:

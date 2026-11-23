@@ -3,19 +3,28 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.identity import IDENTITY_LAYERS, NEW_LAYERS, SALIENCE_DRIVERS, VOTE_LAYERS
 from aerona.catalog.kinds.war_causes import WAR_CAUSES
 from aerona.catalog.life.belonging import CROSSING_PUSHES_IDENTITY_LAYERS, GUILD_PUSHES_IDENTITY_LAYERS
 from aerona.db.fast_session import rows_by_prefix
+from aerona.db.repositories.bonds import BondRepository
+from aerona.db.tables.arts import MatchRow
 from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.collective import MovementRow
+from aerona.db.tables.collective import CommemorationRow, MovementRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow
+from aerona.db.tables.estates import MovementSupportRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.folkways import PurityRankRow
 from aerona.db.tables.military import ArmyProfileRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MarriageRow
+from aerona.db.tables.polity import PolityProfileRow
+from aerona.db.tables.referendums import ReferendumRow
 from aerona.db.tables.settlement import DistrictRow
+from aerona.db.tables.tongues import LanguagePolicyRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.belonging import IdentityLayer, SalienceDriver
@@ -23,17 +32,26 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import CollectiveActKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
+from aerona.domain.enums.minds import MindOrigin
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import DistrictKind
+from aerona.domain.enums.tongues import LanguagePolicy
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.belonging.effects import approach
 from aerona.engine.belonging.values import GUILDS, Value, values_of
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import realm_of
+from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.queries import spoken_language
+from aerona.engine.recording.record import record
 
 COMMUNITIES = (EntityType.SETTLEMENT, EntityType.PEOPLE)
+PERSECUTING = "persecution"
+UNSHELTERED = frozenset({"persecution", "none"})
 FAITH_CAUSES = frozenset(cause for cause, spec in WAR_CAUSES.items() if spec.over_faith)
 Pushes = dict[int, dict[IdentityLayer, tuple[int, SalienceDriver]]]
 
@@ -155,6 +173,103 @@ async def guild_pushes(ctx: TickContext, atlas: RegionAtlas, pushes: Pushes, tal
                 tally.crossed += 1
 
 
+async def tongue_pushes(ctx: TickContext, communities: list[EntityRow], pushes: Pushes) -> None:
+    table = ctx.rules.identity
+    policies = await ctx.session.scalars(
+        select(LanguagePolicyRow)
+        .where(LanguagePolicyRow.policy.in_([LanguagePolicy.SUPPRESSED, LanguagePolicy.REVIVAL]))
+        .order_by(LanguagePolicyRow.holder_entity_id, LanguagePolicyRow.language_entity_id)
+    )
+    pressed = {(row.holder_entity_id, row.language_entity_id): row.policy for row in policies}
+    if not pressed:
+        return
+    for community in communities:
+        tongue = await spoken_language(ctx.session, community.id)
+        realm = await realm_of(ctx.session, community.id)
+        policy = pressed.get((realm, tongue.id)) if realm is not None and tongue is not None else None
+        if policy is LanguagePolicy.SUPPRESSED:
+            push(pushes, community.id, IdentityLayer.LANGUAGE, table.language_suppression_rise, SalienceDriver.PERSECUTION)
+        elif policy is LanguagePolicy.REVIVAL:
+            push(pushes, community.id, IdentityLayer.LANGUAGE, table.language_suppression_rise, SalienceDriver.RHETORIC)
+
+
+async def kind_pushes(ctx: TickContext, communities: list[EntityRow], laws: LawBook, pushes: Pushes) -> None:
+    table = ctx.rules.identity
+    made_homes = set(
+        await ctx.session.scalars(
+            select(EntityRow.location_id)
+            .join(MindProfileRow, MindProfileRow.node_id == EntityRow.id)
+            .where(MindProfileRow.origin != MindOrigin.BORN, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.is_not(None))
+        )
+    )
+    for community in communities:
+        realm = await realm_of(ctx.session, community.id)
+        if realm is not None and laws.in_force(realm, LawKind.MIND_STATUS) is not None:
+            push(pushes, community.id, IdentityLayer.KIND, table.kind_law_rise, SalienceDriver.SEGREGATION)
+        if community.id in made_homes:
+            push(pushes, community.id, IdentityLayer.KIND, table.kind_contact_rise, SalienceDriver.CROSSING)
+
+
+async def cause_pushes(ctx: TickContext, pushes: Pushes) -> None:
+    table = ctx.rules.identity
+    backing = await ctx.session.scalars(
+        select(MovementSupportRow.community_entity_id)
+        .where(MovementSupportRow.share >= ctx.rules.movements.protest_at)
+        .order_by(MovementSupportRow.community_entity_id)
+    )
+    for community_id in sorted(set(backing)):
+        push(pushes, community_id, IdentityLayer.CAUSE, table.cause_rise, SalienceDriver.RHETORIC)
+
+
+async def persecution_pushes(ctx: TickContext, communities: list[EntityRow], laws: LawBook, pushes: Pushes) -> None:
+    rise = SALIENCE_DRIVERS[SalienceDriver.PERSECUTION].rise(ctx.rules)
+    bonds = BondRepository(ctx.session)
+    for community in communities:
+        realm = await realm_of(ctx.session, community.id)
+        if realm is None or realm == community.id:
+            continue
+        if laws.param(realm, LawKind.RELIGIOUS_TOLERANCE, "level") == PERSECUTING:
+            mine, theirs = await bonds.patron(community.id), await bonds.patron(realm)
+            if mine is not None and theirs is not None and mine != theirs:
+                push(pushes, community.id, IdentityLayer.FAITH, rise, SalienceDriver.PERSECUTION)
+        if laws.param(realm, LawKind.FOREIGNER_RIGHTS, "level") in UNSHELTERED:
+            folk = await people_of(ctx.session, community)
+            core = await ctx.session.scalar(select(PolityProfileRow.core_entity_id).where(PolityProfileRow.polity_entity_id == realm))
+            if folk is not None and core is not None and folk.id != core:
+                push(pushes, community.id, IdentityLayer.PEOPLE, rise, SalienceDriver.PERSECUTION)
+
+
+async def memory_pushes(ctx: TickContext, pushes: Pushes) -> None:
+    rise = SALIENCE_DRIVERS[SalienceDriver.COMMEMORATION].rise(ctx.rules)
+    for holder in await ctx.session.scalars(
+        select(CommemorationRow.holder_entity_id).where(CommemorationRow.last_observed_epoch == ctx.epoch).order_by(CommemorationRow.holder_entity_id)
+    ):
+        push(pushes, holder, IdentityLayer.PEOPLE, rise, SalienceDriver.COMMEMORATION)
+
+
+async def vote_pushes(ctx: TickContext, communities: list[EntityRow], pushes: Pushes) -> None:
+    rise = SALIENCE_DRIVERS[SalienceDriver.ELECTION].rise(ctx.rules)
+    votes = list(await ctx.session.scalars(select(ReferendumRow).where(ReferendumRow.held_epoch == ctx.epoch).order_by(ReferendumRow.id)))
+    if not votes:
+        return
+    for community in communities:
+        realm = await realm_of(ctx.session, community.id)
+        for vote in votes:
+            if vote.holder_node_id in {community.id, realm}:
+                push(pushes, community.id, VOTE_LAYERS[vote.subject], rise, SalienceDriver.ELECTION)
+
+
+async def match_pushes(ctx: TickContext, pushes: Pushes) -> None:
+    rise = SALIENCE_DRIVERS[SalienceDriver.CONTEST].rise(ctx.rules)
+    for match in await ctx.session.scalars(select(MatchRow).where(MatchRow.epoch == ctx.epoch).order_by(MatchRow.id)):
+        for side in (match.home_entity_id, match.away_entity_id):
+            team = await ctx.session.get(EntityRow, side)
+            home = side if team is not None and team.entity_type is EntityType.SETTLEMENT else team.location_id if team is not None else None
+            if home is not None:
+                push(pushes, home, IdentityLayer.LOCALITY, rise, SalienceDriver.CONTEST)
+                push(pushes, home, IdentityLayer.CIRCLE, rise, SalienceDriver.CONTEST)
+
+
 def write(row: HeldIdentityRow, value: Value, salience: int, driver: SalienceDriver, epoch: int) -> None:
     if "value_node_id" not in row.locked:
         row.value_node_id = value[0]
@@ -167,7 +282,9 @@ def write(row: HeldIdentityRow, value: Value, salience: int, driver: SalienceDri
     row.updated_epoch = epoch
 
 
-async def keep_holder(ctx: TickContext, atlas: RegionAtlas, holder: EntityRow, targets: dict[IdentityLayer, tuple[int, SalienceDriver]], pct: int) -> None:
+async def keep_holder(
+    ctx: TickContext, atlas: RegionAtlas, holder: EntityRow, targets: dict[IdentityLayer, tuple[int, SalienceDriver]], pct: int, *, told: bool = False
+) -> None:
     values = await values_of(ctx.session, atlas, holder)
     stored = {row.layer: row for row in await rows_by_prefix(ctx.session, HeldIdentityRow, holder.id)}
     for layer in IdentityLayer:
@@ -178,7 +295,17 @@ async def keep_holder(ctx: TickContext, atlas: RegionAtlas, holder: EntityRow, t
                 holder_entity_id=holder.id, layer=layer, strength=50, salience=ctx.rules.identities.base_salience, updated_epoch=ctx.epoch, locked=[]
             )
             ctx.session.add(row)
+        before, was = row.salience, row.driver
         write(row, values[layer], approach(row.salience, target, pct), driver, ctx.epoch)
+        if told:
+            await tell_change(ctx, holder, row, before=before, was=was)
+
+
+async def tell_change(ctx: TickContext, holder: EntityRow, row: HeldIdentityRow, *, before: int, was: SalienceDriver) -> None:
+    if before < ctx.rules.identities.fault_at <= row.salience:
+        await record(ctx, "identity.rose", roles={IncidentRole.SUBJECT: holder.id}, facts={"layer": row.layer, "salience": row.salience})
+    if row.driver is not was and row.driver is not SalienceDriver.BASELINE:
+        await record(ctx, "identity.driven", roles={IncidentRole.SUBJECT: holder.id}, facts={"layer": row.layer, "driver": row.driver})
 
 
 async def keep_identities(ctx: TickContext, tally: IdentityTally) -> None:
@@ -190,6 +317,14 @@ async def keep_identities(ctx: TickContext, tally: IdentityTally) -> None:
         )
     )
     pushes: Pushes = defaultdict(dict)
+    laws = await LawBook.load(ctx.session)
+    await tongue_pushes(ctx, communities, pushes)
+    await kind_pushes(ctx, communities, laws, pushes)
+    await cause_pushes(ctx, pushes)
+    await persecution_pushes(ctx, communities, laws, pushes)
+    await memory_pushes(ctx, pushes)
+    await vote_pushes(ctx, communities, pushes)
+    await match_pushes(ctx, pushes)
     await war_pushes(ctx, atlas, communities, pushes)
     await hunger_pushes(ctx, atlas, pushes)
     await movement_pushes(ctx, pushes)
@@ -201,12 +336,12 @@ async def keep_identities(ctx: TickContext, tally: IdentityTally) -> None:
             continue
         stirred = pushes.get(community.id, {})
         targets = {
-            layer: (clamp_int(table.base_salience + stirred[layer][0], 0, 100), stirred[layer][1])
+            layer: (clamp_int(IDENTITY_LAYERS[layer].base(ctx.rules) + stirred[layer][0], 0, 100), stirred[layer][1])
             if layer in stirred
-            else (table.base_salience, SalienceDriver.BASELINE)
+            else (IDENTITY_LAYERS[layer].base(ctx.rules), SalienceDriver.BASELINE)
             for layer in IdentityLayer
         }
-        await keep_holder(ctx, atlas, community, targets, table.decay_pct)
+        await keep_holder(ctx, atlas, community, targets, table.decay_pct, told=True)
         tally.communities += 1
         tally.stirred += len(stirred)
     await ctx.session.flush()
@@ -222,8 +357,46 @@ async def keep_identities(ctx: TickContext, tally: IdentityTally) -> None:
             homes[home] = {row.layer: row for row in await ctx.session.scalars(select(HeldIdentityRow).where(HeldIdentityRow.holder_entity_id == home))}
         rows = homes.get(home, {}) if home else {}
         targets = {
-            layer: (rows[layer].salience, rows[layer].driver) if layer in rows else (table.base_salience, SalienceDriver.BASELINE) for layer in IdentityLayer
+            layer: (rows[layer].salience, rows[layer].driver) if layer in rows else (IDENTITY_LAYERS[layer].base(ctx.rules), SalienceDriver.BASELINE)
+            for layer in IdentityLayer
         }
         await keep_holder(ctx, atlas, mortal, targets, table.mortal_pct)
         tally.mortals += 1
     await ctx.session.flush()
+
+
+LAYERS_FIXUP = "identity.w52"
+
+
+async def backfill_layers(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, LAYERS_FIXUP) is not None:
+        return 0
+    atlas = await RegionAtlas.load(ctx.session)
+    holders = sorted(set(await ctx.session.scalars(select(HeldIdentityRow.holder_entity_id))))
+    filled = 0
+    for holder_id in holders:
+        holder = await ctx.session.get(EntityRow, holder_id)
+        if holder is None or held(holder_id):
+            continue
+        have = {row.layer for row in await rows_by_prefix(ctx.session, HeldIdentityRow, holder_id)}
+        missing = [layer for layer in NEW_LAYERS if layer not in have]
+        if not missing:
+            continue
+        values = await values_of(ctx.session, atlas, holder)
+        for layer in missing:
+            ctx.session.add(
+                HeldIdentityRow(
+                    holder_entity_id=holder_id,
+                    layer=layer,
+                    value_node_id=values[layer][0],
+                    value_label=values[layer][1],
+                    strength=50,
+                    salience=IDENTITY_LAYERS[layer].base(ctx.rules),
+                    updated_epoch=ctx.epoch,
+                    locked=[],
+                )
+            )
+            filled += 1
+    ctx.session.add(AppliedFixupRow(key=LAYERS_FIXUP, result={"layers": filled}))
+    await ctx.session.flush()
+    return filled

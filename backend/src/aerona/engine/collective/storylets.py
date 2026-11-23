@@ -20,7 +20,7 @@ from aerona.db.tables.warfare import CasusBelliRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.collective import CascadeOutcome, CollectiveTrigger, StoryletEffect, StoryletId, StoryletRole, StoryletStatus
+from aerona.domain.enums.collective import CascadeOutcome, CollectiveTrigger, CrowdFeeling, StoryletEffect, StoryletId, StoryletRole, StoryletStatus
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
@@ -34,6 +34,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.collective.accounts import house_of
 from aerona.engine.collective.book import realm_of_town, ruler_id, shift
 from aerona.engine.collective.crowds import stir
+from aerona.engine.collective.feelings import stir_feelings
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.history.collections import open_collection
@@ -429,9 +430,10 @@ async def apply_effect(ctx: TickContext, effect: Effect, cast: Cast) -> None:
         if realm is not None:
             shift(realm, "legitimacy", effect.amount)
     elif kind is E.ANGER:
-        mood = await stir(ctx, cast.get(effect.role), CollectiveTrigger.RUMOUR, force=0)
-        if mood is not None:
-            shift(mood, "anger", effect.amount)
+        town_id = cast.get(effect.role)
+        mood = await stir(ctx, town_id, CollectiveTrigger.RUMOUR, force=0)
+        if mood is not None and town_id is not None:
+            await stir_feelings(ctx, town_id, {CrowdFeeling.ANGER: effect.amount})
     elif kind is E.FOOD:
         town_id = cast.get(effect.role)
         if town_id is not None and not held(town_id):

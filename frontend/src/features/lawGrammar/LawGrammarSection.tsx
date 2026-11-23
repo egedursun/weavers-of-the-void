@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CirclePlus, PenLine, Trash2 } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
-import { entityTypeValues } from '@/api/generated/schema'
+import { entityTypeValues, naturalLawValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import {
   EmptyState,
@@ -20,6 +20,7 @@ import {
 } from '@/features/cosmography/parts'
 import { StepButton, TextField } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { words } from '@/features/entity/lore/api'
 import { ThingPicker } from '@/features/gatherings/parts'
 import { useMadeAction } from '@/features/minds/api'
@@ -47,7 +48,10 @@ const PEOPLES = ['people'] as const
 const KINDS = Object.fromEntries(
   entityTypeValues.map((value) => [
     value,
-    { label: words(value), icon: EXCEPTION_KINDS.kind.icon },
+    {
+      label: wordOf(entityTypeValues, value).toLowerCase(),
+      icon: EXCEPTION_KINDS.kind.icon,
+    },
   ])
 )
 
@@ -119,7 +123,7 @@ function Exception({
   const spared = row.node
     ? row.node.name
     : row.entity_type
-      ? `every ${words(row.entity_type)}`
+      ? `every ${wordOf(entityTypeValues, row.entity_type).toLowerCase()}`
       : 'no one named'
   return (
     <RecordRow
@@ -523,7 +527,7 @@ export function LawGrammarSection({
                   {LAW_CONDITIONS[query.data.condition].label}
                 </Chip>
                 {query.data.preset !== 'none' && (
-                  <Badge variant='outline'>{`Known of old as ${words(query.data.preset)}`}</Badge>
+                  <Badge variant='outline'>{`Known of old as ${wordOf(naturalLawValues, query.data.preset).toLowerCase()}`}</Badge>
                 )}
                 {query.data.suspended && (
                   <Badge variant='warning'>

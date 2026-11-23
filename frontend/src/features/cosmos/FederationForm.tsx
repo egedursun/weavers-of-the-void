@@ -2,14 +2,15 @@ import { useState } from 'react'
 import { Handshake, Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { entityTypeValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FormRow, Paged } from '@/components/domain'
 import { MultiSelect } from '@/components/domain/MultiSelect'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { CosmicActionButton } from './CosmicActionButton'
 import { type CosmosIndex } from './model/cosmosModel'
-import { humanize } from './model/labels'
 import { useCosmicAction } from './useCosmicAction'
 
 const NAME_MAX = 80
@@ -77,8 +78,8 @@ export function FederationForm({ index }: { index: CosmosIndex }) {
                 value: String(item.id),
                 label: item.name,
                 detail: multiWorld
-                  ? `${humanize(item.entity_type)} · ${index.worldName(item.world_id)}`
-                  : humanize(item.entity_type),
+                  ? `${wordOf(entityTypeValues, item.entity_type)} · ${index.worldName(item.world_id)}`
+                  : wordOf(entityTypeValues, item.entity_type),
               }))}
               value={members.map(String)}
               onChange={(next) => setMembers(next.map(Number))}

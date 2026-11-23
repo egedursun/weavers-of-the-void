@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import {
-  Flame,
   Flag,
+  Flame,
   Gauge,
+  Lock,
   Megaphone,
   Shield,
-  Sparkles,
+  Unlock,
   Users,
   Wind,
 } from 'lucide-react'
@@ -27,6 +28,7 @@ import {
   OUTCOMES,
   SECTION_ICONS,
   TRIGGERS,
+  FEELINGS,
 } from './labels'
 import { clamp, SPAN, useRemove, useRow } from './model'
 import { Held, Listed } from './parts'
@@ -38,6 +40,71 @@ type Movement = CollectiveView['movements'][number]
 
 const NOT_A_TOWN =
   'Crowds gather only in towns; choose a settlement to raise one.'
+
+function FeelingTile({
+  townId,
+  feeling,
+  blocked,
+}: {
+  townId: number
+  feeling: Mood['feelings'][number]
+  blocked: string | null
+}) {
+  const spec = FEELINGS[feeling.feeling]
+  const [level, setLevel] = useState(String(feeling.level))
+  const setting = useCollectiveAction(
+    'crowd_feeling:set',
+    (hold: boolean) => ({
+      town_id: townId,
+      feeling: feeling.feeling,
+      level: clamp(level),
+      hold,
+    }),
+    `${spec.label} is set`
+  )
+  const busy = why(blocked, setting.isPending)
+  return (
+    <div className='flex min-w-0 flex-col gap-2 rounded-md surface-sheen p-2'>
+      <KpiTile
+        label={spec.label}
+        value={feeling.level}
+        icon={spec.icon}
+        tone={spec.tone}
+        meter={{ value: feeling.level, max: SPAN, label: spec.label }}
+      />
+      <NumberField
+        label={`Set ${spec.label.toLowerCase()}`}
+        value={level}
+        min={0}
+        max={SPAN}
+        blocked={blocked}
+        onChange={setLevel}
+      />
+      <div className='flex min-w-0 flex-wrap gap-2'>
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => setting.mutate(true)}
+        >
+          <Lock />
+          {feeling.held ? 'Keep held' : 'Set and hold'}
+        </Button>
+        <Button
+          size='sm'
+          variant='ghost'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => setting.mutate(false)}
+        >
+          <Unlock />
+          Set free
+        </Button>
+      </div>
+    </div>
+  )
+}
 
 function MoodBoard({
   townId,
@@ -55,10 +122,11 @@ function MoodBoard({
     blocked
   )
   const last = mood.last_trigger ? TRIGGERS[mood.last_trigger] : null
+  const peak = Math.max(0, ...mood.feelings.map((item) => item.level))
   return (
     <Held
       icon={SECTION_ICONS.crowds}
-      tone={mood.anger >= 60 ? 'danger' : 'gold'}
+      tone={peak >= 60 ? 'danger' : 'gold'}
       title='The mood of the town'
       caption={
         last
@@ -66,12 +134,9 @@ function MoodBoard({
           : 'Nothing has stirred it this epoch'
       }
       removeLabel='Let it be read anew'
-      editTitle='Set the mood'
-      note='Anger feeds riots, fear feeds panics and fervour feeds faith’s mass acts; the watch deters them and a charismatic voice sways them.'
+      editTitle='Set the watch and the agitators'
+      note='Each crowd act grows from the feeling its catalogue names; the watch deters every act and a charismatic voice sways them.'
       fields={[
-        { key: 'anger', label: 'Anger', kind: 'number', min: 0, max: SPAN },
-        { key: 'anxiety', label: 'Fear', kind: 'number', min: 0, max: SPAN },
-        { key: 'fervour', label: 'Fervour', kind: 'number', min: 0, max: SPAN },
         {
           key: 'deterrence',
           label: 'Deterrence of the watch',
@@ -99,28 +164,15 @@ function MoodBoard({
       onRemove={action.onRemove}
     >
       <div className='@container/tiles min-w-0'>
-        <div className='grid min-w-0 grid-cols-2 gap-2 @lg/tiles:grid-cols-3 @3xl/tiles:grid-cols-5'>
-          <KpiTile
-            label='Anger'
-            value={mood.anger}
-            icon={Flame}
-            tone='danger'
-            meter={{ value: mood.anger, max: SPAN, label: 'Anger' }}
-          />
-          <KpiTile
-            label='Fear'
-            value={mood.anxiety}
-            icon={Wind}
-            tone='warning'
-            meter={{ value: mood.anxiety, max: SPAN, label: 'Fear' }}
-          />
-          <KpiTile
-            label='Fervour'
-            value={mood.fervour}
-            icon={Sparkles}
-            tone='gold'
-            meter={{ value: mood.fervour, max: SPAN, label: 'Fervour' }}
-          />
+        <div className='grid min-w-0 grid-cols-1 gap-2 @lg/tiles:grid-cols-2 @3xl/tiles:grid-cols-3'>
+          {mood.feelings.map((item) => (
+            <FeelingTile
+              key={item.feeling}
+              townId={townId}
+              feeling={item}
+              blocked={action.busy}
+            />
+          ))}
           <KpiTile
             label='Deterrence'
             value={mood.deterrence}
@@ -148,16 +200,13 @@ function MoodForge({
   townId: number
   blocked: string | null
 }) {
-  const [anger, setAnger] = useState('40')
-  const [anxiety, setAnxiety] = useState('20')
-  const [fervour, setFervour] = useState('20')
+  const [feeling, setFeeling] = useState<keyof typeof FEELINGS>('anger')
+  const [level, setLevel] = useState('40')
   const setting = useCollectiveAction(
     'crowd_mood:set',
     (_: void) => ({
       town_id: townId,
-      anger: clamp(anger),
-      anxiety: clamp(anxiety),
-      fervour: clamp(fervour),
+      feelings: { [feeling]: clamp(level) },
     }),
     'The town is stirred so'
   )
@@ -167,8 +216,8 @@ function MoodForge({
       icon={Flame}
       tone='danger'
       title='Set the town’s mood'
-      note='Fill the streets with anger, fear or fervour; the next trigger may turn it into a crowd.'
-      columns={3}
+      note='Fill the streets with one feeling; the next trigger may turn it into the act that grows from it.'
+      columns={2}
       action={
         <Button
           size='sm'
@@ -181,29 +230,21 @@ function MoodForge({
         </Button>
       }
     >
-      <NumberField
-        label='Anger'
-        value={anger}
-        min={0}
-        max={SPAN}
+      <MindPicker
+        label='Feeling'
+        value={feeling}
+        table={table(FEELINGS)}
+        placeholder='Choose'
         blocked={blocked}
-        onChange={setAnger}
+        onPick={(value) => setFeeling(value as keyof typeof FEELINGS)}
       />
       <NumberField
-        label='Fear'
-        value={anxiety}
+        label='Level'
+        value={level}
         min={0}
         max={SPAN}
         blocked={blocked}
-        onChange={setAnxiety}
-      />
-      <NumberField
-        label='Fervour'
-        value={fervour}
-        min={0}
-        max={SPAN}
-        blocked={blocked}
-        onChange={setFervour}
+        onChange={setLevel}
       />
     </ForgeCard>
   )

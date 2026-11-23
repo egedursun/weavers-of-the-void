@@ -1,6 +1,7 @@
 import { Suspense, lazy, useState, type ReactNode } from 'react'
 import { Hammer, Home, Users } from 'lucide-react'
 import { postAction } from '@/api/actions'
+import { sizeTierValues, structureGroupValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -13,7 +14,7 @@ import { Label, Muted } from '@/components/typography'
 import { Chip, Facts, ForgeCard, RecordRow } from '@/features/cosmography/parts'
 import { hasWebGL2 } from '@/features/cosmos/useCosmosViewSettings'
 import { why } from '@/features/dominion/model'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { COMMODITY } from '@/features/entity/economy/labels'
 import { EntityChoice } from '@/features/entity/economy/parts'
 import { NumberField } from '@/features/entity/realm/parts'
@@ -190,9 +191,15 @@ function BuildingType({
       </div>
       <Facts
         items={[
-          ['Group', row.group ? humanize(row.group) : 'none'],
+          [
+            'Group',
+            row.group ? wordOf(structureGroupValues, row.group) : 'none',
+          ],
           ['Staffed by', row.staff ? CLASS_SPEC[row.staff].label : 'nobody'],
-          ['Smallest town', row.tier ? humanize(row.tier) : 'any'],
+          [
+            'Smallest town',
+            row.tier ? wordOf(sizeTierValues, row.tier) : 'any',
+          ],
           ['Upkeep', row.upkeep ? COMMODITY[row.upkeep].label : 'none'],
         ]}
       />

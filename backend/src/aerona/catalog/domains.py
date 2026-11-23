@@ -1,6 +1,7 @@
+from aerona.core.grammar import spoken
 from aerona.domain.enums.domain import Domain
 
-DOMAIN_LABELS: dict[Domain, str] = {domain: domain.value.replace("_", " ").title() for domain in Domain}
+DOMAIN_LABELS: dict[Domain, str] = {domain: spoken(domain).title() for domain in Domain}
 
 
 def match_domain(value: str) -> Domain | None:

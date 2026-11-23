@@ -16,6 +16,7 @@ from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.military import CaptiveCohortRow, CommanderTraitRow, OccupationRow, WarAimRow
+from aerona.db.tables.mortal import DeathReadingRow
 from aerona.db.tables.polity import HouseMemberRow, OathRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -25,6 +26,7 @@ from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.military import CaptiveFate
+from aerona.domain.enums.mortal import DeathReading
 from aerona.domain.enums.polity import OathStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.body.customs import people_of
@@ -63,7 +65,7 @@ async def home_for(session: AsyncSession, me: EntityRow, rules: Rules) -> HomeLi
     house_id = await session.scalar(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == me.id).limit(1))
     house = await session.get(EntityRow, house_id) if house_id is not None else None
     oaths = [
-        f"{row.kind.value.replace('_', ' ')} oath{' before a god' if row.witness_son_id else ''}"
+        f"{spoken(row.kind)} oath{' before a god' if row.witness_son_id else ''}"
         for row in await session.scalars(select(OathRow).where(OathRow.swearer_entity_id == me.id, OathRow.status == OathStatus.SWORN))
     ]
     wars, command, occupied, captives = await war_lines(session, rules, me, home, region)
@@ -100,8 +102,8 @@ async def home_for(session: AsyncSession, me: EntityRow, rules: Rules) -> HomeLi
         command=command,
         occupied_by=occupied,
         captives=captives,
-        realm=f"{realm.name} ({words(profile.government.value)}, legitimacy {profile.legitimacy})" if realm is not None and profile is not None else "",
-        office=words(office.kind.value) if office is not None else "",
+        realm=f"{realm.name} ({spoken(profile.government)}, legitimacy {profile.legitimacy})" if realm is not None and profile is not None else "",
+        office=spoken(office.kind) if office is not None else "",
         house=house.name if house is not None else "",
         oaths=oaths,
         treaties=state.treaties,
@@ -114,7 +116,7 @@ async def home_for(session: AsyncSession, me: EntityRow, rules: Rules) -> HomeLi
         order=town.public_order if town is not None else None,
         crime=town.crime if town is not None else None,
         unrest=town.unrest if town is not None else None,
-        social_class=words(social.value) if social is not None else "",
+        social_class=spoken(social) if social is not None else "",
         satisfaction=society.satisfaction(social) if society is not None and social is not None else None,
         customs=customs,
         sickness=sickness,
@@ -142,7 +144,7 @@ async def sickness_lines(session: AsyncSession, home: EntityRow, region: int | N
 async def disease_traits(session: AsyncSession, profile: DiseaseProfileRow | None) -> str:
     if profile is None:
         return ""
-    parts = [f"spread by {spoken(profile.vector)}", f"strikes {', '.join(words(item) for item in profile.target_functions)}"]
+    parts = [f"spread by {spoken(profile.primary_route)}", f"strikes {', '.join(words(item) for item in profile.target_functions)}"]
     if profile.incubation:
         parts.append(f"hides {several(profile.incubation, 'year', 'years')} before it shows")
     host = await session.get(EntityRow, profile.host_species_id) if profile.host_species_id is not None else None
@@ -164,9 +166,9 @@ async def folk_lines(session: AsyncSession, biology: PeopleBiologyRow | None, cu
     lines: list[str] = []
     if biology is not None:
         lines += [
-            f"{words(biology.size_class.value)} {words(biology.body_plan.value)} folk",
-            f"{words(biology.diet.value)}, living on {words(biology.staple.value)}",
-            f"at home in {words(biology.acclimatised.value)} lands",
+            f"{spoken(biology.size_class)} {spoken(biology.body_plan)} folk",
+            f"{spoken(biology.diet)}, living on {spoken(biology.staple)}",
+            f"at home in {spoken(biology.acclimatised)} lands",
         ]
         lines += [words(trait) for trait in biology.traits]
         immune = [name for name in [await record_name(session, item) for item in biology.immunities] if name]
@@ -177,12 +179,20 @@ async def folk_lines(session: AsyncSession, biology: PeopleBiologyRow | None, cu
     wins, losses = record_of(culture, culture.martial_style.value)
     motif_words = ", ".join(MOTIF_LABELS[source].lower() for source in motifs_of(culture)) or "nothing named"
     lines += [
-        f"fights as {words(culture.martial_style.value)} ({several(wins, 'victory', 'victories')}, {several(losses, 'defeat', 'defeats')})",
-        f"inheritance by {words(culture.inheritance.value)}",
+        f"fights as {spoken(culture.martial_style)} ({several(wins, 'victory', 'victories')}, {several(losses, 'defeat', 'defeats')})",
+        f"inheritance by {spoken(culture.inheritance)}",
         f"art: ornament {culture.ornament}, geometric over organic {culture.geometry}, colour {culture.colour}, "
         f"scale {culture.scale}, symmetry {culture.symmetry} (of 100)",
         f"motifs drawn from {motif_words}",
-        f"funeral rite: {words(culture.funeral_rite.value)}",
+        f"funeral rite: {spoken(culture.funeral_rite)}",
+        *[
+            f"holds a death by {spoken(row.cause)} {spoken(row.reading)}"
+            for row in await session.scalars(
+                select(DeathReadingRow)
+                .where(DeathReadingRow.people_entity_id == culture.people_entity_id, DeathReadingRow.reading != DeathReading.PLAIN)
+                .order_by(DeathReadingRow.cause)
+            )
+        ],
         f"urbanisation {culture.urbanisation}",
     ]
     liturgy = await record_name(session, culture.liturgical_language_id)
@@ -211,10 +221,10 @@ async def war_lines(session: AsyncSession, rules: Rules, me: EntityRow, home: En
             continue
         event = await session.get(EntityRow, war.event_entity_id)
         rows = await session.scalars(select(WarAimRow).where(WarAimRow.war_id == war.id, WarAimRow.side_entity_id == home.id))
-        aims = [words(row.kind.value) for row in rows]
+        aims = [spoken(row.kind) for row in rows]
         justified = "" if war.justified else ", unjustified"
         name = event.name if event is not None else "a war"
-        line = f"{name} (weariness {side.weariness}, war support {side.support}{justified}, cause {words(war.cause.value)}"
+        line = f"{name} (weariness {side.weariness}, war support {side.support}{justified}, cause {spoken(war.cause)}"
         wars.append(line + (f", aims: {', '.join(aims)})" if aims else ")"))
         wars.extend(await war_sheet(session, rules, war, home.id))
     wars.extend(await grievance_sheet(session, home.id))
@@ -222,7 +232,7 @@ async def war_lines(session: AsyncSession, rules: Rules, me: EntityRow, home: En
     wars.extend(await fleet_sheet(session, home.id))
     army_id = await session.scalar(select(ArmyRow.entity_id).where(ArmyRow.commander_entity_id == me.id, ArmyRow.disbanded_epoch.is_(None)).limit(1))
     army = await session.get(EntityRow, army_id) if army_id is not None else None
-    traits = [words(trait.value) for trait in await session.scalars(select(CommanderTraitRow.trait).where(CommanderTraitRow.mortal_entity_id == me.id))]
+    traits = [spoken(trait) for trait in await session.scalars(select(CommanderTraitRow.trait).where(CommanderTraitRow.mortal_entity_id == me.id))]
     command = (await army_sheet(session, rules, army.id) if army is not None else "") + (
         f" (known as {', '.join(traits)})" if army is not None and traits else ""
     )
@@ -234,7 +244,7 @@ async def war_lines(session: AsyncSession, rules: Rules, me: EntityRow, home: En
 
 
 async def faith_lines(session: AsyncSession, home: EntityRow) -> tuple[list[str], str, int | None]:
-    tenets = sorted(words(tenet.value) for tenet in await faith_tenets(session, home.id))
+    tenets = sorted(spoken(tenet) for tenet in await faith_tenets(session, home.id))
     god_id = await patron_node(session, home.id)
     if god_id is None:
         return tenets, "", None
@@ -243,4 +253,4 @@ async def faith_lines(session: AsyncSession, home: EntityRow) -> tuple[list[str]
     doctrine = await session.scalar(doctrines.order_by(CultDoctrineRow.cult_entity_id).limit(1))
     cult = await session.get(EntityRow, doctrine.cult_entity_id) if doctrine is not None else None
     zeal = stat(cult, "zeal") if cult is not None else None
-    return tenets, words(doctrine.judgement.value) if doctrine is not None else "", zeal
+    return tenets, spoken(doctrine.judgement) if doctrine is not None else "", zeal

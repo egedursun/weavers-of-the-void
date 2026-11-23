@@ -23,6 +23,7 @@ from aerona.api.schemas.collective import (
     CommemorationView,
     ComponentView,
     CopiedLessonView,
+    CrowdFeelingView,
     DatingView,
     DiasporaView,
     GenerationView,
@@ -36,6 +37,7 @@ from aerona.api.schemas.collective import (
     NormView,
     PopularMovementView,
     RoleView,
+    SexCountView,
     SexRatioView,
     StoryletChoiceView,
     StoryletSpecView,
@@ -48,6 +50,7 @@ from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.catalog.storylets import STORYLETS
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.db.tables.collective import (
     AccountRow,
@@ -88,7 +91,9 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.collective.accounts import distance_from_truth
 from aerona.engine.collective.armory import Design, draw
 from aerona.engine.collective.dating import SINGLETON, current_year, render_date
+from aerona.engine.collective.demography import sex_counts
 from aerona.engine.collective.designs import lineage_of
+from aerona.engine.collective.feelings import feeling_view_rows
 from aerona.engine.collective.heraldry import DESIGN_FIELDS, blazon_of, invent, strongest
 from aerona.engine.collective.storylets import choice_texts, situation
 
@@ -122,9 +127,7 @@ async def crowd_views(session: AsyncSession, node_id: int) -> tuple[MoodView | N
     cascades = list(
         await session.scalars(select(CascadeRow).where(CascadeRow.settlement_entity_id == node_id).order_by(CascadeRow.epoch.desc(), CascadeRow.id.desc()))
     )
-    districts = {
-        row.id: row.kind.value.replace("_", " ") for row in await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == node_id))
-    }
+    districts = {row.id: spoken(row.kind) for row in await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == node_id))}
     mobs = list(await session.scalars(select(MobRow).where(MobRow.settlement_entity_id == node_id).order_by(MobRow.id.desc())))
     events = {
         row.id: row.name
@@ -142,9 +145,10 @@ async def crowd_views(session: AsyncSession, node_id: int) -> tuple[MoodView | N
     )
     return (
         MoodView(
-            anger=mood.anger,
-            anxiety=mood.anxiety,
-            fervour=mood.fervour,
+            feelings=[
+                CrowdFeelingView(feeling=feeling, level=row.level, held=row.locked)
+                for feeling, row in sorted((await feeling_view_rows(session, node_id)).items())
+            ],
             deterrence=mood.deterrence,
             agitation=mood.agitation,
             last_trigger=mood.last_trigger,
@@ -466,7 +470,14 @@ async def people_views(session: AsyncSession, node_id: int) -> tuple[list[Genera
         )
         if transition is not None
         else None,
-        SexRatioView(males_per_hundred=ratio.males_per_hundred, widows=ratio.widows, locked=list(ratio.locked)) if ratio is not None else None,
+        SexRatioView(
+            counts=[SexCountView(sex_kind=sex, count=count) for sex, count in sorted((await sex_counts(session, node_id)).items()) if count > 0],
+            begetters_per_hundred=ratio.begetters_per_hundred,
+            bereaved_partners=ratio.bereaved_partners,
+            locked=list(ratio.locked),
+        )
+        if ratio is not None
+        else None,
     )
 
 

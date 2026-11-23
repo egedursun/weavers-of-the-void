@@ -54,12 +54,15 @@ from aerona.engine.dominion.blame import blame_rulers
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.economy.routes import trade_links
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
+from aerona.engine.environment.columns import columns_by_region
+from aerona.engine.environment.deep import dissolve_salt
 from aerona.engine.environment.geomorph import erupted, eruption_chance, quaked, river_after_flood, river_after_quake, shapes_by_region
+from aerona.engine.environment.long_seasons import eruption_spell
 from aerona.engine.environment.notable import remember_event_year
 from aerona.engine.environment.profile import RIVER_RANK
 from aerona.engine.folkways.shunning import corpse_exposure
 from aerona.engine.happenings.profile import add_footprint, derive_footprint, flow_of, open_profile, record_casualties
-from aerona.engine.households.homes import sickness_factor
+from aerona.engine.households.homes import shelter, sickness_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
@@ -204,6 +207,7 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
         round_half_up(effects.disaster_injury_hp * scale), HarmCause.DISASTER, f"died of wounds suffered in the {label}", damage_type=DISASTER_DAMAGE[disaster]
     )
     exposed = await corpse_exposure(ctx.session, ctx.rules, mortal.id) if disaster is Disaster.PLAGUE else 1.0
+    scale *= await shelter(ctx.session, ctx.rules, mortal.id, disaster)
     if rng.chance(death_chances[disaster] * scale * medicine * exposed):
         if disaster is not Disaster.PLAGUE:
             await fatal_injury(ctx, mortal, replace(hurt, death_cause=phrase))
@@ -560,6 +564,10 @@ async def strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severi
 
 async def after_strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int, event: EntityRow, *, impact: DisasterImpact) -> None:
     await silt_land(ctx, target, disaster, severity)
+    flooded = await ctx.session.get(RegionEnvironmentRow, target.id) if disaster is Disaster.FLOOD else None
+    if flooded is not None and "scar.flooded" not in flooded.locked:
+        add_scar(flooded, ScarKind.FLOODED, clamp_int(severity // 2, 1, PERCENT))
+        dissolve_salt(ctx.rules.rocks.salt_dissolve_pct, (await columns_by_region(ctx.session, [flooded.entity_id])).get(flooded.entity_id, []))
     if disaster is Disaster.FLOOD and await river_after_flood(ctx, target, severity, event) is not None:
         impact.notes.append("the river left its bed")
         impact.steps.append(StepDraft(StepAction.FLOOD_LAND, locus_kind=StepLocus.REGION, locus_node=target.id, outcome=StepOutcome.SUCCESS))
@@ -570,7 +578,9 @@ async def after_strike(ctx: TickContext, target: EntityRow, disaster: Disaster, 
         await erupted(ctx, target, severity)
         impact.notes.append("ash buried the fields")
         impact.steps.append(StepDraft(StepAction.ERUPT, locus_kind=StepLocus.REGION, locus_node=target.id, outcome=StepOutcome.SUCCESS))
-        cooled = await cold_snap(ctx, target.world_id, ctx.rules.world_life.volcano_cold) if target.world_id is not None else 0
+        world = await ctx.session.get(WorldRow, target.world_id) if target.world_id is not None else None
+        spell = await eruption_spell(ctx, world, target, severity) if world is not None else None
+        cooled = await cold_snap(ctx, target.world_id, ctx.rules.world_life.volcano_cold) if target.world_id is not None and spell is None else 0
         if cooled and target.world_id is not None:
             impact.notes.append("ash in the sky cooled the world")
             await record(
@@ -856,11 +866,13 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.cult_offices",
     "table.cult_tenets",
     "table.culture_values",
+    "table.death_readings",
     "table.designated_heirs",
     "table.dimensional_events",
     "table.dimensions",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.disease_routes",
     "table.districts",
     "table.divine_standing",
     "table.divine_wounds",
@@ -868,7 +880,9 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.dominions",
     "table.drink_kinds",
     "table.dwelling_furnishings",
+    "table.dwelling_kinds",
     "table.dwellings",
+    "table.ecosystem_services",
     "table.endemic_diseases",
     "table.entities",
     "table.entity_flags",
@@ -901,10 +915,12 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.injuries",
     "table.insurance_policies",
     "table.insurers",
+    "table.irregular_seasons",
     "table.item_profiles",
     "table.kind_holdings",
     "table.language_profiles",
     "table.law_jurisdictions",
+    "table.law_profiles",
     "table.lexemes",
     "table.ley_lines",
     "table.marriages",
@@ -936,11 +952,13 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.reconstructions",
     "table.region_dominion",
     "table.region_environment",
+    "table.region_geology",
     "table.region_geomorphology",
     "table.river_shifts",
     "table.role_norms",
     "table.routes",
     "table.sacraments",
+    "table.sense_profiles",
     "table.settlement_profiles",
     "table.sieges",
     "table.sky_events",
@@ -955,6 +973,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.structure_profiles",
     "table.theory_adherents",
     "table.theory_profiles",
+    "table.thoughts",
     "table.trade_flows",
     "table.trade_route_profiles",
     "table.trade_route_regions",
@@ -1022,6 +1041,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.place_environment",
     "table.reconstructions",
     "table.region_environment",
+    "table.region_geology",
     "table.region_geomorphology",
     "table.river_shifts",
     "table.sacraments",

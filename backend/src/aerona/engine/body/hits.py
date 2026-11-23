@@ -5,10 +5,11 @@ from aerona.catalog.anatomy import Anatomy, Part
 from aerona.catalog.harm_kinds import DAMAGE, damage_where, injuries_where
 from aerona.catalog.kinds.harm import HARM_CAUSES
 from aerona.catalog.kinds.strikes import STRIKE_STYLES
+from aerona.catalog.movement import breathes_under_water
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
-from aerona.domain.enums.body import BodyRegion, DamageType, HarmCause, InjuryKind, StrikeStyle
+from aerona.domain.enums.body import BodyFunction, BodyRegion, DamageType, HarmCause, InjuryKind, StrikeStyle
 from aerona.domain.enums.records import InstrumentKind
 from aerona.engine.body.strike import EDGED, Layer, Scorch, Wielding, heat_of, resolve, strike_of
 from aerona.engine.body.tissues import PLAIN, Hardness, TissueHit, tissue_hit
@@ -122,6 +123,13 @@ def pick_part(rules: Rules, anatomy: Anatomy, region: BodyRegion, damage_type: D
     return exposed[rng.below(len(exposed))]
 
 
+def shielded(rules: Rules, anatomy: Anatomy, chosen: Part, damage_type: DamageType, rng: SeededRandom) -> Part:
+    shell = next((part for part in anatomy.parts if part.guards), None)
+    if shell is None or chosen.guards or chosen.region is not shell.region or not physical(damage_type):
+        return chosen
+    return shell if rng.chance(rules.body.carapace_guard_pct) else chosen
+
+
 def severity_of(rules: InjuryRules, magnitude: float, rng: SeededRandom) -> int:
     spread = rng.uniform(rules.severity_spread_low_pct, rules.severity_spread_high_pct) / PERCENT
     raw = magnitude / max(1, rules.severity_step) * spread
@@ -140,7 +148,9 @@ def loss_for(rules: InjuryRules, kind: InjuryKind, severity: int) -> int:
     return (rules.loss_severity_1, rules.loss_severity_2, rules.loss_severity_3, rules.loss_severity_4, rules.loss_severity_5)[severity - 1]
 
 
-def harm_resisted(anatomy: Anatomy, damage_type: DamageType) -> bool:
+def harm_resisted(anatomy: Anatomy, damage_type: DamageType, cause: HarmCause = HarmCause.ACCIDENT) -> bool:
+    if DAMAGE[damage_type].breathing and (not anatomy.breathes or (cause is HarmCause.DISASTER and breathes_under_water(anatomy.plan))):
+        return True
     return damage_type in BODILY_DAMAGE and not anatomy.material
 
 
@@ -187,14 +197,19 @@ def hits_for(
     mix = venom_mix(edged_mix(cause_mix(table, harm.cause), harm.edge, harm.heft), harm.venom_pct)
     for _ in range(count):
         damage_type = harm.damage_type or weighted(rng, {key: float(value) for key, value in mix.items()}) or DamageType.BLUNT
-        if harm_resisted(anatomy, damage_type):
+        if harm_resisted(anatomy, damage_type, harm.cause):
             hits.append(Hit(damage_type, anatomy.parts[0], SEVERITY_MIN, InjuryKind.BRUISE, magnitude * table.resisted_hp_pct / PERCENT, absorbed=True))
             continue
         severity = harm.severity or severity_of(table, magnitude, rng)
         chosen = anatomy.part(harm.part) if harm.part else None
+        lungs = anatomy.with_function(BodyFunction.BREATH) if DAMAGE[damage_type].breathing else ()
+        if chosen is None and lungs:
+            chosen = lungs[rng.below(len(lungs))]
+            severity = max(severity, severity_of(table, magnitude + rules.damage.asphyxia_per_turn, rng))
         if chosen is None:
             region = weighted(rng, region_weights(rules, anatomy, harm.style)) or anatomy.parts[0].region
             chosen = pick_part(rules, anatomy, region, damage_type, severity, rng=rng)
+            chosen = shielded(rules, anatomy, chosen, damage_type, rng)
         scorched: tuple[Scorch, ...] = ()
         attack: float | None = None
         if harm.severity is None and wielding is not None and layers and physical(damage_type):

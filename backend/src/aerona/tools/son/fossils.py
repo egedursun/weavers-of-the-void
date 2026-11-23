@@ -35,7 +35,7 @@ async def lay_bare_fossils(call: SonCall, args: LayBareFossilsInput) -> str:
         fail(SonResult.FOSSILS_REFUSED, why="there is no such land")
     await ensure_in_reach(call, region)
     if held(region.id):
-        fail(SonResult.FOSSILS_REFUSED, why="a stronger hand holds that land")
+        fail(SonResult.FOSSILS_REFUSED, why="that land is held")
     bed = await first_hidden(call.tick, region.id)
     if bed is None or "found_epoch" in bed.locked:
         fail(SonResult.FOSSILS_REFUSED, why=f"no hidden remains lie in {region.name}")

@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.domain.enums.quests import QuestAim, QuestObstacle, QuestReward, QuestTargetKind
 
@@ -84,4 +85,4 @@ REWARD_WORDS: Mapping[QuestReward, str] = total(
 
 
 def quest_name(aim: QuestAim, target: QuestTargetKind) -> str:
-    return f"{aim.value.capitalize()} the {target.value.replace('_', ' ')}"
+    return f"{spoken(aim).capitalize()} the {spoken(target)}"

@@ -298,7 +298,7 @@ async def enact(
     name: str | None = None,
 ) -> EntityRow:
     validate(kind, params or {})
-    title = name or f"{LAW_TITLES.get(kind, 'the ' + kind.value.replace('_', ' ') + ' law').capitalize()} of {holder.name}"
+    title = name or f"{LAW_TITLES.get(kind, 'the ' + spoken(kind) + ' law').capitalize()} of {holder.name}"
     law = await create_record(
         ctx,
         RecordSpec(
@@ -309,7 +309,7 @@ async def enact(
             power=2,
             location_id=holder.id,
             world_id=holder.world_id,
-            subtype=kind.value.replace("_", " "),
+            subtype=spoken(kind),
             pending=False,
         ),
     )

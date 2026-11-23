@@ -1,12 +1,16 @@
 import {
-  DoorOpen,
-  Brain,
-  Users,
+  type LucideIcon,
   Anchor,
+  Biohazard,
   BookOpen,
+  Brain,
+  Building2,
   Castle,
+  CircleDashed,
   CircleDot,
+  CloudFog,
   Compass,
+  DoorOpen,
   Droplet,
   Droplets,
   Eye,
@@ -14,39 +18,42 @@ import {
   Footprints,
   Gem,
   Ghost,
+  GitFork,
   Hammer,
   Landmark,
   Lock,
   Mountain,
   MountainSnow,
+  Orbit,
   PawPrint,
   Pickaxe,
   Route,
   Scroll,
+  ScrollText,
   Search,
   Shell,
   Skull,
+  Snowflake,
   Sparkles,
   Sprout,
+  Sun,
   Swords,
-  Trees,
   TreePine,
+  Trees,
+  Users,
+  Wand,
   Waves,
   Waypoints,
-  Wand,
-  Sun,
-  type LucideIcon,
-  Building2,
-  Orbit,
-  Snowflake,
   Wind,
-  CloudFog,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type Named, plain } from '../environment/labels'
+
+type Schema = components['schemas']
 
 export const PLACE_ICON: LucideIcon = Landmark
 
-export const KIND: Record<string, Named & { hint: string }> = {
+export const KIND: Record<Schema['PlaceKind'], Named & { hint: string }> = {
   mountain: {
     label: 'Mountain',
     icon: Mountain,
@@ -275,9 +282,69 @@ export const KIND: Record<string, Named & { hint: string }> = {
     tone: 'warning',
     hint: 'Ground that throws up hot water',
   },
+  waterfall: {
+    label: 'Waterfall',
+    icon: Waves,
+    tone: 'info',
+    hint: 'A river falling from height; it turns mills and draws pilgrims',
+  },
+  delta: {
+    label: 'Delta',
+    icon: GitFork,
+    tone: 'success',
+    hint: 'Where a great river meets the sea; silt and harbours',
+  },
+  plateau: {
+    label: 'Plateau',
+    icon: Mountain,
+    tone: 'muted',
+    hint: 'High flat ground that favours its defenders',
+  },
+  sinkhole: {
+    label: 'Sinkhole',
+    icon: CircleDashed,
+    tone: 'warning',
+    hint: 'Hollow karst ground; ways below and the risk of collapse',
+  },
+  hot_spring: {
+    label: 'Hot spring',
+    icon: Droplets,
+    tone: 'gold',
+    hint: 'Warm water that eases wounds and draws bathers',
+  },
+  mesa: {
+    label: 'Mesa',
+    icon: Mountain,
+    tone: 'warning',
+    hint: 'A flat-topped height that is hard to take',
+  },
+  natural_arch: {
+    label: 'Natural arch',
+    icon: Landmark,
+    tone: 'verdigris',
+    hint: 'Stone worn into an arch',
+  },
+  tar_pit: {
+    label: 'Tar pit',
+    icon: CircleDot,
+    tone: 'danger',
+    hint: 'Ground that traps the beasts that cross it',
+  },
+  meadow: {
+    label: 'Meadow',
+    icon: Sprout,
+    tone: 'success',
+    hint: 'Open grassland with water',
+  },
+  isthmus: {
+    label: 'Isthmus',
+    icon: Route,
+    tone: 'info',
+    hint: 'A neck of land joining two lands; it controls passage',
+  },
 }
 
-export const SECRET: Record<string, Named & { hint: string }> = {
+export const SECRET: Record<Schema['SecretKind'], Named & { hint: string }> = {
   hidden_resource: {
     label: 'Hidden seam',
     icon: Gem,
@@ -332,6 +399,42 @@ export const SECRET: Record<string, Named & { hint: string }> = {
     tone: 'warning',
     hint: 'Found, a realm is unsealed',
   },
+  hidden_route: {
+    label: 'Hidden way',
+    icon: Route,
+    tone: 'info',
+    hint: 'Found, it opens a passage through the land',
+  },
+  sleeping_beast: {
+    label: 'Sleeping beast',
+    icon: PawPrint,
+    tone: 'danger',
+    hint: 'Woken by search, digging or chance, it becomes a beast of the wilds',
+  },
+  hidden_grave: {
+    label: 'Hidden grave',
+    icon: Skull,
+    tone: 'warning',
+    hint: 'Found, it brings its dead to light',
+  },
+  hidden_spring: {
+    label: 'Hidden spring',
+    icon: Droplets,
+    tone: 'success',
+    hint: 'Found, it waters the place and its fields',
+  },
+  dormant_disease: {
+    label: 'Sleeping sickness',
+    icon: Biohazard,
+    tone: 'danger',
+    hint: 'Opened, a disease takes hold in the land',
+  },
+  false_account: {
+    label: 'False account',
+    icon: ScrollText,
+    tone: 'warning',
+    hint: 'Found, it overturns what the land remembers',
+  },
 }
 
 export const MODE: Record<string, string> = {
@@ -370,11 +473,15 @@ export const FIELD: Record<string, string> = {
 export const ICONS = { search: Search, scroll: Scroll, lock: Lock }
 
 export function kindOf(key: string): Named & { hint: string } {
-  return KIND[key] ?? { label: plain({}, key), icon: Landmark, hint: '' }
+  return key in KIND
+    ? KIND[key as Schema['PlaceKind']]
+    : { label: plain({}, key), icon: Landmark, hint: '' }
 }
 
 export function secretOf(key: string): Named & { hint: string } {
-  return SECRET[key] ?? { label: plain({}, key), icon: Sparkles, hint: '' }
+  return key in SECRET
+    ? SECRET[key as Schema['SecretKind']]
+    : { label: plain({}, key), icon: Sparkles, hint: '' }
 }
 
 export function fieldOf(key: string): string {

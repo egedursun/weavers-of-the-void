@@ -112,6 +112,8 @@ def club_view(row: ClubRow, refs: dict[int, NodeRef]) -> ClubView:
         line_node=at(refs, row.line_entity_id),
         leverage=row.leverage,
         bought_by=at(refs, row.bought_by_entity_id),
+        fixed_by=at(refs, row.fixed_by_entity_id),
+        fixed_winner=at(refs, row.fixed_winner_entity_id),
         founded_epoch=row.founded_epoch,
         locked=row.locked,
     )
@@ -276,10 +278,22 @@ async def node_pursuits(services: ServicesDep, node_id: NodeId) -> PursuitsNodeV
                 *(
                     item
                     for row in clubs
-                    for item in (row.faction_entity_id, row.league_entity_id, row.arena_entity_id, row.line_entity_id, row.bought_by_entity_id)
+                    for item in (
+                        row.faction_entity_id,
+                        row.league_entity_id,
+                        row.arena_entity_id,
+                        row.line_entity_id,
+                        row.bought_by_entity_id,
+                        row.fixed_by_entity_id,
+                        row.fixed_winner_entity_id,
+                    )
                 ),
                 *((league.faction_entity_id, league.polity_entity_id, league.champion_entity_id) if league is not None else ()),
-                *(item for row in matches for item in (row.league_entity_id, row.home_entity_id, row.away_entity_id, row.winner_entity_id)),
+                *(
+                    item
+                    for row in matches
+                    for item in (row.league_entity_id, row.home_entity_id, row.away_entity_id, row.winner_entity_id, row.fixed_by_entity_id)
+                ),
                 *(item for row in bets for item in (row.settlement_entity_id, row.club_entity_id)),
                 *(item for row in bodies for item in (row.entity_id, row.maker_entity_id, row.soul_entity_id)),
                 *(item for row in instructions for item in (row.owner_entity_id, row.token_entity_id, row.holder_node_id, row.kill_token_entity_id)),
@@ -296,6 +310,7 @@ async def node_pursuits(services: ServicesDep, node_id: NodeId) -> PursuitsNodeV
                     artwork=ref(refs, row.artwork_entity_id),
                     price=row.price,
                     provenance=row.provenance,
+                    acclaim=row.acclaim,
                     interest=row.interest,
                     last_buyer=at(refs, row.last_buyer_node_id),
                     last_sale_epoch=row.last_sale_epoch,
@@ -371,6 +386,8 @@ async def node_pursuits(services: ServicesDep, node_id: NodeId) -> PursuitsNodeV
                     winner=at(refs, row.winner_entity_id),
                     stake=row.stake,
                     riot=row.riot,
+                    fixed_by=at(refs, row.fixed_by_entity_id),
+                    fixing_exposed=row.fixing_exposed,
                     epoch=row.epoch,
                     locked=row.locked,
                 )

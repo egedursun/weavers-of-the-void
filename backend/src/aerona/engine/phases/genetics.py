@@ -10,7 +10,7 @@ from aerona.engine.genetics.genome import genome_of
 from aerona.engine.genetics.life import found_genome, refresh_genome
 from aerona.engine.genetics.lineage import examine_children, seed_looks, stance_effects, tend_resemblance
 from aerona.engine.genetics.pools import members_by_people, seed_pool, tend_pool
-from aerona.engine.genetics.widen import widen_loci
+from aerona.engine.genetics.widen import W52_FIXUP, widen_loci
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mortal.kin import parents_of
 from aerona.engine.phase import Phase
@@ -62,6 +62,8 @@ async def genetics_survey(ctx: TickContext) -> None:
         if await ensure_genome(ctx, mortal):
             ctx.count("genomes_founded")
     pools, genomes = await widen_loci(ctx)
+    later_pools, later_genomes = await widen_loci(ctx, W52_FIXUP)
+    pools, genomes = pools + later_pools, genomes + later_genomes
     ctx.count("pools_widened", pools)
     ctx.count("genomes_widened", genomes)
 

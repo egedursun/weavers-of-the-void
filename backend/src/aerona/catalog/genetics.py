@@ -1,12 +1,14 @@
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.genetics import GiftStance, HouseholdDecision, HouseholdRole, Locus, LocusGroup
+from aerona.domain.enums.genetics import DwellingKind, GiftStance, HouseholdDecision, HouseholdRole, Locus, LocusGroup
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.urban import HousingLevel
+from aerona.rules.registry import Rules
 
 
 @dataclass(frozen=True)
@@ -82,7 +84,7 @@ SCHOOL_OF_LOCUS: Mapping[Locus, MagicSchool] = {locus: school for school, locus 
 
 
 def gift(school: MagicSchool) -> LocusSpec:
-    label = school.value.replace("elemental_", "").replace("_", " ")
+    label = spoken(school).removeprefix("elemental ")
     return LocusSpec(
         GIFT_LOCI[school],
         f"Gift of {label}",
@@ -226,6 +228,11 @@ LOCI: dict[Locus, LocusSpec] = {
             (Allele("common", "common span", 2, 80, 0), Allele("brief", "brief-lived", 1, 10, -1), Allele("enduring", "long-lived", 1, 10, 1)),
         ),
         leaning(
+            Locus.TWINNING,
+            "Twinning",
+            (Allele("common", "single births", 2, 90, 0), Allele("twinning", "given to twins", 1, 10, 1)),
+        ),
+        leaning(
             Locus.FERTILITY,
             "Fertility",
             (Allele("common", "common fertility", 2, 80, 0), Allele("barren", "low fertility", 1, 10, -1), Allele("fruitful", "high fertility", 1, 10, 1)),
@@ -323,27 +330,60 @@ CLASS_INCOME_PCT: dict[SocialClass, int] = {
 
 @dataclass(frozen=True)
 class DwellingSpec:
-    key: str
+    key: DwellingKind
     label: str
     level: HousingLevel
     rooms: int
     quality: int
     upkeep: int
     mobile: bool = False
+    floods: Callable[[Rules], int] | None = None
+    cold: Callable[[Rules], int] | None = None
+    stores: bool = False
+    since_w52: bool = False
+    bodily: bool = False
 
 
-DWELLINGS: dict[str, DwellingSpec] = {
-    spec.key: spec
-    for spec in (
-        DwellingSpec("hut", "Hut", HousingLevel.HUT, 1, 25, 1),
-        DwellingSpec("longhouse", "Longhouse", HousingLevel.HOUSE, 3, 40, 2),
-        DwellingSpec("townhouse", "Townhouse", HousingLevel.TOWNHOUSE, 4, 55, 4),
-        DwellingSpec("manor", "Manor", HousingLevel.MANOR, 10, 72, 8),
-        DwellingSpec("palace", "Palace", HousingLevel.MANOR, 30, 90, 18),
-        DwellingSpec("tent", "Tent", HousingLevel.HUT, 1, 20, 1, mobile=True),
-        DwellingSpec("cave", "Cave", HousingLevel.HUT, 2, 15, 0),
-        DwellingSpec("ship", "Ship", HousingLevel.SHIP_BERTH, 2, 35, 3, mobile=True),
-        DwellingSpec("tower", "Tower", HousingLevel.TOWNHOUSE, 6, 60, 6),
-        DwellingSpec("apartment", "Apartment", HousingLevel.APARTMENT, 2, 50, 3),
-    )
-}
+D = DwellingKind
+DWELLINGS: Mapping[DwellingKind, DwellingSpec] = total(
+    DwellingKind,
+    {
+        D.HUT: DwellingSpec(D.HUT, "Hut", HousingLevel.HUT, 1, 25, 1),
+        D.LONGHOUSE: DwellingSpec(D.LONGHOUSE, "Longhouse", HousingLevel.HOUSE, 3, 40, 2),
+        D.TOWNHOUSE: DwellingSpec(D.TOWNHOUSE, "Townhouse", HousingLevel.TOWNHOUSE, 4, 55, 4),
+        D.MANOR: DwellingSpec(D.MANOR, "Manor", HousingLevel.MANOR, 10, 72, 8, stores=True),
+        D.PALACE: DwellingSpec(D.PALACE, "Palace", HousingLevel.MANOR, 30, 90, 18, stores=True),
+        D.TENT: DwellingSpec(D.TENT, "Tent", HousingLevel.HUT, 1, 20, 1, mobile=True),
+        D.CAVE: DwellingSpec(D.CAVE, "Cave", HousingLevel.HUT, 2, 15, 0, cold=lambda rules: rules.dwellings.burrow_cold_cut_pct // 2),
+        D.SHIP: DwellingSpec(D.SHIP, "Ship", HousingLevel.SHIP_BERTH, 2, 35, 3, mobile=True),
+        D.TOWER: DwellingSpec(D.TOWER, "Tower", HousingLevel.TOWNHOUSE, 6, 60, 6),
+        D.APARTMENT: DwellingSpec(D.APARTMENT, "Apartment", HousingLevel.APARTMENT, 2, 50, 3),
+        D.FARMSTEAD: DwellingSpec(D.FARMSTEAD, "Farmstead", HousingLevel.HOUSE, 4, 45, 2, stores=True, since_w52=True),
+        D.STILT_HOUSE: DwellingSpec(
+            D.STILT_HOUSE, "House on stilts", HousingLevel.HOUSE, 2, 40, 2, floods=lambda rules: rules.dwellings.stilt_flood_cut_pct, since_w52=True
+        ),
+        D.BURROW: DwellingSpec(
+            D.BURROW, "Burrow", HousingLevel.HUT, 3, 35, 1, cold=lambda rules: rules.dwellings.burrow_cold_cut_pct, since_w52=True, bodily=True
+        ),
+        D.NEST: DwellingSpec(D.NEST, "Nest", HousingLevel.HUT, 1, 30, 1, since_w52=True, bodily=True),
+        D.SUBMERGED: DwellingSpec(
+            D.SUBMERGED,
+            "Dwelling under water",
+            HousingLevel.HOUSE,
+            2,
+            40,
+            2,
+            floods=lambda rules: rules.dwellings.stilt_flood_cut_pct,
+            since_w52=True,
+            bodily=True,
+        ),
+    },
+)
+BODILY_DWELLING_KEYS = frozenset(kind.value for kind, spec in DWELLINGS.items() if spec.bodily)
+APTITUDE_LOCI = tuple(locus for locus, spec in LOCI.items() if spec.group is LocusGroup.APTITUDE)
+TEMPERAMENT_LOCI = tuple(locus for locus, spec in LOCI.items() if spec.group is LocusGroup.TEMPERAMENT)
+
+
+def dwelling_spec(key: str | None) -> DwellingSpec | None:
+    known = {kind.value for kind in DwellingKind}
+    return DWELLINGS[DwellingKind(key)] if key is not None and key in known else None

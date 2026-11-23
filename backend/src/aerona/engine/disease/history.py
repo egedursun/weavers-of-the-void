@@ -3,6 +3,7 @@ from collections import Counter
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.demography import MINOR_BANDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -62,7 +63,7 @@ async def remember_immunity(ctx: TickContext, book: DiseaseBook, community: Enti
     made = 0
     rows = book.immunity.setdefault((community.id, disease_id), {})
     for band in AgeBand:
-        start = table.backfill_immunity_pct * (1 - table.child_immunity_loss_pct / PERCENT if band is AgeBand.CHILD else 1)
+        start = table.backfill_immunity_pct * (1 - table.child_immunity_loss_pct / PERCENT if band in MINOR_BANDS else 1)
         value = faded(keep, start, elapsed)
         if value <= 0:
             continue

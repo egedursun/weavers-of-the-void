@@ -4,10 +4,13 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.ages import AgeRow, ArcRow, EcoTransformationRow, IrregularSeasonRow
 from aerona.db.tables.cycles import LongPlanRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.ages import AgeCycle, ArcTemplate, SeasonSpell
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cycles import LongPlanKind
+from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.models.entity_stats import MortalStats
@@ -18,9 +21,34 @@ Ids = dict[str, int]
 
 
 async def long_winter(session: AsyncSession, realm: Realm) -> Ids:
-    session.add(IrregularSeasonRow(world_id=realm.cosmos.world_id, spell=SeasonSpell.WINTER, spell_started_epoch=1, spell_length=3, severity=60, locked=[]))
+    row = IrregularSeasonRow(world_id=realm.cosmos.world_id, spell=SeasonSpell.WINTER, spell_started_epoch=1, spell_length=3, severity=60, locked=[])
+    session.add(row)
     await session.flush()
-    return {"world": realm.cosmos.world_id}
+    return {"world": realm.cosmos.world_id, "long_season": row.id}
+
+
+async def turning_year(session: AsyncSession, realm: Realm) -> Ids:
+    son = await session.get(SonRow, realm.son_id)
+    assert son is not None
+    son.domain_primary = Domain.SKY
+    rows = [
+        WorldSeasonRow(
+            world_id=realm.cosmos.world_id,
+            position=position,
+            name=f"Season {position + 1}",
+            temperature_shift=shift,
+            rain_shift=0,
+            growth=50,
+            travel=50,
+            campaign=50,
+            share_pct=50,
+            edited=False,
+        )
+        for position, shift in enumerate((10, -10))
+    ]
+    session.add_all(rows)
+    await session.flush()
+    return {"season": rows[0].id}
 
 
 async def sky_scholar(session: AsyncSession, realm: Realm) -> Ids:

@@ -878,6 +878,7 @@ MIND_STAGE = stage(
     "space_weather",
     "sympathies",
     "gatherings",
+    "disease_paths",
     "reciprocity",
     "relations_circles",
     "relations_passions",

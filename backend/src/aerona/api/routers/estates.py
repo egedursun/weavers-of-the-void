@@ -18,8 +18,9 @@ from aerona.api.schemas.estates import (
 from aerona.api.schemas.mind import LabelView
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
-from aerona.catalog.estates import CAUSE_LABELS, ESTATE_NAMES, PRIVILEGE_LABELS
+from aerona.catalog.estates import ESTATE_NAMES, PRIVILEGE_LABELS
 from aerona.catalog.life.api import GUILDS
+from aerona.catalog.movement_causes import CAUSE_LABELS
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow

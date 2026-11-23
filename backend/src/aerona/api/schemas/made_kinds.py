@@ -4,7 +4,7 @@ from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.collective import DesignComponentKind, DesignKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.demography import MartialStyle, Sex
+from aerona.domain.enums.demography import MartialStyle, SexKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.equipment import ArmamentSlot, EquipmentFamily
 from aerona.domain.enums.integrity import Criticality, SectionHazard, SectionState
@@ -395,7 +395,7 @@ class VesselSectionView(ApiModel):
 
 
 class AttractionView(ApiModel):
-    drawn_to: list[Sex] | None
+    drawn_to: list[SexKind] | None
     attraction: int
     decline: int
     held: list[str]

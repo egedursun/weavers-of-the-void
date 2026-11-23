@@ -1,11 +1,12 @@
 from pydantic import Field
 
-from aerona.catalog.dangers import DANGERS, MEMORY_LABELS
+from aerona.catalog.dangers import DANGERS
+from aerona.catalog.land_memory import LAND_MEMORIES
 from aerona.core.errors import NotFoundError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.region import DangerSource, RegionMemoryKind
+from aerona.domain.enums.region import DangerHarm, DangerSource, RegionMemoryKind
 from aerona.engine.environment import region_control
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -17,12 +18,14 @@ class CreateDanger(Command):
     source: DangerSource
     strength: int = Field(ge=0, le=100)
     hold: bool = True
+    targets: list[DangerHarm] = Field(default_factory=list)
 
 
 class EditDanger(Command):
     danger_id: int
     strength: int | None = Field(default=None, ge=0, le=100)
     hold: bool | None = None
+    targets: list[DangerHarm] | None = None
 
 
 class DangerTarget(Command):
@@ -82,7 +85,14 @@ async def _name(scope: PlayerScope, entity_id: int) -> str:
 @player_action("region:danger_create", ActionKind.OTHER)
 async def create_danger(scope: PlayerScope, command: CreateDanger) -> Effect:
     row = await region_control.set_danger(
-        scope.session, scope.rules, command.region_id, command.source, command.strength, epoch=await scope.epoch(), held=command.hold
+        scope.session,
+        scope.rules,
+        command.region_id,
+        command.source,
+        command.strength,
+        epoch=await scope.epoch(),
+        held=command.hold,
+        targets=command.targets,
     )
     held = " and held there" if command.hold else ""
     label = DANGERS[command.source].label.lower()
@@ -92,7 +102,7 @@ async def create_danger(scope: PlayerScope, command: CreateDanger) -> Effect:
 @player_action("region:danger_edit", ActionKind.OTHER)
 async def edit_danger(scope: PlayerScope, command: EditDanger) -> Effect:
     row = await region_control.edit_danger(
-        scope.session, scope.rules, command.danger_id, strength=command.strength, held=command.hold, epoch=await scope.epoch()
+        scope.session, scope.rules, command.danger_id, strength=command.strength, held=command.hold, epoch=await scope.epoch(), targets=command.targets
     )
     state = ", held" if row.held else ""
     label = DANGERS[row.source].label
@@ -129,7 +139,7 @@ async def add_memory(scope: PlayerScope, command: AddMemory) -> Effect:
         scope.session, command.region_id, command.kind, command.magnitude, command.title, epoch=await scope.epoch(), held=command.hold
     )
     return Effect(
-        f"{await _name(scope, row.region_entity_id)} now remembers {row.title} ({MEMORY_LABELS[row.kind].lower()}, {row.magnitude}).",
+        f"{await _name(scope, row.region_entity_id)} now remembers {row.title} ({LAND_MEMORIES[row.kind].label.lower()}, {row.magnitude}).",
         target_node_id=row.region_entity_id,
     )
 
@@ -167,6 +177,6 @@ async def release_knowledge(scope: PlayerScope, command: KnowledgeTarget) -> Eff
 async def redirect_river(scope: PlayerScope, command: RedirectRiver) -> Effect:
     moved = await region_control.redirect_river(scope.session, scope.rules, command.from_region_id, command.to_region_id, epoch=await scope.epoch())
     source, target = await _name(scope, command.from_region_id), await _name(scope, command.to_region_id)
-    river = moved.river.value.replace("_", " ")
+    river = spoken(moved.river)
     tail = f"; {several(moved.dried, 'place', 'places')} went dry and {moved.watered} found water" if moved.dried or moved.watered else ""
     return Effect(f"The {river} of {source} now runs through {target}{tail}.", target_node_id=command.to_region_id)

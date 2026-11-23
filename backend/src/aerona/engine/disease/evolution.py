@@ -6,7 +6,8 @@ from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.disease import DiseaseTarget, DiseaseVector
+from aerona.domain.enums.affliction import Transmission
+from aerona.domain.enums.disease import DiseaseTarget
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
@@ -19,7 +20,7 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import RoleValue, record
 
 INCUBATION_MAX = 20
-SPREADING_SYMPTOMS = {DiseaseVector.AIR: DiseaseTarget.BREATH, DiseaseVector.TOUCH: DiseaseTarget.SKIN}
+SPREADING_SYMPTOMS = {Transmission.INHALATION: DiseaseTarget.BREATH, Transmission.CONTACT: DiseaseTarget.SKIN}
 
 
 @dataclass
@@ -33,7 +34,7 @@ class PathogenTally:
 
 
 def take_symptom(profile: DiseaseProfileRow, lucky: bool) -> bool:
-    symptom = SPREADING_SYMPTOMS.get(profile.vector)
+    symptom = SPREADING_SYMPTOMS.get(profile.primary_route)
     if not lucky or symptom is None or symptom.value in profile.target_functions or "target_functions" in profile.locked:
         return False
     profile.target_functions = [*profile.target_functions, symptom.value]

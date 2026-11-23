@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.structures import StructureDesignRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.material import MaterialKind
@@ -77,7 +78,7 @@ class RetireDesign(Command):
 
 
 def label(kind: StructureKind) -> str:
-    return kind.value.replace("_", " ")
+    return spoken(kind)
 
 
 @player_action("structure:commission", ActionKind.BUILD)

@@ -12,7 +12,7 @@ from aerona.domain.enums.demography import (
     InheritanceCustom,
     Job,
     MartialStyle,
-    Sex,
+    SexKind,
 )
 from aerona.domain.enums.ecology import Biochemistry, Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
@@ -29,7 +29,7 @@ class CohortRow(Base):
 
     community_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     age_band: Mapped[AgeBand] = mapped_column(enum_type(AgeBand, "age_band"), primary_key=True)
-    sex: Mapped[Sex] = mapped_column(enum_type(Sex, "sex"), primary_key=True)
+    sex_kind: Mapped[SexKind] = mapped_column(enum_type(SexKind, "sex_kind"), primary_key=True)
     social_class: Mapped[SocialClass] = mapped_column(enum_type(SocialClass, "social_class"), primary_key=True)
     condition: Mapped[CohortCondition] = mapped_column(enum_type(CohortCondition, "condition"), primary_key=True)
     count: Mapped[int] = mapped_column(default=0)

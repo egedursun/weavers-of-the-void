@@ -3,6 +3,7 @@ import {
   type ThemeColorName,
   type ThemeColors,
 } from '@/components/domain/useThemeColors'
+import { STANCE_WORDS } from '@/features/entity/affairs/labels'
 import { type MapView } from './api'
 import { type Transform, tracePolyline } from './mapModel'
 
@@ -249,7 +250,7 @@ function shapesOf(view: MapView): Shape[] {
         kind: 'supply',
         source: army.army_id,
         target: army.region_id ?? army.army_id,
-        description: `${army.name}: ${plural(army.size, 'soldier', 'soldiers')}, ${army.stance.replaceAll('_', ' ')}${army.blockade_id !== null ? ', holding a blockade' : ''}`,
+        description: `${army.name}: ${plural(army.size, 'soldier', 'soldiers')}, ${STANCE_WORDS[army.stance].toLowerCase()}${army.blockade_id !== null ? ', holding a blockade' : ''}`,
         length: null,
       },
       points: army.path,

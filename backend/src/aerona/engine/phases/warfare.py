@@ -32,7 +32,7 @@ from aerona.domain.enums.body import Capacity, Consciousness, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.environment import RiverClass, ScarKind
+from aerona.domain.enums.environment import MovementMode, RiverClass, ScarKind
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.life_traits import StarvationStageTrait
@@ -505,6 +505,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.house_members",
     "table.house_profiles",
     "table.injuries",
+    "table.irregular_seasons",
     "table.law_profiles",
     "table.learned_tactics",
     "table.loans",
@@ -1489,7 +1490,9 @@ async def _marches(ctx: TickContext, theatre: Theatre, sides: tuple[EntityRow, E
     return found
 
 
-async def _manoeuvre(ctx: TickContext, theatre: Theatre, marches: list[March], index: int, *, ground: BattleGround, war_id: int) -> bool:
+async def _manoeuvre(
+    ctx: TickContext, theatre: Theatre, marches: list[March], index: int, *, ground: BattleGround, war_id: int, travelled: dict[int, tuple[MovementMode, int]]
+) -> bool:
     atlas = theatre.neighbourhood.atlas
     weather = ground.weather.kind if ground.weather is not None else None
     knowledge = await KnowledgeMap.load(ctx.session)
@@ -1504,6 +1507,8 @@ async def _manoeuvre(ctx: TickContext, theatre: Theatre, marches: list[March], i
         flow = await supply_season(ctx, march, index, raided=log.raided, order=report.order, web=theatre.supply, tally=supply)
         await culminate(ctx, march, flow, supply)
         ctx.count("march_regions", log.moved)
+        if log.mode is not None:
+            travelled[march.army.id] = (log.mode, travelled.get(march.army.id, (log.mode, 0))[1] + log.moved)
         ctx.count("attrition_dead", log.dead)
         ctx.count("deserters", log.deserted)
         ctx.count("storm_losses", await weather_the_storm(ctx, march, weather, knowledge))
@@ -1609,6 +1614,29 @@ async def _surrender(
     return await check_war_end(ctx, item, attacker, defender, armies)
 
 
+def season_suitability(ctx: TickContext, theatre: Theatre, ground: BattleGround) -> int:
+    suitability = ground.season.campaign if ground.season is not None else PERCENT
+    if ground.region is None:
+        return suitability
+    return suitability * (PERCENT - theatre.ground.spell_pull(ground.region).winter * ctx.rules.long_seasons.campaign_winter_pct // PERCENT) // PERCENT
+
+
+async def _ways_travelled(ctx: TickContext, marches: list[March], travelled: dict[int, tuple[MovementMode, int]]) -> None:
+    for march in marches:
+        way = travelled.get(march.army.id)
+        if way is None or march.profile.region_entity_id is None or held(march.owner.id, march.army.id):
+            continue
+        mode, regions = way
+        await record(
+            ctx,
+            "travel.mode_used",
+            roles={IncidentRole.ACTOR: march.owner.id, IncidentRole.MEMBER: march.army.id, IncidentRole.DESTINATION: march.profile.region_entity_id},
+            facts={"mode": mode, "regions": regions},
+            place=march.profile.region_entity_id,
+        )
+        ctx.count("ways_travelled")
+
+
 async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies: dict[int, tuple[EntityRow, ArmyRow]], cap: int) -> int:
     settings = ctx.rules.campaigns
     war = item.war
@@ -1628,15 +1656,14 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     per_year = max(1, settings.seasons_per_war_epoch)
     first_year = rng.below(max(1, years - seasons // per_year))
     base = epoch_start_year(ctx.epoch, years)
-    bouts = 0
-    lost = 0
-    winter_shamed = False
+    bouts, lost, winter_shamed = 0, 0, False
+    travelled: dict[int, tuple[MovementMode, int]] = {}
     for index in range(seasons):
         year = base + min(years - 1, first_year + index // per_year)
         meeting = marches[0].profile.region_entity_id if in_contact(theatre.neighbourhood.atlas, marches[0].profile, marches[1].profile) else None
         ground = theatre.battleground(ctx, war, defender, slot=f"war.{war.id}.{index}", season_index=start + index % per_year, year=year, region_id=meeting)
         lost += await _weather_losses(ctx, theatre, ground, (attacker, defender), armies)
-        contact = await _manoeuvre(ctx, theatre, marches, index, ground=ground, war_id=war.id)
+        contact = await _manoeuvre(ctx, theatre, marches, index, ground=ground, war_id=war.id, travelled=travelled)
         if await occupy(ctx, war, marches[0], defender, theatre.neighbourhood.atlas) is not None:
             ctx.count("occupation_seasons")
         step = await _besiege(ctx, item, (attacker, defender), marches, armies)
@@ -1650,7 +1677,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
             if resting and not storm:
                 ctx.count("winter_taboo_rest")
                 continue
-        suitability = ground.season.campaign if ground.season is not None else PERCENT
+        suitability = season_suitability(ctx, theatre, ground)
         if not contact or bouts >= cap or held(attacker.id, defender.id) or not (storm or rng.chance(settings.season_engagement_pct * suitability / PERCENT)):
             continue
         if storm:
@@ -1659,6 +1686,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
         bouts += 1
         if report is None or report.settlement is not None:
             break
+    await _ways_travelled(ctx, marches, travelled)
     if bouts == 0 and war.status is WarStatus.ONGOING:
         await check_war_end(ctx, item, attacker, defender, armies)
     ctx.count("campaign_seasons", seasons)
@@ -1776,6 +1804,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.genomes",
     "table.goods",
     "table.goods_flows",
+    "table.grade_duties",
     "table.held_identities",
     "table.herds",
     "table.holder_custom_techniques",
@@ -1790,6 +1819,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.incubating_ideas",
     "table.injuries",
     "table.inspirations",
+    "table.irregular_seasons",
     "table.item_profiles",
     "table.language_profiles",
     "table.language_registers",
@@ -1981,6 +2011,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.polity_profiles",
     "table.polity_regard",
     "table.polity_territories",
+    "table.professions_of_value",
     "table.region_environment",
     "table.relationships",
     "table.reputations",

@@ -20,7 +20,7 @@ from aerona.domain.enums.cycles import (
     ReproductiveSystem,
     ResidenceRule,
 )
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.unions import (
     KinMatch,
     PartnerScope,
@@ -192,7 +192,7 @@ class KinshipDraft(Command):
     descent_group: DescentGroup = DescentGroup.LINEAGE
     kin_terms: KinTermSystem = KinTermSystem.LINEAL
     adoption: AdoptionKind = AdoptionKind.FOSTER
-    first_side: Sex
+    first_side: SexKind
     sibling_union_first: bool = False
     sibling_union_second: bool = False
 
@@ -492,6 +492,12 @@ async def gift_return(scope: PlayerScope, command: GiftAnswer) -> Effect:
 async def gift_refuse(scope: PlayerScope, command: GiftTarget) -> Effect:
     row = await control.refuse_gift(await scope.context("gift_refuse"), command.gift_id)
     return Effect("The gift is refused.", row.giver_node_id)
+
+
+@player_action("gift:release", ActionKind.EDIT_RECORD)
+async def gift_release(scope: PlayerScope, command: GiftTarget) -> Effect:
+    row = await control.release_gift(await scope.context("gift_release"), command.gift_id)
+    return Effect("The giver releases the debt, and the receiver is bound by gratitude instead.", row.receiver_node_id)
 
 
 @player_action("gift:edit", ActionKind.EDIT_RECORD)

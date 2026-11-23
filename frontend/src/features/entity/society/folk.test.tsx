@@ -18,6 +18,7 @@ vi.mock('@/api/client', async () => {
 const VIEW = {
   entity_id: 12,
   people_id: 12,
+  sex_kinds: ['bearer', 'begetter'],
   cohorts: [],
   labour: [],
   flows: [],
@@ -54,6 +55,9 @@ const VIEW = {
     locked: ['body_plan'],
   },
   culture: {
+    death_readings: [
+      { cause: 'battle', reading: 'glorious', authored: false, held: false },
+    ],
     cohesion: 60,
     literacy: 20,
     urbanisation: 40,

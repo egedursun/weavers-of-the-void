@@ -5,11 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.dangers import DANGERS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.ecology import HerdRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.region import RegionDangerRow, RegionMemoryRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
@@ -17,7 +19,7 @@ from aerona.domain.enums.region import DangerHarm, DangerSource
 from aerona.engine.body.cohorts import cohort
 from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
-from aerona.engine.environment.dangers import harm_weight, weighted
+from aerona.engine.environment.dangers import dangers_by_region, harm_weight, weighted
 from aerona.engine.environment.knowledge import knowledge_of, polity_of
 from aerona.engine.environment.memory import darkness
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -109,6 +111,81 @@ async def harm_settlers(ctx: TickContext, atlas: RegionAtlas, dangers: dict[int,
     return tally
 
 
+@dataclass
+class WorksTally:
+    fields: int = 0
+    buildings: int = 0
+    vessels: int = 0
+
+
+async def harm_works(ctx: TickContext, dangers: dict[int, list[RegionDangerRow]], grounds: dict[int, RegionEnvironmentRow]) -> WorksTally:
+    table = ctx.rules.regional_danger
+    tally = WorksTally()
+    for region_id, rows in sorted(dangers.items()):
+        if held(region_id):
+            continue
+        ground = grounds.get(region_id)
+        await note_works_harm(ctx, region_id, rows)
+        crops = weighted(ctx.rules, rows, DangerHarm.CROPS)
+        if ground is not None and crops > 0 and "harvest_pct" not in ground.locked:
+            ground.harvest_pct = clamp_int(ground.harvest_pct - round_half_up(crops * table.crops_harm_pct / PERCENT), 0, PERCENT * 2)
+            tally.fields += 1
+        buildings = round_half_up(weighted(ctx.rules, rows, DangerHarm.STRUCTURES) * table.structures_harm / PERCENT)
+        if buildings > 0:
+            tally.buildings += await wear_buildings(ctx, region_id, buildings)
+        hulls = round_half_up(weighted(ctx.rules, rows, DangerHarm.VESSELS) * table.vessels_harm / PERCENT)
+        if hulls > 0:
+            tally.vessels += await wear_vessels(ctx, region_id, hulls)
+    return tally
+
+
+WORKS_HARMS = (DangerHarm.CROPS, DangerHarm.STRUCTURES, DangerHarm.VESSELS)
+
+
+async def note_works_harm(ctx: TickContext, region_id: int, rows: list[RegionDangerRow]) -> None:
+    for harm in WORKS_HARMS:
+        weight = weighted(ctx.rules, rows, harm)
+        source = worst(ctx.rules, rows, harm)
+        if weight >= ctx.rules.regional_danger.works_noted_harm and source is not None:
+            await record(
+                ctx,
+                "danger.harmed",
+                roles={IncidentRole.PLACE: region_id, IncidentRole.ACTOR: source.source_node_id},
+                facts={"source": source.source, "target": harm, "weight": weight},
+                place=region_id,
+            )
+
+
+async def wear_buildings(ctx: TickContext, region_id: int, harm: int) -> int:
+    built = (
+        select(StructureProfileRow)
+        .join(EntityRow, EntityRow.id == StructureProfileRow.structure_entity_id)
+        .where(EntityRow.location_id == region_id, EntityRow.status == EntityStatus.CANON)
+        .order_by(StructureProfileRow.structure_entity_id)
+    )
+    worn = 0
+    for row in await ctx.session.scalars(built):
+        if held(row.structure_entity_id) or "condition" in (row.locked or []):
+            continue
+        row.condition = clamp_int(row.condition - harm, 0, PERCENT)
+        worn += 1
+    return worn
+
+
+async def wear_vessels(ctx: TickContext, region_id: int, harm: int) -> int:
+    worn = 0
+    for vessel in await ctx.session.scalars(
+        select(VesselProfileRow).where(VesselProfileRow.region_entity_id == region_id).order_by(VesselProfileRow.entity_id)
+    ):
+        if held(vessel.entity_id) or "condition" in (vessel.locked or []):
+            continue
+        vessel.condition = clamp_int(vessel.condition - harm, 0, PERCENT)
+        if "crew" not in (vessel.locked or []):
+            vessel.crew = max(0, vessel.crew - round_half_up(vessel.crew * harm / PERCENT))
+        worn += 1
+    return worn
+
+
 @dataclass(frozen=True)
 class Peril:
     dead: int
@@ -177,6 +254,7 @@ async def draw_pilgrims(ctx: TickContext, atlas: RegionAtlas, grounds: dict[int,
     holy = {region_id: ground.sacredness for region_id, ground in grounds.items() if ground.sacredness >= table.pilgrim_sacred_min}
     if not holy:
         return tally
+    perilous = await dangers_by_region(ctx.session, sorted(holy))
     entities = await ctx.session.scalars(
         select(EntityRow)
         .where(EntityRow.entity_type.in_([EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.CULT]), EntityRow.status == EntityStatus.CANON)
@@ -186,7 +264,9 @@ async def draw_pilgrims(ctx: TickContext, atlas: RegionAtlas, grounds: dict[int,
         sacred = holy.get(atlas.top_region(entity.id) or 0)
         if sacred is None:
             continue
-        share = sacred / PERCENT
+        region_id = atlas.top_region(entity.id) or 0
+        turned = weighted(ctx.rules, perilous.get(region_id, []), DangerHarm.PILGRIMS) * ctx.rules.regional_danger.pilgrims_harm_pct / PERCENT / PERCENT
+        share = sacred / PERCENT * (1 - turned)
         if entity.entity_type is EntityType.CULT:
             if has_stat(entity, "zeal"):
                 shift_stat(entity, "zeal", round_half_up(table.pilgrim_zeal * share))

@@ -316,12 +316,12 @@ async def treat_injury(scope: PlayerScope, command: TreatInjury) -> Effect:
     row = await _injury(scope, command.injury_id)
     bearer = await bearer_of(scope, row.bearer_node_id)
     if command.step.value in row.treatments:
-        raise ValidationFailedError(f"The wound is already treated with {_label(command.step.value)}.")
+        raise ValidationFailedError(f"The wound is already treated with {spoken(command.step)}.")
     stanch(row, command.step)
     if command.step is TreatmentStep.DIAGNOSE:
         row.misdiagnosed = False
     await refresh(scope.session, scope.rules, bearer, await scope.epoch())
-    return Effect(f"The wound to {bearer.name}'s {_label(row.part)} was given {_label(command.step.value)}.", target_node_id=bearer.id)
+    return Effect(f"The wound to {bearer.name}'s {_label(row.part)} was given {spoken(command.step)}.", target_node_id=bearer.id)
 
 
 @player_action("body:digit", ActionKind.OTHER)
@@ -368,7 +368,7 @@ async def set_consciousness(scope: PlayerScope, command: SetConsciousness) -> Ef
         locked.discard(CONSCIOUSNESS)
     body.locked = sorted(locked)
     held = " and held there" if command.lock else ""
-    return Effect(f"{bearer.name} is now {_label(command.consciousness.value)}{held}.", target_node_id=bearer.id)
+    return Effect(f"{bearer.name} is now {spoken(command.consciousness)}{held}.", target_node_id=bearer.id)
 
 
 async def world_material(scope: PlayerScope, material_id: int | None) -> WorldMaterialRow | None:
@@ -397,7 +397,7 @@ async def edit_condition(scope: PlayerScope, command: EditCondition) -> Effect:
         if value is not None:
             setattr(row, name, value)
     await refresh(scope.session, scope.rules, bearer, await scope.epoch())
-    return Effect(f"{bearer.name}'s {_label(row.kind.value)} was changed.", target_node_id=bearer.id)
+    return Effect(f"{bearer.name}'s {spoken(row.kind)} was changed.", target_node_id=bearer.id)
 
 
 @player_action("body:prosthesis_edit", ActionKind.OTHER)
@@ -419,7 +419,7 @@ async def edit_prosthesis(scope: PlayerScope, command: EditProsthesis) -> Effect
     if command.restored_pct is not None:
         row.restored_pct = command.restored_pct
     await refresh(scope.session, scope.rules, bearer, await scope.epoch())
-    return Effect(f"{bearer.name}'s {_label(row.material.value)} {_label(row.part)} was reworked.", target_node_id=bearer.id)
+    return Effect(f"{bearer.name}'s {spoken(row.material)} {_label(row.part)} was reworked.", target_node_id=bearer.id)
 
 
 @player_action("body:injury_hold", ActionKind.OTHER)
@@ -457,7 +457,7 @@ async def apply_prosthesis(scope: PlayerScope, command: FitProsthesis) -> Effect
     fitted = await fit_prosthesis(ctx, bearer, row, part, command.material, maker=None, quality=command.quality, item=item, world_material=world)
     await refresh(scope.session, scope.rules, bearer, ctx.epoch)
     return Effect(
-        f"{bearer.name} now wears {an(_label(command.material.value))} {part.label.lower()}.",
+        f"{bearer.name} now wears {an(spoken(command.material))} {part.label.lower()}.",
         target_node_id=bearer.id,
         values={"prosthesis_id": fitted.id},
     )
@@ -472,7 +472,7 @@ async def remove_prosthesis(scope: PlayerScope, command: ProsthesisTarget) -> Ef
     await scope.session.delete(row)
     await scope.session.flush()
     await refresh(scope.session, scope.rules, bearer, await scope.epoch())
-    return Effect(f"{bearer.name}'s {_label(row.material.value)} {_label(row.part)} was taken away.", target_node_id=bearer.id)
+    return Effect(f"{bearer.name}'s {spoken(row.material)} {_label(row.part)} was taken away.", target_node_id=bearer.id)
 
 
 @player_action("body:condition", ActionKind.OTHER)
@@ -485,11 +485,11 @@ async def add_condition(scope: PlayerScope, command: AddCondition) -> Effect:
     if command.variant_id is not None:
         variant = await scope.session.get(KindVariantRow, command.variant_id)
         if variant is None or variant.family is not KindFamily.CONDITION or variant.base != command.kind.value:
-            raise ValidationFailedError(f"That is not a kind of {_label(command.kind.value)}.")
+            raise ValidationFailedError(f"That is not a kind of {spoken(command.kind)}.")
         row.variant_id = variant.id
     await known_kind(scope, command.kind_id)
     row.cause, row.kind_id = command.cause or row.cause, command.kind_id or row.kind_id
-    return Effect(f"{bearer.name} now lives with {_label(command.kind.value)}.", target_node_id=bearer.id, values={"condition_id": row.id})
+    return Effect(f"{bearer.name} now lives with {spoken(command.kind)}.", target_node_id=bearer.id, values={"condition_id": row.id})
 
 
 @player_action("body:condition_end", ActionKind.OTHER)
@@ -500,7 +500,7 @@ async def end_condition_action(scope: PlayerScope, command: ConditionTarget) -> 
     bearer = await bearer_of(scope, row.bearer_node_id)
     ctx = await scope.context("body_condition_end")
     await end_condition(ctx, bearer, row.kind, announce=False)
-    return Effect(f"{bearer.name} is free of {_label(row.kind.value)}.", target_node_id=bearer.id)
+    return Effect(f"{bearer.name} is free of {spoken(row.kind)}.", target_node_id=bearer.id)
 
 
 @player_action("body:plan", ActionKind.OTHER)
@@ -511,7 +511,7 @@ async def set_plan(scope: PlayerScope, command: SetBodyPlan) -> Effect:
     replan(body, command.plan, sorted({trait.value for trait in command.traits}))
     if not isinstance(bearer, EntityRow) or bearer.entity_type is EntityType.MORTAL:
         await refresh(scope.session, scope.rules, bearer, epoch)
-    return Effect(f"{bearer.name} now has {an(_label(command.plan.value))} body.", target_node_id=bearer.id)
+    return Effect(f"{bearer.name} now has {an(spoken(command.plan))} body.", target_node_id=bearer.id)
 
 
 @player_action("body:frame", ActionKind.OTHER)
@@ -601,4 +601,4 @@ async def set_cohort(scope: PlayerScope, command: SetCohort) -> Effect:
     row.count = command.count
     row.veterans = min(command.count, command.veterans if command.veterans is not None else row.veterans)
     row.updated_epoch = epoch
-    return Effect(f"The {_label(command.kind.value)} of {community.name} now number {command.count}.", target_node_id=community.id)
+    return Effect(f"The {spoken(command.kind)} of {community.name} now number {command.count}.", target_node_id=community.id)

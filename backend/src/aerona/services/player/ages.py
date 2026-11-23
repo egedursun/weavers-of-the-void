@@ -1,9 +1,11 @@
 from pydantic import Field
 
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.ages import AgeCycle, ArcRole, ArcStage, ArcTemplate, SetupKind
+from aerona.domain.enums.ages import AgeCycle, ArcRole, ArcStage, ArcTemplate, LongSeasonReach, SeasonCause, SeasonSpell, SeasonSpellShape, SetupKind
+from aerona.engine.environment.spells import SpellSources
 from aerona.engine.storyteller import control
+from aerona.engine.storyteller.control import SpellDraft
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -27,10 +29,28 @@ class FormationDraft(Command):
 
 class SeasonDraft(Command):
     world_id: int
+    cause: SeasonCause = SeasonCause.DIVINE
+    shape: SeasonSpellShape = SeasonSpellShape.CYCLING
+    spell: SeasonSpell = SeasonSpell.SUMMER
+    length: int = Field(default=2, ge=1, le=MANY)
+    severity: int = Field(default=50, ge=0, le=100)
+    reach: LongSeasonReach = LongSeasonReach.WORLD
+    source_impact_id: int | None = None
+    source_region_id: int | None = None
+    source_star_id: int | None = None
+    source_incident_id: int | None = None
+
+
+class LongSeasonTarget(Command):
+    long_season_id: int
+
+
+class LongSeasonEdit(Edited):
+    long_season_id: int
 
 
 class ForecastDraft(Command):
-    world_id: int
+    long_season_id: int
     people_id: int
     predicted_end_epoch: int = Field(default=0, ge=0, le=MANY)
     heeded: bool = True
@@ -168,20 +188,29 @@ async def formation_reshape(scope: PlayerScope, command: WorldTarget) -> Effect:
 
 @player_action("irregular_season:create", ActionKind.EDIT_RECORD)
 async def irregular_season_create(scope: PlayerScope, command: SeasonDraft) -> Effect:
-    await control.unsettle_seasons(await scope.context("irregular_season_create"), command.world_id, None)
-    return Effect("The seasons of the world lose their measure.", command.world_id)
+    draft = SpellDraft(
+        cause=command.cause,
+        shape=command.shape,
+        spell=command.spell,
+        length=command.length,
+        severity=command.severity,
+        reach=command.reach,
+        sources=SpellSources(command.source_impact_id, command.source_region_id, command.source_star_id, command.source_incident_id),
+    )
+    row = await control.unsettle_seasons(await scope.context("irregular_season_create"), command.world_id, (await scope.creator()).id, draft)
+    return Effect(f"A long {spoken(row.spell)} begins over the world.", command.world_id, values={"long_season_id": row.id})
 
 
 @player_action("irregular_season:forecast", ActionKind.EDIT_RECORD)
-async def irregular_season_forecast(scope: PlayerScope, command: WorldTarget) -> Effect:
-    made = await control.read_winter(await scope.context("irregular_season_forecast"), command.world_id)
-    return Effect(f"{several(made, 'people', 'peoples')} read the coming of the seasons.", command.world_id)
+async def irregular_season_forecast(scope: PlayerScope, command: LongSeasonTarget) -> Effect:
+    made = await control.read_winter(await scope.context("irregular_season_forecast"), command.long_season_id)
+    return Effect(f"{several(made, 'people', 'peoples')} read the coming of the seasons.")
 
 
 @player_action("winter_forecast:set", ActionKind.EDIT_RECORD)
 async def winter_forecast_set(scope: PlayerScope, command: ForecastDraft) -> Effect:
     row = await control.set_forecast(
-        await scope.context("winter_forecast_set"), command.world_id, command.people_id, command.predicted_end_epoch, command.heeded
+        await scope.context("winter_forecast_set"), command.long_season_id, command.people_id, command.predicted_end_epoch, command.heeded
     )
     return Effect("The people's forecast is set.", command.people_id, values={"forecast_id": row.id})
 
@@ -268,15 +297,15 @@ async def formation_delete(scope: PlayerScope, command: WorldTarget) -> Effect:
 
 
 @player_action("irregular_season:edit", ActionKind.EDIT_RECORD)
-async def irregular_season_edit(scope: PlayerScope, command: WorldEdit) -> Effect:
-    await control.edit_record(await scope.context("irregular_season_edit"), "irregular_season", command.world_id, command.values, command.release)
-    return Effect("The irregular seasons are set so.")
+async def irregular_season_edit(scope: PlayerScope, command: LongSeasonEdit) -> Effect:
+    await control.edit_record(await scope.context("irregular_season_edit"), "irregular_season", command.long_season_id, command.values, command.release)
+    return Effect("The long season is set so.")
 
 
 @player_action("irregular_season:delete", ActionKind.EDIT_RECORD)
-async def irregular_season_delete(scope: PlayerScope, command: WorldTarget) -> Effect:
-    await control.delete_record(await scope.context("irregular_season_delete"), "irregular_season", command.world_id)
-    return Effect("The seasons keep their measure again.")
+async def irregular_season_delete(scope: PlayerScope, command: LongSeasonTarget) -> Effect:
+    await control.end_long_season(await scope.context("irregular_season_delete"), command.long_season_id)
+    return Effect("The long season ends; the seasons keep their measure again.")
 
 
 @player_action("winter_forecast:edit", ActionKind.EDIT_RECORD)

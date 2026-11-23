@@ -54,6 +54,7 @@ import {
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
+import { WORKSHOP } from '@/features/entity/economy/labels'
 import { useSons } from '@/features/pantheon/api'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -1342,9 +1343,7 @@ export function StructureSection({
               <MiniStat
                 icon={Wrench}
                 label='Workshop'
-                value={
-                  data.workshop ? data.workshop.replaceAll('_', ' ') : 'None'
-                }
+                value={data.workshop ? WORKSHOP[data.workshop].label : 'None'}
               />
               <MiniStat
                 icon={HardHat}

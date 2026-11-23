@@ -1,4 +1,6 @@
+import { entityFlagValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { humanize } from '../actions/schema'
 import { useCatalogue } from '../api/queries'
 import { type EntityDetail } from '../api/types'
@@ -41,7 +43,7 @@ export function TagChips({ detail }: { detail: EntityDetail }) {
     <>
       {detail.flags.map((flag) => (
         <Badge key={`flag-${flag}`} variant={FLAG_TONE[flag] ?? 'secondary'}>
-          {humanize(flag)}
+          {wordOf(entityFlagValues, flag)}
         </Badge>
       ))}
       {detail.traits.map((trait) => (

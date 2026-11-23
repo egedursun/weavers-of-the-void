@@ -11,7 +11,7 @@ from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.disease import ClimateAffinity, OutbreakStatus, SpreadPath
+from aerona.domain.enums.disease import ClimateMoisture, ClimateWarmth, OutbreakStatus, SpreadPath
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.evolution import PlagueResponse
@@ -69,22 +69,33 @@ async def host_for(ctx: TickContext, book: DiseaseBook, region_id: int) -> Entit
     return await ctx.session.get(EntityRow, species_id)
 
 
-def climate_fit(rules_pct: tuple[int, int], profile: DiseaseProfileRow, ground: RegionEnvironmentRow | None) -> float:
-    match, mismatch = rules_pct
-    if ground is None or profile.climate_affinity is ClimateAffinity.ANY:
+def warmth_fit(warmth: ClimateWarmth, ground: RegionEnvironmentRow) -> int:
+    if warmth is ClimateWarmth.ANY:
+        return 0
+    fits = ground.temperature_band in (WARM_BANDS if warmth is ClimateWarmth.WARM else COLD_BANDS)
+    opposed = ground.temperature_band in (COLD_BANDS if warmth is ClimateWarmth.WARM else WARM_BANDS | {TemperatureBand.TEMPERATE})
+    return 1 if fits else -1 if opposed else 0
+
+
+def moisture_fit(moisture: ClimateMoisture, ground: RegionEnvironmentRow) -> int:
+    if moisture is ClimateMoisture.ANY:
+        return 0
+    wet, dry = ground.wetland >= WET, ground.rainfall <= DRY
+    if moisture is ClimateMoisture.WET:
+        return 1 if wet else -1 if dry else 0
+    return 1 if dry else -1 if wet else 0
+
+
+def climate_fit(rules: Rules, profile: DiseaseProfileRow, ground: RegionEnvironmentRow | None) -> float:
+    if ground is None:
         return 1.0
-    fits = {
-        ClimateAffinity.WARM: ground.temperature_band in WARM_BANDS,
-        ClimateAffinity.COLD: ground.temperature_band in COLD_BANDS,
-        ClimateAffinity.WET: ground.wetland >= WET,
-        ClimateAffinity.DRY: ground.rainfall <= DRY,
-    }
-    if fits[profile.climate_affinity]:
-        return match / PERCENT
-    opposed = (profile.climate_affinity is ClimateAffinity.WARM and ground.temperature_band in COLD_BANDS) or (
-        profile.climate_affinity is ClimateAffinity.COLD and ground.temperature_band in WARM_BANDS | {TemperatureBand.TEMPERATE}
-    )
-    return mismatch / PERCENT if opposed else 1.0
+    axes = [axis for axis in (profile.affinity_warmth.value, profile.affinity_moisture.value) if axis != "any"]
+    if not axes:
+        return 1.0
+    score = (warmth_fit(profile.affinity_warmth, ground) + moisture_fit(profile.affinity_moisture, ground)) / len(axes)
+    if score >= 0:
+        return 1 + score * (rules.disease.affinity_fit_pct - PERCENT) / PERCENT
+    return 1 + score * (PERCENT - rules.disease.affinity_misfit_pct) / PERCENT
 
 
 def tolerance_fit(profile: DiseaseProfileRow, ground: RegionEnvironmentRow | None) -> float:
@@ -174,7 +185,7 @@ def spread_factor(
         return 0.0
     region = book.atlas.top_region(target.id)
     factor = profile.virulence / table.neutral_virulence
-    factor *= climate_fit((table.climate_match_pct, table.climate_mismatch_pct), profile, ground)
+    factor *= climate_fit(book.rules, profile, ground)
     factor *= tolerance_fit(profile, ground)
     factor *= answered(book.rules, book.responses.get((target.id, disease_id), set()))
     factor *= 1 - book.shunning.get(target.id, 0) * book.rules.purity.avoidance_pct / PERCENT / PERCENT

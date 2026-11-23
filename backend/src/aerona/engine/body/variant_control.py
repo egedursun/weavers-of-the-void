@@ -2,7 +2,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from aerona.core.errors import NotFoundError
-from aerona.db.tables.biology import BIOLOGY_EFFECTS, BiologyRow
+from aerona.db.tables.biology import BIOLOGY_EDITABLE, BiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.biology import BiologyVariant
 from aerona.engine.body.variants import HOLDER_TYPES, BiologyTally, keep_biology, rederive, reset_biology, seed_biology, variants_of
@@ -21,7 +21,7 @@ async def require_holder(ctx: TickContext, holder_id: int) -> EntityRow:
 
 async def edit_biology(ctx: TickContext, holder_id: int, values: Mapping[str, Any], release: list[str]) -> BiologyRow:
     holder = await require_holder(ctx, holder_id)
-    allowed(values, BIOLOGY_EFFECTS, "biology")
+    allowed(values, BIOLOGY_EDITABLE, "biology")
     row = await seed_biology(ctx.session, holder.id, ctx.epoch)
     apply(row, values, release)
     rederive(row)

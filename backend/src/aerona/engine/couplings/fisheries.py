@@ -32,8 +32,30 @@ async def stock_left(ctx: TickContext, ground: CatchGroundRow) -> int | None:
     return abundance_pct(ground, profile, range_row)
 
 
-@reads("table.catch_grounds", "table.entities", "table.law_profiles", "table.resource_profiles", "table.species_ranges")
-@writes("table.entities", "table.law_profiles")
+@reads(
+    "law.rigidity",
+    "table.bonds",
+    "table.catch_grounds",
+    "table.entities",
+    "table.law_profiles",
+    "table.name_registry",
+    "table.nodes",
+    "table.polity_members",
+    "table.resource_profiles",
+    "table.species_ranges",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.name_registry",
+)
 async def closures(ctx: TickContext) -> None:
     table = ctx.rules.closures
     for ground in list(

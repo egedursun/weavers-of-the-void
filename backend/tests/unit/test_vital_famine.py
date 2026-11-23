@@ -1,7 +1,7 @@
 from aerona.catalog.reproduction import SEX_SYSTEMS
 from aerona.db.tables.demography import CohortRow
 from aerona.domain.enums.cycles import ReproductiveSystem
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.demography.vital import Pressures, one_year
 from aerona.rules.registry import Rules
@@ -10,9 +10,11 @@ from aerona.rules.registry import Rules
 def cohorts() -> dict:
     rows = {}
     for band, count in ((AgeBand.CHILD, 30000), (AgeBand.ADULT, 50000), (AgeBand.ELDER, 20000)):
-        for sex in (Sex.MALE, Sex.FEMALE):
+        for sex in (SexKind.BEGETTER, SexKind.BEARER):
             key = (band, sex, SocialClass.FARMER, CohortCondition.NONE)
-            rows[key] = CohortRow(community_entity_id=1, age_band=band, sex=sex, social_class=SocialClass.FARMER, condition=CohortCondition.NONE, count=count)
+            rows[key] = CohortRow(
+                community_entity_id=1, age_band=band, sex_kind=sex, social_class=SocialClass.FARMER, condition=CohortCondition.NONE, count=count
+            )
     return rows
 
 

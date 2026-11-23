@@ -41,12 +41,12 @@ from aerona.domain.enums.couplings import (
     SealKind,
     SignCause,
     SociolectKind,
-    TeachingKind,
     TeachingState,
 )
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.engine.context import TickContext
-from aerona.engine.couplings.deep import seal_deep
+from aerona.engine.couplings.deep import SealLinks, missing_link, seal_deep
 from aerona.engine.couplings.field import agree
 from aerona.engine.couplings.registers import SPEECH_PRESTIGE, make_sign_language
 from aerona.engine.couplings.teachers import BEAST_LESSONS, lesson
@@ -164,7 +164,7 @@ async def clear_dead(ctx: TickContext, region_id: int) -> int:
     return cleared
 
 
-async def grant_teaching(ctx: TickContext, teacher_id: int, learner_id: int, kind: TeachingKind) -> TeachingRow:
+async def grant_teaching(ctx: TickContext, teacher_id: int, learner_id: int, kind: KnowledgeKind) -> TeachingRow:
     teacher = await living(ctx, teacher_id, "teacher")
     learner = await living(ctx, learner_id, "learner")
     if teacher.entity_type not in (EntityType.SPIRIT, EntityType.BEAST):
@@ -181,7 +181,7 @@ async def block_teaching(ctx: TickContext, teacher_id: int, learner_id: int) -> 
     row = TeachingRow(
         teacher_node_id=teacher.id,
         learner_entity_id=learner.id,
-        kind=TeachingKind.ACCOUNT,
+        kind=KnowledgeKind.ACCOUNT,
         fidelity=0,
         state=TeachingState.BLOCKED,
         price=0,
@@ -244,9 +244,13 @@ async def void_agreement(ctx: TickContext, agreement_id: int) -> FieldAgreementR
     return row
 
 
-async def seal(ctx: TickContext, place_id: int, kind: SealKind, strength: int) -> DeepSealRow:
+async def seal(ctx: TickContext, place_id: int, kind: SealKind, strength: int, links: SealLinks | None = None) -> DeepSealRow:
     place = await living(ctx, place_id, "place")
-    return await seal_deep(ctx, place.id, kind, None, strength)
+    linked = links or SealLinks()
+    missing = missing_link(kind, linked)
+    if missing is not None:
+        raise ValidationFailedError(f"A seal of that kind names its {missing}.")
+    return await seal_deep(ctx, place.id, kind, None, strength=strength, links=linked)
 
 
 async def unseal(ctx: TickContext, seal_id: int) -> DeepSealRow:

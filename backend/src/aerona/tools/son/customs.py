@@ -3,7 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 from sqlalchemy import select
 
-from aerona.catalog.life.tools import AIMS
+from aerona.catalog.revivals import REVIVAL_WAYS
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.grammar import spoken
 from aerona.db.tables.customs import RevivalRow
@@ -11,7 +11,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.customs import MemberRight, Membership, RevivalGoal
+from aerona.domain.enums.customs import MemberRight, Membership, RevivalGoal, RevivalWay
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.customs import control
@@ -29,6 +29,7 @@ Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 class StirRevivalInput(ToolInput):
     people_id: int
+    way: RevivalWay
     goal: RevivalGoal
     reason: Reason
 
@@ -47,14 +48,14 @@ async def stir_revival(call: SonCall, args: StirRevivalInput) -> str:
         fail(SonResult.REVIVAL_REFUSED, why="there is no such people")
     await ensure_in_reach(call, people)
     if held(people.id):
-        fail(SonResult.REVIVAL_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.REVIVAL_REFUSED, why="it is held")
     if await call.session.scalar(select(RevivalRow.id).where(RevivalRow.people_entity_id == people.id, RevivalRow.ended_epoch.is_(None)).limit(1)) is not None:
         fail(SonResult.REVIVAL_REFUSED, why="a movement already stirs among them")
-    await control.set_record(
-        call.tick, "revival", {}, {"people_entity_id": people.id, "aim": AIMS[args.goal], "goal": args.goal, "started_epoch": call.tick.epoch}
-    )
+    if args.goal not in REVIVAL_WAYS[args.way].goals:
+        fail(SonResult.REVIVAL_REFUSED, why=f"a movement that will {spoken(args.way)} cannot seek to {spoken(args.goal)}")
+    await control.set_record(call.tick, "revival", {}, {"people_entity_id": people.id, "way": args.way, "goal": args.goal, "started_epoch": call.tick.epoch})
     call.target(people.id)
-    told = spoken(args.goal)
+    told = f"{spoken(args.goal)} by the way of {spoken(args.way)}"
     await call.record(
         "tools.son.stir_revival",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: people.id},
@@ -70,7 +71,7 @@ async def proclaim_right(call: SonCall, args: ProclaimRightInput) -> str:
         fail(SonResult.RIGHT_REFUSED, why="there is no such realm")
     await ensure_in_reach(call, realm)
     if held(realm.id):
-        fail(SonResult.RIGHT_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.RIGHT_REFUSED, why="it is held")
     await control.grant_right(call.tick, realm.id, args.category, args.right, granted=args.granted)
     call.target(realm.id)
     told = f"{spoken(args.right)} for {spoken(args.category)}s"

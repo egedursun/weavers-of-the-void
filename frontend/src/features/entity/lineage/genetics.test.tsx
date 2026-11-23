@@ -44,6 +44,23 @@ const SIGHT_LOCUS = {
   ],
 }
 
+const TWINNING_LOCUS = {
+  locus: 'twinning',
+  label: 'Twinning',
+  group: 'body',
+  group_label: 'Body and constitution',
+  alleles: [
+    { key: 'low', label: 'seldom bears twins', frequency: null, effects: [] },
+    { key: 'common', label: 'of common births', frequency: null, effects: [] },
+    {
+      key: 'high',
+      label: 'often bears twins',
+      frequency: null,
+      effects: ['Twins born more often'],
+    },
+  ],
+}
+
 function lineage() {
   return {
     node_id: NODE,
@@ -190,6 +207,51 @@ describe('the genetics of a mortal', () => {
       locus: 'muscle',
       first: 'high',
       second: 'high',
+    })
+  })
+  it('names the twinning locus by its label and sets it through the god action', async () => {
+    serve()
+    const base = lineage()
+    onApi('GET', `/api/lineage/${NODE}`, {
+      ...base,
+      loci: [...base.loci, TWINNING_LOCUS],
+      genome: {
+        ...base.genome,
+        genes: [
+          ...base.genome.genes,
+          {
+            locus: 'twinning',
+            label: 'Twinning',
+            group: 'body',
+            group_label: 'Body and constitution',
+            first: 'high',
+            second: 'common',
+            shown: 'high',
+            shown_label: 'often bears twins',
+            effects: ['Twins born more often'],
+          },
+        ],
+      },
+    })
+    const { screen } = await renderApp(<LineageSection nodeId={NODE} />)
+    await screen
+      .getByRole('button', { name: /Twinning alleles/ })
+      .first()
+      .click()
+    await expect
+      .element(screen.getByText('Twinning: often bears twins'))
+      .toBeInTheDocument()
+    await expect
+      .element(screen.getByText(/often bears twins: Twins born more often/))
+      .toBeInTheDocument()
+    expect(screen.container.textContent).not.toContain('twinning')
+    await screen.getByRole('button', { name: 'Set this pair' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/genome:gene').length)
+      .toBe(1)
+    expect(callsTo('POST', '/api/actions/genome:gene')[0]?.body).toMatchObject({
+      mortal_id: NODE,
+      locus: 'twinning',
     })
   })
 })

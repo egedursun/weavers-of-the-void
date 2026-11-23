@@ -32,6 +32,7 @@ import {
 } from '@/features/cosmography/parts'
 import { GOD_KINDS, why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { TextField } from '@/features/entity/economy/parts'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { Ref } from '@/features/gatherings/parts'
@@ -61,7 +62,6 @@ import {
   TRIALS,
   listed,
   table,
-  words,
 } from './labels'
 import { useEntityType } from './model'
 
@@ -717,7 +717,7 @@ function GeasCard({
     <RecordRow
       icon={mode.icon}
       tone={state.tone}
-      title={`${mode.label}: ${words(geas.act)}`}
+      title={`${mode.label}: ${wordOf(actKindValues, geas.act)}`}
       caption={`${state.label} · laid in epoch ${geas.laid_epoch}${geas.broken_epoch !== null ? `, broken in epoch ${geas.broken_epoch}` : ''}`}
       aside={
         <div className='flex shrink-0 flex-wrap items-center gap-1'>

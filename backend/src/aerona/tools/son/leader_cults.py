@@ -37,7 +37,7 @@ async def sway_cult(call: SonCall, args: SwayCultInput) -> str:
         fail(SonResult.CULT_REFUSED, why="there is no such living cult")
     await ensure_in_reach(call, leader)
     if held(leader.id) or "intensity" in (cult.locked or []) or not args.intensity_change:
-        fail(SonResult.CULT_REFUSED, why="a stronger hand holds that cult, or nothing would change")
+        fail(SonResult.CULT_REFUSED, why="that cult is held, or nothing would change")
     cult.intensity = clamp_int(cult.intensity + args.intensity_change, 0, PERCENT)
     call.target(leader.id)
     await call.record("cult.swayed", roles={IncidentRole.SUBJECT: leader.id}, facts={"change": args.intensity_change, "intensity": cult.intensity})

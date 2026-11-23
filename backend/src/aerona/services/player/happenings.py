@@ -7,7 +7,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import several
 from aerona.core.total import total
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.demography import AgeBand, Sex
+from aerona.domain.enums.demography import AgeBand, SexKind
 from aerona.domain.enums.entity import EngineKind
 from aerona.domain.enums.happening import EventPhase, RiverShiftCause
 from aerona.domain.enums.intervention import Disaster
@@ -64,7 +64,7 @@ class EventCasualties(Command):
     event_id: int
     community_id: int
     age_band: AgeBand
-    sex: Sex
+    sex_kind: SexKind
     social_class: SocialClass
     phase: EventPhase = EventPhase.ONSET
     count: int = Field(ge=0)
@@ -146,7 +146,7 @@ async def set_event_footprint(scope: PlayerScope, command: EventFootprint) -> Ef
 
 @player_action("event:casualties", ActionKind.EDIT_RECORD)
 async def set_event_casualties(scope: PlayerScope, command: EventCasualties) -> Effect:
-    toll = control.CohortToll(command.community_id, command.age_band, command.sex, command.social_class, command.phase, command.count)
+    toll = control.CohortToll(command.community_id, command.age_band, command.sex_kind, command.social_class, command.phase, command.count)
     count = await control.set_casualties(await scope.context("event_casualties"), command.event_id, toll)
     return Effect(f"The toll is set at {count} for that cohort.", command.event_id)
 

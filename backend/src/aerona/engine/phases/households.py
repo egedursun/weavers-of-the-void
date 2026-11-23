@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.db.tables.households import HouseholdRow
 from aerona.engine.context import TickContext
 from aerona.engine.households.formation import house_everyone
+from aerona.engine.households.homes import backfill_dwellings
 from aerona.engine.households.life import HouseholdTally, tend_aggregates, tend_household
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
@@ -53,6 +54,7 @@ async def household_survey(ctx: TickContext) -> None:
     "table.faction_memberships",
     "table.faction_profiles",
     "table.foreign_gods",
+    "table.furnishing_kinds",
     "table.galaxies",
     "table.galaxy_clusters",
     "table.geasa",
@@ -66,6 +68,7 @@ async def household_survey(ctx: TickContext) -> None:
     "table.injuries",
     "table.kin_group_members",
     "table.kin_groups",
+    "table.kind_holdings",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.marriages",
@@ -98,6 +101,7 @@ async def household_survey(ctx: TickContext) -> None:
     "table.worlds",
 )
 @writes(
+    "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -121,6 +125,7 @@ async def household_survey(ctx: TickContext) -> None:
     "table.thoughts",
 )
 async def households(ctx: TickContext) -> None:
+    ctx.count("dwellings_rederived", await backfill_dwellings(ctx))
     laws = await LawBook.load(ctx.session)
     tally = HouseholdTally()
     for household in list(await ctx.session.scalars(select(HouseholdRow).order_by(HouseholdRow.id))):

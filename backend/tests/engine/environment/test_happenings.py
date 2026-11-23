@@ -7,7 +7,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind, SoilKind, TerrainKind
 from aerona.domain.enums.happening import EventPhase, RiverShiftCause
@@ -36,13 +36,13 @@ RULES = Rules()
 
 
 async def cohorts(realm: Realm, town: EntityRow) -> None:
-    for age, count in ((AgeBand.CHILD, 800), (AgeBand.ADULT, 1600), (AgeBand.ELDER, 600)):
-        for sex in Sex:
+    for age, count in ((AgeBand.INFANT, 200), (AgeBand.CHILD, 600), (AgeBand.YOUTH, 400), (AgeBand.ADULT, 1200), (AgeBand.ELDER, 600)):
+        for sex in SexKind:
             realm.session.add(
                 CohortRow(
                     community_entity_id=town.id,
                     age_band=age,
-                    sex=sex,
+                    sex_kind=sex,
                     social_class=SocialClass.FARMER,
                     condition=CohortCondition.NONE,
                     count=count // 2,
@@ -141,15 +141,21 @@ async def test_disaster_losses_are_recorded_by_cohort_and_read_by_remembrance(re
 
 def test_plague_kills_more_elders_than_adults() -> None:
     rows = {
-        (age, Sex.MALE, SocialClass.FARMER, CohortCondition.NONE): CohortRow(
-            community_entity_id=1, age_band=age, sex=Sex.MALE, social_class=SocialClass.FARMER, condition=CohortCondition.NONE, count=1000, generation_epoch=1
+        (age, SexKind.BEGETTER, SocialClass.FARMER, CohortCondition.NONE): CohortRow(
+            community_entity_id=1,
+            age_band=age,
+            sex_kind=SexKind.BEGETTER,
+            social_class=SocialClass.FARMER,
+            condition=CohortCondition.NONE,
+            count=1000,
+            generation_epoch=1,
         )
         for age in AgeBand
     }
     split = cohort_split(rows, FlowCategory.PLAGUE, 300, {})
     assert sum(split.values()) == 300
-    elders = split[(AgeBand.ELDER, Sex.MALE, SocialClass.FARMER, CohortCondition.NONE)]
-    adults = split[(AgeBand.ADULT, Sex.MALE, SocialClass.FARMER, CohortCondition.NONE)]
+    elders = split[(AgeBand.ELDER, SexKind.BEGETTER, SocialClass.FARMER, CohortCondition.NONE)]
+    adults = split[(AgeBand.ADULT, SexKind.BEGETTER, SocialClass.FARMER, CohortCondition.NONE)]
     assert elders > adults
     assert all(row.count == 1000 for row in rows.values())
 

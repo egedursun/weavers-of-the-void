@@ -157,7 +157,7 @@ async def decree(scope: PlayerScope, command: Decree) -> Effect:
             ctx,
             "player.entity.decree",
             roles={IncidentRole.SUBJECT: [first.id, second.id], IncidentRole.AUTHORITY: creator.id},
-            facts={"decree": str(command.kind.value.capitalize())},
+            facts={"decree": spoken(command.kind).capitalize()},
             kind=ChronicleKind.DIPLOMACY,
         )
     ).text

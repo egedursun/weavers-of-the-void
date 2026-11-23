@@ -9,6 +9,7 @@ CLAIM_BASIS = total(
             "Inheritance",
             checked_by=(),
             used_by=(
+                "engine.arts.forgery.forge_lineage",
                 "engine.collective.accounts.rally_true_line",
                 "engine.polity.houses.branch",
                 "engine.polity.houses.inherit_claims",

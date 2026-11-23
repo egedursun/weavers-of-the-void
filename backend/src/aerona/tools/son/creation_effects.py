@@ -218,7 +218,7 @@ async def raise_divine_structure(call: SonCall, args: CreationInput, created: En
         son_id=call.son.id,
         material=args.option("material"),
     )
-    return fill(lines.STRUCTURE_RAISED, kind=kind.value.replace("_", " "), effect=profile.effect_pct)
+    return fill(lines.STRUCTURE_RAISED, kind=spoken(kind), effect=profile.effect_pct)
 
 
 async def seed_lore_kinds(call: SonCall, args: CreationInput, created: EntityRow) -> None:
@@ -274,7 +274,7 @@ async def teach_cult(call: SonCall, args: CreationInput, created: EntityRow) -> 
     if path is not None:
         doctrine.rebirth_path = path
     await call.session.flush()
-    return [result(SonResult.CULT_TAUGHT, tenets=", ".join(sorted(tenet.value.replace("_", " ") for tenet in church.tenets)) or "none")]
+    return [result(SonResult.CULT_TAUGHT, tenets=", ".join(sorted(spoken(tenet) for tenet in church.tenets)) or "none")]
 
 
 async def keep_rite(call: SonCall, created: EntityRow, rite: FuneralCustom) -> None:

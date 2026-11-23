@@ -55,6 +55,41 @@ const tags = {
   rows: [{ key: { entity_id: 7, tag: 'x' }, values: { tag: 'x' }, held: [] }],
 }
 
+const housework = {
+  table: 'housework',
+  label: 'Housework',
+  columns: [
+    column('id', 'integer', { primary: true, editable: false }),
+    column('duty', 'choice', {
+      options: ['food', 'water', 'sickcare', 'household_rites'],
+    }),
+    column('doer_node_id', 'integer', { owner: true }),
+    column('load', 'integer'),
+  ],
+  rows: [
+    {
+      key: { id: 3 },
+      values: { id: 3, duty: 'household_rites', doer_node_id: 7, load: 25 },
+      held: ['load'],
+    },
+  ],
+}
+
+const pursuits = {
+  table: 'leisure_pursuits',
+  label: 'Leisure pursuits',
+  columns: [
+    column('id', 'integer', { primary: true, editable: false }),
+    column('holder_node_id', 'integer', { owner: true, required: true }),
+    column('kind', 'choice', {
+      options: ['conversation', 'games', 'sport', 'collecting'],
+      required: true,
+    }),
+    column('share', 'integer'),
+  ],
+  rows: [],
+}
+
 describe('daily life section', () => {
   beforeEach(() => resetApi())
 
@@ -84,5 +119,56 @@ describe('daily life section', () => {
       table: 'care_customs',
       key: { people_entity_id: 7 },
     })
+  })
+  it('names a house duty by its words and gives a pursuit through its own lever', async () => {
+    onApi('GET', '/api/records/7/rows', {
+      node_id: 7,
+      tables: [housework],
+      creatable: [pursuits],
+      names: {},
+    })
+    onApi('POST', '/api/actions/leisure_pursuit:create', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<DailyLifeSection nodeId={7} />)
+    const make = screen.getByRole('button', { name: 'Make it', exact: true })
+    await expect
+      .element(make)
+      .toHaveAccessibleDescription('Choose a kind of record first.')
+    await screen.getByRole('combobox', { name: 'Kind of record' }).click()
+    await screen.getByRole('option', { name: /Leisure pursuits/ }).click()
+    await make.click()
+    const dialog = screen.getByRole('dialog')
+    await expect
+      .element(dialog.getByRole('button', { name: 'Make it', exact: true }))
+      .toHaveAccessibleDescription('Fill in kind.')
+    await dialog.getByRole('combobox', { name: 'Kind' }).click()
+    await screen.getByRole('option', { name: 'Collecting' }).click()
+    await dialog.getByRole('button', { name: 'Make it', exact: true }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/leisure_pursuit:create'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/leisure_pursuit:create')[0].body
+    ).toEqual({
+      table: 'leisure_pursuits',
+      values: { holder_node_id: 7, kind: 'collecting' },
+    })
+    await screen.getByRole('button', { name: 'Open housework' }).click()
+    await expect.element(screen.getByText('Household rites')).toBeVisible()
+    expect(screen.container.textContent).not.toContain('household_rites')
+  })
+
+  it('says what keeps daily life when nothing is kept yet', async () => {
+    onApi('GET', '/api/records/7/rows', {
+      node_id: 7,
+      tables: [],
+      creatable: [pursuits],
+      names: {},
+    })
+    const { screen } = await renderApp(<DailyLifeSection nodeId={7} />)
+    await expect
+      .element(
+        screen.getByText(/Nothing of daily life is kept for this thing yet/)
+      )
+      .toBeVisible()
   })
 })

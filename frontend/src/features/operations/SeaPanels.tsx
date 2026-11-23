@@ -14,6 +14,7 @@ import {
   Users,
   Wind,
 } from 'lucide-react'
+import { vehicleSectionValues } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,10 +26,11 @@ import { Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
 import { YES_NO } from '@/features/cycles/labels'
 import { clamp } from '@/features/cycles/model'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
 import { Ref } from '@/features/gatherings/parts'
-import { SECTION_STATE, sectionLabel } from '@/features/madeKinds/labels'
+import { SECTION_STATE } from '@/features/madeKinds/labels'
 import { Tag } from '@/features/wars/military/parts'
 import { type OperationsNodeView, useOperationsAction } from './api'
 import { COMPASS, POINTS_OF_SAIL, SHOTS, STATIONS } from './labels'
@@ -317,7 +319,7 @@ function ShipCard({
               <Tag
                 key={item.section}
                 item={SECTION_STATE[item.state]}
-                text={`${sectionLabel(item.section)} · ${SECTION_STATE[item.state].label.toLowerCase()} · ${item.condition}`}
+                text={`${wordOf(vehicleSectionValues, item.section)} · ${SECTION_STATE[item.state].label.toLowerCase()} · ${item.condition}`}
               />
             )}
           </PagedList>

@@ -1,9 +1,13 @@
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission, Visibility
 from aerona.domain.enums.body import BodyFunction, ConditionKind
+from aerona.domain.enums.culture import CurseKind
 from aerona.domain.enums.mind import NeedKind, ValueAxis
+from aerona.rules.registry import Rules
 
 P = PackageKind
 T = Transmission
@@ -28,6 +32,10 @@ class StageSpec:
     recruits: bool = False
     appearance: str = ""
     fears_source: bool = False
+    changes_body: bool = False
+    lucky: bool = False
+    binds: bool = False
+    fades: bool = False
 
 
 @dataclass(frozen=True)
@@ -43,13 +51,15 @@ class PackageSpec:
     contagion: frozenset[Transmission] = frozenset()
     cure_level: int = 1
     hereditary: bool = False
+    line: Callable[[Rules], int] | None = None
 
 
 def stats(**values: int) -> MappingProxyType[str, int]:
     return MappingProxyType(values)
 
 
-PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
+PACKAGES: MappingProxyType[PackageKind, PackageSpec] = total(
+    PackageKind,
     {
         P.SNAKE_VENOM: PackageSpec(
             P.SNAKE_VENOM,
@@ -58,7 +68,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             frozenset({T.BITE, T.INHALATION}),
             0,
             (
-                StageSpec("Necrosis", 1, ConditionKind.CHRONIC_ILLNESS, 3, stats(endurance=-10), appearance="blackened flesh around an old bite"),
+                StageSpec("Necrosis", 1, ConditionKind.CHRONIC_ILLNESS, 3, stats(endurance=-10), appearance="lasting harm where the venom entered"),
                 StageSpec("Lasting weakness", None, ConditionKind.CHRONIC_ILLNESS, 1, stats(strength=-5), appearance="a puckered scar"),
             ),
             frozenset({C.MEDICINE, C.POWER, C.SYMBIONT, C.AUGMENT}),
@@ -81,7 +91,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
         P.DRUG_DEPENDENCE: PackageSpec(
             P.DRUG_DEPENDENCE,
             "Drug dependence",
-            "A hunger for a smoke, an elixir or a sacred herb, with withdrawal when the supply fails.",
+            "A hunger for a substance, with withdrawal when the supply fails.",
             frozenset({T.INGESTION, T.INHALATION}),
             0,
             (
@@ -105,7 +115,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
                     stats=stats(strength=15, charisma=-10),
                     grants=frozenset({BodyFunction.VENOM}),
                     transforms=True,
-                    appearance="a restless, watchful gaze",
+                    appearance="the unrest of a body that changes",
                 ),
             ),
             frozenset({C.RITE, C.QUEST, C.DIVINE, C.TRANSFER}),
@@ -130,7 +140,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
                     grants=frozenset({BodyFunction.VENOM}),
                     ageless=True,
                     sunlight_harm=True,
-                    appearance="a pallor that never warms",
+                    appearance="the look of one who no longer ages",
                 ),
             ),
             frozenset({C.RITE, C.QUEST, C.DIVINE, C.TRANSFER}),
@@ -153,7 +163,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
                     stats(strength=10),
                     grants=frozenset({BodyFunction.PRESENCE}),
                     fears_source=True,
-                    appearance="a faint radiance about the skin",
+                    appearance="the mark of a god's favour",
                 ),
             ),
             frozenset({C.RITE, C.DIVINE}),
@@ -167,8 +177,8 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             frozenset({T.CONTACT, T.INHALATION, T.GAZE}),
             0,
             (
-                StageSpec("Tainted", 2, ConditionKind.VOID_TAINT, 2, sanity_loss=5, appearance="dark veins tracing the skin"),
-                StageSpec("Maddened", 2, ConditionKind.VISIONS, 3, sanity_loss=10, appearance="eyes that follow what no one else sees"),
+                StageSpec("Tainted", 2, ConditionKind.VOID_TAINT, 2, sanity_loss=5, appearance="signs of a taint from outside"),
+                StageSpec("Maddened", 2, ConditionKind.VISIONS, 3, sanity_loss=10, appearance="a mind turned toward what others cannot sense"),
                 StageSpec(
                     "Claimed",
                     None,
@@ -177,7 +187,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
                     sanity_loss=5,
                     quenches=frozenset({NeedKind.BELONGING}),
                     recruits=True,
-                    appearance="a hollow, far-off stare",
+                    appearance="the weight of a memory that keeps returning",
                 ),
             ),
             frozenset({C.RITE, C.QUEST, C.DIVINE, C.POWER}),
@@ -190,7 +200,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             "A bound spirit rides the bearer and speaks with their mouth.",
             frozenset({T.RITE, T.CURSE}),
             0,
-            (StageSpec("Ridden", None, ConditionKind.POSSESSION, 3, appearance="a second will moving behind the eyes"),),
+            (StageSpec("Ridden", None, ConditionKind.POSSESSION, 3, appearance="another will acting through them"),),
             frozenset({C.RITE, C.DIVINE, C.POWER, C.TRANSFER}),
             Visibility.NOTICEABLE,
             cure_level=2,
@@ -214,7 +224,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             "A god's curse of a hunger that no meal fills.",
             frozenset({T.CURSE}),
             0,
-            (StageSpec("Starving", None, ConditionKind.ENDLESS_HUNGER, 3, needs=frozenset({NeedKind.SUSTENANCE}), appearance="gaunt despite every meal"),),
+            (StageSpec("Starving", None, ConditionKind.ENDLESS_HUNGER, 3, needs=frozenset({NeedKind.SUSTENANCE}), appearance="wasting despite every meal"),),
             frozenset({C.RITE, C.QUEST, C.DIVINE}),
             Visibility.OBVIOUS,
             cure_level=2,
@@ -256,6 +266,42 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             Visibility.NOTICEABLE,
             cure_level=3,
         ),
+        P.FORTUNE: PackageSpec(
+            P.FORTUNE,
+            "Fortune",
+            "A lasting shift of luck, for good or for ill, that holds and then fades; a line's fortune passes to its children.",
+            frozenset({T.GAZE, T.CURSE, T.RITE, T.BIRTH}),
+            0,
+            (StageSpec("Holding", 3, lucky=True), StageSpec("Fading", 2, lucky=True, fades=True)),
+            frozenset({C.RITE, C.DIVINE, C.QUEST, C.TIME}),
+            Visibility.NOTICEABLE,
+            cure_level=2,
+            hereditary=True,
+            line=lambda rules: rules.packages.fortune_line_pct,
+        ),
+        P.TRANSFORMATION: PackageSpec(
+            P.TRANSFORMATION,
+            "Transformation",
+            "A change of the body into another plan, kind or substance, lasting or coming back at a set sign.",
+            frozenset({T.CURSE, T.BITE, T.RITE, T.INGESTION, T.EXPERIENCE}),
+            0,
+            (StageSpec("Changed", 1, changes_body=True), StageSpec("Between changes", None)),
+            frozenset({C.RITE, C.QUEST, C.DIVINE, C.POWER}),
+            Visibility.OBVIOUS,
+            contagion=frozenset({T.BITE}),
+            cure_level=3,
+        ),
+        P.CHARM: PackageSpec(
+            P.CHARM,
+            "Charm",
+            "A compelled bond of love, obedience or devotion toward a person or a god, which wears off unless renewed.",
+            frozenset({T.INGESTION, T.GAZE, T.RITE, T.INTIMATE}),
+            0,
+            (StageSpec("Bound", None, binds=True), StageSpec("Fading", 1, binds=True, fades=True)),
+            frozenset({C.RITE, C.TIME, C.MEDICINE, C.POWER}),
+            Visibility.HIDDEN,
+            cure_level=2,
+        ),
         P.SOUL_TRAPPED: PackageSpec(
             P.SOUL_TRAPPED,
             "Soul trapped",
@@ -267,5 +313,30 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             Visibility.OBVIOUS,
             cure_level=3,
         ),
-    }
+    },
 )
+
+CURSE_PACKAGES: MappingProxyType[CurseKind, PackageKind | None] = total(
+    CurseKind,
+    {
+        CurseKind.NONE: None,
+        CurseKind.BLOODTHIRST: P.VAMPIRISM,
+        CurseKind.MISFORTUNE: P.FORTUNE,
+        CurseKind.WASTING: P.GEAS_DOOM,
+        CurseKind.MADNESS: P.TRAUMA,
+        CurseKind.BETRAYAL: P.CHARM,
+        CurseKind.BARRENNESS: P.FORTUNE,
+        CurseKind.TRANSFORMATION: P.TRANSFORMATION,
+        CurseKind.SLEEP: P.SOUL_TRAPPED,
+        CurseKind.SILENCE: P.FORTUNE,
+        CurseKind.HUNGER: P.HUNGER_CURSE,
+        CurseKind.FORGETTING: P.TRAUMA,
+        CurseKind.RESTLESSNESS: P.TRAUMA,
+        CurseKind.LINE_CURSE: P.FORTUNE,
+        CurseKind.PLACE_CURSE: P.FORTUNE,
+        CurseKind.COMPULSION: P.CHARM,
+        CurseKind.AGING: P.GEAS_DOOM,
+        CurseKind.EXPOSURE: P.FORTUNE,
+    },
+)
+NEW_CURSE_KINDS = (CurseKind.TRANSFORMATION, CurseKind.COMPULSION)

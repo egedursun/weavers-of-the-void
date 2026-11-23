@@ -3,6 +3,7 @@ from typing import Any
 from aerona.domain.enums.culture import Technique
 from tests.tools.every_setup import (
     advanced,
+    afflicted_healer,
     aiding_realm,
     bound_town,
     bounty_poster,
@@ -10,6 +11,7 @@ from tests.tools.every_setup import (
     camping_party,
     captive_of_outlaws,
     carrying,
+    child_and_house,
     child_at_home,
     child_out_of_union,
     chronicled_event,
@@ -21,6 +23,7 @@ from tests.tools.every_setup import (
     created,
     crime_boss,
     dead_script,
+    deep_land,
     devout,
     dig_ready,
     elder_in_town,
@@ -30,6 +33,7 @@ from tests.tools.every_setup import (
     foreign_crisis,
     fossil_scholar,
     game_reserve,
+    given_gift,
     harbour_dweller,
     herd_handler,
     hidden_magic,
@@ -63,6 +67,7 @@ from tests.tools.every_setup import (
     owed_gift,
     owns_resource,
     pet_herd,
+    poisoned_land,
     prisoner_held,
     quester,
     raising_work,
@@ -71,6 +76,7 @@ from tests.tools.every_setup import (
     rival_realm,
     ruin,
     ruined_town,
+    ruled_common,
     ruled_realm,
     ruled_sickness,
     ruler,
@@ -83,12 +89,14 @@ from tests.tools.every_setup import (
     second_settlement,
     second_species,
     shopkeeper,
+    shore_ground,
     sickness,
     sky_reader,
     spirit,
     spirit_office,
     spymaster,
     storylet_waiting,
+    sworn_friend,
     technique,
     town_profile,
     visionary,
@@ -102,11 +110,11 @@ from tests.tools.every_setup import (
     young_in_town,
 )
 from tests.tools.every_setup_ages import remade_land, sky_scholar, slain_kin
-from tests.tools.every_setup_arts import art_work, built_construct, posted_contract, sold_work
+from tests.tools.every_setup_arts import art_work, built_construct, known_technique, played_match, posted_contract, renowned_critic, sold_work
 from tests.tools.every_setup_belonging import hunted_by_a_temple, mocked_court
 from tests.tools.every_setup_climes import road_culture
 from tests.tools.every_setup_couplings import armies_face, rich_realm, town_besieged
-from tests.tools.every_setup_crafts import people_home, town_insurer
+from tests.tools.every_setup_crafts import of_the_people, people_home, town_insurer
 from tests.tools.every_setup_customs import long_foreigner, town_pool
 from tests.tools.every_setup_eras import skilled_for_programme
 from tests.tools.every_setup_folkways import impure_mortal, neighbour, owned_item
@@ -131,6 +139,7 @@ from tests.tools.every_setup_minds import (
 )
 from tests.tools.every_setup_nature import town_dweller
 from tests.tools.every_setup_orders import (
+    a_canal_river,
     a_coast,
     a_creature_group,
     a_faith_conceived,
@@ -261,6 +270,9 @@ def by_settlement(realm: Realm, _ids: Ids) -> int:
     return realm.settlement_id
 
 
+FIRST_TECHNIQUE = next(iter(Technique)).value
+
+
 def named(arguments: Any, setup: Any = None, **options: Any) -> Case:
     return Case(arguments, setup, by_mortal, **options) if setup is not None else Case(arguments, actor=by_mortal, **options)
 
@@ -346,8 +358,10 @@ MORTAL_CASES: dict[str, Case] = {
     "swear_oath": named(plain()),
     "socialise": named(plain(target_id=created("mortal")), second_mortal),
     "challenge_to_contest": named(plain(target_id=created("mortal")), second_mortal),
-    "persuade": named(plain(target_id=created("mortal")), second_mortal),
-    "trade_lore": named(plain(buyer_id=created("mortal"), key=TECHNIQUE), combined(second_mortal, technique)),
+    "persuade": named(plain(target_id=created("mortal"), axis="honour"), second_mortal),
+    "swear_kinship": named(plain(target_id=created("mortal"), rite="an oath sworn before both households"), sworn_friend),
+    "foster_child": named(plain(child_id=created("child"), household_id=created("household")), child_and_house),
+    "trade_lore": named(plain(buyer_id=created("mortal"), kind="technique", key=TECHNIQUE), combined(second_mortal, technique)),
     "lay_trade_policy": named(plain(), ruler),
     "speculate": folk(plain(commodity="grain"), market),
     "buy_workshop": folk(plain(kind="market"), market),
@@ -369,10 +383,26 @@ MORTAL_CASES: dict[str, Case] = {
     "begin_works": named(plain(kind="road", route_or_region_id=lambda realm, _ids: realm.settlement_id, labour="corvee", budget=0), ruler),
     "fund_works": named(plain(works_id=lambda _realm, ids: ids["works"], amount=5), works_underway),
     "found_enterprise": named(plain(form="mint", sector=None), ruler),
+    "bind_with_charm": named(plain(target_id=created("mortal"), kind="devotion"), second_mortal),
+    "lift_affliction": named(plain(affliction_id=created("affliction"), cure="medicine"), afflicted_healer),
+    "choose_path": named(plain(path="trade")),
+    "improve_soil": named(plain(nutrient="organic"), deep_land),
+    "claim_identity": named(plain(layer="locality")),
+    "mark_body": named(plain(kind="tattoo", meaning="faith", target_id=created("mortal")), second_mortal),
     "stir_feeling": named(plain(place_or_household_id=lambda realm, _ids: realm.settlement_id, feeling="hope")),
     "argue_doctrine": named(plain(faith_id=pick_id("faith"), conception_axis="count", stance="many"), a_faith_conceived),
     "drive_off_group": named(plain(group_id=pick_id("group"), means="offering"), a_creature_group),
     "warn_coast": named(plain(region_id=pick_id("region"), method="sight"), a_coast),
+    "open_ground": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id, ground="shore_gathering", gear="nets"), deep_land),
+    "build_ponds": named(plain(settlement_id=lambda realm, _ids: realm.settlement_id), a_canal_river),
+    "change_gear": named(plain(source_id=pick_id("source"), region_id=pick_id("source"), gear="traps"), shore_ground),
+    "divert_river": named(plain(region_id=pick_id("region"), to_region_id=pick_id("lowland")), a_canal_river),
+    "seal_depth": named(plain(place_id=lambda realm, _ids: realm.cosmos.place_id, kind="structure"), deep_land),
+    "dig_deeper": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id), deep_land),
+    "bore": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id, stratum="aquifer"), deep_land),
+    "drill_reservoir": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id), deep_land),
+    "commemorate": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id, memory="treaty", title="The peace by the ford"), poisoned_land),
+    "cleanse_land": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id, method="works"), poisoned_land),
     "confer_honour": named(
         plain(honour_kind_id=pick_id("kind"), holder_id=pick_id("holder"), deed_incident_id=pick_id("deed")),
         an_honour,
@@ -482,7 +512,7 @@ MORTAL_CASES: dict[str, Case] = {
     "give_speech": named(plain(venue="square", aim="rally"), shopkeeper),
     "dredge": named(plain(budget=200), harbour_dweller),
     "study_fossils": named(plain(bed_id=lambda _realm, ids: ids["bed"]), fossil_scholar),
-    "forecast": named(plain(method="sight"), sky_reader),
+    "forecast": named(plain(method="sight", season_position=0), sky_reader),
     "expose_hypocrisy": named(plain(target_id=lambda _realm, ids: ids["mortal"], value_axis="honour"), hypocrite_near),
     "work_weather": named(plain(aim="rain", method="rite", strength=20), weather_worker),
     "satirise": named(plain(target_id=lambda _realm, ids: ids["mortal"], venue="square"), rival_in_town),
@@ -523,6 +553,7 @@ MORTAL_CASES: dict[str, Case] = {
     "post_bounty": named(plain(outlaw_id=created("outlaw"), amount=10), bounty_poster),
     "choose_storylet": named(plain(run_id=created("storylet_run"), choice=0), storylet_waiting),
     "rouse_crowd": named(plain(grievance="famine"), town_profile),
+    "stir_crowd": named(plain(settlement_id=settlement, act="jubilation"), town_profile),
     "commission_account": named(plain(collection_id=created("collection"), praise_ids=lambda realm, _ids: [realm.mortal_id], blame_ids=[]), chronicled_event),
     "strike_memory": named(plain(figure_id=created("mortal")), figure_to_strike),
     "draw_design": named(plain(frame="boat", emphasis="hull")),
@@ -537,6 +568,7 @@ MORTAL_CASES: dict[str, Case] = {
     "call_tribunal": named(plain(accused_id=created("mortal"), law="share_discoveries"), order_master),
     "seek_cure": named(plain(disease_id=created("disease")), hospital),
     "find_carrier": named(plain(mortal_id=mortal, disease_id=created("disease")), carrying),
+    "make_will": named(plain(heirs=lambda _realm, ids: [ids["mortal"]], shares=[100]), second_mortal),
     "proclaim_tongue": named(plain(language_id=language, policy="official"), ruler),
     "reform_script": named(plain(), scribe),
     "bargain_with_estate": named(plain(estate_id=created("estate"), privilege="council_seat", grant=True), realm_estate),
@@ -548,7 +580,8 @@ MORTAL_CASES: dict[str, Case] = {
     "issue_mandate": named(plain(kind="curfew", settlement_id=settlement), ruler),
     "assign_task": named(plain(office_id=created("office"), task="train_troops"), council_office),
     "send_dispatch": named(plain(recipient_id=created("mortal"), content="plea", medium="letter"), second_mortal),
-    "bestow_gift": named(plain(receiver_id=created("mortal"), value=5), combined(wealthy, second_mortal)),
+    "bestow_gift": named(plain(receiver_id=created("mortal"), value=5, occasion="hospitality"), combined(wealthy, second_mortal)),
+    "release_debt": named(plain(gift_id=created("gift")), given_gift),
     "answer_gift": named(plain(gift_id=created("gift")), owed_gift),
     "refuse_gift": named(plain(gift_id=created("gift")), owed_gift),
     "make_offering": named(plain(value=5), devout),
@@ -564,13 +597,14 @@ MORTAL_CASES: dict[str, Case] = {
     "steer_marriages": named(plain(name="The Long Match", locus="height", allele="tall"), house_head),
     "enclose_commons": named(plain(commons_id=created("commons")), land_common),
     "rule_commons": named(plain(commons_id=created("commons")), land_common),
+    "set_commons_rule": named(plain(commons_id=created("commons"), rule="licensed", quota=50, licence_price=20), ruled_common),
     "reserve_game": named(plain(strictness=70)),
     "poach_game": named(plain(reserve_id=created("reserve")), game_reserve),
     "plant_perennial": named(plain(kind="orchard")),
     "send_aid": named(plain(settlement_id=created("settlement"), kind="goods"), aiding_realm),
     "plan_rebuilding": named(plain(), ruined_town),
     "prepare_town": named(plain(kind="levee"), wealthy),
-    "lead_expedition": named(plain(target_id=created("region")), second_region),
+    "lead_expedition": named(plain(target_id=created("region"), mode="on_foot"), second_region),
     "make_camp": named(plain(), camping_party),
     "order_formation": named(plain(echelon_id=created("echelon"), order="attack"), commanded_brigade),
     "petition_spirit": named(plain(spirit_id=created("spirit"), kind="healing"), spirit_office),
@@ -578,12 +612,15 @@ MORTAL_CASES: dict[str, Case] = {
     "seek_vision": named(plain(), open_mind),
     "consult_diviner": named(plain(question="harvest"), court_diviners),
     "preach_end_time": named(plain(), visionary),
-    "forge_work": named(plain(original_id=created("artwork")), art_work),
+    "forge_work": named(plain(original_id=created("artwork"), kind="artwork"), art_work),
+    "review_work": named(plain(artwork_id=created("artwork")), renowned_critic),
+    "claim_right": named(plain(kind="technique", name="The First Way", technique=FIRST_TECHNIQUE), known_technique),
     "buy_work": named(plain(artwork_id=created("artwork")), sold_work),
-    "found_club": named(plain(kind="racing")),
+    "found_club": named(plain(kind="mind_games")),
+    "fix_contest": named(plain(match_id=created("match"), side=created("home")), played_match),
     "take_contract": named(plain(contract_id=created("contract")), posted_contract),
     "command_construct": named(plain(construct_id=created("construct"), kind="serve", target_id=settlement), built_construct),
-    "forecast_seasons": named(plain(), sky_scholar),
+    "forecast_seasons": named(plain(long_season_id=lambda _realm, ids: ids["long_season"]), sky_scholar),
     "set_economic_order": named(
         plain(polity_id=created("polity"), ownership="state", allocation="redistribution", labour="corvee", distribution="by_office", reason=REASON),
         ruled_realm,
@@ -597,6 +634,7 @@ MORTAL_CASES: dict[str, Case] = {
     "make_charm": named(plain(power="protection"), owned_item),
     "join_cooperative": named(plain(faction_id=created("faction")), town_pool),
     "seek_citizenship": named(plain(), long_foreigner),
+    "lead_revival": named(plain(people_id=created("people"), way="withdraw", goal="revive_language"), of_the_people),
     "buy_insurance": named(plain(insurer_id=created("insurer")), town_insurer),
     "invent_game": named(plain(kind="board"), people_home),
     "join_road_folk": named(plain(culture_id=created("culture")), road_culture),

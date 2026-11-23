@@ -1,8 +1,10 @@
+import { socialClassValues } from '@/api/generated/schema'
 import { formatDecimal, formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Section, Paged } from '@/components/domain'
 import { Label, Muted, Stat } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { humanize } from '../actions/schema'
 import { RULE, useRuleLookup } from '../api/rules'
 import { type EntityDetail } from '../api/types'
@@ -78,7 +80,7 @@ export function SocietyEconomy({ detail }: { detail: EntityDetail }) {
             <Badge variant='warning'>The treasury may fail</Badge>
           )}
           {unhappiest && (
-            <Badge variant='outline'>{`Least content: ${humanize(unhappiest)}`}</Badge>
+            <Badge variant='outline'>{`Least content: ${wordOf(socialClassValues, unhappiest)}`}</Badge>
           )}
         </div>
       )}

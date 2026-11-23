@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.law_depth import METHOD_HARM, METHOD_SEEMING, METHOD_TEXT
 from aerona.catalog.life.phases import PEACE_OPERATIONS, WAR_OPERATIONS
-from aerona.catalog.senses import AGENTS
+from aerona.catalog.senses import AGENTS, SENSES
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.errors import ConflictError, ValidationFailedError
@@ -58,6 +58,7 @@ from aerona.engine.mind.book import skill_level
 from aerona.engine.mind.drives import deceit_drive
 from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.nature.effects import sensed
+from aerona.engine.nature.senses import leading_sense
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.phases.society_support.knowledge import teach
@@ -310,6 +311,9 @@ async def perform_operation(ctx: TickContext, spymaster: EntityRow, target: Enti
     if text is None and operation is not SpyOperation.INTEL:
         text = await gather(ctx, spymaster, target, network)
     found = 1 + await sensed(ctx.session, ctx.rules, target.id, AGENTS, ctx.rules.senses.agents_pct)
+    leading = await leading_sense(ctx.session, target.id, AGENTS)
+    if leading is not None and SENSES[leading].told and found > 1:
+        await record(ctx, "life.sensed", roles={IncidentRole.SUBJECT: target.id, IncidentRole.TARGET: spymaster.id}, facts={"sense": leading})
     gain = round_half_up(cover_exposure(network, ctx.rules.espionage.exposure_per_operation) * found)
     if "exposure" not in network.locked:
         network.exposure = clamp_int(network.exposure + gain, 0, PERCENT)

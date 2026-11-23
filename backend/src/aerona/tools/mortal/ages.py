@@ -30,7 +30,7 @@ from aerona.tools.framework.validation import fail
 
 
 class ForecastSeasonsInput(ToolInput):
-    pass
+    long_season_id: int
 
 
 class SabotageRemakingInput(ToolInput):
@@ -42,15 +42,16 @@ class SwearVengeanceInput(ToolInput):
 
 
 async def forecast_seasons(call: MortalCall, args: ForecastSeasonsInput) -> str:
-    if call.me.world_id is None or await call.session.get(IrregularSeasonRow, call.me.world_id) is None:
-        fail(MortalResult.FORECAST_DECLINED, why="the seasons of your world keep their measure")
+    spell = await call.session.get(IrregularSeasonRow, args.long_season_id)
+    if spell is None or spell.world_id != call.me.world_id:
+        fail(MortalResult.FORECAST_DECLINED, why="no such long season holds your world")
     skill = await call.session.scalar(select(SkillRow.level).where(SkillRow.holder_node_id == call.me.id, SkillRow.skill == SkillKind.ASTRONOMY).limit(1))
     if (skill or 0) < call.tick.rules.long_seasons.scholar_skill:
         fail(MortalResult.FORECAST_DECLINED, why="you lack the learning of the sky to read the seasons")
     folk = await people_id_of(call.session, await town_of(call.session, call.me))
     if folk is None:
         fail(MortalResult.FORECAST_DECLINED, why="you belong to no people that would heed you")
-    made = await control.read_winter(call.tick, call.me.world_id)
+    made = await control.read_winter(call.tick, spell.id)
     call.target(folk)
     await call.record("tools.mortal.forecast_seasons", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.BENEFICIARY: folk}, facts={"peoples": made})
     return result(MortalResult.SEASONS_FORECAST, peoples=made)
@@ -65,7 +66,7 @@ async def sabotage_remaking(call: MortalCall, args: SabotageRemakingInput) -> st
     if region is None or plan.target_node_id not in (region.id, call.me.world_id):
         fail(MortalResult.SABOTAGE_DECLINED, why="it does not touch your land")
     if held(plan.holder_node_id) or "progress" in plan.locked:
-        fail(MortalResult.SABOTAGE_DECLINED, why="a stronger hand holds it")
+        fail(MortalResult.SABOTAGE_DECLINED, why="it is held")
     await set_back(call.tick, plan, work)
     call.target(call.me.id)
     await call.record(

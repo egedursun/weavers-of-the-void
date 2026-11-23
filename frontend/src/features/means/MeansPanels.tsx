@@ -13,6 +13,7 @@ import { Held, Listed } from '@/features/collective/parts'
 import { Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
 import { why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
+import { TECHNIQUE_WORDS } from '@/features/entity/affairs/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { MATERIAL } from '@/features/entity/wilds/labels'
 import { NumberField } from '@/features/entity/wilds/parts'
@@ -850,7 +851,7 @@ export function BuildingPanel({
           ],
           [
             'Technique needed',
-            building?.needs ? building.needs.replace(/_/g, ' ') : 'None',
+            building?.needs ? TECHNIQUE_WORDS[building.needs] : 'None',
           ],
           [
             'Can be repaired',

@@ -13,6 +13,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.travel import RefugeeCause
 from aerona.engine.context import TickContext
+from aerona.engine.demography.care import shelter_displaced
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import closeness
 from aerona.engine.phase import Phase
@@ -105,6 +106,7 @@ async def flee(
         set_stats(origin, population=max(floor, population - refugees))
         host_floor, host_cap = headcount_bounds(ctx.rules, host)
         set_stats(host, population=min(host_cap, max(host_floor, (stat(host, "population") or 0) + refugees)))
+        await shelter_displaced(ctx, host, refugees)
         await connect(
             ctx.session, origin.id, host.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"refugees ({spoken(cause)}): {several(refugees, 'person', 'people')}"
         )
@@ -153,6 +155,7 @@ async def flee(
     "people.population",
     "settlement.population",
     "table.bonds",
+    "table.community_cohorts",
     "table.creator",
     "table.culture_values",
     "table.dimensions",
@@ -175,6 +178,7 @@ async def flee(
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_cohorts",
     "table.entities",
     "table.incident_facts",
     "table.incident_participants",

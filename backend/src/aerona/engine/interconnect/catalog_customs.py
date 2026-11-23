@@ -47,7 +47,7 @@ CUSTOMS_MECHANICS = (
             AgeSetMemberRow.__tablename__,
         ),
         exposure=Exposure.TOOL,
-        tools=("stir_revival",),
+        tools=("stir_revival", "lead_revival", "mark_body"),
         targets=("people", "mortal"),
         couplings=(
             Coupling(S.CULTURE, "drift pressed by rulers, conquerors and neighbours stirs a movement", E.TRIGGER, "revivals.pressure_from"),

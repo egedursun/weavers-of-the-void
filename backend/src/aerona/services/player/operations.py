@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.operations import CarrierKind, CrewStation, EchelonLevel, ExpeditionRole, PointOfSail, QuirkKind, ShotKind
 from aerona.engine.operations import control
 from aerona.services.player.cosmography import Edited
@@ -150,6 +151,7 @@ class ExpeditionDraft(Command):
     target_id: int
     companion_ids: list[int] = Field(default_factory=list)
     sponsor_id: int | None = None
+    mode: MovementMode | None = None
 
 
 class ExpeditionTarget(Command):
@@ -379,7 +381,13 @@ async def admiralty_delete(scope: PlayerScope, command: PolityTarget) -> Effect:
 @player_action("expedition:create", ActionKind.EDIT_RECORD)
 async def expedition_create(scope: PlayerScope, command: ExpeditionDraft) -> Effect:
     row = await control.send_expedition(
-        await scope.context("expedition_create"), command.leader_id, command.target_id, command.companion_ids, command.sponsor_id
+        await scope.context("expedition_create"),
+        command.leader_id,
+        command.target_id,
+        command.companion_ids,
+        command.sponsor_id,
+        mode=command.mode,
+        carried=True,
     )
     return Effect("An expedition sets out.", command.leader_id, values={"expedition_id": row.id})
 

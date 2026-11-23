@@ -102,6 +102,9 @@ function view(overrides: Record<string, unknown> = {}) {
     ],
     wars: [{ id: 7, name: 'The Ford War' }],
     seals: [],
+    oath_choices: [],
+    power_choices: [],
+    line_choices: [],
     novelty: null,
     sinecures: [],
     ...overrides,
@@ -230,6 +233,52 @@ describe('couplings', () => {
       .toBeDisabled()
     await expect
       .element(screen.getByRole('button', { name: 'Void it' }))
+      .toBeDisabled()
+  })
+
+  it('binds a seal over the deep to the pact that holds it', async () => {
+    serveBase()
+    onApi(
+      'GET',
+      '/api/couplings/of/20',
+      view({ oath_choices: [{ id: 44, label: 'The Oath of the Ford' }] })
+    )
+    onApi('POST', '/api/actions/deep_seal:seal', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CouplingsSection nodeId={20} />)
+    const bound = screen.getByRole('combobox', { name: 'What it is bound to' })
+    await expect.element(bound).toBeDisabled()
+    await screen.getByRole('combobox', { name: 'What holds it' }).click()
+    await screen.getByRole('option', { name: 'A sworn pact' }).click()
+    const seal = screen.getByRole('button', { name: 'Seal it' })
+    await expect.element(seal).toBeDisabled()
+    await expect
+      .element(seal)
+      .toHaveAccessibleDescription('Choose what holds the seal first')
+    await bound.click()
+    await screen.getByRole('option', { name: 'The Oath of the Ford' }).click()
+    await seal.click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/deep_seal:seal'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/deep_seal:seal')[0].body
+    ).toMatchObject({
+      place_id: 20,
+      kind: 'pact',
+      oath_id: 44,
+      power_id: null,
+      line_id: null,
+    })
+  })
+
+  it('keeps the binding control disabled with its reason when nothing of that kind exists', async () => {
+    serveBase()
+    onApi('GET', '/api/couplings/of/20', view())
+    const { screen } = await renderApp(<CouplingsSection nodeId={20} />)
+    await screen.getByRole('combobox', { name: 'What holds it' }).click()
+    await screen.getByRole('option', { name: 'An innate power' }).click()
+    await expect
+      .element(screen.getByRole('combobox', { name: 'What it is bound to' }))
       .toBeDisabled()
   })
 })

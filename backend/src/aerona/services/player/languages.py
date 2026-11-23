@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import ChronicleKind, WritingSystem
@@ -71,7 +71,7 @@ async def edit_language(scope: PlayerScope, command: EditLanguage) -> Effect:
     elif command.writing_system is not None:
         profile.writing_system = command.writing_system
         profile.script_epoch = epoch
-        fields.append(f"script {command.writing_system.value.replace('_', ' ')}")
+        fields.append(f"script {spoken(command.writing_system)}")
     if command.sample_names is not None:
         names = tuple(name.strip()[:SAMPLE_NAME_LENGTH_MAX] for name in command.sample_names if name.strip())
         profile.phonology = profile.phonology.model_copy(update={"sample_names": names})

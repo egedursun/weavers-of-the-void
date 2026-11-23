@@ -216,7 +216,7 @@ from aerona.rules.registry.departures import DeparturesRules
 from aerona.rules.registry.diplomacy import DiplomacyRules
 from aerona.rules.registry.disasters import DisastersRules
 from aerona.rules.registry.discovery import DiscoveryRules
-from aerona.rules.registry.disease_agents import DiseaseAgentRules
+from aerona.rules.registry.disease_agents import CureRules, DiseaseAgentRules
 from aerona.rules.registry.divine import (
     AvatarRules,
     CreatorBondRules,
@@ -259,14 +259,20 @@ from aerona.rules.registry.endowments import EndowmentRules
 from aerona.rules.registry.engagement import EngagementRules
 from aerona.rules.registry.engine_phases import EnginePhasesRules
 from aerona.rules.registry.environment import (
+    CalendarSlotRules,
     CalendarsRules,
     EngineBudgetRules,
     EnvironmentRules,
     HarvestRules,
     LandUseRules,
+    MovementSpeedRules,
+    NamedYearsRules,
     PassabilityRules,
     ScarsRules,
     SeasonsRules,
+    SoilsRules,
+    StageAdvanceRules,
+    TerrainDepthRules,
 )
 from aerona.rules.registry.epidemiology import EpidemiologyRules
 from aerona.rules.registry.epoch_flow import EpochFlowRules
@@ -287,6 +293,7 @@ from aerona.rules.registry.evolution import (
     NicheRules,
     PathogenRules,
     PlagueResponseRules,
+    PlanetaryCyclesRules,
     SpilloverRules,
     TraitEvolutionRules,
     TrophicRules,
@@ -314,6 +321,7 @@ from aerona.rules.registry.gatherings import CollectionRules, GatheringRules
 from aerona.rules.registry.genesis import GenesisRules
 from aerona.rules.registry.genetics import GeneticsRules, GiftRules, HouseholdRules
 from aerona.rules.registry.geography import GeographyRules
+from aerona.rules.registry.geology import CoastsRules, RiversRules, RocksRules, SedimentRules, UndergroundRules
 from aerona.rules.registry.geomorphology import GeomorphologyRules
 from aerona.rules.registry.goals import GoalsRules
 from aerona.rules.registry.god_actions import GodActionsRules
@@ -543,7 +551,7 @@ from aerona.rules.registry.physics import (
     SurveyRules,
     TerraformingRules,
 )
-from aerona.rules.registry.places import PlacesRules
+from aerona.rules.registry.places import PlacesRules, SecretsRules
 from aerona.rules.registry.plants import PlantRules
 from aerona.rules.registry.politics import PoliticsRules
 from aerona.rules.registry.polity import (
@@ -590,7 +598,7 @@ from aerona.rules.registry.regime import (
     TimeHorizonRules,
     VenalityRules,
 )
-from aerona.rules.registry.region import HazardsRules, RegionalDangerRules, TerrainRules
+from aerona.rules.registry.region import HazardsRules, LandMemoryRules, RegionalDangerRules, TerrainRules
 from aerona.rules.registry.relations import CircleRules, ContestRules, PassionRules, PeckingRules, PersuasionRules, SocialRules
 from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
@@ -629,6 +637,30 @@ from aerona.rules.registry.society_kinds import SocietyKindsRules
 from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
 from aerona.rules.registry.space_weather import SpaceWeatherRules
+from aerona.rules.registry.species_w52 import (
+    AversionRules,
+    BeastActsRules,
+    BeastProductsRules,
+    BeastTemperRules,
+    BeastWakingRules,
+    BiochemistryRules,
+    BodyCapacityRules,
+    BodyPlanRules,
+    DamageRules,
+    DietsRules,
+    DomesticationDepthRules,
+    HabitatWaysRules,
+    HarmCauseRules,
+    InjuryDepthRules,
+    InjuryStateRules,
+    PlantProductsRules,
+    PlantsDepthRules,
+    SpeciesFormsRules,
+    SpeciesRolesRules,
+    SpreadRules,
+    TransmissionRules,
+    TreatmentRules,
+)
 from aerona.rules.registry.speech import SpeechRules
 from aerona.rules.registry.star_types import StarTypeRules
 from aerona.rules.registry.statecraft import StatecraftRules
@@ -686,6 +718,11 @@ from aerona.rules.registry.urban_depth import (
     TradingPostRules,
     TurfRules,
 )
+from aerona.rules.registry.w52_agent_a import BreakRules, DeathReadingRules, EmotionRules, FuneralRules, PackageRules
+from aerona.rules.registry.w52_agent_b import InteractionRules, IntoxicantRules, RelationRules
+from aerona.rules.registry.w52_agent_c import DwellingRules, InheritanceRules, RenownAxisRules
+from aerona.rules.registry.w52_agent_d import CrowdRules, IdentityLayerRules, RevivalWayRules
+from aerona.rules.registry.w52_agent_e import ArtMarketRoleRules, ClubRules, CulturalRightsRules, GiftExchangeRules
 from aerona.rules.registry.war_conduct import WarConductRules
 from aerona.rules.registry.war_depth import (
     BattleMagicRules,
@@ -736,10 +773,46 @@ class Rules:
     hazards: HazardsRules = field(default_factory=HazardsRules)
     terrain: TerrainRules = field(default_factory=TerrainRules)
     passability: PassabilityRules = field(default_factory=PassabilityRules)
+    terrain_depth: TerrainDepthRules = field(default_factory=TerrainDepthRules)
+    movement: MovementSpeedRules = field(default_factory=MovementSpeedRules)
+    soils: SoilsRules = field(default_factory=SoilsRules)
+    succession_stages: StageAdvanceRules = field(default_factory=StageAdvanceRules)
+    land_memory: LandMemoryRules = field(default_factory=LandMemoryRules)
+    secrets: SecretsRules = field(default_factory=SecretsRules)
+    rocks: RocksRules = field(default_factory=RocksRules)
+    underground: UndergroundRules = field(default_factory=UndergroundRules)
+    rivers: RiversRules = field(default_factory=RiversRules)
+    sediment: SedimentRules = field(default_factory=SedimentRules)
+    coasts: CoastsRules = field(default_factory=CoastsRules)
+    cycles: PlanetaryCyclesRules = field(default_factory=PlanetaryCyclesRules)
+    diets: DietsRules = field(default_factory=DietsRules)
+    species_forms: SpeciesFormsRules = field(default_factory=SpeciesFormsRules)
+    biochemistry: BiochemistryRules = field(default_factory=BiochemistryRules)
+    domestication_depth: DomesticationDepthRules = field(default_factory=DomesticationDepthRules)
+    beast_tempers: BeastTemperRules = field(default_factory=BeastTemperRules)
+    beast_acts: BeastActsRules = field(default_factory=BeastActsRules)
+    habitats: HabitatWaysRules = field(default_factory=HabitatWaysRules)
+    aversions: AversionRules = field(default_factory=AversionRules)
+    beast_waking: BeastWakingRules = field(default_factory=BeastWakingRules)
+    beast_products: BeastProductsRules = field(default_factory=BeastProductsRules)
+    transmission: TransmissionRules = field(default_factory=TransmissionRules)
+    spread: SpreadRules = field(default_factory=SpreadRules)
+    body: BodyPlanRules = field(default_factory=BodyPlanRules)
+    damage: DamageRules = field(default_factory=DamageRules)
+    injuries: InjuryDepthRules = field(default_factory=InjuryDepthRules)
+    injury_states: InjuryStateRules = field(default_factory=InjuryStateRules)
+    harm: HarmCauseRules = field(default_factory=HarmCauseRules)
+    treatment: TreatmentRules = field(default_factory=TreatmentRules)
+    body_capacities: BodyCapacityRules = field(default_factory=BodyCapacityRules)
+    species_roles: SpeciesRolesRules = field(default_factory=SpeciesRolesRules)
+    plants_depth: PlantsDepthRules = field(default_factory=PlantsDepthRules)
+    plant_products: PlantProductsRules = field(default_factory=PlantProductsRules)
     seasons: SeasonsRules = field(default_factory=SeasonsRules)
     land_use: LandUseRules = field(default_factory=LandUseRules)
     harvest: HarvestRules = field(default_factory=HarvestRules)
     calendars: CalendarsRules = field(default_factory=CalendarsRules)
+    calendar: CalendarSlotRules = field(default_factory=CalendarSlotRules)
+    named_years: NamedYearsRules = field(default_factory=NamedYearsRules)
     engine_budget: EngineBudgetRules = field(default_factory=EngineBudgetRules)
     weather: WeatherRules = field(default_factory=WeatherRules)
     seasonal: SeasonalRules = field(default_factory=SeasonalRules)
@@ -757,6 +830,7 @@ class Rules:
     mishaps: MishapRules = field(default_factory=MishapRules)
     witchcraft: WitchcraftRules = field(default_factory=WitchcraftRules)
     revivals: RevivalRules = field(default_factory=RevivalRules)
+    revival: RevivalWayRules = field(default_factory=RevivalWayRules)
     intoxication: IntoxicationRules = field(default_factory=IntoxicationRules)
     marks: MarkRules = field(default_factory=MarkRules)
     time_budgets: TimeBudgetRules = field(default_factory=TimeBudgetRules)
@@ -789,6 +863,7 @@ class Rules:
     launch_windows: LaunchWindowRules = field(default_factory=LaunchWindowRules)
     cosmopolitan: CosmopolitanRules = field(default_factory=CosmopolitanRules)
     identities: IdentityRules = field(default_factory=IdentityRules)
+    identity: IdentityLayerRules = field(default_factory=IdentityLayerRules)
     peer_groups: PeerRules = field(default_factory=PeerRules)
     sanctuary: SanctuaryRules = field(default_factory=SanctuaryRules)
     satire: SatireRules = field(default_factory=SatireRules)
@@ -826,6 +901,8 @@ class Rules:
     ethics: EthicsRules = field(default_factory=EthicsRules)
     aspirations: AspirationsRules = field(default_factory=AspirationsRules)
     social: SocialRules = field(default_factory=SocialRules)
+    relations: RelationRules = field(default_factory=RelationRules)
+    interactions: InteractionRules = field(default_factory=InteractionRules)
     circles: CircleRules = field(default_factory=CircleRules)
     passions: PassionRules = field(default_factory=PassionRules)
     persuasion: PersuasionRules = field(default_factory=PersuasionRules)
@@ -933,6 +1010,7 @@ class Rules:
     outlaws: OutlawRules = field(default_factory=OutlawRules)
     prisons: PrisonRules = field(default_factory=PrisonRules)
     collective_behaviour: CollectiveBehaviourRules = field(default_factory=CollectiveBehaviourRules)
+    collective: CrowdRules = field(default_factory=CrowdRules)
     historiography: HistoriographyRules = field(default_factory=HistoriographyRules)
     storylets: StoryletRules = field(default_factory=StoryletRules)
     norms: NormRules = field(default_factory=NormRules)
@@ -1084,10 +1162,18 @@ class Rules:
     elasticity: ElasticityRules = field(default_factory=ElasticityRules)
     arbitrage: ArbitrageRules = field(default_factory=ArbitrageRules)
     local_renown: LocalRenownRules = field(default_factory=LocalRenownRules)
+    renown: RenownAxisRules = field(default_factory=RenownAxisRules)
+    inheritance: InheritanceRules = field(default_factory=InheritanceRules)
+    dwellings: DwellingRules = field(default_factory=DwellingRules)
     currencies: CurrencyRules = field(default_factory=CurrencyRules)
     lore_trade: LoreTradeRules = field(default_factory=LoreTradeRules)
     claims: ClaimRules = field(default_factory=ClaimRules)
     careers: CareersRules = field(default_factory=CareersRules)
+    death_readings: DeathReadingRules = field(default_factory=DeathReadingRules)
+    funerals: FuneralRules = field(default_factory=FuneralRules)
+    packages: PackageRules = field(default_factory=PackageRules)
+    emotions: EmotionRules = field(default_factory=EmotionRules)
+    breaks: BreakRules = field(default_factory=BreakRules)
     memory: MemoryRules = field(default_factory=MemoryRules)
     opinion: OpinionRules = field(default_factory=OpinionRules)
     needs: NeedsRules = field(default_factory=NeedsRules)
@@ -1318,6 +1404,10 @@ class Rules:
     protected_nature: ProtectedNatureRules = field(default_factory=ProtectedNatureRules)
     kin_dynamics: KinDynamicsRules = field(default_factory=KinDynamicsRules)
     feeling_spread: FeelingSpreadRules = field(default_factory=FeelingSpreadRules)
+    gifts: GiftExchangeRules = field(default_factory=GiftExchangeRules)
+    art_market: ArtMarketRoleRules = field(default_factory=ArtMarketRoleRules)
+    rights: CulturalRightsRules = field(default_factory=CulturalRightsRules)
+    clubs: ClubRules = field(default_factory=ClubRules)
     grave_goods: GraveGoodsRules = field(default_factory=GraveGoodsRules)
     agentless_conditions: AgentlessConditionsRules = field(default_factory=AgentlessConditionsRules)
     fertility_means: FertilityMeansRules = field(default_factory=FertilityMeansRules)
@@ -1334,6 +1424,7 @@ class Rules:
     plants: PlantRules = field(default_factory=PlantRules)
     body_systems: BodySystemRules = field(default_factory=BodySystemRules)
     disease: DiseaseAgentRules = field(default_factory=DiseaseAgentRules)
+    cures: CureRules = field(default_factory=CureRules)
     water_and_ice: WaterAndIceRules = field(default_factory=WaterAndIceRules)
     space_weather: SpaceWeatherRules = field(default_factory=SpaceWeatherRules)
     relics: RelicsRules = field(default_factory=RelicsRules)
@@ -1363,6 +1454,7 @@ class Rules:
     peoples: PeopleRules = field(default_factory=PeopleRules)
     biology: BiologyRules = field(default_factory=BiologyRules)
     customs: CustomsRules = field(default_factory=CustomsRules)
+    intoxicants: IntoxicantRules = field(default_factory=IntoxicantRules)
     mobility: MobilityRules = field(default_factory=MobilityRules)
     espionage: EspionageRules = field(default_factory=EspionageRules)
     incitement: IncitementRules = field(default_factory=IncitementRules)

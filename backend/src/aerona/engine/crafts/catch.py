@@ -5,8 +5,11 @@ from aerona.catalog.catch import GEAR, grounds_in
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import CatchGroundRow
 from aerona.domain.enums.crafts import CatchMedium, Gear
+from aerona.domain.enums.ecology import AnimalRole
 from aerona.engine.climes.shifts import upwelling
 from aerona.engine.couplings.closures import closure_factor
+from aerona.engine.ecology.domestication import heads_kept_for
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.rules.registry import Rules
 
 LAND_GROUNDS = grounds_in(CatchMedium.LAND)
@@ -31,10 +34,20 @@ async def catch_factor(session: AsyncSession, rules: Rules, source_id: int) -> f
 
 
 async def regrowth_scale(session: AsyncSession, rules: Rules, source_id: int) -> float:
-    rows = list(await session.scalars(select(CatchGroundRow).where(CatchGroundRow.source_entity_id == source_id, CatchGroundRow.collapsed.is_(True))))
-    return rules.grounds.collapsed_regrowth_pct / PERCENT if rows else 1.0
+    rows = list(await session.scalars(select(CatchGroundRow).where(CatchGroundRow.source_entity_id == source_id).order_by(CatchGroundRow.region_entity_id)))
+    if not rows:
+        return 1.0
+    pressed = 1 - GEAR[rows[0].gear].depletion(rules) / PERCENT / 2
+    return pressed * (rules.grounds.collapsed_regrowth_pct / PERCENT if any(row.collapsed for row in rows) else 1.0)
 
 
 async def trap_factors(session: AsyncSession, rules: Rules) -> dict[tuple[int, int], float]:
     rows = await session.scalars(select(CatchGroundRow).where(CatchGroundRow.ground.in_(LAND_GROUNDS)))
-    return {(row.source_entity_id, row.region_entity_id): worked(rules, row) for row in rows}
+    hounds = await heads_kept_for(session, AnimalRole.HUNTING)
+    atlas = await RegionAtlas.load(session)
+    found: dict[tuple[int, int], float] = {}
+    for row in rows:
+        kept = any(hounds.get(town, 0) > 0 for town in atlas.communities_in(row.region_entity_id))
+        hounded = 1 + rules.species_roles.hunting_catch_pct / PERCENT if kept and GEAR[row.gear].needs_animals else 1.0
+        found[row.source_entity_id, row.region_entity_id] = worked(rules, row) * hounded if kept or not GEAR[row.gear].needs_animals else 0.0
+    return found

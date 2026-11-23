@@ -14,14 +14,18 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.communication import DispatchContent, DispatchState, Medium, SignalState
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.ecology import AnimalRole
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.life_traits import MediumTrait
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.domestication import kept_for
 from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.lore.civics import holders_know
 from aerona.engine.networks.book import message_epochs, shared_networks
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import spoken_language
+from aerona.engine.recording.record import record
 
 INSTANT = having(MEDIUM_TRAITS, MediumTrait.INSTANT)
 OPEN_MEDIA = having(MEDIUM_TRAITS, MediumTrait.OPEN_MEDIA)
@@ -89,9 +93,21 @@ async def delay(ctx: TickContext, atlas: RegionAtlas, origin_id: int, recipient_
     if medium is Medium.LETTER:
         reach += await tech_bonus(ctx.session, ctx.rules, owner_id, EraChannel.MESSAGES)
     epochs = int(hops // max(1.0, reach))
+    if medium is Medium.LETTER and await kept_for(ctx, owner_id, AnimalRole.MESSENGER) > 0:
+        epochs -= round(epochs * ctx.rules.species_roles.messenger_speed / PERCENT)
     if await signalled(ctx, owner_id):
         epochs = max(0, epochs - table.signal_cut)
     return epochs
+
+
+async def carried_by_beasts(ctx: TickContext, row: MessageRow) -> None:
+    if row.medium is not Medium.LETTER or await kept_for(ctx, row.sender_node_id, AnimalRole.MESSENGER) <= 0:
+        return
+    if ctx.rng(f"messenger.{row.sender_node_id}.{row.recipient_node_id}.{ctx.epoch}").chance(ctx.rules.species_roles.messenger_intercept_pct):
+        row.state = DispatchState.INTERCEPTED
+    await record(
+        ctx, "life.message_carried", roles={IncidentRole.ORIGIN: row.sender_node_id, IncidentRole.RECEIVER: row.recipient_node_id}, facts={"fate": row.state}
+    )
 
 
 async def upgraded(ctx: TickContext, sender_id: int, recipient_id: int, medium: Medium) -> Medium:
@@ -138,6 +154,7 @@ async def send(
         locked=[],
     )
     ctx.session.add(row)
+    await carried_by_beasts(ctx, row)
     await ctx.session.flush()
     return row
 

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Sparkles, Star, StarOff } from 'lucide-react'
+import { entityTypeValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +18,7 @@ import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { ENTITY_TYPE_ICON } from '@/components/domain/domainIcons'
 import { Muted, Text } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { useLoreMutation } from '@/features/entity/api/mutations'
 import { useNames } from '@/features/entity/api/queries'
 import { mediaUrl } from '@/features/images/media'
@@ -69,7 +71,7 @@ function Card({
         <span className='absolute top-2 left-2'>
           <Badge size='sm' variant='secondary'>
             <Icon />
-            {humanize(entity.entity_type)}
+            {wordOf(entityTypeValues, entity.entity_type)}
           </Badge>
         </span>
         <span className='absolute top-2 right-2'>

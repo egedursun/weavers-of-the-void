@@ -14,7 +14,11 @@ import {
   Trophy,
   User,
 } from 'lucide-react'
-import { type components } from '@/api/generated/schema'
+import {
+  captiveStatusValues,
+  type components,
+  tributeStatusValues,
+} from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -26,7 +30,7 @@ import {
 } from '@/components/domain'
 import { PageControls } from '@/components/domain/PageControls'
 import { Muted, Text } from '@/components/typography'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { NodeAvatar } from '@/features/images/NodeAvatar'
 import { ReportSteps } from '@/features/records/ReportSteps'
 import {
@@ -394,7 +398,7 @@ export function CaptivesList({ communityId }: { communityId: number | null }) {
                 size='sm'
                 variant={item.status === 'held' ? 'warning' : 'outline'}
               >
-                {humanize(item.status)}
+                {wordOf(captiveStatusValues, item.status)}
               </Badge>
               <EpochBadge from={item.taken_epoch} to={item.released_epoch} />
               {item.home && (
@@ -448,7 +452,7 @@ export function TributesList({ communityId }: { communityId: number | null }) {
                 size='sm'
                 variant={item.status === 'active' ? 'warning' : 'outline'}
               >
-                {humanize(item.status)}
+                {wordOf(tributeStatusValues, item.status)}
               </Badge>
               <EpochBadge from={item.since_epoch} to={item.ended_epoch} />
             </div>

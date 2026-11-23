@@ -119,6 +119,7 @@
 {{ facts(world.facts) }}
 <div class="clear"></div>
 {{ picture(world.picture, links, world.world.name ~ ": the known world") }}
+{% if world.wheel %}<figure class="heaven"><div class="sky">{{ world.wheel }}</div><figcaption>The year of {{ world.world.name }}, its seasons sized by their share</figcaption></figure>{% endif %}
 {% if world.world.cosmology %}<p class="sublabel">What its peoples believe</p>{{ world.world.cosmology | paragraphs }}{% endif %}
 {{ entity_depth(world.world.depth) }}
 {{ typed(world.typed) }}
@@ -137,8 +138,8 @@
 </article>
 {% endfor %}
 {% endfor %}
-{% if book.routes %}<h3 class="bm2">Roads between worlds</h3><table><thead><tr><th>Between</th><th>Way</th><th>Epochs</th><th>Danger</th><th>Opened</th></tr></thead><tbody>{% for first, second, route in book.routes %}<tr><td>{{ first }} &#8596; {{ second }}{% if route.description %}<br><span class="meta small">{{ route.description }}</span>{% endif %}</td><td>{{ route.method.value | replace("_", " ") }}{% if not route.active %} <span class="meta">sealed</span>{% endif %}{% if not route.known %} <span class="meta">unknown</span>{% endif %}</td><td>{{ route.duration_epochs }}</td><td>{{ route.danger }}</td><td>Epoch {{ route.created_epoch }}</td></tr>{% endfor %}</tbody></table>{% endif %}
-{% if book.journeys %}<h3 class="bm2">Journeys</h3><ul class="timeline">{% for traveller, journey in book.journeys %}<li><span class="when">Epoch {{ journey.start_epoch }}</span>{{ traveller }} · {{ journey.intent.value | replace("_", " ") }} · <i>{{ journey.status.value | replace("_", " ") }}</i></li>{% endfor %}</ul>{% endif %}
+{% if book.routes %}<h3 class="bm2">Roads between worlds</h3><table><thead><tr><th>Between</th><th>Way</th><th>Epochs</th><th>Danger</th><th>Opened</th></tr></thead><tbody>{% for first, second, route in book.routes %}<tr><td>{{ first }} &#8596; {{ second }}{% if route.description %}<br><span class="meta small">{{ route.description }}</span>{% endif %}</td><td>{{ route.method | spoken }}{% if not route.active %} <span class="meta">sealed</span>{% endif %}{% if not route.known %} <span class="meta">unknown</span>{% endif %}</td><td>{{ route.duration_epochs }}</td><td>{{ route.danger }}</td><td>Epoch {{ route.created_epoch }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+{% if book.journeys %}<h3 class="bm2">Journeys</h3><ul class="timeline">{% for traveller, journey in book.journeys %}<li><span class="when">Epoch {{ journey.start_epoch }}</span>{{ traveller }} · {{ journey.intent | spoken }} · <i>{{ journey.status | spoken }}</i></li>{% endfor %}</ul>{% endif %}
 </section>
 
 {% if book.foreign_gods %}
@@ -196,7 +197,7 @@
 {% for war in book.wars %}
 <article class="war" id="{{ war.anchor }}">
 <div class="head"><h4 class="bm3"><a href="#{{ war.event_anchor }}">{{ war.name }}</a></h4></div>
-<p class="meta small">{{ war.world }} · {{ war.war.cause.value | replace("_", " ") }} · {% if war.war.ended_epoch is not none %}epochs {{ war.war.started_epoch }}–{{ war.war.ended_epoch }}{% else %}since epoch {{ war.war.started_epoch }}, {{ war.war.status.value }}{% endif %}{% if war.war.ending %} · ended in {{ war.war.ending.value | replace("_", " ") }}{% endif %}{% if war.instigator %} · stirred by {{ war.instigator }}{% endif %}</p>
+<p class="meta small">{{ war.world }} · {{ war.war.cause | spoken }} · {% if war.war.ended_epoch is not none %}epochs {{ war.war.started_epoch }}–{{ war.war.ended_epoch }}{% else %}since epoch {{ war.war.started_epoch }}, {{ war.war.status.value }}{% endif %}{% if war.war.ending %} · ended in {{ war.war.ending | spoken }}{% endif %}{% if war.instigator %} · stirred by {{ war.instigator }}{% endif %}</p>
 {% if war.war.cause_text %}<p>{{ war.war.cause_text }}</p>{% endif %}
 <div class="sides">
 <div class="side attackers"><span class="label">Attackers</span>{% for name in war.attackers %}<div{% if name == war.victor %} class="victor"{% endif %}>{{ name }}</div>{% else %}<div class="meta">no one</div>{% endfor %}</div>
@@ -248,7 +249,7 @@
 {% if book.open_threads %}<h3 class="bm2">Stories still unfolding</h3><ul class="timeline">{% for thread in book.open_threads %}<li><span class="when">Epoch {{ thread.epoch }}</span>{{ thread.text }}</li>{% endfor %}</ul>{% endif %}
 {% if book.closed_threads %}<h3 class="bm2">Stories that ended</h3><ul class="timeline">{% for thread in book.closed_threads %}<li><span class="when">Epochs {{ thread.epoch }}–{{ thread.closed_epoch }}</span>{{ thread.text }}{% if thread.closing_text %} <i>— {{ thread.closing_text }}</i>{% endif %}</li>{% endfor %}</ul>{% endif %}
 {% if book.facts %}<h3 class="bm2">Canon facts</h3><table><thead><tr><th>Subject</th><th>Fact</th><th>Object</th><th>Epoch</th></tr></thead><tbody>{% for subject, fact, target in book.facts %}<tr><td>{{ subject }}</td><td><i>{{ fact.predicate | replace("_", " ") }}</i></td><td>{{ target }}</td><td>{{ fact.epoch }}</td></tr>{% endfor %}</tbody></table>{% endif %}
-{% if book.prayers %}<h3 class="bm2">Prayers and answers</h3>{% for sender, recipient, message in book.prayers %}<div class="quote"><span class="label">{{ sender }} &#8594; {{ recipient }} · {{ message.intent.value | replace("_", " ") }}{% if message.request %} · {{ message.request.value | replace("_", " ") }}{% endif %}</span>{{ message.text }}</div>{% endfor %}{% endif %}
+{% if book.prayers %}<h3 class="bm2">Prayers and answers</h3>{% for sender, recipient, message in book.prayers %}<div class="quote"><span class="label">{{ sender }} &#8594; {{ recipient }} · {{ message.intent | spoken }}{% if message.request %} · {{ message.request | spoken }}{% endif %}</span>{{ message.text }}</div>{% endfor %}{% endif %}
 </section>
 {% endif %}
 

@@ -88,6 +88,7 @@ BODY_GAP_MECHANICS: tuple[Mechanic, ...] = (
             Coupling(S.FAITH, "a god's blessing, curse or a desecrated shrine lays a package; possession and void taint follow spirits"),
             Coupling(S.DEMOGRAPHY, "blessings and blood curses pass to children"),
             Coupling(S.MIND, "trauma follows heavy memories on weak wills; a bearer comes to dread its source"),
+            Coupling(S.ECONOMY, "a charmer pays to keep a fading charm at full strength", EdgeKind.FLOW, "packages.charm_renew_cost"),
         ),
     ),
     Mechanic(
@@ -426,6 +427,7 @@ MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
         backfill="none: thoughts arise from the next epoch and every mood starts fine",
         fields=("kind", "emotion", "intensity", "decay_pct", "mood", "mood_score", "need", "value"),
         tables=(ThoughtRow.__tablename__, NeedRow.__tablename__),
+        tools=("stir_emotion",),
         exposure=Exposure.CONTEXT,
         targets=("mortal",),
         couplings=(
@@ -444,6 +446,7 @@ MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
         backfill="none: griefs begin with the deaths of the next epoch",
         fields=("stage", "strength", "length_epochs"),
         tables=(GriefRow.__tablename__,),
+        tools=("ease_grief",),
         exposure=Exposure.CONTEXT,
         targets=("mortal",),
         couplings=(Coupling(S.MIND, "complicated grief makes a mortal melancholic and lays a grudge on the killer that can drive vengeance"),),

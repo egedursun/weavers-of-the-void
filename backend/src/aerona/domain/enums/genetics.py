@@ -71,6 +71,7 @@ class Locus(StrEnum):
     GIFT_SUMMONING = "gift_summoning"
     GIFT_BLOOD = "gift_blood"
     GIFT_VOID = "gift_void"
+    TWINNING = "twinning"
 
 
 class GeneticEffect(StrEnum):
@@ -113,6 +114,24 @@ class HouseholdForm(StrEnum):
     INSTITUTIONAL = "institutional"
     MIXED = "mixed"
     CHOSEN = "chosen"
+
+
+class DwellingKind(StrEnum):
+    HUT = "hut"
+    LONGHOUSE = "longhouse"
+    TOWNHOUSE = "townhouse"
+    MANOR = "manor"
+    PALACE = "palace"
+    TENT = "tent"
+    CAVE = "cave"
+    SHIP = "ship"
+    TOWER = "tower"
+    APARTMENT = "apartment"
+    FARMSTEAD = "farmstead"
+    STILT_HOUSE = "stilt_house"
+    BURROW = "burrow"
+    NEST = "nest"
+    SUBMERGED = "submerged"
 
 
 class DwellingTenure(StrEnum):

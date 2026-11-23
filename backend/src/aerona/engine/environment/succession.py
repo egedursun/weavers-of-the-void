@@ -2,15 +2,17 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.evolution import FIRE_STAGE, STAGE_COVER, WET_LAND, WOODED, next_stage
+from aerona.catalog.evolution import ADVANCE, FIRE_STAGE, STAGE_COVER, WET_LAND, WOODED, next_stage, path_of
+from aerona.catalog.soils import SOILS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.environment import CoastKind, ScarKind, SoilKind
 from aerona.domain.enums.evolution import SuccessionStage
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.keystones import dispersal, services_by_region
 from aerona.engine.environment.book import add_scar
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import StepDraft, record
@@ -26,6 +28,14 @@ class SuccessionTally:
     advanced: int = 0
     burned: int = 0
     cleared: int = 0
+
+
+ACID_SOIL = 70
+
+
+def stage_path(ground: RegionEnvironmentRow) -> tuple[SuccessionStage, ...]:
+    wet = ground.base_wetland >= WET_LAND or ground.wetland >= WET_LAND
+    return path_of(ground.succession, wet=wet, poor=SOILS[ground.soil].acidity >= ACID_SOIL, dune=ground.coast_kind is CoastKind.BEACH)
 
 
 def growth(rules: Rules, env: RegionEnvironmentRow) -> float:
@@ -51,6 +61,7 @@ def fuel(env: RegionEnvironmentRow, epoch: int) -> float:
 
 
 async def grow_lands(ctx: TickContext, tally: SuccessionTally) -> None:
+    services = await services_by_region(ctx.session)
     table = ctx.rules.biome_succession
     for env in list(await ctx.session.scalars(select(RegionEnvironmentRow).order_by(RegionEnvironmentRow.entity_id))):
         if held(env.entity_id, env.world_id) or "succession" in env.locked:
@@ -84,12 +95,20 @@ async def grow_lands(ctx: TickContext, tally: SuccessionTally) -> None:
         if env.succession is SuccessionStage.GRASSLAND and env.grazed >= table.grazing_hold:
             continue
         wet = env.base_wetland >= WET_LAND or env.wetland >= WET_LAND
-        following = next_stage(env.succession, wet)
+        poor = SOILS[env.soil].acidity >= ACID_SOIL
+        dune = env.coast_kind is CoastKind.BEACH
+        following = next_stage(env.succession, wet, poor=poor, dune=dune)
         if following is None or (not wet and STAGE_COVER[env.succession] >= env.base_forest and env.succession is not SuccessionStage.BARE):
             continue
-        env.succession_progress = clamp_int(env.succession_progress + round_half_up(growth(ctx.rules, env)), 0, PERCENT)
+        pace = growth(ctx.rules, env) / ADVANCE[env.succession](ctx.rules) * dispersal(ctx.rules, services.get(env.entity_id))
+        env.succession_progress = clamp_int(env.succession_progress + round_half_up(pace), 0, PERCENT)
+        if env.succession is SuccessionStage.BOG and env.succession_progress >= PERCENT and "soil" not in env.locked:
+            env.soil = SoilKind.PEAT
         if env.succession_progress >= PERCENT:
-            env.succession = following
+            before, env.succession = env.succession, following
             env.succession_progress = 0
             tally.advanced += 1
+            await record(
+                ctx, "succession.advanced", roles={IncidentRole.PLACE: env.entity_id}, facts={"before": before, "stage": following}, place=env.entity_id
+            )
     await ctx.session.flush()

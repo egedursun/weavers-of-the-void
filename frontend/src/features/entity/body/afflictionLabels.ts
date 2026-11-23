@@ -1,24 +1,37 @@
 import {
   Brain,
+  CloudLightning,
+  Clover,
+  Crown,
   Droplet,
   Eclipse,
   Eye,
   EyeOff,
+  Flame,
+  FlaskConical,
   Ghost,
+  Heart,
+  HeartHandshake,
   Leaf,
+  Lock,
+  MessageCircle,
   Moon,
   ScanEye,
+  Shuffle,
+  Skull,
+  Sparkles,
   Sun,
   Syringe,
   Utensils,
   Wine,
-  Sparkles,
-  FlaskConical,
-  Skull,
 } from 'lucide-react'
+import type { components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
 
-export const PACKAGE_LOOKS: Record<string, Named> = {
+export const PACKAGE_LOOKS: Record<
+  components['schemas']['PackageKind'],
+  Named
+> = {
   snake_venom: { label: 'Venom', icon: Syringe, tone: 'verdigris' },
   drink_dependence: { label: 'Drink dependence', icon: Wine, tone: 'warning' },
   drug_dependence: { label: 'Drug dependence', icon: Leaf, tone: 'warning' },
@@ -37,9 +50,15 @@ export const PACKAGE_LOOKS: Record<string, Named> = {
   },
   geas_doom: { label: 'Geas doom', icon: Skull, tone: 'danger' },
   soul_trapped: { label: 'Soul trapped', icon: Ghost, tone: 'muted' },
+  fortune: { label: 'Fortune', icon: Clover, tone: 'gold' },
+  transformation: { label: 'Transformation', icon: Shuffle, tone: 'verdigris' },
+  charm: { label: 'Charm', icon: HeartHandshake, tone: 'warning' },
 }
 
-export const TRANSMISSIONS: Record<string, string> = {
+export const TRANSMISSIONS: Record<
+  components['schemas']['Transmission'],
+  string
+> = {
   contact: 'Touch',
   bite: 'A bite',
   ingestion: 'Eating or drinking',
@@ -50,6 +69,11 @@ export const TRANSMISSIONS: Record<string, string> = {
   rite: 'A rite',
   gaze: 'A gaze',
   experience: 'What they lived through',
+  water: 'Water',
+  spirit: 'Spirits',
+  void: 'The void',
+  intimate: 'Intimacy',
+  objects: 'Goods and bedding',
 }
 
 export const CURES: Record<string, string> = {
@@ -82,4 +106,24 @@ export const STAT_LABELS: Record<string, string> = {
   willpower: 'Willpower',
   wisdom: 'Wisdom',
   sanity: 'Sanity',
+}
+
+export const CHANGE_SIGNS: Record<components['schemas']['ChangeSign'], Named> =
+  {
+    season: { label: 'Each season', icon: Leaf, tone: 'success' },
+    sky_event: { label: 'A sign in the sky', icon: Moon, tone: 'info' },
+    emotion: { label: 'A strong feeling', icon: Flame, tone: 'danger' },
+    word: { label: 'A spoken word', icon: MessageCircle, tone: 'gold' },
+    none: { label: 'Fixed for good', icon: Lock, tone: 'muted' },
+  }
+
+export const CHARMS: Record<components['schemas']['CharmKind'], Named> = {
+  love: { label: 'Love', icon: Heart, tone: 'danger' },
+  obedience: { label: 'Obedience', icon: Crown, tone: 'warning' },
+  devotion: { label: 'Devotion', icon: Sparkles, tone: 'gold' },
+}
+
+export const FORTUNE_SIGNS: Record<string, Named> = {
+  '1': { label: 'Good fortune', icon: Clover, tone: 'success' },
+  '-1': { label: 'Ill fortune', icon: CloudLightning, tone: 'danger' },
 }

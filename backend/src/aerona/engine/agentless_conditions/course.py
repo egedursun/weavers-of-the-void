@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.agentless_conditions import AgentlessConditionRow
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN, ConditionRow
 from aerona.db.tables.entities import EntityRow
@@ -30,7 +31,7 @@ async def ease_chance(ctx: TickContext, bearer: EntityRow) -> float:
 
 
 def named_of(row: ConditionRow, kind: AgentlessConditionRow | None) -> str:
-    return kind.name if kind is not None else row.kind.value.replace("_", " ")
+    return kind.name if kind is not None else spoken(row.kind)
 
 
 async def eased(

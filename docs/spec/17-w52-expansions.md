@@ -4292,9 +4292,9 @@ The batch is gated once, alone or with the batches before it.
 
 **Rules.** Namespace `packages`: `fortune_roll_pct` 15 [0–100], `fortune_line_pct` 50 [0–100], `transform_recur_pct` 100 [0–100], `charm_strength` 60 [0–100], `charm_fade` 5 [0–50], `charm_renew_cost` 10 [0–500].
 
-**Incidents.** `affliction.fortune_turned`, `affliction.transformed`, `affliction.charmed`, `affliction.charm_broken`.
+**Incidents.** `affliction.fortune_turned`, `affliction.transformed`, `affliction.charmed`, `affliction.charm_broken`, `affliction.charm_renewed` (the charmer pays `charm_renew_cost` each epoch of fading to restore the charm to `charm_strength`).
 
-**Agent tools.** Mortal `brew_charm` (`target_id`, `kind`) and `lift_affliction` (`affliction_id`, `cure`); son `curse_with` (`node_id`, `package`, `reason`) and `bless_with` list seventeen.
+**Agent tools.** Mortal `bind_with_charm` (`target_id`, `kind`) and `lift_affliction` (`affliction_id`, `cure`); son `curse_with` (`node_id`, `package`, `reason`) and `bless_with` list seventeen.
 
 **God levers.** Package and affliction editors offer seventeen categories with their fields.
 
@@ -4328,7 +4328,7 @@ The deepening pass (Parts 100–109) widens several of the values named here; Ap
 
 | Section | Tables | Phases | God levers | Screens | Tools and context | Codex and book | Integrity | Backfill |
 |---|---|---|---|---|---|---|---|---|
-| 52.90 packages | `effect_packages`, `afflictions` | afflictions, transform, chance | package and affliction editors | affliction section | `brew_charm`, `lift_affliction`, `curse_with`, `bless_with` | entries | targets, sign | curse kinds |
+| 52.90 packages | `effect_packages`, `afflictions` | afflictions, transform, chance | package and affliction editors | affliction section | `bind_with_charm`, `lift_affliction`, `curse_with`, `bless_with` | entries | targets, sign | curse kinds |
 
 **Couplings.** C125 Fortune → every chance roll. C126 Charms → bonds, trust and law.
 
@@ -13111,11 +13111,11 @@ Batches 1–10 were written once as a check of counts. This pass reads every val
 
 **Builds on.** 52.16 memory catalogue.
 
-**Current.** No region remembers an uprising, a great union or a crowning held there.
+**Current.** No region remembers an uprising, a great union or an accession to rule held there.
 
-**State.** `RegionMemoryKind` gains `uprising`, `union` and `crowning`.
+**State.** `RegionMemoryKind` gains `uprising`, `union` and `accession`.
 
-**Behaviour.** Each gives its pilgrimage draw, claim strength and unrest; a crowning place strengthens claims of the line crowned there.
+**Behaviour.** Each gives its pilgrimage draw, claim strength and unrest; a place of accession strengthens claims of the line that came to rule there.
 
 **Rules.** Per memory `{memory}_weight` (0–100).
 

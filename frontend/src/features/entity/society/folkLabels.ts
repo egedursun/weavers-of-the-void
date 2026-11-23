@@ -1,29 +1,36 @@
 import {
+  type LucideIcon,
   Anchor,
   Bird,
   Bone,
   Bot,
+  Boxes,
   Bug,
   Church,
+  CircleSlash,
   Cloud,
   Crown,
   Droplet,
   Droplets,
   Ear,
   Eye,
+  EyeOff,
   Feather,
   Fish,
   Flame,
-  CircleSlash,
-  EyeOff,
+  FlaskConical,
+  Footprints,
   Gem,
   Ghost,
   HeartPulse,
   Landmark,
+  Layers,
   Mountain,
   Network,
+  Package,
   PawPrint,
   PersonStanding,
+  Recycle,
   Ruler,
   Scaling,
   ScrollText,
@@ -42,8 +49,9 @@ import {
   Turtle,
   Utensils,
   Vegan,
+  Waves,
   Wheat,
-  type LucideIcon,
+  Zap,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -130,6 +138,30 @@ export const BODY_SPEC: Record<BodyPlan, Spec> = {
     tone: 'gold',
     hint: 'Born to the clergy; live on essence',
   },
+  tentacled: {
+    label: 'Many-armed folk',
+    icon: Waves,
+    tone: 'info',
+    hint: 'Fishers and crafters who grip with many arms',
+  },
+  centauroid: {
+    label: 'Four-legged upright folk',
+    icon: Footprints,
+    tone: 'warning',
+    hint: 'Herders and traders who fight as riders',
+  },
+  radial: {
+    label: 'Centred folk',
+    icon: Sun,
+    tone: 'verdigris',
+    hint: 'Have no front, so no foe can take their flank',
+  },
+  colonial: {
+    label: 'Many-membered folk',
+    icon: Boxes,
+    tone: 'success',
+    hint: 'Builders who lose members and grow them back',
+  },
 }
 
 export const SIZE_CLASS_SPEC: Record<SizeClass, Spec> = {
@@ -207,6 +239,30 @@ export const DIET_SPEC: Record<Diet, Spec> = {
     icon: Sun,
     tone: 'gold',
     hint: 'Fed by the sun; hunger in the cold',
+  },
+  parasite: {
+    label: 'Live off hosts',
+    icon: Bug,
+    tone: 'danger',
+    hint: 'Fed by the bodies of others, who weaken as they feed',
+  },
+  decomposer: {
+    label: 'Feed on the dead',
+    icon: Recycle,
+    tone: 'muted',
+    hint: 'Return the dead to the soil and keep it fertile',
+  },
+  chemosynthetic: {
+    label: 'Fed by the ground',
+    icon: FlaskConical,
+    tone: 'verdigris',
+    hint: 'Live on what vents and deep rock give off',
+  },
+  energy: {
+    label: 'Fed by power',
+    icon: Zap,
+    tone: 'gold',
+    hint: 'Draw on raw power where the world holds it',
   },
 }
 
@@ -402,6 +458,18 @@ export const FUNERAL_SPEC: Record<FuneralCustom, Spec> = {
     icon: CircleSlash,
     tone: 'muted',
     hint: 'No rite is held; the dead are judged as if unmourned',
+  },
+  mummification: {
+    label: 'Preservation',
+    icon: Package,
+    tone: 'gold',
+    hint: 'The dead are kept whole for their rites, at a cost each time, and their tombs draw robbers',
+  },
+  secondary_burial: {
+    label: 'Second burial',
+    icon: Layers,
+    tone: 'verdigris',
+    hint: 'Laid to rest, then gathered in a second rite that draws the people closer',
   },
 }
 

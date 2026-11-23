@@ -27,6 +27,7 @@ from aerona.constants.agents import (
     TEMPLATE_WORD_PATTERN,
 )
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.repositories.foreign_gods import ForeignGodRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -348,7 +349,7 @@ async def foreign_context(scope: Scope, god: ForeignGodRow) -> ForeignGodDeepenC
             attitude=god.stance,
             contact=god.contacted,
             stats=[LabelValue(label=key, value=str(getattr(god, key))) for key in ("strength", "will", "charisma", "cunning", "wisdom")],
-            powers=[ForeignPowerLine(name=power.name, effect_label=power.effect.value.replace("_", " ")) for power in powers],
+            powers=[ForeignPowerLine(name=power.name, effect_label=spoken(power.effect)) for power in powers],
             personality=[LabelValue(label=key, value=value) for key, value in personality.model_dump().items() if value],
         ),
         worshippers=[WorshipperLine(name=entity.name, type_label=entity.entity_type.value, subtype=entity.subtype) for entity in worshippers],

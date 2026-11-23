@@ -38,6 +38,8 @@ class DeathCause(StrEnum):
     DECOMPRESSION = "decompression"
     EXPERIMENT = "experiment"
     BOMBARDMENT = "bombardment"
+    DROWNING = "drowning"
+    SPORT = "sport"
 
 
 class MarriageEnd(StrEnum):
@@ -58,6 +60,10 @@ class CareerPath(StrEnum):
     WANDER = "wander"
     BANDIT = "bandit"
     STUDY = "study"
+    SEA = "sea"
+    SERVICE = "service"
+    ARTS = "arts"
+    SETTLE = "settle"
 
 
 class StressBreak(StrEnum):
@@ -67,6 +73,7 @@ class StressBreak(StrEnum):
     ZEAL = "zeal"
     VICE = "vice"
     REVELATION = "revelation"
+    WITHDRAWAL = "withdrawal"
 
 
 class CrimeKind(StrEnum):
@@ -142,6 +149,7 @@ class CrimeKind(StrEnum):
     MACHINE_SEIZURE = "machine_seizure"
     IMPERSONATION = "impersonation"
     MIND_COMPULSION = "mind_compulsion"
+    FIXING_CONTESTS = "fixing_contests"
 
 
 class PunishmentKind(StrEnum):
@@ -205,3 +213,11 @@ class HarshnessScale(StrEnum):
     CHILDBIRTH_DEATH = "childbirth_death"
     BATTLE_LOSS = "battle_loss"
     NOTABLE_SURVIVAL = "notable_survival"
+
+
+class DeathReading(StrEnum):
+    GLORIOUS = "glorious"
+    HONOURABLE = "honourable"
+    PLAIN = "plain"
+    SHAMEFUL = "shameful"
+    CURSED = "cursed"

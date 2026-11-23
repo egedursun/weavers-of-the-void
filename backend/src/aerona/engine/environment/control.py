@@ -4,7 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.cartography.biomes import Biome
+from aerona.catalog.named_years import year_name
 from aerona.catalog.weather import WEATHER
+from aerona.constants.calendar import SHARE_TOTAL
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
@@ -30,6 +32,7 @@ from aerona.domain.enums.evolution import SuccessionStage
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.environment.season_remap import remap_positions
+from aerona.engine.environment.season_shape import rebalanced
 from aerona.engine.environment.seasons import season_count_for
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
@@ -285,6 +288,10 @@ async def edit_season(session: AsyncSession, season_id: int, values: dict[str, i
     season = await session.get(WorldSeasonRow, season_id)
     if season is None:
         raise NotFoundError("No such season.")
+    values = dict(values)
+    share = values.pop("share_pct", None)
+    if share is not None:
+        await reshare(session, season, share)
     for key, value in values.items():
         bounds = SEASON_NUMBERS.get(key)
         if bounds is None:
@@ -295,6 +302,18 @@ async def edit_season(session: AsyncSession, season_id: int, values: dict[str, i
     season.edited = True
     await session.flush()
     return season
+
+
+async def reshare(session: AsyncSession, season: WorldSeasonRow, share: int) -> None:
+    seasons = list(await session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == season.world_id).order_by(WorldSeasonRow.position)))
+    if len(seasons) == 1:
+        season.share_pct = SHARE_TOTAL
+        return
+    held = frozenset(item.id for item in seasons if item.edited and item.id != season.id)
+    wanted = clamp_int(share, 1, SHARE_TOTAL - (len(seasons) - 1))
+    shares = rebalanced({item.id: item.share_pct for item in seasons}, {season.id: wanted}, held)
+    for item in seasons:
+        item.share_pct = shares[item.id]
 
 
 def hold_calendar(world: WorldRow, field: str) -> None:
@@ -425,18 +444,6 @@ async def release_weather(session: AsyncSession, forced_id: int) -> ForcedWeathe
     return row
 
 
-NOTABLE_NAMES: dict[NotableYearKind, str] = {
-    NotableYearKind.HUNGER: "the Hungry Year in {place}",
-    NotableYearKind.PLENTY: "the Year of Plenty in {place}",
-    NotableYearKind.WEATHER: "the Year of {weather}",
-    NotableYearKind.PESTILENCE: "the Year of Pestilence in {place}",
-    NotableYearKind.DISASTER: "the Year of Ruin in {place}",
-    NotableYearKind.DISCOVERY: "the Year of Finding in {place}",
-    NotableYearKind.CONTACT: "the Year of Meeting in {place}",
-    NotableYearKind.OMEN: "the Year of the Sign over {place}",
-}
-
-
 async def force_notable_year(
     session: AsyncSession,
     rules: Rules,
@@ -460,7 +467,7 @@ async def force_notable_year(
         year=epoch_start_year(max(1, epoch), rules.time.years_per_epoch),
         kind=kind,
         weather=weather,
-        name=name or NOTABLE_NAMES[kind].format(place=region.name, weather=label),
+        name=name or year_name(kind, region.name, label),
         magnitude=clamp_int(magnitude, 0, PERCENT),
     )
     session.add(row)

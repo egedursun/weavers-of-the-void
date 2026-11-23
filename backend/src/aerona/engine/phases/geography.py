@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.terrain import TERRAIN
+from aerona.catalog.terrain import TERRAIN, terrain_has
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import an
 from aerona.core.total import partial
@@ -14,6 +14,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import TerrainTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.world import WorldType
@@ -61,6 +62,18 @@ COMMON = (
     Nature("plain", "Plain", None, PlaceKind.VALLEY),
     Nature("cove", "Cove", None, PlaceKind.HARBOUR_SITE),
     Nature("upland", "Upland", None, PlaceKind.MOUNTAIN),
+)
+LANDFORMS = (
+    Nature("waterfall", "Falls", "mystery", PlaceKind.WATERFALL),
+    Nature("delta", "Delta", "fertility", PlaceKind.DELTA),
+    Nature("plateau", "Plateau", None, PlaceKind.PLATEAU),
+    Nature("sinkhole", "Sinkhole", "danger", PlaceKind.SINKHOLE),
+    Nature("hot spring", "Hot Spring", "fertility", PlaceKind.HOT_SPRING),
+    Nature("mesa", "Mesa", None, PlaceKind.MESA),
+    Nature("natural arch", "Arch", "mystery", PlaceKind.NATURAL_ARCH),
+    Nature("tar pit", "Tar Pit", "danger", PlaceKind.TAR_PIT),
+    Nature("meadow", "Meadow", "fertility", PlaceKind.MEADOW),
+    Nature("isthmus", "Neck", None, PlaceKind.ISTHMUS),
 )
 WORLD_NATURES: Mapping[WorldType, tuple[Nature, ...]] = partial(
     WorldType,
@@ -124,7 +137,9 @@ class SeededPlace:
     text: str
 
 
-NATURES_BY_SUBTYPE: dict[str, Nature] = {nature.subtype: nature for group in (FERTILE, DANGEROUS, MAGICAL, COMMON, *WORLD_NATURES.values()) for nature in group}
+NATURES_BY_SUBTYPE: dict[str, Nature] = {
+    nature.subtype: nature for group in (FERTILE, DANGEROUS, MAGICAL, COMMON, LANDFORMS, *WORLD_NATURES.values()) for nature in group
+}
 
 
 async def nature_of(ctx: TickContext, region: EntityRow) -> Nature:
@@ -135,6 +150,10 @@ async def nature_of(ctx: TickContext, region: EntityRow) -> Nature:
     if ground is not None:
         shaped = [NATURES_BY_SUBTYPE[subtype] for subtype in TERRAIN[ground.dominant_terrain].natures if subtype in NATURES_BY_SUBTYPE]
         pool.extend(shaped * settings.terrain_nature_weight)
+        if terrain_has(ground.dominant_terrain, TerrainTrait.UNDERGROUND) and ctx.rng(seed_of("karst", region.id)).chance(
+            ctx.rules.terrain_depth.karst_cave_pct
+        ):
+            return NATURES_BY_SUBTYPE["cave"]
     if (stat(region, "fertility") or 0) >= settings.fertile_threshold:
         pool.extend(FERTILE)
     if (stat(region, "danger") or 0) >= settings.dangerous_threshold:
@@ -149,9 +168,9 @@ async def direct_settlements(ctx: TickContext, region_id: int) -> list[EntityRow
     return sorted(settlements, key=lambda item: (-(stat(item, "population") or 0), item.id))
 
 
-async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None = None, by: str | None = None) -> SeededPlace:
+async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None = None, by: str | None = None, nature: Nature | None = None) -> SeededPlace:
     settings = ctx.rules.geography
-    nature = await nature_of(ctx, region)
+    nature = nature or await nature_of(ctx, region)
     rng = ctx.rng(seed_of("seed_place", region.id))
     settlements = await direct_settlements(ctx, region.id)
     neighbours = settlements or [item for item in await EntityRepository(ctx.session).contents(region.id) if item.entity_type in COMMUNITY_TYPES]

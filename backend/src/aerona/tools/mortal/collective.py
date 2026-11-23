@@ -14,14 +14,16 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.collective import AccountKind, AccountMedium, AccountStance, CollectiveTrigger, DesignComponentKind, StoryletStatus
+from aerona.domain.enums.collective import AccountKind, AccountMedium, AccountStance, CollectiveActKind, CollectiveTrigger, DesignComponentKind, StoryletStatus
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.collective.accounts import HistoryTally, record, strike
 from aerona.engine.collective.book import shift
-from aerona.engine.collective.crowds import stir
+from aerona.engine.collective.crowds import lead_crowd, stir
 from aerona.engine.collective.designs import draw_design, frame_sizes, part_ceiling
+from aerona.engine.collective.feelings import feelings_of, told_feelings
 from aerona.engine.collective.storylets import StoryletTally, cast_of, names, resolve
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import living_entity
@@ -47,6 +49,11 @@ class StoryletChoiceInput(ToolInput):
 
 class RouseInput(ToolInput):
     grievance: CollectiveTrigger
+
+
+class StirCrowdInput(ToolInput):
+    settlement_id: int
+    act: CollectiveActKind
 
 
 class AccountInput(ToolInput):
@@ -97,7 +104,8 @@ async def rouse_crowd(call: MortalCall, args: RouseInput) -> str:
         facts={"grievance": args.grievance, "agitation": mood.agitation},
         place=town.id,
     )
-    return result(MortalResult.CROWD_ROUSED, name=town.name, anger=mood.anger, anxiety=mood.anxiety, fervour=mood.fervour, agitation=mood.agitation)
+    feelings = told_feelings(await feelings_of(call.session, town.id))
+    return result(MortalResult.CROWD_ROUSED, name=town.name, feelings=feelings, agitation=mood.agitation)
 
 
 async def commission_account(call: MortalCall, args: AccountInput) -> str:
@@ -181,12 +189,33 @@ async def draw_a_design(call: MortalCall, args: DesignInput) -> str:
     )
 
 
+async def stir_crowd(call: MortalCall, args: StirCrowdInput) -> str:
+    town = await living_entity(call.session, args.settlement_id)
+    if town is None or town.entity_type is not EntityType.SETTLEMENT:
+        fail(MortalResult.STIR_REFUSED, why="there is no such town")
+    if call.me.location_id != town.id:
+        fail(MortalResult.STIR_REFUSED, why="that town lies elsewhere")
+    row = await lead_crowd(call.tick, town, args.act, stat_or(call.me, "charisma", PERCENT // 2) / 2)
+    if row is None:
+        fail(MortalResult.STIR_REFUSED, why="that town is held")
+    call.target(town.id)
+    await call.record(
+        "tools.mortal.stir_crowd",
+        roles={IncidentRole.LEADER: call.me.id, IncidentRole.PLACE: town.id},
+        facts={"act": args.act, "participants": row.participants},
+        place=town.id,
+    )
+    feelings = told_feelings(await feelings_of(call.session, town.id))
+    return result(MortalResult.CROWD_LED, name=town.name, act=spoken(args.act), participants=row.participants, feelings=feelings)
+
+
 def specs() -> list[ToolSpec[MortalCall, Any]]:
     mortal = AgentKind.MORTAL
     meta = ToolMeta(ActionKind.INFLUENCE, mortal_standard_action)
     return [
         ToolSpec(MortalToolId.CHOOSE_STORYLET, mortal, StoryletChoiceInput, meta, choose_storylet),
         ToolSpec(MortalToolId.ROUSE_CROWD, mortal, RouseInput, meta, rouse_crowd),
+        ToolSpec(MortalToolId.STIR_CROWD, mortal, StirCrowdInput, meta, stir_crowd),
         ToolSpec(MortalToolId.COMMISSION_ACCOUNT, mortal, AccountInput, meta, commission_account),
         ToolSpec(MortalToolId.STRIKE_MEMORY, mortal, StrikeInput, meta, strike_memory),
         ToolSpec(MortalToolId.DRAW_DESIGN, mortal, DesignInput, meta, draw_a_design),

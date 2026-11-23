@@ -29,6 +29,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 
 
 @reads(
+    "army.size",
     "beast.strength",
     "cult.zeal",
     "mortal.age",
@@ -43,8 +44,12 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "mortal.strength",
     "mortal.willpower",
     "mortal.wisdom",
+    "people.population",
     "people.wealth",
+    "settlement.population",
     "settlement.wealth",
+    "table.armies",
+    "table.army_units",
     "table.augment_effects",
     "table.augments",
     "table.bonds",
@@ -52,11 +57,13 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.chronicle",
     "table.collection_members",
     "table.collection_places",
+    "table.commemorations",
     "table.community_societies",
     "table.community_stocks",
     "table.conditions",
     "table.creator",
     "table.crime_cases",
+    "table.crowd_feelings",
     "table.cult_tenets",
     "table.culture_ethics",
     "table.culture_values",
@@ -104,6 +111,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.sons",
     "table.stars",
     "table.structure_profiles",
+    "table.thoughts",
     "table.time_budgets",
     "table.title_holders",
     "table.tradition_participation",
@@ -113,10 +121,14 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.worlds",
 )
 @writes(
+    "army.size",
     "cult.zeal",
     "mortal.hp",
+    "people.population",
     "people.wealth",
+    "settlement.population",
     "settlement.wealth",
+    "table.army_units",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -125,6 +137,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.collection_members",
     "table.collection_places",
     "table.community_stocks",
+    "table.crowd_feelings",
     "table.entities",
     "table.gathering_guests",
     "table.gatherings",
@@ -336,7 +349,19 @@ async def excavations(ctx: TickContext) -> None:
     count(ctx, "dig", tally)
 
 
-@reads("table.battlefield_features", "table.battles")
+@reads("table.battlefield_features", "table.battles", "table.bonds", "table.entities", "table.name_registry", "table.node_births", "table.nodes")
+@writes(
+    "table.battlefield_features",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+    "table.spirit_profiles",
+)
 async def battlefields(ctx: TickContext) -> None:
     tally = DigTally()
     await mark_battlefields(ctx, tally)

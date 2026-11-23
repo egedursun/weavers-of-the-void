@@ -153,6 +153,7 @@ async def advance_world(ctx: TickContext, world: WorldRow) -> None:
     "table.sons",
     "table.stars",
     "table.world_physics",
+    "table.world_seasons",
     "table.worlds",
 )
 @writes(

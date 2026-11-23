@@ -492,7 +492,9 @@ function CasualtyControls({
     view.casualties[0] ? String(view.casualties[0].community_id) : null
   )
   const [age, setAge] = useState<AgeBand>('adult')
-  const [sex, setSex] = useState<Sex>(() => view.casualties[0]?.sex ?? 'other')
+  const [sex, setSex] = useState<Sex>(
+    () => view.casualties[0]?.sex_kind ?? 'none'
+  )
   const [social, setSocial] = useState<SocialClass>('farmer')
   const [phase, setPhase] = useState<EventPhase>(view.phase)
   const [count, setCount] = useState('0')
@@ -516,7 +518,7 @@ function CasualtyControls({
             event_id: view.entity_id,
             community_id: Number(community),
             age_band: age,
-            sex,
+            sex_kind: sex,
             social_class: social,
             phase,
             count: Math.max(0, Number(count) || 0),

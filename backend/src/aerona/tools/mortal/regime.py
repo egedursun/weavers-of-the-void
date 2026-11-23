@@ -75,7 +75,7 @@ async def seek_patron(call: MortalCall, args: SeekPatronInput) -> str:
     if patron is None or patron.id == call.me.id:
         fail(MortalResult.PATRON_REFUSED, why="there is no such patron")
     if held(patron.id):
-        fail(MortalResult.PATRON_REFUSED, why="a stronger hand holds them")
+        fail(MortalResult.PATRON_REFUSED, why="they are held")
     known = await call.session.scalar(
         select(PatronageTieRow.id).where(PatronageTieRow.patron_node_id == patron.id, PatronageTieRow.client_entity_id == call.me.id).limit(1)
     )
@@ -147,7 +147,7 @@ async def purge_circle(call: MortalCall, args: PurgeCircleInput) -> str:
     if member is None or victim is None:
         fail(MortalResult.PURGE_REFUSED, why="they are not of your ruling circle")
     if held(victim.id):
-        fail(MortalResult.PURGE_REFUSED, why="a stronger hand holds them")
+        fail(MortalResult.PURGE_REFUSED, why="they are held")
     await control.purge(call.tick, realm.id, victim.id)
     call.target(realm.id)
     await call.record("tools.mortal.purge_circle", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.VICTIM: victim.id, IncidentRole.AUTHORITY: realm.id})

@@ -4,9 +4,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import ActKind, SkillKind
-from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LoreKind, LorePrice, ReputationAxis
+from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LorePrice, ReputationAxis
 
 
 class ReputationRow(Base):
@@ -103,7 +104,7 @@ class LoreTradeRow(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     seller_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
     buyer_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
-    kind: Mapped[LoreKind] = mapped_column(enum_type(LoreKind, "kind"))
+    kind: Mapped[KnowledgeKind] = mapped_column(enum_type(KnowledgeKind, "kind"))
     key: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
     subject_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     value: Mapped[int]

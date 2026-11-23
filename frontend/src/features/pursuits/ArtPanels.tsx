@@ -5,6 +5,7 @@ import {
   Eye,
   Gem,
   Handshake,
+  MessageSquareQuote,
   Palette,
   Stamp,
 } from 'lucide-react'
@@ -53,6 +54,10 @@ type Canon = PursuitsNodeView['canon'][number]
 
 const EXPOSED = 'This forgery is already exposed'
 
+function signedAcclaim(acclaim: number): string {
+  return acclaim > 0 ? `+${acclaim}` : `${acclaim}`
+}
+
 function PriceCard({ row, blocked }: { row: Price; blocked: string | null }) {
   const action = usePursuitsRow(
     'art_price:edit',
@@ -86,6 +91,13 @@ function PriceCard({ row, blocked }: { row: Price; blocked: string | null }) {
           max: SPAN,
         },
         {
+          key: 'acclaim',
+          label: 'Acclaim of critics',
+          kind: 'number',
+          min: -SPAN,
+          max: SPAN,
+        },
+        {
           key: 'last_buyer_node_id',
           label: 'Last buyer',
           kind: 'node',
@@ -102,6 +114,12 @@ function PriceCard({ row, blocked }: { row: Price; blocked: string | null }) {
         value={row.interest}
         tone='info'
         icon={Eye}
+      />
+      <Meter
+        label={`Acclaim of critics (${signedAcclaim(row.acclaim)})`}
+        value={Math.abs(row.acclaim)}
+        tone={row.acclaim >= 0 ? 'success' : 'warning'}
+        icon={MessageSquareQuote}
       />
       <div className='@container/tiles min-w-0'>
         <div className='grid min-w-0 grid-cols-2 gap-2'>
@@ -560,9 +578,14 @@ function ForgeryForge({
   const [forger, setForger] = useState<number | null>(
     kind === 'mortal' ? nodeId : null
   )
+  const [forgery, setForgery] = useState<string>('artwork')
   const forging = usePursuitsAction(
     'forgery:create',
-    (_: void) => ({ original_id: original ?? 0, forger_id: forger ?? 0 }),
+    (_: void) => ({
+      original_id: original ?? 0,
+      forger_id: forger ?? 0,
+      kind: forgery as keyof typeof FORGERY_KINDS,
+    }),
     'A forgery is made'
   )
   const busy = why(
@@ -579,8 +602,8 @@ function ForgeryForge({
       icon={Stamp}
       tone='warning'
       title='Have a work forged'
-      note='A mortal copies a work, a relic, a charter or a town’s brand, with the skill of their own creativity.'
-      columns={2}
+      note='A mortal copies a work, a relic, a charter or a town’s brand, counterfeits a realm’s coin or seal, or forges the lineage of a title, with the skill of their own creativity; the expert of each kind may see through it.'
+      columns={3}
       action={
         <Button
           size='sm'
@@ -606,6 +629,13 @@ function ForgeryForge({
         onChange={setForger}
         blocked={blocked}
         types={MORTAL_TYPES}
+      />
+      <MindPicker
+        label='Kind of forgery'
+        value={forgery}
+        table={table(FORGERY_KINDS)}
+        blocked={blocked}
+        onPick={setForgery}
       />
     </ForgeCard>
   )

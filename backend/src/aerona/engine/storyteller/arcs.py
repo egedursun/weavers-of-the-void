@@ -3,14 +3,16 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.arcs import ARCS, ENDS_IN_DEATH
 from aerona.catalog.life.storyteller import ADVANCE_ARC_ROLES
-from aerona.catalog.life_traits import ARC_TEMPLATE_TRAITS, LIFE_STAGE_TRAITS, having
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
 from aerona.db.tables.ages import AgeEchoRow, ArcBeatRow, ArcFigureRow, ArcRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.intrigue import SecretRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow, LegendaryQuestRow, ThreadLinkRow
 from aerona.db.tables.mind import TraitRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -19,8 +21,8 @@ from aerona.db.tables.polity import HouseProfileRow, OathRow, OfficeHistoryRow, 
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import ArcOutcome, ArcRole, ArcStage, ArcTemplate
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.life_traits import ArcTemplateTrait, LifeStageTrait
+from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import PunishmentKind
@@ -29,6 +31,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record as record_incident
+from aerona.engine.services.war import ongoing_wars
 
 STAGES = (ArcStage.INCITING, ArcStage.RISING, ArcStage.CRISIS, ArcStage.CLIMAX, ArcStage.RESOLUTION)
 MONOMYTH = (ArcStage.CALL, ArcStage.REFUSAL, ArcStage.MENTOR, ArcStage.THRESHOLD, ArcStage.ORDEAL, ArcStage.RETURN, ArcStage.RESOLUTION)
@@ -36,16 +39,17 @@ YOUNG = having(LIFE_STAGE_TRAITS, LifeStageTrait.YOUNG)
 FLAWS = (TraitKind.WRATHFUL, TraitKind.PROUD, TraitKind.PARANOID, TraitKind.CRUEL)
 KIN = (BondKind.PARENT_OF, BondKind.SPOUSE_OF, BondKind.SWORN_KIN)
 FALLEN = 15
+THREAT_ROLES = (MortalRole.HERO, MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.HUNTER)
+SELFLESS = (TraitKind.HONOURABLE, TraitKind.GALLANT, TraitKind.DUTIFUL)
 INFAMOUS = 50
 RENOWNED = 30
 RECENT = 3
-ENDS_IN_DEATH = having(ARC_TEMPLATE_TRAITS, ArcTemplateTrait.ENDS_IN_DEATH)
 
 Figure = tuple[int, ArcRole]
 
 
 def stages_of(template: ArcTemplate) -> tuple[ArcStage, ...]:
-    return MONOMYTH if template is ArcTemplate.QUEST else STAGES
+    return MONOMYTH if ARCS[template].monomyth else STAGES
 
 
 @dataclass(frozen=True)
@@ -240,6 +244,64 @@ async def betrayals(ctx: TickContext) -> list[Candidate]:
     return found
 
 
+async def threats(ctx: TickContext) -> list[Candidate]:
+    found: list[Candidate] = []
+    heroes = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.mortal_role.in_(THREAT_ROLES))
+        .order_by(EntityRow.id)
+    )
+    for hero in heroes:
+        threat = await ctx.session.scalar(
+            select(EntityRow.id)
+            .where(
+                EntityRow.entity_type == EntityType.BEAST,
+                EntityRow.status == EntityStatus.CANON,
+                EntityRow.location_id == hero.location_id,
+                EntityRow.power_level >= hero.power_level,
+            )
+            .order_by(EntityRow.power_level.desc(), EntityRow.id)
+            .limit(1)
+        )
+        if threat is not None:
+            found.append(Candidate(hero.id, ArcTemplate.OVERCOMING, ((threat, ArcRole.FOE),)))
+    return found
+
+
+async def estrangements(ctx: TickContext) -> list[Candidate]:
+    found: list[Candidate] = []
+    for bond in await bonds(ctx, BondKind.ENEMY):
+        first, second = await living_entity(ctx.session, bond.source_node_id), await living_entity(ctx.session, bond.target_node_id)
+        if first is not None and second is not None and first.entity_type is EntityType.MORTAL and second.entity_type is EntityType.MORTAL:
+            found.append(Candidate(first.id, ArcTemplate.RECONCILIATION, ((second.id, ArcRole.RIVAL),)))
+    return found
+
+
+async def sacrifices(ctx: TickContext) -> list[Candidate]:
+    selfless = select(TraitRow.node_id).where(TraitRow.trait.in_(SELFLESS))
+    rows = await ctx.session.scalars(
+        select(EntityRow.id)
+        .where(EntityRow.id.in_(selfless), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    found: list[Candidate] = []
+    for mortal_id in rows:
+        mortal = await living_entity(ctx.session, mortal_id)
+        if mortal is not None and mortal.location_id is not None and await ongoing_wars(ctx.session, mortal.location_id):
+            found.append(Candidate(mortal.id, ArcTemplate.SACRIFICE))
+    return found
+
+
+async def hidden_truths(ctx: TickContext) -> list[Candidate]:
+    rows = await ctx.session.execute(select(SecretRow.holder_node_id, SecretRow.about_node_id).where(SecretRow.exposed_epoch.is_(None)).order_by(SecretRow.id))
+    found: list[Candidate] = []
+    for holder, about in rows.all():
+        if await living(ctx, holder) and (await ctx.session.get(EntityRow, holder)) is not None:
+            figures = ((about, ArcRole.FOE),) if about is not None and about != holder else ()
+            found.append(Candidate(holder, ArcTemplate.DISCOVERY, figures))
+    return found
+
+
 DETECTORS: tuple[Callable[[TickContext], Awaitable[list[Candidate]]], ...] = (
     revenge,
     betrayals,
@@ -254,6 +316,10 @@ DETECTORS: tuple[Callable[[TickContext], Awaitable[list[Candidate]]], ...] = (
     houses,
     quests,
     apotheosis,
+    threats,
+    estrangements,
+    sacrifices,
+    hidden_truths,
 )
 
 
@@ -291,7 +357,8 @@ async def detect(ctx: TickContext, tally: ArcTally) -> None:
             current = await open_arcs_of(ctx, candidate.subject_id)
             if len(current) >= table.open_arcs or any(row.template is candidate.template for row in current):
                 continue
-            chance = clamp_int(table.detect_chance * (PERCENT + await echo_weight(ctx, candidate.template)) // PERCENT, 0, PERCENT)
+            weighted = table.detect_chance * ARCS[candidate.template].weight(ctx.rules) // (PERCENT // 2)
+            chance = clamp_int(weighted * (PERCENT + await echo_weight(ctx, candidate.template)) // PERCENT, 0, PERCENT)
             if not ctx.rng(f"arc.detect.{candidate.subject_id}.{candidate.template.value}.{ctx.epoch}").chance(chance):
                 continue
             row = await open_arc(ctx, candidate.subject_id, candidate.template, candidate.figures)
@@ -378,6 +445,32 @@ async def wed(ctx: TickContext, arc: ArcRow, others: list[int]) -> bool:
         .limit(1)
     )
     return union is not None
+
+
+@GOALS.on(ArcTemplate.RECONCILIATION)
+async def reconciled(ctx: TickContext, arc: ArcRow, others: list[int]) -> bool:
+    feud = await ctx.session.scalar(
+        select(BondRow.id)
+        .where(
+            BondRow.kind == BondKind.ENEMY,
+            BondRow.state == BondState.ACTIVE,
+            ((BondRow.source_node_id == arc.subject_node_id) & BondRow.target_node_id.in_(others or [0]))
+            | ((BondRow.target_node_id == arc.subject_node_id) & BondRow.source_node_id.in_(others or [0])),
+        )
+        .limit(1)
+    )
+    return bool(others) and feud is None
+
+
+@GOALS.on(ArcTemplate.DISCOVERY)
+async def revealed(ctx: TickContext, arc: ArcRow, _others: list[int]) -> bool:
+    found = await ctx.session.scalar(select(SecretRow.id).where(SecretRow.holder_node_id == arc.subject_node_id, SecretRow.exposed_epoch.is_not(None)).limit(1))
+    return found is not None
+
+
+@GOALS.on(ArcTemplate.OVERCOMING)
+async def overcome(ctx: TickContext, _arc: ArcRow, others: list[int]) -> bool:
+    return bool(others) and not any([await living(ctx, node) for node in others])
 
 
 @GOALS.on(ArcTemplate.RIVALRY)

@@ -7,6 +7,7 @@ from sqlalchemy import select
 from aerona.catalog.gatherings import INCIDENT_ROLES, KEY_COLLECTIONS, KEY_PREFIX_COLLECTIONS, NEST_PARENTS
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.life.history import SCHEME_COLLECTIONS
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -32,10 +33,6 @@ class CollectionTally:
     joined: int = 0
     nested: int = 0
     closed: int = 0
-
-
-def spoken(kind: CollectionKind) -> str:
-    return kind.value.replace("_", " ")
 
 
 def kind_of_key(key: str) -> CollectionKind | None:

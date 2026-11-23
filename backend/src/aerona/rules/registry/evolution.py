@@ -10,6 +10,11 @@ W = RuleGroup.ENVIRONMENT
 
 @dataclass(frozen=True)
 class TraitEvolutionRules:
+    resistance_gain: int = rule(5, 0, 50, E, "How far a disease killing a kind or its herds raises its resistance each epoch")
+    virulence_answer: int = rule(3, 0, 50, E, "How far a disease's virulence rises each epoch against a reservoir kind grown resistant")
+    docility_keep_gain: int = rule(4, 0, 50, E, "How far keeping by people raises the docility of a kind each epoch")
+    docility_wild_loss: int = rule(2, 0, 50, E, "How far life in the wild or as a feral herd lowers the docility of a kind each epoch")
+    longevity_predation_pct: int = rule(30, 0, 100, E, "How strongly predators shorten the lives a kind evolves toward (%)")
     predator_pressure: int = rule(2, 0, 20, E, "How far predators move the speed and camouflage of their prey each epoch")
     arms_race: int = rule(1, 0, 20, E, "How far a predator's speed follows the speed of its prey each epoch")
     climate_pressure: int = rule(2, 0, 20, E, "How far a land colder or warmer than a species likes moves its cold tolerance each epoch")
@@ -42,12 +47,19 @@ class NicheRules(Spanned):
 
 @dataclass(frozen=True)
 class TrophicRules:
+    decomposer_share_pct: int = rule(10, 0, 100, E, "Share of each level's biomass that dies and falls to the decomposers each epoch (%)")
+    decomposer_return_pct: int = rule(20, 0, 100, E, "Share of the dead matter decomposers break down that returns to the soil (%)")
+    decomposer_cold_cut_pct: int = rule(50, 0, 100, E, "How much less decomposers break down in a land below freezing (%)")
     efficiency_pct: int = rule(150, 1, 400, E, "Biomass a trophic level can hold for each hundred of the level below it (%)")
     collapse: int = rule(12, 0, 100, E, "Abundance a level above its bound loses each epoch")
 
 
 @dataclass(frozen=True)
 class KeystoneRules:
+    disperser_succession_pct: int = rule(30, 0, 100, E, "How much slower a land's woods spread once its seed dispersers are lost (%)")
+    regulator_grazer_rise_pct: int = rule(40, 0, 200, E, "How far a land's grazers multiply in an epoch once its regulating predators are lost (%)")
+    reef_fish_pct: int = rule(30, 0, 100, E, "Share of a coast's fish stock its reef builders hold up at full strength (%)")
+    reef_wave_cut_pct: int = rule(30, 0, 100, E, "How much of a wave's harm a coast's reef builders turn aside at full strength (%)")
     harvest_gain: int = rule(10, 0, 100, E, "Harvest a land's pollinators add at full strength (%)")
     soil_gain: int = rule(2, 0, 100, E, "Soil fertility a land's soil-makers add each epoch at full strength")
     wetland_gain: int = rule(10, 0, 100, E, "Wetland a land's dam-builders hold at full strength")
@@ -134,6 +146,12 @@ class PlagueResponseRules(Spanned):
     prayer_morale: int = rule(5, 0, 100, D, "Satisfaction prayer gatherings bring")
     prayer_spread_pct: int = rule(20, 0, 100, D, "Extra spread at prayer gatherings (%)")
     cure_points: int = rule(5, 0, 1000, D, "Extra research the community's institutions give a cure it seeks")
+    sanitation_cut_pct: int = rule(
+        50, 0, 100, D, "Share of the water, food and goods routes of a sickness that cleaning water and carrying away refuse cuts (%)"
+    )
+    sanitation_cost: int = rule(20, 0, 500, D, "Treasury a community spends on clean water and on carrying away refuse when it takes up cleaning")
+    sanitation_works: int = rule(5, 0, 100, D, "Sanitation a town keeps for good from the works it builds while cleaning")
+    sanitation_belief: int = rule(30, 0, 100, D, "Least hold a medical theory needs on a community before it backs cleaning against sickness")
 
     @property
     def length(self) -> int:
@@ -186,6 +204,14 @@ class CycleRules:
     ash_gain: int = rule(3, 0, 100, W, "Nutrients volcanic ash brings each epoch at full volcanism")
     river_gain: int = rule(2, 0, 100, W, "Nutrients rivers bring their lands each epoch")
     fertility_pct: int = rule(20, 0, 200, W, "Share of the nutrient cycle's swing that reaches each land's soil (%)")
+    forest_oxygen: int = rule(4, 0, 100, W, "Breathable air fully forested lands give each epoch")
+    plankton_oxygen: int = rule(2, 0, 100, W, "Breathable air the living producers of a full ocean give each epoch")
+    respiration_oxygen: int = rule(2, 0, 100, W, "Breathable air the animals of a land draw each epoch at full biomass")
+    weathering_oxygen: int = rule(1, 0, 100, W, "Breathable air fresh weathering rock binds each epoch at full roughness")
+    industry_oxygen: int = rule(2, 0, 100, W, "Breathable air the foul air of industry draws each epoch at full pollution")
+    uplift_rock: int = rule(3, 0, 100, W, "Rock mountain building raises each epoch on a fully restless world")
+    burial_rock: int = rule(1, 0, 100, W, "Rock sediment buried over deep time forms each epoch on a world of full erosion")
+    erosion_rock: int = rule(2, 0, 100, W, "Rock erosion wears into sediment each epoch at full erosion")
 
 
 @dataclass(frozen=True)
@@ -197,3 +223,24 @@ class LandShapingRules:
     awe_gain: int = rule(3, 0, 100, E, "Awe the folk of a land gain for a god who waters or raises it")
     downstream_moisture: int = rule(8, 0, 100, E, "Moisture the land downstream gains or loses when a god carves, fills or waters a valley")
     coast_lift: int = rule(40, 0, 100, E, "Elevation past which a raised coastal land stands above the sea and loses its harbours")
+
+
+@dataclass(frozen=True)
+class PlanetaryCyclesRules:
+    carbon_source_pct: int = rule(100, 0, 300, W, "Share of its usual inflow the carbon cycle takes in (%)")
+    carbon_sink_pct: int = rule(100, 0, 300, W, "Share of its usual outflow the carbon cycle gives up (%)")
+    water_source_pct: int = rule(100, 0, 300, W, "Share of its usual inflow the water cycle takes in (%)")
+    water_sink_pct: int = rule(100, 0, 300, W, "Share of its usual outflow the water cycle gives up (%)")
+    nutrients_source_pct: int = rule(100, 0, 300, W, "Share of its usual inflow the nutrients cycle takes in (%)")
+    nutrients_sink_pct: int = rule(100, 0, 300, W, "Share of its usual outflow the nutrients cycle gives up (%)")
+    oxygen_source_pct: int = rule(100, 0, 300, W, "Share of its usual inflow the oxygen cycle takes in (%)")
+    oxygen_sink_pct: int = rule(100, 0, 300, W, "Share of its usual outflow the oxygen cycle gives up (%)")
+    rock_source_pct: int = rule(100, 0, 300, W, "Share of its usual inflow the rock cycle takes in (%)")
+    rock_sink_pct: int = rule(100, 0, 300, W, "Share of its usual outflow the rock cycle gives up (%)")
+    oxygen_breath_floor: int = rule(30, 0, 100, W, "Breathable air stock below which the air of a world thins")
+    oxygen_fire_draw: int = rule(5, 0, 50, W, "Breathable air fires and clearing draw each epoch at full burning")
+    rock_weathering_pct: int = rule(5, 0, 50, W, "Rock weathering wears down each epoch on a fully rough world")
+    rock_volcanic_gain: int = rule(10, 0, 50, W, "Rock volcanoes raise each epoch on a fully volcanic world")
+    air_thin_step: int = rule(1, 0, 20, W, "Share of oxygen a world's air loses each epoch while its breathable air stock is thin")
+    band_low: int = rule(30, 0, 100, W, "Stock below which a cycle counts as low")
+    band_high: int = rule(70, 0, 100, W, "Stock above which a cycle counts as high")

@@ -209,12 +209,29 @@ class AggregateView(ApiModel):
     held: list[str]
 
 
+class WillHeirView(ApiModel):
+    heir: NodeRef
+    share: int
+
+
+class WillView(ApiModel):
+    made_epoch: int
+    witnesses: list[NodeRef]
+    forged: bool
+    read_epoch: int | None
+    contested: bool
+    set_aside: bool
+    held: bool
+    heirs: list[WillHeirView]
+
+
 class HomeView(ApiModel):
     node_id: int
     node_kind: EntityType | NodeKind
     can_hold_household: bool
     can_hold_aggregates: bool
     reason: str | None
+    will: WillView | None
     household: HouseholdView | None
     households: list[HouseholdView]
     aggregates: list[AggregateView]

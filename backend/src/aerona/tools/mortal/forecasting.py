@@ -6,15 +6,17 @@ from sqlalchemy import select
 from aerona.catalog.life.forecasting import NEEDS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
-from aerona.db.tables.environment import ForcedWeatherRow
+from aerona.db.tables.environment import ForcedWeatherRow, WorldSeasonRow
 from aerona.db.tables.forecasting import ObservationMethodRow, WeatherWorkRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.body.customs import people_of
 from aerona.engine.economy.purse import take_coin
+from aerona.engine.environment.onsets import onset_of_year
 from aerona.engine.forecasting.works import EPOCH_STRENGTH
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import knows
@@ -32,12 +34,24 @@ AHEAD = 3
 
 class ForecastInput(ToolInput):
     method: ObservationMethod
+    season_position: int | None = Field(default=None, ge=0, le=7)
 
 
 class WorkWeatherInput(ToolInput):
     aim: WeatherAim
     method: WeatherWorkMethod
     strength: int = Field(ge=1, le=100)
+
+
+async def onset_reading(call: MortalCall, world_id: int, position: int, true_reading: bool) -> str:
+    season = await call.session.scalar(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world_id, WorldSeasonRow.position == position).limit(1))
+    if season is None:
+        return "your world keeps no such season"
+    year = epoch_start_year(call.tick.epoch + 1, call.tick.rules.time.years_per_epoch)
+    onset = onset_of_year(call.tick.rules, call.tick.environment.world_seed, world_id, year, position)
+    if not true_reading:
+        return f"{season.name} will come as it always does"
+    return f"{season.name} of year {year} will come {spoken(onset)}"
 
 
 async def forecast(call: MortalCall, args: ForecastInput) -> str:
@@ -65,6 +79,8 @@ async def forecast(call: MortalCall, args: ForecastInput) -> str:
     )
     true_reading = call.tick.rng(seed_of("forecast", call.me.id, call.tick.epoch)).chance(row.accuracy)
     told = f"{spoken(coming.kind)} from epoch {coming.from_epoch}" if coming is not None and true_reading else "no turn of the weather out of the usual"
+    if args.season_position is not None and region.world_id is not None:
+        told += "; " + await onset_reading(call, region.world_id, args.season_position, true_reading)
     call.target(region.id)
     await call.record(
         "tools.mortal.forecast",

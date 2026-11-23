@@ -3,28 +3,36 @@ from collections.abc import Mapping
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.arcs import ARCS
 from aerona.catalog.aspirations import FEARS, GOALS, INSPIRATION_LABELS, WANTS
+from aerona.catalog.careers import CAREERS
+from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS, STANCE_READINGS
 from aerona.catalog.life.mind import OPEN_GRIEF
 from aerona.catalog.mind import MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
 from aerona.catalog.preferences import target_label
-from aerona.catalog.relations import CONTESTS, PASSION_LABELS, RELATION_LABELS
+from aerona.catalog.relations import CONTESTS, INTERACTIONS, PASSION_LABELS, RELATION_LABELS
 from aerona.catalog.renown import AXIS_LABELS
 from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, READING_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.tables.afflictions import AfflictionRow
+from aerona.db.tables.ages import ArcRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.mind import CultureHonourRow, DreamRow, FearRow, GriefRow, InspirationRow, LifeDreamRow, WantRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.records import IncidentFactRow
 from aerona.db.tables.relations import ContestRow, GroupRankRow, PassionRow, RelationshipRow
 from aerona.db.tables.renown import DeedClaimRow, ReputationRow, RulerCurrencyRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.ages import ArcOutcome
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import DreamReading, Emotion, EthicalStance, IdeaState, InspirationState, PressureKind, ValueAxis, ValueHolder
-from aerona.domain.enums.relations import ContestEnd, RelationType
+from aerona.domain.enums.relations import ContestEnd, InteractionKind, RelationType
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus
 from aerona.engine.mind.book import Holder, holder_kind, needs_of, pressures_of, skills_of, traits_of, values_of
 from aerona.engine.mind.ethics import culture_of, ethics_of
@@ -222,7 +230,31 @@ async def bond_lines(session: AsyncSession, rules: Rules, node_id: int) -> list[
         other = contest.defender_node_id if contest.challenger_node_id == node_id else contest.challenger_node_id
         result = "drew" if contest.outcome is ContestEnd.DRAWN else "won" if won else "lost"
         lines.append(f"Last contest of wit: {CONTESTS[contest.kind].label.lower()} with {await name_of(session, other)}, which you {result}")
+    met = await recent_meetings(session, node_id)
+    if met:
+        lines.append("Lately: " + "; ".join(met))
     return lines
+
+
+RECENT_MEETINGS = 3
+
+
+async def recent_meetings(session: AsyncSession, node_id: int) -> list[str]:
+    mine = select(IncidentParticipantRow.incident_id).where(IncidentParticipantRow.node_id == node_id)
+    incidents = list(
+        await session.scalars(
+            select(IncidentRow).where(IncidentRow.kind == "social.interaction", IncidentRow.id.in_(mine)).order_by(IncidentRow.id.desc()).limit(RECENT_MEETINGS)
+        )
+    )
+    told: list[str] = []
+    for incident in incidents:
+        kind = await session.scalar(select(IncidentFactRow.enum_value).where(IncidentFactRow.incident_id == incident.id, IncidentFactRow.key == "interaction"))
+        other = await session.scalar(
+            select(IncidentParticipantRow.node_id).where(IncidentParticipantRow.incident_id == incident.id, IncidentParticipantRow.node_id != node_id).limit(1)
+        )
+        if kind is not None and kind in InteractionKind._value2member_map_ and other is not None:
+            told.append(f"{INTERACTIONS[InteractionKind(kind)].label.lower()} with {await name_of(session, other)} in epoch {incident.epoch}")
+    return told
 
 
 async def renown_lines(session: AsyncSession, rules: Rules, node_id: int) -> list[str]:
@@ -251,6 +283,17 @@ async def feeling_lines(session: AsyncSession, rules: Rules, node_id: int, epoch
     profile = await session.get(MortalProfileRow, node_id)
     if profile is not None:
         lines.append(f"Mood: {spoken(profile.mood)} ({profile.mood_score:+d})")
+    if profile is not None and profile.career is not None:
+        lines.append(f"Path in life: {CAREERS[profile.career].label.lower()}")
+    if profile is not None and profile.last_break is not None:
+        lines.append(f"Last broke under strain by {spoken(profile.last_break)}")
+    for arc in await session.scalars(select(ArcRow).where(ArcRow.subject_node_id == node_id, ArcRow.outcome == ArcOutcome.OPEN).order_by(ArcRow.id)):
+        lines.append(f"Living a tale of {ARCS[arc.template].label.lower()}, at its {spoken(arc.stage)}")
+    for borne in await session.scalars(
+        select(AfflictionRow).where(AfflictionRow.bearer_node_id == node_id, AfflictionRow.cured_epoch.is_(None)).order_by(AfflictionRow.id)
+    ):
+        spec = PACKAGES[borne.package]
+        lines.append(f"Bears {spec.label.lower()} ({spoken(spec.visibility)} to others)")
     totals: dict[Emotion, float] = {}
     for row in await thoughts_of(session, node_id):
         totals[row.emotion] = totals.get(row.emotion, 0.0) + thought_strength(row, epoch)

@@ -27,6 +27,11 @@ TRADE_CLASS: MappingProxyType[Job, SocialClass] = total(
         J.BUILDING: C.WORKER,
         J.SERVICE: C.WORKER,
         J.IDLE: C.UNEMPLOYED,
+        J.TRANSPORT: C.WORKER,
+        J.ADMINISTRATION: C.OFFICIAL,
+        J.GATHERING: C.FARMER,
+        J.INDUSTRY: C.WORKER,
+        J.ARTS: C.ARTISAN,
     },
 )
 TRADE_FORM: MappingProxyType[Job, WorkerBodyForm] = total(
@@ -44,6 +49,11 @@ TRADE_FORM: MappingProxyType[Job, WorkerBodyForm] = total(
         J.BUILDING: F.INDUSTRIAL_UNION,
         J.SERVICE: F.GENERAL_UNION,
         J.IDLE: F.GENERAL_UNION,
+        J.TRANSPORT: F.GENERAL_UNION,
+        J.ADMINISTRATION: F.CRAFT_UNION,
+        J.GATHERING: F.MUTUAL_AID,
+        J.INDUSTRY: F.INDUSTRIAL_UNION,
+        J.ARTS: F.COMPANION_SOCIETY,
     },
 )
 STANDING_COVERAGE_PCT: MappingProxyType[LegalStanding, int] = total(LegalStanding, {L.BANNED: 15, L.TOLERATED: 35, L.RECOGNISED: 60, L.COMPULSORY: 100})

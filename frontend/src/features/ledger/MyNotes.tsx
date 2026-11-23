@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { entityTypeValues } from '@/api/generated/schema'
 import { queryKeys } from '@/api/queryKeys'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,7 +36,7 @@ import {
 } from '@/components/domain'
 import { ENTITY_TYPE_ICON } from '@/components/domain/domainIcons'
 import { Text } from '@/components/typography'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import {
   deleteEntityNote,
   useLoreMutation,
@@ -270,7 +271,7 @@ function RecordNotes() {
                 badges={
                   <>
                     <Badge size='sm' variant='outline'>
-                      {humanize(note.entity_type)}
+                      {wordOf(entityTypeValues, note.entity_type)}
                     </Badge>
                     <Badge size='sm' variant='outline'>
                       <Globe2 />

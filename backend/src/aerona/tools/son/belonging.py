@@ -2,6 +2,7 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from aerona.catalog.identity import SALIENCE_DRIVERS
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.grammar import spoken
 from aerona.db.tables.belonging import HeldIdentityRow
@@ -30,6 +31,7 @@ COMMUNITIES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})
 class StirIdentityInput(ToolInput):
     community_id: int
     layer: IdentityLayer
+    driver: SalienceDriver = SalienceDriver.GOD
     calm: bool = False
     reason: Reason
 
@@ -40,14 +42,14 @@ async def stir_identity(call: SonCall, args: StirIdentityInput) -> str:
         fail(SonResult.IDENTITY_REFUSED, why="there is no such town or people")
     await ensure_in_reach(call, community)
     if held(community.id):
-        fail(SonResult.IDENTITY_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.IDENTITY_REFUSED, why="it is held")
     row = await call.session.get(HeldIdentityRow, (community.id, args.layer))
     current = row.salience if row is not None else call.tick.rules.identities.base_salience
-    step = call.tick.rules.identities.rhetoric * 2
+    if args.driver is not SalienceDriver.GOD and args.layer not in SALIENCE_DRIVERS[args.driver].layers:
+        fail(SonResult.IDENTITY_REFUSED, why=f"{spoken(args.driver)} does not stir the {spoken(args.layer)} layer")
+    step = max(call.tick.rules.identities.rhetoric * 2, SALIENCE_DRIVERS[args.driver].rise(call.tick.rules))
     salience = clamp_int(current - step if args.calm else current + step, 0, 100)
-    await control.set_record(
-        call.tick, "held_identity", {"holder_entity_id": community.id, "layer": args.layer}, {"salience": salience, "driver": SalienceDriver.GOD}
-    )
+    await control.set_record(call.tick, "held_identity", {"holder_entity_id": community.id, "layer": args.layer}, {"salience": salience, "driver": args.driver})
     call.target(community.id)
     told = "quieted" if args.calm else "stirred"
     layer = spoken(args.layer)

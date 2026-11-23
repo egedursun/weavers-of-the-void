@@ -53,4 +53,4 @@ async def test_a_son_cannot_mark_the_birth_of_a_mortal_the_god_holds_against_bir
         )
         await add_modifier(session, draft)
     text = await rejected(toolkit, "mark_birth", arguments)
-    assert "a stronger hand holds it" in text
+    assert "it is held" in text

@@ -1,6 +1,8 @@
 from aerona.db.write_guard import held
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.anatomy import ensure_anatomy
+from aerona.engine.ecology.beast_acts import rob_hoards
+from aerona.engine.ecology.beast_ways import backfill_grudges
 from aerona.engine.ecology.beasts import champions, deify, fallen, lair_cycle, living_beasts
 from aerona.engine.ecology.biochemistry import seed_world_life
 from aerona.engine.ecology.domestication import husbandry
@@ -142,6 +144,8 @@ async def beast_cycles(ctx: TickContext) -> None:
     ctx.count("anatomies", await ensure_anatomy(ctx))
     atlas = await RegionAtlas.load(ctx.session)
     ctx.count("monsters_emerged", await emerge_from_deep(ctx, atlas))
+    ctx.count("hoards_robbed", await rob_hoards(ctx, atlas))
+    ctx.count("grudges_backfilled", await backfill_grudges(ctx))
     for beast, row in await living_beasts(ctx):
         if held(beast.id):
             continue

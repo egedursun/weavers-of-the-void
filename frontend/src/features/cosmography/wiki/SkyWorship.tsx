@@ -18,7 +18,7 @@ import {
   FieldTile,
 } from '@/components/domain'
 import { ENTITY_TYPE_ICON } from '@/components/domain/domainIcons'
-import { capitalized } from '@/features/graph/families'
+import { ENTITY_TYPE_WORDS } from '@/features/entity/affairs/labels'
 import {
   type SkyWorshipView,
   cosmographyKeys,
@@ -127,7 +127,7 @@ export function SkyWorship({ nodeId }: { nodeId: number }) {
                     {row.name}
                   </EntityLink>
                 }
-                caption={capitalized(row.entity_type.replaceAll('_', ' '))}
+                caption={ENTITY_TYPE_WORDS[row.entity_type]}
                 aside={
                   <Button
                     size='sm'

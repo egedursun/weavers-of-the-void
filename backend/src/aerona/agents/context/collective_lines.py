@@ -1,13 +1,14 @@
 from sqlalchemy import func, select
 
 from aerona.agents.context.scope import Scope
-from aerona.catalog.collective import ACT_TEXT
+from aerona.catalog.collective import ACT_TEXT, TRIGGERS
 from aerona.catalog.storylets import STORYLETS
 from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.collective import (
     AccountRow,
     ArmsRow,
     CommemorationRow,
+    CrowdFeelingRow,
     CrowdMoodRow,
     DiasporaRow,
     FoundingMythRow,
@@ -30,6 +31,7 @@ from aerona.domain.enums.mind import EthicalStance
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.dating import render_date
+from aerona.engine.collective.feelings import feelings_of, strongest, told_feelings
 from aerona.engine.collective.heraldry import blazon
 from aerona.engine.collective.norms import norms_of
 from aerona.engine.collective.storylets import choice_texts, situation
@@ -50,8 +52,10 @@ async def town_lines(scope: Scope, me: EntityRow) -> list[str]:
     if me.location_id is None:
         return found
     mood = await session.get(CrowdMoodRow, me.location_id)
-    if mood is not None and max(mood.anger, mood.anxiety, mood.fervour) >= MOOD_AT:
-        found.append(f"your town's mood: anger {mood.anger}, fear {mood.anxiety}, fervour {mood.fervour}, deterrence {mood.deterrence}")
+    feelings = await feelings_of(session, me.location_id)
+    if mood is not None and strongest(feelings) >= MOOD_AT:
+        last = f", last stirred by {TRIGGERS[mood.last_trigger].text}" if mood.last_trigger is not None else ""
+        found.append(f"your town's mood: {told_feelings(feelings)}, deterrence {mood.deterrence}{last}")
     for mob in await session.scalars(select(MobRow).where(MobRow.settlement_entity_id == me.location_id, MobRow.status != MobStatus.DISPERSED)):
         found.append(f"a crowd of {mob.size} has {ACT_TEXT[mob.act]} and goes for the {spoken(mob.target)}, anger {mob.anger}")
     for movement in await session.scalars(select(MovementRow).where(MovementRow.settlement_entity_id == me.location_id, MovementRow.ended_epoch.is_(None))):
@@ -188,15 +192,18 @@ async def son_collective_lines(scope: Scope, son: SonRow) -> list[str]:
     if world is None:
         return []
     found: list[str] = []
+    peak = func.max(CrowdFeelingRow.level).label("peak")
     stirred = await session.execute(
-        select(EntityRow, CrowdMoodRow)
-        .join(CrowdMoodRow, CrowdMoodRow.settlement_entity_id == EntityRow.id)
-        .where(EntityRow.world_id == world, func.max(CrowdMoodRow.anger, CrowdMoodRow.anxiety, CrowdMoodRow.fervour) >= SON_MOOD_AT)
-        .order_by(func.max(CrowdMoodRow.anger, CrowdMoodRow.anxiety, CrowdMoodRow.fervour).desc(), EntityRow.id)
+        select(EntityRow, peak)
+        .join(CrowdFeelingRow, CrowdFeelingRow.settlement_entity_id == EntityRow.id)
+        .where(EntityRow.world_id == world)
+        .group_by(EntityRow.id)
+        .having(peak >= SON_MOOD_AT)
+        .order_by(peak.desc(), EntityRow.id)
         .limit(SON_LINES)
     )
-    for town, mood in stirred.all():
-        found.append(f"{town.name} (town {town.id}) is stirred: anger {mood.anger}, fear {mood.anxiety}, fervour {mood.fervour}, deterrence {mood.deterrence}")
+    for town, _peak in stirred.all():
+        found.append(f"{town.name} (town {town.id}) is stirred: {told_feelings(await feelings_of(session, town.id))}")
     crowds = await session.execute(
         select(EntityRow, MobRow)
         .join(MobRow, MobRow.settlement_entity_id == EntityRow.id)

@@ -3,7 +3,9 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.life.ecology import OPEN
+from aerona.catalog.senses import SPIRITS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.contracts import MonsterContractRow
 from aerona.db.tables.ecology import BeastProfileRow
@@ -13,22 +15,26 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.constructs import ContractStatus
+from aerona.domain.enums.ecology import Habitat
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.context import TickContext
-from aerona.engine.ecology.beasts import HELD, fall, towns_near
+from aerona.engine.ecology.beasts import HELD, cow, fall, towns_near
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.mythic.ballads import sing_of_slaying
+from aerona.engine.nature.effects import sensed
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import retire_in
-from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat_or
 from aerona.engine.recording.record import RoleValue, StepDraft, record
 
 MIDDLING = 50
+
+HALF = 0.5
 
 
 @dataclass
@@ -146,16 +152,27 @@ async def slay(ctx: TickContext, row: MonsterContractRow, hunter: EntityRow, bea
     await record(ctx, "contract.slain", roles=roles, facts={"bounty": row.bounty, "renown": table.renown, "study": row.study}, steps=steps)
 
 
+async def reachable(ctx: TickContext, hunter: EntityRow, beast: EntityRow) -> float:
+    anatomy = await ctx.session.get(CreatureAnatomyRow, beast.id)
+    if anatomy is None or anatomy.habitat is not Habitat.ETHEREAL:
+        return 1.0
+    return min(1.0, HALF + await sensed(ctx.session, ctx.rules, hunter.location_id, SPIRITS, ctx.rules.senses.spirits_pct))
+
+
 async def hunt(ctx: TickContext, row: MonsterContractRow, hunter: EntityRow, beast: EntityRow, tally: ContractTally) -> None:
     table = ctx.rules.monster_contracts
     if "study" not in row.locked:
         row.study = clamp_int(row.study + round_half_up(table.study_step * stat_or(hunter, "intellect", MIDDLING) / PERCENT * 2), 0, PERCENT)
-    if ctx.rng(f"contract.hunt.{row.id}.{ctx.epoch}").chance(hunt_chance(ctx, row, hunter, beast)):
+    if ctx.rng(f"contract.hunt.{row.id}.{ctx.epoch}").chance(round_half_up(hunt_chance(ctx, row, hunter, beast) * await reachable(ctx, hunter, beast))):
         await slay(ctx, row, hunter, beast)
         tally.slain += 1
         return
     hp = stat_or(hunter, "hp", 0)
     set_stats(hunter, hp=max(1, hp - table.wound))
+    if not held(beast.id):
+        shift_stat(beast, "hp", -round_half_up(table.wound * stat_or(hunter, "strength", MIDDLING) / MIDDLING), 0)
+    if hp - table.wound > 1 and ctx.rng(f"contract.drive.{row.id}.{ctx.epoch}").chance(hunt_chance(ctx, row, hunter, beast) // 2):
+        await cow(ctx, beast, hunter.id)
     if hp - table.wound <= 1:
         await settle(ctx, row, ContractStatus.FAILED)
         tally.failed += 1

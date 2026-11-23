@@ -11,6 +11,7 @@ from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.disease import (
     DiseaseCureRow,
     DiseaseProfileRow,
+    DiseaseRouteRow,
     EndemicDiseaseRow,
     ImmunityRow,
     OutbreakRow,
@@ -23,6 +24,7 @@ from aerona.db.tables.evolution import PlagueResponseRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.discovery import TheoryDomain
@@ -33,6 +35,7 @@ from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.cuisine.drinks import drink_safety
+from aerona.engine.demography.cohorts import pyramid
 from aerona.engine.eras.effects import channel_by_holder
 from aerona.engine.folkways.shunning import shunned_sick
 from aerona.engine.lifecycle.states import ended_ids
@@ -99,6 +102,7 @@ class DiseaseBook:
     seasonal: dict[int, float] = field(default_factory=dict)
     responses: dict[tuple[int, int], set[PlagueResponse]] = field(default_factory=dict)
     safe_drink: dict[int, int] = field(default_factory=dict)
+    routes: dict[int, list[tuple[Transmission, int]]] = field(default_factory=dict)
 
     def drink_guard(self, target_id: int) -> float:
         safety = self.safe_drink.get(target_id, 0)
@@ -153,6 +157,8 @@ class DiseaseBook:
         ):
             book.responses.setdefault((response.community_entity_id, response.disease_entity_id), set()).add(response.response)
         book.safe_drink = await drink_safety(session)
+        for route_row in await session.scalars(select(DiseaseRouteRow).order_by(DiseaseRouteRow.disease_entity_id, DiseaseRouteRow.route)):
+            book.routes.setdefault(route_row.disease_entity_id, []).append((route_row.route, route_row.share))
         return book
 
     async def load_hosts(self, session: AsyncSession) -> None:
@@ -217,9 +223,7 @@ class DiseaseBook:
         counts = self.bands.get(community_id)
         total = sum(counts.values()) if counts else 0
         if not counts or total <= 0:
-            table = self.rules.cohorts
-            child, elder = table.child_pct / PERCENT, table.elder_pct / PERCENT
-            return {AgeBand.CHILD: child, AgeBand.ELDER: elder, AgeBand.ADULT: max(0.0, 1 - child - elder)}
+            return pyramid(self.rules)
         return {band: counts.get(band, 0) / total for band in AgeBand}
 
     def immune_share(self, community_id: int, disease_id: int) -> float:

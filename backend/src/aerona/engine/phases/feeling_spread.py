@@ -9,6 +9,7 @@ from aerona.engine.phase import Phase
 @reads(
     "mortal.charisma",
     "table.creator",
+    "table.crowd_feelings",
     "table.crowd_moods",
     "table.dimensions",
     "table.entities",
@@ -29,6 +30,7 @@ from aerona.engine.phase import Phase
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
+    "table.crowd_feelings",
     "table.crowd_moods",
     "table.feeling_spread",
     "table.incident_facts",

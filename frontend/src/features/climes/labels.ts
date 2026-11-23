@@ -1,4 +1,5 @@
 import {
+  type LucideIcon,
   CircleDot,
   CloudRain,
   Compass,
@@ -6,10 +7,11 @@ import {
   Minus,
   Mountain,
   Orbit,
+  RefreshCw,
   Snowflake,
   Sun,
+  Tornado,
   Wind,
-  type LucideIcon,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -40,12 +42,18 @@ export const BANDS: Record<Schema['CirculationBand'], Named> = {
     tone: 'gold',
   },
   still: { label: 'Still air', icon: Minus, tone: 'muted' },
+  doldrums: { label: 'Doldrums', icon: CloudRain, tone: 'info' },
+  subtropical_calm: { label: 'Subtropical calm', icon: Sun, tone: 'warning' },
+  banded: { label: 'Banded winds', icon: Tornado, tone: 'danger' },
+  super_rotation: { label: 'Super rotation', icon: RefreshCw, tone: 'gold' },
 }
 
 export const PHASES: Record<Schema['OscillationPhase'], Named> = {
   neutral: { label: 'Neutral', icon: Minus, tone: 'muted' },
   warm: { label: 'Warm swing', icon: Flame, tone: 'warning' },
   cold: { label: 'Cold swing', icon: Snowflake, tone: 'info' },
+  strong_warm: { label: 'Strong warm swing', icon: Flame, tone: 'danger' },
+  strong_cold: { label: 'Strong cold swing', icon: Snowflake, tone: 'info' },
 }
 
 export const DIRECTIONS = COMPASS.map(

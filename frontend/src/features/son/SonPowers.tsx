@@ -1,14 +1,15 @@
 import { Hammer, Lock, Pencil, Sparkles, Trash2 } from 'lucide-react'
+import { statValues } from '@/api/generated/schema'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Medallion, Section, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { RowAction } from '@/features/entity/actions/RowAction'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type SonPublic } from '@/features/pantheon/api'
 import {
   POWER_EFFECT_LABEL,
   STATS,
-  humanize,
   useLabels,
 } from '@/features/pantheon/labels'
 
@@ -63,7 +64,7 @@ export function SonPowers({ view }: { view: SonPublic }) {
               const locked = index >= view.unlocked_powers
               const parameter = power.param_stat
                 ? (STATS.find((stat) => stat.key === power.param_stat)?.label ??
-                  humanize(power.param_stat))
+                  wordOf(statValues, power.param_stat))
                 : power.param_entity_type
                   ? entityType(power.param_entity_type)
                   : null

@@ -35,7 +35,7 @@ async def keep_the_dead(call: SonCall, args: KeepTheDeadInput) -> str:
         fail(SonResult.DEAD_REFUSED, why="there is no such grave")
     await ensure_in_reach(call, dead)
     if held(dead.id) or "guard" in (row.locked or []):
-        fail(SonResult.DEAD_REFUSED, why="a stronger hand holds that grave as it is")
+        fail(SonResult.DEAD_REFUSED, why="that grave is held as it is")
     if not await guard_allowed(call.tick, row, args.guard, dead.location_id):
         fail(SonResult.DEAD_REFUSED, why=f"the laws of that land do not let a grave be kept {spoken(args.guard)}")
     await set_guard(call.tick, row, args.guard, None, dead.location_id)

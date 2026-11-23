@@ -33,4 +33,4 @@ async def cold_war(ctx: TickContext, community: EntityRow, place_id: int | None)
 
 
 async def sensed(session: AsyncSession, rules: Rules, node_id: int | None, purpose: str, share_pct: int) -> float:
-    return await sense_score(session, node_id, purpose) * share_pct / PERCENT
+    return await sense_score(session, rules, node_id, purpose) * share_pct / PERCENT

@@ -6,7 +6,7 @@ from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type, nullable_between
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import FocusKind, KindFamily, MoodState, Profession
-from aerona.domain.enums.mortal import CareerPath, DeathCause, LifeStage, MarriageEnd, StressBreak
+from aerona.domain.enums.mortal import CareerPath, DeathCause, DeathReading, LifeStage, MarriageEnd, StressBreak
 from aerona.domain.enums.unions import UnionForm, UnionPurpose
 
 PROFILE_PERCENTS = (
@@ -115,4 +115,15 @@ class KindVariantRow(Base):
     strength_pct: Mapped[int] = mapped_column(default=100)
     learning_pct: Mapped[int] = mapped_column(default=100)
     created_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class DeathReadingRow(Base):
+    __tablename__ = "death_readings"
+    __table_args__ = (Index("ix_death_readings_people", "people_entity_id"),)
+
+    people_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    cause: Mapped[DeathCause] = mapped_column(enum_type(DeathCause, "cause"), primary_key=True)
+    reading: Mapped[DeathReading] = mapped_column(enum_type(DeathReading, "reading"), default=DeathReading.PLAIN)
+    authored: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

@@ -740,6 +740,7 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.stars",
     "table.vessel_profiles",
     "table.world_maps",
+    "table.world_seasons",
     "table.worlds",
 )
 @writes(

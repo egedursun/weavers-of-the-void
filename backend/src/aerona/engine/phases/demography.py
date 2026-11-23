@@ -7,10 +7,11 @@ from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.demography.biology import profiles_of
+from aerona.engine.demography.care import tend_conditions
 from aerona.engine.demography.cohorts import rebalance_classes, reconcile, seed
 from aerona.engine.demography.labour import allocate
 from aerona.engine.demography.martial import BattleTally, backfill_records, earliest_tally, record_battles
-from aerona.engine.demography.mobility import class_mobility, desertion, ennoble_heroes, ruin_merchants
+from aerona.engine.demography.mobility import class_mobility, desertion, ennoble_heroes, ruin_merchants, shift_classes
 from aerona.engine.demography.peoples import (
     biology_for,
     culture_for,
@@ -59,6 +60,10 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "mortal.wisdom",
     "people.population",
     "settlement.population",
+    "table.allele_pools",
+    "table.assistive_aids",
+    "table.augment_effects",
+    "table.augments",
     "table.bodies",
     "table.bonds",
     "table.community_cohorts",
@@ -80,9 +85,13 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.maimed_cohorts",
     "table.memories",
     "table.mind_attributes",
+    "table.mind_facets",
+    "table.mind_profiles",
+    "table.minds",
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.outbreaks",
     "table.people_biology",
@@ -91,11 +100,19 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.prostheses",
     "table.region_environment",
     "table.role_norms",
+    "table.sense_profiles",
+    "table.species_profiles",
+    "table.thoughts",
+    "table.traits",
     "table.union_customs",
     "table.world_maps",
 )
 @writes(
+    "mortal.agility",
+    "mortal.charisma",
     "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
     "mortal.strength",
     "table.bodies",
     "table.bonds",
@@ -106,6 +123,7 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.entities",
     "table.entity_flags",
     "table.genomes",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
@@ -114,6 +132,8 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.name_registry",
     "table.people_biology",
     "table.people_culture",
+    "table.settlement_profiles",
+    "table.thoughts",
 )
 async def cohort_upkeep(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
@@ -129,6 +149,7 @@ async def cohort_upkeep(ctx: TickContext) -> None:
         await sync_veterans(ctx, community)
         await sync_maimed(ctx, community)
         await reconcile(ctx.session, ctx.rules, community, rows, ctx.epoch)
+        await tend_conditions(ctx, community, rows)
     ctx.count("cohorts_kept", seeded)
     ctx.count("promoted", await promote(ctx))
     slept, woke = await doze(ctx)
@@ -201,9 +222,16 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.house_profiles",
     "table.loans",
     "table.memories",
+    "table.name_registry",
+    "table.node_births",
     "table.nodes",
+    "table.offices",
+    "table.outlaws",
     "table.people_culture",
     "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
+    "table.vassalages",
     "table.war_sides",
     "table.wars",
 )
@@ -226,6 +254,7 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.memories",
     "table.mobility_events",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.people_culture",
 )
@@ -233,6 +262,7 @@ async def society_mobility(ctx: TickContext) -> None:
     ctx.count("deserted", await desertion(ctx))
     ctx.count("ennobled", await ennoble_heroes(ctx))
     ctx.count("ruined", await ruin_merchants(ctx))
+    ctx.count("classes_shifted", await shift_classes(ctx))
     for community in await canon(ctx.session, LAND_COMMUNITY_TYPES):
         for key, value in (await class_mobility(ctx, community)).items():
             ctx.count(key, value)

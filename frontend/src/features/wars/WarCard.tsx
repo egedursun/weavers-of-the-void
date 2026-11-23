@@ -12,23 +12,24 @@ import {
   Shield,
   Swords,
 } from 'lucide-react'
+import {
+  warCauseValues,
+  warEndingValues,
+  warStatusValues,
+} from '@/api/generated/schema'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { DivergingBar } from '@/features/pantheon/DivergingBar'
 import { ArmiesList, BattlesList, Ref, SiegesList } from './WarsTables'
 import { type WarSummary } from './api'
 import { WarRoom } from './military/WarRoom'
 
 const SCORE_SCALE_MIN = 5
-
-function humanize(value: string): string {
-  const text = value.replaceAll('_', ' ')
-  return text.charAt(0).toUpperCase() + text.slice(1)
-}
 
 function SideColumn({
   title,
@@ -124,14 +125,14 @@ export function WarCard({
           <div className='flex min-w-0 flex-wrap gap-1.5'>
             <Badge size='sm' variant={ongoing ? 'destructive' : 'outline'}>
               {ongoing ? <Flame /> : <Flag />}
-              {humanize(war.status)}
+              {wordOf(warStatusValues, war.status)}
             </Badge>
             <Badge size='sm' variant='outline'>
-              {humanize(war.cause)}
+              {wordOf(warCauseValues, war.cause)}
             </Badge>
             {war.ending && (
               <Badge size='sm' variant='info'>
-                {`Ended in ${humanize(war.ending)}`}
+                {`Ended in ${wordOf(warEndingValues, war.ending)}`}
               </Badge>
             )}
             <Badge size='sm' variant='outline'>

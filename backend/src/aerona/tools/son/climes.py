@@ -2,17 +2,22 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from aerona.catalog.planetary_cycles import CYCLES
+from aerona.catalog.stats import PERCENT
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.climes import OCTANT_MAX, RegionWindRow
+from aerona.db.tables.evolution import WorldCycleRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.climes import DIRECTIONS, CirculationBand
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.evolution import PlanetaryCycle
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.climes import control
+from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -27,6 +32,9 @@ STRONG = 160
 FAILED = 30
 
 
+CYCLE_STEP_MAX = 30
+
+
 class StirMonsoonInput(ToolInput):
     world_id: int
     strong: bool
@@ -36,6 +44,14 @@ class StirMonsoonInput(ToolInput):
 class TurnWindInput(ToolInput):
     region_id: int
     wind_from: Annotated[int, Field(ge=0, le=OCTANT_MAX)]
+    band: CirculationBand | None = None
+    reason: Reason
+
+
+class ShapeCycleInput(ToolInput):
+    world_id: int
+    cycle: PlanetaryCycle
+    change: Annotated[int, Field(ge=-CYCLE_STEP_MAX, le=CYCLE_STEP_MAX)]
     reason: Reason
 
 
@@ -46,7 +62,7 @@ async def stir_monsoon(call: SonCall, args: StirMonsoonInput) -> str:
     if args.world_id != call.son.current_world_id:
         fail(SonResult.MONSOON_REFUSED, why="you can stir the monsoon only of the world you stand on")
     if held(args.world_id):
-        fail(SonResult.MONSOON_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.MONSOON_REFUSED, why="it is held")
     strength = STRONG if args.strong else FAILED
     values = {"strength": strength, "failed": strength < call.tick.rules.monsoons.fail_below}
     await control.set_record(call.tick, "monsoon_season", {"world_id": world.id, "epoch": call.tick.epoch}, values)
@@ -66,9 +82,9 @@ async def turn_wind(call: SonCall, args: TurnWindInput) -> str:
         fail(SonResult.WIND_REFUSED, why="there is no such land")
     await ensure_in_reach(call, region)
     if held(region.id):
-        fail(SonResult.WIND_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.WIND_REFUSED, why="it is held")
     row = await call.session.get(RegionWindRow, region.id)
-    band = row.band if row is not None else CirculationBand.TRADE
+    band = args.band or (row.band if row is not None else CirculationBand.TRADE)
     await control.set_record(call.tick, "region_wind", {"region_entity_id": region.id}, {"band": band, "wind_from": args.wind_from})
     call.target(region.id)
     direction = DIRECTIONS[args.wind_from]
@@ -82,10 +98,34 @@ async def turn_wind(call: SonCall, args: TurnWindInput) -> str:
     return result(SonResult.WIND_TURNED, region=region.name, direction=direction)
 
 
+async def shape_cycle(call: SonCall, args: ShapeCycleInput) -> str:
+    world = await call.session.get(WorldRow, args.world_id)
+    if world is None:
+        fail(SonResult.CYCLE_REFUSED, why="there is no such world")
+    if args.world_id != call.son.current_world_id:
+        fail(SonResult.CYCLE_REFUSED, why="you can shape the cycles only of the world you stand on")
+    if held(args.world_id):
+        fail(SonResult.CYCLE_REFUSED, why="it is held")
+    row = await call.session.get(WorldCycleRow, (world.id, args.cycle))
+    if row is None:
+        row = WorldCycleRow(world_id=world.id, cycle=args.cycle, stock=PERCENT // 2, locked=[])
+        call.session.add(row)
+    before = row.stock
+    row.stock = clamp_int(row.stock + args.change, 0, PERCENT)
+    await call.record(
+        "world.cycle_shifted",
+        roles={IncidentRole.SUBJECT: world.id, IncidentRole.ACTOR: call.son.id},
+        facts={"cycle": args.cycle, "stock": row.stock, "inflow": max(0, row.stock - before), "outflow": max(0, before - row.stock)},
+        world_id=world.id,
+    )
+    return result(SonResult.CYCLE_SHAPED, cycle=CYCLES[args.cycle].label.lower(), world=world.name, stock=row.stock)
+
+
 def specs() -> list[ToolSpec[SonCall, Any]]:
     son = AgentKind.SON
     meta = ToolMeta(ActionKind.INFLUENCE, son_standard_action)
     return [
         ToolSpec(SonToolId.STIR_MONSOON, son, StirMonsoonInput, meta, stir_monsoon),
         ToolSpec(SonToolId.TURN_WIND, son, TurnWindInput, meta, turn_wind),
+        ToolSpec(SonToolId.SHAPE_CYCLE, son, ShapeCycleInput, meta, shape_cycle),
     ]

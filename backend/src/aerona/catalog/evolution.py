@@ -1,25 +1,55 @@
+from collections.abc import Callable, Mapping
+
 from aerona.catalog.diets import FLESH_SEEKERS, FORAGERS, PRODUCERS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.ecology import SIZE_ORDER, Diet, SizeClass
+from aerona.domain.enums.ecology import SIZE_ORDER, Diet, DomesticationStage, SizeClass
 from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, SuccessionStage, TrophicLevel
 from aerona.domain.enums.society import CreatureTrait
+from aerona.rules.registry import Rules
 
 S = SuccessionStage
 T = CreatureTrait
 
-STAGE_COVER: dict[SuccessionStage, int] = {
-    S.BARE: 5,
-    S.GRASSLAND: 15,
-    S.SHRUBLAND: 35,
-    S.YOUNG_FOREST: 60,
-    S.OLD_FOREST: 100,
-    S.MARSH: 40,
-    S.SWAMP_FOREST: 100,
-}
-DRY_PATH = (S.BARE, S.GRASSLAND, S.SHRUBLAND, S.YOUNG_FOREST, S.OLD_FOREST)
-WET_PATH = (S.BARE, S.GRASSLAND, S.MARSH, S.SWAMP_FOREST)
+STAGE_COVER = total(
+    SuccessionStage,
+    {
+        S.BARE: 5,
+        S.PIONEER: 8,
+        S.GRASSLAND: 15,
+        S.HEATH: 20,
+        S.COASTAL_DUNE: 10,
+        S.SHRUBLAND: 35,
+        S.YOUNG_FOREST: 60,
+        S.OLD_FOREST: 100,
+        S.OPEN_WATER: 0,
+        S.MARSH: 40,
+        S.BOG: 45,
+        S.SWAMP_FOREST: 100,
+    },
+)
+DRY_PATH = (S.BARE, S.PIONEER, S.GRASSLAND, S.SHRUBLAND, S.YOUNG_FOREST, S.OLD_FOREST)
+WET_PATH = (S.OPEN_WATER, S.MARSH, S.BOG, S.SWAMP_FOREST)
+ADVANCE: Mapping[SuccessionStage, Callable[[Rules], int]] = total(
+    SuccessionStage,
+    {
+        S.BARE: lambda rules: rules.succession_stages.epochs(rules.succession_stages.bare_advance_years),
+        S.PIONEER: lambda rules: rules.succession_stages.epochs(rules.succession_stages.pioneer_advance_years),
+        S.GRASSLAND: lambda rules: rules.succession_stages.epochs(rules.succession_stages.grassland_advance_years),
+        S.HEATH: lambda rules: rules.succession_stages.epochs(rules.succession_stages.heath_advance_years),
+        S.COASTAL_DUNE: lambda rules: rules.succession_stages.epochs(rules.succession_stages.coastal_dune_advance_years),
+        S.SHRUBLAND: lambda rules: rules.succession_stages.epochs(rules.succession_stages.shrubland_advance_years),
+        S.YOUNG_FOREST: lambda rules: rules.succession_stages.epochs(rules.succession_stages.young_forest_advance_years),
+        S.OLD_FOREST: lambda rules: rules.succession_stages.epochs(rules.succession_stages.old_forest_advance_years),
+        S.OPEN_WATER: lambda rules: rules.succession_stages.epochs(rules.succession_stages.open_water_advance_years),
+        S.MARSH: lambda rules: rules.succession_stages.epochs(rules.succession_stages.marsh_advance_years),
+        S.BOG: lambda rules: rules.succession_stages.epochs(rules.succession_stages.bog_advance_years),
+        S.SWAMP_FOREST: lambda rules: rules.succession_stages.epochs(rules.succession_stages.swamp_forest_advance_years),
+    },
+)
+POOR_PATH = (S.BARE, S.PIONEER, S.HEATH, S.SHRUBLAND)
+DUNE_PATH = (S.BARE, S.PIONEER, S.COASTAL_DUNE, S.GRASSLAND)
 WET_LAND = 40
 BARE_SOIL = 10
 WOODED = frozenset({S.YOUNG_FOREST, S.OLD_FOREST, S.SWAMP_FOREST})
@@ -36,7 +66,8 @@ PREY_TRAITS = (EvolvedTrait.SPEED, EvolvedTrait.CAMOUFLAGE)
 APEX_SIZES = frozenset({SizeClass.LARGE, SizeClass.HUGE, SizeClass.COLOSSAL})
 LITTLE = frozenset({SizeClass.TINY, SizeClass.SMALL})
 DAM_SIZES = frozenset({SizeClass.SMALL, SizeClass.MEDIUM})
-TROPHIC_ORDER = tuple(TrophicLevel)
+DISPERSER_DIETS = frozenset({Diet.HERBIVORE, Diet.OMNIVORE})
+TROPHIC_ORDER = tuple(level for level in TrophicLevel if level is not TrophicLevel.DECOMPOSER)
 
 NEUTRAL = PERCENT // 2
 SEEDED_HIGH = 70
@@ -58,8 +89,18 @@ def climax_stage(forest: int, wetland: int, fertility: int) -> SuccessionStage:
     return S.GRASSLAND
 
 
-def next_stage(stage: SuccessionStage, wet: bool) -> SuccessionStage | None:
-    path = WET_PATH if wet and stage not in (S.SHRUBLAND, S.YOUNG_FOREST, S.OLD_FOREST) else DRY_PATH
+def path_of(stage: SuccessionStage, *, wet: bool, poor: bool = False, dune: bool = False) -> tuple[SuccessionStage, ...]:
+    if wet and stage in (*WET_PATH, S.BARE, S.PIONEER, S.GRASSLAND):
+        return (S.BARE, S.PIONEER, S.GRASSLAND, *WET_PATH[1:]) if stage not in WET_PATH else WET_PATH
+    if dune and stage in DUNE_PATH:
+        return DUNE_PATH
+    if poor and stage in POOR_PATH:
+        return POOR_PATH
+    return DRY_PATH
+
+
+def next_stage(stage: SuccessionStage, wet: bool, *, poor: bool = False, dune: bool = False) -> SuccessionStage | None:
+    path = path_of(stage, wet=wet, poor=poor, dune=dune)
     if stage not in path:
         return None
     index = path.index(stage)
@@ -67,6 +108,8 @@ def next_stage(stage: SuccessionStage, wet: bool) -> SuccessionStage | None:
 
 
 def trophic_level(diet: Diet, size: SizeClass) -> TrophicLevel | None:
+    if diet is Diet.DECOMPOSER:
+        return TrophicLevel.DECOMPOSER
     if diet in PRODUCER_DIETS:
         return TrophicLevel.PRODUCER
     if diet in PLANT_EATERS:
@@ -78,19 +121,39 @@ def trophic_level(diet: Diet, size: SizeClass) -> TrophicLevel | None:
     return None
 
 
+KeystoneTest = Callable[[BodyPlan, Diet, SizeClass, set[CreatureTrait]], bool]
+KEYSTONE_TESTS: tuple[tuple[KeystoneTest, KeystoneRole], ...] = (
+    (lambda _plan, diet, _size, _traits: diet is Diet.SCAVENGER, KeystoneRole.SCAVENGER),
+    (
+        lambda plan, diet, size, traits: size in LITTLE and diet in DISPERSER_DIETS and (T.FLYING in traits or plan in (BodyPlan.INSECTOID, BodyPlan.AVIAN)),
+        KeystoneRole.POLLINATOR,
+    ),
+    (lambda _plan, _diet, size, traits: T.BURROWING in traits and size not in APEX_SIZES, KeystoneRole.SOIL_MAKER),
+    (lambda _plan, diet, size, traits: diet is Diet.HERBIVORE and size in DAM_SIZES and bool(traits & {T.AMPHIBIOUS, T.AQUATIC}), KeystoneRole.DAM_BUILDER),
+    (lambda _plan, diet, size, traits: diet is Diet.FILTER and T.AQUATIC in traits and size in LITTLE, KeystoneRole.REEF_BUILDER),
+    (lambda _plan, diet, size, _traits: diet is Diet.CARNIVORE and size in APEX_SIZES, KeystoneRole.REGULATOR),
+    (lambda plan, diet, _size, traits: diet in DISPERSER_DIETS and (T.FLYING in traits or plan is BodyPlan.AVIAN), KeystoneRole.SEED_DISPERSER),
+)
+
+
 def keystone_of(plan: BodyPlan, diet: Diet, size: SizeClass, traits: set[CreatureTrait]) -> KeystoneRole | None:
-    if diet is Diet.SCAVENGER:
-        return KeystoneRole.SCAVENGER
-    if size in LITTLE and diet in (Diet.HERBIVORE, Diet.OMNIVORE) and (T.FLYING in traits or plan in (BodyPlan.INSECTOID, BodyPlan.AVIAN)):
-        return KeystoneRole.POLLINATOR
-    if T.BURROWING in traits and size not in APEX_SIZES:
-        return KeystoneRole.SOIL_MAKER
-    if diet is Diet.HERBIVORE and size in DAM_SIZES and traits & {T.AMPHIBIOUS, T.AQUATIC}:
-        return KeystoneRole.DAM_BUILDER
-    return None
+    return next((role for test, role in KEYSTONE_TESTS if test(plan, diet, size, traits)), None)
 
 
 HOT = 30
+LIFESPAN_NEUTRAL = 10
+STAGE_DOCILITY: Mapping[DomesticationStage, int] = total(
+    DomesticationStage,
+    {
+        DomesticationStage.WILD: 0,
+        DomesticationStage.COMMENSAL: 35,
+        DomesticationStage.TAMED: 50,
+        DomesticationStage.HERDED: 60,
+        DomesticationStage.DOMESTICATED: 75,
+        DomesticationStage.BREED: 85,
+        DomesticationStage.FERAL: 30,
+    },
+)
 
 
 def seeded_trait(
@@ -104,6 +167,9 @@ def seeded_trait(
     fear: int,
     heat_ceiling: int = HOT,
     water_need: int = NEUTRAL,
+    tameability: int = NEUTRAL,
+    stage: DomesticationStage = DomesticationStage.WILD,
+    lifespan: int = LIFESPAN_NEUTRAL,
 ) -> int:
     def high(flag: bool) -> int:
         return SEEDED_HIGH if flag else SEEDED_LOW
@@ -126,6 +192,9 @@ def seeded_trait(
             EvolvedTrait.HEAT_TOLERANCE: bounded(NEUTRAL + (heat_ceiling - HOT) * 2),
             EvolvedTrait.DROUGHT_TOLERANCE: bounded(PERCENT - water_need),
             EvolvedTrait.KEEN_SENSES: SEEDED_HIGH if traits & {T.ECHOLOCATION, T.SPIRIT_SIGHT, T.MIND_READER} else NEUTRAL,
+            EvolvedTrait.DISEASE_RESISTANCE: NEUTRAL,
+            EvolvedTrait.DOCILITY: bounded(max(tameability, STAGE_DOCILITY[stage])),
+            EvolvedTrait.LONGEVITY: bounded(NEUTRAL * lifespan / LIFESPAN_NEUTRAL),
         },
     )
     return seeds[trait]

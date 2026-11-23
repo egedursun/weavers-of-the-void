@@ -38,7 +38,7 @@ async def weigh_reckoning(call: SonCall, args: WeighReckoningInput) -> str:
         fail(SonResult.RECKONING_REFUSED, why="there is no such reckoning still open")
     await ensure_in_reach(call, realm)
     if held(realm.id):
-        fail(SonResult.RECKONING_REFUSED, why="a stronger hand holds that realm")
+        fail(SonResult.RECKONING_REFUSED, why="that realm is held")
     query = select(ReckoningMeasureRow).where(ReckoningMeasureRow.reckoning_id == row.id, ReckoningMeasureRow.measure == args.measure)
     measure = await call.session.scalar(query.limit(1))
     if measure is None:
@@ -47,7 +47,7 @@ async def weigh_reckoning(call: SonCall, args: WeighReckoningInput) -> str:
         )
         call.session.add(measure)
     if "strength" in (measure.locked or []):
-        fail(SonResult.RECKONING_REFUSED, why="a stronger hand holds that measure")
+        fail(SonResult.RECKONING_REFUSED, why="that measure is held")
     measure.strength = clamp_int(measure.strength + WEIGHT, 0, PERCENT)
     call.target(realm.id)
     await call.record("reckoning.weighed", roles={IncidentRole.SUBJECT: realm.id}, facts={"measure": args.measure, "strength": measure.strength})

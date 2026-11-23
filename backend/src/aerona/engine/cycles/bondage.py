@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.life.cycles import EMPLOYER_IN_FACTION_KINDS
+from aerona.catalog.life.demography import GROWN_BANDS
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.record_context import Term
 from aerona.db.tables.collective import DiasporaRow
@@ -17,7 +18,7 @@ from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.collective import AccountKind, AccountStance
 from aerona.domain.enums.cycles import LabourRegime, ManumissionPath
-from aerona.domain.enums.demography import AgeBand, Job
+from aerona.domain.enums.demography import Job
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import ActKind, ValueAxis, ValueHolder
@@ -347,7 +348,7 @@ async def skill_factor(ctx: TickContext, town_id: int) -> float:
 def age_factor(ctx: TickContext, rows: list[CohortRow]) -> float:
     bound = [row for row in rows if row.social_class is BOUND]
     whole = sum(row.count for row in bound)
-    adults = sum(row.count for row in bound if row.age_band is AgeBand.ADULT)
+    adults = sum(row.count for row in bound if row.age_band in GROWN_BANDS)
     share = adults * PERCENT / whole if whole else HALF
     return 1 + (share - HALF) * ctx.rules.slave_markets.age_weight / PERCENT / HALF
 
@@ -379,7 +380,7 @@ async def origin_factors(ctx: TickContext, town: EntityRow) -> tuple[float, floa
 async def price_market(ctx: TickContext, town: EntityRow, row: SlaveMarketRow) -> None:
     table = ctx.rules.slave_markets
     rows = list((await cohorts_of(ctx.session, town.id)).values())
-    stock = sum(cohort.count for cohort in rows if cohort.social_class is BOUND and cohort.age_band is AgeBand.ADULT)
+    stock = sum(cohort.count for cohort in rows if cohort.social_class is BOUND and cohort.age_band in GROWN_BANDS)
     if "stock" not in row.locked:
         row.stock = round_half_up(stock * table.sale_pct / PERCENT)
     if "price" in row.locked:
@@ -421,7 +422,7 @@ async def sell(ctx: TickContext, town: EntityRow, row: SlaveMarketRow, markets: 
     moved = 0
     for key in sorted(source, key=lambda item: tuple(part.value for part in item)):
         band, _, social_class, _ = key
-        if social_class is not BOUND or band is not AgeBand.ADULT or moved >= affordable:
+        if social_class is not BOUND or band not in GROWN_BANDS or moved >= affordable:
             continue
         step = min(source[key].count, affordable - moved)
         if move_amount(source[key], row_for(ctx.session, target, buyer.id, key, ctx.epoch), "count", step):

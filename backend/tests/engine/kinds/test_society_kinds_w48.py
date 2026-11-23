@@ -17,7 +17,7 @@ from aerona.db.write_guard import HELD_SCOPE, HeldScope
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.collective import RoleEligibility
 from aerona.domain.enums.cycles import AdoptionKind, KinshipDescent, KinTermSystem
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.kinds import KindConcept, KindStance
@@ -196,8 +196,8 @@ def test_kin_terms_adoption_and_the_first_side_follow_the_culture_never_a_fixed_
     lofty = Reading(kin=0, family=0, hierarchy=table.heir_adoption_at, tradition=0, wealth=0, perseverance=0)
     assert adoption_for(lofty, rules) is AdoptionKind.HEIR
     sides = {drawn_side(people) for people in range(1, 40)}
-    assert sides == {Sex.FEMALE, Sex.MALE}
+    assert sides == {SexKind.BEARER, SexKind.BEGETTER}
     plain = Reading(kin=0, family=0, hierarchy=0, tradition=0, wealth=0, perseverance=0)
-    for first in (Sex.FEMALE, Sex.MALE):
-        line = descent_for(None, RoleEligibility.FEMALE_ONLY, plain, rules, people_id=1, first=first)
-        assert line is (KinshipDescent.THROUGH_FIRST_LINE if first is Sex.FEMALE else KinshipDescent.THROUGH_SECOND_LINE)
+    for first in (SexKind.BEARER, SexKind.BEGETTER):
+        line = descent_for(None, RoleEligibility.BEARERS_ONLY, plain, rules, people_id=1, first=first)
+        assert line is (KinshipDescent.THROUGH_FIRST_LINE if first is SexKind.BEARER else KinshipDescent.THROUGH_SECOND_LINE)

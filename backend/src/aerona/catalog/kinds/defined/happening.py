@@ -11,5 +11,9 @@ RIVER_SHIFT_CAUSE = total(
         RiverShiftCause.PLAYER: Defined(
             "Player", checked_by=(), used_by=("engine.environment.region_control.redirect_river", "services.player.happenings.move_river")
         ),
+        RiverShiftCause.SILTING: Defined("Silting", checked_by=(), used_by=("engine.water.courses.silt_out",)),
+        RiverShiftCause.WORKS: Defined("Works", checked_by=(), used_by=("engine.water.courses.works_move", "tools.mortal.deep.divert_river")),
+        RiverShiftCause.ERUPTION: Defined("Eruption", checked_by=(), used_by=("engine.environment.geomorph.erupted",)),
+        RiverShiftCause.LANDSLIDE: Defined("Landslide", checked_by=("engine.water.courses.burst_slide_dams",), used_by=("engine.water.courses.slide_dam",)),
     },
 )

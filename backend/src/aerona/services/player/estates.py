@@ -1,8 +1,9 @@
 from pydantic import Field
 from sqlalchemy import delete
 
-from aerona.catalog.estates import CAUSE_LABELS, ESTATE_NAMES, PRIVILEGE_LABELS
+from aerona.catalog.estates import ESTATE_NAMES, PRIVILEGE_LABELS
 from aerona.catalog.life.services import SECRET_FACTION_KINDS
+from aerona.catalog.movement_causes import CAUSE_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an, spoken
 from aerona.db.tables.culture import HolderTechniqueRow

@@ -1,10 +1,12 @@
 from enum import StrEnum
 
 
-class RevivalAim(StrEnum):
+class RevivalWay(StrEnum):
     RESTORE = "restore"
-    SYNTHESISE = "synthesise"
+    SYNTHESIS = "synthesis"
     ADOPT = "adopt"
+    AWAIT = "await"
+    WITHDRAW = "withdraw"
 
 
 class RevivalStage(StrEnum):
@@ -20,7 +22,8 @@ class RevivalGoal(StrEnum):
     REVIVE_LANGUAGE = "revive_language"
     RESTORE_GOD = "restore_god"
     EXPEL_FOREIGNERS = "expel_foreigners"
-    ADOPT_WAYS = "adopt_ways"
+    RESTORE_LAND = "restore_land"
+    RESTORE_RULE = "restore_rule"
 
 
 class Intoxicant(StrEnum):
@@ -31,6 +34,8 @@ class Intoxicant(StrEnum):
     LEAF = "leaf"
     FUNGUS = "fungus"
     ESSENCE = "essence"
+    SYNTHETIC = "synthetic"
+    ANIMAL_DERIVED = "animal_derived"
 
 
 class IntoxicantUse(StrEnum):
@@ -39,6 +44,8 @@ class IntoxicantUse(StrEnum):
     RITE = "rite"
     MOURNING = "mourning"
     FORBIDDEN = "forbidden"
+    MEDICINE = "medicine"
+    HOSPITALITY = "hospitality"
 
 
 class MarkKind(StrEnum):
@@ -50,6 +57,8 @@ class MarkKind(StrEnum):
     COSMETIC = "cosmetic"
     JEWELLERY = "jewellery"
     BRAND = "brand"
+    HAIR = "hair"
+    IMPLANT = "implant"
 
 
 class MarkMeaning(StrEnum):
@@ -61,6 +70,9 @@ class MarkMeaning(StrEnum):
     MOURNING = "mourning"
     PROTECTION = "protection"
     CRIME = "crime"
+    FAITH = "faith"
+    PROFESSION = "profession"
+    BEAUTY = "beauty"
 
 
 class NamingPattern(StrEnum):
@@ -68,6 +80,8 @@ class NamingPattern(StrEnum):
     PARENT = "parent"
     CLAN = "clan"
     TEKNONYM = "teknonym"
+    PLACE = "place"
+    TRADE = "trade"
 
 
 class NameForm(StrEnum):
@@ -78,14 +92,22 @@ class NameForm(StrEnum):
     MARRIAGE = "marriage"
     VOW = "vow"
     ASCENSION = "ascension"
+    POSTHUMOUS = "posthumous"
 
 
 class AgeGrade(StrEnum):
     CHILDREN = "children"
     YOUTHS = "youths"
-    WARRIORS = "warriors"
+    YOUNG_ADULTS = "young_adults"
     JUNIOR_ELDERS = "junior_elders"
     SENIOR_ELDERS = "senior_elders"
+
+
+class GradeDuty(StrEnum):
+    WAR = "war"
+    HERDING = "herding"
+    LABOUR = "labour"
+    COUNCIL = "council"
 
 
 class EvidenceKind(StrEnum):

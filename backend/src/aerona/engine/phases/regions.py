@@ -4,13 +4,18 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.environment import dangers, hazards, knowledge, memory, perils
+from aerona.engine.environment.geology import lay_columns
+from aerona.engine.environment.memory_effects import answer_memories
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.recording.record import record
 
 BACKFILL_FIXUP = "region.terrain_backfill"
+MEMORY_BACKFILL = "land_memory.w52_backfill"
 
 
 async def _scene(ctx: TickContext) -> dangers.DangerScene:
@@ -26,8 +31,17 @@ async def _scene(ctx: TickContext) -> dangers.DangerScene:
 async def survey_regions(ctx: TickContext) -> dict[str, int]:
     atlas = await RegionAtlas.load(ctx.session)
     backfilled = await ctx.session.get(AppliedFixupRow, BACKFILL_FIXUP) is None
-    remembered = await memory.remember(ctx.session, ctx.rules, atlas, 0 if backfilled else ctx.epoch - 1)
-    faded = await memory.fade_memories(ctx.session, ctx.rules, ctx.epoch)
+    ctx.count("columns_laid", await lay_columns(ctx))
+    made = await memory.remember(ctx.session, ctx.rules, atlas, 0 if backfilled else ctx.epoch - 1)
+    remembered = len(made)
+    await answer_memories(ctx, made)
+    if await ctx.session.get(AppliedFixupRow, MEMORY_BACKFILL) is None:
+        backfill = await memory.remember(ctx.session, ctx.rules, atlas, 0)
+        ctx.session.add(AppliedFixupRow(key=MEMORY_BACKFILL, result={"memories": len(backfill)}))
+    gone = await memory.fade_memories(ctx.session, ctx.rules, ctx.epoch)
+    for region_id, world_id, kind in gone:
+        await record(ctx, "memory.faded", roles={IncidentRole.PLACE: region_id}, facts={"memory": kind}, place=region_id, world_id=world_id)
+    faded = len(gone)
     scene = await _scene(ctx)
     sacred = await memory.derive_sacredness(ctx.session, ctx.rules, scene.atlas, scene.grounds, scene.memories)
     await dangers.derive(ctx.session, ctx.rules, scene, ctx.epoch)
@@ -50,6 +64,7 @@ async def survey_regions(ctx: TickContext) -> dict[str, int]:
     "table.bonds",
     "table.ceremonial_circuits",
     "table.chronicle",
+    "table.claims",
     "table.cosmos",
     "table.dimensional_events",
     "table.dimensions",
@@ -59,8 +74,13 @@ async def survey_regions(ctx: TickContext) -> dict[str, int]:
     "table.galaxies",
     "table.galaxy_clusters",
     "table.holder_techniques",
+    "table.incident_participants",
     "table.incidents",
     "table.item_profiles",
+    "table.memories",
+    "table.mind_profiles",
+    "table.minds",
+    "table.node_births",
     "table.nodes",
     "table.phenomenon_footprints",
     "table.phenomenon_profiles",
@@ -71,8 +91,10 @@ async def survey_regions(ctx: TickContext) -> dict[str, int]:
     "table.polity_territories",
     "table.region_dangers",
     "table.region_environment",
+    "table.region_geology",
     "table.region_memories",
     "table.rifts",
+    "table.sediment_flows",
     "table.species_profiles",
     "table.species_ranges",
     "table.species_relations",
@@ -80,17 +102,28 @@ async def survey_regions(ctx: TickContext) -> dict[str, int]:
     "table.trade_route_profiles",
     "table.tradition_participation",
     "table.tradition_profiles",
+    "table.traits",
     "table.world_maps",
+    "table.world_seasons",
     "table.worlds",
 )
 @writes(
     "region.danger",
     "table.applied_fixups",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.claims",
     "table.entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
     "table.polity_map_knowledge",
     "table.region_dangers",
     "table.region_environment",
+    "table.region_geology",
     "table.region_memories",
+    "table.region_underground",
 )
 async def region_survey(ctx: TickContext) -> None:
     for key, value in (await survey_regions(ctx)).items():
@@ -117,6 +150,8 @@ async def region_survey(ctx: TickContext) -> None:
     "table.region_memories",
     "table.sons",
     "table.stars",
+    "table.structure_profiles",
+    "table.vessel_profiles",
     "table.world_maps",
     "table.worlds",
 )
@@ -131,10 +166,17 @@ async def region_survey(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.maimed_cohorts",
+    "table.region_environment",
+    "table.structure_profiles",
 )
 async def danger_harm(ctx: TickContext) -> None:
     scene = await _scene(ctx)
-    tally = await perils.harm_settlers(ctx, scene.atlas, await dangers.dangers_by_region(ctx.session), scene.regions)
+    perilous = await dangers.dangers_by_region(ctx.session)
+    tally = await perils.harm_settlers(ctx, scene.atlas, perilous, scene.regions)
+    works = await perils.harm_works(ctx, perilous, scene.grounds)
+    ctx.count("danger_fields", works.fields)
+    ctx.count("danger_buildings", works.buildings)
+    ctx.count("danger_vessels", works.vessels)
     ctx.count("danger_dead", tally.dead)
     ctx.count("danger_maimed", tally.maimed)
     ctx.count("danger_livestock", tally.livestock)
@@ -202,6 +244,7 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.injuries",
     "table.insurance_policies",
     "table.insurers",
+    "table.irregular_seasons",
     "table.item_profiles",
     "table.kinship_systems",
     "table.language_profiles",
@@ -230,11 +273,13 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.region_winds",
     "table.routes",
     "table.sacraments",
+    "table.sense_profiles",
     "table.sky_events",
     "table.sons",
     "table.spirit_profiles",
     "table.stars",
     "table.structure_profiles",
+    "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
     "table.transform_prospects",
@@ -300,11 +345,12 @@ async def terrain_hazards(ctx: TickContext) -> None:
     "settlement.prosperity",
     "table.entities",
     "table.nodes",
+    "table.region_dangers",
     "table.region_environment",
     "table.region_memories",
     "table.world_maps",
 )
-@writes("cult.zeal", "people.piety", "settlement.piety", "settlement.prosperity")
+@writes("cult.zeal", "people.piety", "settlement.piety", "settlement.prosperity", "table.entities")
 async def sacred_pilgrims(ctx: TickContext) -> None:
     scene = await _scene(ctx)
     tally = await perils.draw_pilgrims(ctx, scene.atlas, scene.grounds)

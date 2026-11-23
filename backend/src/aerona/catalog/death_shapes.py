@@ -57,6 +57,8 @@ RITE_TREATMENTS: dict[FuneralCustom, tuple[RemainsTreatment, ...]] = {
     FuneralCustom.SOUL_BINDING: (RemainsTreatment.RELEASE, RemainsTreatment.STORAGE),
     FuneralCustom.NAMELESS: (RemainsTreatment.BURIAL, RemainsTreatment.EXPOSURE, RemainsTreatment.WATER),
     FuneralCustom.NONE: (RemainsTreatment.NONE_NEEDED, RemainsTreatment.RELEASE, RemainsTreatment.BURIAL),
+    FuneralCustom.MUMMIFICATION: (RemainsTreatment.PRESERVATION, RemainsTreatment.STORAGE),
+    FuneralCustom.SECONDARY_BURIAL: (RemainsTreatment.BURIAL, RemainsTreatment.STORAGE),
 }
 
 CALLED_PROFESSIONS = frozenset({Profession.DEATH_WORKER})

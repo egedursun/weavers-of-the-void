@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.life_traits import COMMANDER_TRAIT_TRAITS, having
 from aerona.catalog.mind_split import BOLD_FACETS
+from aerona.catalog.movement import FOOT, best_passage
 from aerona.catalog.units import UNITS
 from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
@@ -58,11 +59,13 @@ def bridged(rules: Rules, region: RegionEnvironmentRow | None) -> bool:
     return region is not None and region.built >= rules.campaign_depth.bridge_built and region.scars.get(ScarKind.BRIDGE_DOWN.value, 0) <= 0
 
 
-def step_cost(rules: Rules, region: RegionEnvironmentRow | None, season: WorldSeasonRow | None, *, pontoon: bool = False) -> int:
+def step_cost(
+    rules: Rules, region: RegionEnvironmentRow | None, season: WorldSeasonRow | None, *, pontoon: bool = False, modes: frozenset[MovementMode] = FOOT
+) -> int:
     table = rules.campaign_depth
     if region is None:
         return PERCENT
-    passability = max(rules.logistics.passability_floor, region.passability.get(MovementMode.ON_FOOT.value, PERCENT))
+    passability = max(rules.logistics.passability_floor, best_passage(region.passability, modes, PERCENT))
     cost = PERCENT * max(1.0, table.passability_full / passability)
     if region.river_class in {RiverClass.RIVER, RiverClass.GREAT_RIVER}:
         if not bridged(rules, region) and not pontoon:

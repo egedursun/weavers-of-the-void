@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.biology import BURNING_VARIANTS
 from aerona.catalog.goods_traits import workshops_with
 from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
 from aerona.catalog.urban import QUARTER_WORKS
@@ -146,7 +147,7 @@ def keep(holder: SettlementProfileRow | SettlementInfrastructureRow, key: str, v
 async def capacities(ctx: TickContext, town: Town, knowledge: KnowledgeMap) -> None:
     table = ctx.rules.urban
     builders = await labour(ctx, town, Job.BUILDING)
-    haulers = await labour(ctx, town, Job.TRADE, Job.BUILDING)
+    haulers = await labour(ctx, town, Job.TRADE, Job.BUILDING, Job.TRANSPORT)
     architecture = knowledge.level(town.entity.id, KnowledgeBranch.ARCHITECTURE)
     keep(
         town.profile, "construction_capacity", round_half_up(builders * table.builder_capacity * (1 + architecture * table.engineering_capacity_pct / PERCENT))
@@ -190,8 +191,9 @@ async def administer(ctx: TickContext, town: Town, knowledge: KnowledgeMap, lite
         writing=knowledge.level(town.entity.id, KnowledgeBranch.WRITING),
         palace_pct=town.effects(ctx.rules).admin_pct,
     )
+    clerks = await labour(ctx, town, Job.ADMINISTRATION) / max(1, stat_or(town.entity, "population", 0))
     if "admin_capacity" not in town.profile.locked:
-        town.profile.admin_capacity = clamp_int(parts.total, 0, ADMIN_MAX)
+        town.profile.admin_capacity = clamp_int(parts.total + round_half_up(clerks * ctx.rules.labour.clerk_admin_pct), 0, ADMIN_MAX)
     return parts
 
 
@@ -854,7 +856,8 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
         replan(town.profile)
         floor, _ = headcount_bounds(ctx.rules, town.entity)
         before = stat(town.entity, "population") or 0
-        dead = min(max(0, before - floor), round_half_up(before * table.death_pct * gale / PERCENT * nature.factor("fire_harm_pct")))
+        fungal = ctx.rules.biology.fungal_fire_harm_pct / PERCENT if BURNING_VARIANTS & set(nature.variants) else 1.0
+        dead = min(max(0, before - floor), round_half_up(before * table.death_pct * gale / PERCENT * nature.factor("fire_harm_pct") * fungal))
         with flowing(FlowCategory.DISASTER):
             set_stats(town.entity, population=before - dead)
         treasury_loss = round_half_up(table.treasury_loss * before / PER_MILLE)
@@ -1002,7 +1005,9 @@ async def prestige(ctx: TickContext, town: Town) -> None:
             artworks += 1
         elif item.entity_type is EntityType.MORTAL and (item.importance or 0) >= table.renown_bar:
             renowned += 1
+    artists = await labour(ctx, town, Job.ARTS) / max(1, stat_or(town.entity, "population", 0))
     value = splendour / PERCENT * table.prestige_per_splendor + artworks * table.prestige_per_artwork + renowned * table.prestige_per_renown
+    value += artists * ctx.rules.labour.artist_prestige
     town.profile.prestige = clamp_int(value, 0, PERCENT)
 
 

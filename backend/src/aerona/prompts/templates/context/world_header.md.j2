@@ -36,7 +36,7 @@ DOOM CLOCK: {{ doom }}/{{ doom_threshold }}. Godlessness, rebellion, curses, res
 CLIMATE: {{ climate.name }} (since Age {{ climate.since_age }}; {{ climate.description }}).
 {% endif %}
 {% if not short and seasons %}
-SEASONS ({% if year_days %}{{ year_days | several("day", "days") }} a year; {% endif %}in order): {% for season in seasons %}{{ season.position }}: {{ season.name }} (growth {{ season.growth }}, war {{ season.campaign }}){% if not loop.last %} · {% endif %}{% endfor %}
+SEASONS ({% if year_days %}{{ year_days | several("day", "days") }} a year; {% endif %}in order): {% for season in seasons %}{{ season.position }}: {{ season.name }} [id {{ season.id }}] ({{ season.share_pct }}% of the year, {{ season.warmth }}, {{ season.water }}, warmth {{ season.temperature_shift }}, rain {{ season.rain_shift }}, growth {{ season.growth }}, travel {{ season.travel }}, war {{ season.campaign }}){% if not loop.last %} · {% endif %}{% endfor %}
 
 {% endif %}
 {% if age_star %}

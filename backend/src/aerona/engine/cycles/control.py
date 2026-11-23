@@ -63,11 +63,12 @@ from aerona.engine.collective.control import of_type, saved
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.asabiyya import asabiyya_row
 from aerona.engine.cycles.challenge import answer, response_to
-from aerona.engine.cycles.gifts import GiftTally, give, pass_circuit, refuse, return_gift
+from aerona.engine.cycles.gifts import GiftTally, give, pass_circuit, refuse, release_gift_debt, return_gift
 from aerona.engine.cycles.indenture import bought_freedom, freed_class, record_manumission
 from aerona.engine.cycles.legacy import apply_legacy
 from aerona.engine.cycles.nomads import NomadTally, circuit_for, move
 from aerona.engine.cycles.plans import PlanTally, complete
+from aerona.engine.cycles.sides import SIDES
 from aerona.engine.cycles.stress import stress_row
 from aerona.engine.demography.bound import BOUND, move_people, sync_bound_share
 from aerona.engine.demography.cohorts import cohorts_of
@@ -182,7 +183,7 @@ async def give_gift(ctx: TickContext, giver_id: int, receiver_id: int, value: in
     await node_exists(ctx, receiver_id, "receiver")
     if giver_id == receiver_id:
         raise ValidationFailedError("A gift needs two sides.")
-    gift = await give(ctx, giver_id, receiver_id, value, occasion, item_id=item_id)
+    gift = await give(ctx, giver_id, receiver_id, value, occasion, item_id=item_id, tell=True)
     if gift is None:
         raise ValidationFailedError("The giver cannot afford that gift.")
     await ctx.session.flush()
@@ -196,6 +197,14 @@ async def answer_gift(ctx: TickContext, gift_id: int, value: int | None) -> Gift
         raise ValidationFailedError("The receiver cannot afford to answer that gift.")
     await ctx.session.flush()
     return answer_row
+
+
+async def release_gift(ctx: TickContext, gift_id: int) -> GiftRow:
+    gift = await found(ctx, GiftRow, gift_id, "gift")
+    if not await release_gift_debt(ctx, gift):
+        raise ValidationFailedError("Only a gift still owed, and not held, can have its debt released.")
+    await ctx.session.flush()
+    return gift
 
 
 async def refuse_gift(ctx: TickContext, gift_id: int) -> GiftRow:
@@ -250,6 +259,9 @@ async def set_kinship(ctx: TickContext, people_id: int, values: Values) -> Kinsh
     row = await ctx.session.get(KinshipSystemRow, people_id)
     if row is None:
         row = await saved(ctx, KinshipSystemRow(people_entity_id=people_id, locked=[]))
+    side = values.get("first_side")
+    if side is not None and side not in {item.value for item in SIDES}:
+        raise ValidationFailedError(f"The first side is one of the two sexes of a two-sexed people: {', '.join(item.value for item in SIDES)}.")
     return await put_values(ctx, row, values, KINSHIP_FIELDS, "kinship system")
 
 

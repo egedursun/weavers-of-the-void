@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.constants.agents import FILLER_WORDS
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
@@ -93,9 +94,7 @@ class RepeatQuery:
 async def similar_creations(session: AsyncSession, rules: Rules, query: RepeatQuery) -> list[EntityRow]:
     tools = rules.son_tools
     letters = tools.repeat_root_letters
-    type_words = frozenset(
-        word[:letters] for word in (query.entity_type.value.replace("_", " ") + " " + ENTITY_TYPES[query.entity_type].label).casefold().split()
-    )
+    type_words = frozenset(word[:letters] for word in (spoken(query.entity_type) + " " + ENTITY_TYPES[query.entity_type].label).casefold().split())
     subtype_roots = roots(query.subtype, letters, type_words)
     theme = roots(query.description, letters, type_words | frozenset(roots(query.name, letters)))
     statement = select(EntityRow).where(

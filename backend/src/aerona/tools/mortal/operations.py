@@ -9,10 +9,11 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import EchelonOrder, ExpeditionStatus
 from aerona.engine.operations import control
-from aerona.engine.operations.expeditions import ExpeditionTally, camp, companions_for, on_expedition, party_of
+from aerona.engine.operations.expeditions import ExpeditionTally, camp, companions_for, on_expedition, party_of, way_of
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -26,6 +27,7 @@ UNDER_WAY = (ExpeditionStatus.UNDERWAY, ExpeditionStatus.CAMPED)
 
 class LeadExpeditionInput(ToolInput):
     target_id: int
+    mode: MovementMode | None = None
 
 
 class MakeCampInput(ToolInput):
@@ -46,14 +48,14 @@ async def lead_expedition(call: MortalCall, args: LeadExpeditionInput) -> str:
         fail(MortalResult.EXPEDITION_DECLINED, why="you already travel with an expedition")
     companions = await companions_for(call.tick, call.me, away)
     try:
-        row = await control.send_expedition(call.tick, call.me.id, target.id, [mortal.id for mortal in companions], None)
+        row = await control.send_expedition(call.tick, call.me.id, target.id, [mortal.id for mortal in companions], None, mode=args.mode)
     except ValidationFailedError as error:
         fail(MortalResult.EXPEDITION_DECLINED, why=str(error).rstrip("."))
     call.target(target.id)
     await call.record(
         "tools.mortal.lead_expedition",
         roles={IncidentRole.LEADER: call.me.id, IncidentRole.DESTINATION: target.id, IncidentRole.MEMBER: [mortal.id for mortal in companions]},
-        facts={"party": len(companions) + 1, "legs": row.legs_total},
+        facts={"party": len(companions) + 1, "legs": row.legs_total, "mode": (await way_of(call.tick, call.me, target, args.mode))[0]},
         place=target.id,
         cause=row.incident_id,
     )

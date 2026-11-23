@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.genetics import GIFT_STANCE_LABELS, HOUSEHOLD_ROLE_LABELS
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow
 from aerona.db.tables.households import HouseholdMemberRow
@@ -22,10 +22,6 @@ class LineageBits:
     dwelling: str = ""
 
 
-def school_label(value: str) -> str:
-    return value.replace("elemental_", "").replace("_", " ")
-
-
 async def lineage_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> LineageBits:
     genome = await session.get(GenomeRow, me.id)
     looks = appearance_text(genome.genes, genome.marks) if genome is not None else ""
@@ -34,7 +30,7 @@ async def lineage_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> L
         people = await people_of(session, me)
         pool = await session.get(AllelePoolRow, people.id) if people is not None else None
         stance = f", which your people hold {GIFT_STANCE_LABELS[pool.gift_stance].lower()}" if pool is not None else ""
-        gift = f"gifted in {', '.join(school_label(school.value) for school in schools)}{stance}"
+        gift = f"gifted in {', '.join(spoken(school).removeprefix('elemental ') for school in schools)}{stance}"
     household, dwelling, quality, members = await home_of(session, rules, me.id)
     role = await session.get(HouseholdMemberRow, me.id)
     household_text = (

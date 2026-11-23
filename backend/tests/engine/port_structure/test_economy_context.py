@@ -8,7 +8,7 @@ from aerona.db.tables.economy import CurrencyRow, LoanRow, MarketPriceRow, Trade
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Job, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, Job, SexKind
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, TradeLoss
 from aerona.domain.enums.entity import EntityType
@@ -71,7 +71,12 @@ async def test_inspection_and_mortal_context_carry_the_whole_economy(session: As
     session.add(DistrictRow(settlement_entity_id=town.id, kind=DistrictKind.MARKET, level=2, built_epoch=1))
     session.add(
         CohortRow(
-            community_entity_id=town.id, age_band=AgeBand.ADULT, sex=Sex.FEMALE, social_class=SocialClass.FARMER, condition=CohortCondition.SICK, count=310
+            community_entity_id=town.id,
+            age_band=AgeBand.ADULT,
+            sex_kind=SexKind.BEARER,
+            social_class=SocialClass.FARMER,
+            condition=CohortCondition.SICK,
+            count=310,
         )
     )
     session.add(LabourRow(community_entity_id=town.id, job=Job.FARMING, workers=800, output_pct=90))
@@ -107,7 +112,7 @@ async def test_inspection_and_mortal_context_carry_the_whole_economy(session: As
         "8% to Tinhollow",
         "a town; treasury 120",
         "market level 2",
-        "310 adult female farmer (sick)",
+        "310 adult bearing farmer (sick)",
         "farming 800 hands at 90%",
         "Grey Cough",
         "load 30",

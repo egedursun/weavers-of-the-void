@@ -13,10 +13,10 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.evolution import CureResearchRow, EcosystemServiceRow, LineageMarkRow, SpeciesTraitRow, TrophicLevelRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.domain.enums.affliction import PackageKind
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.disease import ClimateAffinity, DiseaseTarget, DiseaseVector, SpreadPath
+from aerona.domain.enums.disease import ClimateWarmth, DiseaseTarget, SpreadPath
 from aerona.domain.enums.ecology import Diet, DomesticationStage, SizeClass
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, TemperatureBand
@@ -195,13 +195,13 @@ async def sickness(session: AsyncSession, world: CoreWorld) -> EntityRow:
     session.add(
         DiseaseProfileRow(
             disease_entity_id=disease.id,
-            vector=DiseaseVector.AIR,
+            primary_route=Transmission.INHALATION,
             virulence=40,
             lethality=20,
             chronic_rate=0,
             incubation=1,
             target_functions=[],
-            climate_affinity=ClimateAffinity.ANY,
+            affinity_warmth=ClimateWarmth.ANY,
             immunity_epochs=4,
             mutation_rate=5,
             stigma=10,

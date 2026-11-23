@@ -1,22 +1,23 @@
 import {
+  AudioWaveform,
   Axe,
+  Bomb,
+  Brain,
+  Crosshair,
   Flame,
+  FlaskConical,
   Ghost,
+  Package,
   PawPrint,
+  Pickaxe,
+  Radiation,
   Skull,
   Snowflake,
   Sparkles,
   Sword,
   Wheat,
-  Package,
-  Pickaxe,
-  Crosshair,
-  Bomb,
+  Wind,
   Zap,
-  Radiation,
-  FlaskConical,
-  AudioWaveform,
-  Brain,
 } from 'lucide-react'
 import {
   type components,
@@ -29,6 +30,7 @@ import {
   techniqueValues,
   traditionFunctionValues,
 } from '@/api/generated/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import {
   ARCHETYPES,
   CLASSES,
@@ -43,7 +45,6 @@ import {
   VALUES,
   branchOf,
   lookup,
-  sentence,
 } from '../model'
 
 type Catalog = components['schemas']['CustomCatalog']
@@ -79,7 +80,10 @@ type CatalogSpec = {
 }
 
 const MAX_SCALE = 500
-const DAMAGE_ICON: Record<string, LoreNamed['icon']> = {
+const DAMAGE_ICON: Record<
+  components['schemas']['DamageType'],
+  LoreNamed['icon']
+> = {
   cut: Sword,
   pierce: Sword,
   blunt: Axe,
@@ -97,6 +101,7 @@ const DAMAGE_ICON: Record<string, LoreNamed['icon']> = {
   chemical: FlaskConical,
   sonic: AudioWaveform,
   psychic: Brain,
+  asphyxia: Wind,
 }
 
 function named(
@@ -112,8 +117,8 @@ const DAMAGE = Object.fromEntries(
   damageTypeValues.map((value) => [
     value,
     {
-      label: sentence(value),
-      icon: DAMAGE_ICON[value] ?? Sword,
+      label: wordOf(damageTypeValues, value),
+      icon: DAMAGE_ICON[value],
       tone: 'danger',
     } satisfies LoreNamed,
   ])
@@ -151,7 +156,7 @@ const TECHNIQUES = Object.fromEntries(
   techniqueValues.map((value) => [
     value,
     {
-      label: sentence(value),
+      label: wordOf(techniqueValues, value),
       icon: Sparkles,
       tone: 'info',
     } satisfies LoreNamed,

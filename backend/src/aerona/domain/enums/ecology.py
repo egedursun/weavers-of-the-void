@@ -25,6 +25,10 @@ class Diet(StrEnum):
     VOID = "void"
     PISCIVORE = "piscivore"
     SANGUIVORE = "sanguivore"
+    PARASITE = "parasite"
+    DECOMPOSER = "decomposer"
+    CHEMOSYNTHETIC = "chemosynthetic"
+    ENERGY = "energy"
 
 
 class Sociality(StrEnum):
@@ -32,14 +36,18 @@ class Sociality(StrEnum):
     PACK = "pack"
     HERD = "herd"
     HIVE = "hive"
+    COLONY = "colony"
+    SWARM = "swarm"
 
 
 class DomesticationStage(StrEnum):
     WILD = "wild"
+    COMMENSAL = "commensal"
     TAMED = "tamed"
     HERDED = "herded"
     DOMESTICATED = "domesticated"
     BREED = "breed"
+    FERAL = "feral"
 
 
 STAGE_ORDER = tuple(DomesticationStage)
@@ -61,6 +69,8 @@ class AnimalRole(StrEnum):
     SENSING = "sensing"
     ENTERTAINMENT = "entertainment"
     REAGENT_SOURCE = "reagent_source"
+    SPORT = "sport"
+    MEDICINE = "medicine"
 
 
 class RangeTrend(StrEnum):
@@ -77,6 +87,9 @@ class BeastTemper(StrEnum):
     BOUND = "bound"
     TAMED = "tamed"
     COMPANION = "companion"
+    WOUNDED = "wounded"
+    BROODING = "brooding"
+    COWED = "cowed"
 
 
 class YieldProduct(StrEnum):
@@ -93,6 +106,12 @@ class YieldProduct(StrEnum):
     MAGIC_REAGENTS = "magic_reagents"
     GREAT_BEAST_TISSUE = "great_beast_tissue"
     EGGS = "eggs"
+    BLOOD = "blood"
+    ORGANS = "organs"
+    FAT = "fat"
+    SCENT = "scent"
+    HONEY = "honey"
+    WAX = "wax"
 
 
 class FoodLink(StrEnum):
@@ -122,6 +141,8 @@ class Biochemistry(StrEnum):
     CRYSTAL = "crystal"
     VOID = "void"
     SPIRIT = "spirit"
+    CARBON_METHANE = "carbon_methane"
+    PLASMA = "plasma"
 
 
 class GrowthCycle(StrEnum):
@@ -151,6 +172,12 @@ class PlantYield(StrEnum):
     BREW_BASE = "brew_base"
     REAGENT = "reagent"
     POISON = "poison"
+    OIL = "oil"
+    SUGAR = "sugar"
+    SPICE = "spice"
+    RESIN = "resin"
+    STIMULANT = "stimulant"
+    FODDER = "fodder"
 
 
 class HerdTraining(StrEnum):
@@ -220,6 +247,9 @@ class Temperament(StrEnum):
     FIERCE = "fierce"
     CUNNING = "cunning"
     SEIZES_PREY = "seizes_prey"
+    VENGEFUL = "vengeful"
+    ACQUISITIVE = "acquisitive"
+    PROTECTIVE = "protective"
 
 
 class Aversion(StrEnum):
@@ -228,11 +258,17 @@ class Aversion(StrEnum):
     NOISE = "noise"
     WATER = "water"
     HOLY_GROUND = "holy_ground"
+    LIGHT = "light"
+    COLD = "cold"
 
 
 class AwakeningTrigger(StrEnum):
     DEEP_MINING = "deep_mining"
     DESECRATION = "desecration"
+    DISTURBANCE = "disturbance"
+    THEFT = "theft"
+    SKY_SIGN = "sky_sign"
+    SUMMONS = "summons"
 
 
 class Habitat(StrEnum):
@@ -241,3 +277,5 @@ class Habitat(StrEnum):
     SKY = "sky"
     DEEP = "deep"
     VOID = "void"
+    MAGMA = "magma"
+    ETHEREAL = "ethereal"

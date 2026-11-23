@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import or_, select
 
+from aerona.catalog.market_kinds import FORGERIES, JUDGES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import BrandRow
 from aerona.db.tables.arts import ArtPriceRow, CollectorRow, ForgeryRow
@@ -9,10 +10,11 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import RelicRow
+from aerona.db.tables.mind import SKILL_MAX, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import ClaimRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.arts import ForgeryKind, ForgeryStatus
+from aerona.domain.enums.arts import ArtMarketRole, ForgeryKind, ForgeryStatus
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -21,14 +23,17 @@ from aerona.domain.enums.polity import ClaimBasis
 from aerona.domain.enums.records import StepAction
 from aerona.domain.models.entity_stats import ArtworkStats, ItemStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.money import issued_by
+from aerona.engine.economy.purse import receive_coin, take_coin
 from aerona.engine.lore.items import profile_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.polity.trials import report_crime
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft, record
-from aerona.engine.sacred.places import realm_for, region_of
+from aerona.engine.sacred.places import realm_for, region_of, town_of
 
 DOCUMENTS = frozenset({EntityType.TITLE, EntityType.LAW, EntityType.TREATY})
 FORGEABLE = frozenset({EntityType.ARTWORK, *DOCUMENTS})
@@ -47,6 +52,41 @@ def kind_for(original: EntityRow, relic: RelicRow | None) -> ForgeryKind:
     if original.entity_type in DOCUMENTS:
         return ForgeryKind.DOCUMENT
     return ForgeryKind.RELIC if relic is not None else ForgeryKind.BRAND
+
+
+async def forge_coin(ctx: TickContext, realm: EntityRow, forger: EntityRow) -> EntityRow:
+    currency = await issued_by(ctx, realm.id)
+    label = currency.name if currency is not None else realm.name
+    item = await forged_item(ctx, f"False coin of {label}", f"Coin that passes for the coin of {label}.", forger, ItemClass.CURRENCY)
+    if currency is not None and not currency.held and not held(realm.id):
+        currency.trust = clamp_int(currency.trust - ctx.rules.forgery.coin_trust_cut, 0, PERCENT)
+    return item
+
+
+async def forge_lineage(ctx: TickContext, title: EntityRow, forger: EntityRow, skill: int) -> tuple[EntityRow, ClaimRow | None]:
+    item = await forged_item(ctx, f"Lineage of {title.name}", f"A lineage that seems to descend to {title.name}.", forger, ItemClass.SCROLL)
+    realm = await claimed_realm(ctx, title, forger)
+    if realm is None:
+        return item, None
+    claim = ClaimRow(
+        claimant_entity_id=forger.id,
+        polity_entity_id=realm,
+        title_entity_id=title.id,
+        strength=skill // 2,
+        basis=ClaimBasis.INHERITANCE,
+        since_epoch=ctx.epoch,
+        locked=[],
+    )
+    ctx.session.add(claim)
+    return item, claim
+
+
+async def forge_seal(ctx: TickContext, realm: EntityRow, forger: EntityRow) -> EntityRow:
+    item = await forged_item(ctx, f"Seal of {realm.name}", f"A seal that passes false orders in the name of {realm.name}.", forger, ItemClass.SEAL)
+    take = ctx.rules.forgery.seal_order_take
+    if not held(realm.id) and await take_coin(ctx.session, ctx.rules, realm, take):
+        await receive_coin(ctx.session, ctx.rules, forger, take)
+    return item
 
 
 async def copy_artwork(ctx: TickContext, original: EntityRow, forger: EntityRow, skill: int) -> EntityRow:
@@ -112,12 +152,18 @@ async def claimed_realm(ctx: TickContext, original: EntityRow, forger: EntityRow
     return await realm_for(ctx.session, forger)
 
 
-async def forge(ctx: TickContext, original: EntityRow, forger: EntityRow, *, brand: BrandRow | None = None) -> ForgeryRow:
+async def forge(ctx: TickContext, original: EntityRow, forger: EntityRow, *, brand: BrandRow | None = None, kind: ForgeryKind | None = None) -> ForgeryRow:
     skill = clamp_int(stat_or(forger, "creativity", MIDDLING), 0, PERCENT)
     relic = await ctx.session.get(RelicRow, original.id)
-    kind = ForgeryKind.BRAND if brand is not None else kind_for(original, relic)
+    kind = kind if kind is not None else ForgeryKind.BRAND if brand is not None else kind_for(original, relic)
     claim: ClaimRow | None = None
-    if kind is ForgeryKind.ARTWORK:
+    if kind is ForgeryKind.COIN:
+        item = await forge_coin(ctx, original, forger)
+    elif kind is ForgeryKind.LINEAGE:
+        item, claim = await forge_lineage(ctx, original, forger, skill)
+    elif kind is ForgeryKind.SEAL:
+        item = await forge_seal(ctx, original, forger)
+    elif kind is ForgeryKind.ARTWORK:
         item = await copy_artwork(ctx, original, forger, skill)
     elif kind is ForgeryKind.RELIC:
         item = await forged_item(ctx, original.name, f"A relic passed off as {original.name}.", forger, ItemClass.HOLY_RELIC)
@@ -165,8 +211,34 @@ async def forge(ctx: TickContext, original: EntityRow, forger: EntityRow, *, bra
         locked=[],
     )
     ctx.session.add(row)
+    await take_up_forging(ctx, forger)
     await ctx.session.flush()
     return row
+
+
+async def take_up_forging(ctx: TickContext, forger: EntityRow) -> None:
+    if held(forger.id) or await ctx.session.get(CollectorRow, forger.id) is not None:
+        return
+    ctx.session.add(CollectorRow(holder_entity_id=forger.id, role=ArtMarketRole.FORGER, connoisseurship=0, since_epoch=ctx.epoch, locked=[]))
+
+
+async def other_target(ctx: TickContext, maker: EntityRow) -> tuple[EntityRow, ForgeryKind] | None:
+    realm_id = await realm_for(ctx.session, maker)
+    realm = await living_entity(ctx.session, realm_id) if realm_id is not None else None
+    if realm is None:
+        return None
+    options: list[tuple[EntityRow, ForgeryKind]] = [(realm, ForgeryKind.SEAL)]
+    if await issued_by(ctx, realm.id) is not None:
+        options.append((realm, ForgeryKind.COIN))
+    title = await ctx.session.scalar(
+        select(EntityRow)
+        .where(EntityRow.entity_type == EntityType.TITLE, EntityRow.status == EntityStatus.CANON, EntityRow.affiliated_entity_id == realm.id)
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    if title is not None:
+        options.append((title, ForgeryKind.LINEAGE))
+    return ctx.rng(f"forge.kind.{maker.id}.{ctx.epoch}").pick(options)
 
 
 async def work_of(ctx: TickContext, holder: EntityRow) -> EntityRow | None:
@@ -241,9 +313,14 @@ async def forge_works(ctx: TickContext, tally: ForgeryTally) -> None:
         brand = None if original is not None else await renowned_brand(ctx, maker.world_id)
         if brand is not None:
             original = await living_entity(ctx.session, brand.community_entity_id)
+        kind: ForgeryKind | None = None
+        if original is None or ctx.rng(f"forge.other.{maker.id}.{ctx.epoch}").chance(MIDDLING):
+            other = await other_target(ctx, maker)
+            if other is not None:
+                original, kind, brand = other[0], other[1], None
         if original is None or held(original.id):
             continue
-        row = await forge(ctx, original, maker, brand=brand)
+        row = await forge(ctx, original, maker, brand=brand, kind=kind)
         quota.take(maker.world_id)
         tally.forged += 1
         await record(
@@ -284,6 +361,10 @@ async def expose(ctx: TickContext, row: ForgeryRow, expert_id: int | None) -> No
         facts={"forgery": row.kind, "infamy": table.infamy},
         steps=(StepDraft(StepAction.REVEAL, target=row.item_entity_id),),
     )
+    culprit = await living_entity(ctx.session, row.forger_entity_id) if row.forger_entity_id is not None else None
+    town = await town_of(ctx.session, culprit) if culprit is not None else None
+    if culprit is not None and town is not None:
+        await report_crime(ctx, town.id, culprit.id, FORGERIES[row.kind].crime)
 
 
 async def examine(ctx: TickContext, tally: ForgeryTally) -> None:
@@ -293,26 +374,81 @@ async def examine(ctx: TickContext, tally: ForgeryTally) -> None:
         if item is None or held(item.id) or "status" in row.locked:
             continue
         region = await region_of(ctx.session, item)
-        experts = await ctx.session.execute(
-            select(CollectorRow, EntityRow)
-            .join(EntityRow, EntityRow.id == CollectorRow.holder_entity_id)
-            .where(EntityRow.world_id == item.world_id)
-            .order_by(CollectorRow.connoisseurship.desc(), CollectorRow.holder_entity_id)
-            .limit(1)
-        )
-        best = next(iter(experts), None)
-        if best is None:
+        found = await expert_for(ctx, row, item)
+        if found is None:
             continue
-        collector, expert = best
-        edge = max(0, collector.connoisseurship - row.skill)
+        expert, discernment = found
+        edge = max(0, discernment - row.skill)
         local = region is not None and await region_of(ctx.session, expert) == region
-        chance = table.expose_chance * (1 + edge / PERCENT) * (2 if local else 1)
+        chance = table.expose_chance * FORGERIES[row.kind].detect(ctx.rules) / PERCENT * (1 + edge / PERCENT) * (2 if local else 1)
         if ctx.rng(f"expose.{row.id}.{ctx.epoch}").chance(chance):
             await expose(ctx, row, expert.id)
             tally.exposed += 1
 
 
+async def expert_for(ctx: TickContext, row: ForgeryRow, item: EntityRow) -> tuple[EntityRow, int] | None:
+    skill = FORGERIES[row.kind].expert
+    if skill is not None:
+        found = await ctx.session.execute(
+            select(EntityRow, SkillRow.level)
+            .join(SkillRow, SkillRow.holder_node_id == EntityRow.id)
+            .where(EntityRow.world_id == item.world_id, EntityRow.status == EntityStatus.CANON, SkillRow.skill == skill)
+            .order_by(SkillRow.level.desc(), EntityRow.id)
+            .limit(1)
+        )
+        best = next(iter(found), None)
+        if best is not None:
+            return best[0], round_half_up(best[1] * PERCENT / SKILL_MAX)
+    judges = await ctx.session.execute(
+        select(CollectorRow, EntityRow)
+        .join(EntityRow, EntityRow.id == CollectorRow.holder_entity_id)
+        .where(EntityRow.world_id == item.world_id, CollectorRow.role.in_(list(JUDGES)))
+        .order_by(CollectorRow.connoisseurship.desc(), CollectorRow.holder_entity_id)
+        .limit(1)
+    )
+    judge = next(iter(judges), None)
+    return (judge[1], judge[0].connoisseurship) if judge is not None else None
+
+
+async def unmask_forgers(ctx: TickContext, tally: ForgeryTally) -> None:
+    table = ctx.rules.art_market
+    forgers = await ctx.session.execute(
+        select(CollectorRow, EntityRow)
+        .join(EntityRow, EntityRow.id == CollectorRow.holder_entity_id)
+        .where(CollectorRow.role == ArtMarketRole.FORGER, EntityRow.status == EntityStatus.CANON)
+        .order_by(CollectorRow.holder_entity_id)
+    )
+    for _, forger in list(forgers):
+        if held(forger.id) or not ctx.rng(f"forger.unmask.{forger.id}.{ctx.epoch}").chance(table.forger_detect_pct):
+            continue
+        judge = await ctx.session.scalar(
+            select(CollectorRow.holder_entity_id)
+            .join(EntityRow, EntityRow.id == CollectorRow.holder_entity_id)
+            .where(CollectorRow.role.in_(list(JUDGES)), EntityRow.world_id == forger.world_id)
+            .order_by(CollectorRow.connoisseurship.desc(), CollectorRow.holder_entity_id)
+            .limit(1)
+        )
+        row = await ctx.session.scalar(
+            select(ForgeryRow)
+            .where(ForgeryRow.forger_entity_id == forger.id, ForgeryRow.status == ForgeryStatus.HIDDEN)
+            .order_by(ForgeryRow.made_epoch, ForgeryRow.id)
+            .limit(1)
+        )
+        if judge is None or row is None or "status" in row.locked:
+            continue
+        await expose(ctx, row, judge)
+        tally.exposed += 1
+        await record(
+            ctx,
+            "art.forgery_exposed",
+            roles={IncidentRole.ACTOR: judge, IncidentRole.SUBJECT: forger.id},
+            facts={"forgery": row.kind},
+            steps=(StepDraft(StepAction.REVEAL, actor=judge, target=forger.id),),
+        )
+
+
 async def keep_forgeries(ctx: TickContext, tally: ForgeryTally) -> None:
     await forge_works(ctx, tally)
     await examine(ctx, tally)
+    await unmask_forgers(ctx, tally)
     await ctx.session.flush()

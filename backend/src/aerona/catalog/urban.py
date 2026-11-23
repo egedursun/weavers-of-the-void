@@ -201,6 +201,22 @@ HOUSING_GATES = MappingProxyType(
         H.SHIP_BERTH: (KnowledgeBranch.VOID_LIVING, 1),
     }
 )
+HOUSING_LABELS = total(
+    HousingLevel,
+    {
+        H.HUT: "Hut",
+        H.COTTAGE: "Cottage",
+        H.HOUSE: "House",
+        H.TOWNHOUSE: "Townhouse",
+        H.MANOR: "Manor",
+        H.APARTMENT: "Apartment",
+        H.TENEMENT: "Tenement",
+        H.TOWER_BLOCK: "Tower block",
+        H.ARCOLOGY_UNIT: "Arcology unit",
+        H.HABITAT_MODULE: "Habitat module",
+        H.SHIP_BERTH: "Ship berth",
+    },
+)
 FINE_HOMES = frozenset({H.TOWNHOUSE, H.ARCOLOGY_UNIT, H.MANOR})
 TALL_HOMES = frozenset({H.TOWER_BLOCK, H.ARCOLOGY_UNIT})
 M = Morphology

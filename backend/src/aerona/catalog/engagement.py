@@ -35,6 +35,7 @@ DAMAGE_SECTIONS: MappingProxyType[D, tuple[S, ...]] = total(
         D.ELECTRIC: (S.SENSORS, S.NAVIGATION, S.POWER_CORE, S.ENGINE, S.BRIDGE),
         D.RADIATION: (S.CREW_QUARTERS, S.LIFE_SUPPORT, S.COCKPIT),
         D.SONIC: (S.CREW_QUARTERS, S.HULL, S.SENSORS),
+        D.ASPHYXIA: (S.CREW_QUARTERS, S.LIFE_SUPPORT, S.COCKPIT),
     },
 )
 FAMILY_SECTIONS: MappingProxyType[E, tuple[S, ...]] = MappingProxyType(

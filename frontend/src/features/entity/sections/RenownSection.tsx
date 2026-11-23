@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Award, EyeOff, Plus, Trash2, VolumeX, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { skillKindValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,8 @@ import {
   FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
+import { valueTable } from '@/features/entity/affairs/labels'
+import { ACTS } from '@/features/entity/lore/cultureLabels'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -46,6 +49,7 @@ import {
 } from '../renown/labels'
 
 const SPAN = 100
+const SKILLS = valueTable(skillKindValues)
 const WORKING = 'Working on it.'
 const ANYONE = [
   'mortal',
@@ -165,7 +169,7 @@ function ReputationRow({
           'Unknown'
         )
       }
-      meta={`${row.label}${row.skill ? ` (${row.skill.replaceAll('_', ' ')})` : ''} · heard in epoch ${row.heard_epoch}`}
+      meta={`${row.label}${row.skill ? ` (${SKILLS[row.skill].toLowerCase()})` : ''} · heard in epoch ${row.heard_epoch}`}
       badges={row.held ? <Badge variant='secondary'>Held</Badge> : undefined}
       actions={
         <RemoveButton
@@ -517,7 +521,7 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
     <ItemRow
       icon={spec.icon}
       tone={spec.tone}
-      title={`A deed of ${deed.label.toLowerCase()}${deed.act ? ` (${deed.act.replaceAll('_', ' ')})` : ''}`}
+      title={`A deed of ${deed.label.toLowerCase()}${deed.act ? ` (${ACTS[deed.act].label.toLowerCase()})` : ''}`}
       meta={`${deed.doer?.name ?? 'Someone'}${deed.place ? ` in ${deed.place.name}` : ''} · size ${deed.magnitude} · seen by ${deed.witnesses} · epoch ${deed.epoch}`}
       badges={
         deed.token ? <Badge variant='secondary'>Token kept</Badge> : undefined

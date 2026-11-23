@@ -9,7 +9,7 @@ import {
   Trash2,
   Wand2,
 } from 'lucide-react'
-import { naturalLawValues } from '@/api/generated/schema'
+import { naturalLawValues, riteEffectKindValues } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -31,6 +31,7 @@ import {
 } from '@/features/cosmography/parts'
 import { GOD_KINDS, why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { TextField } from '@/features/entity/economy/parts'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/wilds/parts'
@@ -57,7 +58,6 @@ import {
   TECHNIQUES,
   listed,
   table,
-  words,
 } from './labels'
 import { useEntityType } from './model'
 
@@ -621,7 +621,7 @@ function ChargeCard({
     <RecordRow
       icon={Wand2}
       tone='gold'
-      title={words(charge.effect)}
+      title={wordOf(riteEffectKindValues, charge.effect)}
       caption={`Strength ${charge.strength}`}
     >
       <Meter

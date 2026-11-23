@@ -19,7 +19,7 @@ const WORLD = { id: 4, kind: 'world' as const, name: 'Orvael' }
 
 const EMPTY = {
   formation: null,
-  season: null,
+  seasons: [],
   forecasts: [],
   transformations: [],
   cycle: 'linear',
@@ -96,7 +96,7 @@ describe('tales, seasons and ages', () => {
     })
   })
 
-  it('shows a world forming and its long winter and unsettles nothing twice', async () => {
+  it('shows a world forming and its long winter with its shape and reach', async () => {
     serveBase()
     onApi('GET', '/api/tales/of/4', {
       ...EMPTY,
@@ -115,16 +115,25 @@ describe('tales, seasons and ages', () => {
         formed_epoch: 1,
         locked: [],
       },
-      season: {
-        world: WORLD,
-        cause: 'orbit',
-        spell: 'winter',
-        spell_started_epoch: 5,
-        spell_length: 3,
-        severity: 70,
-        by_node: null,
-        locked: [],
-      },
+      seasons: [
+        {
+          id: 2,
+          world: WORLD,
+          cause: 'orbit',
+          shape: 'cycling',
+          spell: 'winter',
+          spell_started_epoch: 5,
+          spell_length: 3,
+          severity: 70,
+          reach: 'north',
+          source_impact_id: null,
+          source_region: null,
+          source_star: null,
+          source_incident_id: null,
+          by_node: null,
+          locked: [],
+        },
+      ],
     })
     const { screen } = await renderApp(<TalesSection nodeId={4} />)
     await screen
@@ -134,11 +143,15 @@ describe('tales, seasons and ages', () => {
       .element(screen.getByText('Orvael: core 25, water 70, bombardment 60'))
       .toBeVisible()
     await expect
-      .element(screen.getByText('Long winter on Orvael'))
+      .element(screen.getByText('Long winter on Orvael').first())
       .toBeVisible()
     await expect
-      .element(screen.getByRole('button', { name: 'Unsettle them' }))
-      .toBeDisabled()
+      .element(
+        screen.getByText(
+          /^Cycling · since epoch 5, until epoch 8 · a chaotic orbit · the northern half$/
+        )
+      )
+      .toBeVisible()
   })
 
   it('keeps the age from turning in a cosmos that runs on', async () => {
@@ -149,5 +162,43 @@ describe('tales, seasons and ages', () => {
     await expect
       .element(screen.getByRole('button', { name: 'Turn the age now' }))
       .toBeDisabled()
+  })
+
+  it('begins a long season from an impact once the impact is named', async () => {
+    serveBase()
+    onApi('GET', '/api/tales/of/4', { ...EMPTY, node: WORLD })
+    onApi('POST', '/api/actions/irregular_season:create', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<TalesSection nodeId={4} />)
+    await screen
+      .getByRole('tab', { name: /Forming, seasons and remaking/ })
+      .click()
+    await screen.getByRole('combobox', { name: '1. Cause' }).click()
+    await screen.getByRole('option', { name: 'An impact' }).click()
+    const begin = screen.getByRole('button', { name: 'Begin it' })
+    await expect
+      .element(begin)
+      .toHaveAccessibleDescription('Name the impact that struck this world')
+    await screen
+      .getByRole('spinbutton', { name: '2. Source impact' })
+      .fill('12')
+    await begin.click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/irregular_season:create'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/irregular_season:create')[0].body
+    ).toEqual({
+      world_id: 4,
+      cause: 'impact',
+      shape: 'single',
+      spell: 'winter',
+      length: 2,
+      severity: 50,
+      reach: 'world',
+      source_impact_id: 12,
+      source_region_id: null,
+      source_star_id: null,
+      source_incident_id: null,
+    })
   })
 })

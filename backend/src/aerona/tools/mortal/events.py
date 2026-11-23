@@ -57,7 +57,7 @@ async def recount(call: MortalCall, args: RecountInput) -> str:
     if home is None:
         fail(MortalResult.RECOUNT_REFUSED, why="you live among no people to tell")
     if held(home.id):
-        fail(MortalResult.RECOUNT_REFUSED, why="a stronger hand holds your people")
+        fail(MortalResult.RECOUNT_REFUSED, why="your people is held")
     rumour = await call.session.scalar(select(RumourRow).where(RumourRow.incident_id == incident.id, RumourRow.carrier_entity_id == home.id))
     if rumour is None:
         call.session.add(

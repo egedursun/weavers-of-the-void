@@ -5,7 +5,7 @@ from sqlalchemy import or_, select
 
 from aerona.agents.context.recent_chronicle import prompt_text
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import fill
+from aerona.core.grammar import fill, spoken
 from aerona.db.repositories.chronicle import kept_lines
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.agency import ActionRecordRow
@@ -195,7 +195,7 @@ async def creator_actor(scope: Scope, epoch: int, limit: int) -> FactActor:
         folded.setdefault(record.kind.value, []).append(record)
     deeds = []
     for group in folded.values():
-        text = shorten(group[0].summary or group[0].kind.value.replace("_", " "), limit)
+        text = shorten(group[0].summary or spoken(group[0].kind), limit)
         deeds.append(text + (fill(TIMES_SUFFIX, count=len(group)) if len(group) > 1 else ""))
     return FactActor(ref=CREATOR_REF, id=scope.creator.id, name=scope.creator.name, deeds=deeds, deed_count=len(records))
 
@@ -348,7 +348,7 @@ async def tale_facts(scope: Scope, epoch: int) -> list[FactTale]:
     for arc in await scope.session.scalars(select(ArcRow).where(or_(ArcRow.last_beat_epoch == epoch, ArcRow.ended_epoch == epoch)).order_by(ArcRow.id)):
         subject = await NodeRepository(scope.session).name_of(arc.subject_node_id)
         if subject is not None:
-            found.append(FactTale(subject=subject, template=arc.template.value.replace("_", " "), stage=arc.stage.value, outcome=arc.outcome.value))
+            found.append(FactTale(subject=subject, template=spoken(arc.template), stage=arc.stage.value, outcome=arc.outcome.value))
     return found
 
 
@@ -358,7 +358,7 @@ async def tales_of(scope: Scope, node_id: int) -> list[FactTale]:
     for arc in await scope.session.scalars(select(ArcRow).where(or_(ArcRow.subject_node_id == node_id, ArcRow.id.in_(figured))).order_by(ArcRow.id)):
         subject = await NodeRepository(scope.session).name_of(arc.subject_node_id)
         if subject is not None:
-            found.append(FactTale(subject=subject, template=arc.template.value.replace("_", " "), stage=arc.stage.value, outcome=arc.outcome.value))
+            found.append(FactTale(subject=subject, template=spoken(arc.template), stage=arc.stage.value, outcome=arc.outcome.value))
     return found
 
 
@@ -386,7 +386,7 @@ async def history_facts(scope: Scope, epoch: int) -> list[FactHistory]:
     return [
         FactHistory(
             name=row.name,
-            kind=row.kind.value.replace("_", " "),
+            kind=spoken(row.kind),
             since=row.start_epoch,
             ended=row.end_epoch,
             within=names.get(row.parent_id) if row.parent_id is not None else None,

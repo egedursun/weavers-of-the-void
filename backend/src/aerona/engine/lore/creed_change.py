@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.lore import IDEOLOGY_VALUES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyProfileRow, IdeologyTenetRow
 from aerona.db.tables.entities import EntityRow
@@ -109,7 +110,7 @@ async def split_creed(ctx: TickContext, creed_id: int, community_id: int, droppe
             name=name,
             entity_type=EntityType.IDEOLOGY,
             stats=IdeologyStats(adherents=1, appeal=PERCENT // 4),
-            body=f"A creed split from {creed.name}: {', '.join(tenet.value.replace('_', ' ') for tenet in tenets)}.",
+            body=f"A creed split from {creed.name}: {', '.join(spoken(tenet) for tenet in tenets)}.",
             power=2,
             world_id=creed.world_id,
             location_id=community.location_id if community is not None else creed.location_id,

@@ -39,11 +39,6 @@ export function strongestKind(kinds: string[]): string {
   )
 }
 
-export function humanKind(kind: string): string {
-  const text = kind.replace(/_/g, ' ')
-  return text.charAt(0).toUpperCase() + text.slice(1)
-}
-
 export const DEFAULT_HIDDEN_KINDS: ReadonlySet<string> = new Set([
   'engine_raw',
   'system',

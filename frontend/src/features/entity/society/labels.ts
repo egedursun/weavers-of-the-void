@@ -1,17 +1,25 @@
 import {
+  type LucideIcon,
   Accessibility,
   Anchor,
   Axe,
   Baby,
   Ban,
+  Bird,
   BookOpen,
   Brain,
   BrickWall,
+  Briefcase,
   Bug,
   Building,
+  Building2,
   Castle,
   Church,
+  Circle,
   CircleCheck,
+  CirclePause,
+  CircleSlash,
+  ClipboardList,
   CloudRain,
   Coins,
   Container,
@@ -19,44 +27,54 @@ import {
   Crown,
   Disc3,
   Dna,
+  Drone,
   Droplet,
   Droplets,
   Eye,
+  Factory,
   Feather,
   Fingerprint,
   Fish,
   Flame,
+  FlaskConical,
   Flower2,
   Footprints,
   Gem,
   Ghost,
   Gift,
   Globe,
+  GraduationCap,
   Hammer,
   Hand,
   HandHeart,
+  Heart,
+  HeartCrack,
   HeartPulse,
   Hexagon,
   House,
   Landmark,
+  Layers,
   Leaf,
   Link,
   Lock,
-  Mars,
-  Sparkle,
   Medal,
   Milestone,
   Orbit,
+  Package,
+  Palette,
   PartyPopper,
   PawPrint,
   Pickaxe,
+  Plane,
   Route,
   Sailboat,
   ScrollText,
   Shield,
   ShieldHalf,
   Skull,
+  Smile,
   Snowflake,
+  Sparkle,
   Sparkles,
   Split,
   Sprout,
@@ -66,47 +84,38 @@ import {
   Swords,
   Tent,
   Thermometer,
+  Ticket,
+  TrainFront,
   TreePine,
+  Trees,
   TrendingDown,
   TrendingUp,
   Trophy,
+  Truck,
   User,
   UserRound,
   Users,
-  Venus,
   Vote,
   WandSparkles,
+  Waves,
   Wheat,
   Wind,
   Zap,
-  type LucideIcon,
-  Trees,
-  Truck,
-  Plane,
-  Drone,
-  Layers,
-  Factory,
-  Briefcase,
-  CirclePause,
-  FlaskConical,
-  TrainFront,
-  GraduationCap,
-  Ticket,
-  Building2,
 } from 'lucide-react'
-import type { components } from '@/api/generated/schema'
+import { type components, sexKindValues } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
 
 type Schemas = components['schemas']
 export type SocialClass = Schemas['SocialClass']
 export type Job = Schemas['Job']
 export type AgeBand = Schemas['AgeBand']
-export type Sex = Schemas['Sex']
+export type Sex = Schemas['SexKind']
 export type CohortCondition = Schemas['CohortCondition']
 export type DistrictKind = Schemas['DistrictKind']
-export type DiseaseVector = Schemas['DiseaseVector']
+export type Transmission = Schemas['Transmission']
 export type DiseaseTarget = Schemas['DiseaseTarget']
-export type ClimateAffinity = Schemas['ClimateAffinity']
+export type ClimateWarmth = Schemas['ClimateWarmth']
+export type ClimateMoisture = Schemas['ClimateMoisture']
 export type SpreadPath = Schemas['SpreadPath']
 export type OutbreakStatus = Schemas['OutbreakStatus']
 export type CureSource = Schemas['CureSource']
@@ -157,24 +166,60 @@ export const JOB_SPEC: Record<Job, Spec> = {
   building: { label: 'Building', icon: TreePine },
   idle: { label: 'No work', icon: User },
   service: { label: 'Services and offices', icon: Briefcase },
+  transport: { label: 'Carrying goods and people', icon: Truck },
+  administration: { label: 'Keeping the offices', icon: ClipboardList },
+  gathering: { label: 'Gathering from the wild', icon: Leaf },
+  industry: { label: 'Works and factories', icon: Factory },
+  arts: { label: 'The arts', icon: Palette },
 }
 export const JOB_ORDER = Object.keys(JOB_SPEC) as Job[]
 
 export const AGE_SPEC: Record<AgeBand, Spec> = {
-  child: { label: 'Children', icon: Baby, tone: 'success' },
+  infant: { label: 'Infants', icon: Baby, tone: 'info' },
+  child: { label: 'Children', icon: Smile, tone: 'success' },
+  youth: { label: 'Youths', icon: Footprints, tone: 'warning' },
   adult: { label: 'Adults', icon: UserRound, tone: 'gold' },
   elder: { label: 'Elders', icon: Users, tone: 'verdigris' },
 }
-export const AGE_ORDER: AgeBand[] = ['elder', 'adult', 'child']
+export const SEX_ORDER: Sex[] = [...sexKindValues]
+export const AGE_ORDER: AgeBand[] = [
+  'elder',
+  'adult',
+  'youth',
+  'child',
+  'infant',
+]
 
 export const SEX_SPEC: Record<Sex, Spec> = {
-  male: { label: 'Male', icon: Mars, tone: 'info' },
-  female: { label: 'Female', icon: Venus, tone: 'verdigris' },
-  other: {
-    label: 'Other',
+  bearer: {
+    label: 'Bearers',
+    icon: Baby,
+    tone: 'verdigris',
+    hint: 'Those of the people who bear young',
+  },
+  begetter: {
+    label: 'Begetters',
+    icon: Sprout,
+    tone: 'info',
+    hint: 'Those of the people who beget young',
+  },
+  both: {
+    label: 'Bearing and begetting',
     icon: Sparkle,
     tone: 'gold',
-    hint: 'A sex outside two, or the one sex of a people that has a single one',
+    hint: 'One sex that both bears and begets young',
+  },
+  neither: {
+    label: 'Neither',
+    icon: CircleSlash,
+    tone: 'muted',
+    hint: 'Those who neither bear nor beget, such as a caste that does not breed',
+  },
+  none: {
+    label: 'Without sexes',
+    icon: Circle,
+    tone: 'muted',
+    hint: 'A people whose biology has no sexes and brings forth young by its own way',
   },
 }
 
@@ -209,6 +254,18 @@ export const CONDITION_SPEC: Record<CohortCondition, Spec> = {
     icon: Accessibility,
     tone: 'warning',
     hint: 'Crippled but no veterans; they work less and are never levied',
+  },
+  orphaned: {
+    label: 'Orphaned',
+    icon: HeartCrack,
+    tone: 'warning',
+    hint: 'Children whose parents died; they need the care of kin, faith or the realm',
+  },
+  displaced: {
+    label: 'Displaced',
+    icon: Tent,
+    tone: 'warning',
+    hint: 'Driven from their homes; they press on the place that takes them in',
   },
 }
 
@@ -345,10 +402,12 @@ export const INHERITANCE_SPEC: Record<InheritanceCustom, Spec> = {
   },
   elective: { label: 'Chosen by vote', icon: Vote, tone: 'info' },
   by_merit: { label: 'The worthiest', icon: Trophy, tone: 'gold' },
+  seniority: { label: 'Eldest of the line', icon: Users, tone: 'warning' },
+  designated: { label: 'As the will names', icon: ScrollText, tone: 'gold' },
 }
 
-export const VECTOR_SPEC: Record<DiseaseVector, Spec> = {
-  air: {
+export const VECTOR_SPEC: Record<Transmission, Spec> = {
+  inhalation: {
     label: 'Breath and air',
     icon: Wind,
     tone: 'info',
@@ -360,7 +419,7 @@ export const VECTOR_SPEC: Record<DiseaseVector, Spec> = {
     tone: 'info',
     hint: 'Follows rivers and marsh; clean wells and sewers hold it back best',
   },
-  touch: {
+  contact: {
     label: 'Touch',
     icon: Hand,
     tone: 'warning',
@@ -390,14 +449,79 @@ export const VECTOR_SPEC: Record<DiseaseVector, Spec> = {
     tone: 'danger',
     hint: 'Ignores clean water; strong while the god who laid it lives',
   },
+  ingestion: {
+    label: 'Food and drink',
+    icon: Wheat,
+    tone: 'warning',
+    hint: 'Passes through food, stores and markets; rises when people eat whatever they can',
+  },
+  blood: {
+    label: 'Blood',
+    icon: Droplet,
+    tone: 'danger',
+    hint: 'Passes through wounds, blood-feeding kinds and rites of blood',
+  },
+  birth: {
+    label: 'Birth',
+    icon: Baby,
+    tone: 'verdigris',
+    hint: 'Passes from parent to child and stays in a line',
+  },
+  rite: {
+    label: 'A rite',
+    icon: Flame,
+    tone: 'verdigris',
+    hint: 'Passes to those who take part in a rite',
+  },
+  gaze: {
+    label: 'A gaze',
+    icon: Eye,
+    tone: 'danger',
+    hint: 'Passes to whoever meets the gaze of one who carries it',
+  },
+  experience: {
+    label: 'What they lived through',
+    icon: Brain,
+    tone: 'muted',
+    hint: 'Comes from what a mind went through, not from another body',
+  },
+  intimate: {
+    label: 'Intimacy',
+    icon: Heart,
+    tone: 'warning',
+    hint: 'Passes through unions; slow and lasting',
+  },
+  objects: {
+    label: 'Goods and bedding',
+    icon: Package,
+    tone: 'warning',
+    hint: 'Rides on goods, bedding and the clothes of the dead along trade',
+  },
 }
 
-export const AFFINITY_SPEC: Record<ClimateAffinity, Spec> = {
+const AFFLICTION_ONLY_ROUTES = ['rite', 'gaze', 'experience'] as const
+
+export type SicknessRoute = Exclude<
+  Transmission,
+  (typeof AFFLICTION_ONLY_ROUTES)[number]
+>
+
+export const SICKNESS_ROUTE_SPEC = Object.fromEntries(
+  Object.entries(VECTOR_SPEC).filter(
+    ([route]) => !(AFFLICTION_ONLY_ROUTES as readonly string[]).includes(route)
+  )
+) as Record<SicknessRoute, Spec>
+
+export const WARMTH_SPEC: Record<ClimateWarmth, Spec> = {
   warm: { label: 'Warm lands', icon: Sun, tone: 'gold' },
-  wet: { label: 'Wet lands', icon: CloudRain, tone: 'info' },
   cold: { label: 'Cold lands', icon: Snowflake, tone: 'info' },
+  any: { label: 'Any warmth', icon: Thermometer, tone: 'muted' },
+}
+
+export const MOISTURE_SPEC: Record<ClimateMoisture, Spec> = {
+  wet: { label: 'Wet lands', icon: CloudRain, tone: 'info' },
   dry: { label: 'Dry lands', icon: Sunset, tone: 'warning' },
-  any: { label: 'Any land', icon: Globe, tone: 'muted' },
+  any: { label: 'Any moisture', icon: Globe, tone: 'muted' },
 }
 
 export const TARGET_SPEC: Record<DiseaseTarget, Spec> = {
@@ -446,6 +570,14 @@ export const PATH_SPEC: Record<SpreadPath, Spec> = {
   siege: { label: 'Bred in a siege', icon: Castle, tone: 'danger' },
   loosed: { label: 'Loosed by a god', icon: Zap, tone: 'gold' },
   mutation: { label: 'A new strain', icon: Dna, tone: 'verdigris' },
+  wildlife: { label: 'Carried by wild hosts', icon: Bird, tone: 'verdigris' },
+  migration: { label: 'Came with migrants', icon: Tent, tone: 'warning' },
+  gathering: {
+    label: 'Brought home from a gathering',
+    icon: PartyPopper,
+    tone: 'warning',
+  },
+  waterway: { label: 'Came downstream', icon: Waves, tone: 'info' },
 }
 
 export const STATUS_SPEC: Record<OutbreakStatus, Spec> = {
@@ -533,8 +665,9 @@ export const FIELD_LABEL: Record<string, string> = {
   mutation_rate: 'Mutation',
   stigma: 'Stigma',
   cure_level: 'Medicine to cure',
-  vector: 'Spread',
-  climate_affinity: 'Climate',
+  primary_route: 'Main route',
+  affinity_warmth: 'Warmth it favours',
+  affinity_moisture: 'Moisture it favours',
   target_functions: 'Struck body functions',
   host_species_id: 'Host species',
   origin_incident_id: 'Origin event',

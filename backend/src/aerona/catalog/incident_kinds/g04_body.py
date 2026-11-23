@@ -5,12 +5,12 @@ from aerona.catalog.incident_kinds.body_lines import CONDITION_PHRASES, END_PHRA
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleSpec
 from aerona.catalog.kinds.life_stages import LIFE_STAGES
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission
-from aerona.domain.enums.body import BodyPart, BodyReading, ConditionKind, DamageType, HarmCause, InjuryKind, MaimedKind, MedicineTier
+from aerona.domain.enums.body import BodyPart, BodyReading, ConditionKind, DamageType, HarmCause, InjuryKind, MaimedKind, MedicineTier, TreatmentStep
 from aerona.domain.enums.chronicle import ChronicleKind as K
 from aerona.domain.enums.chronicle import FeedCategory as F
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.demography import Sex
-from aerona.domain.enums.disease import DiseaseVector, SpreadPath
+from aerona.domain.enums.demography import SexKind
+from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.faith import SpiritAlignment
@@ -22,7 +22,7 @@ from aerona.domain.enums.made import AugmentKind, AugmentMake, AugmentSlot
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import CommanderTrait
 from aerona.domain.enums.modifier import IncidentRole as R
-from aerona.domain.enums.mortal import CrimeKind, DeathCause, LifeStage, StressBreak
+from aerona.domain.enums.mortal import CrimeKind, DeathCause, DeathReading, LifeStage, StressBreak
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.records import FactUnit as U
 from aerona.domain.enums.records import FactValue, PlaceRule, ProcessClock
@@ -75,7 +75,7 @@ def stress_break(key: str, template: str, roles: tuple[RoleSpec, ...] = (), fact
 
 def disease_origin(key: str, template: str, *, host: bool) -> IncidentKindSpec:
     roles = (role(R.SUBJECT), role(R.PLACE), role(R.ORIGIN, required=host), role(R.PATRON, required=False))
-    facts = (chosen("vector", DiseaseVector), chosen("path", SpreadPath), number("lethality", U.PERCENT))
+    facts = (chosen("route", Transmission), chosen("path", SpreadPath), number("lethality", U.PERCENT))
     return kind(key, template, roles=roles, facts=facts, place=PlaceRule.REQUIRED, collection=C.PLAGUE, feed=F.DISASTER, chronicle_kind=K.DISASTER)
 
 
@@ -171,7 +171,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "births.child",
         "{child} was born to {parent}.",
         roles=(role(R.CHILD), role(R.PARENT, many=True), role(R.HEALER, required=False)),
-        facts=(chosen("sex", Sex), number("twin", U.COUNT), number("lifespan", U.YEARS), *BIRTH_FACTS),
+        facts=(chosen("sex", SexKind), number("twin", U.COUNT), number("lifespan", U.YEARS), *BIRTH_FACTS),
         steps=BIRTH_STEPS,
         clock=ProcessClock.INSTANT,
         feed=F.LIFE,
@@ -256,7 +256,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "cohort.scar_festival",
-        "The maimed veterans of {subject} became a festival: {product}.",
+        "{subject} began to honour its maimed veterans in a festival: {product}.",
         roles=(role(R.SUBJECT), role(R.PRODUCT)),
         facts=(number("veterans", U.PEOPLE), chosen("reading", BodyReading)),
     ),
@@ -298,10 +298,10 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         roles=(role(R.BUYER), role(R.SELLER), role(R.TARGET)),
         facts=(number("price", U.COIN),),
     ),
-    disease_origin("disease.emerged", "A new sickness rose in {place}: {subject}, borne by {vector}.", host=False),
-    disease_origin("disease.emerged_host", "A new sickness rose in {place}: {subject}, borne by {vector} and carried by {origin}.", host=True),
-    disease_origin("disease.loosed", "A new sickness was loosed on {place}: {subject}, borne by {vector}.", host=False),
-    disease_origin("disease.loosed_host", "A new sickness was loosed on {place}: {subject}, borne by {vector} and carried by {origin}.", host=True),
+    disease_origin("disease.emerged", "A new sickness rose in {place}: {subject}, borne by {route}.", host=False),
+    disease_origin("disease.emerged_host", "A new sickness rose in {place}: {subject}, borne by {route} and carried by {origin}.", host=True),
+    disease_origin("disease.loosed", "A new sickness was loosed on {place}: {subject}, borne by {route}.", host=False),
+    disease_origin("disease.loosed_host", "A new sickness was loosed on {place}: {subject}, borne by {route} and carried by {origin}.", host=True),
     kind(
         "disease.endemic",
         "{subject} never quite left {place}; it became a sickness of the land.",
@@ -323,6 +323,88 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "{predecessor} changed past the immunity of {place}; {product} spreads where the old sickness could not.",
         roles=(role(R.PREDECESSOR), role(R.PRODUCT), role(R.PLACE)),
         facts=(number("immune_share", U.PERCENT),),
+        collection=C.PLAGUE,
+    ),
+    kind(
+        "body.treated",
+        "{healer} treated the {part} of {patient} by {step}.",
+        roles=(role(R.PATIENT), role(R.HEALER)),
+        facts=(chosen("step", TreatmentStep), chosen("part", BodyPart)),
+    ),
+    kind(
+        "body.maimed",
+        "{subject} took home {count:veteran|veterans} who came back {maim}.",
+        roles=(role(R.SUBJECT),),
+        facts=(chosen("maim", MaimedKind), number("count", U.PEOPLE)),
+    ),
+    kind(
+        "body.harmed",
+        "{subject} was harmed by {cause}, taking {wounds:wound|wounds}.",
+        roles=(role(R.SUBJECT),),
+        facts=(chosen("cause", HarmCause), number("wounds", U.COUNT)),
+    ),
+    kind(
+        "body.injured",
+        "{subject} took {injury:an} to the {part}, of severity {severity}.",
+        roles=(role(R.SUBJECT),),
+        facts=(chosen("injury", InjuryKind), chosen("part", BodyPart), number("severity", U.SEVERITY)),
+    ),
+    kind(
+        "body.gangrene",
+        "The infected wound to the {part} of {patient} turned gangrenous after {infected_epochs:epoch|epochs}.",
+        roles=(role(R.PATIENT),),
+        facts=(chosen("part", BodyPart), number("infected_epochs", U.COUNT)),
+    ),
+    kind(
+        "body.wound_reopened",
+        "The healing {injury} to the {part} of {patient} opened again under strain.",
+        roles=(role(R.PATIENT),),
+        facts=(chosen("injury", InjuryKind), chosen("part", BodyPart)),
+    ),
+    kind(
+        "body.asphyxiated",
+        "{subject} could not breathe and was harmed to severity {severity}.",
+        roles=(role(R.SUBJECT),),
+        facts=(number("severity", U.SEVERITY),),
+    ),
+    kind(
+        "body.paralysed",
+        "A wound to the spine of {subject}, of severity {severity}, took the use of what lies below it.",
+        roles=(role(R.SUBJECT),),
+        facts=(number("severity", U.SEVERITY),),
+    ),
+    kind(
+        "body.member_lost",
+        "{subject} lost members of its many-membered body to a wound of severity {severity}; its vitality stands at {vitality}.",
+        roles=(role(R.SUBJECT),),
+        facts=(number("severity", U.SEVERITY), number("vitality", U.PERCENT)),
+    ),
+    kind(
+        "disease.spread",
+        "{subject} reached {place} from {origin} by {path}, at severity {severity}.",
+        roles=(role(R.SUBJECT), role(R.ORIGIN), role(R.PLACE)),
+        facts=(chosen("path", SpreadPath), number("severity", U.PERCENT)),
+        collection=C.PLAGUE,
+    ),
+    kind(
+        "disease.sanitation_ordered",
+        "Against {target}, {actor} spent {cost} on clean water and on carrying away refuse; its towns now keep sanitation of {sanitation}.",
+        roles=(role(R.ACTOR), role(R.TARGET)),
+        facts=(number("cost", U.COIN), number("sanitation", U.PERCENT)),
+        collection=C.PLAGUE,
+    ),
+    kind(
+        "disease.route_found",
+        "{actor} learned that {target} passes by {route}.",
+        roles=(role(R.ACTOR), role(R.TARGET)),
+        facts=(chosen("route", Transmission),),
+        collection=C.PLAGUE,
+    ),
+    kind(
+        "disease.route_blocked",
+        "{actor} cut the {route} route of {target} by {response}.",
+        roles=(role(R.ACTOR), role(R.TARGET)),
+        facts=(chosen("route", Transmission), chosen("response", PlagueResponse)),
         collection=C.PLAGUE,
     ),
     *(
@@ -574,7 +656,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             f"mortal.death.{ending}",
             template,
             roles=(role(R.VICTIM), role(R.HEIR, required=False), role(R.ACTOR, required=ending == "slain")),
-            facts=(chosen("manner", DeathCause), number("age", U.YEARS), number("year", U.YEARS)),
+            facts=(chosen("manner", DeathCause), number("age", U.YEARS), number("year", U.YEARS), chosen("reading", DeathReading, required=False)),
             steps=frozenset({A.DIE}),
             clock=ProcessClock.INSTANT,
             feed=F.LIFE,
@@ -588,15 +670,15 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "mortal.death_prestige",
-        "The manner of the death of {subject} raised their house.",
+        "The death of {subject}, which their people held {reading}, raised their house.",
         roles=(role(R.SUBJECT),),
-        facts=(chosen("manner", DeathCause), number("prestige", U.STANDING)),
+        facts=(chosen("manner", DeathCause), number("prestige", U.STANDING), chosen("reading", DeathReading)),
     ),
     kind(
         "mortal.death_shame",
-        "The manner of the death of {subject} shamed their house.",
+        "The death of {subject}, which their people held {reading}, shamed their house.",
         roles=(role(R.SUBJECT),),
-        facts=(chosen("manner", DeathCause), number("prestige", U.STANDING)),
+        facts=(chosen("manner", DeathCause), number("prestige", U.STANDING), chosen("reading", DeathReading)),
     ),
     kind(
         "mortal.inheritance",
@@ -667,7 +749,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "reproduction.changed",
         "{subject} came of the age when their people change, and changed sex.",
         roles=(role(R.SUBJECT),),
-        facts=(number("age", U.YEARS), chosen("sex", Sex), number("change_age", U.YEARS)),
+        facts=(number("age", U.YEARS), chosen("sex", SexKind), number("change_age", U.YEARS)),
     ),
     kind("reproduction.budded", "{parent} budded and {child} grew from them.", roles=(role(R.PARENT), role(R.CHILD)), facts=(number("chance", U.PERCENT),)),
     kind(
@@ -711,6 +793,10 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     stress_break("vice", "{subject} broke under the strain and fell into vice.", facts=(chosen("package", PackageKind),)),
     stress_break("revelation", "{subject} broke under the strain, and in the breaking saw visions.", facts=(chosen("condition", ConditionKind),)),
     stress_break("revelation_seer", "{subject} broke under the strain, saw visions and became a seer.", facts=(chosen("role", MortalRole),)),
+    stress_break(
+        "withdrawal", "{subject} broke under the strain and withdrew from the world, leaving {offices:office|offices}.", facts=(number("offices", U.COUNT),)
+    ),
+    stress_break("withdrawal_ended", "{subject} came back to the world after a withdrawal."),
     tool(
         "answer_sickness",
         "{actor} set the answer of {subject} to {target}: {response}.",

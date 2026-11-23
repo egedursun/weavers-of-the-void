@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.ethics import STANCE_ORDER
 from aerona.catalog.life.collective import CAREER_ROLES
+from aerona.catalog.reproduction import ELIGIBILITY_NEEDS, kind_of_sex, rule_fit
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.collective import RoleNormRow, SexRatioRow
@@ -14,7 +15,7 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.collective import RoleEligibility, RoleKind
 from aerona.domain.enums.cycles import ReproductiveCaste, ReproductiveSystem
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intimacy import ChildLegitimacy
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, ValueAxis, ValueHolder
@@ -33,8 +34,8 @@ from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.regime.book import credentialed, examined
 from aerona.rules.registry import Rules
 
-FEMALE = "female"
-MALE = "male"
+BEARER = SexKind.BEARER.value
+BEGETTER = SexKind.BEGETTER.value
 LEAN = 40
 RANK_PREFERRED = 0
 RANK_OPEN = 1
@@ -42,15 +43,15 @@ RANK_TOLERATED = 2
 MIN_AGES = total(RoleKind, {RoleKind.OFFICE: 16, RoleKind.PROFESSION: 12, RoleKind.COMBAT: 15, RoleKind.PRIESTHOOD: 14, RoleKind.INHERITANCE: 0})
 ELITE = (SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.SCRIBE, SocialClass.WARRIOR)
 OPENING = {
-    RoleEligibility.FEMALE_ONLY: RoleEligibility.FEMALE_PREFERRED,
-    RoleEligibility.MALE_ONLY: RoleEligibility.MALE_PREFERRED,
-    RoleEligibility.FEMALE_PREFERRED: RoleEligibility.ANY,
-    RoleEligibility.MALE_PREFERRED: RoleEligibility.ANY,
+    RoleEligibility.BEARERS_ONLY: RoleEligibility.BEARERS_PREFERRED,
+    RoleEligibility.BEGETTERS_ONLY: RoleEligibility.BEGETTERS_PREFERRED,
+    RoleEligibility.BEARERS_PREFERRED: RoleEligibility.ANY,
+    RoleEligibility.BEGETTERS_PREFERRED: RoleEligibility.ANY,
     RoleEligibility.ANY: RoleEligibility.ANY,
 }
 NARROWING = {
-    FEMALE: (RoleEligibility.FEMALE_PREFERRED, RoleEligibility.FEMALE_ONLY),
-    MALE: (RoleEligibility.MALE_PREFERRED, RoleEligibility.MALE_ONLY),
+    BEARER: (RoleEligibility.BEARERS_PREFERRED, RoleEligibility.BEARERS_ONLY),
+    BEGETTER: (RoleEligibility.BEGETTERS_PREFERRED, RoleEligibility.BEGETTERS_ONLY),
 }
 
 
@@ -73,12 +74,10 @@ def rank_for(row: RoleNormRow | None, sex: str, age: int) -> int | None:
     rule = row.eligibility
     if rule is RoleEligibility.ANY:
         return RANK_OPEN
-    favoured = FEMALE if rule in {RoleEligibility.FEMALE_ONLY, RoleEligibility.FEMALE_PREFERRED} else MALE
-    if sex == favoured:
-        return RANK_PREFERRED
-    if rule in {RoleEligibility.FEMALE_ONLY, RoleEligibility.MALE_ONLY}:
+    fit = rule_fit(*ELIGIBILITY_NEEDS[rule], kind_of_sex(sex))
+    if fit is None:
         return None
-    return RANK_TOLERATED
+    return RANK_PREFERRED if fit >= 1 else RANK_TOLERATED
 
 
 async def role_norm(session: AsyncSession, mortal: EntityRow, role: RoleKind) -> RoleNormRow | None:
@@ -151,12 +150,12 @@ async def allowed_heirs(session: AsyncSession, dead: EntityRow, heirs: list[Enti
     return [heir for rank, heir in ranked if rank == best]
 
 
-async def combat_sexes(session: AsyncSession, community: EntityRow) -> set[Sex]:
+async def combat_sexes(session: AsyncSession, community: EntityRow) -> set[SexKind]:
     people = await people_of(session, community)
     row = await session.get(RoleNormRow, (people.id, RoleKind.COMBAT)) if people is not None else None
     if people is not None and not sexes_fixed(await system_of(session, people)):
-        return set() if barred(row, PERCENT) else set(Sex)
-    return {sex for sex in Sex if rank_for(row, sex.value, PERCENT) is not None}
+        return set() if barred(row, PERCENT) else set(SexKind)
+    return {sex for sex in SexKind if rank_for(row, sex.value, PERCENT) is not None}
 
 
 async def seed_roles(ctx: TickContext, people: EntityRow, tally: RoleTally) -> None:
@@ -170,7 +169,7 @@ async def seed_roles(ctx: TickContext, people: EntityRow, tally: RoleTally) -> N
     for role in RoleKind:
         eligibility = RoleEligibility.ANY
         if strict >= LEAN * 2 and rng.chance(strict / 2):
-            favoured = FEMALE if rng.chance(PERCENT // 2) else MALE
+            favoured = BEARER if rng.chance(PERCENT // 2) else BEGETTER
             eligibility = NARROWING[favoured][1 if strict >= LEAN * 3 else 0]
         classes = [item.value for item in ELITE] if role is RoleKind.OFFICE and values.get(ValueAxis.HIERARCHY, 0) >= LEAN else []
         ctx.session.add(
@@ -192,12 +191,12 @@ async def seed_roles(ctx: TickContext, people: EntityRow, tally: RoleTally) -> N
 async def open_roles(ctx: TickContext, people: EntityRow, tally: RoleTally) -> None:
     ratio = await ctx.session.get(SexRatioRow, people.id)
     table = ctx.rules.sex_ratio
-    if ratio is None or table.skew_at <= ratio.males_per_hundred <= PERCENT * PERCENT // table.skew_at:
+    if ratio is None or table.skew_at <= ratio.begetters_per_hundred <= PERCENT * PERCENT // table.skew_at:
         return
     values = await stored_values(ctx.session, ValueHolder.CULTURE, people.id)
     if values.get(ValueAxis.TRADITION, 0) >= LEAN or not ctx.rng(f"role_open.{people.id}.{ctx.epoch}").chance(table.norm_shift_pct):
         return
-    scarce = MALE if ratio.males_per_hundred < table.skew_at else FEMALE
+    scarce = BEGETTER if ratio.begetters_per_hundred < table.skew_at else BEARER
     for row in await ctx.session.scalars(select(RoleNormRow).where(RoleNormRow.holder_entity_id == people.id).order_by(RoleNormRow.role)):
         favours_scarce = row.eligibility in NARROWING[scarce]
         if not favours_scarce or "eligibility" in row.locked:
@@ -208,7 +207,7 @@ async def open_roles(ctx: TickContext, people: EntityRow, tally: RoleTally) -> N
             ctx,
             "roles.opened",
             roles={IncidentRole.AUTHORITY: people.id},
-            facts={"role": row.role, "eligibility": row.eligibility, "males_per_hundred": ratio.males_per_hundred},
+            facts={"role": row.role, "eligibility": row.eligibility, "begetters_per_hundred": ratio.begetters_per_hundred},
             steps=(StepDraft(StepAction.DECREE, actor=people.id),),
         )
         return
@@ -231,7 +230,7 @@ async def drift_roles(ctx: TickContext, people: EntityRow, tally: RoleTally) -> 
         open_rows = [row for row in free if row.eligibility is RoleEligibility.ANY]
         if open_rows:
             row = rng.pick(open_rows)
-            row.eligibility, row.since_epoch = NARROWING[FEMALE if rng.chance(PERCENT // 2) else MALE][0], ctx.epoch
+            row.eligibility, row.since_epoch = NARROWING[BEARER if rng.chance(PERCENT // 2) else BEGETTER][0], ctx.epoch
             tally.narrowed += 1
 
 

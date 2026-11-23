@@ -53,3 +53,28 @@ class KinGroupMemberRow(Base):
     adopted: Mapped[bool] = mapped_column(default=False)
     joined_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class WillRow(Base):
+    __tablename__ = "wills"
+    __table_args__ = (at_least("made_epoch", 0), Index("ix_wills_testator", "testator_node_id", unique=True))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    testator_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    witnesses: Mapped[list[int]] = mapped_column(JSON, default=list)
+    made_epoch: Mapped[int] = mapped_column(default=0)
+    forged: Mapped[bool] = mapped_column(default=False)
+    read_epoch: Mapped[int | None]
+    contested: Mapped[bool] = mapped_column(default=False)
+    set_aside: Mapped[bool] = mapped_column(default=False)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class WillHeirRow(Base):
+    __tablename__ = "will_heirs"
+    __table_args__ = (between("share", 1, PERCENT_MAX), Index("ix_will_heirs_heir", "heir_node_id"))
+
+    will_id: Mapped[int] = mapped_column(ForeignKey("wills.id", ondelete="CASCADE"), primary_key=True)
+    heir_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
+    share: Mapped[int] = mapped_column(default=50)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)

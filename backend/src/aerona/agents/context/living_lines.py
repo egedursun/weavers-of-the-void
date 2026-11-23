@@ -1,7 +1,8 @@
 from sqlalchemy import or_, select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.living import GeneBankRow, GeneBankSampleRow, LivingLineRow, LivingLineTraitRow, LivingProfileRow, SymbiontRow
 from aerona.db.tables.sons import SonRow
@@ -19,15 +20,15 @@ LAWS = (
 
 async def trait_words(scope: Scope, line_id: int) -> str:
     rows = await scope.session.execute(select(LivingLineTraitRow.trait, LivingLineTraitRow.strength).where(LivingLineTraitRow.line_id == line_id))
-    shown = [f"{words(trait.value)} {strength:+d}" for trait, strength in rows.all()]
+    shown = [f"{spoken(trait)} {strength:+d}" for trait, strength in rows.all()]
     return ", ".join(shown) if shown else "no designed traits"
 
 
 async def line_words(scope: Scope, line: LivingLineRow) -> str:
     loose = ", loose in the wild" if line.escaped else ""
     return (
-        f"the line {line.name} (line {line.id}), made by {words(line.method.value)}: stability {line.stability}, "
-        f"generation {line.generation}, drift {line.drift_pct}, {words(line.fertility.value)}{loose}; {await trait_words(scope, line.id)}"
+        f"the line {line.name} (line {line.id}), made by {spoken(line.method)}: stability {line.stability}, "
+        f"generation {line.generation}, drift {line.drift_pct}, {spoken(line.fertility)}{loose}; {await trait_words(scope, line.id)}"
     )
 
 
@@ -38,16 +39,14 @@ async def mortal_living_lines(scope: Scope, me: EntityRow) -> list[str]:
     if profile is not None:
         handler = await named(scope, profile.bonded_to_node_id) if profile.bonded_to_node_id else "no one"
         found.append(
-            f"your own living body: {words(profile.growth_stage.value)}, health {profile.health}, size {profile.size_pct}, "
-            f"eats by {words(profile.metabolism.value)}, bond {profile.bond} with {handler}"
+            f"your own living body: {spoken(profile.growth_stage)}, health {profile.health}, size {profile.size_pct}, "
+            f"eats by {spoken(profile.metabolism)}, bond {profile.bond} with {handler}"
         )
     mine = select(LivingLineRow).where(or_(LivingLineRow.owner_node_id == me.id, LivingLineRow.maker_node_id == me.id)).order_by(LivingLineRow.id)
     for line in await session.scalars(mine.limit(LIST_LINES)):
         found.append(f"you hold {await line_words(scope, line)}")
     for row in await session.scalars(select(SymbiontRow).where(SymbiontRow.host_node_id == me.id).order_by(SymbiontRow.id).limit(LIST_LINES)):
-        found.append(
-            f"something lives within you (symbiont {row.id}) in the {words(row.placement.value)}, {words(row.relation.value)}, strength {row.strength}"
-        )
+        found.append(f"something lives within you (symbiont {row.id}) in the {spoken(row.placement)}, {spoken(row.relation)}, strength {row.strength}")
     banks = select(GeneBankRow).where(or_(GeneBankRow.holder_node_id == me.id, GeneBankRow.holder_node_id == me.location_id))
     for bank in await session.scalars(banks.order_by(GeneBankRow.structure_entity_id).limit(LIST_LINES)):
         samples = list(await session.scalars(select(GeneBankSampleRow).where(GeneBankSampleRow.bank_entity_id == bank.structure_entity_id).limit(LIST_LINES)))
@@ -57,7 +56,7 @@ async def mortal_living_lines(scope: Scope, me: EntityRow) -> list[str]:
         for law, key, said in LAWS:
             level = await law_param(session, me.location_id, law, key)
             if level is not None:
-                found.append(f"here {said} {words(str(level))}")
+                found.append(f"here {said} {spoken(str(level))}")
     return found
 
 

@@ -3,6 +3,8 @@ from sqlalchemy import select
 
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.regions import (
+    BeneathView,
+    DepthStratumView,
     HazardExposure,
     MapKnowledgeView,
     RealmChoice,
@@ -11,16 +13,21 @@ from aerona.api.schemas.regions import (
     RegionMemoryView,
     RegionTerrainView,
     RiverNeighbour,
+    RockLayerView,
 )
-from aerona.catalog.dangers import DANGERS, HAZARDS, MEMORY_LABELS
+from aerona.catalog.dangers import DANGERS, HAZARDS
+from aerona.catalog.land_memory import LAND_MEMORIES
+from aerona.catalog.rocks import ROCKS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.geology import RegionStratumRow
 from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.region import DangerHarm
-from aerona.engine.environment.dangers import harm_weight, total, weighted
+from aerona.engine.environment.columns import carvable, columns_by_region, quarry_grade, stratum_depth
+from aerona.engine.environment.dangers import reaches, row_weight, total, weighted
 from aerona.engine.environment.hazards import exposed
 from aerona.engine.environment.knowledge import reveals
 from aerona.engine.environment.memory import darkness, darkness_of, fades, holiness, holiness_of
@@ -86,7 +93,9 @@ async def region_terrain(services: ServicesDep, region_id: int = Path(ge=1)) -> 
                 source_node_name=names.get(row.source_node_id or 0),
                 son_id=row.son_id,
                 since_epoch=row.since_epoch,
-                harms={harm: round_half_up(row.strength * harm_weight(rules, row.source, harm) / PERCENT) for harm in DangerHarm},
+                harms={harm: round_half_up(row.strength * row_weight(rules, row, harm) / PERCENT) for harm in DangerHarm},
+                targets=[DangerHarm(target) for target in row.harmed],
+                reachable=reaches(rules, row.source),
             )
             for row in dangers
         ],
@@ -101,7 +110,7 @@ async def region_terrain(services: ServicesDep, region_id: int = Path(ge=1)) -> 
             RegionMemoryView(
                 id=row.id,
                 kind=row.kind,
-                label=MEMORY_LABELS[row.kind],
+                label=LAND_MEMORIES[row.kind].label,
                 magnitude=row.magnitude,
                 epoch=row.epoch,
                 title=row.title,
@@ -149,5 +158,55 @@ async def region_terrain(services: ServicesDep, region_id: int = Path(ge=1)) -> 
         river_neighbours=[
             RiverNeighbour(id=item, name=name, river_class=neighbours[item].river_class if item in neighbours else None)
             for item, name in neighbour_names.items()
+        ],
+    )
+
+
+@router.get("/regions/{region_id}/beneath", response_model=BeneathView)
+async def region_beneath(services: ServicesDep, region_id: int = Path(ge=1)) -> BeneathView:
+    rules = services.rules.current
+    async with reader(services) as session:
+        ground = await session.get(RegionEnvironmentRow, region_id)
+        if ground is None:
+            raise NotFoundError("No such region.")
+        rows = (await columns_by_region(session, [region_id])).get(region_id, [])
+        strata = list(await session.scalars(select(RegionStratumRow).where(RegionStratumRow.region_entity_id == region_id).order_by(RegionStratumRow.id)))
+    tops = [sum(row.thickness for row in rows[:index]) for index in range(len(rows))]
+    return BeneathView(
+        region_id=region_id,
+        mined_depth=ground.mined * rules.rocks.depth_per_mined,
+        quarry_grade=quarry_grade(rows),
+        carvable=carvable(rules, rows),
+        layers=[
+            RockLayerView(
+                id=row.id,
+                depth_order=row.depth_order,
+                rock=row.rock,
+                thickness=row.thickness,
+                top=top,
+                veins=row.veins,
+                reached_epoch=row.reached_epoch,
+                hardness=ROCKS[row.rock].hardness(rules),
+                porosity=ROCKS[row.rock].porosity(rules),
+                solubility=ROCKS[row.rock].solubility(rules),
+                workability=ROCKS[row.rock].workability(rules),
+                grade=ROCKS[row.rock].grade,
+                locked=row.locked,
+            )
+            for row, top in zip(rows, tops, strict=True)
+        ],
+        strata=[
+            DepthStratumView(
+                id=row.id,
+                stratum=row.stratum,
+                depth=stratum_depth(rules, rows, row.stratum),
+                volume=row.volume,
+                pressure=row.pressure,
+                reached_epoch=row.reached_epoch,
+                breached_epoch=row.breached_epoch,
+                tapped_epoch=row.tapped_epoch,
+                locked=row.locked,
+            )
+            for row in sorted(strata, key=lambda item: (stratum_depth(rules, rows, item.stratum), item.id))
         ],
     )

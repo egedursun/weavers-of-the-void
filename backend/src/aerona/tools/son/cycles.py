@@ -24,7 +24,7 @@ from aerona.domain.enums.cycles import (
     ReproductiveSystem,
     ResidenceRule,
 )
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
@@ -84,7 +84,7 @@ class ShapeKinshipInput(ToolInput):
     residence: ResidenceRule
     kin_terms: KinTermSystem
     adoption: AdoptionKind
-    first_side: Sex
+    first_side: SexKind
     reason: Reason
 
 
@@ -129,7 +129,7 @@ async def reached(call: SonCall, entity_id: int, kinds: frozenset[EntityType], r
         fail(refused, why=why)
     await ensure_in_reach(call, entity)
     if held(entity.id):
-        fail(refused, why="a stronger hand holds it")
+        fail(refused, why="it is held")
     return entity
 
 
@@ -140,7 +140,7 @@ async def answer_offerings(call: SonCall, args: AnswerOfferingsInput) -> str:
         fail(SonResult.OFFERINGS_REFUSED, why="that community has offered you nothing")
     await ensure_in_reach(call, community)
     if "answered" in row.locked:
-        fail(SonResult.OFFERINGS_REFUSED, why="a stronger hand keeps that ledger")
+        fail(SonResult.OFFERINGS_REFUSED, why="that ledger is held")
     owed = max(0, row.offered - row.answered)
     row.answered += owed + (round(owed * call.tick.rules.reciprocity.outgive_pct / PERCENT) if args.generous else 0)
     row.last_answer_epoch = call.tick.epoch

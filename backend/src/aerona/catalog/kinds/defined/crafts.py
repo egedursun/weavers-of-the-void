@@ -1,14 +1,19 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.crafts import CatchMedium, CatchRight, InsuranceCover, Notation, RightAcquired
+from aerona.domain.enums.crafts import CatchMedium, CatchRight, InsuranceCover, Notation
 
 CATCH_MEDIUM = total(
     CatchMedium,
     {
         CatchMedium.WATER: Defined("Water", checked_by=(), used_by=("catalog.catch.GROUNDS", "engine.couplings.registers.SEA_GROUNDS")),
         CatchMedium.LAND: Defined(
-            "Land", checked_by=(), used_by=("catalog.catch.GROUNDS", "engine.couplings.registers.HUNT_GROUNDS", "engine.crafts.catch.LAND_GROUNDS")
+            "Land",
+            checked_by=("tools.mortal.deep.open_catch_ground",),
+            used_by=("catalog.catch.GROUNDS", "engine.couplings.registers.HUNT_GROUNDS", "engine.crafts.catch.LAND_GROUNDS"),
         ),
+        CatchMedium.SHORE: Defined("Shore", checked_by=(), used_by=("catalog.catch.GROUNDS", "engine.crafts.shores.WORKED_MEDIA")),
+        CatchMedium.UNDER_WATER: Defined("Under water", checked_by=(), used_by=("catalog.catch.GROUNDS", "engine.crafts.shores.WORKED_MEDIA")),
+        CatchMedium.POND: Defined("Pond", checked_by=(), used_by=("catalog.catch.GROUNDS", "engine.crafts.shores.WORKED_MEDIA")),
     },
 )
 
@@ -54,19 +59,5 @@ NOTATION = total(
             checked_by=("agents.context.crafts_lines.people_lines", "engine.crafts.reckoning.notation_boost"),
             used_by=("engine.crafts.numbers.keep_numbers", "engine.crafts.numbers.seed_system"),
         ),
-    },
-)
-
-RIGHT_ACQUIRED = total(
-    RightAcquired,
-    {
-        RightAcquired.CREATED: Defined(
-            "Made", checked_by=(), used_by=("db.tables.crafts.IncorporealRightRow", "engine.crafts.rights.claim_names", "engine.crafts.rights.claim_works")
-        ),
-        RightAcquired.INHERITED: Defined("Inherited", checked_by=(), used_by=("engine.crafts.heirs.pass_rights",)),
-        RightAcquired.BOUGHT: Defined("Bought", checked_by=(), used_by=("engine.crafts.rights.collect_licence",)),
-        RightAcquired.LICENSED: Defined("Licensed", checked_by=("engine.crafts.rights.licensed_copy",), used_by=("engine.crafts.rights.licensed_copy",)),
-        RightAcquired.STOLEN: Defined("Stolen", checked_by=(), used_by=("engine.crafts.rights.infringe",)),
-        RightAcquired.GRANTED: Defined("Granted", checked_by=(), used_by=("services.player.crafts.IncorporealRightDraft",)),
     },
 )

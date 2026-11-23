@@ -35,7 +35,7 @@ async def sway_org(call: SonCall, args: SwayOrgInput) -> str:
         fail(SonResult.ORG_REFUSED, why="there is no such organisation with a governing body")
     await ensure_in_reach(call, org)
     if held(org.id) or STRATEGY_LOCK in (body.locked or []):
-        fail(SonResult.ORG_REFUSED, why="a stronger hand holds its course")
+        fail(SonResult.ORG_REFUSED, why="its course is held")
     if body.strategy is args.strategy:
         fail(SonResult.ORG_REFUSED, why=f"{org.name} already follows {spoken(args.strategy)}")
     await set_strategy(call.tick, body, args.strategy, call.son.id, args.reason)

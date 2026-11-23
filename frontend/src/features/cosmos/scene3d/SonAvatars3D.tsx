@@ -1,12 +1,13 @@
 import { useCallback } from 'react'
+import { rarityValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Portrait } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { mediaUrl } from '@/features/pantheon/media'
 import { type SonPublic } from '../api'
 import { type CosmosIndex } from '../model/cosmosModel'
-import { humanize } from '../model/labels'
 import { labelKey } from './labelKeys'
 
 const MAX_AVATARS = 7
@@ -54,8 +55,8 @@ export function SonAvatars3D({ index, sons, labels }: SonAvatars3DProps) {
                     key={ref.id}
                     variant='ghost'
                     size='icon-sm'
-                    aria-label={`${ref.name}${rarity ? `, ${humanize(rarity)} son` : ''} on ${item.world.name}`}
-                    title={`${ref.name}${rarity ? ` · ${humanize(rarity)} son` : ''} · on ${item.world.name}`}
+                    aria-label={`${ref.name}${rarity ? `, ${wordOf(rarityValues, rarity)} son` : ''} on ${item.world.name}`}
+                    title={`${ref.name}${rarity ? ` · ${wordOf(rarityValues, rarity)} son` : ''} · on ${item.world.name}`}
                     onClick={() =>
                       void drawer.open({ kind: 'son', id: String(ref.id) })
                     }

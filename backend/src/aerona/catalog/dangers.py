@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.body import DamageType, MaimedKind
-from aerona.domain.enums.environment import WeatherEffect
-from aerona.domain.enums.region import DangerSource, HazardSeason, RegionMemoryKind, TerrainHazard
+from aerona.domain.enums.environment import TerrainTrait, WeatherEffect
+from aerona.domain.enums.region import DangerSource, HazardSeason, TerrainHazard
 
 
 @dataclass(frozen=True)
@@ -18,9 +18,11 @@ class HazardSpec:
     season: HazardSeason
     effect: WeatherEffect
     damage: DamageType
+    traits: frozenset[TerrainTrait] = frozenset()
 
 
-DANGERS = MappingProxyType(
+DANGERS = total(
+    DangerSource,
     {
         DangerSource.BEASTS: DangerSpec("Beasts", MaimedKind.SCARRED),
         DangerSource.BANDITS: DangerSpec("Bandits", MaimedKind.SCARRED),
@@ -30,10 +32,18 @@ DANGERS = MappingProxyType(
         DangerSource.AVALANCHE: DangerSpec("Avalanches", MaimedKind.ONE_LEGGED),
         DangerSource.QUICKSAND: DangerSpec("Quicksand", None),
         DangerSource.VOLCANIC: DangerSpec("Volcanic ground", MaimedKind.SCARRED),
-    }
+        DangerSource.LANDSLIDE: DangerSpec("Landslides", MaimedKind.ONE_LEGGED),
+        DangerSource.EXPOSURE: DangerSpec("Exposure", MaimedKind.SCARRED),
+        DangerSource.CURRENTS: DangerSpec("Currents", None),
+        DangerSource.TOXIC_GROUND: DangerSpec("Toxic ground", MaimedKind.BROKEN_MINDED),
+        DangerSource.LIGHTNING: DangerSpec("Lightning", MaimedKind.SCARRED),
+        DangerSource.SINKHOLE: DangerSpec("Sinkholes", MaimedKind.ONE_LEGGED),
+        DangerSource.ROCKFALL: DangerSpec("Rockfall", MaimedKind.ONE_ARMED),
+    },
 )
 
-HAZARDS = MappingProxyType(
+HAZARDS = total(
+    TerrainHazard,
     {
         TerrainHazard.AVALANCHE: HazardSpec(
             "Avalanche",
@@ -45,7 +55,7 @@ HAZARDS = MappingProxyType(
             "Spring flood",
             HazardSeason.WETTEST,
             WeatherEffect.WET,
-            DamageType.BLUNT,
+            DamageType.ASPHYXIA,
         ),
         TerrainHazard.WILDFIRE: HazardSpec(
             "Wildfire",
@@ -59,19 +69,47 @@ HAZARDS = MappingProxyType(
             WeatherEffect.COLD,
             DamageType.COLD,
         ),
-    }
-)
-
-MEMORY_LABELS = MappingProxyType(
-    {
-        RegionMemoryKind.BATTLE: "Battle",
-        RegionMemoryKind.MASSACRE: "Massacre",
-        RegionMemoryKind.SACK: "Sack",
-        RegionMemoryKind.DISASTER: "Disaster",
-        RegionMemoryKind.PLAGUE: "Plague",
-        RegionMemoryKind.FAMINE: "Famine",
-        RegionMemoryKind.GOD_DEATH: "A god fell here",
-        RegionMemoryKind.SAINT_BURIAL: "Saint's grave",
-        RegionMemoryKind.MIRACLE: "Miracle",
-    }
+        TerrainHazard.MUDSLIDE: HazardSpec(
+            "Mudslide",
+            HazardSeason.WETTEST,
+            WeatherEffect.WET,
+            DamageType.ASPHYXIA,
+            frozenset({TerrainTrait.ROUGH}),
+        ),
+        TerrainHazard.FLASH_FLOOD: HazardSpec(
+            "Flash flood",
+            HazardSeason.WETTEST,
+            WeatherEffect.FLOOD,
+            DamageType.ASPHYXIA,
+            frozenset({TerrainTrait.ARID}),
+        ),
+        TerrainHazard.THIN_ICE: HazardSpec(
+            "Thin ice",
+            HazardSeason.WARMING,
+            WeatherEffect.HEAT,
+            DamageType.ASPHYXIA,
+            frozenset({TerrainTrait.COLD}),
+        ),
+        TerrainHazard.ICE_JAM: HazardSpec(
+            "Ice jam",
+            HazardSeason.WARMING,
+            WeatherEffect.WET,
+            DamageType.BLUNT,
+            frozenset({TerrainTrait.COLD}),
+        ),
+        TerrainHazard.STORM_SURGE: HazardSpec(
+            "Storm surge",
+            HazardSeason.WETTEST,
+            WeatherEffect.WIND,
+            DamageType.ASPHYXIA,
+            frozenset({TerrainTrait.COASTAL}),
+        ),
+        TerrainHazard.DUST_STORM: HazardSpec(
+            "Dust storm",
+            HazardSeason.DRIEST,
+            WeatherEffect.WIND,
+            DamageType.ASPHYXIA,
+            frozenset({TerrainTrait.ARID}),
+        ),
+    },
 )

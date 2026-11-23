@@ -8,6 +8,7 @@ import {
   Timer,
   Trash2,
 } from 'lucide-react'
+import { worldTypeValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -27,8 +28,8 @@ import {
 } from '@/features/cosmography/parts'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { Ref } from '@/features/gatherings/parts'
-import { humanize } from '@/features/pantheon/labels'
 import { Bars } from '@/features/sacred/parts'
 import { NumberField } from '@/features/wars/military/parts'
 import {
@@ -347,7 +348,7 @@ export function PrehistorySection({
                 label='World'
                 value={
                   query.data.world
-                    ? `${query.data.world.name}, ${humanize(query.data.world_type ?? 'none')}`
+                    ? `${query.data.world.name}, ${wordOf(worldTypeValues, query.data.world_type ?? 'none')}`
                     : `${query.data.node.name} stands on no world`
                 }
                 icon={PREHISTORY_ICON}

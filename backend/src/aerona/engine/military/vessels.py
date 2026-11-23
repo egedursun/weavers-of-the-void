@@ -217,13 +217,21 @@ async def wreck(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, weat
     await record(ctx, "seafaring.wreck", roles={IncidentRole.SUBJECT: vessel.id}, facts={"weather": weather}, place=row.region_entity_id)
 
 
+def icing(rules: Rules, damage: int, *, stormy: bool, icy: bool) -> int:
+    share = rules.weather.icing_hull_pct
+    if not icy:
+        return damage
+    return damage * (PERCENT + share) // PERCENT if stormy else damage * share // PERCENT
+
+
 async def weather_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, weather: WeatherKind | None, tally: SeaTally) -> None:
     table = ctx.rules.seafaring
-    if weather is None or not has_trait(weather, WeatherTrait.STORM) or domain_of(row) not in WEATHERED:
+    stormy, icy = has_trait(weather, WeatherTrait.STORM), has_trait(weather, WeatherTrait.ICY)
+    if weather is None or not (stormy or icy) or domain_of(row) not in WEATHERED:
         return
     tally.storms += 1
     with explaining() as found:
-        damage = storm_damage(ctx.rules, row)
+        damage = icing(ctx.rules, storm_damage(ctx.rules, row), stormy=stormy, icy=icy)
     terms = found.snapshot()
     if "condition" not in row.locked:
         row.condition = clamp_int(row.condition - damage, 0, PERCENT)

@@ -46,6 +46,7 @@ from aerona.domain.enums.collective import (
     CascadeOutcome,
     CollectiveActKind,
     CollectiveTrigger,
+    CrowdFeeling,
     DatingSystemKind,
     DesignComponentKind,
     DesignKind,
@@ -63,7 +64,7 @@ from aerona.domain.enums.collective import (
     StoryletRole,
     StoryletStatus,
 )
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
@@ -94,6 +95,7 @@ from aerona.engine.collective.crowds import CrowdTally, cascade, crowd_for, mood
 from aerona.engine.collective.dating import render_date
 from aerona.engine.collective.demography import DemographyTally, fertility_factor, measure
 from aerona.engine.collective.designs import DesignTally, design_power, draw_design, frame_sizes, mend, wear_leg
+from aerona.engine.collective.feelings import feelings_of, set_feeling
 from aerona.engine.collective.generations import GenerationTally, keep_generations
 from aerona.engine.collective.heraldry import HeraldryTally, grant_arms, invent, quarter_on_marriage, signature, signature_of
 from aerona.engine.collective.learning import LearningTally, learn_socially
@@ -172,15 +174,16 @@ async def house_with(session: AsyncSession, world: CoreWorld, name: str, member:
 
 
 async def test_cascades_are_reproducible_and_deterrence_raises_thresholds(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await context(session, collective_behaviour={"base_threshold": 40})
+    ctx = await context(session, collective={"riot_threshold": 40})
     town = await town_of(session, world)
     mood = await mood_of(ctx, town.id)
-    mood.anger, mood.deterrence = 90, 0
-    first = cascade(ctx, crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2), ctx.rng("same"))
-    again = cascade(ctx, crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2), ctx.rng("same"))
+    mood.deterrence = 0
+    await set_feeling(session, town.id, CrowdFeeling.ANGER, 90, hold=None)
+    first = cascade(ctx, crowd_for(ctx, mood, await feelings_of(session, town.id), CollectiveActKind.RIOT, 0.2), ctx.rng("same"))
+    again = cascade(ctx, crowd_for(ctx, mood, await feelings_of(session, town.id), CollectiveActKind.RIOT, 0.2), ctx.rng("same"))
     assert first == again
     mood.deterrence = 100
-    guarded = cascade(ctx, crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2), ctx.rng("same"))
+    guarded = cascade(ctx, crowd_for(ctx, mood, await feelings_of(session, town.id), CollectiveActKind.RIOT, 0.2), ctx.rng("same"))
     assert first > ctx.rules.collective_behaviour.mob_share > guarded
 
 
@@ -189,22 +192,24 @@ async def test_with_the_default_rules_a_furious_town_can_riot_and_a_calm_one_doe
     town = await town_of(session, world)
     mood = await mood_of(ctx, town.id)
     mood.deterrence = 0
-    mood.anger = 0
-    calm = [cascade(ctx, crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2), ctx.rng(f"calm.{seed}")) for seed in range(20)]
-    mood.anger = 95
-    furious = [cascade(ctx, crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2), ctx.rng(f"furious.{seed}")) for seed in range(20)]
+    await set_feeling(session, town.id, CrowdFeeling.ANGER, 0, hold=None)
+    calm = [cascade(ctx, crowd_for(ctx, mood, await feelings_of(session, town.id), CollectiveActKind.RIOT, 0.2), ctx.rng(f"calm.{seed}")) for seed in range(20)]
+    await set_feeling(session, town.id, CrowdFeeling.ANGER, 95, hold=None)
+    furious = [
+        cascade(ctx, crowd_for(ctx, mood, await feelings_of(session, town.id), CollectiveActKind.RIOT, 0.2), ctx.rng(f"furious.{seed}")) for seed in range(20)
+    ]
     mob = ctx.rules.collective_behaviour.mob_share
     assert max(calm) < mob
     assert sum(1 for share in furious if share >= mob) > len(furious) // 2
 
 
 async def test_a_hungry_town_riots_storms_its_granary_and_is_broken_by_force(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await context(session, collective_behaviour={"base_threshold": 0, "movement_share": 101, "mob_share": 1, "force_pct": 100})
+    ctx = await context(session, collective_behaviour={"movement_share": 101, "mob_share": 1, "force_pct": 100}, collective={"riot_threshold": 0})
     town = await town_of(session, world, militia=50000)
     session.add(CommunitySocietyRow(**society_defaults(town.id)))
     await session.flush()
-    mood = await mood_of(ctx, town.id)
-    mood.anger = 100
+    await mood_of(ctx, town.id)
+    await set_feeling(session, town.id, CrowdFeeling.ANGER, 100, hold=None)
     row = await spark(ctx, town, CollectiveTrigger.FAMINE, CrowdTally(), forced=True)
     assert row is not None and row.outcome is CascadeOutcome.MOB
     mob = await session.scalar(select(MobRow).where(MobRow.cascade_id == row.id))
@@ -255,10 +260,10 @@ async def test_a_large_town_with_full_stores_feels_no_famine_and_an_empty_one_do
 
 
 async def test_a_panic_sends_folk_fleeing_and_tramples_the_crowded(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await context(session, collective_behaviour={"base_threshold": 0, "mob_share": 1, "panic_flight_pct": 20, "trample_per_mille": 10})
+    ctx = await context(session, collective_behaviour={"mob_share": 1, "panic_flight_pct": 20, "trample_per_mille": 10}, collective={"panic_threshold": 0})
     town = await town_of(session, world, population=5000)
-    mood = await mood_of(ctx, town.id)
-    mood.anxiety = 100
+    await mood_of(ctx, town.id)
+    await set_feeling(session, town.id, CrowdFeeling.FEAR, 100, hold=None)
     row = await spark(ctx, town, CollectiveTrigger.FIRE, CrowdTally(), forced=True)
     assert row is not None and row.outcome is CascadeOutcome.PANIC
     assert row.fled > 0 and row.deaths > 0
@@ -443,12 +448,12 @@ async def test_a_generation_is_shaped_by_its_youth_and_passes(session: AsyncSess
 async def test_towns_and_letters_lower_fertility_and_war_skews_the_sexes(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await context(session, demographic_transition={"lag_pct": 100})
     town = await town_of(session, world)
-    for sex, count in ((Sex.FEMALE, 100), (Sex.MALE, 50)):
+    for sex, count in ((SexKind.BEARER, 100), (SexKind.BEGETTER, 50)):
         session.add(
             CohortRow(
                 community_entity_id=town.id,
                 age_band=AgeBand.ADULT,
-                sex=sex,
+                sex_kind=sex,
                 social_class=SocialClass.FARMER,
                 condition=CohortCondition.NONE,
                 count=count,
@@ -459,7 +464,7 @@ async def test_towns_and_letters_lower_fertility_and_war_skews_the_sexes(session
     await measure(ctx, town, DemographyTally())
     transition = await session.get(DemographicTransitionRow, town.id)
     ratio = await session.get(SexRatioRow, town.id)
-    assert transition.fertility_pct < 100 and ratio.males_per_hundred == 50 and ratio.widows == 50
+    assert transition.fertility_pct < 100 and ratio.begetters_per_hundred == 50 and ratio.bereaved_partners == 0
     assert await fertility_factor(ctx, town.id) < transition.fertility_pct / 100
 
 
@@ -468,17 +473,17 @@ async def test_role_norms_bar_soldiers_and_heirs(session: AsyncSession, world: C
     people = await entity(session, "Folk", EntityType.PEOPLE, PeopleStats(), world_id=world.world.id)
     await homeland(session, people, town)
     session.add(
-        RoleNormRow(holder_entity_id=people.id, role=RoleKind.COMBAT, eligibility=RoleEligibility.FEMALE_ONLY, min_age=0, classes=[], since_epoch=0, locked=[])
+        RoleNormRow(holder_entity_id=people.id, role=RoleKind.COMBAT, eligibility=RoleEligibility.BEARERS_ONLY, min_age=0, classes=[], since_epoch=0, locked=[])
     )
     session.add(
         RoleNormRow(
-            holder_entity_id=people.id, role=RoleKind.INHERITANCE, eligibility=RoleEligibility.MALE_ONLY, min_age=0, classes=[], since_epoch=0, locked=[]
+            holder_entity_id=people.id, role=RoleKind.INHERITANCE, eligibility=RoleEligibility.BEGETTERS_ONLY, min_age=0, classes=[], since_epoch=0, locked=[]
         )
     )
     await session.flush()
-    assert await combat_sexes(session, town) == {Sex.FEMALE}
-    daughter = await entity(session, "Daughter", EntityType.MORTAL, MortalStats(age=20, sex="female"), world_id=world.world.id, location_id=town.id)
-    son = await entity(session, "Son", EntityType.MORTAL, MortalStats(age=22, sex="male"), world_id=world.world.id, location_id=town.id)
+    assert await combat_sexes(session, town) == {SexKind.BEARER, SexKind.BOTH, SexKind.NONE}
+    daughter = await entity(session, "Daughter", EntityType.MORTAL, MortalStats(age=20, sex="bearer"), world_id=world.world.id, location_id=town.id)
+    son = await entity(session, "Son", EntityType.MORTAL, MortalStats(age=22, sex="begetter"), world_id=world.world.id, location_id=town.id)
     assert await allowed_heirs(session, daughter, [daughter, son]) == [son]
 
 
@@ -644,8 +649,10 @@ async def test_a_son_sees_stirred_towns_crowds_rewritten_accounts_and_waiting_st
     ctx = await context(session)
     town = await town_of(session, world)
     realm = await realm_of(session, world, town)
-    mood = await mood_of(ctx, town.id)
-    mood.anger, mood.anxiety, mood.fervour = 80, 10, 5
+    await mood_of(ctx, town.id)
+    await set_feeling(session, town.id, CrowdFeeling.ANGER, 80, hold=None)
+    await set_feeling(session, town.id, CrowdFeeling.FEAR, 10, hold=None)
+    await set_feeling(session, town.id, CrowdFeeling.FERVOUR, 5, hold=None)
     session.add(MobRow(settlement_entity_id=town.id, act=CollectiveActKind.RIOT, size=250, anger=70, target=MobTarget.GRANARY, since_epoch=1, locked=[]))
     older = AccountRow(holder_entity_id=realm.id, kind=AccountKind.OFFICIAL_CHRONICLE, fidelity=80, credence=60, epoch=1, locked=[])
     session.add(older)

@@ -37,6 +37,14 @@ def test_borrowed_textile_imagery_in_model_text_is_caught() -> None:
     assert "borrowed imagery" not in rules_hit(module, PROMPT, "You declare a bond between two existing things.")
 
 
+def test_a_power_given_a_body_is_caught() -> None:
+    module = checker()
+    for text in ("a stronger hand holds that realm", "An unseen hand keeps the ledger.", "the greater hands of heaven"):
+        assert "a power given a body" in rules_hit(module, PROMPT, text), text
+    assert "a power given a body" not in rules_hit(module, PROMPT, "that realm is held")
+    assert "a power given a body" not in rules_hit(module, PROMPT, "a one-handed smith")
+
+
 def test_a_reaction_our_text_imposes_is_caught() -> None:
     module = checker()
     engine_line = REPOSITORY_ROOT / "backend/src/aerona/engine/lore/sample.py"
@@ -496,3 +504,13 @@ def test_a_dotted_code_path_is_not_text() -> None:
     module = checker()
     assert rules_hit(module, PROMPT, "engine.vehicles.caravans.SNOW_GROUNDS") == set()
     assert "assumed carrier" in rules_hit(module, PROMPT, "The caravans carry the goods.")
+
+
+def test_an_age_grade_that_names_a_martial_role_is_caught(tmp_path: Path) -> None:
+    module = checker()
+    enum = tmp_path / "grades.py"
+    enum.write_text('from enum import StrEnum\n\n\nclass AgeGrade(StrEnum):\n    YOUTHS = "youths"\n    WARRIORS = "warriors"\n', encoding="utf-8")
+    assert [finding.text for finding in module.martial_ages(enum)] == ["warriors"]
+    calm = tmp_path / "calm.py"
+    calm.write_text('from enum import StrEnum\n\n\nclass AgeGrade(StrEnum):\n    YOUNG_ADULTS = "young_adults"\n', encoding="utf-8")
+    assert module.martial_ages(calm) == []

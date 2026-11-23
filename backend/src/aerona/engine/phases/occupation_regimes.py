@@ -9,10 +9,15 @@ from aerona.engine.phase import Phase
 @reads(
     "people.wealth",
     "table.collaborations",
+    "table.collection_members",
+    "table.entities",
+    "table.leader_cults",
     "table.node_births",
+    "table.nodes",
     "table.occupation_measures",
     "table.occupation_regimes",
     "table.occupations",
+    "table.offices",
     "table.polity_members",
     "table.polity_territories",
 )
@@ -32,6 +37,8 @@ from aerona.engine.phase import Phase
     "table.occupation_regimes",
     "table.occupations",
     "table.polity_profiles",
+    "table.reckoning_measures",
+    "table.reckonings",
 )
 async def occupation_regimes(ctx: TickContext) -> None:
     for key, value in asdict(await tend_regimes(ctx)).items():

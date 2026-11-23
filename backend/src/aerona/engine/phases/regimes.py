@@ -144,6 +144,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.power_bases",
     "table.professions_of_value",
     "table.regimes",
+    "table.sons",
     "table.stars",
     "table.tradition_profiles",
     "table.traits",
@@ -167,6 +168,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.polity_profiles",
     "table.polity_treasury",
     "table.power_bases",
+    "table.professions_of_value",
     "table.regimes",
     "table.venal_offices",
 )
@@ -210,6 +212,8 @@ async def kin_politics(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.age",
+    "table.credentials",
     "table.entities",
     "table.examinations",
     "table.holder_techniques",
@@ -220,9 +224,11 @@ async def kin_politics(ctx: TickContext) -> None:
     "table.polity_territories",
     "table.school_lineages",
     "table.school_members",
+    "table.skills",
     "table.structure_profiles",
     "table.vassalages",
 )
+@writes("table.credentials", "table.entities")
 async def learning_institutions(ctx: TickContext) -> None:
     tally = LearningTally()
     await keep_learning(ctx, tally)

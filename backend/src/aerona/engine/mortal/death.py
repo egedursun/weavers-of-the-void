@@ -1,31 +1,36 @@
+from collections.abc import Mapping
+
 from sqlalchemy import select
 
-from aerona.catalog.kinds.harm import HARM_DEATHS
-from aerona.catalog.life_traits import DEATH_CAUSE_TRAITS, having
+from aerona.catalog.death_causes import death_cause_of
+from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
-from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.life_traits import DeathCauseTrait
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.mortal import DeathCause, DeathReading
 from aerona.engine.context import TickContext
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.mortal.kinship import widow
 from aerona.engine.mortal.profile import ensure_profile, is_held
-from aerona.engine.mortal.standing import add_stress
+from aerona.engine.mortal.readings import reading_for
+from aerona.engine.mortal.standing import add_renown, add_stress
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 
-GLORIOUS_DEATHS = having(DEATH_CAUSE_TRAITS, DeathCauseTrait.GLORIOUS_DEATHS)
-SHAMEFUL_DEATHS = having(DEATH_CAUSE_TRAITS, DeathCauseTrait.SHAMEFUL_DEATHS)
+GLORY: Mapping[DeathReading, int] = total(
+    DeathReading,
+    {DeathReading.GLORIOUS: 2, DeathReading.HONOURABLE: 1, DeathReading.PLAIN: 0, DeathReading.SHAMEFUL: -1, DeathReading.CURSED: -2},
+)
 
 
-def manner_of(harm: HarmCause | None, default: DeathCause = DeathCause.UNKNOWN) -> DeathCause:
-    return HARM_DEATHS.get(harm, default) if harm is not None else default
+def manner_of(harm: HarmCause | None, default: DeathCause = DeathCause.UNKNOWN, damage: DamageType | None = None) -> DeathCause:
+    return death_cause_of(harm, damage, default)
 
 
 async def death_place(ctx: TickContext, mortal: EntityRow) -> int | None:
@@ -38,7 +43,10 @@ async def death_place(ctx: TickContext, mortal: EntityRow) -> int | None:
 
 async def house_prestige(ctx: TickContext, mortal: EntityRow, manner: DeathCause) -> int:
     table = ctx.rules.standing
-    change = table.glorious_death_prestige if manner in GLORIOUS_DEATHS else -table.shameful_death_prestige if manner in SHAMEFUL_DEATHS else 0
+    glory = GLORY[await reading_for(ctx.session, ctx.rules, mortal, manner)]
+    change = table.glorious_death_prestige * glory // 2 if glory > 0 else table.shameful_death_prestige * glory // 2 if glory < 0 else 0
+    if glory > 1:
+        await add_renown(ctx.session, mortal.id, ctx.rules.death_readings.glorious_renown, ctx.epoch)
     if not change:
         return 0
     changed = 0
@@ -53,7 +61,7 @@ async def house_prestige(ctx: TickContext, mortal: EntityRow, manner: DeathCause
             ctx,
             "mortal.death_prestige" if changed > 0 else "mortal.death_shame",
             roles={IncidentRole.SUBJECT: mortal.id},
-            facts={"manner": manner, "prestige": changed},
+            facts={"manner": manner, "prestige": changed, "reading": await reading_for(ctx.session, ctx.rules, mortal, manner)},
         )
     return changed
 
@@ -65,10 +73,10 @@ async def record_end(ctx: TickContext, mortal: EntityRow, manner: DeathCause) ->
     if not is_held(profile, "death_place_id"):
         profile.death_place_id = await death_place(ctx, mortal)
     kinship = ctx.rules.kinship
+    reading = await reading_for(ctx.session, ctx.rules, mortal, manner)
+    lament = kinship.widowed_magnitude * (ctx.rules.death_readings.lament_pct / PERCENT if abs(GLORY[reading]) > 1 else 1)
     for spouse in await widow(ctx.session, mortal.id, ctx.epoch):
-        await remember(
-            ctx.session, ctx.rules, holder_id=spouse, subject_id=mortal.id, kind=MemoryKind.LAMENTED, magnitude=kinship.widowed_magnitude, epoch=ctx.epoch
-        )
+        await remember(ctx.session, ctx.rules, holder_id=spouse, subject_id=mortal.id, kind=MemoryKind.LAMENTED, magnitude=lament, epoch=ctx.epoch)
     for kin_id in await close_kin_of(ctx.session, mortal.id):
         if await living_entity(ctx.session, kin_id) is not None:
             await add_stress(ctx.session, kin_id, ctx.rules.stress.loss_stress, ctx.epoch)

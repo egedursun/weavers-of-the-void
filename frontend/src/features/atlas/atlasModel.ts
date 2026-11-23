@@ -1,4 +1,9 @@
 import { type LucideIcon } from 'lucide-react'
+import {
+  clusterKindValues,
+  dimensionKindValues,
+  galaxyTypeValues,
+} from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import {
   type DrawerEntry,
@@ -11,6 +16,7 @@ import {
   dwellingTypeKey,
 } from '@/features/city/typeKeys'
 import { type Cosmography } from '@/features/cosmography/api'
+import { wordOf } from '@/features/entity/affairs/labels'
 import {
   type CosmosView,
   type EntitySummary,
@@ -198,11 +204,6 @@ function buildingTypes(
   ]
 }
 
-function humanizeKind(value: string): string {
-  const text = value.replaceAll('_', ' ')
-  return text.charAt(0).toUpperCase() + text.slice(1)
-}
-
 function heavensTree(
   heavens: Cosmography,
   starNode: (starId: number) => AtlasNode | null,
@@ -224,7 +225,7 @@ function heavensTree(
       label: galaxy.name,
       kind: 'galaxy',
       id: galaxy.id,
-      hint: `${humanizeKind(galaxy.galaxy_type)} galaxy`,
+      hint: `${wordOf(galaxyTypeValues, galaxy.galaxy_type)} galaxy`,
       children: [...stars, ...(freeWorlds.get(`galaxy:${galaxy.id}`) ?? [])],
     }
   }
@@ -242,7 +243,7 @@ function heavensTree(
       label: cluster.name,
       kind: 'cluster',
       id: cluster.id,
-      hint: humanizeKind(cluster.cluster_kind),
+      hint: wordOf(clusterKindValues, cluster.cluster_kind),
       children: [...inner, ...galaxies].filter(
         (node): node is AtlasNode => node !== null
       ),
@@ -264,7 +265,7 @@ function heavensTree(
       label: dimension.name,
       kind: 'dimension' as const,
       id: dimension.id,
-      hint: `${humanizeKind(dimension.dimension_kind)} dimension`,
+      hint: `${wordOf(dimensionKindValues, dimension.dimension_kind)} dimension`,
       children: [
         ...[...clusters, ...loose].filter(
           (node): node is AtlasNode => node !== null

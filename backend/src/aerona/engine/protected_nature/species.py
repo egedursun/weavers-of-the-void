@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -34,7 +35,7 @@ async def protect_species(
         ctx,
         "nature.species_protected",
         roles={IncidentRole.SUBJECT: species.id, IncidentRole.ACTOR: holder},
-        facts={"basis": basis, "measures": ", ".join(measure.value.replace("_", " ") for measure in measures) or "nothing"},
+        facts={"basis": basis, "measures": ", ".join(spoken(measure) for measure in measures) or "nothing"},
     )
     return row
 

@@ -57,6 +57,7 @@ NUTRIENT_KIND = total(
                 "api.routers.map.agrarian_by_region",
                 "engine.agrarian.soil.feed_soils",
                 "engine.nature.microbes.keep_microbiota",
+                "tools.mortal.w52_agent_a.improve_soil",
             ),
             used_by=("engine.agrarian.book.readout",),
         ),

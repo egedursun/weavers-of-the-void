@@ -171,7 +171,12 @@ export function CosmosCyclesSection() {
                 itemKey={(item) => item.id}
               >
                 {(item) => (
-                  <GiftCard nodeId={null} row={item} blocked={blocked} />
+                  <GiftCard
+                    nodeId={null}
+                    row={item}
+                    circuits={data.circuits}
+                    blocked={blocked}
+                  />
                 )}
               </PagedList>
             )}

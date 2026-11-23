@@ -194,7 +194,7 @@ class LoanTarget(Command):
 
 
 def material_word(material: MaterialKind | None) -> str:
-    return material.value.replace("_", " ") if material is not None else "a substance of this world"
+    return spoken(material) if material is not None else "a substance of this world"
 
 
 @player_action("material:create", ActionKind.CREATE_ENTITY)

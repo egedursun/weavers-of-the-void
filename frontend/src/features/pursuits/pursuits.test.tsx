@@ -85,6 +85,7 @@ describe('works, pastimes, constructs and fates', () => {
           price: 140,
           provenance: 2,
           interest: 30,
+          acclaim: -20,
           last_buyer: TOWN,
           last_sale_epoch: 5,
           updated_epoch: 6,
@@ -113,6 +114,9 @@ describe('works, pastimes, constructs and fates', () => {
     const { screen } = await renderApp(<PursuitsSection nodeId={33} />)
     await expect
       .element(screen.getByText('The Long Stair: 140, 2 sales, interest 30'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Acclaim of critics (-20)'))
       .toBeVisible()
     await expect
       .element(
@@ -267,5 +271,89 @@ describe('works, pastimes, constructs and fates', () => {
     await expect
       .element(screen.getByRole('button', { name: 'Make a collector' }))
       .toBeDisabled()
+  })
+
+  it('forges a seal of the chosen kind by the mortal whose page it is, and says what is missing first', async () => {
+    serveBase()
+    onApi('GET', '/api/pursuits/of/32', { ...EMPTY, node: MAKER })
+    onApi('POST', '/api/actions/forgery:create', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<PursuitsSection nodeId={32} />)
+    await screen
+      .getByRole('tab', { name: /Works, forgeries and canon/ })
+      .click()
+    const forge = screen.getByRole('button', { name: 'Forge it' })
+    await expect
+      .element(forge)
+      .toHaveAccessibleDescription('Choose what is copied')
+    await screen.getByRole('combobox', { name: 'What is copied' }).click()
+    await screen.getByRole('option', { name: /The Long Stair/ }).click()
+    await screen.getByRole('combobox', { name: 'Kind of forgery' }).click()
+    await screen.getByRole('option', { name: 'A forged seal' }).click()
+    await forge.click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/forgery:create'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/forgery:create')[0].body).toEqual({
+      original_id: 33,
+      forger_id: 32,
+      kind: 'seal',
+    })
+  })
+
+  it('shows who fixed a club’s next contest and a match found to be fixed', async () => {
+    serveBase()
+    onApi('GET', '/api/pursuits/of/30', {
+      ...EMPTY,
+      node: TOWN,
+      clubs: [
+        {
+          faction: { id: 50, kind: 'entity', name: 'The Reds' },
+          kind: 'team_game',
+          league: null,
+          arena: null,
+          wins: 4,
+          losses: 2,
+          rating: 60,
+          fandom: 40,
+          line: 'district',
+          line_node: null,
+          leverage: 10,
+          bought_by: null,
+          fixed_by: MAKER,
+          fixed_winner: { id: 51, kind: 'entity', name: 'The Blues' },
+          founded_epoch: 3,
+          locked: [],
+        },
+      ],
+      matches: [
+        {
+          id: 9,
+          league: null,
+          home: { id: 50, kind: 'entity', name: 'The Reds' },
+          away: { id: 51, kind: 'entity', name: 'The Blues' },
+          winner: { id: 51, kind: 'entity', name: 'The Blues' },
+          stake: 300,
+          riot: false,
+          fixed_by: MAKER,
+          fixing_exposed: true,
+          epoch: 6,
+          locked: [],
+        },
+      ],
+    })
+    const { screen } = await renderApp(<PursuitsSection nodeId={30} />)
+    await screen
+      .getByRole('tab', { name: /Movements, clubs and matches/ })
+      .click()
+    await expect
+      .element(screen.getByText('Next contest fixed by'))
+      .toBeVisible()
+    await expect.element(screen.getByText('Fixed to win')).toBeVisible()
+    await expect
+      .element(screen.getByText('Epoch 6 · 300 wagered · found to be fixed'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Fixed', { exact: true }))
+      .toBeVisible()
   })
 })

@@ -23,7 +23,7 @@ async def mortal_nature_lines(scope: Scope, me: EntityRow) -> list[str]:
     holder = await sense_holder(session, me.id)
     keen = sorted(((acuity, sense) for sense, acuity in (await senses_of(session, holder)).items()), reverse=True) if holder is not None else []
     if keen:
-        found.append("your people's keenest senses: " + ", ".join(f"{sense.value.replace('_', ' ')} {acuity}" for acuity, sense in keen[:LIST_LINES]))
+        found.append("your people's keenest senses: " + ", ".join(f"{spoken(sense)} {acuity}" for acuity, sense in keen[:LIST_LINES]))
     if await folk_warmth(session, me.id) is Thermoregulation.ECTOTHERM:
         band = await band_at(session, rules, scope.epoch, me.id)
         found.append(f"your people are cold-blooded; this season the land is {band.value if band is not None else 'of no known warmth'}")

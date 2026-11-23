@@ -39,7 +39,7 @@ async def stir_labour(call: SonCall, args: StirLabourInput) -> str:
         fail(SonResult.LABOUR_REFUSED, why="there is no such town")
     await ensure_in_reach(call, town)
     if held(town.id):
-        fail(SonResult.LABOUR_REFUSED, why="a stronger hand holds that town")
+        fail(SonResult.LABOUR_REFUSED, why="that town is held")
     if not await trade_workers(call.session, town.id, [args.trade]):
         fail(SonResult.LABOUR_REFUSED, why=f"no one works {spoken(args.trade)} at {town.name}")
     body = await body_covering(call.session, town.id, args.trade)
@@ -49,7 +49,7 @@ async def stir_labour(call: SonCall, args: StirLabourInput) -> str:
         faction = await call.session.get(EntityRow, made.faction_node_id)
         return result(SonResult.LABOUR_STIRRED, town=town.name, trade=spoken(args.trade), outcome=f"they founded {faction.name if faction else 'a body'}")
     if held(body.faction_node_id) or "solidarity" in (body.locked or []):
-        fail(SonResult.LABOUR_REFUSED, why="a stronger hand holds that body as it is")
+        fail(SonResult.LABOUR_REFUSED, why="that body is held as it is")
     gain = call.tick.rules.labour.solidarity_won * STIR_FACTOR
     body.solidarity = clamp_int(body.solidarity + gain, 0, PERCENT)
     await call.record(

@@ -88,7 +88,7 @@ Settlement: {{ s.tier | an }}; treasury {{ s.treasury }}, tax {{ s.tax_rate }}%,
 {% if e.labour %}Work: {% for j in e.labour %}{{ j.job }} {{ j.workers | several("hand", "hands") }} at {{ j.output_pct }}%{% if not loop.last %}, {% endif %}{% endfor %}
 
 {% endif %}
-{% if e.cohorts %}People by age, sex, class and state: {% for c in e.cohorts %}{{ c.count }} {{ c.age_band }} {{ c.sex }} {{ c.social_class }}{% if c.condition != "none" %} ({{ c.condition }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
+{% if e.cohorts %}People by age, sex, class and state: {% for c in e.cohorts %}{{ c.count }} {{ c.age_band }}{% if c.sex_kind %} {{ c.sex_kind }}{% endif %} {{ c.social_class }}{% if c.condition != "none" %} ({{ c.condition }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
 
 {% endif %}
 {% if e.outbreaks %}Sickness in the land: {% for o in e.outbreaks %}{{ o.disease }} in {{ o.region }} ({{ o.status }}, severity {{ o.severity }}, {{ o.infected }} sick, {{ o.dead }} dead, came by {{ o.path }}{% if o.quarantined %}, quarantined{% endif %}){% if not loop.last %}; {% endif %}{% endfor %}

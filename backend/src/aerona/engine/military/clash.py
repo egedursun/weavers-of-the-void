@@ -5,12 +5,14 @@ from sqlalchemy import func, select
 from aerona.catalog.life.military import WANTED_TRAITS_TACTICS
 from aerona.catalog.life_traits import COMMANDER_TRAIT_TRAITS, TACTIC_TRAITS, having
 from aerona.catalog.mind import COMBAT_SKILLS
+from aerona.catalog.peoples import KIN
 from aerona.catalog.senses import AMBUSH, NIGHT
 from aerona.catalog.terrain import terrains
 from aerona.catalog.units import UNITS, UnitSpec
 from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import (
     ArmyOfficerRow,
@@ -41,6 +43,7 @@ from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.transform import TransformKind
 from aerona.engine.body.book import perception_of
+from aerona.engine.body.cohorts import shooting_factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.body.variants import fear_of, folk_biology
 from aerona.engine.context import TickContext
@@ -83,6 +86,7 @@ from aerona.engine.renown.book import acclaim
 from aerona.engine.sacred.omens import battle_omen
 from aerona.engine.transform.record import blocked, record_transformation
 from aerona.engine.vehicles.fleet import after_battle, crew_specs
+from aerona.rules.registry import Rules
 
 EDGE_FLOOR, EDGE_CEILING = 0.5, 2.0
 INSPIRING_CHARISMA = 70
@@ -237,6 +241,10 @@ async def planned(ctx: TickContext, profile: ArmyProfileRow, community: EntityRo
     return any(subject == enemy.id and row.confidence >= table.planning_confidence for (subject, _attribute), row in known.items())
 
 
+def born_riders(rules: Rules, biology: PeopleBiologyRow | None) -> float:
+    return 1 + rules.beasts.mount_edge_pct / PERCENT if biology is not None and KIN[biology.body_plan].mounted else 1.0
+
+
 async def side_of(
     ctx: TickContext,
     community: EntityRow,
@@ -290,15 +298,21 @@ async def side_of(
     if ground.night:
         kin *= 1 + await sensed(ctx.session, ctx.rules, community.id, NIGHT, ctx.rules.senses.night_pct)
     return Side(
-        firepower_pct=await tech_bonus(ctx.session, ctx.rules, community.id, EraChannel.FIREPOWER),
-        keen=await sense_score(ctx.session, community.id, AMBUSH),
+        firepower_pct=await tech_bonus(ctx.session, ctx.rules, community.id, EraChannel.FIREPOWER) - await shooting_factor(ctx, community),
+        keen=await sense_score(ctx.session, ctx.rules, community.id, AMBUSH),
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
         leadership=sum(parts.values()),
         entity=community,
         army=army,
         profile=profile,
         stacks=stacks,
-        edge=edge * kin * await holy_strike(ctx.session, table, army.id, enemy) * await mounted_edge(ctx, row.commander_entity_id) * ordered,
+        edge=edge
+        * kin
+        * await holy_strike(ctx.session, table, army.id, enemy)
+        * await mounted_edge(ctx, row.commander_entity_id)
+        * ordered
+        * born_riders(table, biology),
+        frontless=biology is not None and KIN[biology.body_plan].frontless,
         defending=defending,
         skill=await skill_level(ctx, commander, SkillKind.TACTICS),
         traits=await traits_of(ctx, commander),

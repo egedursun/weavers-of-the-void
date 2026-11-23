@@ -4,6 +4,7 @@ from itertools import combinations
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.demography import MINOR_BANDS
 from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.db.tables.belonging import PeerGroupRow, PeerMemberRow
 from aerona.db.tables.demography import CohortRow
@@ -16,7 +17,6 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.belonging import PlayKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.enums.kinds import KindConcept
@@ -154,7 +154,9 @@ async def keep_group(ctx: TickContext, group: PeerGroupRow, children: list[int],
     if "children" not in group.locked:
         counted = await ctx.session.scalar(
             select(func.coalesce(func.sum(CohortRow.count), 0)).where(
-                CohortRow.community_entity_id == group.settlement_entity_id, CohortRow.age_band == AgeBand.CHILD, CohortRow.social_class == group.social_class
+                CohortRow.community_entity_id == group.settlement_entity_id,
+                CohortRow.age_band.in_(sorted(MINOR_BANDS)),
+                CohortRow.social_class == group.social_class,
             )
         )
         group.children = int(counted or 0) + len(children)

@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.lore import CREED_DEFIES, DEFIED_BY
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken as spoken_word
 from aerona.db.tables.bonds import BondRow
@@ -19,7 +20,7 @@ from aerona.db.write_guard import held as frozen
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import WritingSystem
-from aerona.domain.enums.culture import IdeologyTenet, ProphecyState, RiteStage, SpeakerKind, TraditionFunction
+from aerona.domain.enums.culture import ProphecyState, RiteStage, SpeakerKind, TraditionFunction
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
@@ -62,15 +63,6 @@ from aerona.engine.recording.record import record
 
 K = TraditionFunction
 STAGE_DEFIED_BY = {RiteStage.DEATH: LawKind.BURIAL_LAW, RiteStage.UNION: LawKind.MARRIAGE_LAW}
-DEFIED_BY = {
-    K.FESTIVAL: LawKind.SUMPTUARY,
-    K.OFFERING: LawKind.WORSHIP_BAN,
-    K.PILGRIMAGE: LawKind.WORSHIP_BAN,
-    K.ANCESTRAL_RITE: LawKind.WORSHIP_BAN,
-    K.DUEL_CUSTOM: LawKind.PENAL_CODE,
-    K.BODY_MARKING: LawKind.PENAL_CODE,
-    K.HOSPITALITY: LawKind.FOREIGNER_RIGHTS,
-}
 HARD_SCRIPTS = frozenset({WritingSystem.PICTOGRAPHIC, WritingSystem.LOGOGRAPHIC, WritingSystem.KNOT, WritingSystem.NOTCH})
 SCRIBE_FLOOR = 30
 
@@ -389,17 +381,6 @@ async def legend_cycles(ctx: TickContext) -> None:
             await record(ctx, "lore.legend_consequence", roles={IncidentRole.SUBJECT: legend.id}, facts={"legend": str(legend.name), "outcome": outcome})
 
 
-CREED_DEFIES = {
-    IdeologyTenet.RATIONALISM: frozenset({K.OFFERING, K.PILGRIMAGE, K.ANCESTRAL_RITE, K.FAST}),
-    IdeologyTenet.ANTI_GOD: frozenset({K.OFFERING, K.PILGRIMAGE, K.RITE_OF_PASSAGE}),
-    IdeologyTenet.EGALITARIANISM: frozenset({K.DUEL_CUSTOM, K.BODY_MARKING}),
-    IdeologyTenet.ASCETICISM: frozenset({K.FESTIVAL, K.ANCESTRAL_RITE}),
-    IdeologyTenet.COSMOPOLITANISM: frozenset({K.TABOO, K.HOSPITALITY}),
-    IdeologyTenet.CREATORISM: frozenset({K.ANCESTRAL_RITE, K.OFFERING}),
-    IdeologyTenet.RESTRAINT: frozenset({K.MARTIAL_DISPLAY, K.DUEL_CUSTOM}),
-}
-
-
 def resistance(ctx: TickContext, tradition: EntityRow) -> int:
     table = ctx.rules.traditions
     rigidity = stat(tradition, "rigidity") or 0
@@ -452,7 +433,7 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
             await record(ctx, "lore.commemoration", roles={IncidentRole.SUBJECT: [founded.id, event.id]}, facts={"event": str(event.name)})
     for founded in await traditions.remember_years(ctx, atlas):
         ctx.count("commemorations_of_years")
-        await record(ctx, "lore.commemoration_year", roles={IncidentRole.SUBJECT: founded.id})
+        await record(ctx, "tradition.remembrance_founded", roles={IncidentRole.SUBJECT: founded.id})
     for founded in await traditions.remember_miracles(ctx):
         ctx.count("commemorations_of_miracles")
         await record(ctx, "lore.commemoration_miracle", roles={IncidentRole.SUBJECT: founded.id})
@@ -467,6 +448,7 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
     "table.calendars",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.commemorations",
     "table.community_societies",
     "table.community_stocks",
     "table.creator",
@@ -529,6 +511,7 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
     "table.injuries",
     "table.legend_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.people_culture",
     "table.region_dangers",
@@ -543,6 +526,7 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
 async def tradition_cycles(ctx: TickContext) -> None:
     table = ctx.rules.traditions
     ctx.count("typed_kinds_backfilled", await backfill_typed_kinds(ctx))
+    ctx.count("tradition_functions_backfilled", await traditions.backfill_functions(ctx))
     atlas = await RegionAtlas.load(ctx.session)
     laws = await LawBook.load(ctx.session)
     rite_rows = await RiteCalendar.load(ctx.session)
@@ -572,6 +556,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
 
 @reads(
     "cult.followers",
+    "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
@@ -593,6 +578,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.artifact_studies",
     "table.artwork_profiles",
     "table.assistive_aids",
+    "table.augment_effects",
     "table.augments",
     "table.banned_works",
     "table.blueprints",
@@ -601,6 +587,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.bonds",
     "table.book_contents",
     "table.captive_cohorts",
+    "table.charms",
     "table.community_societies",
     "table.community_stocks",
     "table.conditions",
@@ -614,6 +601,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
+    "table.entity_tags",
     "table.era_deeds",
     "table.foreign_gods",
     "table.galaxies",
@@ -675,6 +663,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.world_domain_hooks",
     "table.world_eras",
     "table.worlds",
+    "table.written_works",
 )
 @writes(
     "art_form.practitioners",
@@ -766,6 +755,7 @@ async def research_cycles(ctx: TickContext) -> None:
     "table.bonds",
     "table.community_societies",
     "table.community_society",
+    "table.community_stocks",
     "table.constitutions",
     "table.creator",
     "table.cult_tenets",
@@ -775,6 +765,7 @@ async def research_cycles(ctx: TickContext) -> None:
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.holder_levels",
     "table.holder_techniques",
     "table.ideology_adherents",
     "table.ideology_profiles",
@@ -790,9 +781,11 @@ async def research_cycles(ctx: TickContext) -> None:
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
+    "table.resource_profiles",
     "table.sons",
     "table.stars",
     "table.structure_profiles",
+    "table.world_materials",
     "table.worlds",
 )
 @writes(

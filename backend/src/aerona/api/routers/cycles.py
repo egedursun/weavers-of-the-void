@@ -5,7 +5,7 @@ from fastapi import APIRouter, Path
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.api.dependencies import ServicesDep, reader
+from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.cycles import (
     AllianceView,
     BondMarketView,
@@ -37,6 +37,7 @@ from aerona.api.views.common import node_refs
 from aerona.catalog.peoples import STYLE_AXES
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.tables.cycles import (
     AsabiyyaRow,
     CampRow,
@@ -62,9 +63,10 @@ from aerona.db.tables.unions import UnionCustomRow
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import LegacyKind, StressComponent
 from aerona.domain.enums.mind import ValueAxis
-from aerona.engine.cycles.gifts import balance
+from aerona.engine.cycles.gifts import OBLIGING, balance, owed_back
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import homes_of
+from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["cycles"])
 NAMED_LEGACIES = frozenset({LegacyKind.BELIEF, LegacyKind.ART_FORM})
@@ -134,7 +136,7 @@ def plan_view(row: LongPlanRow, refs: dict[int, NodeRef]) -> PlanView:
     )
 
 
-def gift_view(row: GiftRow, refs: dict[int, NodeRef]) -> GiftRecordView:
+def gift_view(rules: Rules, row: GiftRow, refs: dict[int, NodeRef]) -> GiftRecordView:
     return GiftRecordView(
         id=row.id,
         giver=need(refs, row.giver_node_id),
@@ -144,6 +146,9 @@ def gift_view(row: GiftRow, refs: dict[int, NodeRef]) -> GiftRecordView:
         item=at(refs, row.item_entity_id),
         state=row.state,
         answers_gift_id=row.answers_gift_id,
+        circuit_id=row.circuit_id,
+        owed=row.state in OBLIGING,
+        owed_back=owed_back(rules, row),
         due_epoch=row.due_epoch,
         settled_epoch=row.settled_epoch,
         epoch=row.epoch,
@@ -185,7 +190,7 @@ def legacy_label(row: LegacyTraitRow, refs: dict[int, NodeRef]) -> str:
     if row.kind is LegacyKind.AESTHETIC and row.key.count(",") == len(STYLE_AXES) - 1:
         return ", ".join(f"{axis} {value}" for axis, value in zip(STYLE_AXES, row.key.split(","), strict=True))
     if row.kind is LegacyKind.VALUE and row.key in ValueAxis._value2member_map_:
-        return ValueAxis(row.key).value.replace("_", " ")
+        return spoken(ValueAxis(row.key))
     return row.key.replace("_", " ")
 
 
@@ -201,7 +206,7 @@ async def plans_of(session: AsyncSession, node_id: int | None) -> list[LongPlanR
 
 
 async def gifts_of(session: AsyncSession, node_id: int | None) -> list[GiftRow]:
-    statement = select(GiftRow).order_by(GiftRow.id.desc())
+    statement = select(GiftRow).order_by(GiftRow.state.in_(list(OBLIGING)).desc(), GiftRow.id.desc())
     if node_id is not None:
         statement = statement.where(or_(GiftRow.giver_node_id == node_id, GiftRow.receiver_node_id == node_id))
     return list(await session.scalars(statement))
@@ -229,6 +234,7 @@ async def node_cycles(services: ServicesDep, node_id: NodeId) -> CyclesView:
         challenges = list(await session.scalars(select(ChallengeRow).where(ChallengeRow.holder_entity_id == node_id).order_by(ChallengeRow.id.desc())))
         plans = await plans_of(session, node_id)
         gifts = await gifts_of(session, node_id)
+        rules = await world_rules(services, session)
         debts = list(
             await session.scalars(
                 select(DivineDebtRow)
@@ -295,7 +301,7 @@ async def node_cycles(services: ServicesDep, node_id: NodeId) -> CyclesView:
                 for row in challenges
             ],
             plans=[plan_view(row, refs) for row in plans],
-            gifts=[gift_view(row, refs) for row in gifts],
+            gifts=[gift_view(rules, row, refs) for row in gifts],
             gift_balance=balance(gifts, node_id),
             debts=[
                 OfferingLedgerView(
@@ -456,6 +462,7 @@ async def cosmos_cycles(services: ServicesDep) -> CosmosCyclesView:
         confederations = await confederations_of(session, None)
         plans = await plans_of(session, None)
         gifts = await gifts_of(session, None)
+        rules = await world_rules(services, session)
         refs = await refs_of(
             session,
             [
@@ -482,5 +489,5 @@ async def cosmos_cycles(services: ServicesDep) -> CosmosCyclesView:
             circuits=[circuit_view(row, refs) for row in circuits],
             confederations=[confederation_view(row, refs) for row in confederations],
             plans=[plan_view(row, refs) for row in plans if row.holder_node_id in refs],
-            gifts=[gift_view(row, refs) for row in gifts if row.giver_node_id in refs and row.receiver_node_id in refs],
+            gifts=[gift_view(rules, row, refs) for row in gifts if row.giver_node_id in refs and row.receiver_node_id in refs],
         )

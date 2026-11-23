@@ -42,6 +42,7 @@ class BiologyNodeView(ApiModel):
     derived: BiologyEffectsView | None
     leanings: list[BiologyLeaningView]
     body: BiologyBodyView | None
+    partner: NodeRef | None
     seeded: bool
     updated_epoch: int | None
     locked: list[str]

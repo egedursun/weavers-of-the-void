@@ -216,6 +216,27 @@ class Namer:
             return None
         return await self.from_language(language, seed, kind)
 
+    async def world_voice(self, world_id: int) -> NamingVoice | None:
+        world = await self.session.get(WorldRow, world_id)
+        if world is None or world.phonology is None:
+            return None
+        sources = CorpusSources(world_name=world.name, naming_samples=world.phonology.sample_names)
+        phonology = phonology_for(sources, await self.world_alphabet(world_id), self.rules)
+        return None if phonology.is_empty else build_voice(f"world.{world_id}", phonology, self.rules)
+
+    async def for_world(self, world_id: int, seed: str, kind: NameKind) -> str | None:
+        for language in await self._world_languages(world_id):
+            name = await self.from_language(language, seed, kind)
+            if name is not None:
+                return name
+        voice = await self.world_voice(world_id)
+        if voice is None:
+            return None
+        name = generate_name(voice, seed, kind, await self.pool(), self.rules)
+        if name is not None:
+            (await self.pool()).add(name)
+        return name
+
     async def _world_languages(self, world_id: int) -> list[EntityRow]:
         statement = (
             select(EntityRow.id)

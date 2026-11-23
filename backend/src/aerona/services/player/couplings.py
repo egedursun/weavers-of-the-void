@@ -1,8 +1,10 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.couplings import FieldAgreementKind, RestraintKind, RiteComponent, SealKind, SignCause, SociolectKind, TeachingKind
+from aerona.domain.enums.couplings import FieldAgreementKind, RestraintKind, RiteComponent, SealKind, SignCause, SociolectKind
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.engine.couplings import control
+from aerona.engine.couplings.deep import SealLinks
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -42,7 +44,7 @@ class CarrionKeep(Command):
 class TeachingDraft(Command):
     teacher_id: int
     learner_id: int
-    kind: TeachingKind
+    kind: KnowledgeKind
 
 
 class TeachingBlock(Command):
@@ -72,6 +74,9 @@ class SealDraft(Command):
     place_id: int
     kind: SealKind = SealKind.DIVINE
     strength: int = Field(default=80, ge=1, le=100)
+    oath_id: int | None = None
+    power_id: int | None = None
+    line_id: int | None = None
 
 
 class NoveltyDraft(Edited):
@@ -221,7 +226,8 @@ async def field_agreement_void(scope: PlayerScope, command: FieldAgreementTarget
 
 @player_action("deep_seal:seal", ActionKind.EDIT_RECORD)
 async def deep_seal_seal(scope: PlayerScope, command: SealDraft) -> Effect:
-    await control.seal(await scope.context("deep_seal_seal"), command.place_id, command.kind, command.strength)
+    links = SealLinks(oath_id=command.oath_id, power_id=command.power_id, line_id=command.line_id)
+    await control.seal(await scope.context("deep_seal_seal"), command.place_id, command.kind, command.strength, links)
     return Effect("The deep is sealed.", target_node_id=command.place_id)
 
 

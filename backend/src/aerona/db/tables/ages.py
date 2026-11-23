@@ -10,16 +10,30 @@ from aerona.domain.enums.ages import (
     ArcTemplate,
     FormationZone,
     GiantMigration,
+    LongSeasonReach,
     PayoffKind,
     SeasonCause,
     SeasonSpell,
+    SeasonSpellShape,
     SetupKind,
 )
 from aerona.domain.enums.cosmography import ApocalypseVariant
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
 FORMATION_FIELDS = ("zone", "migration", "bombardment", "craters", "core_share", "mantle_heat", "water_delivered", "exotic_delivered")
-SEASON_FIELDS = ("cause", "spell", "spell_started_epoch", "spell_length", "severity")
+SEASON_FIELDS = (
+    "cause",
+    "shape",
+    "spell",
+    "spell_started_epoch",
+    "spell_length",
+    "severity",
+    "reach",
+    "source_impact_id",
+    "source_region_id",
+    "source_star_id",
+    "source_incident_id",
+)
 FORECAST_FIELDS = ("scholar_entity_id", "predicted_end_epoch", "heeded")
 TRANSFORMATION_FIELDS = ("target_moisture", "target_forest", "target_fertility", "regions_changed", "resistance", "sabotage")
 AGE_FIELDS = ("number", "began_epoch", "ended_epoch", "variant", "carried")
@@ -58,14 +72,26 @@ class FormationHistoryRow(Base):
 
 class IrregularSeasonRow(Base):
     __tablename__ = "irregular_seasons"
-    __table_args__ = (at_least("spell_started_epoch", 0), at_least("spell_length", 1), between("severity", PERCENT_MIN, PERCENT_MAX))
+    __table_args__ = (
+        at_least("spell_started_epoch", 0),
+        at_least("spell_length", 1),
+        between("severity", PERCENT_MIN, PERCENT_MAX),
+        Index("ix_irregular_seasons_world", "world_id"),
+    )
 
-    world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
     cause: Mapped[SeasonCause] = mapped_column(enum_type(SeasonCause, "cause"), default=SeasonCause.ORBIT)
+    shape: Mapped[SeasonSpellShape] = mapped_column(enum_type(SeasonSpellShape, "shape"), default=SeasonSpellShape.CYCLING)
     spell: Mapped[SeasonSpell] = mapped_column(enum_type(SeasonSpell, "spell"), default=SeasonSpell.SUMMER)
     spell_started_epoch: Mapped[int] = mapped_column(default=0)
     spell_length: Mapped[int] = mapped_column(default=2)
     severity: Mapped[int] = mapped_column(default=50)
+    reach: Mapped[LongSeasonReach] = mapped_column(enum_type(LongSeasonReach, "reach"), default=LongSeasonReach.WORLD)
+    source_impact_id: Mapped[int | None] = mapped_column(ForeignKey("impact_events.id", ondelete="SET NULL"))
+    source_region_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    source_star_id: Mapped[int | None] = mapped_column(ForeignKey("stars.id", ondelete="SET NULL"))
+    source_incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     by_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -73,11 +99,12 @@ class IrregularSeasonRow(Base):
 class WinterForecastRow(Base):
     __tablename__ = "winter_forecasts"
     __table_args__ = (
-        UniqueConstraint("world_id", "people_entity_id", name="uq_winter_forecasts_world_people"),
+        UniqueConstraint("long_season_id", "people_entity_id", name="uq_winter_forecasts_season_people"),
         Index("ix_winter_forecasts_people", "people_entity_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    long_season_id: Mapped[int] = mapped_column(ForeignKey("irregular_seasons.id", ondelete="CASCADE"))
     world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
     people_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     scholar_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

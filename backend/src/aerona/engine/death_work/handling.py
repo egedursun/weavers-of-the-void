@@ -1,7 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.death_shapes import (
@@ -14,6 +14,7 @@ from aerona.catalog.death_shapes import (
     TREATMENT_SPIRIT_PCT,
 )
 from aerona.catalog.life_traits import DEATH_ROLE_TRAITS, having
+from aerona.catalog.peoples import FUNERALS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.death_work import DeathWorkRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -34,7 +35,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.death_work.seed import needed_workers
-from aerona.engine.economy.purse import shift_points
+from aerona.engine.economy.purse import shift_points, take_coin
 from aerona.engine.folkways.purity import barred_professions
 from aerona.engine.primitives.folk import folk_among, towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -131,6 +132,31 @@ async def treat_the_dead(ctx: TickContext, people: EntityRow, towns: list[int], 
         by_town[home].append(treatment)
     for town_id, treated in sorted(by_town.items()):
         await clean_or_foul(ctx, town_id, treated, people.id)
+    await keep_custom(ctx, people, culture, towns, sum(len(treated) for treated in by_town.values()))
+
+
+async def keep_custom(ctx: TickContext, people: EntityRow, culture: PeopleCultureRow, towns: list[int], dead: int) -> None:
+    spec = FUNERALS[culture.funeral_rite]
+    table = ctx.rules.funerals
+    cost = table.mummification_cost * dead if spec.preserves else 0
+    if cost:
+        payer = await ctx.session.get(EntityRow, towns[0])
+        if payer is not None:
+            await take_coin(ctx.session, ctx.rules, payer, cost)
+    if dead:
+        await record(ctx, "death.funeral", roles={IncidentRole.SUBJECT: people.id}, facts={"custom": culture.funeral_rite, "dead": dead, "cost": cost})
+    if not spec.second_rite or table.epochs(table.secondary_rite_years) <= 0:
+        return
+    gathered = await ctx.session.scalar(
+        select(func.count(EntityRow.id)).where(
+            EntityRow.status == EntityStatus.DEAD,
+            EntityRow.end_epoch == ctx.epoch - table.epochs(table.secondary_rite_years),
+            await folk_among(ctx.session, towns),
+        )
+    )
+    if gathered and "cohesion" not in culture.locked:
+        culture.cohesion = clamp_int(culture.cohesion + table.second_rite_cohesion, 0, PERCENT)
+        await record(ctx, "death.second_rite", roles={IncidentRole.SUBJECT: people.id}, facts={"dead": int(gathered), "cohesion": culture.cohesion})
 
 
 def standing_of(purity: int, line: int) -> DeathStanding:

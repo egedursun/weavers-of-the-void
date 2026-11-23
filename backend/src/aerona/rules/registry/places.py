@@ -57,3 +57,24 @@ class PlacesRules:
     sanctify_essence: int = rule(10, 0, 1000, G, "Essence a son spends to sanctify a place")
     sanctify_amount: int = rule(30, 0, 100, G, "Sacredness a son's sanctification adds to a place")
     raise_nexus_essence: int = rule(25, 0, 1000, G, "Essence a son spends to raise a ley nexus at a place")
+    waterfall_power: int = rule(20, 0, 100, G, "Water power each waterfall gives the mills of its region")
+    delta_harbour: int = rule(20, 0, 100, G, "Boat passage each delta adds to its region (%)")
+    plateau_defence: int = rule(20, 0, 100, G, "Height advantage a plateau or mesa adds to its defenders")
+    sinkhole_collapse_pct: int = rule(5, 0, 100, G, "Chance a sinkhole gives way in an epoch, harming what stands on it (%)")
+    sinkhole_collapse_harm: int = rule(30, 0, 100, G, "Condition buildings lose when a sinkhole gives way")
+    hot_spring_heal: int = rule(1, 0, 4, G, "Steps of severity a hot spring takes off the wounds of those who bathe in it each epoch, on the scale of 1 to 5")
+    landform_backfill_pct: int = rule(
+        30, 0, 100, G, "Chance an old region whose land fits a newly known kind of place gains one when the world first learns of it (%)"
+    )
+    tar_pit_trap: int = rule(3, 0, 100, G, "Abundance a tar pit takes from each wild kind of its region each epoch")
+
+
+@dataclass(frozen=True)
+class SecretsRules:
+    hidden_route_find_pct: int = rule(10, 0, 100, G, "Chance a hidden way is found in an epoch beyond any searcher's skill (%)")
+    hidden_route_passage: int = rule(10, 0, 100, G, "Passage each found hidden way adds to its region")
+    sleeping_beast_wake_pct: int = rule(5, 0, 100, G, "Chance a sleeping beast wakes in an epoch, more where the ground is dug (%)")
+    hidden_grave_find_pct: int = rule(10, 0, 100, G, "Chance a hidden grave is found in an epoch beyond any searcher's skill (%)")
+    hidden_spring_harvest: int = rule(10, 0, 100, G, "Harvest a found hidden spring adds to its region")
+    dormant_disease_load: int = rule(30, 0, 100, G, "Load a woken disease takes in the land when its resting place is opened")
+    false_account_cut_pct: int = rule(50, 0, 100, G, "Share of the strongest memory of its region a false account overturns when found (%)")

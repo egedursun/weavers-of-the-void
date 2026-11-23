@@ -7,7 +7,7 @@ from aerona.db.ledger_undo import UndoRun
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow
-from aerona.domain.enums.demography import AgeBand, Sex
+from aerona.domain.enums.demography import AgeBand, SexKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
 from aerona.domain.enums.happening import EventPhase
@@ -101,7 +101,7 @@ async def test_an_event_is_created_held_released_and_ended(scope: PlayerScope, s
     await happenings.set_event_casualties(
         scope,
         happenings.EventCasualties(
-            event_id=event_id, community_id=world.region.id, age_band=AgeBand.ADULT, sex=Sex.MALE, social_class=SocialClass.FARMER, count=12
+            event_id=event_id, community_id=world.region.id, age_band=AgeBand.ADULT, sex_kind=SexKind.BEGETTER, social_class=SocialClass.FARMER, count=12
         ),
     )
     assert sum(row.count for row in await session.scalars(select(EventCasualtyRow).where(EventCasualtyRow.event_entity_id == event_id))) == 12

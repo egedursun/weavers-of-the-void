@@ -5,6 +5,9 @@ from aerona.domain.enums.environment import (
     NotableYearKind,
     PlaceCover,
     RiverClass,
+    SeasonOnset,
+    SeasonWarmth,
+    SeasonWater,
     SoilKind,
     TemperatureBand,
     TerrainKind,
@@ -129,7 +132,20 @@ class SeasonView(ApiModel):
     growth: int
     travel: int
     campaign: int
+    share_pct: int
+    warmth: SeasonWarmth
+    water: SeasonWater
     edited: bool
+
+
+class SeasonOnsetView(ApiModel):
+    id: int
+    year: int
+    season_position: int
+    onset: SeasonOnset
+    locked: bool
+    by_node_id: int | None
+    by_name: str | None
 
 
 class HolyDayView(ApiModel):
@@ -169,7 +185,9 @@ class WorldSeasonsView(ApiModel):
     day_length_hours: int | None
     moon_count: int | None
     tidal_strength: int | None
+    seasons_max: int
     seasons: list[SeasonView]
+    onsets: list[SeasonOnsetView]
     calendars: list[CalendarView]
     notable_years: list[NotableYearView]
     astronomy_records: list[AstronomyRecordView]

@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.core.grammar import spoken
 from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.discovery import EpithetRow, NameExonymRow, NameMeaningRow
 from aerona.db.tables.entities import EntityRow
@@ -75,9 +76,9 @@ async def feature_of(session: AsyncSession, entity: EntityRow, atlas: RegionAtla
         region = atlas.top_region(entity.id)
         land = await session.get(RegionEnvironmentRow, region) if region is not None else None
         if land is not None and land.dominant_terrain is not None:
-            return land.dominant_terrain.value.replace("_", " ")
+            return spoken(land.dominant_terrain)
     if entity.entity_type is EntityType.MORTAL and entity.social_class is not None:
-        return entity.social_class.value.replace("_", " ")
+        return spoken(entity.social_class)
     return ENTITY_TYPES[entity.entity_type].noun
 
 
@@ -107,7 +108,7 @@ async def coined(ctx: TickContext, language: EntityRow, token: str, entity: Enti
     compound = await compounds(ctx.session, language.id) and len(token) >= COMPOUND_LENGTH
     if compound and ctx.rng(f"name.compound.{entity.id}").chance(ctx.rules.grammar.compound_pct):
         half = len(token) // 2
-        kind_word = entity.entity_type.value.replace("_", " ")
+        kind_word = spoken(entity.entity_type)
         head, modifier = (token[:half], token[half:]) if await head_first(ctx.session, language.id) else (token[half:], token[:half])
         return [await coin(ctx, language, modifier, feature), await coin(ctx, language, head, kind_word)]
     return [await coin(ctx, language, token, feature)]

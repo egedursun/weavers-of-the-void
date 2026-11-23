@@ -40,6 +40,8 @@ const TERRAIN = {
       son_id: null,
       since_epoch: 2,
       harms: HARMS,
+      targets: ['travellers'],
+      reachable: ['travellers', 'merchants', 'pilgrims'],
     },
   ],
   sacredness: 45,
@@ -139,5 +141,31 @@ describe('region terrain', () => {
     expect(
       callsTo('POST', '/api/actions/region:danger_release')[0].body
     ).toEqual({ danger_id: 7 })
+  })
+
+  it('narrows a danger to the harms it may reach and holds it', async () => {
+    serve()
+    onApi('POST', '/api/actions/region:danger_edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<RegionTerrainSection regionId={5} />)
+    await screen.getByRole('button', { name: 'Adjust' }).first().click()
+    await screen
+      .getByRole('button', {
+        name: /Harms only \(none chosen: all it reaches\)/,
+      })
+      .click()
+    await screen.getByRole('checkbox', { name: 'Pilgrims' }).click()
+    await screen
+      .getByRole('button', { name: 'Set and hold' })
+      .first()
+      .click({ force: true })
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/region:danger_edit'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/region:danger_edit')[0].body).toEqual({
+      danger_id: 7,
+      strength: 60,
+      hold: true,
+      targets: ['travellers', 'pilgrims'],
+    })
   })
 })

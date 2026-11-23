@@ -35,7 +35,7 @@ class ShieldWorldInput(ToolInput):
 async def shield_world(call: SonCall, args: ShieldWorldInput) -> str:
     world = await world_in_hand(call, args.world_id)
     if held(world.id):
-        fail(SonResult.SHIELD_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.SHIELD_REFUSED, why="it is held")
     table = call.rules.space_weather
     if abs(args.change) > table.shield_change_max:
         fail(SonResult.SHIELD_REFUSED, why=f"no god moves a field by more than {table.shield_change_max} at once")
@@ -43,7 +43,7 @@ async def shield_world(call: SonCall, args: ShieldWorldInput) -> str:
     require_essence(call, cost)
     field: WorldFieldRow = await field_of(call.tick, world)
     if "shift" in field.locked:
-        fail(SonResult.SHIELD_REFUSED, why="a stronger hand holds this field")
+        fail(SonResult.SHIELD_REFUSED, why="this field is held")
     with explaining_alone():
         term("space_weather.shield", args.change, source_node_id=world.id)
         field.shift = clamp_int(args.change, -PERCENT, PERCENT)

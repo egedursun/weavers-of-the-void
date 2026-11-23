@@ -30,6 +30,9 @@ class Part:
     internal: bool = False
     vital: bool = False
     counted: int = 0
+    guards: bool = False
+    shared: bool = False
+    paralyses: bool = False
 
     @property
     def visible(self) -> bool:
@@ -46,6 +49,7 @@ class Anatomy:
     heals: bool = True
     infects: bool = True
     material: bool = True
+    colonial: bool = False
 
     def part(self, key: str) -> Part | None:
         return next((part for part in self.parts if part.key == key), None)
@@ -76,6 +80,10 @@ def _pair(left: BodyPart, right: BodyPart, label: str, region: BodyRegion, funct
     )
 
 
+SPINE_PART = Part(P.SPINE, "Spine", R.TORSO, (F.LOCOMOTION,), internal=True, paralyses=True)
+CARAPACE_PART = Part(P.CARAPACE, "Carapace", R.TORSO, (F.VITAL,), guards=True)
+
+
 def _organs(*, breath: bool = True) -> tuple[Part, ...]:
     lungs = (Part(P.LUNGS, "Lungs", R.TORSO, (F.BREATH,), internal=True, vital=True),) if breath else ()
     return (
@@ -104,6 +112,7 @@ HUMANOID_PARTS: tuple[Part, ...] = (
     *_pair(P.LEFT_LEG, P.RIGHT_LEG, "leg", R.LEGS, (F.LOCOMOTION,)),
     *_pair(P.LEFT_FOOT, P.RIGHT_FOOT, "foot", R.LEGS, (F.LOCOMOTION,)),
     Part(TOES, "Toes", R.LEGS, (F.LOCOMOTION,), severable=True, counted=TOE_COUNT),
+    SPINE_PART,
 )
 
 QUADRUPED_PARTS: tuple[Part, ...] = (
@@ -119,6 +128,7 @@ QUADRUPED_PARTS: tuple[Part, ...] = (
     *_pair(P.LEFT_FORELEG, P.RIGHT_FORELEG, "foreleg", R.LEGS, (F.LOCOMOTION,)),
     *_pair(P.LEFT_HINDLEG, P.RIGHT_HINDLEG, "hind leg", R.LEGS, (F.LOCOMOTION,)),
     Part(P.TAIL, "Tail", R.TAIL, (F.TAIL,), severable=True),
+    SPINE_PART,
 )
 
 AVIAN_PARTS: tuple[Part, ...] = (
@@ -131,6 +141,7 @@ AVIAN_PARTS: tuple[Part, ...] = (
     *_pair(P.LEFT_WING, P.RIGHT_WING, "wing", R.WINGS, (F.FLIGHT,)),
     *_pair(P.LEFT_LEG, P.RIGHT_LEG, "talon", R.LEGS, (F.LOCOMOTION, F.FINE_MANIPULATION)),
     Part(P.TAIL, "Tail feathers", R.TAIL, (F.TAIL,), severable=True),
+    SPINE_PART,
 )
 
 SERPENTINE_PARTS: tuple[Part, ...] = (
@@ -142,6 +153,7 @@ SERPENTINE_PARTS: tuple[Part, ...] = (
     Part(P.TORSO, "Coils", R.TORSO, (F.LOCOMOTION, F.VITAL)),
     *_organs(),
     Part(P.TAIL, "Tail", R.TAIL, (F.LOCOMOTION, F.TAIL), severable=True),
+    SPINE_PART,
 )
 
 INSECTOID_PARTS: tuple[Part, ...] = (
@@ -154,6 +166,7 @@ INSECTOID_PARTS: tuple[Part, ...] = (
     *_pair(P.LEFT_FORELEG, P.RIGHT_FORELEG, "foreleg", R.ARMS, (F.GRASP, F.FINE_MANIPULATION)),
     *_pair(P.LEFT_MIDLEG, P.RIGHT_MIDLEG, "middle leg", R.LEGS, (F.LOCOMOTION,)),
     *_pair(P.LEFT_HINDLEG, P.RIGHT_HINDLEG, "hind leg", R.LEGS, (F.LOCOMOTION,)),
+    CARAPACE_PART,
 )
 
 AQUATIC_PARTS: tuple[Part, ...] = (
@@ -166,6 +179,7 @@ AQUATIC_PARTS: tuple[Part, ...] = (
     *_organs(breath=False),
     *_pair(P.LEFT_FIN, P.RIGHT_FIN, "fin", R.ARMS, (F.LOCOMOTION, F.FINE_MANIPULATION)),
     Part(P.TAIL, "Tail fin", R.TAIL, (F.LOCOMOTION, F.TAIL), severable=True),
+    SPINE_PART,
 )
 
 AMORPHOUS_PARTS: tuple[Part, ...] = (
@@ -192,9 +206,9 @@ INCORPOREAL_PARTS: tuple[Part, ...] = (
 )
 
 CONSTRUCT_PARTS: tuple[Part, ...] = (
-    Part(P.HEAD, "Rune head", R.HEAD, (F.COGNITION,), vital=True),
+    Part(P.HEAD, "Head", R.HEAD, (F.COGNITION,), vital=True),
     *_pair(P.LEFT_EYE, P.RIGHT_EYE, "lens", R.HEAD, (F.SIGHT,)),
-    Part(P.JAW, "Voice grille", R.HEAD, (F.SPEECH, F.HEARING, F.PRESENCE)),
+    Part(P.JAW, "Voice", R.HEAD, (F.SPEECH, F.HEARING, F.PRESENCE)),
     Part(P.TORSO, "Frame", R.TORSO, (F.BREATH,)),
     Part(P.CORE, "Animating core", R.TORSO, (F.VITAL,), internal=True, vital=True),
     *_pair(P.LEFT_ARM, P.RIGHT_ARM, "arm", R.ARMS, (F.GRASP,)),
@@ -204,6 +218,50 @@ CONSTRUCT_PARTS: tuple[Part, ...] = (
 )
 
 DIVINE_PARTS: tuple[Part, ...] = (*HUMANOID_PARTS, Part(P.AURA, "Aura", R.HEAD, (F.PRESENCE,)))
+
+TENTACLED_PARTS: tuple[Part, ...] = (
+    Part(P.HEAD, "Head", R.HEAD, (F.COGNITION,), vital=True),
+    *_pair(P.LEFT_EYE, P.RIGHT_EYE, "eye", R.HEAD, (F.SIGHT,)),
+    Part(P.BEAK, "Beak", R.HEAD, (F.SPEECH, F.GRASP, F.PRESENCE)),
+    Part(P.CORE, "Mantle", R.TORSO, (F.VITAL, F.PRESENCE)),
+    Part(P.GILLS, "Gills", R.TORSO, (F.BREATH,), internal=True, vital=True),
+    *_organs(breath=False),
+    Part(P.TENTACLES, "Tentacles", R.ARMS, (F.GRASP, F.FINE_MANIPULATION, F.LOCOMOTION), severable=True, shared=True),
+)
+
+CENTAUROID_PARTS: tuple[Part, ...] = (
+    Part(P.HEAD, "Head", R.HEAD, (F.COGNITION,), vital=True),
+    Part(P.FACE, "Face", R.HEAD, (F.PRESENCE,)),
+    *_pair(P.LEFT_EYE, P.RIGHT_EYE, "eye", R.HEAD, (F.SIGHT,)),
+    *_pair(P.LEFT_EAR, P.RIGHT_EAR, "ear", R.HEAD, (F.HEARING,)),
+    Part(P.JAW, "Jaw", R.HEAD, (F.SPEECH,)),
+    Part(TEETH, "Teeth", R.HEAD, (F.SPEECH, F.PRESENCE), severable=True, counted=TOOTH_COUNT),
+    Part(P.TONGUE, "Tongue", R.HEAD, (F.SPEECH,), severable=True, internal=True),
+    Part(P.NECK, "Neck", R.TORSO, (F.BREATH,), vital=True),
+    Part(P.TORSO, "Upper body and flank", R.TORSO, (F.VITAL,)),
+    *_organs(),
+    SPINE_PART,
+    *_pair(P.LEFT_ARM, P.RIGHT_ARM, "arm", R.ARMS, (F.GRASP,)),
+    *_pair(P.LEFT_HAND, P.RIGHT_HAND, "hand", R.ARMS, (F.GRASP,)),
+    Part(FINGERS, "Fingers", R.ARMS, (F.FINE_MANIPULATION,), severable=True, counted=FINGER_COUNT),
+    *_pair(P.LEFT_FORELEG, P.RIGHT_FORELEG, "foreleg", R.LEGS, (F.LOCOMOTION,)),
+    *_pair(P.LEFT_HINDLEG, P.RIGHT_HINDLEG, "hind leg", R.LEGS, (F.LOCOMOTION,)),
+    Part(P.TAIL, "Tail", R.TAIL, (F.TAIL,), severable=True),
+)
+
+RADIAL_PARTS: tuple[Part, ...] = (
+    Part(P.CORE, "Core", R.TORSO, (F.VITAL, F.COGNITION), vital=True),
+    Part(P.EYE, "Sensing spots", R.TORSO, (F.SIGHT, F.HEARING)),
+    *_organs(breath=False),
+    Part(P.TENTACLES, "Arms around the core", R.ARMS, (F.GRASP, F.FINE_MANIPULATION, F.LOCOMOTION), severable=True, shared=True),
+)
+
+COLONIAL_PARTS: tuple[Part, ...] = (
+    Part(P.TORSO, "Members", R.TORSO, (F.VITAL, F.LOCOMOTION, F.BREATH, F.REPRODUCTION, F.PRESENCE), shared=True),
+    Part(P.CORE, "Joined centre", R.TORSO, (F.COGNITION,), internal=True),
+    Part(P.EYE, "Sensing members", R.HEAD, (F.SIGHT, F.HEARING)),
+    Part(P.PSEUDOPODS, "Reaching members", R.ARMS, (F.GRASP, F.FINE_MANIPULATION), severable=True, shared=True),
+)
 
 ANATOMIES: dict[BodyPlan, Anatomy] = {
     BodyPlan.HUMANOID: Anatomy(BodyPlan.HUMANOID, "Humanoid", HUMANOID_PARTS),
@@ -218,6 +276,10 @@ ANATOMIES: dict[BodyPlan, Anatomy] = {
     BodyPlan.COLOSSAL: Anatomy(BodyPlan.COLOSSAL, "Colossal", HUMANOID_PARTS),
     BodyPlan.CONSTRUCT: Anatomy(BodyPlan.CONSTRUCT, "Construct", CONSTRUCT_PARTS, breathes=False, bleeds=False, heals=False, infects=False),
     BodyPlan.DIVINE_MANIFEST: Anatomy(BodyPlan.DIVINE_MANIFEST, "Divine manifestation", DIVINE_PARTS, infects=False),
+    BodyPlan.TENTACLED: Anatomy(BodyPlan.TENTACLED, "Many-armed", TENTACLED_PARTS),
+    BodyPlan.CENTAUROID: Anatomy(BodyPlan.CENTAUROID, "Upright on four legs", CENTAUROID_PARTS),
+    BodyPlan.RADIAL: Anatomy(BodyPlan.RADIAL, "Built round a centre", RADIAL_PARTS),
+    BodyPlan.COLONIAL: Anatomy(BodyPlan.COLONIAL, "Many living members", COLONIAL_PARTS, colonial=True),
 }
 
 SIGHT_PARTS = frozenset(part.key for anatomy in ANATOMIES.values() for part in anatomy.parts if F.SIGHT in part.functions)

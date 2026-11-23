@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.demography import GROWN_BANDS
+from aerona.catalog.reproduction import BEARING_KINDS, BEGETTING_KINDS, ELIGIBILITY_NEEDS, SEX_KINDS, rule_fit
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
@@ -10,14 +12,16 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import DemographicTransitionRow, DiasporaRow, RoleNormRow, SexRatioRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mortal import MarriageRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
-from aerona.domain.enums.collective import RoleEligibility, RoleKind
-from aerona.domain.enums.demography import AgeBand, Sex
+from aerona.domain.enums.collective import RoleKind
+from aerona.domain.enums.demography import AgeBand, SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.mortal import MarriageEnd
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.settlement import DistrictKind, SizeTier
@@ -32,6 +36,7 @@ from aerona.engine.demography.cohorts import cohort_rows
 from aerona.engine.fertility_means.factor import people_factor
 from aerona.engine.mind.book import stored_values
 from aerona.engine.polity.laws import law_param
+from aerona.engine.primitives.folk import folk_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.recording.record import StepDraft, record
@@ -64,10 +69,17 @@ class DemographyTally:
     skewed: int = 0
 
 
-async def cohort_counts(session: AsyncSession, community_id: int) -> dict[tuple[AgeBand, Sex], int]:
-    found: dict[tuple[AgeBand, Sex], int] = {}
+async def cohort_counts(session: AsyncSession, community_id: int) -> dict[tuple[AgeBand, SexKind], int]:
+    found: dict[tuple[AgeBand, SexKind], int] = {}
     for row in await cohort_rows(session, community_id):
-        found[(row.age_band, row.sex)] = found.get((row.age_band, row.sex), 0) + row.count
+        found[(row.age_band, row.sex_kind)] = found.get((row.age_band, row.sex_kind), 0) + row.count
+    return found
+
+
+async def sex_counts(session: AsyncSession, community_id: int) -> dict[SexKind, int]:
+    found: dict[SexKind, int] = {}
+    for (_band, sex), count in (await cohort_counts(session, community_id)).items():
+        found[sex] = found.get(sex, 0) + count
     return found
 
 
@@ -98,9 +110,27 @@ async def ratio_of(ctx: TickContext, community_id: int) -> SexRatioRow:
     return row
 
 
-async def women_study(session: AsyncSession, people_id: int | None) -> bool:
+async def bearers_study(session: AsyncSession, people_id: int | None) -> bool:
     row = await session.get(RoleNormRow, (people_id, RoleKind.PROFESSION)) if people_id is not None else None
-    return row is None or row.eligibility not in {RoleEligibility.MALE_ONLY}
+    return row is None or any(rule_fit(*ELIGIBILITY_NEEDS[row.eligibility], kind) is not None for kind in BEARING_KINDS)
+
+
+async def bereaved_among(session: AsyncSession, community_id: int) -> int:
+    folk = select(EntityRow.id).where(
+        await folk_among(session, [community_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+    )
+    living = set(await session.scalars(folk))
+    if not living:
+        return 0
+    ended = await session.execute(
+        select(MarriageRow.first_id, MarriageRow.second_id).where(
+            MarriageRow.cause_end == MarriageEnd.DEATH, or_(MarriageRow.first_id.in_(sorted(living)), MarriageRow.second_id.in_(sorted(living)))
+        )
+    )
+    wed = set(await session.scalars(select(MarriageRow.first_id).where(MarriageRow.end_epoch.is_(None), MarriageRow.first_id.in_(sorted(living))))) | set(
+        await session.scalars(select(MarriageRow.second_id).where(MarriageRow.end_epoch.is_(None), MarriageRow.second_id.in_(sorted(living))))
+    )
+    return len({person for pair in ended for person in pair if person in living and person not in wed})
 
 
 async def measure(ctx: TickContext, community: EntityRow, tally: DemographyTally) -> None:
@@ -113,24 +143,26 @@ async def measure(ctx: TickContext, community: EntityRow, tally: DemographyTally
     culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
     profile = await ctx.session.get(SettlementProfileRow, community.id)
     transition = await transition_of(ctx, community.id)
-    elders = sum(counts.get((AgeBand.ELDER, sex), 0) for sex in Sex)
+    elders = sum(counts.get((AgeBand.ELDER, sex), 0) for sex in SexKind)
     if "elder_share" not in transition.locked:
         transition.elder_share = clamp_int(elders * PERCENT / everyone, 0, PERCENT)
     if "urban_share" not in transition.locked:
         transition.urban_share = URBAN_OF[profile.size_tier] if profile is not None else (culture.urbanisation if culture is not None else 0)
     if "literacy" not in transition.locked:
         transition.literacy = culture.literacy if culture is not None else 0
-    study = table.education_cut if await women_study(ctx.session, people.id if people is not None else None) else 0
+    study = table.education_cut if await bearers_study(ctx.session, people.id if people is not None else None) else 0
     target = PERCENT - (table.urban_cut * transition.urban_share + table.literacy_cut * transition.literacy + study * transition.literacy) / PERCENT
     shift(transition, "fertility_pct", (target - transition.fertility_pct) * table.lag_pct / PERCENT, high=FERTILITY_SPAN)
     tally.transitions += 1
     ratio = await ratio_of(ctx, community.id)
-    men, women = counts.get((AgeBand.ADULT, Sex.MALE), 0), counts.get((AgeBand.ADULT, Sex.FEMALE), 0)
-    if "males_per_hundred" not in ratio.locked:
-        ratio.males_per_hundred = clamp_int(men * PERCENT / max(1, women), 0, PERCENT * 10)
-    if "widows" not in ratio.locked:
-        ratio.widows = max(0, women - men)
-    if ratio.males_per_hundred < ctx.rules.sex_ratio.skew_at:
+    grown = {sex: sum(counts.get((band, sex), 0) for band in GROWN_BANDS) for sex in SexKind}
+    begetters = sum(count for sex, count in grown.items() if sex in BEGETTING_KINDS and SEX_KINDS[sex].bears is False)
+    bearers = sum(count for sex, count in grown.items() if sex in BEARING_KINDS and SEX_KINDS[sex].begets is False and SEX_KINDS[sex].sexed)
+    if "begetters_per_hundred" not in ratio.locked:
+        ratio.begetters_per_hundred = clamp_int(begetters * PERCENT / bearers, 0, PERCENT * 10) if bearers and begetters else PERCENT
+    if "bereaved_partners" not in ratio.locked:
+        ratio.bereaved_partners = await bereaved_among(ctx.session, community.id)
+    if ratio.begetters_per_hundred < ctx.rules.sex_ratio.skew_at:
         tally.skewed += 1
     if profile is not None and transition.elder_share > THIRD and people is not None:
         values = await stored_values(ctx.session, ValueHolder.CULTURE, people.id)
@@ -149,7 +181,7 @@ async def scarce_side_plural(ctx: TickContext, community_id: int) -> bool:
         return True
     town = await ctx.session.get(EntityRow, community_id)
     system = await system_of_people(ctx.session, await people_id_of(ctx.session, town)) if town is not None else None
-    scarce = PluralSide.FIRST if system is None or first_sex(system) == Sex.MALE.value else PluralSide.SECOND
+    scarce = PluralSide.FIRST if system is None or first_sex(system) == SexKind.BEGETTER.value else PluralSide.SECOND
     return side == scarce.value
 
 
@@ -161,9 +193,9 @@ async def fertility_factor(ctx: TickContext, community_id: int) -> float:
     community = await ctx.session.get(EntityRow, community_id)
     factor *= await people_factor(ctx.session, ctx.rules, await people_id_of(ctx.session, community))
     ratio = await ctx.session.get(SexRatioRow, community_id) if await fixed_sexes_at(ctx.session, community_id) else None
-    if ratio is not None and ratio.males_per_hundred < table.skew_at:
+    if ratio is not None and ratio.begetters_per_hundred < table.skew_at:
         several = await scarce_side_plural(ctx, community_id)
-        lack = (table.skew_at - ratio.males_per_hundred) / PERCENT
+        lack = (table.skew_at - ratio.begetters_per_hundred) / PERCENT
         factor *= 1 - lack * (PERCENT - (table.polygamy_pct if several else 0)) / PERCENT
         factor *= 1 - table.late_marriage_pct / PERCENT * lack
     return max(0.0, factor)

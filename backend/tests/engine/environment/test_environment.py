@@ -113,7 +113,7 @@ async def test_a_failed_harvest_names_its_year_and_becomes_a_famine(realm: Realm
     rules = tuned(harvest={"normal_growth": 100, "notable_threshold": 95, "famine_event_below": 95})
     await harvest(context(realm.session, rules))
     years = list(await realm.session.scalars(select(NotableYearRow)))
-    assert any(row.region_entity_id == realm.region.id and row.name.startswith("the Hungry Year") for row in years)
+    assert any(row.region_entity_id == realm.region.id and row.name.startswith("the Year of Hunger") for row in years)
     famines = list(await realm.session.scalars(select(EntityRow).where(EntityRow.engine_kind == EngineKind.FAMINE)))
     assert famines
     ground = await realm.session.get(RegionEnvironmentRow, realm.region.id)
@@ -155,7 +155,9 @@ async def test_astronomy_becomes_a_calendar_that_keeps_fasts(realm: Realm) -> No
     )
     await realm.session.flush()
     await calendars(context(realm.session, rules, epoch=4))
-    assert any(day["name"] == "Fast of the Hungry Year in Vale" for day in calendar.holy_days)
+    day = next(day for day in calendar.holy_days if day["name"] == "Day of the Hungry Year in Vale")
+    fast = await realm.session.get(EntityRow, day["tradition_entity_id"])
+    assert fast is not None and fast.name == "The Fast of the Hungry Year in Vale"
 
 
 async def test_places_inherit_terrain_and_water_shapes_capacity(realm: Realm) -> None:
@@ -264,6 +266,8 @@ def test_terrain_works_and_wind_shape_passability_and_fertility() -> None:
     plain, roads, bog = passability_of(rules, bare), passability_of(rules, built), passability_of(rules, marsh)
     assert roads["wheeled"] > plain["wheeled"] and roads["boat"] > plain["boat"]
     assert bog["on_foot"] < plain["on_foot"] and bog["flying"] == plain["flying"]
+    landlocked = replace(bare, river=RiverClass.NONE, coast=CoastKind.NONE)
+    assert passability_of(rules, landlocked)["boat"] == 0 and passability_of(rules, landlocked)["submerged"] == 0
     watered = climate_factor(rules, temperature=50, rainfall=50, river=RiverClass.RIVER, scars={}, works=built.works)
     dry = climate_factor(rules, temperature=50, rainfall=50, river=RiverClass.RIVER, scars={}, works=Works())
     assert watered > dry

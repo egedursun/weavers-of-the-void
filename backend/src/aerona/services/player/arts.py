@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.arts import ArtMarketRole, CanonPath, ClubKind
+from aerona.domain.enums.arts import ArtMarketRole, CanonPath, ClubKind, ForgeryKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.arts import control
 from aerona.services.player.cosmography import Edited
@@ -55,6 +55,7 @@ class HolderEdit(Edited):
 class ForgeryDraft(Command):
     original_id: int
     forger_id: int
+    kind: ForgeryKind | None = None
 
 
 class ForgeryTarget(Command):
@@ -199,7 +200,7 @@ async def collector_delete(scope: PlayerScope, command: HolderTarget) -> Effect:
 
 @player_action("forgery:create", ActionKind.EDIT_RECORD)
 async def forgery_create(scope: PlayerScope, command: ForgeryDraft) -> Effect:
-    row = await control.forge_work(await scope.context("forgery_create"), command.original_id, command.forger_id)
+    row = await control.forge_work(await scope.context("forgery_create"), command.original_id, command.forger_id, command.kind)
     return Effect("A forgery is made.", command.forger_id, values={"forgery_id": row.id})
 
 

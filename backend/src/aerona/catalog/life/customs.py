@@ -2,11 +2,13 @@ from collections.abc import Mapping
 
 from aerona.core.total import total
 from aerona.domain.enums.affliction import PackageKind
-from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.customs import AgeGrade, CoopPurpose, Intoxicant, IntoxicantUse, MarkMeaning, MemberRight, Membership, Naturalisation, RevivalGoal
+from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.customs import AgeGrade, CoopPurpose, Intoxicant, IntoxicantUse, MemberRight, Membership, Naturalisation
+from aerona.domain.enums.daily_life import HouseDuty
+from aerona.domain.enums.ecology import YieldProduct
 from aerona.domain.enums.mortal import LifeStage
 
-GRADES = (AgeGrade.CHILDREN, AgeGrade.YOUTHS, AgeGrade.WARRIORS, AgeGrade.JUNIOR_ELDERS, AgeGrade.SENIOR_ELDERS)
+GRADES = (AgeGrade.CHILDREN, AgeGrade.YOUTHS, AgeGrade.YOUNG_ADULTS, AgeGrade.JUNIOR_ELDERS, AgeGrade.SENIOR_ELDERS)
 
 
 RIGHTS: Mapping[Membership, tuple[MemberRight, ...]] = {
@@ -32,25 +34,20 @@ PATH_WAIT: Mapping[Naturalisation, int] = total(
 )
 
 
-PACKAGES: Mapping[Intoxicant, PackageKind] = {
-    Intoxicant.BREW: PackageKind.DRINK_DEPENDENCE,
-    Intoxicant.WINE: PackageKind.DRINK_DEPENDENCE,
-    Intoxicant.SPIRITS: PackageKind.DRINK_DEPENDENCE,
-    Intoxicant.SMOKE: PackageKind.DRUG_DEPENDENCE,
-    Intoxicant.LEAF: PackageKind.DRUG_DEPENDENCE,
-    Intoxicant.FUNGUS: PackageKind.DRUG_DEPENDENCE,
-    Intoxicant.ESSENCE: PackageKind.VIS_DEPENDENCE,
-}
-
-
-EVENT_BONDS: Mapping[MarkMeaning, BondKind] = {
-    MarkMeaning.DEED: BondKind.KILLED,
-    MarkMeaning.MARRIAGE: BondKind.SPOUSE_OF,
-    MarkMeaning.STATUS: BondKind.RULES,
-}
-
-
-RESTORING = (RevivalGoal.REVIVE_LANGUAGE, RevivalGoal.RESTORE_GOD, RevivalGoal.EXPEL_FOREIGNERS)
+PACKAGES: Mapping[Intoxicant, PackageKind] = total(
+    Intoxicant,
+    {
+        Intoxicant.BREW: PackageKind.DRINK_DEPENDENCE,
+        Intoxicant.WINE: PackageKind.DRINK_DEPENDENCE,
+        Intoxicant.SPIRITS: PackageKind.DRINK_DEPENDENCE,
+        Intoxicant.SMOKE: PackageKind.DRUG_DEPENDENCE,
+        Intoxicant.LEAF: PackageKind.DRUG_DEPENDENCE,
+        Intoxicant.FUNGUS: PackageKind.DRUG_DEPENDENCE,
+        Intoxicant.ESSENCE: PackageKind.VIS_DEPENDENCE,
+        Intoxicant.SYNTHETIC: PackageKind.DRUG_DEPENDENCE,
+        Intoxicant.ANIMAL_DERIVED: PackageKind.DRUG_DEPENDENCE,
+    },
+)
 
 
 SEEDED_STAGES = (LifeStage.CHILD, LifeStage.YOUTH, LifeStage.ADULT, LifeStage.ELDER)
@@ -64,8 +61,9 @@ STAGE_SHIFTS: dict[LifeStage, dict[str, int]] = {
 }
 
 KEEP_INTOXICATION_INTOXICANT_USES = frozenset({IntoxicantUse.DAILY, IntoxicantUse.FEAST})
-KEEP_INTOXICATION_INTOXICANT_USES_2 = (IntoxicantUse.DAILY, IntoxicantUse.FORBIDDEN)
-READ_MARK_MARK_MEANINGS = (MarkMeaning.DEED, MarkMeaning.STATUS)
-READ_MARK_MARK_MEANINGS_2 = (MarkMeaning.CLAN, MarkMeaning.MARRIAGE, MarkMeaning.AGE_SET)
-CALM_MARKED_MARK_MEANINGS = (MarkMeaning.PROTECTION, MarkMeaning.MOURNING)
+KEEP_INTOXICATION_INTOXICANT_USES_2 = (IntoxicantUse.DAILY, IntoxicantUse.FORBIDDEN, IntoxicantUse.MEDICINE)
+ANIMAL_INTOXICANT_SOURCES = frozenset({YieldProduct.VENOM, YieldProduct.SCENT, YieldProduct.ORGANS, YieldProduct.BLOOD})
+MADE_INTOXICANT_TECHNIQUES = frozenset({Technique.INDUSTRIAL_CHEMISTRY, Technique.ALCHEMY})
+SOURCED_INTOXICANTS = (Intoxicant.SYNTHETIC, Intoxicant.ANIMAL_DERIVED)
+KEPT_HOUSE_DUTIES = (HouseDuty.SICKCARE, HouseDuty.HOUSEHOLD_RITES)
 PURPOSE_FOR_COOP_PURPOSES = (CoopPurpose.INSURANCE, CoopPurpose.BURIAL, CoopPurpose.CREDIT, CoopPurpose.IRRIGATION)

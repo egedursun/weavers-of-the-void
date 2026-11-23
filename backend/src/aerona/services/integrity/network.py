@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.bond_texts import MENTIONED_IN_FATE as MENTIONED
 from aerona.constants.bond_texts import NAMES_IT as MENTIONS_IT
 from aerona.constants.bond_texts import SYSTEM_RELATED_DESCRIPTIONS
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -368,7 +368,7 @@ class DanglingEndRepair:
             return
         normalized = await self.bonds.normalize(BondDraft(source, target, kind, bond.epoch, description))
         if normalized.kind is not kind:
-            bond.description = kind.value.replace("_", " ") + (f": {description}" if description else "")
+            bond.description = spoken(kind) + (f": {description}" if description else "")
             return
         bond.source_node_id = normalized.source_node_id
         bond.target_node_id = normalized.target_node_id

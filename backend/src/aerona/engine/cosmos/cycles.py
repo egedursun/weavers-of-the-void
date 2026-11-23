@@ -4,17 +4,19 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.planetary_cycles import CYCLES, CycleFlow, cycles_moving
+from aerona.catalog.planetary_cycles import CYCLES, SCALES, CycleFlow, cycles_moving
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.evolution import TrophicLevelRow, WorldCycleRow
+from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.environment import RiverClass
 from aerona.domain.enums.evolution import CycleEffect, CycleSource, PlanetaryCycle, TrophicLevel
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
+from aerona.engine.environment.long_seasons import made_spell
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
@@ -43,6 +45,8 @@ class WorldState:
     warmth: float
     rivers: float
     erosion: float
+    industry: float = 0.0
+    uplift: float = 0.0
 
     def driver(self, source: CycleSource) -> float:
         return {
@@ -57,6 +61,9 @@ class WorldState:
             CycleSource.FREEZING: max(0.0, -self.warmth),
             CycleSource.RIVERS: self.rivers,
             CycleSource.EROSION: self.erosion / PERCENT,
+            CycleSource.INDUSTRY: self.industry / PERCENT,
+            CycleSource.UPLIFT: self.uplift / PERCENT,
+            CycleSource.BURIAL: self.erosion / PERCENT,
         }[source]
 
 
@@ -113,7 +120,7 @@ def settle_pool(row: WorldCycleRow, gained: int, lost: int) -> None:
         row.stock = clamp_int(row.stock + gained - lost, 0, PERCENT)
 
 
-def state_of(land: list[RegionEnvironmentRow], physics: WorldPhysicsRow | None, animals: int, epoch: int) -> WorldState:
+def state_of(land: list[RegionEnvironmentRow], physics: WorldPhysicsRow | None, animals: int, epoch: int, industry: float = 0.0) -> WorldState:
     burned = mean([ground.cleared for ground in land]) + PERCENT * sum(1 for ground in land if ground.burned_epoch == epoch) / len(land)
     return WorldState(
         volcanism=physics.volcanism if physics is not None else 0,
@@ -125,6 +132,8 @@ def state_of(land: list[RegionEnvironmentRow], physics: WorldPhysicsRow | None, 
         warmth=mean([ground.temperature_shift for ground in land]),
         rivers=sum(1 for ground in land if ground.river_class is not RiverClass.NONE) / len(land),
         erosion=mean([ground.erosion for ground in land]),
+        industry=industry,
+        uplift=physics.tectonics if physics is not None else 0,
     )
 
 
@@ -150,26 +159,81 @@ async def raise_seas(ctx: TickContext, world_id: int, physics: WorldPhysicsRow |
             )
 
 
+def first_stock(cycle: PlanetaryCycle, state: WorldState) -> int:
+    sources = sorted(CYCLES[cycle].seeded_by)
+    if not sources:
+        return BALANCE
+    return clamp_int(round_half_up(sum(state.driver(source) for source in sources) / len(sources) * PERCENT), 0, PERCENT)
+
+
+def band_word(rules: Rules, stock: int) -> str:
+    table = rules.cycles
+    return "low" if stock < table.band_low else "high" if stock > table.band_high else "balanced"
+
+
+async def note_band(ctx: TickContext, world_id: int, row: WorldCycleRow, before: int) -> None:
+    now, was = band_word(ctx.rules, row.stock), band_word(ctx.rules, before)
+    if now == was:
+        return
+    await record(
+        ctx,
+        "world.cycle_shifted",
+        roles={IncidentRole.SUBJECT: world_id},
+        facts={"cycle": row.cycle, "stock": row.stock, "inflow": row.inflow, "outflow": row.outflow},
+        world_id=world_id,
+    )
+
+
+async def thin_air(ctx: TickContext, world_id: int, physics: WorldPhysicsRow | None, cycles: WorldCycles) -> None:
+    air = next((row for cycle in cycles_moving(CycleEffect.BREATH) if (row := cycles.get(cycle)) is not None), None)
+    table = ctx.rules.cycles
+    if air is None or physics is None or physics.oxygen <= 0 or air.stock >= table.oxygen_breath_floor or "oxygen" in physics.locked:
+        return
+    physics.oxygen = clamp_int(physics.oxygen - table.air_thin_step, 0, PERCENT)
+    await record(ctx, "world.air_thinned", roles={IncidentRole.SUBJECT: world_id}, facts={"oxygen": physics.oxygen, "stock": air.stock}, world_id=world_id)
+
+
+async def foul_air(session: AsyncSession) -> dict[int, float]:
+    found: dict[int, list[int]] = defaultdict(list)
+    for world_id, air in await session.execute(
+        select(RegionEnvironmentRow.world_id, RegionPollutionRow.air).join(
+            RegionPollutionRow, RegionPollutionRow.region_node_id == RegionEnvironmentRow.entity_id
+        )
+    ):
+        found[world_id].append(air)
+    return {world_id: sum(values) / len(values) for world_id, values in found.items()}
+
+
 async def turn_cycles(ctx: TickContext, tally: CycleTally) -> None:
     grounds: dict[int, list[RegionEnvironmentRow]] = defaultdict(list)
     for ground in await ctx.session.scalars(select(RegionEnvironmentRow).order_by(RegionEnvironmentRow.entity_id)):
         grounds[ground.world_id].append(ground)
     known = await cycles_by_world(ctx.session)
     living = await animal_biomass(ctx.session)
+    fumes = await foul_air(ctx.session)
     for world_id in sorted(grounds):
         world = await ctx.session.get(WorldRow, world_id)
         if world is None or held(world_id):
             continue
         physics = await ctx.session.get(WorldPhysicsRow, world_id)
-        state = state_of(grounds[world_id], physics, living.get(world_id, 0), ctx.epoch)
+        state = state_of(grounds[world_id], physics, living.get(world_id, 0), ctx.epoch, fumes.get(world_id, 0.0))
         cycles = known[world_id]
         for cycle, spec in CYCLES.items():
             row = cycles.get(cycle)
             if row is None:
-                row = cycles[cycle] = WorldCycleRow(world_id=world_id, cycle=cycle, stock=BALANCE, locked=[])
+                row = cycles[cycle] = WorldCycleRow(world_id=world_id, cycle=cycle, stock=first_stock(cycle, state), locked=[])
                 ctx.session.add(row)
-            settle_pool(row, flowed(ctx.rules, spec.sources, state), flowed(ctx.rules, spec.sinks, state))
+            before = row.stock
+            gain, loss = SCALES[cycle]
+            settle_pool(
+                row, flowed(ctx.rules, spec.sources, state) * gain(ctx.rules) // PERCENT, flowed(ctx.rules, spec.sinks, state) * loss(ctx.rules) // PERCENT
+            )
             row.updated_epoch = ctx.epoch
+            await note_band(ctx, world_id, row, before)
         tally.turned += 1
         await raise_seas(ctx, world_id, physics, cycles, tally)
+        await thin_air(ctx, world_id, physics, cycles)
+        carbon = cycles.get(PlanetaryCycle.CARBON)
+        if carbon is not None and carbon.stock >= ctx.rules.long_seasons.made_threshold:
+            await made_spell(ctx, world, winter=False, severity=carbon.stock - BALANCE, incident_id=None)
     await ctx.session.flush()

@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.careers import CAREERS
 from aerona.catalog.life.collective import CAREER_ROLES as ROLE_OF_CAREER
 from aerona.catalog.life.mortal import (
     BREAK_TRAITS,
@@ -26,6 +27,7 @@ from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
@@ -59,6 +61,7 @@ from aerona.engine.mind.split import facet_weight, facets_of, stored_attribute
 from aerona.engine.mind.thoughts import need_importance, think
 from aerona.engine.mind.values import liege_of
 from aerona.engine.mortal.justice import code_punishment, community_ruler, sentence
+from aerona.engine.mortal.paths import path_open, path_weight
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.mortal.standing import add_renown, add_wealth
 from aerona.engine.polity.laws import law_param
@@ -276,6 +279,33 @@ async def vice(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, r
     return Broke("stress.vice", facts={"package": PackageKind.DRINK_DEPENDENCE})
 
 
+@BREAKS.on(StressBreak.WITHDRAWAL)
+async def withdraw(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
+    left = 0
+    for office in await ctx.session.scalars(select(OfficeRow).where(OfficeRow.holder_entity_id == mortal.id).order_by(OfficeRow.id)):
+        if not held(office.polity_entity_id):
+            office.holder_entity_id = None
+            left += 1
+    return Broke("stress.withdrawal", facts={"offices": left})
+
+
+def withdrawn(ctx: TickContext, profile: MortalProfileRow) -> bool:
+    return profile.last_break is StressBreak.WITHDRAWAL and profile.last_break_epoch is not None and profile.last_break_epoch >= 0
+
+
+async def come_back(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, cared: bool) -> bool:
+    table = ctx.rules.breaks
+    if not withdrawn(ctx, profile) or profile.last_break_epoch is None:
+        return False
+    span = table.epochs(table.withdrawal_years) * (PERCENT - (table.withdrawal_care_cut if cared else 0)) / PERCENT
+    if ctx.epoch - profile.last_break_epoch < span:
+        profile.stress = clamp_int(profile.stress - table.withdrawal_ease, 0, FULL)
+        return False
+    profile.last_break_epoch = -1
+    await record(ctx, "stress.withdrawal_ended", roles={IncidentRole.SUBJECT: mortal.id}, facts={"break": StressBreak.WITHDRAWAL, "stress": profile.stress})
+    return True
+
+
 @BREAKS.on(StressBreak.REVELATION)
 async def revelation(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     await gain_condition(ctx, mortal, ConditionKind.VISIONS, HarmCause.GOD, severity=banded(ctx, ctx.rules.harm_bands.revelation, mortal.id))
@@ -445,6 +475,9 @@ async def openings(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRo
     home = mortal.location_id
     if home is not None and (await known_levels(ctx.session, [home])).get(home, {}).get(KnowledgeBranch.WRITING, 0) >= table.study_level:
         open_paths.add(CareerPath.STUDY)
+    for path, spec in CAREERS.items():
+        if (spec.crews or spec.household or spec.frontier) and await path_open(ctx, mortal, spec):
+            open_paths.add(path)
     return open_paths
 
 
@@ -476,7 +509,7 @@ async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfil
         if not await career_open(ctx.session, ctx.rules, mortal, path):
             continue
         if path is CareerPath.STAY:
-            scores[path] = table.stay_score + needs.get(NeedKind.PURPOSE, FULL // 2) / 4
+            scores[path] = (table.stay_score + needs.get(NeedKind.PURPOSE, FULL // 2) / 4) * path_weight(ctx, path)
             continue
         score = float(len(traits & CAREER_TRAITS.get(path, frozenset())) * table.trait_weight)
         score += await best_level(ctx, mortal.id, path) * table.skill_weight_pct / PERCENT
@@ -486,7 +519,7 @@ async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfil
             score += ctx.rules.skills.profession_pull
         need = CAREER_NEEDS.get(path)
         score += (FULL - needs.get(need, FULL)) * table.need_weight_pct / PERCENT if need is not None else 0
-        scores[path] = score + rng.integer(0, table.switch_margin)
+        scores[path] = score * path_weight(ctx, path) + rng.integer(0, table.switch_margin)
     if not scores:
         return None
     best = max(scores, key=lambda path: (scores[path], path.value))

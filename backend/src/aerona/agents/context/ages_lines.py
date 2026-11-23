@@ -1,12 +1,12 @@
 from sqlalchemy import select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import spoken
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.ages import ArcFigureRow, ArcRow, IrregularSeasonRow, SetupRow, WinterForecastRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.ages import ArcOutcome, ArcStage, PayoffKind, SeasonSpell
+from aerona.domain.enums.ages import ArcOutcome, ArcStage, PayoffKind
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.sacred.places import town_of
 
@@ -35,7 +35,7 @@ async def tale_lines(scope: Scope, node_id: int) -> list[str]:
         figures = list(await session.scalars(select(ArcFigureRow).where(ArcFigureRow.arc_id == arc.id).order_by(ArcFigureRow.node_id)))
         parts = [f"{await named(scope, figure.node_id)} as your {spoken(figure.role)}" for figure in figures]
         cast = f", with {', '.join(parts)}" if parts else ""
-        found.append(f"your life follows a tale of {words(arc.template.value)}, now at {STAGE_WORDS[arc.stage]}{cast}")
+        found.append(f"your life follows a tale of {spoken(arc.template)}, now at {STAGE_WORDS[arc.stage]}{cast}")
     for figure, arc in await session.execute(
         select(ArcFigureRow, ArcRow)
         .join(ArcRow, ArcRow.id == ArcFigureRow.arc_id)
@@ -43,26 +43,33 @@ async def tale_lines(scope: Scope, node_id: int) -> list[str]:
         .order_by(ArcRow.id)
         .limit(LIST_LINES)
     ):
-        found.append(f"in the tale of {words(arc.template.value)} of {await named(scope, arc.subject_node_id)} your part is {spoken(figure.role)}")
+        found.append(f"in the tale of {spoken(arc.template)} of {await named(scope, arc.subject_node_id)} your part is {spoken(figure.role)}")
     return found
+
+
+async def spell_line(scope: Scope, row: IrregularSeasonRow) -> str:
+    source_id = row.source_region_id or row.source_star_id
+    source = f" from {await named(scope, source_id)}" if source_id is not None else ""
+    left = max(0, row.spell_started_epoch + row.spell_length - scope.epoch)
+    return (
+        f"long season {row.id}: a long {spoken(row.spell)} ({spoken(row.shape)}, caused by {spoken(row.cause)}{source}), severity {row.severity}, "
+        f"{several(left, 'epoch', 'epochs')} left, reaching {spoken(row.reach)}"
+    )
 
 
 async def season_lines(scope: Scope, me: EntityRow) -> list[str]:
     if me.world_id is None:
         return []
-    row = await scope.session.get(IrregularSeasonRow, me.world_id)
-    if row is None:
-        return []
-    spell = "a long winter" if row.spell is SeasonSpell.WINTER else "a long summer"
-    found = [f"the seasons of your world run irregular; {spell} holds since epoch {row.spell_started_epoch}"]
+    rows = list(await scope.session.scalars(select(IrregularSeasonRow).where(IrregularSeasonRow.world_id == me.world_id).order_by(IrregularSeasonRow.id)))
+    found = [await spell_line(scope, row) for row in rows]
     folk = await people_id_of(scope.session, await town_of(scope.session, me))
-    if folk is not None:
-        forecast = await scope.session.scalar(
-            select(WinterForecastRow).where(WinterForecastRow.world_id == me.world_id, WinterForecastRow.people_entity_id == folk)
+    if folk is not None and rows:
+        forecasts = await scope.session.scalars(
+            select(WinterForecastRow).where(WinterForecastRow.long_season_id.in_([row.id for row in rows]), WinterForecastRow.people_entity_id == folk)
         )
-        if forecast is not None:
+        for forecast in forecasts:
             heeded = "your people heeded it and stored food" if forecast.heeded else "your people paid it little mind"
-            found.append(f"your people expect it to turn by epoch {forecast.predicted_end_epoch}; {heeded}")
+            found.append(f"your people expect long season {forecast.long_season_id} to end by epoch {forecast.predicted_end_epoch}; {heeded}")
     return found
 
 
@@ -76,16 +83,14 @@ async def son_ages_lines(scope: Scope, son: SonRow) -> list[str]:
     if son.current_world_id is None:
         return found
     world = son.current_world_id
-    row = await session.get(IrregularSeasonRow, world)
-    if row is not None:
-        spell = "a long winter" if row.spell is SeasonSpell.WINTER else "a long summer"
-        found.append(f"the seasons of your world run irregular: {spell}, severity {row.severity}")
+    for row in await session.scalars(select(IrregularSeasonRow).where(IrregularSeasonRow.world_id == world).order_by(IrregularSeasonRow.id)):
+        found.append(await spell_line(scope, row))
     subjects = select(EntityRow.id).where(EntityRow.world_id == world)
     for arc in await session.scalars(
         select(ArcRow).where(ArcRow.subject_node_id.in_(subjects), ArcRow.outcome == ArcOutcome.OPEN).order_by(ArcRow.drama.desc(), ArcRow.id).limit(LIST_LINES)
     ):
         subject = await named(scope, arc.subject_node_id)
-        found.append(f"tale {arc.id}: {subject} follows a tale of {words(arc.template.value)} at {STAGE_WORDS[arc.stage]}, drama {arc.drama}")
+        found.append(f"tale {arc.id}: {subject} follows a tale of {spoken(arc.template)} at {STAGE_WORDS[arc.stage]}, drama {arc.drama}")
     for setup in await session.scalars(
         select(SetupRow).where(SetupRow.subject_node_id.in_(subjects), SetupRow.payoff == PayoffKind.OPEN).order_by(SetupRow.id).limit(LIST_LINES)
     ):

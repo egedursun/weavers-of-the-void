@@ -1,11 +1,12 @@
 import {
-  Bone,
   Anchor,
   Bird,
+  Bone,
   Brain,
   Church,
   CloudFog,
   Cog,
+  Crosshair,
   Droplet,
   Eclipse,
   Feather,
@@ -14,6 +15,7 @@ import {
   Gem,
   Ghost,
   Hand,
+  HandCoins,
   Layers,
   MoonStar,
   Mountain,
@@ -21,11 +23,15 @@ import {
   Pickaxe,
   Search,
   Shield,
+  ShieldCheck,
   Smile,
   Snowflake,
+  Sparkles,
+  Sun,
   Swords,
   TreeDeciduous,
   Volume2,
+  Wand,
   Zap,
 } from 'lucide-react'
 import { type Named } from './labels'
@@ -92,6 +98,24 @@ export const TEMPERAMENT_KIND: Record<string, Named & { hint: string }> = {
     tone: 'warning',
     hint: 'Carries people off rather than killing them',
   },
+  vengeful: {
+    label: 'Vengeful',
+    icon: Crosshair,
+    tone: 'danger',
+    hint: 'Remembers who harmed it and hunts their line',
+  },
+  acquisitive: {
+    label: 'Acquisitive',
+    icon: Gem,
+    tone: 'gold',
+    hint: 'Raids and demands tribute to grow its hoard',
+  },
+  protective: {
+    label: 'Protective',
+    icon: ShieldCheck,
+    tone: 'verdigris',
+    hint: 'Guards a place or a people against all comers',
+  },
 }
 
 export const AVERSION: Record<string, Named> = {
@@ -100,6 +124,8 @@ export const AVERSION: Record<string, Named> = {
   noise: { label: 'Noise', icon: Volume2, tone: 'warning' },
   water: { label: 'Water', icon: Droplet, tone: 'info' },
   holy_ground: { label: 'Holy ground', icon: Church, tone: 'gold' },
+  light: { label: 'Light', icon: Sun, tone: 'gold' },
+  cold: { label: 'Cold', icon: Snowflake, tone: 'info' },
 }
 
 export const AWAKENING: Record<string, Named & { hint: string }> = {
@@ -115,6 +141,30 @@ export const AWAKENING: Record<string, Named & { hint: string }> = {
     tone: 'danger',
     hint: 'Wakes when something holy in its land is desecrated',
   },
+  disturbance: {
+    label: 'Disturbance',
+    icon: Swords,
+    tone: 'danger',
+    hint: 'Wakes when battles or sieges come near its lair',
+  },
+  theft: {
+    label: 'Theft',
+    icon: HandCoins,
+    tone: 'warning',
+    hint: 'Wakes when anything is taken from its hoard',
+  },
+  sky_sign: {
+    label: 'A sign in the sky',
+    icon: Sparkles,
+    tone: 'gold',
+    hint: 'Wakes at a sign in its world’s sky',
+  },
+  summons: {
+    label: 'Summons',
+    icon: Wand,
+    tone: 'verdigris',
+    hint: 'Wakes when a summoning rite calls it, and may be bound',
+  },
 }
 
 export const HABITAT: Record<string, Named> = {
@@ -123,4 +173,6 @@ export const HABITAT: Record<string, Named> = {
   sky: { label: 'Sky', icon: Bird, tone: 'info' },
   deep: { label: 'The deep', icon: Pickaxe, tone: 'muted' },
   void: { label: 'The void', icon: Orbit, tone: 'muted' },
+  magma: { label: 'The magma sea', icon: Flame, tone: 'danger' },
+  ethereal: { label: 'The realms beyond', icon: Ghost, tone: 'verdigris' },
 }

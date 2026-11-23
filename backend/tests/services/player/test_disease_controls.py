@@ -8,8 +8,9 @@ from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.disease import DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.interconnect import ModifierRow
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
-from aerona.domain.enums.disease import DiseaseVector, OutbreakStatus
+from aerona.domain.enums.affliction import Transmission
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
+from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.domain.enums.society import SocialClass
@@ -26,7 +27,7 @@ NEW_ACTIONS = ("disease:create", "outbreak:edit", "endemic:set", "endemic:remove
 
 
 async def forged(scope: PlayerScope, world: PlayerWorld) -> int:
-    values: dict[str, ProfileValue] = {"vector": "air", "target_functions": ["breath"], "virulence": 55}
+    values: dict[str, ProfileValue] = {"primary_route": "inhalation", "target_functions": ["breath"], "virulence": 55}
     outcome = await disease.create_disease(scope, disease.CreateDisease(region_id=world.region.id, name="The Ash Cough", values=values))
     assert outcome.created_ids
     return outcome.created_ids[0]
@@ -39,16 +40,18 @@ def test_the_new_levers_are_in_the_catalogue() -> None:
 async def test_a_disease_is_forged_held_released_and_undone(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
     outcome = await disease.create_disease(
         scope,
-        disease.CreateDisease(region_id=world.region.id, name="The Ash Cough", values={"vector": "spirit", "target_functions": ["cognition"], "incubation": 5}),
+        disease.CreateDisease(
+            region_id=world.region.id, name="The Ash Cough", values={"primary_route": "spirit", "target_functions": ["cognition"], "incubation": 5}
+        ),
     )
     disease_id = outcome.created_ids[0]
     profile = await session.get(DiseaseProfileRow, disease_id)
-    assert profile is not None and profile.vector is DiseaseVector.SPIRIT and profile.incubation == 5
-    assert set(profile.locked) == {"vector", "target_functions", "incubation"}
+    assert profile is not None and profile.primary_route is Transmission.SPIRIT and profile.incubation == 5
+    assert set(profile.locked) == {"primary_route", "target_functions", "incubation"}
     await disease.edit_disease(scope, disease.EditDisease(disease_id=disease_id, values={"target_functions": ["sight", "skin"], "lethality": 80}))
     assert profile.target_functions == ["sight", "skin"] and profile.lethality == 80
-    await disease.edit_disease(scope, disease.EditDisease(disease_id=disease_id, release=["vector", "lethality"]))
-    assert "vector" not in profile.locked and "lethality" not in profile.locked
+    await disease.edit_disease(scope, disease.EditDisease(disease_id=disease_id, release=["primary_route", "lethality"]))
+    assert "primary_route" not in profile.locked and "lethality" not in profile.locked
     with pytest.raises(ValidationFailedError):
         await disease.edit_disease(scope, disease.EditDisease(disease_id=disease_id, values={"target_functions": []}))
     with pytest.raises(ValidationFailedError):
@@ -113,12 +116,12 @@ async def test_a_cohort_headcount_is_set_and_the_population_follows(scope: Playe
     await peoples.set_cohort(
         scope,
         peoples.SetCohort(
-            community_id=town.id, age_band=AgeBand.ADULT, sex=Sex.MALE, social_class=SocialClass.FARMER, condition=CohortCondition.SICK, count=321
+            community_id=town.id, age_band=AgeBand.ADULT, sex_kind=SexKind.BEGETTER, social_class=SocialClass.FARMER, condition=CohortCondition.SICK, count=321
         ),
     )
     rows = list(await session.scalars(select(CohortRow).where(CohortRow.community_entity_id == town.id)))
     assert sum(row.count for row in rows) == stat(town, "population")
-    sick = next(row for row in rows if row.condition is CohortCondition.SICK and row.age_band is AgeBand.ADULT and row.sex is Sex.MALE)
+    sick = next(row for row in rows if row.condition is CohortCondition.SICK and row.age_band is AgeBand.ADULT and row.sex_kind is SexKind.BEGETTER)
     assert sick.count == 321
     moved = await peoples.move_cohort(
         scope,
@@ -171,15 +174,15 @@ async def test_disease_and_cohort_edits_are_undone(scope: PlayerScope, session: 
     set_stats(town, population=2000)
     await session.flush()
     first = await peoples.set_cohort(
-        scope, peoples.SetCohort(community_id=town.id, age_band=AgeBand.CHILD, sex=Sex.FEMALE, social_class=SocialClass.FARMER, count=50)
+        scope, peoples.SetCohort(community_id=town.id, age_band=AgeBand.CHILD, sex_kind=SexKind.BEARER, social_class=SocialClass.FARMER, count=50)
     )
     before = stat(town, "population")
     second = await peoples.set_cohort(
-        scope, peoples.SetCohort(community_id=town.id, age_band=AgeBand.CHILD, sex=Sex.FEMALE, social_class=SocialClass.FARMER, count=500)
+        scope, peoples.SetCohort(community_id=town.id, age_band=AgeBand.CHILD, sex_kind=SexKind.BEARER, social_class=SocialClass.FARMER, count=500)
     )
     assert first.ledger_entry_id is not None and stat(town, "population") == (before or 0) + 450
     await undo(session, world, second.ledger_entry_id)
     await session.refresh(town)
-    row = await session.get(CohortRow, (town.id, AgeBand.CHILD, Sex.FEMALE, SocialClass.FARMER, CohortCondition.NONE))
+    row = await session.get(CohortRow, (town.id, AgeBand.CHILD, SexKind.BEARER, SocialClass.FARMER, CohortCondition.NONE))
     assert row is not None and row.count == 50
     assert stat(town, "population") == before

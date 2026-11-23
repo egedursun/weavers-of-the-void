@@ -56,6 +56,7 @@ import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { loreKeys } from '../api/keys'
+import { BeneathSection } from '../environment/BeneathSection'
 import {
   ForgeLey,
   HoldWeather,
@@ -968,6 +969,7 @@ export function EntityEnvironment({
       <>
         <RegionEnvironmentSection regionId={entityId} />
         <RegionTerrainSection regionId={entityId} />
+        <BeneathSection regionId={entityId} />
         <LandSection regionId={entityId} />
       </>
     )

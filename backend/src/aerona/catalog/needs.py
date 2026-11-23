@@ -245,6 +245,11 @@ JOB_GOODS: Mapping[Job, tuple[CommodityKind, ...]] = total(
         J.SOLDIERING: (),
         J.SERVICE: (),
         J.IDLE: (),
+        J.TRANSPORT: (),
+        J.ADMINISTRATION: (),
+        J.GATHERING: (C.HERBS, C.FRUIT, C.TIMBER),
+        J.INDUSTRY: (C.TOOLS, C.CLOTH, C.FUEL),
+        J.ARTS: (C.LUXURIES,),
     },
 )
 

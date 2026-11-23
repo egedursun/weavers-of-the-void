@@ -11,6 +11,9 @@ class IdentityLayer(StrEnum):
     GENERATION = "generation"
     POLITY = "polity"
     CIRCLE = "circle"
+    LANGUAGE = "language"
+    KIND = "kind"
+    CAUSE = "cause"
 
 
 class SalienceDriver(StrEnum):
@@ -23,6 +26,10 @@ class SalienceDriver(StrEnum):
     SEGREGATION = "segregation"
     CROSSING = "crossing"
     GOD = "god"
+    PERSECUTION = "persecution"
+    COMMEMORATION = "commemoration"
+    ELECTION = "election"
+    CONTEST = "contest"
 
 
 class PlayKind(StrEnum):

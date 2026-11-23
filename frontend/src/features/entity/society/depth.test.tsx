@@ -151,6 +151,19 @@ const DEPTH = {
       by_hand: false,
       epoch: 48,
     },
+    {
+      id: 2,
+      event: 'ordained',
+      count: 1,
+      mortal_id: 9,
+      mortal: 'Brann',
+      house_id: null,
+      house: '',
+      other_id: null,
+      other: '',
+      by_hand: true,
+      epoch: 49,
+    },
   ],
 }
 
@@ -184,6 +197,71 @@ describe('society depth sections', () => {
       share_pct: 20,
       polity_id: null,
       work_id: null,
+    })
+  })
+
+  it('names the newer kinds of work and holds the workers of the arts', async () => {
+    serve()
+    onApi('GET', '/api/entities/30/society-depth', {
+      ...DEPTH,
+      labour_reasons: [
+        {
+          job: 'gathering',
+          reason: 'class',
+          workers: 120,
+          commodity: null,
+          workshop: null,
+          price_pct: 100,
+        },
+        {
+          job: 'arts',
+          reason: 'class',
+          workers: 40,
+          commodity: null,
+          workshop: null,
+          price_pct: 100,
+        },
+        {
+          job: 'administration',
+          reason: 'resource',
+          workers: 15,
+          commodity: null,
+          workshop: null,
+          price_pct: 100,
+        },
+      ],
+      held_jobs: ['gathering'],
+    })
+    onApi('POST', '/api/actions/labour:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<LabourDepth communityId={30} />)
+    await expect
+      .element(screen.getByText('Gathering from the wild'))
+      .toBeVisible()
+    await expect.element(screen.getByText('The arts')).toBeVisible()
+    await expect.element(screen.getByText('Keeping the offices')).toBeVisible()
+    await expect
+      .element(screen.getByText('120 by custom, 120 at work'))
+      .toBeVisible()
+    expect(screen.container.textContent).not.toContain('administration')
+    await screen.getByRole('button', { name: 'Adjust' }).click()
+    await expect
+      .element(screen.getByText('1 held against the world'))
+      .toBeVisible()
+    await screen.getByRole('combobox', { name: 'Trade' }).click()
+    await screen.getByRole('option', { name: 'The arts' }).click()
+    await screen
+      .getByRole('spinbutton', { name: 'Workers at the arts' })
+      .fill('60')
+    await screen
+      .getByRole('button', { name: 'Set Workers at the arts' })
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/labour:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/labour:set')[0].body).toEqual({
+      community_id: 30,
+      job: 'arts',
+      workers: 60,
     })
   })
 
@@ -276,5 +354,26 @@ describe('society depth sections', () => {
       count: 50,
       target: 'farmer',
     })
+  })
+
+  it('raises a mortal by wealth, ordains them and casts them out', async () => {
+    serve()
+    onApi('POST', '/api/actions/mobility:move', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<MobilitySection entityId={30} mortal />)
+    await expect.element(screen.getByText('Ordained: Brann')).toBeVisible()
+    await screen.getByRole('button', { name: 'Adjust' }).click()
+    await screen.getByRole('button', { name: 'Raise them by wealth' }).click()
+    await screen.getByRole('button', { name: 'Ordain them' }).click()
+    await screen.getByRole('button', { name: 'Cast them out' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/mobility:move'))
+      .toHaveLength(3)
+    expect(
+      callsTo('POST', '/api/actions/mobility:move').map((call) => call.body)
+    ).toEqual([
+      { mortal_id: 30, event: 'enriched' },
+      { mortal_id: 30, event: 'ordained' },
+      { mortal_id: 30, event: 'outcast' },
+    ])
   })
 })

@@ -29,6 +29,8 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.records import StepAction, StepOutcome
+from aerona.domain.enums.relations import AppealKind, PersuasionAim
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.engine.body.bands import banded
 from aerona.engine.body.customs import people_of
@@ -65,7 +67,8 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import relation
-from aerona.engine.relations.persuasion import office_holder
+from aerona.engine.relations.persuasion import already_won, office_holder, persuade
+from aerona.engine.renown.axes import honour_axis, powerful
 from aerona.engine.settlement.book import Town, credit
 
 CRUEL = 60
@@ -502,6 +505,9 @@ async def convict(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, laws
     punishment = TRIAL_SPECS[case.trial or TrialKind.JUDGE].sentence or await code_punishment(ctx, case.settlement_entity_id, case.crime)
     close(ctx, case, Verdict.GUILTY)
     case.wrongful = case.culprit_entity_id != accused.id
+    if judge is not None and not case.wrongful:
+        gain = ctx.rules.renown.justice_gain * (2 if powerful(accused) else 1)
+        await honour_axis(ctx, judge.id, ReputationAxis.JUSTICE, gain, case.settlement_entity_id)
     code = laws.in_force(case.settlement_entity_id, LawKind.PENAL_CODE) if case.settlement_entity_id is not None else None
     ctx.session.add(
         SentenceRow(
@@ -553,6 +559,29 @@ async def heard(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, guilty
     return guilty
 
 
+async def seek_confession(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) -> bool:
+    asker = case.investigator_entity_id or case.judge_entity_id
+    if asker is None or asker == accused.id or accused.entity_type is not EntityType.MORTAL:
+        return False
+    won = await already_won(ctx.session, PersuasionAim.CONFESSION, target_id=accused.id, subject_id=None, since=case.opened_epoch)
+    appeal = won.appeal if won is not None else AppealKind.FEAR if case.tortured else AppealKind.EVIDENCE
+    if won is None and not (await persuade(ctx, asker, accused.id, appeal, PersuasionAim.CONFESSION, subject_id=case.settlement_entity_id)).success:
+        return False
+    false = case.culprit_entity_id != accused.id
+    if false and not ctx.rng(f"trials.false_confession.{case.id}").chance(ctx.rules.persuasion.false_confession_pct):
+        return False
+    if "evidence" not in case.locked:
+        case.evidence = PERCENT
+    await record(
+        ctx,
+        "justice.confessed",
+        roles={IncidentRole.ACCUSED: accused.id, IncidentRole.ACTOR: asker},
+        facts={"crime": case.crime, "appeal": appeal},
+        place=case.settlement_entity_id,
+    )
+    return True
+
+
 async def try_case(ctx: TickContext, case: CrimeCaseRow, laws: LawBook, tally: TrialTally) -> None:
     accused = await living_entity(ctx.session, case.accused_entity_id) if case.accused_entity_id is not None else None
     if accused is None or accused.location_id != case.settlement_entity_id:
@@ -569,7 +598,8 @@ async def try_case(ctx: TickContext, case: CrimeCaseRow, laws: LawBook, tally: T
     await claimed_court(ctx, case, accused)
     await plead(ctx, case, accused)
     trial: TrialKind = case.trial or TrialKind.JUDGE
-    guilty = await heard(ctx, case, accused, erred(ctx, case, trial, await by_system(ctx, case, accused, await TRIALS[trial](ctx, case, accused))))
+    confessed = await seek_confession(ctx, case, accused)
+    guilty = confessed or await heard(ctx, case, accused, erred(ctx, case, trial, await by_system(ctx, case, accused, await TRIALS[trial](ctx, case, accused))))
     tally.tried += 1
     await weigh_trial(ctx, trial, case.settlement_entity_id, case.polity_entity_id)
     if guilty:

@@ -23,14 +23,14 @@ from aerona.domain.enums.cycles import (
     ReproductiveSystem,
     ResidenceRule,
 )
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
 NAME = 200
 STRESS_FIELDS = ("pressure", "immiseration", "elite_overproduction", "fiscal_distress", "aspirants", "positions", "challenge", "phase")
 ASABIYYA_FIELDS = ("value", "frontier", "luxury_generations", "conflict")
 PLAN_FIELDS = ("name", "kind", "target_node_id", "carrier_node_id", "steps", "progress", "step_cost", "secrecy", "exposed", "status")
-GIFT_FIELDS = ("value", "occasion", "item_entity_id", "state", "due_epoch")
+GIFT_FIELDS = ("value", "occasion", "item_entity_id", "state", "due_epoch", "circuit_id")
 CIRCUIT_FIELDS = ("name", "item_entity_id", "position", "passes")
 DEBT_FIELDS = ("offered", "answered")
 KINSHIP_FIELDS = (
@@ -185,6 +185,7 @@ class GiftRow(Base):
     item_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     state: Mapped[GiftState] = mapped_column(enum_type(GiftState, "state"), default=GiftState.OPEN)
     answers_gift_id: Mapped[int | None] = mapped_column(ForeignKey("gifts.id", ondelete="SET NULL"))
+    circuit_id: Mapped[int | None] = mapped_column(ForeignKey("ceremonial_circuits.id", ondelete="SET NULL"))
     due_epoch: Mapped[int | None]
     settled_epoch: Mapped[int | None]
     epoch: Mapped[int] = mapped_column(default=0)
@@ -228,7 +229,7 @@ class KinshipSystemRow(Base):
     kin_terms: Mapped[KinTermSystem] = mapped_column(
         "cousin_terms", enum_type(KinTermSystem, "cousin_terms"), default=KinTermSystem.LINEAL, server_default=KinTermSystem.LINEAL.value
     )
-    first_side: Mapped[Sex] = mapped_column(enum_type(Sex, "first_side"), default=Sex.MALE, server_default=Sex.MALE.value)
+    first_side: Mapped[SexKind] = mapped_column(enum_type(SexKind, "first_side"), default=SexKind.BEGETTER, server_default=SexKind.BEGETTER.value)
     adoption: Mapped[AdoptionKind] = mapped_column(enum_type(AdoptionKind, "adoption"), default=AdoptionKind.FOSTER, server_default=AdoptionKind.FOSTER.value)
     sibling_union_first: Mapped[bool] = mapped_column(default=False)
     sibling_union_second: Mapped[bool] = mapped_column(default=False)

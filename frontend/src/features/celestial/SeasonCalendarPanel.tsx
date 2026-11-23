@@ -48,6 +48,8 @@ import {
 } from '@/features/entity/wilds/parts'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { SeasonOnsets } from './SeasonOnsets'
+import { SeasonWheel } from './SeasonWheel'
 import { TRADITION, fieldLabel } from './calendarLabels'
 
 type WorldSeasons = components['schemas']['WorldSeasonsView']
@@ -581,6 +583,7 @@ function SeasonRow({
 }
 
 const NEW_SEASON = {
+  share_pct: '10',
   temperature_shift: '0',
   rain_shift: '0',
   growth: '50',
@@ -589,6 +592,7 @@ const NEW_SEASON = {
 }
 
 const NEW_SEASON_LABELS: Record<keyof typeof NEW_SEASON, string> = {
+  share_pct: 'Share of the year',
   temperature_shift: 'Warmth',
   rain_shift: 'Rain',
   growth: 'Crop growth',
@@ -617,6 +621,7 @@ function NewSeason({
             growth: wholeOrNull(values.growth) ?? 0,
             travel: wholeOrNull(values.travel) ?? 0,
             campaign: wholeOrNull(values.campaign) ?? 0,
+            share_pct: wholeOrNull(values.share_pct) ?? 1,
           },
         })
       ),
@@ -630,6 +635,11 @@ function NewSeason({
       ? 'Write whole numbers.'
       : null) ??
     (add.isPending ? WORKING : null)
+  const full =
+    data.seasons.length >= data.seasons_max
+      ? `A world keeps at most ${plural(data.seasons_max, 'season', 'seasons')}.`
+      : null
+  const addReason = full ?? reason
   return (
     <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
       <FieldTile id={`season-new-${data.world_id}`} label='Add a season'>
@@ -640,7 +650,7 @@ function NewSeason({
           onChange={(event) => setName(event.target.value)}
         />
       </FieldTile>
-      <div className='grid min-w-0 grid-cols-2 gap-2 @lg/year:grid-cols-5'>
+      <div className='grid min-w-0 grid-cols-2 gap-2 @lg/year:grid-cols-6'>
         {(Object.keys(NEW_SEASON) as (keyof typeof NEW_SEASON)[]).map((key) => (
           <NumberField
             key={key}
@@ -654,8 +664,8 @@ function NewSeason({
       </div>
       <Button
         className='self-start'
-        disabled={reason !== null}
-        disabledReason={reason ?? undefined}
+        disabled={addReason !== null}
+        disabledReason={addReason ?? undefined}
         onClick={() => add.mutate()}
       >
         <Plus />
@@ -844,6 +854,13 @@ export function SeasonCalendarPanel({ data }: { data: WorldSeasons }) {
       className='flex min-w-0 flex-col gap-4'
     >
       <div className='flex min-w-0 flex-col gap-2'>
+        <Label variant='overline'>The wheel of the year</Label>
+        <SeasonWheel
+          seasons={data.seasons}
+          label={`${plural(data.seasons.length, 'season', 'seasons')} of at most ${data.seasons_max}, sized by their share of the year`}
+        />
+      </div>
+      <div className='flex min-w-0 flex-col gap-2'>
         <Label variant='overline'>Festivals through the year</Label>
         <FestivalWheel data={data} view={view} />
       </div>
@@ -857,7 +874,7 @@ export function SeasonCalendarPanel({ data }: { data: WorldSeasons }) {
       </div>
       <AdjustPanel
         title='Add, remove and hold seasons'
-        note='A season shaped by hand is held when the year is redrawn from a new tilt. Moons and tides set here are held until released.'
+        note='A season shaped by hand is held when the year is redrawn from a new tilt. Adding a season takes its share from the others in proportion; removing one gives it back.'
         label='Seasons and moons'
       >
         <ul className='flex min-w-0 flex-col gap-2'>
@@ -873,6 +890,19 @@ export function SeasonCalendarPanel({ data }: { data: WorldSeasons }) {
           </Paged>
         </ul>
         <NewSeason data={data} blocked={blocked} />
+      </AdjustPanel>
+      <AdjustPanel
+        title='Early, late and failed seasons'
+        note='Each year the engine draws whether a season comes early, on time, late or fails; a failed season does not bring its water. Set one and it is held.'
+        label='Season onsets'
+      >
+        <SeasonOnsets data={data} blocked={blocked} />
+      </AdjustPanel>
+      <AdjustPanel
+        title='Moons and tides'
+        note='Moons and tides set here are held until released.'
+        label='Moons and tides'
+      >
         <MoonsAndTides
           key={`${data.moon_count}-${data.tidal_strength}`}
           data={data}

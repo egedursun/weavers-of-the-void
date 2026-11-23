@@ -10,9 +10,11 @@ from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.justice import CrimeCaseRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.museums import MuseumPieceRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.renown import RulerCurrencyRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.justice import Verdict
@@ -24,9 +26,11 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.renown import Currency, ReputationAxis
 from aerona.engine.context import TickContext
 from aerona.engine.loops.delay import lagged
+from aerona.engine.mortal.profile import is_held
 from aerona.engine.museums.reading import grandeur
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
+from aerona.engine.renown.axes import renown_share
 from aerona.engine.renown.book import among
 
 FEARSOME = having(ACT_KIND_TRAITS, ActKindTrait.FEARSOME)
@@ -178,13 +182,28 @@ async def tend_currencies(ctx: TickContext, tally: CurrencyTally) -> None:
             row.prestige = clamp_int(max(row.prestige - table.prestige_fade, won), 0, PERCENT)
         if Currency.PIETY.value not in row.locked:
             row.piety = clamp_int(max(row.piety, await among(ctx.session, ruler_id, members, PIOUS) * table.piety_pct / PERCENT), 0, PERCENT)
-        bump(row, Currency.DREAD, -table.dread_fade)
+        mercy = await renown_share(ctx.session, ruler_id, members, ReputationAxis.MERCY)
+        bump(row, Currency.DREAD, -round_half_up(table.dread_fade * (1 + mercy)))
+        await rule_justly(ctx, ruler_id, members, await renown_share(ctx.session, ruler_id, members, ReputationAxis.JUSTICE))
         bump(row, Currency.TYRANNY, -round_half_up(table.tyranny_fade * (1 + await amends(ctx, polity_id, members) * table.amends_pct / PERCENT)))
         row.updated_epoch = ctx.epoch
         await court_clergy(ctx, row, members, tally)
         await silence(ctx, row, members, tally)
         tally.rulers += 1
     await ctx.session.flush()
+
+
+async def rule_justly(ctx: TickContext, ruler_id: int, members: list[int], justice: float) -> None:
+    lift = round_half_up(justice * ctx.rules.renown.justice_legitimacy)
+    if lift <= 0:
+        return
+    profile = await ctx.session.get(MortalProfileRow, ruler_id)
+    if profile is not None and profile.legitimacy is not None and not is_held(profile, "legitimacy"):
+        profile.legitimacy = clamp_int(profile.legitimacy + lift, 0, PERCENT)
+    for member in members:
+        town = await ctx.session.get(SettlementProfileRow, member)
+        if town is not None and not held(member) and "unrest" not in (town.locked or []):
+            town.unrest = clamp_int(town.unrest - lift, 0, PERCENT)
 
 
 async def realm_purse(session: AsyncSession, polity_id: int | None) -> RulerCurrencyRow | None:

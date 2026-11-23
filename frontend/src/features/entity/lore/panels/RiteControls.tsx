@@ -11,6 +11,7 @@ import {
 import { type ActionBody } from '@/api/actions'
 import {
   damageTypeValues,
+  magicSchoolValues,
   summonFormValues,
   techniqueValues,
 } from '@/api/generated/schema'
@@ -20,11 +21,12 @@ import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Paged, PagedList, FieldTile } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { AdjustBlock, ChoicePicker, NamedChip, Who } from '../LoreFields'
 import { type LoreCard as LoreCardData } from '../api'
 import { KindForge } from '../forge/KindForge'
 import { CALENDAR_SLOTS } from '../forge/forgeModel'
-import { EFFECTS, type LoreNamed, busyOf, lookup, sentence } from '../model'
+import { EFFECTS, type LoreNamed, busyOf, lookup } from '../model'
 import { PickAndRun, useLoreAction } from './controlParts'
 
 type Rite = NonNullable<LoreCardData['rite']>
@@ -314,7 +316,7 @@ export function RiteControls({
         />
       </AdjustBlock>
       <AdjustBlock title='Undo its last working' icon={Eraser}>
-        <Muted variant='caption'>{`Lifts the weather it called, the ward it raised or the curse it laid (${sentence(card.school)}).`}</Muted>
+        <Muted variant='caption'>{`Lifts the weather it called, the ward it raised or the curse it laid (${wordOf(magicSchoolValues, card.school)}).`}</Muted>
         <Button
           size='sm'
           variant='outline'

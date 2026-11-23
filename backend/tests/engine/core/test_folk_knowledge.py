@@ -12,9 +12,10 @@ from aerona.db.tables.folk_knowledge import FolkClassRow, FolkKnowledgeRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cosmography import OmenReading
-from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector
+from aerona.domain.enums.disease import ClimateWarmth
 from aerona.domain.enums.ecology import SpeciesClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -102,8 +103,8 @@ async def test_an_illness_taken_for_a_curse_is_blamed_and_stirs_the_town(session
     session.add(
         DiseaseProfileRow(
             disease_entity_id=sickness.id,
-            vector=DiseaseVector.AIR,
-            climate_affinity=ClimateAffinity.WARM,
+            primary_route=Transmission.INHALATION,
+            affinity_warmth=ClimateWarmth.WARM,
             virulence=30,
             lethality=10,
             chronic_rate=0,

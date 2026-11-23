@@ -186,6 +186,9 @@ SPECIES_YIELDS: MappingProxyType[BodyPlan, tuple[MaterialKind, ...]] = MappingPr
         BodyPlan.ARBOREAL: (M.WOOD,),
         BodyPlan.COLOSSAL: (M.GREAT_BEAST_TISSUE, M.IVORY, M.HIDE),
         BodyPlan.HUMANOID: (M.CALCIFIED_TISSUE,),
+        BodyPlan.CENTAUROID: (M.HIDE, M.CALCIFIED_TISSUE),
+        BodyPlan.TENTACLED: (M.HIDE,),
+        BodyPlan.RADIAL: (M.CALCIFIED_TISSUE,),
     }
 )
 SPECIES_GOODS: MappingProxyType[BodyPlan, tuple[CommodityKind, ...]] = MappingProxyType(

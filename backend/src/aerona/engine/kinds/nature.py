@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
 from aerona.catalog.methods import METHODS, MethodSpec
 from aerona.constants.units import PERCENT
-from aerona.db.kind_concepts.nature import FUNCTION_DANGER, FUNCTION_STEPS, LEGACY_TRAITS, OFFICE_DUTY, REALM_FUNCTION, TRAIT_STATS, words
+from aerona.core.grammar import spoken
+from aerona.db.kind_concepts.nature import FUNCTION_DANGER, FUNCTION_STEPS, LEGACY_TRAITS, OFFICE_DUTY, REALM_FUNCTION, TRAIT_STATS
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.economy import WorldMaterialRow
@@ -59,13 +60,13 @@ async def ensure_built_ins(session: AsyncSession) -> int:
             added += 1
     if not await session.scalar(select(func.count()).select_from(DivineOfficeKindRow).where(DivineOfficeKindRow.built_in.is_(True))):
         for office, duty in OFFICE_DUTY.items():
-            session.add(DivineOfficeKindRow(name=words(duty.value), built_in=True, built_in_key=office.value, category=duty, locked=[]))
+            session.add(DivineOfficeKindRow(name=spoken(duty).capitalize(), built_in=True, built_in_key=office.value, category=duty, locked=[]))
             added += 1
     if not await session.scalar(select(func.count()).select_from(RealmKindRow).where(RealmKindRow.built_in.is_(True))):
         for realm, function in REALM_FUNCTION.items():
             session.add(
                 RealmKindRow(
-                    name=words(function.value),
+                    name=spoken(function).capitalize(),
                     built_in=True,
                     built_in_key=realm.value,
                     category=function,

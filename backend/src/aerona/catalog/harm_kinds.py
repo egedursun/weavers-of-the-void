@@ -17,6 +17,7 @@ KindRule = Callable[[InjuryRules, Part, int, HarmCause], InjuryKind]
 Healing = Callable[[HealingRules], int]
 DRESSED = (S.CLEAN, S.DRESS)
 SET = (S.SET_BONE, S.SPLINT)
+JOINTED = frozenset({BodyRegion.ARMS, BodyRegion.LEGS, BodyRegion.WINGS})
 
 
 def sees(part: Part) -> bool:
@@ -43,6 +44,10 @@ def pierce_wound(rules: InjuryRules, part: Part, severity: int, cause: HarmCause
 
 
 def blunt_wound(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
+    if part.internal and severity >= rules.blunt_fracture_at:
+        return K.INTERNAL_BLEEDING
+    if part.severable and part.region in JOINTED and severity == rules.blunt_fracture_at - 1:
+        return K.DISLOCATION
     if severity >= rules.blunt_crush_at:
         return K.CRUSH
     return K.FRACTURE if severity >= rules.blunt_fracture_at else K.BRUISE
@@ -86,6 +91,10 @@ def chemical_wound(rules: InjuryRules, part: Part, severity: int, cause: HarmCau
     return K.DESTROYED if sees(part) and severity >= rules.fire_blind_at else K.CHEMICAL_BURN
 
 
+def asphyxia_wound(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
+    return K.DESTROYED if part.vital and severity >= rules.blunt_crush_at else K.ASPHYXIA
+
+
 def always(kind: InjuryKind) -> KindRule:
     return lambda rules, part, severity, cause: kind
 
@@ -98,6 +107,7 @@ class DamageSpec:
     bodily: bool = False
     edged: bool = False
     striking: bool = False
+    breathing: bool = False
     searing: bool = False
     thermal: bool = False
     spared: InjuryKind | None = None
@@ -119,6 +129,7 @@ class InjurySpec:
     infection: Healing | None = None
     lasting: Healing | None = None
     healing: Healing | None = None
+    noted: bool = False
 
 
 @dataclass(frozen=True)
@@ -127,6 +138,8 @@ class StepSpec:
     supply: CommodityKind | None = None
     level: Callable[[TissueRules], int] | None = None
     stanches: bool = False
+    noted: bool = False
+    festering: bool = False
 
 
 DAMAGE: Mapping[DamageType, DamageSpec] = total(
@@ -149,6 +162,7 @@ DAMAGE: Mapping[DamageType, DamageSpec] = total(
         D.CHEMICAL: DamageSpec(chemical_wound, bodily=True, searing=True, spared=K.CHEMICAL_BURN),
         D.SONIC: DamageSpec(always(K.CONCUSSION), striking=True),
         D.PSYCHIC: DamageSpec(always(K.MIND_SCAR)),
+        D.ASPHYXIA: DamageSpec(asphyxia_wound, bodily=True, breathing=True),
     },
 )
 
@@ -194,6 +208,9 @@ INJURIES: Mapping[InjuryKind, InjurySpec] = total(
         K.VOID_TOUCH: InjurySpec(permanent=True, mark=True, of_the_mind=True),
         K.DIVINE_BRAND: InjurySpec(permanent=True, mark=True),
         K.SICKNESS: InjurySpec(clean_healing=True),
+        K.ASPHYXIA: InjurySpec(noted=True, clean_healing=True, of_the_mind=True, healing=lambda rules: rules.heal_bruise_pct),
+        K.DISLOCATION: InjurySpec(noted=True, care=SET, healing=lambda rules: rules.heal_cut_pct),
+        K.INTERNAL_BLEEDING: InjurySpec(noted=True, care=DRESSED, lasting=lambda rules: rules.permanent_crush, healing=lambda rules: rules.heal_puncture_pct),
         K.GUNSHOT: InjurySpec(
             care=DRESSED,
             infection=lambda rules: rules.infection_gunshot,
@@ -236,6 +253,9 @@ STEPS: Mapping[TreatmentStep, StepSpec] = total(
         S.CAUTERISE: StepSpec(StepAction.TREAT, level=lambda rules: rules.cauterise_level, stanches=True),
         S.CRUTCH: StepSpec(StepAction.TREAT, supply=CommodityKind.TIMBER),
         S.TRACTION: StepSpec(StepAction.TREAT, level=lambda rules: rules.traction_level),
+        S.DRAIN: StepSpec(StepAction.TREAT, supply=CommodityKind.CLOTH, level=lambda rules: rules.cauterise_level, noted=True, festering=True),
+        S.BLEED: StepSpec(StepAction.TREAT, noted=True),
+        S.MEDICATE: StepSpec(StepAction.TREAT, supply=CommodityKind.MEDICINE, noted=True, festering=True),
     },
 )
 
@@ -246,3 +266,6 @@ def damage_where(test: Callable[[DamageSpec], bool]) -> frozenset[DamageType]:
 
 def injuries_where(test: Callable[[InjurySpec], bool]) -> frozenset[InjuryKind]:
     return frozenset(kind for kind, spec in INJURIES.items() if test(spec))
+
+
+FESTERING_STEPS = tuple(step for step, spec in STEPS.items() if spec.festering)

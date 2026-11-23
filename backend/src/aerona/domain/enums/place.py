@@ -40,6 +40,16 @@ class PlaceKind(StrEnum):
     CANYON = "canyon"
     OASIS = "oasis"
     GEYSER = "geyser"
+    WATERFALL = "waterfall"
+    DELTA = "delta"
+    PLATEAU = "plateau"
+    SINKHOLE = "sinkhole"
+    HOT_SPRING = "hot_spring"
+    MESA = "mesa"
+    NATURAL_ARCH = "natural_arch"
+    TAR_PIT = "tar_pit"
+    MEADOW = "meadow"
+    ISTHMUS = "isthmus"
 
 
 class SacredClass(StrEnum):
@@ -64,6 +74,12 @@ class SecretKind(StrEnum):
     HIDDEN_PEOPLE = "hidden_people"
     DORMANT_MIND = "dormant_mind"
     SEALED_REALM = "sealed_realm"
+    HIDDEN_ROUTE = "hidden_route"
+    SLEEPING_BEAST = "sleeping_beast"
+    HIDDEN_GRAVE = "hidden_grave"
+    HIDDEN_SPRING = "hidden_spring"
+    DORMANT_DISEASE = "dormant_disease"
+    FALSE_ACCOUNT = "false_account"
 
 
 class DiscoveryMode(StrEnum):

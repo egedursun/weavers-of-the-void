@@ -5,6 +5,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.reproduction import SEX_KINDS
 from aerona.core.grammar import several, spoken
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
@@ -125,7 +126,7 @@ async def currency_line(session: AsyncSession, community_id: int, names: Names) 
     return CurrencyLine(
         id=currency.id,
         name=currency.name,
-        metal=words(currency.metal.value) if currency.metal is not None else LEDGER,
+        metal=spoken(currency.metal) if currency.metal is not None else LEDGER,
         purity=currency.purity,
         trust=currency.trust,
         supply=currency.supply,
@@ -149,7 +150,7 @@ async def loan_lines(session: AsyncSession, node_id: int, names: Names) -> list[
             owed=max(0, owed(loan)),
             interest_pct=loan.interest_pct,
             due_epoch=loan.due_epoch,
-            status=words(loan.status.value),
+            status=spoken(loan.status),
             currency=currencies.get(loan.currency_id, "") if loan.currency_id is not None else "",
             purpose=loan.purpose,
         )
@@ -175,7 +176,7 @@ async def debt_lines(session: AsyncSession, node_id: int, names: Names) -> list[
             amount=bond.debt_amount or 0,
             what=bond.debt_what or "",
             due_epoch=bond.debt_due_epoch,
-            status=words(bond.debt_status.value) if bond.debt_status is not None else "open",
+            status=spoken(bond.debt_status) if bond.debt_status is not None else "open",
             currency=currencies.get(bond.debt_currency_id, "") if bond.debt_currency_id is not None else "",
         )
         for bond in bonds
@@ -212,8 +213,8 @@ async def route_line(session: AsyncSession, profile: TradeRouteProfileRow, names
     return RouteLine(
         id=entity.id,
         name=entity.name,
-        mode=words(profile.mode.value),
-        status=words(profile.status.value),
+        mode=spoken(profile.mode),
+        status=spoken(profile.status),
         partner=ends,
         capacity=stat(entity, "capacity") or 0,
         danger=stat(entity, "danger") or 0,
@@ -241,7 +242,7 @@ async def route_line(session: AsyncSession, profile: TradeRouteProfileRow, names
             for toll in tolls
         ],
         losses=[
-            f"age {loss.epoch}: {loss.units} {COMMODITIES[loss.commodity].label.lower()} to {words(loss.cause.value)}"
+            f"age {loss.epoch}: {loss.units} {COMMODITIES[loss.commodity].label.lower()} to {spoken(loss.cause)}"
             + (f" ({names.of(loss.culprit_entity_id)})" if loss.culprit_entity_id is not None else "")
             for loss in losses
         ],
@@ -282,7 +283,7 @@ async def settlement_line(session: AsyncSession, settlement_id: int) -> Settleme
             f"{several(works.gates, 'gate', 'gates')}",
             f"{several(works.towers, 'tower', 'towers')}",
             f"{several(works.roads, 'road', 'roads')}",
-            f"water from {words(works.water.value)}",
+            f"water from {spoken(works.water)}",
             "sewers" if works.sewers else "no sewers",
             f"granary for {works.granary_capacity}",
             f"warehouses for {works.warehouse_capacity}",
@@ -292,7 +293,7 @@ async def settlement_line(session: AsyncSession, settlement_id: int) -> Settleme
         else []
     )
     return SettlementPlanLine(
-        tier=words(profile.size_tier.value),
+        tier=spoken(profile.size_tier),
         treasury=profile.treasury,
         tax_rate=profile.tax_rate,
         order=profile.public_order,
@@ -304,7 +305,7 @@ async def settlement_line(session: AsyncSession, settlement_id: int) -> Settleme
         militia=profile.militia,
         free_city=profile.free_city,
         rationing=profile.rationing,
-        districts=[f"{words(row.kind.value)} level {row.level} of {words(row.material.value)} (condition {row.condition})" for row in districts],
+        districts=[f"{spoken(row.kind)} level {row.level} of {spoken(row.material)} (condition {row.condition})" for row in districts],
         infrastructure=infrastructure,
     )
 
@@ -313,11 +314,15 @@ async def cohort_lines(session: AsyncSession, community_id: int) -> list[CohortL
     rows = await session.scalars(
         select(CohortRow)
         .where(CohortRow.community_entity_id == community_id, CohortRow.count > 0)
-        .order_by(CohortRow.age_band, CohortRow.sex, CohortRow.social_class, CohortRow.condition)
+        .order_by(CohortRow.age_band, CohortRow.sex_kind, CohortRow.social_class, CohortRow.condition)
     )
     return [
         CohortLine(
-            age_band=row.age_band.value, sex=row.sex.value, social_class=words(row.social_class.value), condition=words(row.condition.value), count=row.count
+            age_band=spoken(row.age_band),
+            sex_kind=SEX_KINDS[row.sex_kind].word,
+            social_class=spoken(row.social_class),
+            condition=spoken(row.condition),
+            count=row.count,
         )
         for row in rows
     ]
@@ -325,7 +330,7 @@ async def cohort_lines(session: AsyncSession, community_id: int) -> list[CohortL
 
 async def labour_lines(session: AsyncSession, community_id: int) -> list[LabourLine]:
     rows = await session.scalars(select(LabourRow).where(LabourRow.community_entity_id == community_id).order_by(LabourRow.job))
-    return [LabourLine(job=words(row.job.value), workers=row.workers, output_pct=row.output_pct) for row in rows if row.workers > 0]
+    return [LabourLine(job=spoken(row.job), workers=row.workers, output_pct=row.output_pct) for row in rows if row.workers > 0]
 
 
 async def sickness_lines(session: AsyncSession, region_id: int | None, names: Names) -> tuple[list[OutbreakLine], list[EndemicLine]]:
@@ -345,12 +350,12 @@ async def sickness_lines(session: AsyncSession, region_id: int | None, names: Na
             OutbreakLine(
                 disease=names.of(row.disease_entity_id),
                 region=names.of(region_id),
-                status=words(row.status.value),
+                status=spoken(row.status),
                 severity=row.severity,
                 infected=row.infected,
                 dead=row.dead,
                 quarantined=row.quarantined,
-                path=words(row.path.value),
+                path=spoken(row.path),
             )
             for row in outbreaks
         ],
@@ -374,7 +379,7 @@ async def pact_lines(session: AsyncSession, node_id: int, names: Names) -> list[
     for clause, profile in found:
         params = clause.params or {}
         goods = f"{params.get('units', 0)} {words(str(params.get('commodity')))}" if params.get("commodity") else f"prosperity {params.get('cost', 0)}"
-        state = "in force" if profile.status is TreatyStatus.IN_FORCE else words(profile.status.value)
+        state = "in force" if profile.status is TreatyStatus.IN_FORCE else spoken(profile.status)
         lines.append(
             f"pact#{profile.treaty_entity_id} ({state}): {names.of(clause.obligor_node_id)} gives {names.of(clause.beneficiary_node_id)} "
             f"{params.get('demand', 'its due')} ({goods}) every {params.get('every', 1)} ages, "

@@ -26,6 +26,7 @@ from aerona.catalog.methods import ENERGY_LABELS, ENERGY_SOURCES, METHODS, PERIS
 from aerona.catalog.ownership import OWNER_CLASS, OWNER_LABELS
 from aerona.catalog.production import STEPS, WORKSHOP_LABELS
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderTechniqueRow
@@ -82,7 +83,7 @@ async def method_views(session: AsyncSession, community: EntityRow, ground: Regi
                 tool_wear=option.tool_wear,
                 labour_pct=option.labour_pct,
                 inputs=[
-                    f"{units} {(material.value.replace('_', ' ') + ' ') if material is not None else ''}{COMMODITIES[commodity].label.lower()} per ten"
+                    f"{units} {(spoken(material) + ' ') if material is not None else ''}{COMMODITIES[commodity].label.lower()} per ten"
                     for commodity, units, material in option.inputs
                 ],
                 blocked=blocked_by(

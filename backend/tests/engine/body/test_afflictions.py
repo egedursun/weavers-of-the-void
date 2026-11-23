@@ -25,7 +25,7 @@ async def conditions(realm: Realm, bearer_id: int) -> set[ConditionKind]:
 def test_every_package_has_stages_cures_and_a_transmission() -> None:
     for kind, spec in PACKAGES.items():
         assert spec.kind is kind and spec.stages and spec.cures and spec.transmissions
-        assert spec.stages[-1].epochs is None or len(spec.stages) == 1
+        assert spec.stages[-1].epochs is None or len(spec.stages) == 1 or spec.stages[-1].fades
 
 
 async def test_a_package_holds_its_condition_and_stats_and_a_cure_gives_them_back(realm: Realm) -> None:

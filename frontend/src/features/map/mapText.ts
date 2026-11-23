@@ -1,5 +1,9 @@
 import { formatNumber } from '@/lib/format'
 import { agree } from '@/lib/units'
+import {
+  HOLDING_WORDS,
+  NODE_KIND_WORDS,
+} from '@/features/entity/affairs/labels'
 import { typeLabel } from '@/features/graph/families'
 import { type MapView } from './api'
 import { type LineKind } from './mapLines'
@@ -118,7 +122,9 @@ export function hoverText(
     for (const holy of (view.holy ?? []).filter(
       (item) => item.holding_id === point.id
     ))
-      lines.push(`Holy to ${holy.cult}: ${holy.kind.replaceAll('_', ' ')}`)
+      lines.push(
+        `Holy to ${holy.cult}: ${HOLDING_WORDS[holy.kind].toLowerCase()}`
+      )
     const others = (hit.members ?? []).filter((id) => id !== point.id)
     if (others.length > 0) {
       lines.push(
@@ -174,7 +180,7 @@ export function hoverText(
       view.dominion?.[String(region.top_level_id)]
     if (rule)
       lines.push(
-        `Divine dominion: ${rule.name} (${rule.kind.replaceAll('_', ' ')}) ${rule.share}%${rule.rivals > 0 ? ` · against ${rule.rivals} rival ${rule.rivals === 1 ? 'god' : 'gods'}` : ''}`
+        `Divine dominion: ${rule.name} (${NODE_KIND_WORDS[rule.kind].toLowerCase()}) ${rule.share}%${rule.rivals > 0 ? ` · against ${rule.rivals} rival ${rule.rivals === 1 ? 'god' : 'gods'}` : ''}`
       )
     const occupied = view.occupations?.[String(region.id)]
     if (occupied)

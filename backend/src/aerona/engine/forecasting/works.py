@@ -135,13 +135,24 @@ async def foresee(ctx: TickContext, people: EntityRow, rows: list[ObservationMet
     await record(ctx, "weather.forecast_kept", roles=roles, facts={"method": best.method, "accuracy": best.accuracy})
 
 
-def force(ctx: TickContext, region: EntityRow, aim: WeatherAim) -> None:
+def aimed_weather(rules: Rules, aim: WeatherAim, ground: RegionEnvironmentRow | None) -> WeatherKind:
+    if aim is not WeatherAim.COLD or ground is None:
+        return AIM_WEATHER[aim]
+    settings = rules.weather
+    near = abs(ground.temperature - settings.cold_threshold) <= settings.glaze_band
+    if near and ground.rainfall >= settings.wet_pivot:
+        return WeatherKind.ICE_STORM
+    if ground.rainfall < settings.dry_threshold or ground.temperature <= settings.cold_threshold + settings.frost_band:
+        return WeatherKind.FROST
+    return AIM_WEATHER[aim]
+
+
+async def force(ctx: TickContext, region: EntityRow, aim: WeatherAim) -> None:
     if region.world_id is None:
         return
+    kind = aimed_weather(ctx.rules, aim, await ctx.session.get(RegionEnvironmentRow, region.id))
     ctx.session.add(
-        ForcedWeatherRow(
-            region_entity_id=region.id, world_id=region.world_id, from_epoch=max(1, ctx.epoch), until_epoch=max(1, ctx.epoch), kind=AIM_WEATHER[aim]
-        )
+        ForcedWeatherRow(region_entity_id=region.id, world_id=region.world_id, from_epoch=max(1, ctx.epoch), until_epoch=max(1, ctx.epoch), kind=kind)
     )
 
 
@@ -150,7 +161,7 @@ async def work(ctx: TickContext, row: WeatherWorkRow, atlas: RegionAtlas, tally:
     region = await ctx.session.get(EntityRow, row.region_entity_id)
     if region is None or held(region.id):
         return
-    force(ctx, region, row.aim)
+    await force(ctx, region, row.aim)
     tally.worked += 1
     await record(
         ctx,
@@ -165,7 +176,7 @@ async def work(ctx: TickContext, row: WeatherWorkRow, atlas: RegionAtlas, tally:
     side = row.strength * table.side_effect_share_pct // PERCENT
     if downwind is None or held(downwind.id) or side <= 0 or OPPOSITE[row.aim] is row.aim:
         return
-    force(ctx, downwind, OPPOSITE[row.aim])
+    await force(ctx, downwind, OPPOSITE[row.aim])
     tally.side_effects += 1
     await record(
         ctx,

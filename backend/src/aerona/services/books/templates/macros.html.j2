@@ -121,6 +121,8 @@
 <dl class="facts">{% for label, value in article.plan.facts %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
 {% if article.arms %}<figure class="arms"><div class="shield">{{ article.arms.figure }}</div><figcaption>{{ article.arms.caption }}</figcaption></figure>
 <dl class="facts">{% for label, value in article.arms.facts %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
+{% if article.festivals %}<figure class="plan"><div class="ground">{{ article.festivals.figure }}</div><figcaption>{{ article.festivals.caption }}</figcaption></figure>
+<dl class="facts">{% for label, value in article.festivals.facts %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
 {% if article.made %}{{ made_kind(article.made) }}{% endif %}
 {{ entity_depth(article.entity.depth) }}
 {{ typed(article.typed) }}
@@ -133,7 +135,7 @@
 
 {% macro son_article(article, single, links) -%}
 <article class="entry" id="{{ article.anchor }}">
-<div class="head"><h3 class="bm2">{{ article.son.name }}{% if article.son.status.value == "dead" %} <span class="dagger">&#8224;</span>{% endif %}</h3><span class="kind">{{ article.son.rarity.value | replace("_", " ") }}</span></div>
+<div class="head"><h3 class="bm2">{{ article.son.name }}{% if article.son.status.value == "dead" %} <span class="dagger">&#8224;</span>{% endif %}</h3><span class="kind">{{ article.son.rarity | spoken }}</span></div>
 <div class="portrait-hero">
 {% if article.cover %}<img src="{{ links.media(article.cover, 'portrait') }}" alt="{{ article.son.name }}" loading="lazy" decoding="async">{% else %}<div></div>{% endif %}
 <div>
@@ -159,7 +161,7 @@
 
 {% macro god_article(article, links) -%}
 <article class="entry" id="{{ article.anchor }}">
-<div class="head"><h4 class="bm3">{{ article.god.name }}</h4><span class="kind">{{ article.god.status.value | replace("_", " ") }}</span></div>
+<div class="head"><h4 class="bm3">{{ article.god.name }}</h4><span class="kind">{{ article.god.status | spoken }}</span></div>
 {% if article.god.title %}<p class="subtitle">{{ article.god.title }}</p>{% endif %}
 {{ thumb(article.cover, article.god.name, links, true) }}
 <ul class="stats"><li>World<b>{{ article.world }}</b></li><li>Power<b>{{ article.god.power }}</b></li><li>Faith<b>{{ article.god.faith }}</b></li><li>Attitude<b>{{ article.god.stance }}</b></li></ul>

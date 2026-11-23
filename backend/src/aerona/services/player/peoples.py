@@ -3,7 +3,7 @@ from pydantic import Field
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.demography import control
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -42,7 +42,7 @@ class MoveCohort(Command):
 class SetCohort(Command):
     community_id: int
     age_band: AgeBand
-    sex: Sex
+    sex_kind: SexKind
     social_class: SocialClass
     condition: CohortCondition = CohortCondition.NONE
     count: int = Field(ge=0, le=10**9)
@@ -94,9 +94,9 @@ async def move_cohort(scope: PlayerScope, command: MoveCohort) -> Effect:
 
 @player_action("cohort:set", ActionKind.EDIT_RECORD)
 async def set_cohort(scope: PlayerScope, command: SetCohort) -> Effect:
-    key = (command.age_band, command.sex, command.social_class, command.condition)
+    key = (command.age_band, command.sex_kind, command.social_class, command.condition)
     total = await control.set_cohort(await scope.context("cohort_set"), command.community_id, key, command.count)
-    label = " ".join(part.value.replace("_", " ") for part in key)
+    label = " ".join(spoken(part) for part in key)
     return Effect(f"The {label} now number {command.count}; the community holds {total}.", command.community_id, values={"population": total})
 
 

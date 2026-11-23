@@ -291,7 +291,7 @@ async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRo
     item = await create_record(
         ctx,
         RecordSpec(
-            name=f"{stage.find.value.replace('_', ' ').capitalize()} of {site.name}",
+            name=f"{spoken(stage.find).capitalize()} of {site.name}",
             entity_type=EntityType.ITEM,
             stats=ItemStats(might=ctx.rules.excavations.find_power),
             body=f"Found by {leader.name} in the {spoken(stage.stage)} of {site.name}.",

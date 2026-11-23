@@ -30,6 +30,7 @@ from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.urban import AMENITIES, NUISANCES, SERVICE_OF
 from aerona.catalog.zones import CIVIC_SERVICE_OF, ZONE_OF_DISTRICT, ZONE_OF_STRUCTURE
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.tables.city_rules import ConurbationRow
 from aerona.db.tables.dominion import MagicSiteRow
 from aerona.db.tables.economy import ResourceProfileRow
@@ -242,7 +243,7 @@ async def land_scene(services: ServicesDep, region_id: NodeId) -> LandSceneView:
                 node=refs[row.id],
                 q=cell[0],
                 r=cell[1],
-                detail=sites.get(row.id) or row.subtype or (kind.value.replace("_", " ") if (kind := kinds.get(row.id)) is not None else "place"),
+                detail=sites.get(row.id) or row.subtype or (spoken(kind) if (kind := kinds.get(row.id)) is not None else "place"),
                 kind=kinds.get(row.id),
                 sacred=row.id in sites,
             )

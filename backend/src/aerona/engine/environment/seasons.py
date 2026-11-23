@@ -1,28 +1,22 @@
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.catalog.world_views import WORLD_VIEWS
+from aerona.constants.calendar import SEASONS_MAX
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.world import WorldType
+from aerona.engine.environment.season_shape import drafted_shares
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
 ORBIT_EXPONENT = 1.5
 DRY, NEUTRAL, WET = -1, 0, 1
+TWO = 2
 
-SEASON_SHAPES: dict[int, tuple[tuple[str, int], ...]] = {
-    1: (("Endless Day", NEUTRAL),),
-    2: (("Wet Season", WET), ("Dry Season", DRY)),
-    3: (("Inundation", WET), ("Growing", NEUTRAL), ("Harvest", DRY)),
-    4: (("Spring", NEUTRAL), ("Summer", DRY), ("Autumn", NEUTRAL), ("Winter", NEUTRAL)),
-    5: (("Spring", NEUTRAL), ("Summer", DRY), ("Monsoon", WET), ("Autumn", NEUTRAL), ("Winter", NEUTRAL)),
-    6: (("Spring", NEUTRAL), ("Summer", DRY), ("Monsoon", WET), ("Autumn", NEUTRAL), ("Early Winter", NEUTRAL), ("Deep Winter", NEUTRAL)),
-}
-ICE_SHAPE = (("Long Winter", NEUTRAL), ("Short Thaw", WET))
-WARMEST: dict[int, int] = {1: 0, 2: 0, 3: 1, 4: 1, 5: 1, 6: 1}
+ICE_SHAPE = (NEUTRAL, WET)
 NO_SEASON_WORLDS = frozenset(world_type for world_type, view in WORLD_VIEWS.items() if not view.seasons)
 TWO_SEASON_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.TWO_SEASON_WORLDS)
 
@@ -38,12 +32,24 @@ class WorldCalendar:
 @dataclass(frozen=True)
 class SeasonDraft:
     position: int
-    name: str
     temperature_shift: int
     rain_shift: int
     growth: int
     travel: int
     campaign: int
+    share_pct: int = 0
+
+
+def warmest_of(count: int) -> int:
+    return 0 if count <= TWO else 1
+
+
+def wetness_pattern(count: int, wet_offset: int) -> tuple[int, ...]:
+    if count <= 1:
+        return (NEUTRAL,)
+    peak = warmest_of(count)
+    wet = (peak + wet_offset) % count
+    return tuple(WET if position == wet else DRY if position == peak else NEUTRAL for position in range(count))
 
 
 def season_count_for(rules: Rules, world_type: WorldType, axial_tilt: int) -> int:
@@ -57,10 +63,12 @@ def season_count_for(rules: Rules, world_type: WorldType, axial_tilt: int) -> in
         (3, settings.three_seasons_below_tilt),
         (4, settings.four_seasons_below_tilt),
         (5, settings.five_seasons_below_tilt),
+        (6, settings.six_seasons_below_tilt),
+        (7, settings.seven_seasons_below_tilt),
     ):
         if axial_tilt < ceiling:
             return count
-    return max(SEASON_SHAPES)
+    return SEASONS_MAX
 
 
 def world_calendar(rules: Rules, rng: SeededRandom, world_type: WorldType, orbit: float) -> WorldCalendar:
@@ -76,11 +84,12 @@ def world_calendar(rules: Rules, rng: SeededRandom, world_type: WorldType, orbit
 
 def season_drafts(rules: Rules, world_type: WorldType, count: int, axial_tilt: int) -> list[SeasonDraft]:
     settings = rules.seasons
-    shapes = ICE_SHAPE if world_type in TWO_SEASON_WORLDS and count == len(ICE_SHAPE) else SEASON_SHAPES[count]
+    count = max(1, min(SEASONS_MAX, count))
+    pattern = ICE_SHAPE if world_type in TWO_SEASON_WORLDS and count == len(ICE_SHAPE) else wetness_pattern(count, settings.wet_offset)
     amplitude = axial_tilt / max(1, settings.tilt_max)
-    peak = WARMEST[count]
+    peak = warmest_of(count)
     drafts: list[SeasonDraft] = []
-    for position, (name, wetness) in enumerate(shapes):
+    for position, wetness in enumerate(pattern):
         warmth = math.cos(math.tau * (position - peak) / count) if count > 1 else 0.0
         if world_type in TWO_SEASON_WORLDS:
             warmth = -1.0 if position == 0 else 1.0
@@ -89,7 +98,6 @@ def season_drafts(rules: Rules, world_type: WorldType, count: int, axial_tilt: i
         drafts.append(
             SeasonDraft(
                 position=position,
-                name=name,
                 temperature_shift=temperature,
                 rain_shift=rain,
                 growth=clamp_int(settings.growth_base + warmth * settings.growth_swing * amplitude + wetness * settings.growth_wet, 0, PERCENT),
@@ -99,7 +107,8 @@ def season_drafts(rules: Rules, world_type: WorldType, count: int, axial_tilt: i
                 campaign=clamp_int(settings.campaign_base + warmth * settings.campaign_warm * amplitude - max(0, wetness) * settings.campaign_wet, 0, PERCENT),
             )
         )
-    return drafts
+    shares = drafted_shares(drafts, settings.transition_share_pct)
+    return [replace(draft, share_pct=share) for draft, share in zip(drafts, shares, strict=True)]
 
 
 def tidal_strength(rules: Rules, moons: int) -> int:

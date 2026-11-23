@@ -4,7 +4,7 @@ from enum import StrEnum
 from aerona.catalog.life.interconnect import CURSE_RULES
 from aerona.catalog.lore import ART_MESSAGES, IDEOLOGY_APPEAL, IDEOLOGY_VALUES, LEGEND_MORALS, RITE_TEMPLATES, TRADITIONS
 from aerona.catalog.techniques import BRANCH_GRAPH, TECHNIQUES
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.culture import (
     ArtworkProfileRow,
     BookContentRow,
@@ -111,7 +111,7 @@ LORE_MECHANICS = (
         tables=(TraditionProfileRow.__tablename__, TraditionParticipationRow.__tablename__, TraditionEffectRow.__tablename__),
         targets=("tradition", *COMMUNITIES, "event"),
         couplings=(
-            Coupling(S.ECONOMY, "festivals eat food and offerings burn goods", EdgeKind.FLOW, "traditions.festival_food"),
+            Coupling(S.ECONOMY, "festivals eat food and offerings burn goods", EdgeKind.FLOW, "traditions.festival_cost"),
             Coupling(S.SOCIAL, "keepers resent those who trade in what is taboo", EdgeKind.MODIFIER, "traditions.taboo_infamy"),
             Coupling(S.LAW, "a rigid tradition stirs unrest against a law that defies it", EdgeKind.MODIFIER, "traditions.conflict_unrest"),
             Coupling(S.WAR, "great battles and plagues found commemorations", EdgeKind.TRIGGER, "traditions.commemoration_chance"),
@@ -369,12 +369,8 @@ RAW = (
 Raw = tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tuple[str, ...], tuple[Subsystem, str | None, str]]
 
 
-def label(value: str) -> str:
-    return value.replace("_", " ")
-
-
 def listed(values: Iterable[StrEnum]) -> str:
-    return ", ".join(label(item.value) for item in values)
+    return ", ".join(spoken(item) for item in values)
 
 
 def legend_morals() -> tuple[Raw, ...]:
@@ -382,7 +378,7 @@ def legend_morals() -> tuple[Raw, ...]:
         (
             f"tale_{archetype.value}",
             "S8.2",
-            f"A tale of {label(archetype.value)} teaches {', '.join(label(axis.value) for axis in moral)}",
+            f"A tale of {spoken(archetype)} teaches {', '.join(spoken(axis) for axis in moral)}",
             ("legend_cycles",),
             LORE,
             ("legend", "people", "settlement"),
@@ -413,6 +409,7 @@ TRADITION_EFFECTS = {
     "purification": (S.FAITH, "traditions.piety", "piety"),
     "commemoration": (S.SOCIAL, "traditions.festival_cohesion", "cohesion"),
     "competition": (S.SOCIAL, "traditions.festival_satisfaction", "satisfaction"),
+    "fair": (S.ECONOMY, "traditions.fair_trade_pct", "trade"),
 }
 
 
@@ -421,7 +418,7 @@ def tradition_kinds() -> tuple[Raw, ...]:
         (
             f"keep_{kind.value}",
             "S8.3",
-            f"{an(label(kind.value), capital=True)} works on those who keep it",
+            f"{an(spoken(kind), capital=True)} works on those who keep it",
             ("tradition_cycles",),
             LORE,
             ("tradition", "people", "settlement"),
@@ -437,7 +434,7 @@ def creed_tenets() -> tuple[Raw, ...]:
         (
             f"creed_{tenet.value}",
             "S8.5",
-            f"A creed of {label(tenet.value)} presses {listed(IDEOLOGY_VALUES[tenet])} and calls to {listed(IDEOLOGY_APPEAL[tenet])}",
+            f"A creed of {spoken(tenet)} presses {listed(IDEOLOGY_VALUES[tenet])} and calls to {listed(IDEOLOGY_APPEAL[tenet])}",
             ("ideology_cycles",),
             LORE,
             ("ideology", "people", "settlement", "polity"),
@@ -512,7 +509,7 @@ def rite_workings() -> tuple[Raw, ...]:
         (
             f"working_{effect.value}",
             "S8.6",
-            f"A rite of {label(effect.value)} is worked on the world",
+            f"A rite of {spoken(effect)} is worked on the world",
             ("wizards", "rite_cycles"),
             LORE,
             ("rite", "mortal", "settlement"),
@@ -525,7 +522,7 @@ def rite_workings() -> tuple[Raw, ...]:
         (
             f"drawn_{source.value}",
             "S8.6",
-            f"A rite drawn from {label(source.value)} is paid for in it",
+            f"A rite drawn from {spoken(source)} is paid for in it",
             ("wizards", "rite_cycles"),
             LORE,
             ("rite", "mortal", "cult"),
@@ -538,7 +535,7 @@ def rite_workings() -> tuple[Raw, ...]:
         (
             f"backlash_{kind.value}",
             "S8.6",
-            f"A failed rite turns on its caster as {label(kind.value)}",
+            f"A failed rite turns on its caster as {spoken(kind)}",
             ("wizards", "rite_cycles"),
             LORE,
             ("rite", "mortal", "region"),
@@ -551,7 +548,7 @@ def rite_workings() -> tuple[Raw, ...]:
         (
             f"school_{school.value}",
             "S8.6",
-            f"The {label(school.value)} school works {template.name.lower()}",
+            f"The {spoken(school)} school works {template.name.lower()}",
             ("wizards",),
             LORE,
             ("rite", "son", "mortal"),
@@ -579,7 +576,7 @@ def prophecy_predicates() -> tuple[Raw, ...]:
         (
             f"foretold_{predicate.value}",
             "S8.7",
-            f"A prophecy that something {label(predicate.value)} is judged against the world",
+            f"A prophecy that something {spoken(predicate)} is judged against the world",
             ("prophecy_cycles", "belief_and_memory"),
             LORE,
             PREDICATE_TARGETS[predicate],
@@ -595,7 +592,7 @@ def branch_gates() -> tuple[Raw, ...]:
         (
             f"branch_{branch.value}",
             "S8.4",
-            f"{label(branch.value).capitalize()} opens once its gate is met",
+            f"{spoken(branch).capitalize()} opens once its gate is met",
             ("research_cycles", "knowledge_levels"),
             LEARNING,
             ("knowledge", "people", "settlement"),
@@ -627,7 +624,7 @@ def media() -> tuple[Raw, ...]:
         (
             f"medium_{medium.value}",
             "S7.4",
-            f"{an(label(medium.value), capital=True)} stirs {', '.join(label(axis.value) for axis in message)}",
+            f"{an(spoken(medium), capital=True)} stirs {', '.join(spoken(axis) for axis in message)}",
             ("artwork_cycles",),
             LORE,
             ("artwork", "people", "settlement"),
@@ -667,7 +664,7 @@ def curses() -> tuple[Raw, ...]:
         (
             f"curse_{kind.value}",
             "S7.1",
-            f"A thing cursed with {label(kind.value)} works on its bearer",
+            f"A thing cursed with {spoken(kind)} works on its bearer",
             ("item_cycles",),
             LORE,
             ("item", "mortal"),

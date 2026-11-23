@@ -29,6 +29,7 @@ from aerona.engine.phases.dominion import count
     "table.stars",
     "table.world_maps",
     "table.world_physics",
+    "table.world_seasons",
     "table.worlds",
 )
 @writes(

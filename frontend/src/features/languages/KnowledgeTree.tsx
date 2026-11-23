@@ -9,6 +9,7 @@ import {
   Unlock,
   Users,
 } from 'lucide-react'
+import { knowledgeBranchValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
@@ -26,7 +27,7 @@ import {
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type KnowledgeView } from '@/features/entity/api/types'
 import { TechBoard } from './TechBoard'
 import {
@@ -102,7 +103,9 @@ function BranchTile({
         />
         <span className='flex min-w-0 flex-1 flex-col'>
           <Text as='span' weight='semibold' truncate>
-            {summary.key === UNSORTED ? 'Unsorted' : humanize(summary.key)}
+            {summary.key === UNSORTED
+              ? 'Unsorted'
+              : wordOf(knowledgeBranchValues, summary.key)}
           </Text>
           <Muted as='span' variant='caption' truncate>
             {`${plural(summary.items.length, 'art', 'arts')} · tier ${tierNumeral(summary.top)}`}
@@ -132,7 +135,7 @@ function LockedTile({ branch }: { branch: KnowledgeBranch }) {
       <Medallion icon={Icon} tone='muted' size='sm' />
       <span className='flex min-w-0 flex-1 flex-col'>
         <Text as='span' weight='medium' tone='muted' truncate>
-          {humanize(branch)}
+          {wordOf(knowledgeBranchValues, branch)}
         </Text>
         <Muted as='span' variant='caption' truncate>
           Not yet discovered
@@ -173,7 +176,7 @@ function TechDetail({
             </Badge>
             {item.branch && (
               <Badge size='sm' variant='outline'>
-                {humanize(item.branch)}
+                {wordOf(knowledgeBranchValues, item.branch)}
               </Badge>
             )}
             {item.knowledge.subtype && (
@@ -440,7 +443,7 @@ export function KnowledgeTree({ knowledge }: { knowledge: KnowledgeView[] }) {
             <Text as='span' weight='semibold'>
               {current.key === UNSORTED
                 ? 'Unsorted knowledge'
-                : `The ${humanize(current.key)} tree`}
+                : `The ${wordOf(knowledgeBranchValues, current.key)} tree`}
             </Text>
             <Badge size='sm' variant='outline'>
               {`${plural(current.items.length, 'art', 'arts')}`}

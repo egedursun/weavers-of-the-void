@@ -36,6 +36,7 @@ from aerona.db.tables.operations import (
 )
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import CarrierKind, CrewStation, EchelonLevel, ExpeditionEvent, ExpeditionRole, ExpeditionStatus, QuirkKind
 from aerona.engine.collective.control import of_type, saved
@@ -171,13 +172,22 @@ async def set_admiralty(ctx: TickContext, polity_id: int, values: Values) -> Adm
     return await put_values(ctx, row, values, ADMIRALTY_FIELDS, "admiralty")
 
 
-async def send_expedition(ctx: TickContext, leader_id: int, target_id: int, companion_ids: list[int], sponsor_id: int | None) -> ExpeditionRow:
+async def send_expedition(
+    ctx: TickContext,
+    leader_id: int,
+    target_id: int,
+    companion_ids: list[int],
+    sponsor_id: int | None,
+    *,
+    mode: MovementMode | None = None,
+    carried: bool = False,
+) -> ExpeditionRow:
     leader = await of_type(ctx, leader_id, MORTALS, "a mortal")
     target: EntityRow = await found(ctx, EntityRow, target_id, "destination")
     companions = [await of_type(ctx, item, MORTALS, "a mortal") for item in dict.fromkeys(companion_ids) if item != leader_id]
     if sponsor_id is not None:
         await node_exists(ctx, sponsor_id, "sponsor")
-    return await launch(ctx, leader, target, companions, sponsor_id=sponsor_id, tally=ExpeditionTally())
+    return await launch(ctx, leader, target, companions, sponsor_id=sponsor_id, tally=ExpeditionTally(), mode=mode, carried=carried)
 
 
 async def press_on(ctx: TickContext, expedition_id: int, legs: int) -> ExpeditionRow:

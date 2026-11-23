@@ -16,6 +16,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
+from aerona.engine.customs.grades import derive_duties
 from aerona.engine.customs.marks import MarkTally, customs_of, place
 from aerona.engine.customs.naming import NamingTally, initiate_name
 from aerona.engine.gatherings.hold import plan
@@ -34,6 +35,7 @@ class AgeSetTally:
     initiated: int = 0
     promoted: int = 0
     delayed: int = 0
+    duties: int = 0
 
 
 async def sets_of(ctx: TickContext, people_id: int) -> list[AgeSetRow]:
@@ -142,6 +144,7 @@ async def keep_age_sets(ctx: TickContext, tally: AgeSetTally) -> None:
         values = await stored_values(ctx.session, ValueHolder.CULTURE, people.id)
         if not sets and values.get(ValueAxis.TRADITION, 0) < ctx.rules.age_sets.from_tradition:
             continue
+        tally.duties += await derive_duties(ctx, people.id)
         current = await open_set(ctx, people, sets, tally)
         await initiate(ctx, people, current, tally)
         await promote(ctx, people, sets, tally)

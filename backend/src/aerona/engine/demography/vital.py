@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from aerona.catalog.life.demography import DEATH_RATES
+from aerona.catalog.life.demography import BEARING_BANDS, DEATH_RATES
 from aerona.catalog.reproduction import SexSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow
@@ -49,13 +49,20 @@ async def stress_of(ctx: TickContext, community: EntityRow) -> float:
 
 def death_rate(rules: Rules, band: AgeBand) -> float:
     table = rules.demography
-    return {A.CHILD: table.child_death_pct_per_year, A.ADULT: table.adult_death_pct_per_year, A.ELDER: table.elder_death_pct_per_year}[band] / PERCENT
+    rates = {
+        A.INFANT: table.infant_mortality_pct,
+        A.CHILD: table.child_death_pct_per_year,
+        A.YOUTH: table.adult_death_pct_per_year,
+        A.ADULT: table.adult_death_pct_per_year,
+        A.ELDER: table.elder_death_pct_per_year,
+    }
+    return rates[band] / PERCENT
 
 
 def one_year(rules: Rules, rows: dict[CohortKey, CohortRow], biology: PeopleBiologyRow | None, pressures: Pressures, spec: SexSpec) -> VitalYear:
     table = rules.demography
     fertility = (biology.fertility_pct if biology is not None else PERCENT) / PERCENT
-    bearers = sum(row.count for key, row in rows.items() if key[0] is A.ADULT and key[1] in spec.bearing and key[3] is not CohortCondition.SICK)
+    bearers = sum(row.count for key, row in rows.items() if key[0] in BEARING_BANDS and key[1] in spec.bearing and key[3] is not CohortCondition.SICK)
     birth_rate = table.birth_pct_per_year / PERCENT * fertility * pressures.fertility
     famine = pressures.hunger**2
     birth_rate *= max(0.0, 1 - famine * table.hunger_birth_pct / PERCENT) * max(0.0, 1 - pressures.stress * table.stress_birth_pct / PERCENT)
@@ -93,7 +100,7 @@ async def give_births(ctx: TickContext, community: EntityRow, rows: dict[CohortK
     counts = apportion(births, {(sex, social_class): part for sex, social_class, part in slots})
     for sex, social_class, _part in slots:
         count = max(0, min(counts.get((sex, social_class), 0), births - placed))
-        row_for(ctx.session, rows, community.id, (A.CHILD, sex, social_class, CohortCondition.NONE), ctx.epoch).count += count
+        row_for(ctx.session, rows, community.id, (A.INFANT, sex, social_class, CohortCondition.NONE), ctx.epoch).count += count
         placed += count
     return placed
 

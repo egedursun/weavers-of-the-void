@@ -1,11 +1,13 @@
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 
-from aerona.core.total import partial
+from aerona.core.total import partial, total
 from aerona.domain.enums.demography import AgeBand, CohortCondition, InheritanceCustom, Job
 from aerona.domain.enums.polity import SuccessionRule
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import ShortfallEffect
+from aerona.rules.registry import Rules
 
 INHERITANCE_RULES: dict[InheritanceCustom, SuccessionRule] = {
     InheritanceCustom.PRIMOGENITURE: SuccessionRule.PRIMOGENITURE,
@@ -14,14 +16,64 @@ INHERITANCE_RULES: dict[InheritanceCustom, SuccessionRule] = {
     InheritanceCustom.BY_MERIT: SuccessionRule.TANISTRY,
     InheritanceCustom.ULTIMOGENITURE: SuccessionRule.ULTIMOGENITURE,
     InheritanceCustom.THROUGH_SECOND_LINE: SuccessionRule.THROUGH_SECOND_LINE,
+    InheritanceCustom.SENIORITY: SuccessionRule.SENIORITY,
+    InheritanceCustom.DESIGNATED: SuccessionRule.TANISTRY,
 }
 
 
-AGE_WORK: Mapping[AgeBand, float] = MappingProxyType({AgeBand.CHILD: 0.2, AgeBand.ADULT: 1.0, AgeBand.ELDER: 0.5})
+@dataclass(frozen=True)
+class BandSpec:
+    label: str
+    work: float
+    youth_share: float | None
+    minor: bool = False
+    fights: bool = False
+    bears: bool = False
 
 
-CONDITION_WORK: Mapping[CohortCondition, float] = MappingProxyType(
-    {CohortCondition.NONE: 1.0, CohortCondition.VETERAN: 0.9, CohortCondition.ENSLAVED: 1.0, CohortCondition.CAPTIVE: 0.8}
+AGE_BANDS: Mapping[AgeBand, BandSpec] = total(
+    AgeBand,
+    {
+        AgeBand.INFANT: BandSpec("Infants", 0.0, 1 / 6, minor=True),
+        AgeBand.CHILD: BandSpec("Children", 0.2, 1 / 2, minor=True),
+        AgeBand.YOUTH: BandSpec("Youths", 0.8, 1 / 3, fights=True, bears=True),
+        AgeBand.ADULT: BandSpec("Adults", 1.0, None, fights=True, bears=True),
+        AgeBand.ELDER: BandSpec("Elders", 0.5, None),
+    },
+)
+AGE_ORDER = tuple(AgeBand)
+AGE_WORK: Mapping[AgeBand, float] = MappingProxyType({band: spec.work for band, spec in AGE_BANDS.items()})
+MINOR_BANDS = frozenset(band for band, spec in AGE_BANDS.items() if spec.minor)
+FIGHTING_BANDS = frozenset(band for band, spec in AGE_BANDS.items() if spec.fights)
+BEARING_BANDS = frozenset(band for band, spec in AGE_BANDS.items() if spec.bears)
+CONDITION_EMERGES: Mapping[CohortCondition, bool] = total(
+    CohortCondition,
+    {
+        CohortCondition.NONE: False,
+        CohortCondition.VETERAN: False,
+        CohortCondition.SICK: False,
+        CohortCondition.ENSLAVED: False,
+        CohortCondition.CAPTIVE: False,
+        CohortCondition.MAIMED: False,
+        CohortCondition.ORPHANED: True,
+        CohortCondition.DISPLACED: True,
+    },
+)
+EMERGING_CONDITIONS = frozenset(condition for condition, emerges in CONDITION_EMERGES.items() if emerges)
+GROWN_BANDS = frozenset(band for band, spec in AGE_BANDS.items() if spec.work >= 1 or spec.bears)
+
+
+CONDITION_WORK: Mapping[CohortCondition, float] = partial(
+    CohortCondition,
+    {
+        CohortCondition.NONE: 1.0,
+        CohortCondition.VETERAN: 0.9,
+        CohortCondition.ENSLAVED: 1.0,
+        CohortCondition.CAPTIVE: 0.8,
+        CohortCondition.ORPHANED: 0.6,
+        CohortCondition.DISPLACED: 0.7,
+    },
+    without=(CohortCondition.SICK, CohortCondition.MAIMED),
 )
 
 
@@ -46,9 +98,29 @@ CLASS_JOBS = partial(
 )
 
 
-DEATH_RATES = (AgeBand.CHILD, AgeBand.ADULT, AgeBand.ELDER)
+DEATH_RATES = AGE_ORDER
 
 APPLY_SHORTFALLS_SHORTFALL_EFFECTS = (ShortfallEffect.HUNGER, ShortfallEffect.STATUS, ShortfallEffect.ARCANE)
 MOVE_PEOPLE_COHORT_CONDITIONS = frozenset({CohortCondition.ENSLAVED, CohortCondition.CAPTIVE})
 CORVEE_JOBS = (Job.FARMING, Job.HERDING)
 ALLOCATE_COHORT_CONDITIONS = frozenset({CohortCondition.ENSLAVED, CohortCondition.CAPTIVE})
+
+
+@dataclass(frozen=True)
+class NewTrade:
+    source: Job
+    classes: frozenset[SocialClass]
+    share: Callable[[Rules], int]
+
+
+NEW_TRADES: Mapping[Job, NewTrade] = MappingProxyType(
+    {
+        Job.TRANSPORT: NewTrade(Job.TRADE, frozenset({SocialClass.MERCHANT, SocialClass.CITIZEN}), lambda rules: rules.labour.transport_base_share),
+        Job.ADMINISTRATION: NewTrade(
+            Job.SERVICE, frozenset({SocialClass.OFFICIAL, SocialClass.PROFESSIONAL}), lambda rules: rules.labour.administration_base_share
+        ),
+        Job.GATHERING: NewTrade(Job.FARMING, frozenset({SocialClass.FARMER, SocialClass.SERF_OR_SLAVE}), lambda rules: rules.labour.gathering_base_share),
+        Job.INDUSTRY: NewTrade(Job.CRAFTING, frozenset({SocialClass.WORKER, SocialClass.PROFESSIONAL}), lambda rules: rules.labour.industry_base_share),
+        Job.ARTS: NewTrade(Job.CRAFTING, frozenset({SocialClass.ARTISAN, SocialClass.CITIZEN}), lambda rules: rules.labour.arts_base_share),
+    }
+)

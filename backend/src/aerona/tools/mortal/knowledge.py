@@ -95,7 +95,7 @@ async def develop_knowledge(call: MortalCall, args: DevelopKnowledgeInput) -> st
             args.name,
             EntityType.KNOWLEDGE,
             args.description,
-            subtype=args.branch.value.replace("_", " "),
+            subtype=spoken(args.branch),
             stats={"level": level, "spread": tools.knowledge_spread},
             power=max(1, min(level, tools.creation_power_cap)),
             image_prompt=args.image_prompt,

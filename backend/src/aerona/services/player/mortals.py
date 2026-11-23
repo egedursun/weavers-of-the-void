@@ -12,7 +12,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MarriageRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import MemoryKind, Profession
 from aerona.domain.enums.mortal import CareerPath, CrimeKind, DeathCause, EquipmentSlot, LifeStage, MarriageEnd, PunishmentKind
@@ -54,7 +54,7 @@ class ReleaseMortal(MortalTarget):
 
 
 class SetSex(MortalTarget):
-    sex: Sex
+    sex: SexKind
 
 
 class PairCommand(Command):
@@ -241,7 +241,7 @@ async def end_marriage_action(scope: PlayerScope, command: EndMarriage) -> Effec
     if row.end_epoch is not None:
         raise ValidationFailedError("That marriage has already ended.")
     await end_marriage(scope.session, row, await scope.epoch(), command.cause)
-    return Effect(f"The marriage ended by {label(command.cause.value)}.", target_node_id=row.first_id)
+    return Effect(f"The marriage ended by {spoken(command.cause)}.", target_node_id=row.first_id)
 
 
 @player_action("kin:edit_marriage", ActionKind.OTHER)
@@ -277,7 +277,7 @@ async def add_kin_bond(scope: PlayerScope, command: KinBond) -> Effect:
     made = await connect(scope.session, source.id, target.id, kind, await scope.epoch(), description="by the gods' hand")
     if made is None:
         raise ValidationFailedError("A mortal cannot be bound to themself.")
-    return Effect(f"{source.name} is now {label(kind.value)} {target.name}.", target_node_id=source.id, values={"bond_id": made.id})
+    return Effect(f"{source.name} is now {spoken(kind)} {target.name}.", target_node_id=source.id, values={"bond_id": made.id})
 
 
 @player_action("kin:unbond", ActionKind.OTHER)
@@ -305,13 +305,13 @@ async def equip(scope: PlayerScope, command: Equip) -> Effect:
         else:
             profile = await scope.session.get(ItemProfileRow, target.id)
             if target.entity_type is not EntityType.ITEM or profile is None or profile.item_class not in SLOT_CLASSES[command.slot]:
-                raise ValidationFailedError(f"That cannot be carried as {an(label(command.slot.value))}.")
+                raise ValidationFailedError(f"That cannot be carried as {an(spoken(command.slot))}.")
             if not fits_slot(command.slot, profile):
-                raise ValidationFailedError(f"Only one rigid layer is worn per covering; {an(label(command.slot.value))} must be soft.")
+                raise ValidationFailedError(f"Only one rigid layer is worn per covering; {an(spoken(command.slot))} must be soft.")
     setattr(row, column, command.item_id)
     row.locked = hold(row.locked, column, command.hold)
     action = "now carries something new as" if command.item_id is not None else "has nothing as"
-    return Effect(f"{mortal.name} {action} their {label(command.slot.value)}.", target_node_id=mortal.id)
+    return Effect(f"{mortal.name} {action} their {spoken(command.slot)}.", target_node_id=mortal.id)
 
 
 @player_action("mortal:equip_release", ActionKind.OTHER)
@@ -320,9 +320,9 @@ async def release_slot(scope: PlayerScope, command: ReleaseSlot) -> Effect:
     row = await ensure_equipment(scope.session, mortal.id)
     column = SLOT_COLUMNS[command.slot]
     if column not in (row.locked or []):
-        raise ValidationFailedError(f"{mortal.name}'s {label(command.slot.value)} is not held.")
+        raise ValidationFailedError(f"{mortal.name}'s {spoken(command.slot)} is not held.")
     row.locked = hold(row.locked, column, False)
-    return Effect(f"{mortal.name} chooses their own {label(command.slot.value)} again.", target_node_id=mortal.id)
+    return Effect(f"{mortal.name} chooses their own {spoken(command.slot)} again.", target_node_id=mortal.id)
 
 
 @player_action("mortal:sentence", ActionKind.OTHER)
@@ -331,7 +331,7 @@ async def sentence_mortal(scope: PlayerScope, command: Sentence) -> Effect:
     judge = await mortal_of(scope, command.judge_id) if command.judge_id is not None else None
     ctx = await scope.context("mortal_sentence")
     await sentence(ctx, mortal, command.crime, command.punishment, judge=judge)
-    return Effect(f"{mortal.name} was sentenced to {label(command.punishment.value)} for {label(command.crime.value)}.", target_node_id=mortal.id)
+    return Effect(f"{mortal.name} was sentenced to {spoken(command.punishment)} for {spoken(command.crime)}.", target_node_id=mortal.id)
 
 
 @player_action("mortal:pardon", ActionKind.OTHER)

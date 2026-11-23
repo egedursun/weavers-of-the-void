@@ -9,6 +9,7 @@ from aerona.catalog.life_traits import ACT_KIND_TRAITS, THOUGHT_KIND_TRAITS, hav
 from aerona.catalog.mind import ACT_READINGS
 from aerona.constants.units import PERCENT
 from aerona.db.fast_session import rows_by_prefix
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.mind import CultureEthicRow, CultureHonourRow, MemoryRow, ThoughtRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -237,6 +238,9 @@ async def conscience(ctx: TickContext, actor_id: int, act: ActKind, victim_id: i
         profile = await ctx.session.get(MortalProfileRow, actor.id)
         if profile is not None and profile.legitimacy is not None and not is_held(profile, "legitimacy"):
             profile.legitimacy = clamp_int(profile.legitimacy - table.legitimacy_loss, 0, PERCENT)
+    if row.stance in GOOD or row.stance in BAD:
+        roles = {IncidentRole.ACTOR: actor.id, **({IncidentRole.VICTIM: victim_id} if victim_id is not None and victim_id != actor.id else {})}
+        await record_incident(ctx, "ethics.act_judged", roles=roles, facts={"act": act, "stance": row.stance})
     return row.stance
 
 
@@ -389,3 +393,24 @@ async def killing_act(session: AsyncSession, victim: EntityRow, killer_id: int |
         (grudge is not None, ActKind.REVENGE_KILLING),
     )
     return next((act for hit, act in checks if hit), ActKind.KILLING_OUTSIDER)
+
+
+ACTS_FIXUP = "ethics.w52_acts"
+
+
+async def backfill_acts(ctx: TickContext, cultures: list[EntityRow]) -> int:
+    if await ctx.session.get(AppliedFixupRow, ACTS_FIXUP) is not None:
+        return 0
+    added = 0
+    for culture in cultures:
+        held_acts = await ethics_of(ctx.session, culture.id)
+        values = await stored_values(ctx.session, holder_kind(culture), culture.id)
+        if not held_acts or not values or write_blocked(culture.id, ETHICS_KEY):
+            continue
+        for act in ActKind:
+            if act not in held_acts:
+                await write_stance(ctx.session, culture.id, act, stance_for(ctx.rules, value_reading(values, act)), ctx.epoch)
+                added += 1
+    ctx.session.add(AppliedFixupRow(key=ACTS_FIXUP, result={"stances": added}))
+    await ctx.session.flush()
+    return added

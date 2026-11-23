@@ -51,6 +51,11 @@ class SymbiosisRules:
 
 @dataclass(frozen=True)
 class DormancyRules:
+    torpor_food_cut_pct: int = rule(30, 0, 100, C, "How much less food a kind that slows in daily torpor needs (%)")
+    cryptobiosis_survival_pct: int = rule(90, 0, 100, C, "Share of the losses of a starving or stricken land a near-lifeless kind lives through (%)")
+    cryptobiosis_wake_pct: int = rule(
+        20, 0, 100, C, "Chance in an epoch that a near-lifeless kind gone from a land wakes there again once its season turns (%)"
+    )
     disturb_chance: int = rule(10, 0, 100, C, "Chance a sleeping aggressive kind is woken by the folk of a crowded land in an epoch (%)")
     seasonal_at: int = rule(20, 0, 100, C, "Seasonality of its home land from which a small kind that stays put sleeps through its harshest season")
     disturb_aggression: int = rule(50, 0, 100, C, "Aggression from which a sleeping kind wakes hungry when disturbed")
@@ -61,6 +66,9 @@ class DormancyRules:
 
 @dataclass(frozen=True)
 class ThermoregulationRules:
+    heterotherm_switch: int = rule(
+        30, 0, 100, C, "Share of a cold-blooded kind's slowing a kind that switches between warm and cold takes in a cold season (%)"
+    )
     frozen_pct: int = rule(30, 0, 200, C, "Activity a cold-blooded kind keeps in a frozen season (%)")
     cold_pct: int = rule(60, 0, 200, C, "Activity a cold-blooded kind keeps in a cold season (%)")
     warm_pct: int = rule(115, 0, 200, C, "Activity a cold-blooded kind has in a warm season (%)")
@@ -72,6 +80,9 @@ class ThermoregulationRules:
 
 @dataclass(frozen=True)
 class SenseRules:
+    electric_range: int = rule(2, 0, 20, C, "Reach in lands at which an electric sense finds hidden living beings; at two it reaches fully")
+    electric_water_pct: int = rule(200, 0, 500, W, "Strength of an electric sense for those who live in water or wetland (%)")
+    ultraviolet_track_pct: int = rule(30, 0, 100, W, "Weight an ultraviolet sense gives to following trails and signs others cannot see (%)")
     base_sight: int = rule(50, 0, 100, C, "Sight a kind or people starts with when its senses are first read")
     sharpened: int = rule(20, 0, 100, C, "Acuity a sense gains when a god sharpens it")
     gift: int = rule(70, 0, 100, C, "Acuity of a sense a kind or people is born with when its senses are first read")
@@ -85,6 +96,8 @@ class SenseRules:
 
 @dataclass(frozen=True)
 class PlantDefenceRules:
+    stinging_harm: int = rule(5, 0, 50, E, "Danger stinging plants lend a land they cover fully, and the fibre its towns handle from them each epoch")
+    guardian_harm: int = rule(10, 0, 50, E, "Abundance a plant's guardian allies drive from the grazers of a land they cover fully each epoch")
     default_potency: int = rule(50, 0, 100, E, "Potency a plant's defence takes when its maker names the defence but not its strength")
     thorn_passage_pct: int = rule(30, 0, 100, E, "Share of a land's passage thorns take where they cover all of it, at full potency (%)")
     thorn_grazing_pct: int = rule(40, 0, 100, E, "Share of grazing thorns spoil where they cover all of a land, at full potency (%)")

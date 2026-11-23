@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import {
+  Church,
+  Coins,
   Crown,
   Flame,
   Handshake,
@@ -10,6 +12,7 @@ import {
   Shuffle,
   Trash2,
   Unlink,
+  UserX,
   Users,
 } from 'lucide-react'
 import { api } from '@/api/client'
@@ -619,7 +622,17 @@ function MobilityControls({
             })
           ),
   })
-  const busy = blocked ?? (move.isPending || person.isPending ? WORKING : null)
+  const shift = useGodAction({
+    run: (event: 'enriched' | 'ordained' | 'outcast') =>
+      unwrap(
+        api.POST('/api/actions/mobility:move', {
+          body: { mortal_id: view.entity_id, event },
+        })
+      ),
+  })
+  const busy =
+    blocked ??
+    (move.isPending || person.isPending || shift.isPending ? WORKING : null)
   if (mortal)
     return (
       <EditorGroup title='Raise or ruin them' icon={Crown} pairs>
@@ -651,6 +664,36 @@ function MobilityControls({
         >
           <Link />
           Sell them into bondage
+        </Button>
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => shift.mutate('enriched')}
+        >
+          <Coins />
+          Raise them by wealth
+        </Button>
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => shift.mutate('ordained')}
+        >
+          <Church />
+          Ordain them
+        </Button>
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => shift.mutate('outcast')}
+        >
+          <UserX />
+          Cast them out
         </Button>
       </EditorGroup>
     )

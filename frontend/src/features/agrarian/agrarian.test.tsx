@@ -83,13 +83,16 @@ describe('land, harvest, readiness and staples', () => {
           id: 7,
           region: VALE,
           kind: 'pasture',
-          rule: 'customary',
+          rule: 'licensed',
           condition: 40,
           use: 90,
           steward: TOWN,
           encloser: null,
           enclosed_epoch: null,
           dispossessed: 0,
+          quota: 35,
+          licence_price: 120,
+          officials: 60,
           since_epoch: 2,
           locked: [],
         },
@@ -106,6 +109,12 @@ describe('land, harvest, readiness and staples', () => {
       .click()
     await expect
       .element(screen.getByText('Common pasture of Long Vale'))
+      .toBeVisible()
+    await expect.element(screen.getByText('Sold by permit')).toBeVisible()
+    await expect.element(screen.getByText('Coin a permit costs')).toBeVisible()
+    await expect.element(screen.getByText('120', { exact: true })).toBeVisible()
+    await expect
+      .element(screen.getByText('Strength of its officials'))
       .toBeVisible()
     await screen.getByRole('button', { name: 'Enclose it' }).click()
     await expect

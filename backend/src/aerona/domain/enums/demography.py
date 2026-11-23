@@ -2,15 +2,19 @@ from enum import StrEnum
 
 
 class AgeBand(StrEnum):
+    INFANT = "infant"
     CHILD = "child"
+    YOUTH = "youth"
     ADULT = "adult"
     ELDER = "elder"
 
 
-class Sex(StrEnum):
-    FEMALE = "female"
-    MALE = "male"
-    OTHER = "other"
+class SexKind(StrEnum):
+    BEARER = "bearer"
+    BEGETTER = "begetter"
+    BOTH = "both"
+    NEITHER = "neither"
+    NONE = "none"
 
 
 class CohortCondition(StrEnum):
@@ -20,6 +24,8 @@ class CohortCondition(StrEnum):
     ENSLAVED = "enslaved"
     CAPTIVE = "captive"
     MAIMED = "maimed"
+    ORPHANED = "orphaned"
+    DISPLACED = "displaced"
 
 
 class Job(StrEnum):
@@ -35,6 +41,11 @@ class Job(StrEnum):
     BUILDING = "building"
     SERVICE = "service"
     IDLE = "idle"
+    TRANSPORT = "transport"
+    ADMINISTRATION = "administration"
+    GATHERING = "gathering"
+    INDUSTRY = "industry"
+    ARTS = "arts"
 
 
 class MotifSource(StrEnum):
@@ -75,6 +86,8 @@ class InheritanceCustom(StrEnum):
     THROUGH_SECOND_LINE = "through_second_line"
     ELECTIVE = "elective"
     BY_MERIT = "by_merit"
+    SENIORITY = "seniority"
+    DESIGNATED = "designated"
 
 
 class NaturalTrait(StrEnum):
@@ -102,3 +115,5 @@ class FuneralCustom(StrEnum):
     SOUL_BINDING = "soul_binding"
     NAMELESS = "nameless"
     NONE = "none"
+    MUMMIFICATION = "mummification"
+    SECONDARY_BURIAL = "secondary_burial"

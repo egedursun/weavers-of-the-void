@@ -20,6 +20,7 @@ class CultureValue(Command):
 class RegionWindDraft(Command):
     region_id: int
     band: CirculationBand = CirculationBand.TRADE
+    summer_band: CirculationBand | None = None
     wind_from: int = 2
     strength: int = 50
     windward: bool = False
@@ -125,6 +126,7 @@ async def region_wind_set(scope: PlayerScope, command: RegionWindDraft) -> Effec
         {"region_entity_id": command.region_id},
         {
             "band": command.band,
+            "summer_band": command.band if command.summer_band is None else command.summer_band,
             "wind_from": command.wind_from,
             "strength": command.strength,
             "windward": command.windward,

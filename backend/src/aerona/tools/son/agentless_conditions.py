@@ -36,7 +36,7 @@ async def ease_body(call: SonCall, args: EaseBodyInput) -> str:
         fail(SonResult.BODY_REFUSED, why="that being bears no such condition")
     await ensure_in_reach(call, being)
     if held(being.id):
-        fail(SonResult.BODY_REFUSED, why="a stronger hand holds that body as it is")
+        fail(SonResult.BODY_REFUSED, why="that body is held as it is")
     kind = await call.session.get(AgentlessConditionRow, row.kind_id) if row.kind_id is not None else None
     await eased(call.tick, row, being, kind, ConditionTally())
     await refresh(call.session, call.rules, being, call.tick.epoch)

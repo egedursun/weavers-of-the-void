@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Index, String, Text, UniqueConstraint
+from sqlalchemy import JSON, ForeignKey, Index, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
@@ -21,6 +21,7 @@ class RegionDangerRow(Base):
     region_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     source: Mapped[DangerSource] = mapped_column(enum_type(DangerSource, "source"))
     strength: Mapped[int] = mapped_column(default=0)
+    harmed: Mapped[list[str]] = mapped_column(JSON, default=list, server_default=text("'[]'"))
     origin: Mapped[DangerOrigin] = mapped_column(enum_type(DangerOrigin, "origin"), default=DangerOrigin.DERIVED)
     source_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))

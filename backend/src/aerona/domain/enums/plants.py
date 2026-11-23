@@ -13,6 +13,8 @@ class PlantForm(StrEnum):
     FUNGUS_LIKE = "fungus_like"
     COLONIAL = "colonial"
     MADE = "made"
+    EPIPHYTE = "epiphyte"
+    PARASITIC = "parasitic"
 
 
 class PlantPart(StrEnum):
@@ -28,6 +30,7 @@ class PlantPart(StrEnum):
     SAP = "sap"
     FIBRE = "fibre"
     SPORE = "spore"
+    RESIN = "resin"
 
 
 class PlantReproduction(StrEnum):

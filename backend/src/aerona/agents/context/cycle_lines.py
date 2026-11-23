@@ -1,6 +1,7 @@
 from sqlalchemy import or_, select
 
 from aerona.agents.context.scope import Scope
+from aerona.catalog.gift_occasions import GIFT_STATES, OCCASIONS, REMEMBERED
 from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.cycles import (
     AsabiyyaRow,
@@ -25,17 +26,13 @@ from aerona.db.tables.unions import UnionCustomRow
 from aerona.domain.enums.cycles import CyclePhase, LongPlanStatus, ReproductiveSystem
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.body.customs import people_of
-from aerona.engine.cycles.gifts import OBLIGING
+from aerona.engine.cycles.gifts import OBLIGING, owed_back
 
 GIFT_LINES = 4
 DEBT_LINES = 6
 PLAN_LINES = 3
 TROUBLED = (CyclePhase.CRISIS, CyclePhase.DEPRESSION, CyclePhase.STAGFLATION)
 FULL_STANDING = 100
-
-
-def words(value: str) -> str:
-    return value.replace("_", " ")
 
 
 async def named(scope: Scope, node_id: int | None) -> str:
@@ -51,33 +48,45 @@ async def gift_lines(scope: Scope, me: EntityRow) -> list[str]:
         .order_by(GiftRow.due_epoch, GiftRow.id)
         .limit(GIFT_LINES)
     ):
+        occasion = OCCASIONS[gift.occasion].label.lower()
         if gift.receiver_node_id == me.id:
-            due = f" by epoch {gift.due_epoch}" if gift.due_epoch is not None else ""
-            found.append(
-                f"gift {gift.id}: you owe {await named(scope, gift.giver_node_id)} a return for {an(words(gift.occasion.value))} gift worth {spoken(gift)}{due}"
-            )
+            due = f" by epoch {gift.due_epoch}" if gift.due_epoch is not None else " at the giver's own need"
+            giver = await named(scope, gift.giver_node_id)
+            found.append(f"gift {gift.id}: you owe {giver} a return of {owed_back(scope.rules, gift)} for a gift worth {spoken(gift)} ({occasion}){due}")
         else:
-            found.append(f"{await named(scope, gift.receiver_node_id)} owes you a return for your gift worth {spoken(gift)}")
+            found.append(f"gift {gift.id}: {await named(scope, gift.receiver_node_id)} owes you a return for your gift worth {spoken(gift)} ({occasion})")
+    for gift in await scope.session.scalars(
+        select(GiftRow)
+        .where(
+            or_(GiftRow.receiver_node_id == me.id, GiftRow.giver_node_id == me.id),
+            GiftRow.state.in_(list(REMEMBERED)),
+            GiftRow.settled_epoch >= scope.epoch - 1,
+        )
+        .order_by(GiftRow.id.desc())
+        .limit(GIFT_LINES)
+    ):
+        other = gift.giver_node_id if gift.receiver_node_id == me.id else gift.receiver_node_id
+        found.append(f"a gift between you and {await named(scope, other)} worth {spoken(gift)}: {GIFT_STATES[gift.state].label.lower()}")
     return found
 
 
 def union_line(people: str, union: UnionCustomRow) -> str:
     parts = [
-        f"form {words(union.form.value)}",
-        *([f"several partners on the {words(union.plural_side.value)} side"] if union.form.value == "plural" else []),
-        f"made for {words(union.purpose.value)}",
-        f"the joined live {words(union.residence.value)}",
-        f"descent {words(union.descent.value)}",
-        "no exchange" if union.exchange.value == "none" else f"exchange {words(union.exchange.value)} worth {union.exchange_value}",
-        f"{words(union.arrangement.value)}",
-        "never ended" if union.dissolution.value == "none" else f"ended {words(union.dissolution.value)}",
+        f"form {spoken(union.form)}",
+        *([f"several partners on the {spoken(union.plural_side)} side"] if union.form.value == "plural" else []),
+        f"made for {spoken(union.purpose)}",
+        f"the joined live {spoken(union.residence)}",
+        f"descent {spoken(union.descent)}",
+        "no exchange" if union.exchange.value == "none" else f"exchange {spoken(union.exchange)} worth {union.exchange_value}",
+        f"{spoken(union.arrangement)}",
+        "never ended" if union.dissolution.value == "none" else f"ended {spoken(union.dissolution)}",
     ]
     if union.endogamy.value != "none":
-        parts.append(f"partners from the same {words(union.endogamy.value)}")
+        parts.append(f"partners from the same {spoken(union.endogamy)}")
     if union.exogamy.value != "none":
-        parts.append(f"partners from another {words(union.exogamy.value)}")
+        parts.append(f"partners from another {spoken(union.exogamy)}")
     if union.kin_match.value != "none":
-        parts.append(f"matches sought among {words(union.kin_match.value)}s")
+        parts.append(f"matches sought among {spoken(union.kin_match)}s")
     return f"the customs of union of {people}: {', '.join(parts)}"
 
 
@@ -89,7 +98,7 @@ async def people_lines(scope: Scope, me: EntityRow) -> list[str]:
     found: list[str] = []
     kin = await session.get(KinshipSystemRow, people.id)
     if kin is not None:
-        customs = [f"descent {words(kin.descent.value)}", f"couples live {words(kin.residence.value)}", f"lines grouped as {words(kin.descent_group.value)}"]
+        customs = [f"descent {spoken(kin.descent)}", f"couples live {spoken(kin.residence)}", f"lines grouped as {spoken(kin.descent_group)}"]
         if kin.sibling_union_first or kin.sibling_union_second:
             customs.append("the widowed wed the kin of the dead")
         found.append(f"the ways of kin of {people.name}: {', '.join(customs)}")
@@ -98,7 +107,7 @@ async def people_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.append(union_line(people.name, union))
     birth = await session.get(PeopleReproductionRow, people.id)
     if birth is not None and birth.system is not ReproductiveSystem.TWO_SEX:
-        found.append(f"{people.name} bear their young by the {words(birth.system.value)} way")
+        found.append(f"{people.name} bear their young by the {spoken(birth.system)} way")
     caste = await session.get(MortalCasteRow, me.id)
     if caste is not None:
         found.append(f"your caste: {spoken(caste.caste)}")
@@ -106,7 +115,7 @@ async def people_lines(scope: Scope, me: EntityRow) -> list[str]:
     if solidarity is not None:
         found.append(f"the solidarity of {people.name} stands at {spoken(solidarity)}, {solidarity.frontier} frontier lands")
     for legacy in await session.scalars(select(LegacyTraitRow).where(LegacyTraitRow.people_entity_id == people.id).limit(DEBT_LINES)):
-        found.append(f"{people.name} keep the {words(legacy.kind.value)} of {await named(scope, legacy.predecessor_entity_id)}")
+        found.append(f"{people.name} keep the {spoken(legacy.kind)} of {await named(scope, legacy.predecessor_entity_id)}")
     return found
 
 
@@ -117,11 +126,11 @@ async def town_lines(scope: Scope, me: EntityRow) -> list[str]:
     found: list[str] = []
     camp = await session.get(CampRow, me.location_id)
     if camp is not None:
-        found.append(f"your settlement is {an(words(camp.mode.value))} camp with a herd of {camp.herd}, grazing {camp.grazing}, water {camp.water}")
+        found.append(f"your settlement is {an(spoken(camp.mode))} camp with a herd of {camp.herd}, grazing {camp.grazing}, water {camp.water}")
     for bond in await session.scalars(select(IndentureRow).where(IndentureRow.community_entity_id == me.location_id).limit(GIFT_LINES)):
         newcomers = f", newcomers of {await named(scope, bond.origin_entity_id)}" if bond.origin_entity_id is not None else ""
         found.append(
-            f"{several(bond.count, 'labourer here is', 'labourers here are')} bound in {words(bond.regime.value)}{newcomers}, "
+            f"{several(bond.count, 'labourer here is', 'labourers here are')} bound in {spoken(bond.regime)}{newcomers}, "
             f"debt {bond.debt}, exploited at {bond.exploitation}"
         )
     for freed in await session.scalars(
@@ -131,7 +140,7 @@ async def town_lines(scope: Scope, me: EntityRow) -> list[str]:
         .limit(GIFT_LINES)
     ):
         origin = f", folk of {await named(scope, freed.origin_entity_id)}" if freed.origin_entity_id is not None else ""
-        found.append(f"{freed.count} freed by {words(freed.path.value)} here{origin} stand at {freed.standing} of {FULL_STANDING} among the freeborn")
+        found.append(f"{freed.count} freed by {spoken(freed.path)} here{origin} stand at {freed.standing} of {FULL_STANDING} among the freeborn")
     market = await session.get(SlaveMarketRow, me.location_id)
     if market is not None and market.open:
         found.append(f"a market in bound folk sells at {market.price} each, {market.stock} offered")
@@ -139,7 +148,7 @@ async def town_lines(scope: Scope, me: EntityRow) -> list[str]:
     stress = await session.get(PolityStressRow, realm) if realm is not None else None
     if stress is not None:
         found.append(
-            f"your realm is in {words(stress.phase.value)}: stress {stress.psi}, the poor's misery {stress.immiseration}, "
+            f"your realm is in {spoken(stress.phase)}: stress {stress.psi}, the poor's misery {stress.immiseration}, "
             f"{several(stress.aspirants, 'aspirant', 'aspirants')} for {several(stress.positions, 'post', 'posts')}, fiscal strain {stress.fiscal_distress}"
         )
     return found
@@ -157,7 +166,7 @@ async def plan_lines(scope: Scope, me: EntityRow) -> list[str]:
         .limit(PLAN_LINES)
     ):
         steps_counted = several(plan.steps, "step", "steps")
-        found.append(f"plan {plan.id}, {plan.name}, {an(words(plan.kind.value))}: {plan.progress} of {steps_counted}{', exposed' if plan.exposed else ''}")
+        found.append(f"plan {plan.id}, {plan.name}, {an(spoken(plan.kind))}: {plan.progress} of {steps_counted}{', exposed' if plan.exposed else ''}")
     return found
 
 
@@ -192,7 +201,7 @@ async def realm_lines(scope: Scope, son: SonRow) -> list[str]:
         .limit(PLAN_LINES)
     ):
         found.append(
-            f"realm {realm.name} (polity {realm.id}) is in {words(stress.phase.value)}: stress {stress.psi}, "
+            f"realm {realm.name} (polity {realm.id}) is in {spoken(stress.phase)}: stress {stress.psi}, "
             f"{several(stress.aspirants, 'aspirant', 'aspirants')} for {several(stress.positions, 'post', 'posts')}, fiscal strain {stress.fiscal_distress}"
         )
     return found

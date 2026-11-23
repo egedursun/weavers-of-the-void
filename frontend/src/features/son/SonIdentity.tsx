@@ -1,7 +1,8 @@
+import { existenceModeValues } from '@/api/generated/schema'
 import { KeyValueList, Section } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type SonRecord } from '@/features/pantheon/api'
-import { humanize } from '@/features/pantheon/labels'
 
 function Secret({ title, text }: { title: string; text: string }) {
   if (!text) return null
@@ -26,7 +27,9 @@ export function SonIdentity({ son }: { son: SonRecord }) {
                 { label: 'Essence nature', value: existence.nature || '—' },
                 {
                   label: 'State',
-                  value: existence.mode ? humanize(existence.mode) : '—',
+                  value: existence.mode
+                    ? wordOf(existenceModeValues, existence.mode)
+                    : '—',
                 },
                 {
                   label: 'Manifestation',

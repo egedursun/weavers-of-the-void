@@ -1,21 +1,10 @@
+from aerona.catalog.urban import HOUSING_LABELS
 from aerona.db.kind_concepts.spec import ConceptSpec, KindProperty
 from aerona.db.tables.dwelling_kinds import DwellingKindRow
 from aerona.domain.enums.kinds import KindConcept
 from aerona.domain.enums.urban import HousingLevel
 
-LEVEL_LABELS = {
-    HousingLevel.HUT.value: "Hut",
-    HousingLevel.COTTAGE.value: "Cottage",
-    HousingLevel.HOUSE.value: "House",
-    HousingLevel.TOWNHOUSE.value: "Townhouse",
-    HousingLevel.MANOR.value: "Manor",
-    HousingLevel.APARTMENT.value: "Apartment",
-    HousingLevel.TENEMENT.value: "Tenement",
-    HousingLevel.TOWER_BLOCK.value: "Tower block",
-    HousingLevel.ARCOLOGY_UNIT.value: "Arcology unit",
-    HousingLevel.HABITAT_MODULE.value: "Habitat module",
-    HousingLevel.SHIP_BERTH.value: "Ship berth",
-}
+LEVEL_LABELS = {level.value: label for level, label in HOUSING_LABELS.items()}
 
 SPEC = ConceptSpec(
     concept=KindConcept.DWELLING,

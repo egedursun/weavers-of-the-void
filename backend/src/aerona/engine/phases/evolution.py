@@ -21,14 +21,27 @@ from aerona.engine.phases.dominion import count
 @reads(
     "species.intelligence",
     "table.bonds",
+    "table.disease_agents",
     "table.entity_traits",
+    "table.herds",
+    "table.node_births",
+    "table.outbreaks",
     "table.region_environment",
     "table.species_profiles",
     "table.species_ranges",
     "table.species_traits",
     "table.trait_history",
 )
-@writes("table.species_traits", "table.trait_history")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.species_profiles",
+    "table.species_traits",
+    "table.trait_history",
+)
 async def trait_evolution(ctx: TickContext) -> None:
     tally = EvolutionTally()
     await evolve_traits(ctx, tally)
@@ -69,8 +82,17 @@ async def niches(ctx: TickContext) -> None:
     count(ctx, "niche", tally)
 
 
-@reads("table.region_environment", "table.species_profiles", "table.species_ranges", "table.trophic_levels")
-@writes("table.species_ranges", "table.trophic_levels")
+@reads("table.node_births", "table.region_environment", "table.species_profiles", "table.species_ranges", "table.trophic_levels")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.region_environment",
+    "table.species_ranges",
+    "table.trophic_levels",
+)
 async def trophic_flow(ctx: TickContext) -> None:
     tally = TrophicTally()
     await balance_food_chain(ctx, tally)
@@ -78,6 +100,7 @@ async def trophic_flow(ctx: TickContext) -> None:
 
 
 @reads("table.ecosystem_services", "table.entity_traits", "table.species_profiles", "table.species_ranges")
+@writes("table.ecosystem_services", "table.species_profiles")
 async def keystones(ctx: TickContext) -> None:
     tally = KeystoneTally()
     await keep_services(ctx, tally)
@@ -104,6 +127,7 @@ async def lineages(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.disease_routes",
     "table.drink_kinds",
     "table.endemic_diseases",
     "table.entities",
@@ -140,6 +164,7 @@ async def pathogen_evolution(ctx: TickContext) -> None:
     "table.disease_carriers",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.disease_routes",
     "table.drink_kinds",
     "table.endemic_diseases",
     "table.entities",
@@ -174,6 +199,7 @@ async def carriers(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.disease_routes",
     "table.drink_kinds",
     "table.endemic_diseases",
     "table.entities",
@@ -205,6 +231,7 @@ async def spillover(ctx: TickContext) -> None:
 @reads(
     "table.bonds",
     "table.culture_values",
+    "table.disease_routes",
     "table.entities",
     "table.node_births",
     "table.nodes",
@@ -212,6 +239,8 @@ async def spillover(ctx: TickContext) -> None:
     "table.plague_responses",
     "table.quarantines",
     "table.structure_profiles",
+    "table.theory_adherents",
+    "table.theory_profiles",
     "table.tradition_profiles",
 )
 @writes(
@@ -235,6 +264,7 @@ async def plague_responses(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.disease_routes",
     "table.drink_kinds",
     "table.endemic_diseases",
     "table.entities",
@@ -270,7 +300,7 @@ async def cure_research(ctx: TickContext) -> None:
     count(ctx, "cure", tally)
 
 
-@reads("table.region_environment")
+@reads("table.ecosystem_services", "table.region_environment")
 @writes("table.region_environment")
 async def biome_succession(ctx: TickContext) -> None:
     tally = SuccessionTally()
@@ -278,8 +308,8 @@ async def biome_succession(ctx: TickContext) -> None:
     count(ctx, "succession", tally)
 
 
-@reads("table.region_environment", "table.trophic_levels", "table.world_cycles", "table.world_physics")
-@writes("table.world_cycles", "table.world_physics")
+@reads("table.node_births", "table.region_environment", "table.region_pollution", "table.trophic_levels", "table.world_cycles", "table.world_physics")
+@writes("table.chronicle", "table.incident_facts", "table.incident_participants", "table.incidents", "table.world_cycles", "table.world_physics")
 async def world_cycles(ctx: TickContext) -> None:
     tally = CycleTally()
     await turn_cycles(ctx, tally)

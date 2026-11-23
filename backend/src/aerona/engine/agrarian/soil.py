@@ -19,7 +19,7 @@ from aerona.domain.enums.collective import FormativeKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import NotableYearKind, RiverClass
+from aerona.domain.enums.environment import NotableYearKind, RiverClass, SoilKind
 from aerona.domain.enums.industry import MethodKind, ProcessKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.agrarian.rings import put
@@ -165,6 +165,7 @@ def nutrient_change(ctx: TickContext, land: RegionEnvironmentRow, nutrient: Nutr
             - farmed * table.organic_draw
             - land.erosion / PERCENT * table.erosion_pct
             + (grazed * table.manure_pct + land.forest_cover / PERCENT * table.litter_pct) * life
+            + (grazed * ctx.rules.soils.leached_amend_gain if land.soil is SoilKind.LEACHED else 0)
         )
     irrigation = work.irrigated.get(region, 0)
     if irrigation > 0 and region not in work.drained:

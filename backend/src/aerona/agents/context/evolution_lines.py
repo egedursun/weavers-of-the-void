@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.catalog.disease_agents import AGENTS, CURE_LABELS
+from aerona.catalog.spread_paths import SPREAD_PATHS
 from aerona.core.grammar import an, spoken
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.disease_agents import DiseaseAgentRow
@@ -60,16 +61,18 @@ async def agent_lines(scope: Scope, me: EntityRow) -> list[str]:
     if region is None:
         return []
     found: list[str] = []
-    sick = await session.scalars(
-        select(OutbreakRow.disease_entity_id)
+    sick = await session.execute(
+        select(OutbreakRow.disease_entity_id, OutbreakRow.path)
         .where(OutbreakRow.region_entity_id == region.id, OutbreakRow.status == OutbreakStatus.ACTIVE)
         .order_by(OutbreakRow.id)
     )
-    for disease_id in sorted(set(sick)):
+    paths = {disease_id: path for disease_id, path in sick}
+    for disease_id in sorted(paths):
         disease = await session.get(EntityRow, disease_id)
         agent = await session.get(DiseaseAgentRow, disease_id)
         if disease is None or agent is None:
             continue
+        found.append(f"{disease.name} came here: {SPREAD_PATHS[paths[disease_id]].label.lower()}")
         if not agent.identified:
             found.append(f"no healer yet knows what {disease.name} is")
             continue

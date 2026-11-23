@@ -8,16 +8,21 @@ from aerona.catalog.place_terrain import DEEPENS, kind_spec
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
+from aerona.db.tables.disease import DiseaseProfileRow, EndemicDiseaseRow
+from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.db.tables.made import MadeRealmRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
+from aerona.db.tables.region import RegionMemoryRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.environment import ScarKind, WaterSource
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.modifier import IncidentRole
@@ -25,12 +30,14 @@ from aerona.domain.enums.place import DiscoveryMode, SecretKind, SecretOrigin
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats, KnowledgeStats, ResourceStats, SpiritStats
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.control import spawn_beast
 from aerona.engine.economy.materials import material_kind
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.environment.book import add_scar
 from aerona.engine.environment.places import KIND_LOCK, write_kind
 from aerona.engine.lore.rites import devise, rite_of
 from aerona.engine.phases.society_support.knowledge import teach
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon, connect, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -93,10 +100,17 @@ def seeded_draft(rules: Rules, rng: SeededRandom, profile: PlaceProfileRow, myst
     return draft_for(rng.pick(list(options)), strength, rng, region)
 
 
-def find_chance(rules: Rules, *, skill: int, mystery: int, strength: int, called: bool) -> float:
+FIND_BONUS: dict[SecretKind, Callable[[Rules], int]] = {
+    SecretKind.HIDDEN_ROUTE: lambda rules: rules.secrets.hidden_route_find_pct,
+    SecretKind.HIDDEN_GRAVE: lambda rules: rules.secrets.hidden_grave_find_pct,
+}
+
+
+def find_chance(rules: Rules, *, skill: int, mystery: int, strength: int, called: bool, kind: SecretKind | None = None) -> float:
     table = rules.places
     chance = (
-        table.discover_base_pct
+        (FIND_BONUS[kind](rules) if kind in FIND_BONUS else 0)
+        + table.discover_base_pct
         + skill * table.discover_skill_pct / PERCENT
         + mystery * table.discover_mystery_pct / PERCENT
         - strength * table.discover_strength_pct / PERCENT
@@ -137,7 +151,7 @@ async def unearth_resource(ctx: TickContext, secret: PlaceSecretRow, place: Enti
         ctx,
         RecordSpec(
             entity_type=EntityType.RESOURCE,
-            name=f"{spec.label if spec is not None else material.value.title()} of {place.name}",
+            name=f"{spec.label if spec is not None else spoken(material).title()} of {place.name}",
             body=f"A seam of {spoken(material)} that lay hidden in {place.name} until it was found.",
             stats=ResourceStats(abundance=secret.strength, value=secret.strength, might=secret.strength // 2),
             power=ctx.rules.places.resource_power,
@@ -286,6 +300,102 @@ async def sealed_realm(ctx: TickContext, place: EntityRow) -> EntityRow | None:
     return await ctx.session.get(EntityRow, realm.dimension_id)
 
 
+async def subject_for(ctx: TickContext, kind: SecretKind, region_id: int | None) -> int | None:
+    if kind is SecretKind.SLEEPING_BEAST and region_id is not None:
+        return await ctx.session.scalar(
+            select(SpeciesRangeRow.species_entity_id)
+            .where(SpeciesRangeRow.region_entity_id == region_id, SpeciesRangeRow.abundance > 0)
+            .order_by(SpeciesRangeRow.abundance.desc(), SpeciesRangeRow.species_entity_id)
+            .limit(1)
+        )
+    if kind is SecretKind.HIDDEN_GRAVE and region_id is not None:
+        atlas = await RegionAtlas.load(ctx.session)
+        return next(iter(atlas.communities_in(region_id)), None)
+    if kind is SecretKind.DORMANT_DISEASE:
+        return await ctx.session.scalar(select(DiseaseProfileRow.disease_entity_id).order_by(DiseaseProfileRow.disease_entity_id).limit(1))
+    return None
+
+
+async def wake_beast(ctx: TickContext, secret: PlaceSecretRow, place: EntityRow) -> EntityRow | None:
+    if secret.subject_entity_id is None:
+        return None
+    beast = await spawn_beast(ctx, secret.subject_entity_id)
+    profile = await ctx.session.get(BeastProfileRow, beast.id)
+    if profile is not None:
+        profile.lair_place_id = place.id
+        profile.temper = BeastTemper.HUNGRY
+        profile.woke_epoch = ctx.epoch
+    await record(ctx, "beast.woken", roles={IncidentRole.ACTOR: beast.id, IncidentRole.PLACE: place.id}, facts={"strength": secret.strength}, place=place.id)
+    return beast
+
+
+async def open_grave(ctx: TickContext, secret: PlaceSecretRow, place: EntityRow) -> EntityRow | None:
+    people = await ctx.session.get(EntityRow, secret.subject_entity_id) if secret.subject_entity_id is not None else None
+    await record(
+        ctx,
+        "grave.found",
+        roles={IncidentRole.PLACE: place.id, IncidentRole.SUBJECT: people.id if people is not None else None},
+        facts={"strength": secret.strength},
+        place=place.id,
+    )
+    return people
+
+
+async def open_spring(ctx: TickContext, secret: PlaceSecretRow, place: EntityRow) -> EntityRow | None:
+    ground = await ctx.session.get(PlaceEnvironmentRow, place.id)
+    if ground is not None and "water_source" not in ground.locked:
+        ground.water_source = WaterSource.SPRING
+    land = await ctx.session.get(RegionEnvironmentRow, ground.region_entity_id) if ground is not None and ground.region_entity_id is not None else None
+    if land is not None and "harvest_pct" not in land.locked:
+        land.harvest_pct = clamp_int(land.harvest_pct + ctx.rules.secrets.hidden_spring_harvest, 0, PERCENT * 2)
+    return None
+
+
+async def wake_disease(ctx: TickContext, secret: PlaceSecretRow, place: EntityRow) -> EntityRow | None:
+    region_id = (await RegionAtlas.load(ctx.session)).top_region(place.id)
+    if secret.subject_entity_id is None or region_id is None or held(region_id):
+        return None
+    if await ctx.session.get(EndemicDiseaseRow, (region_id, secret.subject_entity_id)) is None:
+        ctx.session.add(
+            EndemicDiseaseRow(
+                region_entity_id=region_id, disease_entity_id=secret.subject_entity_id, load=ctx.rules.secrets.dormant_disease_load, since_epoch=ctx.epoch
+            )
+        )
+    return await ctx.session.get(EntityRow, secret.subject_entity_id)
+
+
+async def overturn_account(ctx: TickContext, secret: PlaceSecretRow, place: EntityRow) -> EntityRow | None:
+    region_id = (await RegionAtlas.load(ctx.session)).top_region(place.id)
+    if region_id is None:
+        return None
+    told = await ctx.session.scalar(
+        select(RegionMemoryRow)
+        .where(RegionMemoryRow.region_entity_id == region_id, RegionMemoryRow.held.is_(False))
+        .order_by(RegionMemoryRow.magnitude.desc(), RegionMemoryRow.id)
+        .limit(1)
+    )
+    if told is not None:
+        told.magnitude = clamp_int(told.magnitude - told.magnitude * ctx.rules.secrets.false_account_cut_pct // PERCENT, 0, PERCENT)
+    return None
+
+
+SECRET_FOUND: dict[SecretKind, Callable[[TickContext, PlaceSecretRow, EntityRow], Awaitable[EntityRow | None]]] = {
+    SecretKind.SLEEPING_BEAST: wake_beast,
+    SecretKind.HIDDEN_GRAVE: open_grave,
+    SecretKind.HIDDEN_SPRING: open_spring,
+    SecretKind.DORMANT_DISEASE: wake_disease,
+    SecretKind.FALSE_ACCOUNT: overturn_account,
+}
+
+
+async def found_by_table(ctx: TickContext, secret: PlaceSecretRow, place: EntityRow) -> EntityRow | None:
+    if secret.kind in UNCOVERED:
+        return await UNCOVERED[secret.kind](ctx, place)
+    if secret.kind in SECRET_FOUND:
+        return await SECRET_FOUND[secret.kind](ctx, secret, place)
+    return None
+
+
 UNCOVERED: dict[SecretKind, Callable[[TickContext, EntityRow], Awaitable[EntityRow | None]]] = {
     SecretKind.HIDDEN_PEOPLE: hidden_people,
     SecretKind.DORMANT_MIND: sleeping_mind,
@@ -318,8 +428,8 @@ async def reveal(
         result = await recover_knowledge(ctx, secret, place, learner)
     elif secret.kind is SecretKind.LOST_RITE:
         result = await recover_rite(ctx, secret, place, finder or learner)
-    elif secret.kind in UNCOVERED:
-        result = await UNCOVERED[secret.kind](ctx, place)
+    elif secret.kind in UNCOVERED or secret.kind in SECRET_FOUND:
+        result = await found_by_table(ctx, secret, place)
     elif secret.kind is SecretKind.UNDERWORLD_ENTRANCE:
         result = await underworld_of(ctx, place.world_id)
         if result is not None:

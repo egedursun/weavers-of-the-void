@@ -36,7 +36,7 @@ async def raise_sea(call: SonCall, args: RaiseSeaInput) -> str:
         fail(SonResult.SEA_REFUSED, why="that is no sea")
     await ensure_in_reach(call, sea)
     if held(sea.id):
-        fail(SonResult.SEA_REFUSED, why="a stronger hand holds that sea still")
+        fail(SonResult.SEA_REFUSED, why="that sea is held")
     wave = await raise_wave(call.tick, sea.id, WaveOrigin.DIVINE, args.strength / PERCENT, strike=strike_disaster, cause=call.son.id, sure=True, atlas=atlas)
     if wave is None:
         fail(SonResult.SEA_REFUSED, why="that sea has no coast to strike")

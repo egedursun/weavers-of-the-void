@@ -12,16 +12,16 @@ from aerona.domain.enums.couplings import (
     SealKind,
     SignCause,
     SociolectKind,
-    TeachingKind,
     TeachingState,
 )
+from aerona.domain.enums.knowledge import KnowledgeKind
 
 SOCIOLECT_FIELDS = ("kind", "prestige", "secret", "salience", "faded_epoch")
 SIGN_FIELDS = ("community_entity_id", "cause")
 CARRION_FIELDS = ("carrion", "scavenged", "preserved", "rest", "kept")
 TEACHING_FIELDS = ("kind", "fidelity", "state", "price")
 FIELD_AGREEMENT_FIELDS = ("kind", "state", "term_epoch", "honour")
-SEAL_FIELDS = ("kind", "strength", "decay")
+SEAL_FIELDS = ("kind", "strength", "decay", "pact_oath_id", "power_id", "living_line_id")
 NOVELTY_FIELDS = ("novelty", "adoption", "revivals")
 
 
@@ -99,7 +99,7 @@ class TeachingRow(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     teacher_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
     learner_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
-    kind: Mapped[TeachingKind] = mapped_column(enum_type(TeachingKind, "kind"))
+    kind: Mapped[KnowledgeKind] = mapped_column(enum_type(KnowledgeKind, "kind"))
     subject_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     fidelity: Mapped[int] = mapped_column(default=80)
     state: Mapped[TeachingState] = mapped_column(enum_type(TeachingState, "state"), default=TeachingState.TAUGHT)
@@ -136,6 +136,9 @@ class DeepSealRow(Base):
     strength: Mapped[int] = mapped_column(default=60)
     decay: Mapped[int] = mapped_column(default=5)
     sealer_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    pact_oath_id: Mapped[int | None] = mapped_column(ForeignKey("oaths.id", ondelete="SET NULL"))
+    power_id: Mapped[int | None] = mapped_column(ForeignKey("powers.id", ondelete="SET NULL"))
+    living_line_id: Mapped[int | None] = mapped_column(ForeignKey("living_lines.id", ondelete="SET NULL"))
     epoch: Mapped[int] = mapped_column(default=0)
     broken_epoch: Mapped[int | None]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

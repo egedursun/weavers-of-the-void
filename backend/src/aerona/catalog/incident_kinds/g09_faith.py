@@ -4,6 +4,7 @@ from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleS
 from aerona.domain.enums.chronicle import ChronicleKind as K
 from aerona.domain.enums.chronicle import FeedCategory as F
 from aerona.domain.enums.cosmography import OmenReading
+from aerona.domain.enums.couplings import CarrionRest
 from aerona.domain.enums.culture import RiteEffectKind
 from aerona.domain.enums.horror import HorrorEffect, HorrorScope, HorrorSense, HorrorSource, HorrorTarget
 from aerona.domain.enums.modifier import IncidentRole as R
@@ -65,6 +66,15 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         roles=(RoleSpec(R.CHILD), RoleSpec(R.SUBJECT, required=False, many=True)),
         facts=(FactSpec("spirit", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.PHASE,
+    ),
+    IncidentKindSpec(
+        "carrion.laid",
+        G.FAITH,
+        "The {dead} dead of {place} came to rest {rest}.",
+        roles=(RoleSpec(R.PLACE),),
+        facts=(FactSpec("rest", FactValue.ENUM, enum=CarrionRest), FactSpec("dead", FactValue.NUMBER, unit=FactUnit.COUNT)),
+        place=PlaceRule.REQUIRED,
         clock=ProcessClock.PHASE,
     ),
     IncidentKindSpec(
@@ -224,7 +234,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "inspiration.masterwork",
         G.FAITH,
-        "In a fever of inspiration, {subject[0]} made {item}.",
+        "Inspired, {subject[0]} made {item}.",
         roles=(RoleSpec(R.SUBJECT, required=False, many=True),),
         facts=(FactSpec("item", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,
@@ -248,7 +258,34 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=ProcessClock.PHASE,
     ),
     IncidentKindSpec(
-        "lore.commemoration_year",
+        "tradition.fair_held",
+        G.FAITH,
+        "{subject} held its fair, and its trade rose by {lift}%.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("lift", FactValue.NUMBER, FactUnit.PERCENT),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.SEASON,
+    ),
+    IncidentKindSpec(
+        "tradition.forage_taken",
+        G.FAITH,
+        "{subject} gathered {food} food from the wild of {place}.",
+        roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PLACE)),
+        facts=(FactSpec("food", FactValue.NUMBER, FactUnit.COUNT),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.SEASON,
+    ),
+    IncidentKindSpec(
+        "tradition.slot_closed",
+        G.FAITH,
+        "The time of {subject} did not come for {actor}: {reason}.",
+        roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR)),
+        facts=(FactSpec("reason", FactValue.NAME),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.SEASON,
+    ),
+    IncidentKindSpec(
+        "tradition.remembrance_founded",
         G.FAITH,
         "{subject} began, so that the year is not forgotten.",
         roles=(RoleSpec(R.SUBJECT, required=False),),
@@ -446,7 +483,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "magic.lasting_storm",
         G.FAITH,
-        "A rite gone wrong left a storm over {place} that will not die.",
+        "A rite gone wrong left a storm over {place} that does not pass.",
         roles=(RoleSpec(R.PLACE),),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
@@ -832,6 +869,23 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=ProcessClock.PHASE,
     ),
     IncidentKindSpec(
+        "seal.weakened",
+        G.FAITH,
+        "The seal beneath {subject} weakened to strength {strength}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("strength", FactValue.NUMBER, unit=FactUnit.STRENGTH),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.PHASE,
+    ),
+    IncidentKindSpec(
+        "seal.pact_broken",
+        G.FAITH,
+        "The pact that sealed the deep beneath {subject} was broken, and the seal fell with it.",
+        roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR, required=False)),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.INSTANT,
+    ),
+    IncidentKindSpec(
         "seal.made",
         G.FAITH,
         "{subject[0]} sealed the deep beneath {subject[1]}.",
@@ -953,7 +1007,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.defier_cursed",
         G.FAITH,
-        "The mortal {co_actor} stood up to the god {actor}; was defeated and cursed: {reason}",
+        "The mortal {co_actor} stood up to the god {actor} and was defeated and cursed: {reason}",
         roles=(RoleSpec(R.CO_ACTOR), RoleSpec(R.ACTOR)),
         facts=(FactSpec("reason", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,

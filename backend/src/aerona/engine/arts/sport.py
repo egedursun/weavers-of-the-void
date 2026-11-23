@@ -4,29 +4,40 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.life.arts import FIELD_GAMES
+from aerona.catalog.market_kinds import ANIMAL_CLUBS, CLUBS, MIND_CLUBS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.arts import BetRow, ClubRow, LeagueRow, MatchRow
 from aerona.db.tables.crafts import GameRow
+from aerona.db.tables.ecology import HerdRow, SpeciesUseRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.kinds import KindHoldingRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.arts import ClubKind, FandomLine
 from aerona.domain.enums.collective import CollectiveTrigger
+from aerona.domain.enums.cycles import GiftOccasion
+from aerona.domain.enums.ecology import AnimalRole
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.kinds import KindConcept
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.collective.crowds import CrowdTally, spark
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.gifts import occasion_gift
+from aerona.engine.ecology.domestication import kept_for
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
+from aerona.engine.mind.ethics import conscience
 from aerona.engine.phases.factions import found_faction
+from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
@@ -51,6 +62,10 @@ class SportTally:
     bought: int = 0
     champions: int = 0
     friendlies: int = 0
+    fixed: int = 0
+    exposed: int = 0
+    bred: int = 0
+    patrons: int = 0
 
 
 async def home_of(ctx: TickContext, club_id: int) -> EntityRow | None:
@@ -61,9 +76,10 @@ async def home_of(ctx: TickContext, club_id: int) -> EntityRow | None:
 async def found_club(ctx: TickContext, town: EntityRow, kind: ClubKind | None) -> ClubRow:
     faction = await found_faction(ctx, town, FactionKind.CLUB)
     arenas = await working(ctx.session, ARENAS, host_id=town.id)
+    open_kinds = [item for item in ClubKind if item not in ANIMAL_CLUBS or await kept_for(ctx, town.id, AnimalRole.SPORT) > 0]
     row = ClubRow(
         faction_entity_id=faction.id,
-        kind=kind or ctx.rng(f"club.kind.{town.id}.{faction.id}").pick(list(ClubKind)),
+        kind=kind or ctx.rng(f"club.kind.{town.id}.{faction.id}").pick(open_kinds),
         arena_entity_id=arenas[0].structure.id if arenas else None,
         founded_epoch=ctx.epoch,
         locked=[],
@@ -132,6 +148,8 @@ async def found_clubs(ctx: TickContext, tally: SportTally) -> None:
             continue
         arena = bool(await working(ctx.session, ARENAS, host_id=town.id))
         kind = None if arena else await field_game(ctx, town)
+        if not arena and kind is None and await kept_for(ctx, town.id, AnimalRole.SPORT) > 0:
+            kind = next(iter(sorted(ANIMAL_CLUBS)))
         if (not arena and kind is None) or not ctx.rng(f"club.{town.id}").chance(table.club_chance):
             continue
         club = await found_club(ctx, town, kind)
@@ -235,6 +253,7 @@ async def play(ctx: TickContext, league_id: int | None, home: ClubRow, away: Clu
     rng = ctx.rng(f"match.{home.faction_entity_id}.{away.faction_entity_id}.{ctx.epoch}")
     strength = home.rating + await prowess(ctx, home)
     against = away.rating + await prowess(ctx, away)
+    fixer, fixed = await fixing_of(ctx, home, away, fixed)
     home_wins = rng.integer(0, strength + against) < strength + rng.integer(0, MIDDLING // 5) if fixed is None else fixed == home.faction_entity_id
     winner, loser = (home, away) if home_wins else (away, home)
     match = MatchRow(
@@ -242,6 +261,7 @@ async def play(ctx: TickContext, league_id: int | None, home: ClubRow, away: Clu
         home_entity_id=home.faction_entity_id,
         away_entity_id=away.faction_entity_id,
         winner_entity_id=winner.faction_entity_id,
+        fixed_by_entity_id=fixer,
         epoch=ctx.epoch,
         locked=[],
     )
@@ -252,7 +272,18 @@ async def play(ctx: TickContext, league_id: int | None, home: ClubRow, away: Clu
         if town is not None and not held(town.id):
             await wager(ctx, match, club, town)
     await ctx.session.flush()
-    await settle_bets(ctx, match)
+    if fixer is not None:
+        tally.fixed += 1
+        await expose_fixing(ctx, match, (home, away), tally)
+    if not match.fixing_exposed:
+        await settle_bets(ctx, match)
+    await record(
+        ctx,
+        "club.match",
+        roles={IncidentRole.ACTOR: winner.faction_entity_id, IncidentRole.OPPONENT: loser.faction_entity_id},
+        facts={"kind": home.kind, "stake": match.stake},
+        steps=(StepDraft(StepAction.WIN, actor=winner.faction_entity_id, target=loser.faction_entity_id),),
+    )
     for club, won in ((winner, True), (loser, False)):
         if "wins" not in club.locked and won:
             club.wins += 1
@@ -266,6 +297,96 @@ async def play(ctx: TickContext, league_id: int | None, home: ClubRow, away: Clu
     tally.wagered += match.stake
     await riot_after(ctx, match, loser, tally)
     return match
+
+
+async def fixing_of(ctx: TickContext, home: ClubRow, away: ClubRow, fixed: int | None) -> tuple[int | None, int | None]:
+    sides = {home.faction_entity_id, away.faction_entity_id}
+    for club in (home, away):
+        if club.fixed_by_entity_id is not None and club.fixed_winner_entity_id in sides:
+            fixer, winner = club.fixed_by_entity_id, club.fixed_winner_entity_id
+            if "fixed_by_entity_id" not in club.locked:
+                club.fixed_by_entity_id, club.fixed_winner_entity_id = None, None
+            return fixer, winner
+    return None, fixed
+
+
+async def expose_fixing(ctx: TickContext, match: MatchRow, sides: tuple[ClubRow, ClubRow], tally: SportTally) -> None:
+    table = ctx.rules.clubs
+    if match.fixed_by_entity_id is None or not ctx.rng(f"fixing.{match.id}").chance(table.fixing_detect_pct):
+        return
+    match.fixing_exposed = True
+    tally.exposed += 1
+    for club in sides:
+        if "rating" not in club.locked:
+            club.rating = clamp_int(club.rating - table.fixing_standing_loss, 0, PERCENT)
+        if "fandom" not in club.locked:
+            club.fandom = clamp_int(club.fandom - table.fixing_standing_loss, 0, PERCENT)
+    loser = sides[0] if sides[0].faction_entity_id != match.winner_entity_id else sides[1]
+    town = await home_of(ctx, loser.faction_entity_id)
+    fixer = await living_entity(ctx.session, match.fixed_by_entity_id)
+    if town is not None and not held(town.id):
+        works = await ctx.session.get(SettlementProfileRow, town.id)
+        if works is not None and "unrest" not in works.locked:
+            works.unrest = clamp_int(works.unrest + table.fixing_riot_push, 0, PERCENT)
+        if fixer is not None:
+            await report_crime(ctx, town.id, fixer.id, CrimeKind.FIXING_CONTESTS)
+            await conscience(ctx, fixer.id, ActKind.FIXING_CONTESTS, loser.faction_entity_id)
+        if await spark(ctx, town, CollectiveTrigger.LOST_MATCH, CrowdTally(), forced=True) is not None:
+            match.riot = True
+            tally.riots += 1
+    await record(
+        ctx,
+        "club.fixing_exposed",
+        roles={IncidentRole.ACTOR: match.fixed_by_entity_id, IncidentRole.VICTIM: loser.faction_entity_id},
+        facts={"stake": match.stake, "unrest": table.fixing_riot_push},
+        steps=(StepDraft(StepAction.REVEAL, target=loser.faction_entity_id),),
+    )
+
+
+async def fix_for_patrons(ctx: TickContext) -> None:
+    for club in list(
+        await ctx.session.scalars(
+            select(ClubRow).where(ClubRow.bought_by_entity_id.is_not(None), ClubRow.fixed_by_entity_id.is_(None)).order_by(ClubRow.faction_entity_id)
+        )
+    ):
+        if held(club.faction_entity_id) or "fixed_by_entity_id" in club.locked:
+            continue
+        if ctx.rng(f"fixing.patron.{club.faction_entity_id}.{ctx.epoch}").chance(ctx.rules.clubs.fixing_detect_pct):
+            club.fixed_by_entity_id, club.fixed_winner_entity_id = club.bought_by_entity_id, club.faction_entity_id
+
+
+async def draw_fans(ctx: TickContext) -> None:
+    for club in list(await ctx.session.scalars(select(ClubRow).order_by(ClubRow.faction_entity_id))):
+        if held(club.faction_entity_id) or "fandom" in club.locked:
+            continue
+        draw = CLUBS[club.kind].fan_draw(ctx.rules)
+        club.fandom = clamp_int(club.fandom + round_half_up(draw * (PERCENT - club.fandom) / PERCENT), 0, PERCENT)
+
+
+async def breed_for_sport(ctx: TickContext, tally: SportTally) -> None:
+    table = ctx.rules.clubs
+    sport = select(SpeciesUseRow.species_entity_id).where(SpeciesUseRow.use == AnimalRole.SPORT)
+    for club in list(await ctx.session.scalars(select(ClubRow).where(ClubRow.kind.in_(list(ANIMAL_CLUBS))).order_by(ClubRow.faction_entity_id))):
+        town = await home_of(ctx, club.faction_entity_id)
+        if town is None or held(town.id) or not ctx.rng(f"club.breed.{club.faction_entity_id}.{ctx.epoch}").chance(table.animal_breed_pct):
+            continue
+        herd = await ctx.session.scalar(
+            select(HerdRow).where(HerdRow.community_entity_id == town.id, HerdRow.species_entity_id.in_(sport)).order_by(HerdRow.species_entity_id).limit(1)
+        )
+        if herd is not None and "head" not in herd.locked:
+            herd.head += 1
+            tally.bred += 1
+
+
+async def court_mind_patrons(ctx: TickContext, tally: SportTally) -> None:
+    table = ctx.rules.clubs
+    for club in list(await ctx.session.scalars(select(ClubRow).where(ClubRow.kind.in_(list(MIND_CLUBS))).order_by(ClubRow.faction_entity_id))):
+        town = await home_of(ctx, club.faction_entity_id)
+        realm = await realm_of_town(ctx.session, town.id) if town is not None else None
+        if realm is None or held(club.faction_entity_id) or not ctx.rng(f"club.patron.{club.faction_entity_id}.{ctx.epoch}").chance(table.mind_patron_pct):
+            continue
+        if await occasion_gift(ctx, realm, club.faction_entity_id, GiftOccasion.PATRONAGE, ctx.rules.gifts.occasion_value) is not None:
+            tally.patrons += 1
 
 
 async def riot_after(ctx: TickContext, match: MatchRow, loser: ClubRow, tally: SportTally) -> None:
@@ -362,6 +483,10 @@ async def buy_favour(ctx: TickContext, tally: SportTally) -> None:
 
 async def keep_sport(ctx: TickContext, tally: SportTally) -> None:
     await found_clubs(ctx, tally)
+    await draw_fans(ctx)
+    await breed_for_sport(ctx, tally)
+    await court_mind_patrons(ctx, tally)
+    await fix_for_patrons(ctx)
     await form_leagues(ctx, tally)
     await play_seasons(ctx, tally)
     await play_friendlies(ctx, tally)

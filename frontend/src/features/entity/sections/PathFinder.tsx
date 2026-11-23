@@ -1,12 +1,14 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, Route, Waypoints } from 'lucide-react'
+import { nodeKindValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityLink, FormRow, Paged, Section } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
 import { drawerKindOf } from '@/features/chronicle/linkTargets'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { humanize } from '../actions/schema'
 import { useCatalogue, useNames, usePath } from '../api/queries'
 import { type NameEntry } from '../api/types'
@@ -62,7 +64,7 @@ export function PathFinder({ fromId, fromName }: PathFinderProps) {
           hint:
             entry.kind === 'entity'
               ? humanize(entry.type)
-              : humanize(entry.kind),
+              : wordOf(nodeKindValues, entry.kind),
         })),
     [names.data, fromId]
   )

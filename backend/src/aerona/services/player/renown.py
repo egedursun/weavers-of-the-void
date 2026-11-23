@@ -10,8 +10,9 @@ from aerona.db.tables.renown import DeedClaimRow, DeedRow, LoreTradeRow, Reputat
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.mind import ActKind, SkillKind
-from aerona.domain.enums.renown import ClaimKind, ClaimStatus, Currency, LoreKind, ReputationAxis
+from aerona.domain.enums.renown import ClaimKind, ClaimStatus, Currency, ReputationAxis
 from aerona.engine.renown.book import reputation_row
 from aerona.engine.renown.claims import punish
 from aerona.engine.renown.currencies import purse_of
@@ -87,7 +88,7 @@ class DeedClaimTarget(Command):
 class TradeLore(Command):
     seller_id: int
     buyer_id: int
-    kind: LoreKind
+    kind: KnowledgeKind
     key: str = Field(min_length=1, max_length=120)
     subject_id: int | None = None
 
@@ -273,9 +274,9 @@ async def trade_lore(scope: PlayerScope, command: TradeLore) -> Effect:
     seller, buyer = await living(scope, command.seller_id), await living(scope, command.buyer_id)
     if seller.id == buyer.id:
         raise ValidationFailedError(f"{seller.name} cannot trade lore with themselves.")
-    if command.kind is LoreKind.TECHNIQUE and command.key not in {technique.value for technique in Technique}:
+    if command.kind is KnowledgeKind.TECHNIQUE and command.key not in {technique.value for technique in Technique}:
         raise ValidationFailedError(f"'{command.key}' is not a technique that can be traded.")
-    if command.kind is not LoreKind.TECHNIQUE and command.subject_id is None:
+    if command.kind is not KnowledgeKind.TECHNIQUE and command.subject_id is None:
         raise ValidationFailedError("Choose the site, region or prophecy the lore is about.")
     if command.subject_id is not None:
         await node(scope, command.subject_id)

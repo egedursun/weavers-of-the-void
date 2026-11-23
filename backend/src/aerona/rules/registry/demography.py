@@ -9,9 +9,9 @@ S = RuleGroup.ECONOMY
 
 @dataclass(frozen=True)
 class CohortsRules:
-    child_pct: int = rule(32, 0, 100, G, "Share of a new community's people who are children (%)")
+    child_pct: int = rule(32, 0, 100, G, "Share of a new community's people who are infants, children or youths (%)")
     elder_pct: int = rule(10, 0, 100, G, "Share of a new community's people who are elders (%)")
-    female_pct: int = rule(50, 0, 100, G, "Share of women among the people (%)")
+    bearer_pct: int = rule(50, 0, 100, G, "Share of those who bear young among a two-sexed people (%)")
     dormant_after_epochs: int = rule(6, 1, 1000, G, "Epochs a named mortal of low importance may stay uninvolved before falling dormant")
     dormant_importance: int = rule(40, 0, 1000, G, "Importance below which an uninvolved named mortal may fall dormant")
     named_mortal_soft_limit_per_world: int = rule(
@@ -32,9 +32,15 @@ class CohortsRules:
 
 @dataclass(frozen=True)
 class DemographyRules:
-    birth_pct_per_year: int = rule(9, 0, 100, G, "Children born a year per hundred adult women of full fertility, fed and healthy (%)")
+    birth_pct_per_year: int = rule(9, 0, 100, G, "Young born a year per hundred grown bearers of full fertility, fed and healthy (%)")
     child_death_pct_per_year: int = rule(3, 0, 100, G, "Children who die in a year at a neutral health (%)")
     adult_death_pct_per_year: int = rule(1, 0, 100, G, "Adults who die in a year at a neutral health (%)")
+    infant_mortality_pct: int = rule(15, 0, 100, G, "Infants who die in a year at a neutral health, before care, hunger and sickness (%)")
+    youth_levy_pct: int = rule(60, 0, 100, G, "How readily youths are drawn into levies and lost in war compared with adults (%)")
+    orphan_care_need: int = rule(20, 0, 100, G, "Unrest a community bears at a full share of orphans left without the care of kin, faith or the realm")
+    displaced_pressure: int = rule(10, 0, 100, G, "Unrest a community bears at a full share of the displaced pressing on it")
+    orphan_emerge_pct: int = rule(5, 0, 100, G, "Added chance an orphan or one of the displaced steps out of the crowd as a named mortal (%)")
+    displaced_settle_pct: int = rule(50, 0, 100, G, "Share of the displaced who settle among their hosts each epoch (%)")
     elder_death_pct_per_year: int = rule(8, 0, 100, G, "Elders who die in a year at a neutral health (%)")
     hunger_birth_pct: int = rule(60, 0, 100, G, "Births lost at the worst hunger (%)")
     hunger_death_pct: int = rule(150, 0, 1000, G, "Extra deaths at the worst hunger (%)")
@@ -49,6 +55,13 @@ class DemographyRules:
 @dataclass(frozen=True)
 class LabourRules(Spanned):
     satisfaction_pct: int = rule(20, 0, 100, S, "Output gained by a content class and lost by a bitter one, at the extremes (%)")
+    transport_base_share: int = rule(30, 0, 100, S, "Share of traders who carry goods and people rather than buy and sell (%)")
+    administration_base_share: int = rule(40, 0, 100, S, "Share of officials and professionals who keep the books and offices of the realm (%)")
+    gathering_base_share: int = rule(10, 0, 100, S, "Share of those who work the land who gather from the wild instead (%)")
+    industry_base_share: int = rule(25, 0, 100, S, "Share of workers' craft done in works and factories (%)")
+    arts_base_share: int = rule(15, 0, 100, S, "Share of artisans' craft given to performance and the making of art (%)")
+    clerk_admin_pct: int = rule(40, 0, 200, S, "Administration a town gains at a full share of its people keeping its offices (%)")
+    artist_prestige: int = rule(30, 0, 100, S, "Prestige a town gains at a full share of its people working at the arts")
     soldier_pct: int = rule(60, 0, 100, S, "Share of warriors who soldier rather than farm in peace (%)")
     price_pull_pct: int = rule(30, 0, 100, S, "How strongly dear goods pull workers into the trades that make them (%)")
     idle_outcast_pct: int = rule(70, 0, 100, S, "Share of outcasts who find no work (%)")
@@ -123,6 +136,8 @@ class MobilityRules:
     bitter_satisfaction: int = rule(30, 0, 100, S, "Satisfaction below which a class counts as bitter")
     ennoble_chance: int = rule(40, 0, 100, S, "A war hero is raised among the nobles (%)")
     ruin_chance: int = rule(30, 0, 100, S, "A merchant of a bankrupt guild falls among the outcasts (%)")
+    enrich_threshold: int = rule(70, 0, 100, S, "Wealth at which a commoner rises among the merchants where the culture lets wealth buy rank")
+    enrich_hierarchy_max: int = rule(60, -100, 100, S, "Hierarchy above which a culture refuses to let wealth alone raise anyone's rank")
     manumission_chance: int = rule(10, 0, 100, S, "A share of a community's serfs and slaves is freed in an epoch (%)")
     manumission_pct: int = rule(10, 0, 100, S, "Share of the bound freed when they are freed (%)")
     enslave_captives_pct: int = rule(60, 0, 100, S, "Share of a conquered community's captives bound where slavery is lawful (%)")

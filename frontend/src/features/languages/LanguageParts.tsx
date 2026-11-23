@@ -1,11 +1,12 @@
 import { ChevronRight, Signature } from 'lucide-react'
+import { writingSystemValues } from '@/api/generated/schema'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PagedList, Portrait } from '@/components/domain'
 import { Sigil } from '@/components/domain/Sigil'
 import { Label, Muted, Text } from '@/components/typography'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { mediaUrl } from '@/features/pantheon/media'
 import { type LanguageNode } from './languageFamilies'
 import { SCRIPT_ICON, UNWRITTEN_ICON } from './languageIcons'
@@ -57,7 +58,7 @@ export function ScriptBadge({
   return (
     <Badge size='sm' variant={script ? 'info' : 'outline'}>
       <Icon />
-      {script ? humanize(script) : 'Unwritten'}
+      {script ? wordOf(writingSystemValues, script) : 'Unwritten'}
     </Badge>
   )
 }

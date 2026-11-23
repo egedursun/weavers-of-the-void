@@ -21,7 +21,7 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.belonging import FugitiveKind, IdentityLayer, PlayKind, SalienceDriver, SanctuaryKind, SanctuaryState, SatireSource
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.collective import AccountStance, CollectiveActKind, NormBehaviour, NormSituation
+from aerona.domain.enums.collective import AccountStance, CollectiveActKind, CrowdFeeling, NormBehaviour, NormSituation
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.folkways import DecisionBias
@@ -157,10 +157,10 @@ async def test_a_fault_line_on_people_breeds_separatism_and_a_salient_realm_hold
     assert parts[LoyaltyPart.IDENTITY] == round(rules.identities.cohesion * 90 / 100)
     assert await identity_levy(session, rules, far.id) > 1
     assert await apart_from_ruler(session, rules, far.id) == 80 and await apart_from_ruler(session, rules, town.id) == 0
-    mood = CrowdMoodRow(settlement_entity_id=far.id, anger=0, anxiety=0, fervour=0, deterrence=0, agitation=0, locked=[])
+    mood = CrowdMoodRow(settlement_entity_id=far.id, deterrence=0, agitation=0, locked=[])
     ctx = await at(session, 3, identities={"revolt_cut": 20})
-    calm = crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2)
-    divided = crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2, divided=80)
+    calm = crowd_for(ctx, mood, dict.fromkeys(CrowdFeeling, 0), CollectiveActKind.RIOT, 0.2)
+    divided = crowd_for(ctx, mood, dict.fromkeys(CrowdFeeling, 0), CollectiveActKind.RIOT, 0.2, divided=80)
     assert divided.cut == calm.cut + 16
 
 

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.collective import HERALDIC_NAMES
 from aerona.catalog.life.polity import INHERIT_CLAIMS_CLAIM_BASISS
+from aerona.catalog.reproduction import kind_of_sex, sex_rule_fit
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
@@ -25,7 +26,7 @@ from aerona.domain.enums.intrigue import HookDemand
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import PunishmentKind
-from aerona.domain.enums.polity import ClaimBasis, GenderRule, HouseEnd, HouseTrait, LawKind, OathBreach, OathKind, OfficeKind, OfficePower
+from aerona.domain.enums.polity import ClaimBasis, HouseEnd, HouseTrait, LawKind, OathBreach, OathKind, OfficeKind, OfficePower, SexRule
 from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.son import SonStatus
@@ -233,17 +234,11 @@ async def gather_kin(ctx: TickContext, book: HouseBook) -> int:
     return joined
 
 
-def gender_share(rule: str | None, mortal: EntityRow) -> float:
+def sex_share(rule: str | None, mortal: EntityRow) -> float:
     sex = sex_of(mortal)
-    if rule == GenderRule.MALE_ONLY.value:
-        return 1.0 if sex == "male" else 0.0
-    if rule == GenderRule.FEMALE_ONLY.value:
-        return 1.0 if sex == "female" else 0.0
-    if rule == GenderRule.MALE_PREFERENCE.value:
-        return 1.0 if sex == "male" else 0.5
-    if rule == GenderRule.FEMALE_PREFERENCE.value:
-        return 1.0 if sex == "female" else 0.5
-    return 1.0
+    known = {item.value for item in SexRule}
+    fit = sex_rule_fit(SexRule(rule), kind_of_sex(sex)) if rule is not None and rule in known else 1.0
+    return 0.0 if fit is None else fit
 
 
 async def inherit_claims(ctx: TickContext, child: EntityRow, parent_id: int) -> None:
@@ -253,8 +248,8 @@ async def inherit_claims(ctx: TickContext, child: EntityRow, parent_id: int) -> 
     house = await ctx.session.scalar(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == child.id).limit(1))
     throne = await ctx.session.scalar(select(OfficeRow).where(OfficeRow.holder_entity_id == parent_id, OfficeRow.kind == OfficeKind.RULER).limit(1))
     if throne is not None and not held(child.id, throne.polity_entity_id):
-        rule = await law_param(ctx.session, throne.polity_entity_id, LawKind.SUCCESSION_RULE, "gender")
-        share = gender_share(str(rule) if rule is not None else None, child)
+        rule = await law_param(ctx.session, throne.polity_entity_id, LawKind.SUCCESSION_RULE, "sex_rule")
+        share = sex_share(str(rule) if rule is not None else None, child)
         if share > 0:
             ctx.session.add(
                 ClaimRow(
@@ -270,8 +265,8 @@ async def inherit_claims(ctx: TickContext, child: EntityRow, parent_id: int) -> 
                 )
             )
     for claim in await ctx.session.scalars(select(ClaimRow).where(ClaimRow.claimant_entity_id == parent_id, ClaimRow.ended_epoch.is_(None))):
-        rule = await law_param(ctx.session, claim.polity_entity_id, LawKind.SUCCESSION_RULE, "gender")
-        strength = round_half_up(claim.strength * table.claim_inherit_pct / PERCENT * gender_share(str(rule) if rule is not None else None, child))
+        rule = await law_param(ctx.session, claim.polity_entity_id, LawKind.SUCCESSION_RULE, "sex_rule")
+        strength = round_half_up(claim.strength * table.claim_inherit_pct / PERCENT * sex_share(str(rule) if rule is not None else None, child))
         if strength <= 0 or held(child.id, claim.polity_entity_id, claim.house_entity_id):
             continue
         ctx.session.add(

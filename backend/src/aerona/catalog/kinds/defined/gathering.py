@@ -9,6 +9,7 @@ COLLECTION_KIND = total(
             "War",
             checked_by=("catalog.collective.COLLECTION_FORMATIVE", "engine.polity.standing.recovery"),
             used_by=(
+                "catalog.gatherings.GATHERING_COLLECTIONS",
                 "catalog.gatherings.KEY_COLLECTIONS",
                 "catalog.gatherings.NEST_PARENTS",
                 "engine.collective.accounts.GREAT_KINDS",
@@ -89,7 +90,7 @@ COLLECTION_KIND = total(
             "Insurrection",
             checked_by=("catalog.collective.COLLECTION_FORMATIVE",),
             used_by=(
-                "catalog.collective.ACT_COLLECTION",
+                "catalog.collective.ACTS",
                 "catalog.gatherings.KEY_COLLECTIONS",
                 "catalog.gatherings.NEST_PARENTS",
                 "engine.collective.accounts.GREAT_KINDS",
@@ -135,9 +136,7 @@ COLLECTION_KIND = total(
             used_by=("catalog.gatherings.GATHERING_COLLECTIONS", "engine.collective.accounts.STAGED_KINDS"),
         ),
         CollectionKind.PROCESSION: Defined(
-            "Procession",
-            checked_by=("catalog.norms.GATHERING_SITUATIONS",),
-            used_by=("catalog.collective.ACT_COLLECTION", "catalog.gatherings.GATHERING_COLLECTIONS"),
+            "Procession", checked_by=("catalog.norms.GATHERING_SITUATIONS",), used_by=("catalog.collective.ACTS", "catalog.gatherings.GATHERING_COLLECTIONS")
         ),
         CollectionKind.CEREMONY: Defined(
             "Ceremony",
@@ -169,7 +168,12 @@ COLLECTION_KIND = total(
         CollectionKind.FEAST: Defined(
             "Feast",
             checked_by=("catalog.norms.GATHERING_SITUATIONS",),
-            used_by=("catalog.gatherings.GATHERING_COLLECTIONS", "catalog.gatherings.NEST_PARENTS", "engine.collective.accounts.STAGED_KINDS"),
+            used_by=(
+                "catalog.collective.ACTS",
+                "catalog.gatherings.GATHERING_COLLECTIONS",
+                "catalog.gatherings.NEST_PARENTS",
+                "engine.collective.accounts.STAGED_KINDS",
+            ),
         ),
         CollectionKind.TOURNAMENT: Defined(
             "Tournament",
@@ -212,7 +216,7 @@ COLLECTION_KIND = total(
         CollectionKind.MIGRATION: Defined(
             "Migration",
             checked_by=("catalog.collective.COLLECTION_FORMATIVE", "catalog.gatherings.NEST_PARENTS"),
-            used_by=("catalog.gatherings.KEY_COLLECTIONS", "engine.collective.accounts.RECORDED"),
+            used_by=("catalog.collective.ACTS", "catalog.gatherings.KEY_COLLECTIONS", "engine.collective.accounts.RECORDED"),
         ),
         CollectionKind.FOUNDING: Defined(
             "Founding",
@@ -254,7 +258,7 @@ COLLECTION_KIND = total(
             "Wave of conversion",
             checked_by=(),
             used_by=(
-                "catalog.collective.ACT_COLLECTION",
+                "catalog.collective.ACTS",
                 "catalog.gatherings.KEY_COLLECTIONS",
                 "catalog.gatherings.NEST_PARENTS",
                 "engine.collective.accounts.FAITH_KINDS",
@@ -293,17 +297,17 @@ COLLECTION_KIND = total(
             "Riot",
             checked_by=(),
             used_by=(
-                "catalog.collective.ACT_COLLECTION",
+                "catalog.collective.ACTS",
                 "catalog.incident_kinds.g04_body.KINDS",
                 "engine.collective.accounts.GRIEF_KINDS",
                 "engine.collective.accounts.RECORDED",
             ),
         ),
-        CollectionKind.PANIC: Defined("Panic", checked_by=(), used_by=("catalog.collective.ACT_COLLECTION", "engine.collective.accounts.RECORDED")),
+        CollectionKind.PANIC: Defined("Panic", checked_by=(), used_by=("catalog.collective.ACTS", "engine.collective.accounts.RECORDED")),
         CollectionKind.MOVEMENT: Defined(
             "Movement",
             checked_by=("catalog.collective.COLLECTION_FORMATIVE",),
-            used_by=("catalog.collective.ACT_COLLECTION", "engine.collective.accounts.FAITH_KINDS", "engine.collective.accounts.RECORDED"),
+            used_by=("catalog.collective.ACTS", "engine.collective.accounts.FAITH_KINDS", "engine.collective.accounts.RECORDED"),
         ),
         CollectionKind.STORYLET: Defined("Storylet", checked_by=(), used_by=("catalog.incident_kinds.g11_social.KINDS", "engine.collective.storylets.begin")),
     },

@@ -4,7 +4,7 @@ from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.equipment import EquipmentFamily
 from aerona.domain.enums.kinds import IngredientRole
@@ -240,7 +240,7 @@ class CookingEdit(Edited):
 
 class AttractionDraft(Command):
     mortal_id: int
-    drawn_to: list[Sex] | None = None
+    drawn_to: list[SexKind] | None = None
     attraction: int | None = Field(default=None, ge=0, le=SPAN)
     hold: bool = True
 

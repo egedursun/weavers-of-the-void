@@ -4,13 +4,16 @@ from sqlalchemy import select
 
 from aerona.catalog.operations import STATION_SHARES
 from aerona.catalog.vehicles import FRAMES
+from aerona.catalog.wind_belts import BELTS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.climes import RegionWindRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.operations import ShipCrewRow, ShipStateRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import MaterialFamily
 from aerona.domain.enums.equipment import EquipmentFamily
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import CrewStation, PointOfSail, ShotKind
 from aerona.domain.enums.vehicles import VehicleFrame, VehicleSection
 from aerona.engine.climes.shifts import prevailing
@@ -19,6 +22,7 @@ from aerona.engine.military.battle import stack_material
 from aerona.engine.operations.fields import keep
 from aerona.engine.operations.limits import tonnage_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 from aerona.engine.vehicles.sections import design_sections
 
 OCTANTS = 8
@@ -114,6 +118,14 @@ def speed_of(ctx: TickContext, state: ShipStateRow) -> int:
     }[state.point_of_sail]
 
 
+async def becalmed(ctx: TickContext, vessel: EntityRow, region_id: int | None, unlucky: bool) -> bool:
+    wind = await ctx.session.get(RegionWindRow, region_id) if region_id is not None else None
+    if wind is None or not unlucky or not BELTS[wind.band].calm:
+        return False
+    await record(ctx, "voyage.becalmed", roles={IncidentRole.SUBJECT: vessel.id, IncidentRole.PLACE: region_id}, facts={"band": wind.band}, place=region_id)
+    return True
+
+
 async def set_sail(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, region_id: int | None, tally: SailTally) -> ShipStateRow:
     state = await ship_state(ctx, vessel.id)
     if held(vessel.id):
@@ -121,6 +133,12 @@ async def set_sail(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, r
     table = ctx.rules.age_of_sail
     rng = ctx.rng(f"sail.{vessel.id}.{'adrift' if region_id is None else region_id}.{ctx.epoch}")
     steady = await prevailing(ctx.session, region_id)
+    if await becalmed(ctx, vessel, region_id, rng.chance(ctx.rules.winds.becalmed_pct)):
+        keep(state, "point_of_sail", P.IN_IRONS)
+        tally.legs += 1
+        tally.in_irons += 1
+        state.updated_epoch = ctx.epoch
+        return state
     keep(state, "wind_from", steady if steady is not None and rng.chance(ctx.rules.winds.sail_steady_pct) else rng.below(OCTANTS))
     keep(state, "heading", rng.below(OCTANTS))
     gap = angle(state.heading, state.wind_from)

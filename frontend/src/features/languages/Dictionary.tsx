@@ -10,6 +10,11 @@ import {
   Users,
   WholeWord,
 } from 'lucide-react'
+import {
+  actorKindValues,
+  partOfSpeechValues,
+  writingSystemValues,
+} from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { agree, plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
@@ -30,7 +35,7 @@ import { Label, Muted, SectionTitle, Text } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Highlight } from '@/features/atlas/Highlight'
 import { why } from '@/features/dominion/model'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { useWorldState } from '@/features/entity/api/queries'
 import { type LanguageView } from '@/features/entity/api/types'
 import { MindPicker } from '@/features/entity/mind/parts'
@@ -102,7 +107,7 @@ function RailItem({
         <Muted as='span' variant='caption' truncate>
           {language.language.subtype ??
             (node?.writing_system
-              ? humanize(node.writing_system)
+              ? wordOf(writingSystemValues, node.writing_system)
               : 'Spoken only')}
         </Muted>
       </span>
@@ -350,7 +355,7 @@ function WordCard({ word, query }: { word: Lexeme; query: string }) {
         {Part && word.part_of_speech && (
           <Badge size='sm' variant='outline'>
             <Part />
-            {humanize(word.part_of_speech)}
+            {wordOf(partOfSpeechValues, word.part_of_speech)}
           </Badge>
         )}
       </div>
@@ -372,7 +377,7 @@ function WordCard({ word, query }: { word: Lexeme; query: string }) {
         <Muted as='span' variant='caption' truncate className='min-w-0 flex-1'>
           {word.etymology ??
             word.added_by?.name ??
-            humanize(word.added_by_kind)}
+            wordOf(actorKindValues, word.added_by_kind)}
         </Muted>
         <Badge size='sm' variant='outline'>{`E${word.epoch}`}</Badge>
       </div>
@@ -450,7 +455,7 @@ function Lexicon({ current }: { current: LanguageView }) {
                 onClick={() => setPart(key)}
               >
                 <Icon />
-                {`${humanize(key)} · ${count}`}
+                {`${wordOf(partOfSpeechValues, key)} · ${count}`}
               </Button>
             )
           })}

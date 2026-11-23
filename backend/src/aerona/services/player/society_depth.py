@@ -1,18 +1,19 @@
 from pydantic import Field
 
-from aerona.core.grammar import several
+from aerona.catalog.mobility import MOBILITY_EVENTS
+from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several, spoken
+from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.society_depth import DriftCause
+from aerona.domain.enums.society_depth import DriftCause, MobilityEvent
 from aerona.engine.demography import society_control as control
+from aerona.engine.demography.events import moved_class
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
-
-
-def words(value: str) -> str:
-    return value.replace("_", " ")
 
 
 class HoldNeed(Command):
@@ -93,7 +94,7 @@ class Manumit(Command):
 @player_action("needs:hold", ActionKind.EDIT_RECORD)
 async def hold_need(scope: PlayerScope, command: HoldNeed) -> Effect:
     row = await control.hold_need(await scope.context("needs_hold"), command.community_id, command.social_class, command.commodity, command.held_pct)
-    label = f"{words(command.social_class.value)}s' {words(command.commodity.value)}"
+    label = f"{spoken(command.social_class)}s' {spoken(command.commodity)}"
     if row.held_pct is None:
         return Effect(f"The {label} is met as the stores allow again.", command.community_id)
     return Effect(f"The {label} is held at {row.held_pct}% met.", command.community_id, values={"held_pct": row.held_pct})
@@ -105,7 +106,7 @@ async def edit_standing(scope: PlayerScope, command: EditStanding) -> Effect:
         await scope.context("class_standing"), command.community_id, command.social_class, command.values, release=command.release
     )
     return Effect(
-        f"The {words(command.social_class.value)}s hold {row.wealth} wealth, are fed {row.fed_pct}% and have {row.needs_met_pct}% of their needs.",
+        f"The {spoken(command.social_class)}s hold {row.wealth} wealth, are fed {row.fed_pct}% and have {row.needs_met_pct}% of their needs.",
         command.community_id,
         values={"wealth": row.wealth},
     )
@@ -115,8 +116,8 @@ async def edit_standing(scope: PlayerScope, command: EditStanding) -> Effect:
 async def set_labour(scope: PlayerScope, command: SetLabour) -> Effect:
     row = await control.set_labour(await scope.context("labour_set"), command.community_id, command.job, command.workers)
     if not row.held:
-        return Effect(f"Work at {words(command.job.value)} follows the people and the prices again.", command.community_id)
-    return Effect(f"{row.workers} are held at {words(command.job.value)}.", command.community_id, values={"workers": row.workers})
+        return Effect(f"Work at {spoken(command.job)} follows the people and the prices again.", command.community_id)
+    return Effect(f"{row.workers} are held at {spoken(command.job)}.", command.community_id, values={"workers": row.workers})
 
 
 @player_action("labour:corvee", ActionKind.EDIT_RECORD)
@@ -139,7 +140,7 @@ async def impose_drift(scope: PlayerScope, command: ImposeDrift) -> Effect:
         await scope.context("drift_impose"), command.community_id, command.cause, command.axis, amount=command.amount, epochs=command.epochs
     )
     return Effect(
-        f"For {several(row.epochs_left, 'epoch', 'epochs')}, {words(command.cause.value)} will push their {words(command.axis.value)} by {row.amount}.",
+        f"For {several(row.epochs_left, 'epoch', 'epochs')}, {spoken(command.cause)} will push their {spoken(command.axis)} by {row.amount}.",
         command.community_id,
         values={"imposition_id": row.id},
     )
@@ -150,9 +151,7 @@ async def edit_drift(scope: PlayerScope, command: EditDrift) -> Effect:
     row = await control.edit_drift(
         await scope.context("drift_edit"), command.imposition_id, amount=command.amount, epochs=command.epochs, cause=command.cause, axis=command.axis
     )
-    return Effect(
-        f"The pressure now pushes {words(row.axis.value)} by {row.amount} for {several(row.epochs_left, 'epoch', 'epochs')}.", row.community_entity_id
-    )
+    return Effect(f"The pressure now pushes {spoken(row.axis)} by {row.amount} for {several(row.epochs_left, 'epoch', 'epochs')}.", row.community_entity_id)
 
 
 @player_action("drift:cancel", ActionKind.EDIT_RECORD)
@@ -178,10 +177,27 @@ async def ruin(scope: PlayerScope, command: Ruin) -> Effect:
 @player_action("mobility:enslave", ActionKind.EDIT_RECORD)
 async def enslave(scope: PlayerScope, command: Enslave) -> Effect:
     moved = await control.enslave(await scope.context("mobility_enslave"), command.community_id, command.count, command.source)
-    return Effect(f"{moved} {words(command.source.value)}s were put in chains.", command.community_id, values={"moved": moved})
+    return Effect(f"{moved} {spoken(command.source)}s were put in chains.", command.community_id, values={"moved": moved})
 
 
 @player_action("mobility:manumit", ActionKind.EDIT_RECORD)
 async def manumit(scope: PlayerScope, command: Manumit) -> Effect:
     moved = await control.manumit(await scope.context("mobility_manumit"), command.community_id, command.count, command.target)
     return Effect(f"{moved} of the bound were set free.", command.community_id, values={"moved": moved})
+
+
+class MoveClass(Command):
+    mortal_id: int
+    event: MobilityEvent
+
+
+@player_action("mobility:move", ActionKind.EDIT_RECORD)
+async def move_class(scope: PlayerScope, command: MoveClass) -> Effect:
+    mortal = await scope.session.get(EntityRow, command.mortal_id)
+    if mortal is None or mortal.entity_type is not EntityType.MORTAL:
+        raise ValidationFailedError("Only a mortal changes class.")
+    if MOBILITY_EVENTS[command.event].lands_in is None:
+        raise ValidationFailedError("That change of standing lands in no single class; use its own control.")
+    moved = await moved_class(await scope.context("mobility_move"), mortal, command.event, cause="the will of the Creator", by_hand=True)
+    label = MOBILITY_EVENTS[command.event].label.lower()
+    return Effect(f"{mortal.name} was {label}." if moved else f"{mortal.name} already stands there.", mortal.id)

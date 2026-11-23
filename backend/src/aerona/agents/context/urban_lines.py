@@ -41,10 +41,7 @@ async def mortal_urban_lines(scope: Scope, me: EntityRow) -> list[str]:
         if payer is not None:
             found.append(f"you take {row.bribe} in bribes a season from {payer.name}")
     for member in await session.scalars(select(FactionMembershipRow).where(FactionMembershipRow.mortal_entity_id == me.id)):
-        laws = [
-            row.law.value.replace("_", " ")
-            for row in await session.scalars(select(OrderLawRow).where(OrderLawRow.faction_entity_id == member.faction_entity_id))
-        ]
+        laws = [spoken(row.law) for row in await session.scalars(select(OrderLawRow).where(OrderLawRow.faction_entity_id == member.faction_entity_id))]
         if laws:
             order = await session.get(EntityRow, member.faction_entity_id)
             found.append(f"the laws of {order.name if order is not None else 'your order'}: {', '.join(laws)}")

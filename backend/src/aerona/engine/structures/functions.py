@@ -194,7 +194,7 @@ async def arena(ctx: TickContext, item: Working, host: EntityRow, tally: Tally) 
     second_roll = stat_or(second, "strength", 0) + rng.die(PERCENT)
     victor, loser = (first, second) if first_roll >= second_roll else (second, first)
     victor.importance = (victor.importance or 0) + table.arena_duel_renown
-    await apply_hits(ctx, loser, Harm(table.arena_duel_hp, HarmCause.DUEL, f"fell in the arena of {item.structure.name}"))
+    await apply_hits(ctx, loser, Harm(table.arena_duel_hp, HarmCause.SPORT, f"fell in the arena of {item.structure.name}"))
     await record(
         ctx,
         "structures.duel",

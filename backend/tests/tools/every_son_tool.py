@@ -5,14 +5,17 @@ from tests.tools.every_setup import (
     cosmic_being,
     court_diviners,
     created,
+    dangerous_land,
     dead_creation,
     dead_sibling,
     dead_star,
     death_son,
+    deep_land,
     dreamer,
     faith_crisis,
     falling_body,
     friendly_sibling,
+    grieving_mortal,
     heavens,
     home_star,
     house,
@@ -36,6 +39,7 @@ from tests.tools.every_setup import (
     pact_friend,
     phenomenon,
     plant,
+    poisoned_land,
     rewritten_account,
     rich_son,
     rifted,
@@ -71,7 +75,7 @@ from tests.tools.every_setup import (
     world_body,
     wounded,
 )
-from tests.tools.every_setup_ages import long_winter, open_tale, turning_cosmos
+from tests.tools.every_setup_ages import long_winter, open_tale, turning_cosmos, turning_year
 from tests.tools.every_setup_arts import art_work, built_construct, forged_work, two_clubs, wild_beast
 from tests.tools.every_setup_couplings import teaching_spirit
 from tests.tools.every_setup_crafts import material_resource
@@ -139,6 +143,14 @@ def region(realm: Realm, _ids: Ids) -> int:
 
 def place(realm: Realm, _ids: Ids) -> int:
     return realm.cosmos.place_id
+
+
+def long_season(_realm: Realm, ids: Ids) -> int:
+    return ids["long_season"]
+
+
+def season_of(_realm: Realm, ids: Ids) -> int:
+    return ids["season"]
 
 
 def world(realm: Realm, _ids: Ids) -> int:
@@ -388,6 +400,12 @@ SON_CASES: dict[str, Case] = {
     "sanctify_place": Case(plain(place_id=place, reason=REASON)),
     "raise_nexus": Case(plain(place_id=place, reason=REASON), surveyed),
     "reshape_land": Case(plain(region_id=region, act="green", reason=REASON), surveyed),
+    "wound_land": Case(plain(region_id=region, scar="eroded", depth=30, reason=REASON), surveyed),
+    "open_the_deep": Case(plain(region_id=region, stratum="magma_sea", reason=REASON), deep_land),
+    "close_the_deep": Case(plain(region_id=region, stratum="aquifer", reason=REASON), deep_land),
+    "quell_danger": Case(plain(region_id=region, danger="landslide", strength=20, reason=REASON), dangerous_land),
+    "mark_land": Case(plain(region_id=region, memory="founding", magnitude=30, title="The first hearth", reason=REASON), surveyed),
+    "heal_land": Case(plain(region_id=region, scar="poisoned", reason=REASON), poisoned_land),
     "sow_crop": Case(plain(region_id=region, plant_id=plant_kind), plant),
     "sanctify_region": Case(plain(region_id=region, reason=REASON), surveyed),
     "curse_region": Case(plain(region_id=region, strength=20, reason=REASON), surveyed),
@@ -456,7 +474,7 @@ SON_CASES: dict[str, Case] = {
             payment="to_one_family",
             kin_terms="cross_parallel",
             adoption="ward",
-            first_side="female",
+            first_side="bearer",
             reason=REASON,
         )
     ),
@@ -508,8 +526,10 @@ SON_CASES: dict[str, Case] = {
     "rig_match": Case(plain(home_id=created("home"), away_id=created("away"), winner_id=created("away"), reason=REASON), two_clubs),
     "set_beast_bounty": Case(plain(town_id=settlement, beast_id=created("beast"), reason=REASON), wild_beast),
     "mark_birth": Case(plain(mortal_id=mortal, dreaded=True, reason=REASON)),
-    "unsettle_seasons": Case(plain(world_id=world, reason=REASON)),
-    "lengthen_winter": Case(plain(world_id=world, epochs=2, reason=REASON), long_winter),
+    "unsettle_seasons": Case(plain(world_id=world, shape="single", spell="winter", length=2, severity=40, reason=REASON)),
+    "lengthen_winter": Case(plain(long_season_id=long_season, epochs=2, reason=REASON), long_winter),
+    "end_long_season": Case(plain(long_season_id=long_season, reason=REASON), long_winter),
+    "reshape_season": Case(plain(season_id=season_of, share_pct=30, temperature_shift=5, reason=REASON), turning_year),
     "shift_world_nature": Case(plain(world_id=world, share="storm_pct", change=10, reason=REASON)),
     "shape_biology": Case(plain(holder_id=people, variant="aerial", gain=True, reason=REASON)),
     "wake_lore": Case(plain(lore_id=created("theory"), reason=REASON), forgotten_theory),
@@ -532,6 +552,10 @@ SON_CASES: dict[str, Case] = {
     "stir_revival": Case(plain(people_id=people, goal="revive_language", reason=REASON)),
     "move_population_policy": Case(plain(holder_node_id=people, aim="hold", reason=REASON)),
     "break_market": Case(plain(market_id=lambda _realm, ids: ids["market"], goods_kind="grain", reason=REASON), cartel_in_market),
+    "stir_emotion": Case(plain(node_id=mortal, emotion="curiosity", reason=REASON)),
+    "ease_grief": Case(plain(mourner_id=mortal, stage="yearning", reason=REASON), grieving_mortal),
+    "curse_with": Case(plain(node_id=mortal, package="fortune", reason=REASON)),
+    "bless_with": Case(plain(node_id=mortal, package="charm", reason=REASON)),
     "move_hearts": Case(plain(place_id=lambda realm, _ids: realm.settlement_id, feeling="awe", strength=60, reason=REASON)),
     "reveal_nature": Case(plain(faith_id=lambda realm, _ids: realm.cult_id, axis="nearness", stance="within", reason=REASON)),
     "lead_creatures": Case(plain(group_id=lambda _realm, ids: ids["group"], aim="guard", reason=REASON), a_creature_group),
@@ -563,6 +587,7 @@ SON_CASES: dict[str, Case] = {
     "wake_spirit": Case(plain(region_id=region, emotion="awe", reason=REASON)),
     "lay_affinity": Case(plain(resource_id=resource, school="earth", mode="worn", reason=REASON), material_resource),
     "stir_monsoon": Case(plain(world_id=world, strong=False, reason=REASON)),
+    "shape_cycle": Case(plain(world_id=world, cycle="oxygen", change=-10, reason=REASON)),
     "turn_wind": Case(plain(region_id=region, wind_from=4, reason=REASON)),
     "shield_world": Case(plain(world_id=world, change=20, epochs=3, reason=REASON)),
     "move_ice": Case(plain(region_id=region, change=2, reason=REASON)),

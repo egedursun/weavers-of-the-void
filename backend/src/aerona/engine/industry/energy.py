@@ -116,7 +116,15 @@ def weather_wind(ctx: TickContext, book: EconomyBook, community: EntityRow) -> i
     return book.ground.weather(ctx.environment.world_seed, ctx.epoch, ground, season, f"wind.{community.id}").effect(WeatherEffect.WIND)
 
 
-async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, leys: Counter[int]) -> tuple[dict[EnergyKind, int], int]:
+async def supply_of(
+    ctx: TickContext,
+    book: EconomyBook,
+    community: EntityRow,
+    leys: Counter[int],
+    *,
+    falls: Counter[int] | None = None,
+    magma: Counter[int] | None = None,
+) -> tuple[dict[EnergyKind, int], int]:
     table = ctx.rules.energy
     region = book.ground.region_of(community.id)
     held = await holdings(ctx.session, community.id)
@@ -128,6 +136,7 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
         + draught * ctx.rules.husbandry.muscle_per_10_draught / 10
     )
     water = river_energy(ctx.rules, region.river_class) if region is not None else 0
+    water += (falls or Counter()).get(region.entity_id, 0) * ctx.rules.places.waterfall_power if region is not None else 0
     wind: float = table.wind_base
     if region is not None:
         wind += (table.wind_coast if region.coast_kind is not CoastKind.NONE else 0) + region.roughness * table.wind_heights_pct / PERCENT
@@ -155,7 +164,8 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
             EnergyKind.ELECTRIC: electric,
             EnergyKind.STORED: stored,
             EnergyKind.SOLAR: table.solar_base if region is not None and region.dominant_terrain is not TerrainKind.UNDERGROUND else 0,
-            EnergyKind.GEOTHERMAL: table.geothermal_volcanic if region is not None and region.dominant_terrain is TerrainKind.VOLCANIC else 0,
+            EnergyKind.GEOTHERMAL: (table.geothermal_volcanic if region is not None and region.dominant_terrain is TerrainKind.VOLCANIC else 0)
+            + ((magma or Counter()).get(region.entity_id, 0) * ctx.rules.underground.magma_forge_energy if region is not None else 0),
             EnergyKind.TIDAL: table.tidal_coast if region is not None and region.coast_kind is not CoastKind.NONE else 0,
             EnergyKind.FISSION: held.get(CommodityKind.ORE, 0) * table.fission_per_10_ore // 10,
             EnergyKind.FUSION: table.fusion_base if plants > 0 else 0,
@@ -314,9 +324,11 @@ def industry_row(ctx: TickContext, book: EconomyBook, community_id: int) -> Comm
     return row
 
 
-async def gauge(ctx: TickContext, book: EconomyBook, community: EntityRow, leys: Counter[int]) -> CommunityIndustryRow:
+async def gauge(
+    ctx: TickContext, book: EconomyBook, community: EntityRow, leys: Counter[int], *, falls: Counter[int] | None = None, magma: Counter[int] | None = None
+) -> CommunityIndustryRow:
     row = industry_row(ctx, book, community.id)
-    supply, need = await supply_of(ctx, book, community, leys)
+    supply, need = await supply_of(ctx, book, community, leys, falls=falls, magma=magma)
     for kind, amount in supply.items():
         if kind.value not in row.locked:
             setattr(row, kind.value, amount)

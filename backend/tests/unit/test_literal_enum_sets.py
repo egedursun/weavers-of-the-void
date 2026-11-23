@@ -64,3 +64,18 @@ def test_only_static_tables_outside_a_catalogue_are_caught() -> None:
 
 def test_the_source_keeps_every_family_in_its_catalogues() -> None:
     assert checker().main([]) == 0
+
+
+STORED_KEYS = """
+from aerona.domain.enums.relations import RelationType
+from aerona.domain.enums.mind import Emotion
+RIVALS = frozenset({RelationType.RIVAL.value, RelationType.ENEMY.value})
+FEARFUL = {Emotion.FEAR.value, Emotion.ANXIETY.value}
+ONE = frozenset({Emotion.FEAR.value})
+"""
+
+
+def test_a_set_of_stored_member_values_is_caught_like_a_set_of_members() -> None:
+    check = checker()
+    found = check.literals_in("engine/sample.py", STORED_KEYS, check.FAMILIES)
+    assert sorted((item.line, item.family, item.enum) for item in found) == [(4, "life", "RelationType"), (5, "life", "Emotion")]

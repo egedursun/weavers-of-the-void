@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { Merge, ShieldAlert, Undo2 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { entityTypeValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -12,9 +13,9 @@ import { Input } from '@/components/ui/input'
 import { ConfirmDialog, FormRow, FieldTile } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type EntityContext } from '../actions/context'
 import { optionsFor } from '../actions/pickers'
-import { humanize } from '../actions/schema'
 import { usePickerData } from '../actions/usePickerData'
 import { useLoreMutation } from '../api/mutations'
 import { MERGE_WORD } from '../constants'
@@ -117,7 +118,7 @@ export function DangerZone({
         )}
         <div className='flex min-w-0 flex-col gap-3'>
           <Text>
-            {`If two records are truly the same, the chosen ${humanize(ctx.type).toLowerCase()} gives its bonds, contents, lexicon and images to ${entity.name} and is marked merged. This cannot be taken back.`}
+            {`If two records are truly the same, the chosen ${wordOf(entityTypeValues, ctx.type).toLowerCase()} gives its bonds, contents, lexicon and images to ${entity.name} and is marked merged. This cannot be taken back.`}
           </Text>
           <FormRow label='Merge into this'>
             {(id) => (
@@ -128,7 +129,7 @@ export function DangerZone({
                 onChange={(value) =>
                   setOther(value === null ? null : Number(value))
                 }
-                placeholder={`Choose a ${humanize(ctx.type).toLowerCase()}`}
+                placeholder={`Choose a ${wordOf(entityTypeValues, ctx.type).toLowerCase()}`}
                 emptyText='No such record of the same kind.'
                 aria-label='Record to merge'
               />

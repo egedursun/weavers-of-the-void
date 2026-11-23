@@ -8,7 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import ReproductiveCaste
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -18,7 +18,7 @@ from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
-SEXES = tuple(sex.value for sex in Sex)
+SEXES = tuple(sex.value for sex in SexKind)
 
 
 @dataclass
@@ -84,7 +84,7 @@ async def assign_attraction(ctx: TickContext) -> AttractionTally:
     return tally
 
 
-async def set_attraction(ctx: TickContext, mortal_id: int, drawn_to: list[Sex] | None, strength: int | None, *, hold: bool) -> MortalProfileRow:
+async def set_attraction(ctx: TickContext, mortal_id: int, drawn_to: list[SexKind] | None, strength: int | None, *, hold: bool) -> MortalProfileRow:
     profile = await found(ctx, MortalProfileRow, mortal_id, "mortal")
     values: dict[str, object] = {}
     if drawn_to is not None:

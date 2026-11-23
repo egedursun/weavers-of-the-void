@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.domain.enums.cosmography import (
     ApocalypseVariant,
@@ -255,9 +256,7 @@ WORLD_AGE_LABELS: MappingProxyType[WorldAge, str] = MappingProxyType(
 CAUSALITY_LABELS: MappingProxyType[Causality, str] = MappingProxyType(
     {Causality.STRICT: "Strict causality", Causality.LOOSE: "Loose causality", Causality.BROKEN: "Broken causality"}
 )
-ELEMENT_LABELS: MappingProxyType[DimensionElement, str] = MappingProxyType(
-    {element: element.value.replace("_", " ").capitalize() for element in DimensionElement}
-)
+ELEMENT_LABELS: MappingProxyType[DimensionElement, str] = MappingProxyType({element: spoken(element).capitalize() for element in DimensionElement})
 GALACTIC_EVENT_LABELS: MappingProxyType[GalacticEventKind, KindSpec] = MappingProxyType(
     {
         GalacticEventKind.CORE_OUTBURST: KindSpec("Core outburst", "The central black hole flares; the core and bulge are flooded with radiation."),

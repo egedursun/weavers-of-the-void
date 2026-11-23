@@ -3,8 +3,11 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.collective import COLLECTION_FORMATIVE, FORMATIVE_SHIFTS
+from aerona.catalog.life.demography import MINOR_BANDS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.ages import IrregularSeasonRow
 from aerona.db.tables.collective import GenerationRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionMemberRow, CollectionPlaceRow, CollectionRow
@@ -12,7 +15,6 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.collective import FormativeKind
-from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.gathering import CollectionRole
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
@@ -56,11 +58,18 @@ async def formative_now(ctx: TickContext, town: EntityRow) -> set[FormativeKind]
     society = await ctx.session.get(CommunitySocietyRow, town.id)
     if society is not None and society.golden_age_since_epoch is not None:
         found.add(FormativeKind.GOLDEN_AGE)
+    if town.world_id is not None and await under_long_season(ctx, town.world_id, ctx.epoch, ctx.epoch):
+        found.add(FormativeKind.LONG_SEASON)
     return found
 
 
+async def under_long_season(ctx: TickContext, world_id: int, first: int, last: int) -> bool:
+    spells = await ctx.session.scalars(select(IrregularSeasonRow).where(IrregularSeasonRow.world_id == world_id).order_by(IrregularSeasonRow.id))
+    return any(row.spell_started_epoch <= last and first < row.spell_started_epoch + row.spell_length for row in spells)
+
+
 async def children_of_town(ctx: TickContext, town_id: int) -> int:
-    rows = await ctx.session.scalars(select(CohortRow.count).where(CohortRow.community_entity_id == town_id, CohortRow.age_band == AgeBand.CHILD))
+    rows = await ctx.session.scalars(select(CohortRow.count).where(CohortRow.community_entity_id == town_id, CohortRow.age_band.in_(sorted(MINOR_BANDS))))
     return sum(rows)
 
 
@@ -99,9 +108,11 @@ async def shape_youth(ctx: TickContext, town: EntityRow, tally: GenerationTally)
         if event.value in formative:
             continue
         formative.append(event.value)
+        mark = table.long_season_mark if event is FormativeKind.LONG_SEASON else table.shift
         for axis, sign in FORMATIVE_SHIFTS[event]:
-            shifts[axis.value] = clamp_int(shifts.get(axis.value, 0) + sign * table.shift, -VALUE_SPAN, VALUE_SPAN)
+            shifts[axis.value] = clamp_int(shifts.get(axis.value, 0) + sign * mark, -VALUE_SPAN, VALUE_SPAN)
         tally.shaped += 1
+        await record(ctx, "generation.formed", roles={IncidentRole.PLACE: town.id}, facts={"kind": event, "born": start}, place=town.id)
     row.formative = formative
     if "value_shifts" not in row.locked:
         row.value_shifts = shifts
@@ -153,7 +164,28 @@ async def pass_on(ctx: TickContext, town: EntityRow, profile: SettlementProfileR
             row.alive = round_half_up(row.alive * remaining / (remaining + 1))
 
 
+GENERATIONS_FIXUP = "generations.w52"
+
+
+async def backfill_long_seasons(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, GENERATIONS_FIXUP) is not None:
+        return 0
+    marked = 0
+    span = max(1, ctx.rules.generations.youth_epochs)
+    for row in list(await ctx.session.scalars(select(GenerationRow).order_by(GenerationRow.community_entity_id, GenerationRow.generation_epoch))):
+        town = await ctx.session.get(EntityRow, row.community_entity_id)
+        if town is None or town.world_id is None or held(town.id) or "formative" in row.locked or FormativeKind.LONG_SEASON.value in row.formative:
+            continue
+        if await under_long_season(ctx, town.world_id, row.generation_epoch, row.generation_epoch + span - 1):
+            row.formative = [*row.formative, FormativeKind.LONG_SEASON.value]
+            marked += 1
+    ctx.session.add(AppliedFixupRow(key=GENERATIONS_FIXUP, result={"generations": marked}))
+    await ctx.session.flush()
+    return marked
+
+
 async def keep_generations(ctx: TickContext, tally: GenerationTally) -> None:
+    await backfill_long_seasons(ctx)
     for town, profile in await towns(ctx):
         if held(town.id):
             continue

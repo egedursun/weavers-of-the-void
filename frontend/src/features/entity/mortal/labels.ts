@@ -1,12 +1,9 @@
 import {
-  ZapOff,
-  Ship,
-  Home,
-  Ban,
-  Link,
-  Hammer,
+  type LucideIcon,
+  Anchor,
   Baby,
   Backpack,
+  Ban,
   Bomb,
   BookOpen,
   Brain,
@@ -18,6 +15,7 @@ import {
   Cpu,
   Crown,
   Eye,
+  EyeOff,
   Factory,
   Feather,
   Flame,
@@ -27,15 +25,20 @@ import {
   Gem,
   Ghost,
   GraduationCap,
+  Hammer,
   HandHeart,
   Heart,
   HeartCrack,
   HeartHandshake,
   HeartPulse,
+  Home,
   Hourglass,
+  KeyRound,
+  Link,
   Link2,
   Lock,
-  type LucideIcon,
+  Medal,
+  Minus,
   Mountain,
   Orbit,
   Palette,
@@ -48,6 +51,7 @@ import {
   Shapes,
   Shield,
   ShieldHalf,
+  Ship,
   Shirt,
   Skull,
   Sparkles,
@@ -56,14 +60,19 @@ import {
   Store,
   Sword,
   Swords,
+  Tent,
+  ThumbsDown,
   TreeDeciduous,
+  Trophy,
   User,
   Users,
   Wand,
+  Waves,
   Wheat,
   Wind,
   Wrench,
   Zap,
+  ZapOff,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
@@ -89,7 +98,7 @@ export const SEXES: Record<string, Named> = {
   other: { label: 'Other', icon: Sparkles, tone: 'gold' },
 }
 
-export const CAREERS: Record<string, Named> = {
+export const CAREERS: Record<components['schemas']['CareerPath'], Named> = {
   stay: { label: 'Stays the course', icon: Footprints, tone: 'muted' },
   army: { label: 'Took up arms', icon: Swords, tone: 'danger' },
   office: { label: 'Seeks office', icon: Crown, tone: 'gold' },
@@ -99,18 +108,23 @@ export const CAREERS: Record<string, Named> = {
   wander: { label: 'Wanders', icon: Compass, tone: 'info' },
   bandit: { label: 'Turned bandit', icon: Skull, tone: 'danger' },
   study: { label: 'Went to study', icon: GraduationCap, tone: 'info' },
+  sea: { label: 'Went to sea', icon: Anchor, tone: 'info' },
+  service: { label: 'Serves a great house', icon: KeyRound, tone: 'gold' },
+  arts: { label: 'Took up an art', icon: Palette, tone: 'verdigris' },
+  settle: { label: 'Left to settle a frontier', icon: Tent, tone: 'success' },
 }
 
-export const BREAKS: Record<string, Named> = {
+export const BREAKS: Record<components['schemas']['StressBreak'], Named> = {
   rage: { label: 'Rage', icon: Flame, tone: 'danger' },
   flight: { label: 'Flight', icon: Wind, tone: 'warning' },
   despair: { label: 'Despair', icon: HeartCrack, tone: 'muted' },
   zeal: { label: 'Zeal', icon: Star, tone: 'gold' },
   vice: { label: 'Vice', icon: Gem, tone: 'warning' },
   revelation: { label: 'Revelation', icon: Zap, tone: 'verdigris' },
+  withdrawal: { label: 'Withdrawal', icon: EyeOff, tone: 'muted' },
 }
 
-export const DEATHS: Record<string, Named> = {
+export const DEATHS: Record<components['schemas']['DeathCause'], Named> = {
   old_age: { label: 'Old age', icon: Hourglass, tone: 'muted' },
   wounds: { label: 'Wounds', icon: HeartCrack, tone: 'danger' },
   battle: { label: 'Battle', icon: Swords, tone: 'danger' },
@@ -138,6 +152,16 @@ export const DEATHS: Record<string, Named> = {
   radiation: { label: 'Radiation', icon: Radiation, tone: 'danger' },
   decompression: { label: 'Decompression', icon: Orbit, tone: 'danger' },
   experiment: { label: 'An experiment', icon: FlaskConical, tone: 'warning' },
+  drowning: { label: 'Drowning', icon: Waves, tone: 'info' },
+  sport: { label: 'Sport', icon: Trophy, tone: 'warning' },
+}
+
+export const READINGS: Record<components['schemas']['DeathReading'], Named> = {
+  glorious: { label: 'Glorious', icon: Crown, tone: 'gold' },
+  honourable: { label: 'Honourable', icon: Medal, tone: 'success' },
+  plain: { label: 'Plain', icon: Minus, tone: 'muted' },
+  shameful: { label: 'Shameful', icon: ThumbsDown, tone: 'warning' },
+  cursed: { label: 'Cursed', icon: Skull, tone: 'danger' },
 }
 
 export const KIN_KINDS: Record<string, Named & { out: string; in: string }> = {

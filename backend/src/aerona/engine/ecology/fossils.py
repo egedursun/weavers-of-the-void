@@ -1,3 +1,4 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
@@ -6,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.catalog.nature_kinds50 import PRESERVATIONS
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.discovery import TheoryAdherentRow
@@ -24,6 +26,7 @@ from aerona.domain.enums.environment import ScarKind, TemperatureBand
 from aerona.domain.enums.fossil import FossilReading, FossilSource, Preservation
 from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.lifecycle_end import LifecycleState
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
@@ -32,7 +35,7 @@ from aerona.engine.economy.stocks import goods_of
 from aerona.engine.mind.book import values_for
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import scale_stat
+from aerona.engine.primitives.stats import has_stat, scale_stat, shift_stat
 from aerona.engine.recording.record import record
 
 COLD_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.COLD_WORLDS)
@@ -43,6 +46,8 @@ READINGS = (
     (ValueAxis.SUPERSTITION, FossilReading.LEGEND),
     (ValueAxis.PIETY, FossilReading.RELIC),
     (ValueAxis.KNOWLEDGE, FossilReading.DEEP_TIME),
+    (ValueAxis.WEALTH, FossilReading.MATERIAL),
+    (ValueAxis.MERCY, FossilReading.MEDICINE),
 )
 
 
@@ -93,6 +98,11 @@ async def remains(ctx: TickContext) -> list[Remains]:
         age = ctx.epoch - born.get(people.world_id or 0, ctx.epoch)
         if people.id not in laid and people.world_id in born and age >= ctx.rules.fossils.old_world_epochs:
             found.append(Remains(people, FossilSource.EXTINCT_PEOPLE))
+    for corpse in await session.scalars(
+        select(EntityRow).where(EntityRow.engine_kind == EngineKind.DEAD_GOD, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+    ):
+        if corpse.id not in laid:
+            found.append(Remains(corpse, FossilSource.GOD))
     return found
 
 
@@ -151,7 +161,13 @@ async def lay_beds(ctx: TickContext, atlas: RegionAtlas, tally: FossilTally) -> 
         if region is None or held(region):
             continue
         frozen = await is_frozen(ctx, region, item.entity.world_id)
-        richness = table.richness if item.source in {FossilSource.EXTINCT_SPECIES, FossilSource.EXTINCT_PEOPLE} else table.megafauna_richness
+        richness = (
+            table.dead_god_richness
+            if item.source is FossilSource.GOD
+            else table.richness
+            if item.source in {FossilSource.EXTINCT_SPECIES, FossilSource.EXTINCT_PEOPLE}
+            else table.megafauna_richness
+        )
         ctx.session.add(
             FossilBedRow(
                 region_entity_id=region,
@@ -205,24 +221,63 @@ async def reading_of(ctx: TickContext, finder: EntityRow) -> FossilReading:
     return strongest[1] if values.get(strongest[0], 0) >= ctx.rules.fossils.reading_from else FossilReading.UNREAD
 
 
-async def told(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) -> None:
+async def tell_legend(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) -> None:
+    for legend in await ctx.session.scalars(select(LegendProfileRow)):
+        if finder.id in legend.tellers and "credence" not in legend.locked:
+            legend.credence = clamp_int(legend.credence + ctx.rules.fossils.legend_credence, 0, PERCENT)
+
+
+async def revere(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) -> None:
+    for cult in await ctx.session.scalars(
+        select(EntityRow).where(
+            EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_([bed.region_entity_id, finder.id])
+        )
+    ):
+        if not held(cult.id):
+            scale_stat(ctx.rules, cult, "followers", 1 + ctx.rules.fossils.relic_followers_pct / PERCENT, default=0)
+
+
+async def overturn(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) -> None:
+    for row in await ctx.session.scalars(select(TheoryAdherentRow).where(TheoryAdherentRow.adherent_entity_id == finder.id)):
+        if "strength" not in row.locked:
+            row.strength = clamp_int(row.strength + ctx.rules.fossils.deep_time_strength, 0, PERCENT)
+
+
+async def work_remains(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) -> None:
+    units = round_half_up(bed.richness / 10 * ctx.rules.fossils.material_yield)
+    material = MaterialKind.DIVINE_TISSUE if bed.source is FossilSource.GOD else MaterialKind.CALCIFIED_TISSUE
+    await goods_of(ctx.session, ctx.epoch).add(finder.id, CommodityKind.ORE, units, GoodsFlow.EXTRACTION, material=material)
+
+
+async def grind_remains(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) -> None:
     table = ctx.rules.fossils
-    if bed.reading is FossilReading.LEGEND:
-        for legend in await ctx.session.scalars(select(LegendProfileRow)):
-            if finder.id in legend.tellers and "credence" not in legend.locked:
-                legend.credence = clamp_int(legend.credence + table.legend_credence, 0, PERCENT)
-    elif bed.reading is FossilReading.RELIC:
-        for cult in await ctx.session.scalars(
-            select(EntityRow).where(
-                EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_([bed.region_entity_id, finder.id])
-            )
-        ):
-            if not held(cult.id):
-                scale_stat(ctx.rules, cult, "followers", 1 + table.relic_followers_pct / PERCENT, default=0)
-    elif bed.reading is FossilReading.DEEP_TIME:
-        for row in await ctx.session.scalars(select(TheoryAdherentRow).where(TheoryAdherentRow.adherent_entity_id == finder.id)):
-            if "strength" not in row.locked:
-                row.strength = clamp_int(row.strength + table.deep_time_strength, 0, PERCENT)
+    await goods_of(ctx.session, ctx.epoch).add(
+        finder.id, CommodityKind.MEDICINE, round_half_up(bed.richness / 10 * table.medicine_demand), GoodsFlow.EXTRACTION
+    )
+    if table.medicine_effect and has_stat(finder, "hp"):
+        shift_stat(finder, "hp", table.medicine_effect, 0)
+
+
+READ_EFFECTS: Mapping[FossilReading, Callable[[TickContext, FossilBedRow, EntityRow], Awaitable[None]]] = partial(
+    FossilReading,
+    {
+        FossilReading.LEGEND: tell_legend,
+        FossilReading.RELIC: revere,
+        FossilReading.DEEP_TIME: overturn,
+        FossilReading.MATERIAL: work_remains,
+        FossilReading.MEDICINE: grind_remains,
+    },
+    without=(FossilReading.UNREAD,),
+)
+
+
+async def told(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) -> None:
+    if bed.reading in READ_EFFECTS:
+        await READ_EFFECTS[bed.reading](ctx, bed, finder)
+    if bed.source is FossilSource.GOD:
+        ground = await ctx.session.get(RegionEnvironmentRow, bed.region_entity_id)
+        if ground is not None and "sacredness" not in ground.locked and not held(ground.entity_id):
+            ground.sacredness = clamp_int(ground.sacredness + ctx.rules.fossils.dead_god_draw, 0, PERCENT)
 
 
 async def reveal(ctx: TickContext, bed: FossilBedRow, finder: EntityRow | None, tally: FossilTally) -> None:

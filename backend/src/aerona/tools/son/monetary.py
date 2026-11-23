@@ -36,7 +36,7 @@ async def shake_coin(call: SonCall, args: ShakeCoinInput) -> str:
         fail(SonResult.MONEY_REFUSED, why="there is no such currency with a living issuer")
     await ensure_in_reach(call, issuer)
     if currency.held or held(issuer.id):
-        fail(SonResult.MONEY_REFUSED, why="a stronger hand holds that money")
+        fail(SonResult.MONEY_REFUSED, why="that money is held")
     if not args.trust_change:
         fail(SonResult.MONEY_REFUSED, why="a shake moves trust one way or the other")
     currency.trust = clamp_int(currency.trust + args.trust_change, 0, PERCENT)

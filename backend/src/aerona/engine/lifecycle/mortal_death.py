@@ -20,6 +20,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.culture import ItemDeed
+from aerona.domain.enums.demography import InheritanceCustom
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
@@ -34,8 +35,10 @@ from aerona.engine.context import TickContext
 from aerona.engine.crafts.cover import claim
 from aerona.engine.crafts.heirs import pass_rights
 from aerona.engine.death_work.handling import remains_of, spirit_share
+from aerona.engine.demography.kinship import inheritance_of
 from aerona.engine.demography.rites import mourning_factor, rite_of, spirit_factor
 from aerona.engine.demography.rites import restless as restless_by_rite
+from aerona.engine.demography.wills import allot, read_will, senior_heirs
 from aerona.engine.divine.wounds import avatar_slain
 from aerona.engine.faith.judgement import profile_for
 from aerona.engine.folkways.wrongs import wrongly_condemned
@@ -51,6 +54,7 @@ from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import inherit_memories, mourn
 from aerona.engine.mortal.death import record_end
 from aerona.engine.mortal.kin import children_of
+from aerona.engine.mortal.readings import reading_for
 from aerona.engine.polity.law_effects import bequest_order
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
@@ -106,6 +110,10 @@ async def death_moment(ctx: TickContext, mortal: EntityRow, killer_id: int | Non
 async def world_year(session: AsyncSession) -> int:
     cosmos = await session.get(CosmosRow, SINGLETON_ID)
     return cosmos.epoch_start_year if cosmos is not None else 0
+
+
+async def death_facts(ctx: TickContext, mortal: EntityRow, manner: DeathCause, age: int, year: int) -> dict[str, FactInput]:
+    return {"manner": manner, "age": age, "year": year, "reading": await reading_for(ctx.session, ctx.rules, mortal, manner)}
 
 
 async def die(
@@ -166,7 +174,7 @@ async def die(
     if killer_id is not None and killer_kind is not None:
         roles[IncidentRole.ACTOR] = killer_id
     key = "mortal.death.natural" if natural else "mortal.death.slain" if IncidentRole.ACTOR in roles else "mortal.death.cause"
-    facts: dict[str, FactInput] = {"manner": manner or (DeathCause.OLD_AGE if natural else DeathCause.UNKNOWN), "age": age or 0, "year": death_year}
+    facts = await death_facts(ctx, mortal, manner or (DeathCause.OLD_AGE if natural else DeathCause.UNKNOWN), age or 0, death_year)
     steps = (
         StepDraft(
             StepAction.DIE,
@@ -224,6 +232,18 @@ def left_behind(mortal: EntityRow) -> tuple[ItemDeed, int, str]:
     return ItemDeed.LOST, mortal.id, f"lost with {mortal.name}, who died far from any grave"
 
 
+async def heirs_and_shares(ctx: TickContext, mortal: EntityRow, children: list[EntityRow], count: int) -> tuple[list[EntityRow], list[int]]:
+    custom = await inheritance_of(ctx.session, mortal)
+    willed = await read_will(ctx, mortal, children, custom)
+    if willed is not None:
+        return [heir for heir, _share in willed], allot(count, [share for _heir, share in willed])
+    if custom is InheritanceCustom.SENIORITY:
+        heirs = await senior_heirs(ctx, mortal, children)
+    else:
+        heirs = await bequest_order(ctx.session, mortal, children)
+    return heirs, [index % max(1, len(heirs)) for index in range(count)]
+
+
 async def _bequeath(ctx: TickContext, mortal: EntityRow, buried: frozenset[int] = frozenset()) -> None:
     session = ctx.session
     items = [bond for bond in await active_bonds(session, [BondKind.OWNS], sources=[mortal.id]) if bond.target_node_id not in buried]
@@ -234,16 +254,16 @@ async def _bequeath(ctx: TickContext, mortal: EntityRow, buried: frozenset[int] 
         child = await living_entity(session, child_id)
         if child is not None:
             children.append(child)
-    heirs = await bequest_order(session, mortal, children)
+    heirs, shares = await heirs_and_shares(ctx, mortal, children, len(items))
     receiver: EntityRow | None = heirs[0] if heirs else None
     if receiver is None:
         place = await living_entity(session, mortal.location_id)
         receiver = place if place is not None and place.entity_type in COMMUNITY_TYPES else None
     for index, bond in enumerate(items):
-        receiver = heirs[index % len(heirs)] if len(heirs) > 1 else receiver
+        receiver = heirs[shares[index]] if len(heirs) > 1 else receiver
         await close(session, bond, ctx.epoch, "inheritance")
         if heirs:
-            taker = heirs[index % len(heirs)]
+            taker = heirs[shares[index]]
             await connect(session, taker.id, bond.target_node_id, BondKind.OWNS, ctx.epoch, description=f"inherited from {mortal.name}")
             if await session.get(ItemProfileRow, bond.target_node_id) is not None:
                 record(ctx, bond.target_node_id, ItemDeed.OWNED, taker.id, f"an heirloom of {mortal.name}")

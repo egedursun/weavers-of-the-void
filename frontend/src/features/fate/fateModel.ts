@@ -1,3 +1,4 @@
+import { EPOCH_STEP_WORDS } from '@/features/entity/affairs/labels'
 import { type FateControls, type FateJobAction, type StepState } from './api'
 
 type StepKind = StepState['step']
@@ -11,10 +12,7 @@ export const STEP_LABEL: Partial<Record<StepKind, string>> = {
 }
 
 export function stepLabel(step: StepKind): string {
-  const known = STEP_LABEL[step]
-  if (known) return known
-  const spaced = step.replace(/_/g, ' ')
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
+  return STEP_LABEL[step] ?? EPOCH_STEP_WORDS[step]
 }
 
 export const STEP_STATUS_LABEL: Record<StepStatus, string> = {

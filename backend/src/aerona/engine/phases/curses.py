@@ -78,6 +78,7 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "table.node_births",
     "table.nodes",
     "table.prostheses",
+    "table.sense_profiles",
     "table.traits",
 )
 @writes(
@@ -220,6 +221,7 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.nodes",
     "table.nutrition_scores",
     "table.prostheses",
+    "table.sense_profiles",
     "table.sons",
     "table.stars",
     "table.tradition_profiles",

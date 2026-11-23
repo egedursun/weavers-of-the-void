@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Feather, Plus, RefreshCcw } from 'lucide-react'
+import { Feather, Landmark, Plus, RefreshCcw } from 'lucide-react'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
@@ -11,12 +11,14 @@ import { StepButton, TextField } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
 import { CLASSES } from '@/features/entity/affairs/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
+import { STAGES as LIFE_STAGES } from '@/features/entity/mortal/labels'
 import { NumberField } from '@/features/entity/realm/parts'
 import { Bars } from '@/features/sacred/parts'
 import { Tag } from '@/features/wars/military/parts'
 import { type CustomsNodeView, useCustomsAction } from './api'
 import {
-  AIMS,
+  DUTIES,
+  WAYS,
   GOALS,
   GRADES,
   INTOXICANTS,
@@ -47,6 +49,10 @@ const SHARES = [
   'learning',
   'care',
   'art',
+  'housework',
+  'sleep',
+  'civic',
+  'training',
 ] as const
 
 function RevivalCard({
@@ -68,12 +74,12 @@ function RevivalCard({
       icon={stage.icon}
       tone={stage.tone}
       title={GOALS[row.goal].label}
-      caption={`${AIMS[row.aim].label} · ${stage.label} · from epoch ${row.started_epoch}${row.ended_epoch !== null ? ` to ${row.ended_epoch}` : ''}${row.dominant ? ` · against ${row.dominant.name}` : ''}${row.prophet ? ` · led by ${row.prophet.name}` : ''}`}
+      caption={`${WAYS[row.way].label} · ${stage.label} · from epoch ${row.started_epoch}${row.ended_epoch !== null ? ` to ${row.ended_epoch}` : ''}${row.dominant ? ` · against ${row.dominant.name}` : ''}${row.prophet ? ` · led by ${row.prophet.name}` : ''}`}
       removeLabel='Strike the movement'
       editTitle='Set the movement'
-      note='A movement rises when rulers, conquerors or neighbours press their ways on a people. It passes through stress and distortion to revival, when it works its aim, and settles into a new steady way.'
+      note='A movement rises when rulers, conquerors or neighbours press their ways on a people. It passes through stress and distortion to revival, when it works its way toward its goal, and settles into a new steady way or meets its goal.'
       fields={[
-        { key: 'aim', label: 'Aim', kind: 'pick', table: table(AIMS) },
+        { key: 'way', label: 'Way', kind: 'pick', table: table(WAYS) },
         { key: 'stage', label: 'Stage', kind: 'pick', table: table(STAGES) },
         { key: 'goal', label: 'Goal', kind: 'pick', table: table(GOALS) },
         {
@@ -137,7 +143,7 @@ function IntoxCard({
       caption={`${USES[row.use].label} · accepted ${row.acceptance} of ${SPAN}`}
       removeLabel='Strike the custom'
       editTitle='Set the custom'
-      note='Taken daily it breeds dependence, at feasts it breeds brawls, in rites it brings mystics visions; brewing uses the brew base of the towns.'
+      note='Taken daily it breeds dependence, at feasts it breeds brawls, in rites it gives mystics visions; brewing uses the brew base of the towns.'
       fields={[
         { key: 'use', label: 'When taken', kind: 'pick', table: table(USES) },
         {
@@ -181,7 +187,7 @@ function MarkCustomCard({
       caption='A mark the people give and read'
       removeLabel='Strike the custom'
       editTitle='Set the custom'
-      note='The people place this mark when its meaning comes to pass: a deed, a marriage, a mourning, a birth, an initiation or a rise to rule.'
+      note='The people place this mark when its meaning comes to pass: a deed, a marriage, a mourning, a birth, an initiation, a rise to rule, a faith taken up, a guild joined or a betrothal.'
       fields={[
         {
           key: 'meaning',
@@ -210,18 +216,23 @@ function BudgetCard({
   const action = useCustomsRow(
     'time_budget:edit',
     'time_budget:delete',
-    { people_id: people, social_class: row.social_class },
+    {
+      people_id: people,
+      social_class: row.social_class,
+      life_stage: row.life_stage,
+    },
     blocked
   )
+  const stage = LIFE_STAGES[row.life_stage]
   return (
     <Held
-      icon={Feather}
+      icon={stage.icon}
       tone='info'
-      title={CLASSES[row.social_class] ?? row.social_class}
+      title={`${CLASSES[row.social_class] ?? row.social_class}, ${stage.label.toLowerCase()}`}
       caption={SHARES.map((key) => `${key} ${row[key]}`).join(' · ')}
       removeLabel='Strike the budget'
       editTitle='Set the budget'
-      note="A class's year: work sets a town's output, leisure its satisfaction, worship its piety, rest eases unrest, travel brings trade, service guards the walls, and learning, care and art feed the needs they serve."
+      note="A class's year: work sets a town's output, leisure its satisfaction, worship its piety, rest eases unrest, travel brings trade, service guards the walls, learning, care and art feed the needs they serve, housework keeps the home, sleep is the night a body needs, civic duty lowers crime and training sharpens skills."
       fields={SHARES.map((key) => ({
         key,
         label: key[0].toUpperCase() + key.slice(1),
@@ -299,11 +310,56 @@ function NamingCard({
           kind: 'pick',
           table: YES_NO,
         },
+        {
+          key: 'posthumous_names',
+          label: 'Name the dead anew',
+          kind: 'pick',
+          table: YES_NO,
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
       onEdit={action.onEdit}
       onRemove={action.onRemove}
+    />
+  )
+}
+
+type Duty = View['grade_duties'][number]
+
+function DutyCard({
+  people,
+  row,
+  blocked,
+}: {
+  people: number
+  row: Duty
+  blocked: string | null
+}) {
+  const action = useCustomsRow(
+    'grade_duty:edit',
+    'grade_duty:delete',
+    { people_id: people, duty: row.duty },
+    blocked
+  )
+  const duty = DUTIES[row.duty]
+  return (
+    <Held
+      icon={duty.icon}
+      tone={duty.tone}
+      title={duty.label}
+      caption={`Carried by the ${GRADES[row.grade].label.toLowerCase()}${row.held ? ' · held' : ''}`}
+      removeLabel='Take the duty away'
+      editTitle='Set the duty'
+      note='A people gives a duty to the grade it chooses; with no grade named for war, it sends no grade to war.'
+      fields={[
+        { key: 'grade', label: 'Grade', kind: 'pick', table: table(GRADES) },
+      ]}
+      locked={row.held ? ['grade'] : []}
+      blocked={action.busy}
+      onEdit={action.onEdit}
+      onRemove={action.onRemove}
+      extra={<Tag item={duty} />}
     />
   )
 }
@@ -324,7 +380,7 @@ function AgeSetCard({ row, blocked }: { row: AgeSet; blocked: string | null }) {
       caption={`${grade.label} · ${plural(row.members, 'member', 'members')} · initiated from epoch ${row.initiated_from}${row.initiated_to !== null ? ` to ${row.initiated_to}` : ', still open'}`}
       removeLabel='Strike the age-set'
       editTitle='Set the age-set'
-      note='Those initiated together move through the grades together; youths may not wed, warriors swell the levy, and a set waits while the set ahead holds its grade.'
+      note='Those initiated together move through the grades together; youths may not wed, a grade swells the levy only where the people gives it the duty of war, and a set waits while the set ahead holds its grade.'
       fields={[
         { key: 'name', label: 'Age-set name', kind: 'text' },
         {
@@ -368,10 +424,14 @@ export function FolkPanel({
 }) {
   const people = data.people?.id ?? null
   const [goal, setGoal] = useState('revive_language')
+  const [way, setWay] = useState('restore')
+  const [duty, setDuty] = useState('council')
+  const [dutyGrade, setDutyGrade] = useState('senior_elders')
   const [intox, setIntox] = useState('brew')
   const [mark, setMark] = useState('tattoo')
   const [meaning, setMeaning] = useState('deed')
   const [klass, setKlass] = useState('farmer')
+  const [lifeStage, setLifeStage] = useState('adult')
   const [setName, setSetName] = useState('')
   const [work, setWork] = useState('55')
   const noPeople = people === null ? NO_PEOPLE : null
@@ -379,7 +439,7 @@ export function FolkPanel({
     'revival:create',
     (_: void) => ({
       people_entity_id: people ?? 0,
-      aim: goal === 'adopt_ways' ? 'adopt' : 'restore',
+      way: way as Revival['way'],
       goal: goal as Revival['goal'],
     }),
     'A movement rises'
@@ -408,6 +468,7 @@ export function FolkPanel({
     (_: void) => ({
       people_id: people ?? 0,
       social_class: klass as Budget['social_class'],
+      life_stage: lifeStage as Budget['life_stage'],
       work: Number(work || '0'),
       rest: 20,
       worship: 10,
@@ -417,6 +478,10 @@ export function FolkPanel({
       learning: 0,
       care: 0,
       art: 0,
+      housework: 0,
+      sleep: 0,
+      civic: 0,
+      training: 0,
     }),
     'The year is set'
   )
@@ -429,6 +494,16 @@ export function FolkPanel({
       taboo_epochs: 0,
     }),
     'The people name so'
+  )
+  const dutying = useCustomsAction(
+    'grade_duty:set',
+    (_: void) => ({
+      people_id: people ?? 0,
+      duty: duty as Duty['duty'],
+      grade: dutyGrade as Duty['grade'],
+      hold: true,
+    }),
+    'The duty is given'
   )
   const opening = useCustomsAction(
     'age_set:create',
@@ -498,7 +573,7 @@ export function FolkPanel({
         items={data.budgets}
         empty='No year is set for its classes.'
         noun={['budget', 'budgets']}
-        itemKey={(item) => item.social_class}
+        itemKey={(item) => `${item.social_class}.${item.life_stage}`}
       >
         {(item) => (
           <BudgetCard people={people ?? 0} row={item} blocked={blocked} />
@@ -518,6 +593,52 @@ export function FolkPanel({
       >
         {(item) => <AgeSetCard row={item} blocked={blocked} />}
       </Listed>
+      <Listed
+        title='Duties of the grades'
+        items={data.grade_duties}
+        empty='No grade of its people carries a duty.'
+        noun={['duty', 'duties']}
+        itemKey={(item) => item.duty}
+      >
+        {(item) => (
+          <DutyCard people={people ?? 0} row={item} blocked={blocked} />
+        )}
+      </Listed>
+      <ForgeCard
+        icon={Landmark}
+        tone='gold'
+        title='Give a grade a duty'
+        note='Name which grade carries war, herding, labour or council.'
+        columns={2}
+        action={
+          <Button
+            size='sm'
+            disabled={busy(dutying.isPending) !== null}
+            disabledReason={busy(dutying.isPending) ?? undefined}
+            onClick={() => dutying.mutate()}
+          >
+            <Plus />
+            Give the duty
+          </Button>
+        }
+      >
+        <MindPicker
+          label='Duty'
+          value={duty}
+          table={table(DUTIES)}
+          placeholder='Choose'
+          blocked={blocked}
+          onPick={setDuty}
+        />
+        <MindPicker
+          label='Grade'
+          value={dutyGrade}
+          table={table(GRADES)}
+          placeholder='Choose'
+          blocked={blocked}
+          onPick={setDutyGrade}
+        />
+      </ForgeCard>
       <ForgeCard
         icon={RefreshCcw}
         tone='gold'
@@ -536,6 +657,14 @@ export function FolkPanel({
           </Button>
         }
       >
+        <MindPicker
+          label='Way'
+          value={way}
+          table={table(WAYS)}
+          placeholder='Choose'
+          blocked={blocked}
+          onPick={setWay}
+        />
         <MindPicker
           label='Goal'
           value={goal}
@@ -636,6 +765,14 @@ export function FolkPanel({
           placeholder='Choose'
           blocked={blocked}
           onPick={setKlass}
+        />
+        <MindPicker
+          label='Time of life'
+          value={lifeStage}
+          table={table(LIFE_STAGES)}
+          placeholder='Choose'
+          blocked={blocked}
+          onPick={setLifeStage}
         />
         <NumberField
           label='Work share'

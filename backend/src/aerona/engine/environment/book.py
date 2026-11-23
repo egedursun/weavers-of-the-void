@@ -6,13 +6,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.movement import by_water
 from aerona.constants.units import PERCENT
+from aerona.db.tables.ages import IrregularSeasonRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import ScarKind, WeatherEffect
+from aerona.domain.enums.environment import ScarKind, SeasonWarmth, WeatherEffect
 from aerona.domain.enums.nature import PlantDefence
 from aerona.domain.enums.world import SkyEventKind
+from aerona.engine.environment.season_shape import season_of_index, season_phase
+from aerona.engine.environment.spells import SpellPull, pull_of, shifts
 from aerona.engine.environment.weather import Weather, WeatherInputs, weather_at, weather_of
 from aerona.engine.nature.cover import defence_cover, passage
 from aerona.engine.primitives.distance import RegionAtlas
@@ -62,6 +65,8 @@ class EnvironmentBook:
     forced: dict[int, list[ForcedWeatherRow]] = field(default_factory=dict)
     living_places: frozenset[int] = frozenset()
     thorns: dict[int, float] = field(default_factory=dict)
+    spells: dict[int, list[IrregularSeasonRow]] = field(default_factory=dict)
+    map_ys: dict[int, float | None] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int, atlas: RegionAtlas | None = None) -> "EnvironmentBook":
@@ -72,6 +77,9 @@ class EnvironmentBook:
             seasons.setdefault(row.world_id, []).append(row)
         worlds = {row.id: row for row in await session.scalars(select(WorldRow))}
         calendars = {row.knowledge_entity_id: row for row in await session.scalars(select(CalendarRow))}
+        spells: dict[int, list[IrregularSeasonRow]] = {}
+        for spell in await session.scalars(select(IrregularSeasonRow).order_by(IrregularSeasonRow.world_id, IrregularSeasonRow.id)):
+            spells.setdefault(spell.world_id, []).append(spell)
         return cls(
             rules=rules,
             atlas=atlas or await RegionAtlas.load(session),
@@ -87,7 +95,12 @@ class EnvironmentBook:
                 await session.scalars(select(EntityRow.id).where(EntityRow.entity_type == EntityType.PLACE, EntityRow.status == EntityStatus.CANON))
             ),
             thorns={region: cover.get(PlantDefence.THORNS, 0.0) for region, cover in (await defence_cover(session)).items()},
+            spells=spells,
+            map_ys={row_id: map_y for row_id, map_y in await session.execute(select(EntityRow.id, EntityRow.map_y).where(EntityRow.id.in_(list(regions))))},
         )
+
+    def spell_pull(self, region: RegionEnvironmentRow) -> SpellPull:
+        return pull_of(self.rules, self.spells.get(region.world_id, []), region.latitude, self.map_ys.get(region.entity_id))
 
     def star_of(self, world: WorldRow) -> StarRow | None:
         return self.stars.get(world.star_id) if world.star_id is not None else None
@@ -109,7 +122,7 @@ class EnvironmentBook:
 
     def season_at(self, world_id: int, index: int) -> WorldSeasonRow | None:
         seasons = self.seasons_of(world_id)
-        return seasons[index % len(seasons)] if seasons else None
+        return season_of_index(seasons, index)
 
     def growing_season(self, world_id: int) -> WorldSeasonRow | None:
         seasons = self.seasons_of(world_id)
@@ -119,7 +132,11 @@ class EnvironmentBook:
         world = self.worlds.get(region.world_id)
         sky = self.sky.get(region.world_id, frozenset()) | self.sky.get(None, frozenset())
         scale = region.seasonality / PERCENT
+        pull = self.spell_pull(region)
+        spelled = shifts(self.rules, pull)
         return WeatherInputs(
+            winter_pull=pull.winter,
+            summer_pull=pull.summer,
             region_id=region.entity_id,
             temperature=region.temperature,
             rainfall=region.rainfall,
@@ -127,9 +144,12 @@ class EnvironmentBook:
             magic_density=region.magic_density,
             terrain=region.dominant_terrain,
             leakage=world.leakage if world is not None else 0,
-            season_temperature=round(season.temperature_shift * scale) if season is not None else 0,
-            season_rain=round(season.rain_shift * scale) if season is not None else 0,
+            season_temperature=(round(season.temperature_shift * scale) if season is not None else 0) + spelled[0],
+            season_rain=(round(season.rain_shift * scale) if season is not None else 0) + spelled[1],
             sky=sky,
+            season_warmth=season_phase(self.seasons_of(region.world_id))[season.position].warmth
+            if season is not None and season.position in {item.position for item in self.seasons_of(region.world_id)}
+            else SeasonWarmth.EVEN,
         )
 
     def weather(self, world_seed: int, epoch: int, region: RegionEnvironmentRow, season: WorldSeasonRow | None, slot: str) -> Weather:
@@ -146,7 +166,9 @@ class EnvironmentBook:
         base = region.passability.get(mode, PERCENT) * passage(self.rules, self.thorns.get(region.entity_id, 0.0))
         weather = self.weather(world_seed, epoch, region, season, slot)
         footing = sail_factor(self.rules, weather.effect(WeatherEffect.WIND)) if by_water(mode) else weather.factor(WeatherEffect.FOOTING)
+        footing *= 1 + min(0, weather.effect(WeatherEffect.BREATH)) / PERCENT
         travel = season.travel / PERCENT if season is not None else 1.0
+        travel *= (PERCENT - self.spell_pull(region).winter * self.rules.long_seasons.travel_winter_pct // PERCENT) / PERCENT
         return clamp_int(base * max(0.0, footing) * travel, 0, PERCENT)
 
     def clarity(self, world_seed: int, epoch: int, world_id: int, slot: str) -> float:
@@ -177,7 +199,8 @@ def season_attrition(rules: Rules, weather: Weather, *, armour_pct: int, acclima
     settings = rules.environment
     cold = weather.effect(WeatherEffect.COLD) * (settings.attrition_armour_base_pct + armour_pct) / PERCENT
     heat = weather.effect(WeatherEffect.HEAT) * (settings.attrition_armour_base_pct + armour_pct) / PERCENT
-    exposure = (cold + heat) * settings.attrition_exposure_pct / PERCENT / PERCENT
+    choking = max(0, -weather.effect(WeatherEffect.BREATH))
+    exposure = (cold + heat + choking) * settings.attrition_exposure_pct / PERCENT / PERCENT
     return exposure * (settings.acclimatised_attrition_pct / PERCENT if acclimatised else 1.0)
 
 

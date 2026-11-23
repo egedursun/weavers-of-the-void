@@ -7,6 +7,7 @@ from aerona.catalog.life.crafts import SCHOOLING
 from aerona.catalog.life.domain import GROWN
 from aerona.catalog.life.folk_knowledge import THEORY_DOMAINS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.crafts import NumberSystemRow
 from aerona.db.tables.discovery import TheoryAdherentRow, TheoryProfileRow
@@ -124,7 +125,7 @@ async def candidates(ctx: TickContext, people: EntityRow, domain: FolkDomain, mi
         )
         if found is None:
             return []
-        return [Candidate(found.name or (found.base_kind.value.replace("_", " ") if found.base_kind else "a material"), material_id=found.id)]
+        return [Candidate(found.name or (spoken(found.base_kind) if found.base_kind else "a material"), material_id=found.id)]
     if domain is FolkDomain.SKY:
         return await sky_candidates(ctx, people, nodes)
     return await entity_candidates(ctx, people, domain, nodes)

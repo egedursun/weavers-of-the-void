@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, Scale } from 'lucide-react'
+import { naturalLawValues } from '@/api/generated/schema'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,8 +18,8 @@ import {
   Section,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type NaturalLaw, useWorldGeography, useWorldLaws } from './api'
-import { humanize } from './model/labels'
 
 const NO_MECHANIC: NaturalLaw = 'none'
 
@@ -57,7 +58,7 @@ export function WorldLaws({ worldId }: { worldId: number }) {
                   </Badge>
                   {law.mechanic && law.mechanic !== NO_MECHANIC && (
                     <Badge size='sm' variant='secondary'>
-                      {humanize(law.mechanic)}
+                      {wordOf(naturalLawValues, law.mechanic)}
                     </Badge>
                   )}
                 </li>

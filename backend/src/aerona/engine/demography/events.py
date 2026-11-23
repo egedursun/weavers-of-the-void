@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.mobility import MOBILITY_EVENTS
 from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow
@@ -171,3 +172,21 @@ async def ruined(ctx: TickContext, member: EntityRow, guild: EntityRow | None, *
             "fell_to": member.social_class,
         },
     )
+
+
+async def moved_class(ctx: TickContext, mortal: EntityRow, event: MobilityEvent, *, cause: str, by_hand: bool = False) -> bool:
+    spec = MOBILITY_EVENTS[event]
+    target = spec.lands_in
+    if target is None or mortal.social_class is target:
+        return False
+    before = mortal.social_class
+    mortal.social_class = target
+    community = await ctx.session.get(EntityRow, mortal.location_id) if mortal.location_id is not None else None
+    await log_event(ctx, event, community=community, count=1, mortal=mortal, by_hand=by_hand)
+    await record_incident(
+        ctx,
+        "life.class_changed",
+        roles={IncidentRole.SUBJECT: mortal.id, IncidentRole.PLACE: community.id if community is not None else None},
+        facts={"event": event, "from_class": before, "to_class": target, "cause": cause},
+    )
+    return True

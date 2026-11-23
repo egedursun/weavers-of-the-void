@@ -10,6 +10,10 @@ class CollectiveActKind(StrEnum):
     STRIKE = "strike"
     PROCESSION = "procession"
     REVIVAL = "revival"
+    JUBILATION = "jubilation"
+    DEMONSTRATION = "demonstration"
+    BOYCOTT = "boycott"
+    EXODUS = "exodus"
 
 
 class CollectiveTrigger(StrEnum):
@@ -26,6 +30,17 @@ class CollectiveTrigger(StrEnum):
     FAMINE = "famine"
     UNPAID_WAGES = "unpaid_wages"
     LOST_MATCH = "lost_match"
+    VICTORY = "victory"
+    GREAT_FUNERAL = "great_funeral"
+    ELECTION = "election"
+
+
+class CrowdFeeling(StrEnum):
+    ANGER = "anger"
+    FEAR = "fear"
+    FERVOUR = "fervour"
+    GRIEF = "grief"
+    HOPE = "hope"
 
 
 class CascadeOutcome(StrEnum):
@@ -207,6 +222,7 @@ class FormativeKind(StrEnum):
     DISASTER = "disaster"
     LIBERATION = "liberation"
     SCHISM = "schism"
+    LONG_SEASON = "long_season"
 
 
 class RoleKind(StrEnum):
@@ -219,10 +235,10 @@ class RoleKind(StrEnum):
 
 class RoleEligibility(StrEnum):
     ANY = "any"
-    FEMALE_ONLY = "female_only"
-    MALE_ONLY = "male_only"
-    FEMALE_PREFERRED = "female_preferred"
-    MALE_PREFERRED = "male_preferred"
+    BEARERS_ONLY = "bearers_only"
+    BEGETTERS_ONLY = "begetters_only"
+    BEARERS_PREFERRED = "bearers_preferred"
+    BEGETTERS_PREFERRED = "begetters_preferred"
 
 
 class DatingSystemKind(StrEnum):

@@ -226,6 +226,7 @@ async def find_gate(ctx: TickContext, delver: EntityRow, realm: EntityRow, room:
             IncidentRole.DESTINATION: realm.id,
             IncidentRole.PLACE: room.site_entity_id,
         },
+        place=room.site_entity_id,
     )
 
 

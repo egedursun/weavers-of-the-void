@@ -24,6 +24,7 @@ class NameKind(StrEnum):
     PEOPLE = "people"
     ARMY = "army"
     GENERAL = "general"
+    SEASON = "season"
 
 
 @dataclass(frozen=True)

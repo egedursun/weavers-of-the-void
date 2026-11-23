@@ -12,6 +12,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.renown.axes import backfill_axes
 from aerona.engine.renown.book import aggregate
 from aerona.engine.renown.claims import tend_claims
 from aerona.engine.renown.currencies import CurrencyTally, tend_currencies
@@ -89,6 +90,7 @@ async def renown_hearsay(ctx: TickContext) -> None:
 
 
 @reads("table.deed_claims", "table.deeds", "table.incident_participants")
+@writes("table.deed_claims")
 async def renown_claims(ctx: TickContext) -> None:
     tally = DeedTally()
     await tend_claims(ctx, tally)
@@ -97,18 +99,32 @@ async def renown_claims(ctx: TickContext) -> None:
 
 @reads(
     "table.crime_cases",
+    "table.entities",
     "table.faction_profiles",
     "table.gardens",
     "table.museum_collections",
     "table.museum_pieces",
+    "table.node_births",
+    "table.nodes",
     "table.offices",
+    "table.pardons",
     "table.polity_members",
     "table.reputations",
     "table.ruler_currencies",
 )
-@writes("table.ruler_currencies")
+@writes(
+    "table.applied_fixups",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.reputations",
+    "table.ruler_currencies",
+)
 async def ruler_currencies(ctx: TickContext) -> None:
     tally = CurrencyTally()
+    ctx.count("renown_axes_seeded", await backfill_axes(ctx))
     await tend_currencies(ctx, tally)
     count(ctx, "currency", tally)
 

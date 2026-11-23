@@ -1,7 +1,11 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.naming import NAMING_PATTERNS
+from aerona.core.grammar import spoken
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.customs import NameFormRow, NamingCustomRow
 from aerona.db.tables.entities import EntityRow
@@ -12,6 +16,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.customs import NameForm, NamingPattern
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import TrueNameCause
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -19,6 +24,7 @@ from aerona.engine.intrigue.names import name_bearer, rename
 from aerona.engine.mortal.kin import parents_of
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import Namer, seed_of
+from aerona.engine.recording.record import record
 
 ROMAN = ("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X")
 
@@ -44,6 +50,7 @@ async def custom_of(ctx: TickContext, people: EntityRow) -> NamingCustomRow:
         rename_on_initiation=rng.chance(table.rename_chance),
         rename_on_marriage=rng.chance(table.rename_chance),
         rename_on_vow=rng.chance(table.rename_chance),
+        posthumous_names=rng.chance(table.posthumous_chance),
         locked=[],
     )
     ctx.session.add(row)
@@ -61,16 +68,51 @@ async def give(ctx: TickContext, mortal: EntityRow, form: NameForm, name: str, t
     tally.named += 1
 
 
+async def parent_part(ctx: TickContext, mortal: EntityRow) -> str | None:
+    parents = await parents_of(ctx.session, mortal.id)
+    parent = await ctx.session.get(EntityRow, parents[0]) if parents else None
+    return parent.name if parent is not None else None
+
+
+async def clan_part(ctx: TickContext, mortal: EntityRow) -> str | None:
+    house = await ctx.session.scalar(select(BondRow.target_node_id).where(BondRow.source_node_id == mortal.id, BondRow.kind == BondKind.MEMBER_OF).limit(1))
+    clan = await ctx.session.get(EntityRow, house) if house is not None else None
+    return clan.name if clan is not None else None
+
+
+async def place_part(ctx: TickContext, mortal: EntityRow) -> str | None:
+    home = await ctx.session.get(EntityRow, mortal.location_id) if mortal.location_id is not None else None
+    return home.name if home is not None else None
+
+
+async def trade_part(ctx: TickContext, mortal: EntityRow) -> str | None:
+    for parent_id in await parents_of(ctx.session, mortal.id):
+        profile = await ctx.session.get(MortalProfileRow, parent_id)
+        if profile is not None and profile.profession is not None:
+            return str(spoken(profile.profession))
+    return None
+
+
+async def no_part(ctx: TickContext, mortal: EntityRow) -> str | None:
+    return None
+
+
+PARTS: Mapping[NamingPattern, Callable[[TickContext, EntityRow], Awaitable[str | None]]] = total(
+    NamingPattern,
+    {
+        NamingPattern.GIVEN: no_part,
+        NamingPattern.PARENT: parent_part,
+        NamingPattern.CLAN: clan_part,
+        NamingPattern.TEKNONYM: no_part,
+        NamingPattern.PLACE: place_part,
+        NamingPattern.TRADE: trade_part,
+    },
+)
+
+
 async def birth_name(ctx: TickContext, mortal: EntityRow, custom: NamingCustomRow) -> str:
-    if custom.pattern is NamingPattern.PARENT:
-        parents = await parents_of(ctx.session, mortal.id)
-        parent = await ctx.session.get(EntityRow, parents[0]) if parents else None
-        return f"{mortal.name}, child of {parent.name}" if parent is not None else mortal.name
-    if custom.pattern is NamingPattern.CLAN:
-        house = await ctx.session.scalar(select(BondRow.target_node_id).where(BondRow.source_node_id == mortal.id, BondRow.kind == BondKind.MEMBER_OF).limit(1))
-        clan = await ctx.session.get(EntityRow, house) if house is not None else None
-        return f"{mortal.name} of {clan.name}" if clan is not None else mortal.name
-    return mortal.name
+    part = await PARTS[custom.pattern](ctx, mortal)
+    return f"{mortal.name}{NAMING_PATTERNS[custom.pattern].joiner}{part}" if part else mortal.name
 
 
 async def teknonyms(ctx: TickContext, mortal: EntityRow, tally: NamingTally) -> None:
@@ -131,6 +173,33 @@ async def initiate_name(ctx: TickContext, namer: Namer, mortal: EntityRow, tally
         await rename_for(ctx, namer, mortal, NameForm.INITIATION, tally)
 
 
+async def name_the_dead(ctx: TickContext, namer: Namer, people: EntityRow, custom: NamingCustomRow, tally: NamingTally) -> None:
+    if not custom.posthumous_names:
+        return
+    dead = await ctx.session.scalars(
+        select(EntityRow)
+        .where(
+            await present_among(ctx.session, [people.id]),
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.DEAD,
+            EntityRow.end_epoch == ctx.epoch,
+        )
+        .order_by(EntityRow.id)
+    )
+    for mortal in list(dead):
+        if held(mortal.id) or await ctx.session.get(NameFormRow, (mortal.id, NameForm.POSTHUMOUS)) is not None:
+            continue
+        name = await fresh_name(ctx, namer, mortal, NameForm.POSTHUMOUS)
+        if not name:
+            continue
+        if await ctx.session.get(NameFormRow, (mortal.id, NameForm.BIRTH)) is None:
+            await give(ctx, mortal, NameForm.BIRTH, mortal.name, tally)
+        await give(ctx, mortal, NameForm.POSTHUMOUS, name, tally)
+        living = mortal.name
+        mortal.name = name
+        await record(ctx, "death.named", roles={IncidentRole.SUBJECT: mortal.id}, facts={"name": name, "living": living, "taboo": custom.taboo_epochs})
+
+
 async def keep_naming(ctx: TickContext, tally: NamingTally) -> None:
     namer = Namer(ctx.session, ctx.rules)
     for people in list(
@@ -151,4 +220,5 @@ async def keep_naming(ctx: TickContext, tally: NamingTally) -> None:
         ):
             if not held(mortal.id):
                 await name_life(ctx, namer, mortal, custom, tally)
+        await name_the_dead(ctx, namer, people, custom, tally)
     await ctx.session.flush()

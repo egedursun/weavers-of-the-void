@@ -24,6 +24,11 @@ from aerona.catalog.incident_kinds.phases import KINDS as PHASES
 from aerona.catalog.incident_kinds.spec import IncidentKindSpec
 from aerona.catalog.incident_kinds.tellings import KINDS as TELLINGS
 from aerona.catalog.incident_kinds.w51_orders import KINDS as W51_ORDERS
+from aerona.catalog.incident_kinds.w52_agent_a import KINDS as W52_AGENT_A
+from aerona.catalog.incident_kinds.w52_agent_b import KINDS as W52_AGENT_B
+from aerona.catalog.incident_kinds.w52_agent_c import KINDS as W52_AGENT_C
+from aerona.catalog.incident_kinds.w52_agent_d import KINDS as W52_AGENT_D
+from aerona.catalog.incident_kinds.w52_agent_e import KINDS as W52_AGENT_E
 
 GROUP_KINDS: tuple[tuple[IncidentKindSpec, ...], ...] = (
     SINGLE_COMBAT,
@@ -48,6 +53,11 @@ GROUP_KINDS: tuple[tuple[IncidentKindSpec, ...], ...] = (
     AUTHORED,
     TELLINGS,
     W51_ORDERS,
+    W52_AGENT_B,
+    W52_AGENT_C,
+    W52_AGENT_E,
+    W52_AGENT_A,
+    W52_AGENT_D,
 )
 
 

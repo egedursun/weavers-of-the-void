@@ -1,12 +1,12 @@
 from sqlalchemy import select
 
+from aerona.catalog.beast_tempers import HELD_TEMPERS
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, TreatyKind
 from aerona.engine.context import TickContext
@@ -16,7 +16,7 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import living_entity
 
-HELD = (BeastTemper.BOUND, BeastTemper.TAMED)
+HELD = HELD_TEMPERS
 
 
 async def faith_pacts(ctx: TickContext, book: RealmBook, laws: LawBook, room: int) -> int:

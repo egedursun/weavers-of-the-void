@@ -76,7 +76,7 @@ async def found_school(ctx: TickContext, founder: EntityRow, tenets: list[Ideolo
     asked = list(dict.fromkeys(tenets))
     tenets = await teachable(ctx, founder, asked)
     if not tenets:
-        needs = ", ".join(sorted({TENET_GATES[tenet].value.replace("_", " ") for tenet in asked if tenet in TENET_GATES}))
+        needs = ", ".join(sorted({spoken(TENET_GATES[tenet]) for tenet in asked if tenet in TENET_GATES}))
         raise ValidationFailedError(f"No one around {founder.name} has yet learned what such a creed needs: {needs}.")
     name = (name or "").strip() or f"The {spoken(tenets[0]).title()} of {founder.name}"
     creed = await create_record(
@@ -85,7 +85,7 @@ async def found_school(ctx: TickContext, founder: EntityRow, tenets: list[Ideolo
             name=name,
             entity_type=EntityType.IDEOLOGY,
             stats=IdeologyStats(adherents=1, appeal=PERCENT // 4),
-            body=f"A creed taught by {founder.name}: {', '.join(tenet.value.replace('_', ' ') for tenet in tenets)}.",
+            body=f"A creed taught by {founder.name}: {', '.join(spoken(tenet) for tenet in tenets)}.",
             power=2,
             world_id=founder.world_id,
             location_id=founder.location_id,

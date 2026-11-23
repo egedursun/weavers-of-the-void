@@ -1,7 +1,12 @@
+from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass
+
 from sqlalchemy import Select, select
 
+from aerona.catalog.beast_tempers import HOSTILE_TEMPERS
 from aerona.catalog.bonds import bond_fits
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.couplings import TeachingRow
@@ -10,15 +15,16 @@ from aerona.db.tables.discovery import ArtFormPractitionerRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionRow
-from aerona.db.tables.intrigue import TrueNameRow
+from aerona.db.tables.intrigue import HookRow, SecretRow, TrueNameRow
 from aerona.db.tables.place import PlaceSecretRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import AccountKind, AccountMedium
-from aerona.domain.enums.couplings import TeachingKind, TeachingState
-from aerona.domain.enums.ecology import BeastTemper
+from aerona.domain.enums.couplings import TeachingState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.intrigue import HookSource, HookStrength
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.collective.accounts import RECORDED
 from aerona.engine.context import TickContext
@@ -31,8 +37,7 @@ from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import connect, top_region
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record as record_incident
-
-HOSTILE_TEMPERS = frozenset({BeastTemper.ENRAGED})
+from aerona.engine.renown.lore import grant, holdings
 
 
 async def origin_of(ctx: TickContext, teacher: EntityRow) -> EntityRow | None:
@@ -42,7 +47,7 @@ async def origin_of(ctx: TickContext, teacher: EntityRow) -> EntityRow | None:
     return await ctx.session.get(EntityRow, bond.target_node_id) if bond is not None else None
 
 
-async def taught(ctx: TickContext, teacher_id: int, learner_id: int, kind: TeachingKind) -> bool:
+async def taught(ctx: TickContext, teacher_id: int, learner_id: int, kind: KnowledgeKind) -> bool:
     found = await ctx.session.scalar(
         select(TeachingRow.id).where(TeachingRow.teacher_node_id == teacher_id, TeachingRow.learner_entity_id == learner_id, TeachingRow.kind == kind).limit(1)
     )
@@ -182,28 +187,102 @@ async def give_prophecy(ctx: TickContext, teacher: EntityRow, learner: EntityRow
     return found
 
 
-async def teach(ctx: TickContext, teacher: EntityRow, learner: EntityRow, kind: TeachingKind, fidelity: int) -> int | None:
+@dataclass(frozen=True)
+class Lesson:
+    teacher: EntityRow
+    learner: EntityRow
+    sources: list[int]
+    fidelity: int
+    kind: KnowledgeKind
+
+
+async def give_lore(ctx: TickContext, lesson: Lesson) -> int | None:
+    known = sorted(await holdings(ctx.session, lesson.teacher.id, lesson.kind), key=lambda item: (item[0], item[1] or 0))
+    for key, subject in known:
+        if await grant(ctx, lesson.learner, (lesson.kind, key, subject)):
+            return subject if subject is not None else lesson.teacher.id
+    return None
+
+
+async def give_secret(ctx: TickContext, lesson: Lesson) -> int | None:
+    secrets = await ctx.session.scalars(select(SecretRow).where(SecretRow.exposed_epoch.is_(None)).order_by(SecretRow.id))
+    for secret in secrets:
+        knows = lesson.teacher.id == secret.holder_node_id or lesson.teacher.id in (secret.known_by or [])
+        if not knows or lesson.learner.id in (secret.known_by or []) or "known_by" in secret.locked:
+            continue
+        secret.known_by = [*(secret.known_by or []), lesson.learner.id]
+        target = secret.about_node_id or secret.holder_node_id
+        strong = ctx.rules.knowledge.secret_hook_strength >= PERCENT // 2
+        ctx.session.add(
+            HookRow(
+                holder_node_id=lesson.learner.id,
+                target_node_id=target,
+                strength=HookStrength.STRONG if strong else HookStrength.WEAK,
+                source=HookSource.SECRET,
+                secret_id=secret.id,
+                created_epoch=ctx.epoch,
+            )
+        )
+        return target
+    return None
+
+
+async def by_sources(ctx: TickContext, lesson: Lesson) -> int | None:
+    giver = SOURCE_GIVERS.get(lesson.kind)
+    return None if giver is None else await giver(ctx, lesson.sources, lesson.learner)
+
+
+async def by_account(ctx: TickContext, lesson: Lesson) -> int | None:
+    return await give_account(ctx, lesson.teacher, lesson.learner, lesson.fidelity)
+
+
+async def by_treasure(ctx: TickContext, lesson: Lesson) -> int | None:
+    return await give_treasure(ctx, lesson.teacher, lesson.learner)
+
+
+async def by_prophecy(ctx: TickContext, lesson: Lesson) -> int | None:
+    return await give_prophecy(ctx, lesson.teacher, lesson.learner)
+
+
+SOURCE_GIVERS: Mapping[KnowledgeKind, Callable[[TickContext, list[int], EntityRow], Awaitable[int | None]]] = {
+    KnowledgeKind.RITE: give_rite,
+    KnowledgeKind.TECHNIQUE: give_technique,
+    KnowledgeKind.TRUE_NAME: give_name,
+    KnowledgeKind.LANGUAGE: give_language,
+    KnowledgeKind.ART_FORM: give_art,
+    KnowledgeKind.SONG: give_song,
+}
+Giver = Callable[[TickContext, Lesson], Awaitable[int | None]]
+GIVERS: Mapping[KnowledgeKind, Giver] = total(
+    KnowledgeKind,
+    {
+        KnowledgeKind.SONG: by_sources,
+        KnowledgeKind.ART_FORM: by_sources,
+        KnowledgeKind.RITE: by_sources,
+        KnowledgeKind.TECHNIQUE: by_sources,
+        KnowledgeKind.TRUE_NAME: by_sources,
+        KnowledgeKind.LANGUAGE: by_sources,
+        KnowledgeKind.PROPHECY: by_prophecy,
+        KnowledgeKind.TREASURE: by_treasure,
+        KnowledgeKind.ACCOUNT: by_account,
+        KnowledgeKind.SITE: give_lore,
+        KnowledgeKind.MAP: give_lore,
+        KnowledgeKind.WEAKNESS: give_lore,
+        KnowledgeKind.PATTERN: give_lore,
+        KnowledgeKind.SOURCE: give_lore,
+        KnowledgeKind.SECRET: give_secret,
+    },
+)
+
+
+async def teach(ctx: TickContext, teacher: EntityRow, learner: EntityRow, kind: KnowledgeKind, fidelity: int) -> int | None:
     origin = await origin_of(ctx, teacher)
     sources = [
         teacher.id,
         *([origin.id] if origin is not None else []),
         *([origin.affiliated_entity_id] if origin is not None and origin.affiliated_entity_id else []),
     ]
-    by_source = {
-        TeachingKind.RITE: give_rite,
-        TeachingKind.TECHNIQUE: give_technique,
-        TeachingKind.TRUE_NAME: give_name,
-        TeachingKind.LANGUAGE: give_language,
-        TeachingKind.ART_FORM: give_art,
-        TeachingKind.SONG: give_song,
-    }
-    if kind in by_source:
-        return await by_source[kind](ctx, sources, learner)
-    if kind is TeachingKind.ACCOUNT:
-        return await give_account(ctx, teacher, learner, fidelity)
-    if kind is TeachingKind.TREASURE:
-        return await give_treasure(ctx, teacher, learner)
-    return await give_prophecy(ctx, teacher, learner)
+    return await GIVERS[kind](ctx, Lesson(teacher, learner, sources, fidelity, kind))
 
 
 def fidelity_of(ctx: TickContext, teacher: EntityRow, beast: BeastProfileRow | None) -> int:
@@ -213,7 +292,7 @@ def fidelity_of(ctx: TickContext, teacher: EntityRow, beast: BeastProfileRow | N
 
 
 async def lesson(
-    ctx: TickContext, teacher: EntityRow, learner: EntityRow, *, kinds: tuple[TeachingKind, ...], price: int = 0, forced: bool = False
+    ctx: TickContext, teacher: EntityRow, learner: EntityRow, *, kinds: tuple[KnowledgeKind, ...], price: int = 0, forced: bool = False
 ) -> TeachingRow | None:
     if not forced and (held(teacher.id, learner.id) or await barred(ctx, teacher.id, learner.id)):
         return None
@@ -228,6 +307,8 @@ async def lesson(
         sold = price > 0
         if sold:
             await shift_points(ctx.session, learner, -price)
+            if kind is KnowledgeKind.SECRET:
+                await hand_over_hook(ctx, teacher.id, subject)
         row = TeachingRow(
             teacher_node_id=teacher.id,
             learner_entity_id=learner.id,
@@ -246,6 +327,17 @@ async def lesson(
         )
         return row
     return None
+
+
+async def hand_over_hook(ctx: TickContext, seller_id: int, target_id: int) -> None:
+    hooks = await ctx.session.scalars(
+        select(HookRow)
+        .where(HookRow.holder_node_id == seller_id, HookRow.target_node_id == target_id, HookRow.source == HookSource.SECRET)
+        .order_by(HookRow.id)
+    )
+    for hook in list(hooks):
+        if not hook.locked:
+            await ctx.session.delete(hook)
 
 
 async def learners_of(ctx: TickContext, teacher: EntityRow) -> list[EntityRow]:
@@ -270,16 +362,16 @@ async def learners_of(ctx: TickContext, teacher: EntityRow) -> list[EntityRow]:
 
 
 SPIRIT_LESSONS = (
-    TeachingKind.RITE,
-    TeachingKind.TECHNIQUE,
-    TeachingKind.ART_FORM,
-    TeachingKind.SONG,
-    TeachingKind.TRUE_NAME,
-    TeachingKind.PROPHECY,
-    TeachingKind.TREASURE,
-    TeachingKind.LANGUAGE,
+    KnowledgeKind.RITE,
+    KnowledgeKind.TECHNIQUE,
+    KnowledgeKind.ART_FORM,
+    KnowledgeKind.SONG,
+    KnowledgeKind.TRUE_NAME,
+    KnowledgeKind.PROPHECY,
+    KnowledgeKind.TREASURE,
+    KnowledgeKind.LANGUAGE,
 )
-BEAST_LESSONS = (TeachingKind.ACCOUNT, TeachingKind.RITE, TeachingKind.LANGUAGE, TeachingKind.TRUE_NAME)
+BEAST_LESSONS = (KnowledgeKind.ACCOUNT, KnowledgeKind.RITE, KnowledgeKind.LANGUAGE, KnowledgeKind.TRUE_NAME)
 
 
 async def lore_beasts(ctx: TickContext) -> list[tuple[EntityRow, BeastProfileRow]]:

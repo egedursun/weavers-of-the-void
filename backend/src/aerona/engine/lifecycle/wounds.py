@@ -2,8 +2,9 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
 from aerona.catalog.anatomy import SIGHT_PARTS
-from aerona.catalog.harm_kinds import DAMAGE, injuries_where
+from aerona.catalog.harm_kinds import DAMAGE, INJURIES, injuries_where
 from aerona.catalog.incident_kinds.body_lines import injury_line
+from aerona.catalog.kinds.harm import HARM_CAUSES
 from aerona.catalog.mind import MELEE_SKILLS
 from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS
 from aerona.constants.units import PERCENT
@@ -19,7 +20,7 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.records import IncidentStepStateRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import BodyFunction, DamageType, HarmCause, InjuryKind, InjuryState
+from aerona.domain.enums.body import BodyFunction, ConditionKind, DamageType, HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -28,6 +29,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.domain.enums.records import StepState
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_level, metallurgy_of
+from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.digits import lose
 from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, loss_for
 from aerona.engine.body.state import refresh
@@ -127,6 +129,8 @@ async def _deadly(ctx: TickContext, bearer: Bearer, body: BodyRow, hit: Hit, rng
             spared = ctx.rules.injury.notable_survival_pct * harshness(ctx.rules, HarshnessScale.NOTABLE_SURVIVAL)
             chance *= max(0.0, PERCENT - spared) / PERCENT
         return ctx.rng(seed_of("lethal", rng_key)).chance(chance)
+    if anatomy_for(body).colonial:
+        return body.vital < ctx.rules.body.colonial_member_floor_pct
     if hit.severity < SEVERITY_MAX or not hit.part.vital:
         return False
     weakness = (PERCENT - body.vital) * ctx.rules.injury.vital_lethality_pct / PERCENT
@@ -186,10 +190,31 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
         )
         ctx.session.add(row)
         rows.append(row)
+        await body_plan_harm(ctx, bearer, body, hit, row, rng_key=f"{bearer.id}.{ctx.epoch}.{index}.{harm.cause.value}")
     if rows:
         await ctx.session.flush()
         await mark_wound_states(ctx, bearer.id, rows)
     return rows
+
+
+MEMBER_SEVERITY = 3
+
+
+async def body_plan_harm(ctx: TickContext, bearer: Bearer, body: BodyRow, hit: Hit, row: InjuryRow, *, rng_key: str) -> None:
+    if hit.kind is InjuryKind.DISLOCATION:
+        row.function_loss = ctx.rules.injuries.dislocation_disable
+    if hit.kind is InjuryKind.INTERNAL_BLEEDING:
+        row.visible = not ctx.rng(seed_of("hidden", rng_key)).chance(ctx.rules.injuries.internal_bleed_hidden_pct)
+    if INJURIES[hit.kind].noted:
+        await record(ctx, "body.injured", roles={IncidentRole.SUBJECT: bearer.id}, facts={"injury": hit.kind, "part": hit.part.key, "severity": hit.severity})
+    if hit.part.paralyses and ctx.rng(seed_of("spine", rng_key)).chance(ctx.rules.body.spine_paralysis_pct):
+        row.function_loss = PERCENT
+        await record(ctx, "body.paralysed", roles={IncidentRole.SUBJECT: bearer.id}, facts={"severity": hit.severity})
+        await gain_condition(ctx, bearer, ConditionKind.PARALYSIS, row.cause_kind, severity=hit.severity, part=hit.part.key, source_node_id=row.cause_node_id)
+    if hit.damage_type is DamageType.ASPHYXIA:
+        await record(ctx, "body.asphyxiated", roles={IncidentRole.SUBJECT: bearer.id}, facts={"severity": hit.severity})
+    if anatomy_for(body).colonial and hit.part.shared and hit.severity >= MEMBER_SEVERITY:
+        await record(ctx, "body.member_lost", roles={IncidentRole.SUBJECT: bearer.id}, facts={"severity": hit.severity, "vitality": body.vital})
 
 
 BLINDING = injuries_where(lambda spec: spec.blinding)
@@ -318,6 +343,8 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
     if not lethal:
         hits = [_spare(hit) for hit in hits]
     rows = await _record(ctx, bearer, body, harm, hits, world_id=world_of(bearer))
+    if rows and HARM_CAUSES[harm.cause].noted:
+        await record(ctx, "body.harmed", roles={IncidentRole.SUBJECT: bearer.id}, facts={"cause": harm.cause, "wounds": len(rows)})
     if isinstance(bearer, EntityRow) and bearer.entity_type is EntityType.MORTAL and rows:
         await add_stress(ctx.session, bearer.id, sum(row.severity for row in rows) * ctx.rules.stress.wound_per_severity, ctx.epoch)
     lost, emptied = await _hp_loss(ctx, bearer, harm, hits, lethal)
@@ -336,7 +363,9 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
         return Wounding(WoundOutcome.DIED, rows, lost)
     if rows and not any(row.state is InjuryState.LETHAL for row in rows):
         max(rows, key=lambda row: row.severity).state = InjuryState.LETHAL
-    result = await die(ctx, bearer, cause=harm.death_cause, manner=manner_of(harm.cause), killer_id=harm.killer_id, event_id=harm.event_entity_id)
+    result = await die(
+        ctx, bearer, cause=harm.death_cause, manner=manner_of(harm.cause, damage=harm.damage_type), killer_id=harm.killer_id, event_id=harm.event_entity_id
+    )
     return Wounding(WoundOutcome.DIED if result is not None else WoundOutcome.WOUNDED, rows, lost)
 
 
@@ -344,7 +373,18 @@ async def slay(ctx: TickContext, mortal: EntityRow, harm: Harm, *, forced: bool 
     if mortal.entity_type is not EntityType.MORTAL or mortal.status is not EntityStatus.CANON:
         return False
     await fatal_injury(ctx, mortal, replace(harm, event_entity_id=harm.event_entity_id or event_id))
-    return await die(ctx, mortal, cause=harm.death_cause, manner=manner_of(harm.cause), killer_id=harm.killer_id, forced=forced, event_id=event_id) is not None
+    return (
+        await die(
+            ctx,
+            mortal,
+            cause=harm.death_cause,
+            manner=manner_of(harm.cause, damage=harm.damage_type),
+            killer_id=harm.killer_id,
+            forced=forced,
+            event_id=event_id,
+        )
+        is not None
+    )
 
 
 async def fatal_injury(ctx: TickContext, mortal: EntityRow, harm: Harm) -> InjuryRow | None:

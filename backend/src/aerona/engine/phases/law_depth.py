@@ -61,6 +61,7 @@ async def appeals(ctx: TickContext) -> None:
     "table.designs",
     "table.entities",
     "table.holder_techniques",
+    "table.incorporeal_rights",
     "table.living_lines",
     "table.memberships",
     "table.mind_profiles",
@@ -162,6 +163,7 @@ async def prisons(ctx: TickContext) -> None:
     "table.spy_agents",
     "table.spy_cells",
     "table.spy_networks",
+    "table.thoughts",
 )
 @writes(
     "table.chronicle",

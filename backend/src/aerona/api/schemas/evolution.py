@@ -52,6 +52,8 @@ class SuccessionView(ApiModel):
     succession_progress: int
     burned_epoch: int | None
     stage_cover: int
+    stage_path: list[SuccessionStage]
+    advance_epochs: int
     locked: list[str]
 
 

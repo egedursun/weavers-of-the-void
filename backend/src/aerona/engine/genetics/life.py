@@ -1,9 +1,9 @@
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from sqlalchemy import select
 
-from aerona.catalog.genetic_effects import HOUSE_TRAIT_ALLELES
-from aerona.catalog.genetics import LOOKS_LOCI
+from aerona.catalog.genetic_effects import HOUSE_TRAIT_ALLELES, LOCUS_EFFECTS
+from aerona.catalog.genetics import APTITUDE_LOCI, LOOKS_LOCI
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
@@ -156,10 +156,28 @@ def express(rules: Rules, mortal: EntityRow, genes: dict[str, list[str]], before
         set_stats(mortal, charisma=clamp_int((stat(mortal, "charisma") or 0) + delta(Locus.DIVINE_BLOOD) * table.divine_charisma, 0, PERCENT))
 
 
+def aptitude_pace(rules: Rules, genes: Mapping[str, list[str]]) -> dict[Attribute, float]:
+    weight = rules.genetics.general_aptitude_weight_pct / PERCENT
+    pace: dict[Attribute, float] = {}
+    for locus in APTITUDE_LOCI:
+        score = score_of(genes, locus)
+        for member in LOCUS_EFFECTS[locus].attributes:
+            pace[member] = pace.get(member, 1.0) * max(0.0, 1 + score * weight)
+    return pace
+
+
+def twinning_chance(rules: Rules, base: float, genomes: Sequence[GenomeRow | None]) -> float:
+    carried = sum(max(0, score_of(genome.genes, Locus.TWINNING)) for genome in genomes if genome is not None)
+    return base + carried * rules.genetics.twinning_pct
+
+
 async def raise_child(ctx: TickContext, child: EntityRow, genome: GenomeRow, upbringing: int) -> None:
     inborn = attribute_shifts(ctx.rules, genome.genes)
+    pace = aptitude_pace(ctx.rules, genome.genes)
     grown = {
-        Attribute(key): clamp_int(value + upbringing + inborn.get(Attribute(key), 0), 0, PERCENT) for key, value in genome.potential.items() if key in Attribute
+        Attribute(key): clamp_int(value + round_half_up(upbringing * pace.get(Attribute(key), 1.0)) + inborn.get(Attribute(key), 0), 0, PERCENT)
+        for key, value in genome.potential.items()
+        if key in Attribute
     }
     if grown:
         await store_attributes(ctx.session, child, {**await attributes_of(ctx.session, child.id), **grown})

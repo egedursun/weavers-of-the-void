@@ -15,6 +15,9 @@ class SedimentKind(StrEnum):
     GRAVEL = "gravel"
     VOLCANIC = "volcanic"
     ORGANIC = "organic"
+    CLAY = "clay"
+    CARBONATE = "carbonate"
+    EVAPORITE = "evaporite"
 
 
 class CoastForm(StrEnum):
@@ -26,6 +29,9 @@ class CoastForm(StrEnum):
     ICE_SHELF = "ice_shelf"
     FJORD = "fjord"
     LAGOON = "lagoon"
+    ESTUARY = "estuary"
+    MANGROVE = "mangrove"
+    BARRIER_ISLAND = "barrier_island"
 
 
 class LocalClimateCause(StrEnum):

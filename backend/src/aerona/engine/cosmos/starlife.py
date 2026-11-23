@@ -35,6 +35,7 @@ from aerona.engine.cosmos.stellar import (
     stage_length,
     typical_mass,
 )
+from aerona.engine.environment.long_seasons import stellar_spells
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity
@@ -250,6 +251,7 @@ async def star_lives(ctx: TickContext) -> None:
         )
     )
     dimmed: dict[int, int] = {}
+    changed: dict[int, tuple[int, int]] = {}
     physics_rows = await physics_of_stars(ctx.session, ctx.rules, list(cosmography.stars.values()))
     shifts = await luminosity_shifts(ctx.session)
     for star in sorted(cosmography.stars.values(), key=lambda row: row.id):
@@ -265,6 +267,7 @@ async def star_lives(ctx: TickContext) -> None:
             drift_brightness(ctx.rules, star, physics)
             drift_metallicity(ctx.rules, star, physics, galaxy)
         dimmed[star.id] = max(0, before - star.brightness)
+        changed[star.id] = (before, star.brightness)
         if "stability" not in star.locked:
             target = stage_stability(ctx.rules, star.age_stage)
             star.stability = clamp_percent(star.stability + max(-table.stability_drift, min(table.stability_drift, target - star.stability)))
@@ -272,6 +275,7 @@ async def star_lives(ctx: TickContext) -> None:
             star.radiation = radiate(
                 ctx.rules, cosmography, star, outburst_radiation(events, star.galaxy_id, star.galactic_zone, ctx.epoch), star.id in flaring
             )
+    ctx.count("stellar_spells", await stellar_spells(ctx, cosmography, changed))
     ctx.count("star_cults", await star_cults(ctx, cosmography, dimmed, flaring))
     worshippers = await worship(ctx, cosmography, dimmed)
     for star in cosmography.stars.values():

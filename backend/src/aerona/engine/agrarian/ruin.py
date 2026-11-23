@@ -1,5 +1,8 @@
+from collections.abc import Mapping
+
 from sqlalchemy import select
 
+from aerona.core.total import partial
 from aerona.db.tables.agrarian import ReconstructionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
@@ -7,12 +10,16 @@ from aerona.domain.enums.agrarian import RebuildCause
 from aerona.domain.enums.settlement import DistrictHarm
 from aerona.engine.context import TickContext
 
-CAUSES: dict[DistrictHarm, RebuildCause] = {
-    DistrictHarm.FLOOD: RebuildCause.FLOOD,
-    DistrictHarm.EARTHQUAKE: RebuildCause.QUAKE,
-    DistrictHarm.STORM: RebuildCause.STORM,
-    DistrictHarm.SACK: RebuildCause.SACK,
-}
+CAUSES: Mapping[DistrictHarm, RebuildCause] = partial(
+    DistrictHarm,
+    {
+        DistrictHarm.FLOOD: RebuildCause.FLOOD,
+        DistrictHarm.EARTHQUAKE: RebuildCause.QUAKE,
+        DistrictHarm.STORM: RebuildCause.STORM,
+        DistrictHarm.SACK: RebuildCause.SACK,
+    },
+    without=(DistrictHarm.DROUGHT,),
+)
 
 
 async def mark_ruin(ctx: TickContext, town: EntityRow, cause: RebuildCause) -> ReconstructionRow | None:

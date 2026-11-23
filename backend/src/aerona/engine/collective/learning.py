@@ -4,15 +4,16 @@ from sqlalchemy import select
 
 from aerona.catalog.life.collective import FEARFUL
 from aerona.constants.units import PERCENT
-from aerona.db.tables.collective import CrowdMoodRow, LearningBiasRow, LearningEventRow
+from aerona.db.tables.collective import LearningBiasRow, LearningEventRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.collective import SocialBias
+from aerona.domain.enums.collective import CrowdFeeling, SocialBias
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import towns
+from aerona.engine.collective.feelings import feelings_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import Values, stored_values, write_values
 from aerona.engine.mind.values import mean_of
@@ -84,8 +85,7 @@ async def learn_in(ctx: TickContext, town: EntityRow, tally: LearningTally) -> N
     learners = [mortal for mortal, _ in folk if rng.chance(table.learners_pct)]
     famous = max(folk, key=lambda pair: (pair[1], -pair[0]))
     majority = await mean_of(ctx.session, ValueHolder.PERSONAL, [mortal for mortal, _ in folk])
-    mood = await ctx.session.get(CrowdMoodRow, town.id)
-    fear = table.fear_stickiness / PERCENT if mood is not None and mood.anxiety >= ANXIOUS_AT else 1.0
+    fear = table.fear_stickiness / PERCENT if (await feelings_of(ctx.session, town.id))[CrowdFeeling.FEAR] >= ANXIOUS_AT else 1.0
     for learner in learners:
         mine = dict(await stored_values(ctx.session, ValueHolder.PERSONAL, learner))
         bias = rng.weighted(list(SocialBias), [biases.prestige_pct, biases.conformity_pct, biases.content_pct])

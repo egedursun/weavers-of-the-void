@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.senses import AMBUSH
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import ARMOUR_COLUMNS, BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
@@ -30,6 +31,7 @@ from aerona.engine.crafts.aiding import aid_quality
 from aerona.engine.gods.queries import community_of
 from aerona.engine.mortal.equipment import mount_pct
 from aerona.engine.mortal.variants import strength, variants_by_id
+from aerona.engine.nature.senses import sense_score
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import active_bonds
 from aerona.rules.registry import Rules
@@ -95,6 +97,8 @@ async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: in
             body.mobility = round(body.mobility * moving)
         if Capacity.MELEE.value not in locked:
             body.melee = round(body.melee * riding)
+        if Capacity.PERCEPTION.value not in locked:
+            body.perception = round(body.perception * (1 + await sense_score(session, rules, bearer.id, AMBUSH)))
     if PAIN not in locked:
         body.pain = pain_of(rules.capacities, open_severity(injuries))
     functions = function_percents(rules, BodyState(anatomy_for(body), wounds_from(injuries, prostheses), counts_of(body), open_severity(injuries)))

@@ -35,7 +35,7 @@ async def found_totem(ctx: TickContext, people: EntityRow, species: EntityRow) -
     tradition = await create_record(
         ctx,
         RecordSpec(
-            name=f"The Feast of the {species.name}",
+            name=f"The Festival of the {species.name}",
             entity_type=EntityType.TRADITION,
             stats=TraditionStats(spread=PERCENT // 5, rigidity=PERCENT // 3),
             body=f"The {people.name} hold {species.name} as their emblem and will not hunt it.",

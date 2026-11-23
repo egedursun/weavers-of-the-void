@@ -2,7 +2,7 @@ from aerona.catalog.body_plans import PLAN_TEXT
 from aerona.catalog.creatures import CREATURE_TRAITS
 from aerona.catalog.diets import DIETS
 from aerona.catalog.domestication import SOCIALITIES, STAGES
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
@@ -310,7 +310,7 @@ WILDS_MECHANICS = (
     Mechanic(
         key="extinction_cascade",
         spec_item="S3.2",
-        title="A kind dying out starves its hunters, fades the crafts it fed and shakes the faith that held it holy",
+        title="A kind dying out starves its hunters, fades the crafts it fed and weakens the faith that held it holy",
         subsystem=S.ECOLOGY,
         phases=("ecology",),
         surface=Surface(drawer=ECOLOGY),
@@ -367,7 +367,7 @@ WILDS_MECHANICS = (
         tables=(BeastProfileRow.__tablename__,),
         targets=("beast", SP, "settlement", "mortal", "army", "house", "place", "legend"),
         couplings=(
-            Coupling(S.ECONOMY, "a hoard looted is a flood of riches", EdgeKind.FLOW, "beasts.hoard_wealth_pct"),
+            Coupling(S.ECONOMY, "a looted hoard brings great riches", EdgeKind.FLOW, "beasts.hoard_wealth_pct"),
             Coupling(S.WAR, "a bound beast frightens the enemy", EdgeKind.MODIFIER, "beasts.army_terror"),
             Coupling(S.SOCIAL, "terror drains the towns near the lair", EdgeKind.MODIFIER, "beasts.terror_prosperity"),
             Coupling(S.CULTURE, "a slain beast becomes a legend", EdgeKind.TRIGGER),
@@ -384,10 +384,6 @@ def entry(
 
 
 Raw = tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tuple[str, ...], tuple[Subsystem, str | None, str]]
-
-
-def label(value: str) -> str:
-    return value.replace("_", " ")
 
 
 def traits() -> tuple[Raw, ...]:
@@ -411,7 +407,7 @@ def diets() -> tuple[Raw, ...]:
         (
             f"diet_{diet.value}",
             "S3.2",
-            f"{an(label(diet.value), capital=True)} {DIETS[diet].text}",
+            f"{an(spoken(diet), capital=True)} {DIETS[diet].text}",
             ("ecology",),
             ECOLOGY,
             (SP, "region"),
@@ -427,7 +423,7 @@ def sizes() -> tuple[Raw, ...]:
         (
             f"size_{size.value}",
             "S3.2",
-            f"{an(label(size.value), capital=True)} kind lives, breeds, eats and yields by its size",
+            f"{an(spoken(size), capital=True)} kind lives, breeds, eats and yields by its size",
             ("ecology", "creatures"),
             ECOLOGY,
             (SP,),
@@ -443,7 +439,7 @@ def socialities() -> tuple[Raw, ...]:
         (
             f"social_{kind.value}",
             "S3.2",
-            f"A kind that lives {label(kind.value)} hunts and is hunted by its numbers",
+            f"A kind that lives {spoken(kind)} hunts and is hunted by its numbers",
             ("ecology",),
             ECOLOGY,
             (SP,),
@@ -459,7 +455,7 @@ def stages() -> tuple[Raw, ...]:
         (
             f"stage_{stage.value}",
             "S3.2",
-            f"{an(label(stage.value), capital=True)} kind moves along the path of taming",
+            f"{an(spoken(stage), capital=True)} kind moves along the path of taming",
             ("husbandry",),
             HERDS,
             (SP, "settlement", "people"),
@@ -486,6 +482,8 @@ USE_RULES = {
     AnimalRole.MESSENGER: "domestication.messenger_prosperity",
     AnimalRole.SENSING: "domestication.sensing_pct",
     AnimalRole.ENTERTAINMENT: "domestication.entertainment_calm",
+    AnimalRole.SPORT: "species_roles.sport_draw",
+    AnimalRole.MEDICINE: "species_roles.medicine_yield",
 }
 
 
@@ -494,7 +492,7 @@ def uses() -> tuple[Raw, ...]:
         (
             f"use_{use.value}",
             "S3.2",
-            f"Herds kept for {label(use.value)} serve their keepers",
+            f"Herds kept for {spoken(use)} serve their keepers",
             ("husbandry", "campaigns", "society_economy"),
             HERDS,
             (SP, "settlement", "army"),
@@ -526,7 +524,7 @@ def crafts() -> tuple[Raw, ...]:
         (
             f"craft_{product.replace(' ', '_')}",
             "S3.2",
-            f"When the last kind yielding {product} dies, {label(branch.value)} fades",
+            f"When the last kind yielding {product} dies, {spoken(branch)} fades",
             ("ecology",),
             ECOLOGY,
             (SP, "knowledge"),
@@ -545,6 +543,9 @@ TEMPER_TEXT = {
     BeastTemper.BOUND: "guards what it is bound to",
     BeastTemper.TAMED: "carries its rider to battle",
     BeastTemper.COMPANION: "keeps its owner company, comforts them and hunts at their side",
+    BeastTemper.WOUNDED: "keeps to its lair to heal, and strikes harder if cornered",
+    BeastTemper.BROODING: "guards its young in its lair against all who come near",
+    BeastTemper.COWED: "keeps away from where it was driven off",
 }
 
 
@@ -553,7 +554,7 @@ def tempers() -> tuple[Raw, ...]:
         (
             f"temper_{temper.value}",
             "S3.3a",
-            f"{an(label(temper.value), capital=True)} beast {TEMPER_TEXT[temper]}",
+            f"{an(spoken(temper), capital=True)} beast {TEMPER_TEXT[temper]}",
             ("beast_cycles",),
             BEAST,
             ("beast", "settlement"),
@@ -954,7 +955,7 @@ EXTRA: tuple[Raw, ...] = (
     (
         "sacred_crisis",
         "S3.2",
-        "The death of a sacred animal shakes its faithful",
+        "The death of a sacred animal troubles its faithful",
         ("ecology",),
         ECOLOGY,
         (SP, "cult", "settlement"),
@@ -1170,7 +1171,7 @@ def plans() -> tuple[Raw, ...]:
         (
             f"plan_{plan.value}",
             "S3.2",
-            f"{an(label(plan.value), capital=True)} kind {PLAN_TEXT[plan]}",
+            f"{an(spoken(plan), capital=True)} kind {PLAN_TEXT[plan]}",
             ("creatures", "ecology"),
             ECOLOGY,
             (SP,),
@@ -1365,7 +1366,7 @@ TYPED: tuple[Raw, ...] = (
     (
         "hoard_price_shock",
         "S3.3a",
-        "Looted hoard gold floods the slayer's market and luxuries fall in price",
+        "Looted hoard gold fills the slayer's market and luxuries fall in price",
         ("beast_cycles", "glory_hunts", "market"),
         BEAST,
         ("beast", "settlement"),
@@ -1375,7 +1376,7 @@ TYPED: tuple[Raw, ...] = (
     (
         "wilds_recover",
         "S3.3a",
-        "When the beast dies its land breathes again: wild herds return and danger fades",
+        "When the beast dies its land recovers: wild herds return and danger fades",
         ("beast_cycles",),
         BEAST,
         ("beast", "region", SP),

@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.tables.node import NodeRow
@@ -108,7 +108,7 @@ async def create_modifier(scope: PlayerScope, command: CreateModifier) -> Effect
         decay_pct=command.decay_pct,
     )
     row = await add_modifier(scope.session, draft, held=command.source_kind in DERIVED_SOURCES)
-    label = command.source_kind.value.replace("_", " ")
+    label = spoken(command.source_kind)
     return Effect(
         f"{node.name}'s {command.key.replace('_', ' ')} gains {an(label)} modifier of {_change(command.op, command.magnitude)}.",
         target_node_id=node.id,

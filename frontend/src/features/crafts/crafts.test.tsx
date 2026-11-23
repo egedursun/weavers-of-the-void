@@ -34,6 +34,10 @@ const EMPTY = {
   links: [],
   spirits: [],
   materials: [],
+  dish_choices: [],
+  technique_choices: [],
+  contest_choices: [],
+  union_choices: [],
 }
 
 const GAME_INFO = {
@@ -164,6 +168,7 @@ describe('trades, aids, games and magic', () => {
           collapsed: true,
           last_catch: 1,
           first_stock: 40,
+          stock: 12,
           locked: [],
         },
       ],
@@ -182,6 +187,9 @@ describe('trades, aids, games and magic', () => {
     })
     const { screen } = await renderApp(<CraftsSection nodeId={40} />)
     await expect.element(screen.getByText('Fishery: Cold Shoals')).toBeVisible()
+    await expect
+      .element(screen.getByText(/first stock 40 · stock 12 · collapsed/))
+      .toBeVisible()
     await expect.element(screen.getByText('Works for soap')).toBeVisible()
     await expect
       .element(screen.getByText(/1 accident · set up in epoch 3/))
@@ -270,5 +278,73 @@ describe('trades, aids, games and magic', () => {
     await expect
       .element(screen.getByRole('button', { name: 'Give the aid' }))
       .toBeDisabled()
+  })
+
+  it('shows the dish and contest of a right and holds a recipe right only once it names a dish', async () => {
+    serveBase()
+    onApi('GET', '/api/crafts/of/32', {
+      ...EMPTY,
+      node: MORTAL,
+      dish_choices: [{ id: 91, name: 'Fen stew' }],
+      technique_choices: [
+        { technique: 'phalanx_drill', label: 'Phalanx drill' },
+      ],
+      contest_choices: [{ id: 5, name: 'The Spring Games' }],
+      rights: [
+        {
+          id: 8,
+          holder: MORTAL,
+          kind: 'recipe',
+          subject: null,
+          name: 'The stew of the fen',
+          acquired: 'created',
+          licensed_to: null,
+          dish_id: 91,
+          dish: 'Fen stew',
+          technique: null,
+          technique_label: null,
+          contest_id: 5,
+          marriage_id: null,
+          since_epoch: 4,
+          locked: [],
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/incorporeal_right:create', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CraftsSection nodeId={32} />)
+    await screen.getByRole('tab', { name: /Insurance and rights/ }).click()
+    await expect.element(screen.getByText('Fen stew').first()).toBeVisible()
+    await expect.element(screen.getByText('The Spring Games')).toBeVisible()
+    await expect
+      .element(screen.getByText('no technique', { exact: true }))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('no union', { exact: true }))
+      .toBeVisible()
+    await screen.getByRole('combobox', { name: 'Right to' }).click()
+    await screen.getByRole('option', { name: 'Recipe' }).click()
+    await screen
+      .getByRole('textbox', { name: 'What it is called' })
+      .fill('The second stew')
+    const hold = screen.getByRole('button', { name: 'Hold the right' })
+    await expect
+      .element(hold)
+      .toHaveAccessibleDescription('A right to a recipe names a dish')
+    await screen.getByRole('combobox', { name: 'Dish of a recipe' }).click()
+    await screen.getByRole('option', { name: 'Fen stew' }).click()
+    await hold.click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/incorporeal_right:create'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/incorporeal_right:create')[0].body
+    ).toEqual({
+      holder_node_id: 32,
+      kind: 'recipe',
+      subject_node_id: null,
+      name: 'The second stew',
+      dish_id: 91,
+      technique: null,
+    })
   })
 })

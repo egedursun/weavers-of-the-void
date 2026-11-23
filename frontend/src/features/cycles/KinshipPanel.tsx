@@ -185,7 +185,7 @@ function KinshipForge({
       residence,
       kin_terms: terms,
       adoption,
-      first_side: side === '' ? 'other' : side,
+      first_side: side === '' ? undefined : side,
     }),
     'Their ways of kin are set'
   )

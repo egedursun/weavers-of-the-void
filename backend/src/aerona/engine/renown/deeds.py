@@ -201,11 +201,11 @@ async def boldness(ctx: TickContext, mortal_id: int) -> float:
     return vanity * guile * ctx.rules.claims.vanity_pct / PERCENT
 
 
-async def claim_falsely(ctx: TickContext, deed: DeedRow, tally: DeedTally) -> None:
+async def claim_falsely(ctx: TickContext, deed: DeedRow, tally: DeedTally) -> int | None:
     table = ctx.rules.claims
     doer = await living_entity(ctx.session, deed.doer_node_id)
     if doer is None or deed.magnitude < table.claim_at or doer.location_id is None:
-        return
+        return None
     near = await ctx.session.scalars(
         select(EntityRow)
         .where(
@@ -221,10 +221,12 @@ async def claim_falsely(ctx: TickContext, deed: DeedRow, tally: DeedTally) -> No
             continue
         if not ctx.rng(seed_of("claim", deed.id, rival.id)).chance(table.claim_pct * await boldness(ctx, rival.id)):
             continue
-        if await ctx.session.scalar(select(DeedClaimRow.id).where(DeedClaimRow.deed_id == deed.id, DeedClaimRow.claimant_node_id == rival.id)) is None:
-            ctx.session.add(new_claim(deed.id, rival.id, ClaimKind.FALSE, ctx.epoch))
-            tally.false_claims += 1
-        return
+        if await ctx.session.scalar(select(DeedClaimRow.id).where(DeedClaimRow.deed_id == deed.id, DeedClaimRow.claimant_node_id == rival.id)) is not None:
+            return None
+        ctx.session.add(new_claim(deed.id, rival.id, ClaimKind.FALSE, ctx.epoch))
+        tally.false_claims += 1
+        return rival.id
+    return None
 
 
 async def expose(ctx: TickContext, deed: DeedRow, claim: DeedClaimRow, tally: DeedTally) -> None:

@@ -1,8 +1,8 @@
 from collections.abc import Mapping
 
+from aerona.catalog.biology import SKYLESS_VARIANTS
 from aerona.core.total import total
 from aerona.domain.enums.affliction import PackageKind
-from aerona.domain.enums.ages import ArcTemplate
 from aerona.domain.enums.agrarian import PreparednessKind, RebuildCause
 from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.belonging import IdentityLayer
@@ -34,7 +34,6 @@ from aerona.domain.enums.life_traits import (
     ActKindTrait,
     AgeGradeTrait,
     AllocationModeTrait,
-    ArcTemplateTrait,
     AssistiveAidTrait,
     AttackRangeTrait,
     BiologyVariantTrait,
@@ -52,7 +51,6 @@ from aerona.domain.enums.life_traits import (
     CoopPurposeTrait,
     CouncilMotionTrait,
     CultivationMethodTrait,
-    DeathCauseTrait,
     DeathRoleTrait,
     DuelContextTrait,
     EmotionTrait,
@@ -139,7 +137,7 @@ from aerona.domain.enums.media import RecordForm
 from aerona.domain.enums.military import CaptiveFate, CommanderTrait, DuelContext, Stance, StarvationStage, Tactic
 from aerona.domain.enums.mind import ActKind, Emotion, MemoryKind, SkillKind, ThoughtKind
 from aerona.domain.enums.minds import MindUpkeep
-from aerona.domain.enums.mortal import DeathCause, LifeStage, PunishmentKind
+from aerona.domain.enums.mortal import LifeStage, PunishmentKind
 from aerona.domain.enums.nature_kinds import OfficeDuty
 from aerona.domain.enums.operations import ExpeditionGround
 from aerona.domain.enums.orders import AllocationMode
@@ -221,6 +219,13 @@ ACT_KIND_TRAITS: Mapping[ActKind, frozenset[ActKindTrait]] = total(
         ActKind.SELLING_OFFICES: frozenset(),
         ActKind.POACHING: frozenset(),
         ActKind.ENCLOSING: frozenset(),
+        ActKind.LYING: frozenset(),
+        ActKind.DRUNKENNESS: frozenset(),
+        ActKind.TOMB_ROBBING: frozenset(),
+        ActKind.USING_CHARMS: frozenset(),
+        ActKind.FEEDING_ON_HOSTS: frozenset({ActKindTrait.FAMINE_ACTS}),
+        ActKind.KILLING_SACRED_ANIMAL: frozenset(),
+        ActKind.FIXING_CONTESTS: frozenset(),
     },
 )
 
@@ -230,7 +235,7 @@ AGE_GRADE_TRAITS: Mapping[AgeGrade, frozenset[AgeGradeTrait]] = total(
     {
         AgeGrade.CHILDREN: frozenset({AgeGradeTrait.UNWED_GRADES}),
         AgeGrade.YOUTHS: frozenset({AgeGradeTrait.UNWED_GRADES}),
-        AgeGrade.WARRIORS: frozenset(),
+        AgeGrade.YOUNG_ADULTS: frozenset(),
         AgeGrade.JUNIOR_ELDERS: frozenset(),
         AgeGrade.SENIOR_ELDERS: frozenset(),
     },
@@ -247,28 +252,6 @@ ALLOCATION_MODE_TRAITS: Mapping[AllocationMode, frozenset[AllocationModeTrait]] 
         AllocationMode.GIFT: frozenset(),
         AllocationMode.NEED: frozenset({AllocationModeTrait.SHARING}),
         AllocationMode.ABUNDANCE: frozenset({AllocationModeTrait.SHARING}),
-    },
-)
-
-
-ARC_TEMPLATE_TRAITS: Mapping[ArcTemplate, frozenset[ArcTemplateTrait]] = total(
-    ArcTemplate,
-    {
-        ArcTemplate.RISE_AND_FALL: frozenset({ArcTemplateTrait.ENDS_IN_DEATH}),
-        ArcTemplate.RAGS_TO_RICHES: frozenset(),
-        ArcTemplate.REVENGE: frozenset({ArcTemplateTrait.CONFRONTING}),
-        ArcTemplate.REDEMPTION: frozenset(),
-        ArcTemplate.QUEST: frozenset(),
-        ArcTemplate.TRAGEDY: frozenset({ArcTemplateTrait.ENDS_IN_DEATH}),
-        ArcTemplate.FORBIDDEN_LOVE: frozenset(),
-        ArcTemplate.RIVALRY: frozenset({ArcTemplateTrait.CONFRONTING}),
-        ArcTemplate.MENTOR_AND_HEIR: frozenset(),
-        ArcTemplate.EXILE_AND_RETURN: frozenset(),
-        ArcTemplate.CORRUPTION: frozenset({ArcTemplateTrait.ENDS_IN_DEATH}),
-        ArcTemplate.COMING_OF_AGE: frozenset(),
-        ArcTemplate.FALL_OF_A_HOUSE: frozenset({ArcTemplateTrait.ENDS_IN_DEATH}),
-        ArcTemplate.FOUNDING: frozenset(),
-        ArcTemplate.APOTHEOSIS: frozenset(),
     },
 )
 
@@ -298,20 +281,7 @@ ATTACK_RANGE_TRAITS: Mapping[AttackRange, frozenset[AttackRangeTrait]] = total(
 
 BIOLOGY_VARIANT_TRAITS: Mapping[BiologyVariant, frozenset[BiologyVariantTrait]] = total(
     BiologyVariant,
-    {
-        BiologyVariant.INCORPOREAL: frozenset(),
-        BiologyVariant.AQUATIC: frozenset({BiologyVariantTrait.SKYLESS}),
-        BiologyVariant.AERIAL: frozenset(),
-        BiologyVariant.SUBTERRANEAN: frozenset({BiologyVariantTrait.SKYLESS}),
-        BiologyVariant.HIVE: frozenset(),
-        BiologyVariant.PLANT_LIKE: frozenset(),
-        BiologyVariant.CONSTRUCT: frozenset(),
-        BiologyVariant.AGELESS: frozenset(),
-        BiologyVariant.SHAPESHIFTING: frozenset(),
-        BiologyVariant.GASEOUS: frozenset(),
-        BiologyVariant.CRYSTALLINE: frozenset(),
-        BiologyVariant.UNDEAD: frozenset(),
-    },
+    {variant: frozenset({BiologyVariantTrait.SKYLESS}) if variant in SKYLESS_VARIANTS else frozenset() for variant in BiologyVariant},
 )
 
 
@@ -524,6 +494,9 @@ CONTEST_STAKE_TRAITS: Mapping[ContestStake, frozenset[ContestStakeTrait]] = tota
         ContestStake.OFFICE: frozenset({ContestStakeTrait.NOTED}),
         ContestStake.CAPTIVE: frozenset({ContestStakeTrait.NOTED}),
         ContestStake.DIVINE_FAVOUR: frozenset({ContestStakeTrait.NOTED}),
+        ContestStake.LAND: frozenset({ContestStakeTrait.NOTED}),
+        ContestStake.FREEDOM: frozenset({ContestStakeTrait.NOTED}),
+        ContestStake.KNOWLEDGE: frozenset({ContestStakeTrait.NOTED}),
     },
 )
 
@@ -589,40 +562,6 @@ CULTIVATION_METHOD_TRAITS: Mapping[CultivationMethod, frozenset[CultivationMetho
 )
 
 
-DEATH_CAUSE_TRAITS: Mapping[DeathCause, frozenset[DeathCauseTrait]] = total(
-    DeathCause,
-    {
-        DeathCause.OLD_AGE: frozenset({DeathCauseTrait.VIOLENT}),
-        DeathCause.WOUNDS: frozenset(),
-        DeathCause.BATTLE: frozenset({DeathCauseTrait.GLORIOUS_DEATHS, DeathCauseTrait.VIOLENT}),
-        DeathCause.DUEL: frozenset({DeathCauseTrait.GLORIOUS_DEATHS, DeathCauseTrait.VIOLENT}),
-        DeathCause.EXECUTION: frozenset({DeathCauseTrait.SHAMEFUL_DEATHS, DeathCauseTrait.VIOLENT}),
-        DeathCause.MURDER: frozenset({DeathCauseTrait.VIOLENT}),
-        DeathCause.MONSTER: frozenset({DeathCauseTrait.GLORIOUS_DEATHS}),
-        DeathCause.DISEASE: frozenset(),
-        DeathCause.CHILDBIRTH: frozenset(),
-        DeathCause.FAMINE: frozenset(),
-        DeathCause.ACCIDENT: frozenset(),
-        DeathCause.DISASTER: frozenset(),
-        DeathCause.EXPOSURE: frozenset(),
-        DeathCause.CURSE: frozenset(),
-        DeathCause.MAGIC: frozenset(),
-        DeathCause.DIVINE: frozenset(),
-        DeathCause.POISON: frozenset(),
-        DeathCause.SACRIFICE: frozenset({DeathCauseTrait.GLORIOUS_DEATHS, DeathCauseTrait.VIOLENT}),
-        DeathCause.HARDSHIP: frozenset(),
-        DeathCause.DESPAIR: frozenset({DeathCauseTrait.SHAMEFUL_DEATHS}),
-        DeathCause.UNKNOWN: frozenset(),
-        DeathCause.INDUSTRIAL: frozenset(),
-        DeathCause.CRASH: frozenset(),
-        DeathCause.RADIATION: frozenset(),
-        DeathCause.DECOMPRESSION: frozenset(),
-        DeathCause.EXPERIMENT: frozenset(),
-        DeathCause.BOMBARDMENT: frozenset(),
-    },
-)
-
-
 DEATH_ROLE_TRAITS: Mapping[DeathRole, frozenset[DeathRoleTrait]] = total(
     DeathRole,
     {
@@ -658,15 +597,15 @@ EMOTION_TRAITS: Mapping[Emotion, frozenset[EmotionTrait]] = total(
         Emotion.LOVE: frozenset(),
         Emotion.GRATITUDE: frozenset(),
         Emotion.RELIEF: frozenset(),
-        Emotion.HOPE: frozenset(),
+        Emotion.HOPE: frozenset({EmotionTrait.HOPEFUL}),
         Emotion.AWE: frozenset({EmotionTrait.STIRRED}),
         Emotion.AMUSEMENT: frozenset(),
         Emotion.FEAR: frozenset({EmotionTrait.AFRAID}),
         Emotion.ANXIETY: frozenset({EmotionTrait.AFRAID}),
         Emotion.ANGER: frozenset({EmotionTrait.ANGRY}),
         Emotion.RAGE: frozenset({EmotionTrait.ANGRY}),
-        Emotion.GRIEF: frozenset(),
-        Emotion.SADNESS: frozenset(),
+        Emotion.GRIEF: frozenset({EmotionTrait.GRIEVING}),
+        Emotion.SADNESS: frozenset({EmotionTrait.GRIEVING}),
         Emotion.SHAME: frozenset(),
         Emotion.GUILT: frozenset(),
         Emotion.ENVY: frozenset(),
@@ -674,8 +613,12 @@ EMOTION_TRAITS: Mapping[Emotion, frozenset[EmotionTrait]] = total(
         Emotion.DISGUST: frozenset(),
         Emotion.LONELINESS: frozenset(),
         Emotion.BOREDOM: frozenset(),
-        Emotion.DESPAIR: frozenset(),
+        Emotion.DESPAIR: frozenset({EmotionTrait.GRIEVING}),
         Emotion.LONGING: frozenset(),
+        Emotion.SURPRISE: frozenset({EmotionTrait.STIRRED}),
+        Emotion.CURIOSITY: frozenset({EmotionTrait.STIRRED}),
+        Emotion.COMPASSION: frozenset(),
+        Emotion.CONTEMPT: frozenset({EmotionTrait.ANGRY}),
     },
 )
 
@@ -846,6 +789,8 @@ GATHERING_KIND_TRAITS: Mapping[GatheringKind, frozenset[GatheringKindTrait]] = t
         GatheringKind.MOURNING: frozenset(),
         GatheringKind.INITIATION: frozenset(),
         GatheringKind.SPORT_MATCH: frozenset(),
+        GatheringKind.COMMEMORATION: frozenset({GatheringKindTrait.ENGINE_KINDS}),
+        GatheringKind.MUSTER: frozenset({GatheringKindTrait.ENGINE_KINDS}),
     },
 )
 
@@ -858,6 +803,9 @@ GIFT_STATE_TRAITS: Mapping[GiftState, frozenset[GiftStateTrait]] = total(
         GiftState.REFUSED: frozenset(),
         GiftState.DESTROYED: frozenset({GiftStateTrait.OBLIGING}),
         GiftState.LAPSED: frozenset(),
+        GiftState.EXCEEDED: frozenset(),
+        GiftState.PASSED_ON: frozenset(),
+        GiftState.RELEASED: frozenset(),
     },
 )
 
@@ -926,6 +874,8 @@ HOUSE_DUTY_TRAITS: Mapping[HouseDuty, frozenset[HouseDutyTrait]] = total(
         HouseDuty.ELDERCARE: frozenset({HouseDutyTrait.CARE_DUTIES}),
         HouseDuty.ANIMALS: frozenset(),
         HouseDuty.REPAIRS: frozenset(),
+        HouseDuty.SICKCARE: frozenset({HouseDutyTrait.CARE_DUTIES}),
+        HouseDuty.HOUSEHOLD_RITES: frozenset(),
     },
 )
 
@@ -942,6 +892,9 @@ IDENTITY_LAYER_TRAITS: Mapping[IdentityLayer, frozenset[IdentityLayerTrait]] = t
         IdentityLayer.GENERATION: frozenset(),
         IdentityLayer.POLITY: frozenset(),
         IdentityLayer.CIRCLE: frozenset({IdentityLayerTrait.GROUP_LAYERS}),
+        IdentityLayer.LANGUAGE: frozenset(),
+        IdentityLayer.KIND: frozenset(),
+        IdentityLayer.CAUSE: frozenset({IdentityLayerTrait.GROUP_LAYERS}),
     },
 )
 
@@ -955,6 +908,8 @@ INHERITANCE_CUSTOM_TRAITS: Mapping[InheritanceCustom, frozenset[InheritanceCusto
         InheritanceCustom.THROUGH_SECOND_LINE: frozenset(),
         InheritanceCustom.ELECTIVE: frozenset({InheritanceCustomTrait.DISCRETION}),
         InheritanceCustom.BY_MERIT: frozenset({InheritanceCustomTrait.DISCRETION}),
+        InheritanceCustom.SENIORITY: frozenset(),
+        InheritanceCustom.DESIGNATED: frozenset({InheritanceCustomTrait.DISCRETION}),
     },
 )
 
@@ -983,6 +938,9 @@ INTERACTION_KIND_TRAITS: Mapping[InteractionKind, frozenset[InteractionKindTrait
         InteractionKind.CONFIDE_SECRET: frozenset({InteractionKindTrait.FRIENDLY_TALK}),
         InteractionKind.THREATEN: frozenset(),
         InteractionKind.BRAWL: frozenset({InteractionKindTrait.TALK_FREE}),
+        InteractionKind.APOLOGISE: frozenset({InteractionKindTrait.FRIENDLY_TALK}),
+        InteractionKind.SHARE_MEAL: frozenset({InteractionKindTrait.FRIENDLY_TALK, InteractionKindTrait.TALK_FREE}),
+        InteractionKind.ASK_COUNSEL: frozenset({InteractionKindTrait.FRIENDLY_TALK}),
     },
 )
 
@@ -994,9 +952,11 @@ INTOXICANT_TRAITS: Mapping[Intoxicant, frozenset[IntoxicantTrait]] = total(
         Intoxicant.WINE: frozenset({IntoxicantTrait.DRINKS}),
         Intoxicant.SPIRITS: frozenset({IntoxicantTrait.DRINKS}),
         Intoxicant.SMOKE: frozenset(),
-        Intoxicant.LEAF: frozenset(),
+        Intoxicant.LEAF: frozenset({IntoxicantTrait.STIMULATES}),
         Intoxicant.FUNGUS: frozenset(),
         Intoxicant.ESSENCE: frozenset(),
+        Intoxicant.SYNTHETIC: frozenset({IntoxicantTrait.STIMULATES}),
+        Intoxicant.ANIMAL_DERIVED: frozenset(),
     },
 )
 
@@ -1016,6 +976,11 @@ JOB_TRAITS: Mapping[Job, frozenset[JobTrait]] = total(
         Job.BUILDING: frozenset({JobTrait.BOUND_JOBS}),
         Job.SERVICE: frozenset({JobTrait.MADE_MIND_TRADES}),
         Job.IDLE: frozenset(),
+        Job.TRANSPORT: frozenset(),
+        Job.ADMINISTRATION: frozenset({JobTrait.MADE_MIND_TRADES}),
+        Job.GATHERING: frozenset(),
+        Job.INDUSTRY: frozenset({JobTrait.BOUND_JOBS, JobTrait.MADE_MIND_TRADES}),
+        Job.ARTS: frozenset(),
     },
 )
 
@@ -1109,6 +1074,9 @@ LEISURE_KIND_TRAITS: Mapping[LeisureKind, frozenset[LeisureKindTrait]] = total(
         LeisureKind.WORSHIP_EXTRA: frozenset(),
         LeisureKind.REST: frozenset(),
         LeisureKind.MEDIA: frozenset(),
+        LeisureKind.DANCE: frozenset(),
+        LeisureKind.STORYTELLING: frozenset(),
+        LeisureKind.HUNTING: frozenset({LeisureKindTrait.TRAVEL_PURSUITS}),
     },
 )
 
@@ -1411,6 +1379,9 @@ PACKAGE_KIND_TRAITS: Mapping[PackageKind, frozenset[PackageKindTrait]] = total(
         PackageKind.VIS_DEPENDENCE: frozenset(),
         PackageKind.GEAS_DOOM: frozenset(),
         PackageKind.SOUL_TRAPPED: frozenset(),
+        PackageKind.FORTUNE: frozenset(),
+        PackageKind.TRANSFORMATION: frozenset(),
+        PackageKind.CHARM: frozenset(),
     },
 )
 
@@ -1608,6 +1579,9 @@ RELATION_TYPE_TRAITS: Mapping[RelationType, frozenset[RelationTypeTrait]] = tota
         RelationType.DRINKING_COMPANION: frozenset(),
         RelationType.PATRON: frozenset(),
         RelationType.CLIENT: frozenset(),
+        RelationType.BETROTHED: frozenset(),
+        RelationType.SWORN_KIN: frozenset({RelationTypeTrait.FRIENDLY}),
+        RelationType.FOSTER: frozenset({RelationTypeTrait.FRIENDLY}),
     },
 )
 
@@ -1615,15 +1589,17 @@ RELATION_TYPE_TRAITS: Mapping[RelationType, frozenset[RelationTypeTrait]] = tota
 RIGHT_KIND_TRAITS: Mapping[RightKind, frozenset[RightKindTrait]] = total(
     RightKind,
     {
-        RightKind.SONG: frozenset(),
-        RightKind.DANCE: frozenset(),
-        RightKind.STORY: frozenset(),
+        RightKind.SONG: frozenset({RightKindTrait.PORTION}),
+        RightKind.DANCE: frozenset({RightKindTrait.PORTION}),
+        RightKind.STORY: frozenset({RightKindTrait.PORTION}),
         RightKind.RITE: frozenset(),
-        RightKind.DESIGN: frozenset({RightKindTrait.COPIED}),
+        RightKind.DESIGN: frozenset({RightKindTrait.COPIED, RightKindTrait.PORTION}),
         RightKind.NAME: frozenset(),
         RightKind.TITLE: frozenset(),
-        RightKind.TRADEMARK: frozenset({RightKindTrait.COPIED}),
+        RightKind.TRADEMARK: frozenset({RightKindTrait.COPIED, RightKindTrait.PORTION}),
         RightKind.MARKET_PRIVILEGE: frozenset({RightKindTrait.COPIED}),
+        RightKind.RECIPE: frozenset({RightKindTrait.COPIED, RightKindTrait.PORTION}),
+        RightKind.TECHNIQUE: frozenset({RightKindTrait.COPIED, RightKindTrait.PORTION}),
     },
 )
 
@@ -1989,10 +1965,10 @@ TECHNIQUE_TRAITS: Mapping[Technique, frozenset[TechniqueTrait]] = total(
         Technique.TERRACING: frozenset(),
         Technique.PLOUGH: frozenset(),
         Technique.SELECTIVE_BREEDING: frozenset(),
-        Technique.BRONZE: frozenset(),
-        Technique.IRON: frozenset(),
-        Technique.STEEL: frozenset(),
-        Technique.SKYSTEEL: frozenset(),
+        Technique.BRONZE: frozenset({TechniqueTrait.TOOL_METALS}),
+        Technique.IRON: frozenset({TechniqueTrait.TOOL_METALS}),
+        Technique.STEEL: frozenset({TechniqueTrait.TOOL_METALS}),
+        Technique.SKYSTEEL: frozenset({TechniqueTrait.TOOL_METALS}),
         Technique.ARCH: frozenset(),
         Technique.DOME: frozenset(),
         Technique.AQUEDUCT: frozenset(),
@@ -2226,6 +2202,10 @@ THOUGHT_KIND_TRAITS: Mapping[ThoughtKind, frozenset[ThoughtKindTrait]] = total(
         ThoughtKind.PASSION_STIRRED: frozenset(),
         ThoughtKind.PASSION_BROKE: frozenset(),
         ThoughtKind.CAUGHT_FEELING: frozenset(),
+        ThoughtKind.WAS_SURPRISED: frozenset(),
+        ThoughtKind.GREW_CURIOUS: frozenset(),
+        ThoughtKind.FELT_COMPASSION: frozenset(),
+        ThoughtKind.FELT_CONTEMPT: frozenset(),
     },
 )
 
@@ -2412,6 +2392,9 @@ WEATHER_EFFECT_TRAITS: Mapping[WeatherEffect, frozenset[WeatherEffectTrait]] = t
         WeatherEffect.WIND: frozenset(),
         WeatherEffect.MORALE: frozenset(),
         WeatherEffect.GROWTH: frozenset(),
+        WeatherEffect.LIGHTNING: frozenset(),
+        WeatherEffect.FLOOD: frozenset(),
+        WeatherEffect.BREATH: frozenset({WeatherEffectTrait.FALLING_EFFECTS}),
     },
 )
 

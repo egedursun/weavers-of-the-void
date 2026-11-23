@@ -1,6 +1,10 @@
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from aerona.core.total import total
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, ResourceMechanic
+from aerona.rules.registry import Rules
 
 B = KnowledgeBranch
 
@@ -93,3 +97,36 @@ ENGINE_UNDISCOVERABLE_BRANCHES: frozenset[KnowledgeBranch] = frozenset({B.FORBID
 
 def branch_label(branch: KnowledgeBranch) -> str:
     return KNOWLEDGE_BRANCHES[branch].label
+
+
+K = KnowledgeKind
+
+
+@dataclass(frozen=True)
+class KnowledgeSpec:
+    label: str
+    dies: bool
+    worth: Callable[[Rules], int]
+
+
+KNOWLEDGE: Mapping[KnowledgeKind, KnowledgeSpec] = total(
+    KnowledgeKind,
+    {
+        K.SONG: KnowledgeSpec("A song", dies=False, worth=lambda rules: rules.knowledge.song_value),
+        K.ART_FORM: KnowledgeSpec("An art form", dies=False, worth=lambda rules: rules.knowledge.art_form_value),
+        K.RITE: KnowledgeSpec("A rite", dies=False, worth=lambda rules: rules.knowledge.rite_value),
+        K.TECHNIQUE: KnowledgeSpec("A technique", dies=False, worth=lambda rules: rules.knowledge.technique_value),
+        K.TRUE_NAME: KnowledgeSpec("A true name", dies=True, worth=lambda rules: rules.knowledge.true_name_value),
+        K.PROPHECY: KnowledgeSpec("A prophecy", dies=True, worth=lambda rules: rules.knowledge.prophecy_value),
+        K.TREASURE: KnowledgeSpec("Where a treasure lies", dies=True, worth=lambda rules: rules.knowledge.treasure_value),
+        K.LANGUAGE: KnowledgeSpec("A language", dies=False, worth=lambda rules: rules.knowledge.language_value),
+        K.ACCOUNT: KnowledgeSpec("An account of what happened", dies=False, worth=lambda rules: rules.knowledge.account_value),
+        K.SITE: KnowledgeSpec("A hidden site", dies=True, worth=lambda rules: rules.knowledge.site_value),
+        K.MAP: KnowledgeSpec("Knowledge of a land", dies=False, worth=lambda rules: rules.knowledge.map_value),
+        K.WEAKNESS: KnowledgeSpec("A weakness", dies=True, worth=lambda rules: rules.knowledge.weakness_value),
+        K.PATTERN: KnowledgeSpec("A pattern of a made thing", dies=False, worth=lambda rules: rules.knowledge.pattern_value),
+        K.SOURCE: KnowledgeSpec("Where a source of power lies", dies=True, worth=lambda rules: rules.knowledge.source_value),
+        K.SECRET: KnowledgeSpec("A secret of a person, house or realm", dies=True, worth=lambda rules: rules.knowledge.secret_value),
+    },
+)
+DYING_KNOWLEDGE = frozenset(kind for kind, spec in KNOWLEDGE.items() if spec.dies)

@@ -56,6 +56,7 @@ from aerona.services.integrity.regime_links import mend_regime_links
 from aerona.services.integrity.rite_needs import keep_war_needs
 from aerona.services.integrity.sacred_links import mend_sacred_links
 from aerona.services.integrity.season_positions import mend_season_positions
+from aerona.services.integrity.season_shares import impact_winters, remembrance_slots, share_the_year
 from aerona.services.integrity.single_ruler import homeland_to_lives_in, restore_homelands, single_rule
 from aerona.services.integrity.told_dangers import retell_dangers
 from aerona.services.integrity.tongue_links import mend_tongue_links
@@ -163,6 +164,9 @@ class DataRepairs:
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
             ("season_positions", lambda session, rules, epoch: mend_season_positions(session)),
             ("rite_war_needs", lambda session, rules, epoch: keep_war_needs(session)),
+            ("season_shares", lambda session, rules, epoch: share_the_year(session, rules)),
+            ("impact_winters", lambda session, rules, epoch: impact_winters(session)),
+            ("remembrance_slots", lambda session, rules, epoch: remembrance_slots(session)),
             ("told_dangers", lambda session, rules, epoch: retell_dangers(session)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),
             ("pending_dialect_names", refit_pending_names),

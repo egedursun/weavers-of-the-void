@@ -10,10 +10,11 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.collective import CollectiveTrigger, StoryletId
+from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger, StoryletId
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.collective.accounts import expose, scholar_in
-from aerona.engine.collective.crowds import stir
+from aerona.engine.collective.crowds import CrowdTally, spark, stir
+from aerona.engine.collective.feelings import feelings_of, told_feelings
 from aerona.engine.collective.storylets import CASTERS, begin, conditions_hold, names
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
@@ -30,6 +31,7 @@ Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 class StirCrowdInput(ToolInput):
     town_id: int
     grievance: CollectiveTrigger
+    act: CollectiveActKind | None = None
     reason: Reason
 
 
@@ -50,7 +52,9 @@ async def stir_crowd(call: SonCall, args: StirCrowdInput) -> str:
     await ensure_in_reach(call, town)
     mood = await stir(call.tick, town.id, args.grievance)
     if mood is None:
-        fail(SonResult.CROWD_REFUSED, why="a stronger hand holds that town still")
+        fail(SonResult.CROWD_REFUSED, why="that town is held")
+    if args.act is not None:
+        await spark(call.tick, town, args.grievance, CrowdTally(), act=args.act)
     call.target(town.id)
     await call.record(
         "tools.son.stir_crowd",
@@ -59,7 +63,7 @@ async def stir_crowd(call: SonCall, args: StirCrowdInput) -> str:
         place=town.id,
         kind=ChronicleKind.WORLD,
     )
-    return result(SonResult.CROWD_STIRRED, name=town.name, anger=mood.anger, anxiety=mood.anxiety, fervour=mood.fervour)
+    return result(SonResult.CROWD_STIRRED, name=town.name, feelings=told_feelings(await feelings_of(call.session, town.id)))
 
 
 async def reveal_true_history(call: SonCall, args: RevealInput) -> str:

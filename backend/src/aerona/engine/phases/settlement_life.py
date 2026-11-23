@@ -109,6 +109,7 @@ JUSTICE_FULL = 100
     "table.identities",
     "table.incident_participants",
     "table.incidents",
+    "table.irregular_seasons",
     "table.land_use_rules",
     "table.law_jurisdictions",
     "table.law_profiles",

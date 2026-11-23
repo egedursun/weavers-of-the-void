@@ -2,14 +2,16 @@ from pydantic import Field
 
 from aerona.catalog.weather import WEATHER
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.environment import NotableYearKind, WeatherKind
+from aerona.domain.enums.environment import NotableYearKind, SeasonOnset, WeatherKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.environment import time_control
 from aerona.engine.lore.calendar_rites import found_fast, keepers_of
+from aerona.engine.recording.record import record
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 NAME_MAX = 120
@@ -25,10 +27,22 @@ class AddSeason(Command):
     growth: int = Field(default=50, ge=0, le=100)
     travel: int = Field(default=50, ge=0, le=100)
     campaign: int = Field(default=50, ge=0, le=100)
+    share_pct: int | None = Field(default=None, ge=1, le=100)
 
 
 class SeasonTarget(Command):
     season_id: int
+
+
+class SetOnset(Command):
+    world_id: int
+    year: int
+    season_position: int = Field(ge=0)
+    onset: SeasonOnset
+
+
+class OnsetTarget(Command):
+    onset_id: int
 
 
 class SetMoons(Command):
@@ -113,8 +127,10 @@ async def _name(scope: PlayerScope, entity_id: int) -> str:
 @player_action("seasons:add", ActionKind.OTHER)
 async def add_season(scope: PlayerScope, command: AddSeason) -> Effect:
     values = command.model_dump(include={"temperature_shift", "rain_shift", "growth", "travel", "campaign"})
-    season = await time_control.add_season(scope.session, command.world_id, command.name, values, command.position)
+    season = await time_control.add_season(scope.session, command.world_id, command.name, values, command.position, share_pct=command.share_pct)
     world = await _world(scope, command.world_id)
+    ctx = await scope.context("seasons:add")
+    await record(ctx, "season.added", roles={IncidentRole.SUBJECT: world.id}, facts={"season": season.name, "share": season.share_pct}, world_id=world.id)
     return Effect(f"{season.name} now turns in the year of {world.name}, season {season.position + 1} of {world.season_count}.", target_node_id=world.id)
 
 
@@ -122,6 +138,8 @@ async def add_season(scope: PlayerScope, command: AddSeason) -> Effect:
 async def remove_season(scope: PlayerScope, command: SeasonTarget) -> Effect:
     season = await time_control.remove_season(scope.session, command.season_id)
     world = await _world(scope, season.world_id)
+    ctx = await scope.context("seasons:remove")
+    await record(ctx, "season.removed", roles={IncidentRole.SUBJECT: world.id}, facts={"season": season.name}, world_id=world.id)
     return Effect(
         f"{season.name} is gone from the year of {world.name}; "
         f"{several(world.season_count, 'season', 'seasons')} {agree(world.season_count, 'remains', 'remain')}.",
@@ -133,6 +151,29 @@ async def remove_season(scope: PlayerScope, command: SeasonTarget) -> Effect:
 async def release_season(scope: PlayerScope, command: SeasonTarget) -> Effect:
     season = await time_control.release_season(scope.session, command.season_id)
     return Effect(f"{season.name} is no longer held; the world may reshape it when its year changes.", target_node_id=season.world_id)
+
+
+@player_action("seasons:onset", ActionKind.OTHER)
+async def set_onset(scope: PlayerScope, command: SetOnset) -> Effect:
+    row = await time_control.set_onset(
+        scope.session, command.world_id, command.year, command.season_position, command.onset, by_node_id=(await scope.creator()).id
+    )
+    world = await _world(scope, command.world_id)
+    return Effect(
+        f"In year {row.year} of {world.name}, season {row.season_position + 1} comes {spoken(row.onset)}; the onset is held.", target_node_id=world.id
+    )
+
+
+@player_action("seasons:onset_release", ActionKind.OTHER)
+async def release_onset(scope: PlayerScope, command: OnsetTarget) -> Effect:
+    row = await time_control.release_onset(scope.session, command.onset_id)
+    return Effect(f"The onset of year {row.year} is no longer held; the engine draws it again.", target_node_id=row.world_id)
+
+
+@player_action("seasons:onset_clear", ActionKind.OTHER)
+async def clear_onset(scope: PlayerScope, command: OnsetTarget) -> Effect:
+    row = await time_control.clear_onset(scope.session, command.onset_id)
+    return Effect(f"Season {row.season_position + 1} comes on time in year {row.year}.", target_node_id=row.world_id)
 
 
 @player_action("seasons:moons", ActionKind.OTHER)

@@ -30,7 +30,7 @@ async def close_the_way(call: SonCall, args: CloseTheWayInput) -> str:
     if route is None or not route.active:
         fail(SonResult.CLOSING_REFUSED, why="there is no such way")
     if "temp_closed_until_epoch" in (route.locked or []):
-        fail(SonResult.CLOSING_REFUSED, why="a stronger hand holds that way as it is")
+        fail(SonResult.CLOSING_REFUSED, why="that way is held as it is")
     route.temp_closed_until_epoch = max(route.temp_closed_until_epoch or 0, call.tick.epoch + args.epochs)
     first = await call.session.get(WorldRow, route.world_a_id)
     second = await call.session.get(WorldRow, route.world_b_id)

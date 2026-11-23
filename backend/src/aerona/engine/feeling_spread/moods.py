@@ -3,7 +3,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.life_traits import EMOTION_TRAITS, having
+from aerona.catalog.collective import CROWD_FEELINGS
+from aerona.catalog.life_traits import EMOTION_TRAITS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.collective import CrowdMoodRow
 from aerona.db.tables.entities import EntityRow
@@ -13,9 +14,9 @@ from aerona.db.tables.mind import ThoughtRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.life_traits import EmotionTrait
 from aerona.domain.enums.mind import Emotion, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.engine.collective.feelings import stir_feelings
 from aerona.engine.context import TickContext
 from aerona.engine.mind.thoughts import think
 from aerona.engine.primitives.folk import present_among
@@ -25,9 +26,6 @@ from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import record
 
 SPREAD_BONDS = (BondKind.PARENT_OF, BondKind.SPOUSE_OF, BondKind.LOVES, BondKind.COMPANION, BondKind.SWORN_KIN, BondKind.APPRENTICE_OF, BondKind.ADHERENT_OF)
-ANGRY = having(EMOTION_TRAITS, EmotionTrait.ANGRY)
-AFRAID = having(EMOTION_TRAITS, EmotionTrait.AFRAID)
-STIRRED = having(EMOTION_TRAITS, EmotionTrait.STIRRED)
 KEPT = 3
 FADED = 10
 
@@ -128,14 +126,18 @@ async def catch(ctx: TickContext, holder: int, emotion: Emotion, strength: float
 
 
 async def feed_crowd(ctx: TickContext, town: int, feelings: dict[str, int]) -> None:
-    crowd = await ctx.session.get(CrowdMoodRow, town)
-    if crowd is None or "anger" in (crowd.locked or []):
+    if await ctx.session.get(CrowdMoodRow, town) is None:
         return
     share = ctx.rules.feeling_spread.crowd_pct
     of = {emotion_of(key): value for key, value in feelings.items()}
-    crowd.anger = clamp_int(crowd.anger + sum(value for key, value in of.items() if key in ANGRY) * share // PERCENT, 0, PERCENT)
-    crowd.anxiety = clamp_int(crowd.anxiety + sum(value for key, value in of.items() if key in AFRAID) * share // PERCENT, 0, PERCENT)
-    crowd.fervour = clamp_int(crowd.fervour + sum(value for key, value in of.items() if key in STIRRED) * share // PERCENT, 0, PERCENT)
+    await stir_feelings(
+        ctx,
+        town,
+        {
+            feeling: sum(value for key, value in of.items() if key is not None and spec.trait in EMOTION_TRAITS[key]) * share // PERCENT
+            for feeling, spec in CROWD_FEELINGS.items()
+        },
+    )
 
 
 async def spread_in_places(ctx: TickContext, tally: MoodTally) -> None:

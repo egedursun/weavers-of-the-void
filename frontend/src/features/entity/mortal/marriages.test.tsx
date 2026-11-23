@@ -29,7 +29,7 @@ function serve() {
   onApi('GET', '/api/mortals/5/family', { root: 5, people: [] })
   onApi('GET', '/api/mortals/5/profile', {
     mortal: ME,
-    sex: 'female',
+    sex: 'bearer',
     life_stage: 'adult',
     fertility: 50,
     health: 80,

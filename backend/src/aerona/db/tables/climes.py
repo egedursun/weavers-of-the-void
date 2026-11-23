@@ -7,7 +7,7 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.climes import CirculationBand, OscillationPhase
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
-WIND_FIELDS = ("band", "wind_from", "strength", "windward", "shadow", "monsoon", "upwelling")
+WIND_FIELDS = ("band", "summer_band", "wind_from", "strength", "windward", "shadow", "monsoon", "upwelling")
 MONSOON_FIELDS = ("strength", "failed")
 OSCILLATION_FIELDS = ("phase", "period", "step", "strength")
 WINDOW_FIELDS = ("synodic", "offset", "open")
@@ -29,6 +29,7 @@ class RegionWindRow(Base):
 
     region_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     band: Mapped[CirculationBand] = mapped_column(enum_type(CirculationBand, "band"))
+    summer_band: Mapped[CirculationBand] = mapped_column(enum_type(CirculationBand, "summer_band"), default=CirculationBand.TRADE)
     wind_from: Mapped[int] = mapped_column(default=0)
     strength: Mapped[int] = mapped_column(default=40)
     windward: Mapped[bool] = mapped_column(default=False)

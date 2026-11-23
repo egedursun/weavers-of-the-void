@@ -14,7 +14,7 @@ from aerona.domain.enums.crafts import (
     RightAcquired,
     RightKind,
 )
-from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.culture import MagicSchool, Technique
 from aerona.domain.enums.folk_knowledge import NumberReading
 from aerona.domain.enums.mind import Emotion
 from aerona.engine.crafts import control
@@ -102,6 +102,10 @@ class IncorporealRightDraft(Command):
     name: str
     acquired: RightAcquired = RightAcquired.GRANTED
     licensed_to_node_id: int | None = None
+    dish_id: int | None = None
+    technique: Technique | None = None
+    contest_id: int | None = None
+    marriage_id: int | None = None
 
 
 class IncorporealRightTarget(Command):
@@ -325,6 +329,10 @@ async def incorporeal_right_create(scope: PlayerScope, command: IncorporealRight
             "name": command.name,
             "acquired": command.acquired,
             "licensed_to_node_id": command.licensed_to_node_id,
+            "dish_id": command.dish_id,
+            "technique": command.technique,
+            "contest_id": command.contest_id,
+            "marriage_id": command.marriage_id,
         },
     )
     return Effect("The right is held.", values={"record_id": getattr(row, "id", 0)})

@@ -9,7 +9,11 @@ import {
   Trash2,
   Users,
 } from 'lucide-react'
-import { techniqueValues, unitKindValues } from '@/api/generated/schema'
+import {
+  equipmentFamilyValues,
+  techniqueValues,
+  unitKindValues,
+} from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { KpiTile, PagedList } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
@@ -17,6 +21,7 @@ import { Held, Listed } from '@/features/collective/parts'
 import { Chip, Facts, ForgeCard } from '@/features/cosmography/parts'
 import { SPAN } from '@/features/cycles/model'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
 import { CLASS_SPEC } from '@/features/entity/society/labels'
@@ -35,13 +40,7 @@ import {
   type VehicleType,
   useLever,
 } from './api'
-import {
-  SLOT,
-  familyLabel,
-  namedTable,
-  sectionLabel,
-  wordTable,
-} from './labels'
+import { SLOT, namedTable, sectionLabel, wordTable } from './labels'
 import {
   OWNER_TYPES,
   numberProblem,
@@ -100,7 +99,7 @@ function LoadoutRow({
         <Muted
           as='span'
           variant='caption'
-        >{`${row.model_name}, ${familyLabel(row.family).toLowerCase()}`}</Muted>
+        >{`${row.model_name}, ${wordOf(equipmentFamilyValues, row.family).toLowerCase()}`}</Muted>
       </div>
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
         <NumberField

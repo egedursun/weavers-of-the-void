@@ -10,7 +10,7 @@ from aerona.catalog.life.services import BUILDING_STATES, STATE_OPACITY, ZONE_IN
 from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.urban import SERVICE_OF
 from aerona.catalog.zones import CIVIC_SERVICE_OF, ZONE_OF_DISTRICT, ZONE_OF_STRUCTURE
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -141,7 +141,7 @@ async def city_plan(session: AsyncSession, rules: Rules, town: EntityRow) -> Pla
     homes = sum(homes_of(people.get(district.id, 0), rules.city_plan.household) for district in districts)
     facts = [
         (
-            f"{zone.value.capitalize()} zone",
+            f"{spoken(zone).capitalize()} zone",
             f"{several(districts_n, 'district', 'districts')} on {several(cells_n, 'hex', 'hexes')}, {several(built, 'building', 'buildings')}",
         )
         for zone, (districts_n, cells_n, built) in counts.items()
@@ -210,7 +210,7 @@ async def land_plan(session: AsyncSession, region: EntityRow) -> Plan | None:
     for tile in tiles:
         covers[tile.cover] = covers.get(tile.cover, 0) + 1
     facts = [
-        (cover.value.capitalize(), f"{count} of {several(len(tiles), 'tile', 'tiles')}") for cover, count in sorted(covers.items(), key=lambda item: -item[1])
+        (spoken(cover).capitalize(), f"{count} of {several(len(tiles), 'tile', 'tiles')}") for cover, count in sorted(covers.items(), key=lambda item: -item[1])
     ]
     on_land = [
         several(len(towns), "settlement", "settlements"),
@@ -221,10 +221,6 @@ async def land_plan(session: AsyncSession, region: EntityRow) -> Plan | None:
     facts.append(("On the land", ", ".join(on_land)))
     caption = f"{region.name}: its ground and cover tile by tile, its river, settlements (circles), places (triangles), works (squares) and deposits (diamonds)"
     return Plan(_frame([(tile.q, tile.r) for tile in tiles], body, f"Land of {region.name}"), caption, facts)
-
-
-def _words(value: str) -> str:
-    return value.replace("_", " ")
 
 
 async def type_tables(session: AsyncSession, rules: Rules) -> list[RecordTable]:
@@ -254,9 +250,9 @@ async def type_tables(session: AsyncSession, rules: Rules) -> list[RecordTable]:
         buildings.rows.append(
             [
                 worlds.get(world_id, f"World {world_id}"),
-                spec.label if spec is not None else _words(kind.value).capitalize(),
+                spec.label if spec is not None else spoken(kind).capitalize(),
                 ZONE_OF_STRUCTURE[kind].value,
-                ", ".join(_words(part.value) for part in (civic, service) if part is not None) or "nothing",
+                ", ".join(spoken(part) for part in (civic, service) if part is not None) or "nothing",
                 *(str(count) for count in states),
                 ", ".join(hosts) or "the open land",
             ]
@@ -278,7 +274,5 @@ async def type_tables(session: AsyncSession, rules: Rules) -> list[RecordTable]:
             tally[key][1] += homes_of(people.get(district.id, 0), rules.city_plan.household)
             places[key].add(town.name)
     for (world_id, level), (count, dwellings) in sorted(tally.items(), key=lambda item: (item[0][0], item[0][1].value)):
-        homes.rows.append(
-            [worlds.get(world_id, f"World {world_id}"), _words(level.value), str(count), str(dwellings), ", ".join(sorted(places[(world_id, level)]))]
-        )
+        homes.rows.append([worlds.get(world_id, f"World {world_id}"), spoken(level), str(count), str(dwellings), ", ".join(sorted(places[(world_id, level)]))])
     return [table for table in (buildings, homes) if table.rows]

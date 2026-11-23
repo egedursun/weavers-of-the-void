@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from types import MappingProxyType
 
+from aerona.core.grammar import spoken
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import ActKind, TraitKind
@@ -23,6 +24,4 @@ LAW_WORDS: MappingProxyType[LawKind, tuple[str, ...]] = MappingProxyType({LawKin
 STRUCTURE_WORDS: MappingProxyType[StructureKind, tuple[str, ...]] = MappingProxyType(
     {StructureKind(key): tuple(words) for key, words in RAW.get("structures", {}).items()}
 )
-ACT_WORDS: MappingProxyType[ActKind, tuple[str, ...]] = MappingProxyType(
-    {act: (*RAW.get("acts", {}).get(act.value, []), act.value.replace("_", " ")) for act in ActKind}
-)
+ACT_WORDS: MappingProxyType[ActKind, tuple[str, ...]] = MappingProxyType({act: (*RAW.get("acts", {}).get(act.value, []), spoken(act)) for act in ActKind})

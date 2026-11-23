@@ -115,6 +115,8 @@ class ClimateEra(StrEnum):
     SNOWBALL = "snowball"
     VARIABLE = "variable"
     WET_COLD = "wet_cold"
+    WARMING = "warming"
+    COOLING = "cooling"
 
 
 class SkyEventKind(StrEnum):

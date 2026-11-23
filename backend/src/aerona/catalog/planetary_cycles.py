@@ -22,6 +22,7 @@ class CycleSpec:
     sources: tuple[CycleFlow, ...]
     sinks: tuple[CycleFlow, ...]
     moves: frozenset[CycleEffect]
+    seeded_by: frozenset[CycleSource] = frozenset()
 
 
 CYCLES: Mapping[PlanetaryCycle, CycleSpec] = total(
@@ -62,6 +63,45 @@ CYCLES: Mapping[PlanetaryCycle, CycleSpec] = total(
             (CycleFlow(S.EROSION, lambda rules: rules.world_cycles.erosion_loss),),
             frozenset({CycleEffect.SOIL}),
         ),
+        PlanetaryCycle.OXYGEN: CycleSpec(
+            "Breathable air",
+            (
+                CycleFlow(S.FORESTS, lambda rules: rules.world_cycles.forest_oxygen),
+                CycleFlow(S.OCEANS, lambda rules: rules.world_cycles.plankton_oxygen),
+            ),
+            (
+                CycleFlow(S.FIRES, lambda rules: rules.cycles.oxygen_fire_draw),
+                CycleFlow(S.LIFE, lambda rules: rules.world_cycles.respiration_oxygen),
+                CycleFlow(S.WEATHERING, lambda rules: rules.world_cycles.weathering_oxygen),
+                CycleFlow(S.INDUSTRY, lambda rules: rules.world_cycles.industry_oxygen),
+            ),
+            frozenset({CycleEffect.BREATH}),
+            frozenset({S.FORESTS, S.OCEANS}),
+        ),
+        PlanetaryCycle.ROCK: CycleSpec(
+            "Rock",
+            (
+                CycleFlow(S.VOLCANOES, lambda rules: rules.cycles.rock_volcanic_gain),
+                CycleFlow(S.UPLIFT, lambda rules: rules.world_cycles.uplift_rock),
+                CycleFlow(S.BURIAL, lambda rules: rules.world_cycles.burial_rock),
+            ),
+            (
+                CycleFlow(S.WEATHERING, lambda rules: rules.cycles.rock_weathering_pct),
+                CycleFlow(S.EROSION, lambda rules: rules.world_cycles.erosion_rock),
+            ),
+            frozenset({CycleEffect.SOIL}),
+            frozenset({S.VOLCANOES, S.UPLIFT, S.WEATHERING}),
+        ),
+    },
+)
+SCALES: Mapping[PlanetaryCycle, tuple[Rate, Rate]] = total(
+    PlanetaryCycle,
+    {
+        PlanetaryCycle.CARBON: (lambda rules: rules.cycles.carbon_source_pct, lambda rules: rules.cycles.carbon_sink_pct),
+        PlanetaryCycle.WATER: (lambda rules: rules.cycles.water_source_pct, lambda rules: rules.cycles.water_sink_pct),
+        PlanetaryCycle.NUTRIENTS: (lambda rules: rules.cycles.nutrients_source_pct, lambda rules: rules.cycles.nutrients_sink_pct),
+        PlanetaryCycle.OXYGEN: (lambda rules: rules.cycles.oxygen_source_pct, lambda rules: rules.cycles.oxygen_sink_pct),
+        PlanetaryCycle.ROCK: (lambda rules: rules.cycles.rock_source_pct, lambda rules: rules.cycles.rock_sink_pct),
     },
 )
 
@@ -79,6 +119,9 @@ SOURCE_LABELS: Mapping[CycleSource, str] = total(
         S.FREEZING: "Cold binding ice",
         S.RIVERS: "Rivers",
         S.EROSION: "Erosion",
+        S.INDUSTRY: "Foul air of industry",
+        S.UPLIFT: "Mountain building",
+        S.BURIAL: "Sediment buried deep",
     },
 )
 

@@ -37,7 +37,7 @@ function GroundCard({ row, blocked }: { row: Ground; blocked: string | null }) {
       icon={ground.icon}
       tone={row.collapsed ? 'danger' : ground.tone}
       title={`${ground.label}: ${row.source.name}`}
-      caption={`${GEAR[row.gear].label} · effort ${row.effort} · last catch ${row.last_catch} · first stock ${row.first_stock}${row.collapsed ? ' · collapsed' : ''}`}
+      caption={`${GEAR[row.gear].label} · effort ${row.effort} · last catch ${row.last_catch} · first stock ${row.first_stock} · stock ${row.stock}${row.collapsed ? ' · collapsed' : ''}`}
       removeLabel='Strike the ground'
       editTitle='Set the ground'
       note='Gear and effort set the catch; worked below its collapse mark, a share of its first stock, a ground gives out and regrows slowly until it recovers. Others who work owned waters sour the owner, and sea beasts wound their hunters.'
@@ -66,6 +66,13 @@ function GroundCard({ row, blocked }: { row: Ground; blocked: string | null }) {
           kind: 'number',
           min: 1,
           max: MANY,
+        },
+        {
+          key: 'stock',
+          label: 'Stock left (worked shores, beds and ponds)',
+          kind: 'number',
+          min: 0,
+          max: 100,
         },
         {
           key: 'last_catch',

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.collective import HERALDIC_NAMES
 from aerona.catalog.heraldry import CHARGE_NAMES, DIVISION_NAMES, LINE_NAMES, RIM_NAMES, SHAPE_NAMES
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.collective import ArmsRow
 from aerona.db.tables.entities import EntityRow
@@ -77,7 +78,7 @@ async def arms_plan(session: AsyncSession, entity: EntityRow) -> Plan | None:
     quartered = await session.get(EntityRow, arms.quartered_entity_id) if arms.quartered_entity_id is not None else None
     text = blazon(arms)
     facts = [
-        ("Bearer", arms.holder_kind.value.replace("_", " ")),
+        ("Bearer", spoken(arms.holder_kind)),
         ("Shield", SHAPE_NAMES[arms.shape]),
         ("Field", HERALDIC_NAMES[arms.field]),
         ("Division", DIVISION_NAMES[arms.division][0] or "plain"),
@@ -86,7 +87,7 @@ async def arms_plan(session: AsyncSession, entity: EntityRow) -> Plan | None:
         ("First charge", charged(arms.charge, arms.charge_tincture)),
         ("Second charge", charged(arms.charge_two, arms.charge_two_tincture)),
         ("Third charge", charged(arms.charge_three, arms.charge_three_tincture)),
-        ("Arrangement", arms.arrangement.value.replace("_", " ")),
+        ("Arrangement", spoken(arms.arrangement)),
         ("Rim", RIM_NAMES[arms.rim] or "a plain line"),
         ("Edge of the shield", LINE_NAMES[arms.rim_line] or "straight"),
         ("Rim tincture", tinct(arms.rim_tincture)),

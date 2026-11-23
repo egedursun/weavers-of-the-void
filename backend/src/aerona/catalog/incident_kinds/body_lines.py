@@ -25,6 +25,9 @@ CONDITION_PHRASES: Mapping[ConditionKind, str] = {
     ConditionKind.COMATOSE: "fell into a sleep no one could wake them from",
     ConditionKind.COGNITIVE_DECLINE: "began to lose their memory and their reckoning",
     ConditionKind.MALNUTRITION: "began to waste from a poor diet",
+    ConditionKind.PARALYSIS: "lost the use of what lies below the wound",
+    ConditionKind.INFERTILITY: "could no longer bear or sire children",
+    ConditionKind.CHRONIC_PAIN: "came to live with a pain that does not leave",
 }
 
 ILLNESSES = frozenset({ConditionKind.CHRONIC_ILLNESS, ConditionKind.ENDLESS_HUNGER, ConditionKind.MALNUTRITION})
@@ -61,6 +64,7 @@ RESPONSE_WORDS: Mapping[PlagueResponse, str] = {
     PlagueResponse.EXPEL_SICK: "drove out its sick",
     PlagueResponse.PRAYER: "gathered to pray",
     PlagueResponse.SEEK_CURE: "set its learned to seek a cure",
+    PlagueResponse.SANITATION: "cleaned its water and carried away its refuse",
 }
 
 INJURY_PHRASES: Mapping[InjuryKind, str] = total(
@@ -90,6 +94,9 @@ INJURY_PHRASES: Mapping[InjuryKind, str] = total(
         InjuryKind.CHEMICAL_BURN: "chemical burns",
         InjuryKind.RADIATION_SICKNESS: "radiation sickness",
         InjuryKind.MIND_SCAR: "harm to the mind",
+        InjuryKind.ASPHYXIA: "a loss of breath",
+        InjuryKind.DISLOCATION: "a dislocated joint",
+        InjuryKind.INTERNAL_BLEEDING: "bleeding inside the body",
     },
 )
 LOSS_LINES: Mapping[InjuryKind, str] = {

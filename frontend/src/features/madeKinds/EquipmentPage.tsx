@@ -6,18 +6,13 @@ import { table } from '@/features/arcana/labels'
 import { Held } from '@/features/collective/parts'
 import { Chip, Facts } from '@/features/cosmography/parts'
 import { SPAN } from '@/features/cycles/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { useWorldMaterials } from '@/features/entity/economy/api'
 import { COMMODITY, MATERIAL_LABEL } from '@/features/entity/economy/labels'
 import { Ref } from '@/features/gatherings/parts'
 import { DEVICE_EFFECTS } from '@/features/powers/labels'
 import { type EquipmentModel } from './api'
-import {
-  EQUIPMENT_FAMILIES,
-  SLOT,
-  namedTable,
-  sectionLabel,
-  wordTable,
-} from './labels'
+import { EQUIPMENT_FAMILIES, SLOT, namedTable, wordTable } from './labels'
 import { OWNER_TYPES, useKindRow } from './model'
 import { KindHeader } from './parts'
 
@@ -127,7 +122,7 @@ export function EquipmentPage({
         items={[
           [
             'Damage and kind',
-            `${row.damage} · ${sectionLabel(row.damage_type).toLowerCase()}`,
+            `${row.damage} · ${wordOf(damageTypeValues, row.damage_type).toLowerCase()}`,
           ],
           [
             'Reach, rate and accuracy',
@@ -141,7 +136,7 @@ export function EquipmentPage({
           ['Weight and cost', `${row.weight} · ${row.cost}`],
           [
             'Knowledge it needs',
-            `level ${row.tech_level}${row.technique ? `, ${sectionLabel(row.technique).toLowerCase()}` : ''}${row.power_effect ? `, ${DEVICE_EFFECTS[row.power_effect].label.toLowerCase()}` : ''}`,
+            `level ${row.tech_level}${row.technique ? `, ${wordOf(techniqueValues, row.technique).toLowerCase()}` : ''}${row.power_effect ? `, ${DEVICE_EFFECTS[row.power_effect].label.toLowerCase()}` : ''}`,
           ],
           ['Made by', <Ref key='origin' node={row.origin} empty='no maker' />],
           [

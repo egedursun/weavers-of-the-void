@@ -42,6 +42,9 @@ GAINED_KEYS = partial(
         ConditionKind.COMATOSE: "condition.gained.comatose",
         ConditionKind.COGNITIVE_DECLINE: "condition.gained.cognitive_decline",
         ConditionKind.MALNUTRITION: "condition.gained.malnutrition",
+        ConditionKind.PARALYSIS: "condition.gained.paralysis",
+        ConditionKind.INFERTILITY: "condition.gained.infertility",
+        ConditionKind.CHRONIC_PAIN: "condition.gained.chronic_pain",
     },
     without=tuple(kind for kind in ConditionKind if kind not in CONDITION_PHRASES),
 )

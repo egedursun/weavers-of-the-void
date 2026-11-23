@@ -1,6 +1,7 @@
 import {
   Coins,
   Crown,
+  Dices,
   HandCoins,
   HeartPulse,
   Landmark,
@@ -190,5 +191,10 @@ export const CRIMES: Record<Schema['CrimeKind'], Named> = {
     label: 'Compelling a mind by a power',
     icon: Skull,
     tone: 'danger',
+  },
+  fixing_contests: {
+    label: 'Fixing a contest',
+    icon: Dices,
+    tone: 'warning',
   },
 }

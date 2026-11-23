@@ -459,7 +459,7 @@ BASE_BEHAVIOURS = (
     (
         "succession_line",
         "S4.6",
-        "Heirs ordered by the succession law: rule, gender and wholeness",
+        "Heirs ordered by the succession law: rule, which sexes may succeed, and wholeness",
         ("polity_cycles", "mortal_wounds"),
         REALM_SECTION,
         (P, "mortal", L),

@@ -36,7 +36,7 @@ async def press_transformation(call: SonCall, args: PressTransformationInput) ->
     if node is None:
         fail(SonResult.TRANSFORMATION_REFUSED, why="there is no such thing")
     if held(node.id):
-        fail(SonResult.TRANSFORMATION_REFUSED, why="a stronger hand holds it")
+        fail(SonResult.TRANSFORMATION_REFUSED, why="it is held")
     entity = await call.session.get(EntityRow, node.id)
     if entity is not None:
         await ensure_in_reach(call, entity)

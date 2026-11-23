@@ -15,6 +15,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.ethics import ethic_reading
@@ -24,6 +25,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 from aerona.engine.relations.book import relation
+from aerona.engine.renown.axes import honour_axis
 
 CORRUPTION = "corruption"
 
@@ -98,6 +100,8 @@ async def grant_pardon(ctx: TickContext, granter: EntityRow, mortal: EntityRow, 
     if unjust:
         await add_renown(ctx.session, granter.id, table.mercy_renown, ctx.epoch, rules=ctx.rules)
     await read_mercy(ctx, granter, polity_id)
+    if not corrupt:
+        await honour_axis(ctx, granter.id, ReputationAxis.MERCY, ctx.rules.renown.mercy_gain, granter.location_id)
     await ctx.session.flush()
     await record(
         ctx,

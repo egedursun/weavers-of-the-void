@@ -9,14 +9,16 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector, SpreadPath
+from aerona.domain.enums.disease import ClimateMoisture, ClimateWarmth, SpreadPath
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import DiseaseStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
+from aerona.engine.disease.routes import seed_routes
 from aerona.engine.ecology.hosts import link_hosts
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
@@ -31,50 +33,45 @@ MAGIC = 60
 VOID_SCARS = ("void", "void_wound", "unmade")
 
 
-def affinity_of(ground: RegionEnvironmentRow | None) -> ClimateAffinity:
+def affinity_of(ground: RegionEnvironmentRow | None) -> tuple[ClimateWarmth, ClimateMoisture]:
     if ground is None:
-        return ClimateAffinity.ANY
-    if ground.wetland >= WET or ground.rainfall >= PERCENT - DRY:
-        return ClimateAffinity.WET
-    if ground.temperature_band in WARM_BANDS:
-        return ClimateAffinity.WARM
-    if ground.temperature_band in COLD_BANDS:
-        return ClimateAffinity.COLD
-    if ground.rainfall <= DRY:
-        return ClimateAffinity.DRY
-    return ClimateAffinity.ANY
+        return ClimateWarmth.ANY, ClimateMoisture.ANY
+    warmth = ClimateWarmth.WARM if ground.temperature_band in WARM_BANDS else ClimateWarmth.COLD if ground.temperature_band in COLD_BANDS else ClimateWarmth.ANY
+    moisture = ClimateMoisture.WET if ground.wetland >= WET else ClimateMoisture.DRY if ground.rainfall <= DRY else ClimateMoisture.ANY
+    return warmth, moisture
 
 
-def vector_of(rng: SeededRandom, ground: RegionEnvironmentRow | None, *, host: EntityRow | None, cursed: bool) -> DiseaseVector:
+def vector_of(rng: SeededRandom, ground: RegionEnvironmentRow | None, *, host: EntityRow | None, cursed: bool) -> Transmission:
     if cursed:
-        return DiseaseVector.CURSE
+        return Transmission.CURSE
     if ground is not None and any(ground.scars.get(key, 0) for key in VOID_SCARS):
-        return DiseaseVector.VOID
+        return Transmission.VOID
     if ground is not None and ground.magic_density >= MAGIC and rng.chance(40):
-        return DiseaseVector.SPIRIT
+        return Transmission.SPIRIT
     if host is not None:
-        return DiseaseVector.BITE if rng.chance(60) else DiseaseVector.TOUCH
+        return Transmission.BITE if rng.chance(60) else Transmission.CONTACT
     if ground is not None and ground.wetland >= WET:
-        return rng.pick([DiseaseVector.WATER, DiseaseVector.BITE])
-    return rng.pick([DiseaseVector.AIR, DiseaseVector.AIR, DiseaseVector.TOUCH, DiseaseVector.WATER])
+        return rng.pick([Transmission.WATER, Transmission.BITE])
+    return rng.pick([Transmission.INHALATION, Transmission.INHALATION, Transmission.CONTACT, Transmission.WATER])
 
 
-def name_of(vector: DiseaseVector, region: EntityRow | None) -> str:
+def name_of(vector: Transmission, region: EntityRow | None) -> str:
     place = f" of {region.name}" if region is not None else ""
     return f"the {VECTOR_LABELS[vector]} sickness{place}"
 
 
 def fresh_profile(ctx: TickContext, rng: SeededRandom, ground: RegionEnvironmentRow | None, *, host: EntityRow | None, cursed: bool) -> DiseaseProfileRow:
     vector = vector_of(rng, ground, host=host, cursed=cursed)
-    affinity = affinity_of(ground)
+    warmth, moisture = affinity_of(ground)
     return DiseaseProfileRow(
-        vector=vector,
+        primary_route=vector,
         virulence=rng.integer(20, 70),
         lethality=rng.integer(10, 55),
         chronic_rate=rng.integer(0, 30),
         incubation=rng.integer(0, 3),
         target_functions=[item.value for item in VECTOR_FUNCTIONS[vector]],
-        climate_affinity=affinity,
+        affinity_warmth=warmth,
+        affinity_moisture=moisture,
         host_species_id=host.id if host is not None else None,
         immunity_epochs=rng.integer(2, 12),
         mutation_rate=rng.integer(2, 20),
@@ -87,13 +84,14 @@ def fresh_profile(ctx: TickContext, rng: SeededRandom, ground: RegionEnvironment
 
 def strain_profile(ctx: TickContext, rng: SeededRandom, parent: DiseaseProfileRow) -> DiseaseProfileRow:
     return DiseaseProfileRow(
-        vector=parent.vector,
+        primary_route=parent.primary_route,
         virulence=clamp_int(parent.virulence + rng.integer(-5, 15), 1, PERCENT),
         lethality=clamp_int(parent.lethality + rng.integer(-15, 10), 1, PERCENT),
         chronic_rate=parent.chronic_rate,
         incubation=parent.incubation,
         target_functions=list(parent.target_functions),
-        climate_affinity=parent.climate_affinity,
+        affinity_warmth=parent.affinity_warmth,
+        affinity_moisture=parent.affinity_moisture,
         host_species_id=parent.host_species_id,
         immunity_epochs=parent.immunity_epochs,
         mutation_rate=parent.mutation_rate,
@@ -123,7 +121,7 @@ async def mark_origin(ctx: TickContext, profile: DiseaseProfileRow, entity: Enti
         IncidentRole.ORIGIN: host.id if host else None,
         IncidentRole.PATRON: son_id,
     }
-    facts: dict[str, FactInput] = {"vector": profile.vector, "path": path, "lethality": profile.lethality}
+    facts: dict[str, FactInput] = {"route": profile.primary_route, "path": path, "lethality": profile.lethality}
     write = await record(ctx, key, roles=roles, facts=facts, place=region.id, son_id=son_id, world_id=region.world_id)
     profile.origin_incident_id = write.incident_id
 
@@ -144,12 +142,12 @@ async def birth_disease(
         RecordSpec(
             entity_type=EntityType.DISEASE,
             name=name,
-            body=f"A sickness that first showed itself in {region.name}, carried by {spoken(profile.vector)}.",
+            body=f"A sickness that first showed itself in {region.name}, carried by {spoken(profile.primary_route)}.",
             stats=DiseaseStats(virulence=profile.virulence, lethality=profile.lethality, infected=0, dead=0),
             power=max(1, profile.lethality // 10),
             location_id=region.id,
             world_id=region.world_id,
-            subtype=profile.vector.value,
+            subtype=profile.primary_route.value,
             creator_son_id=son_id,
             pending=False,
         ),
@@ -157,6 +155,7 @@ async def birth_disease(
     profile.disease_entity_id = entity.id
     profile.origin_region_id = region.id
     ctx.session.add(profile)
+    seed_routes(ctx, book, entity, profile)
     if profile.parent_disease_id is not None:
         await connect(ctx.session, entity.id, profile.parent_disease_id, BondKind.DESCENDS_FROM, ctx.epoch, description="a new strain")
     await ctx.session.flush()
@@ -188,7 +187,7 @@ async def new_disease(
     profile = fresh_profile(ctx, rng, ground, host=host, cursed=cursed)
     if shape is not None:
         shape(profile)
-    title = name or name_of(profile.vector, region)
+    title = name or name_of(profile.primary_route, region)
     disease = await birth_disease(ctx, book, profile, region=region, path=path, name=title, son_id=son_id, quiet=quiet)
     ctx.count("disease_hosts", await link_hosts(ctx, disease, region.id, host))
     return disease

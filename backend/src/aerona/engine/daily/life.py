@@ -23,6 +23,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.customs.time_budgets import sleeps_of
 from aerona.engine.daily.service import engage_servant
 from aerona.engine.economy.purse import coin_of, give_coin, take_coin
 from aerona.engine.loops.delay import lagged
@@ -79,9 +80,24 @@ async def budget_for(ctx: TickContext, mortal: EntityRow, profile: MortalProfile
     return exact if exact is not None else await ctx.session.get(TimeBudgetRow, (folk.id, mortal.social_class, LifeStage.ADULT))
 
 
+def strain_of(budget: TimeBudgetRow, ctx: TickContext, *, sleeps: bool) -> list[tuple[str, int]]:
+    table = ctx.rules.daily_life
+    usual = ctx.rules.time_budgets
+    strains = [
+        ("daily_life.overwork_stress_pct", round_half_up(max(0, budget.work - usual.usual_work) / TEN * table.overwork_stress_pct / TEN)),
+        ("daily_life.housework_stress_pct", round_half_up(max(0, budget.housework - table.usual_housework) / TEN * table.housework_stress_pct / TEN)),
+    ]
+    if sleeps:
+        strains.append(
+            ("daily_life.short_sleep_stress_pct", round_half_up(max(0, table.usual_sleep - budget.sleep) / TEN * table.short_sleep_stress_pct / TEN))
+        )
+    return [(key, amount) for key, amount in strains if amount]
+
+
 async def keep_hours(ctx: TickContext, tally: DailyTally) -> None:
     table = ctx.rules.daily_life
     usual = ctx.rules.time_budgets
+    sleepers: dict[int, bool] = {}
     rows = await ctx.session.execute(
         select(EntityRow, MortalProfileRow)
         .join(MortalProfileRow, MortalProfileRow.entity_id == EntityRow.id)
@@ -94,11 +110,14 @@ async def keep_hours(ctx: TickContext, tally: DailyTally) -> None:
         budget = await budget_for(ctx, mortal, profile)
         if budget is None:
             continue
-        strain = round_half_up(max(0, budget.work - usual.usual_work) / TEN * table.overwork_stress_pct / TEN)
-        if strain and "stress" not in (profile.locked or []):
+        if budget.people_entity_id not in sleepers:
+            sleepers[budget.people_entity_id] = await sleeps_of(ctx.session, budget.people_entity_id)
+        strains = strain_of(budget, ctx, sleeps=sleepers[budget.people_entity_id])
+        if strains and "stress" not in (profile.locked or []):
             with explaining():
-                term("daily_life.overwork_stress_pct", strain)
-                profile.stress = clamp_int(profile.stress + strain, 0, PERCENT)
+                for key, amount in strains:
+                    term(key, amount)
+                profile.stress = clamp_int(profile.stress + sum(amount for _, amount in strains), 0, PERCENT)
             tally.stressed += 1
         cheer = round_half_up((budget.leisure - usual.usual_leisure) / TEN * table.leisure_happiness_pct / TEN)
         if cheer and "mood_score" not in (profile.locked or []):

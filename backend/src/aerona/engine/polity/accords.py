@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.life.polity import DEFAULT_CLAUSES, DERIVED, END_TREATY_TREATY_STATUSS, TREATY_WORDS
 from aerona.catalog.life_traits import TREATY_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
@@ -160,7 +161,7 @@ async def sign(
             power=2,
             location_id=None,
             world_id=world_id,
-            subtype=kind.value.replace("_", " "),
+            subtype=spoken(kind),
             pending=False,
         ),
     )
@@ -334,7 +335,7 @@ async def propose(
             power=2,
             location_id=None,
             world_id=first.world_id if first is not None else None,
-            subtype=kind.value.replace("_", " "),
+            subtype=spoken(kind),
             pending=False,
         ),
     )

@@ -8,9 +8,11 @@ from aerona.domain.enums.ages import (
     ArcTemplate,
     FormationZone,
     GiantMigration,
+    LongSeasonReach,
     PayoffKind,
     SeasonCause,
     SeasonSpell,
+    SeasonSpellShape,
     SetupKind,
 )
 from aerona.domain.enums.cosmography import ApocalypseVariant
@@ -32,18 +34,26 @@ class FormationView(ApiModel):
 
 
 class LongSeasonView(ApiModel):
+    id: int
     world: NodeRef
     cause: SeasonCause
+    shape: SeasonSpellShape
     spell: SeasonSpell
     spell_started_epoch: int
     spell_length: int
     severity: int
+    reach: LongSeasonReach
+    source_impact_id: int | None
+    source_region: NodeRef | None
+    source_star: NodeRef | None
+    source_incident_id: int | None
     by_node: NodeRef | None
     locked: list[str]
 
 
 class ForecastView(ApiModel):
     id: int
+    long_season_id: int
     world: NodeRef
     people: NodeRef
     scholar: NodeRef | None
@@ -137,7 +147,7 @@ class SetupView(ApiModel):
 class TalesNodeView(ApiModel):
     node: NodeRef
     formation: FormationView | None
-    season: LongSeasonView | None
+    seasons: list[LongSeasonView]
     forecasts: list[ForecastView]
     transformations: list[TransformationView]
     cycle: AgeCycle

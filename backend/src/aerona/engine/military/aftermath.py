@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.life.demography import GROWN_BANDS
 from aerona.catalog.terrain import terrain_has, terrains
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
@@ -10,7 +11,7 @@ from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, BattleCasualt
 from aerona.db.tables.warfare import BattleRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.demography import AgeBand, CohortCondition
+from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.environment import ScarKind, TerrainKind, TerrainTrait, WeatherKind
 from aerona.domain.enums.military import CasualtyFate, UnitKind
@@ -108,7 +109,7 @@ async def send_home_wounded(ctx: TickContext, side: Side, wounded: int) -> int:
     moved = 0
     for key in sorted(rows, key=lambda item: -rows[item].count):
         band, sex, social, condition = key
-        if moved >= returned or band is not AgeBand.ADULT or social is not SocialClass.WARRIOR or condition is not CohortCondition.NONE:
+        if moved >= returned or band not in GROWN_BANDS or social is not SocialClass.WARRIOR or condition is not CohortCondition.NONE:
             continue
         part = min(rows[key].count, returned - moved)
         if move_amount(rows[key], row_for(ctx.session, rows, owner.id, (band, sex, social, RECOVERING), ctx.epoch), "count", part):
@@ -132,7 +133,7 @@ async def recover_wounded(ctx: TickContext) -> int:
         if row.community_entity_id not in known:
             known[row.community_entity_id] = await cohorts_of(ctx.session, row.community_entity_id)
         cohorts = known[row.community_entity_id]
-        veterans = row_for(ctx.session, cohorts, row.community_entity_id, (row.age_band, row.sex, row.social_class, CohortCondition.VETERAN), ctx.epoch)
+        veterans = row_for(ctx.session, cohorts, row.community_entity_id, (row.age_band, row.sex_kind, row.social_class, CohortCondition.VETERAN), ctx.epoch)
         if move_amount(row, veterans, "count", healed):
             recovered += healed
     return recovered

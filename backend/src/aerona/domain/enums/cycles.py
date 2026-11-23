@@ -66,6 +66,11 @@ class GiftOccasion(StrEnum):
     RETURN = "return"
     ALLIANCE = "alliance"
     RELIEF = "relief"
+    BIRTH = "birth"
+    FUNERAL = "funeral"
+    AMENDS = "amends"
+    PATRONAGE = "patronage"
+    HOSPITALITY = "hospitality"
 
 
 class GiftState(StrEnum):
@@ -74,6 +79,9 @@ class GiftState(StrEnum):
     REFUSED = "refused"
     DESTROYED = "destroyed"
     LAPSED = "lapsed"
+    EXCEEDED = "exceeded"
+    PASSED_ON = "passed_on"
+    RELEASED = "released"
 
 
 class KinshipDescent(StrEnum):

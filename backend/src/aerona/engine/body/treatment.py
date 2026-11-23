@@ -1,12 +1,16 @@
 from dataclasses import dataclass
 
-from aerona.catalog.conditions import OPEN_INJURY_STATES
-from aerona.catalog.harm_kinds import INJURIES, STEPS
+from sqlalchemy import select
+
+from aerona.catalog.conditions import FESTERING, OPEN_INJURY_STATES
+from aerona.catalog.harm_kinds import FESTERING_STEPS, INJURIES, STEPS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyRow, InjuryRow
+from aerona.db.tables.discovery import TheoryAdherentRow, TheoryProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import TreatmentStep
+from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.mind import SkillKind
 from aerona.engine.body.strike import worn_layers
@@ -33,10 +37,14 @@ def step_level(rules: Rules, step: TreatmentStep) -> int:
     return level(rules.tissues) if level is not None else 0
 
 
-def wanted_steps(row: InjuryRow, *, walking: bool) -> list[TreatmentStep]:
+def wanted_steps(row: InjuryRow, *, walking: bool, bleeds: bool = False) -> list[TreatmentStep]:
     steps: list[TreatmentStep] = []
     if row.bleeding > 0:
         steps.append(S.SUTURE)
+    if row.state in FESTERING:
+        steps.extend(FESTERING_STEPS)
+    if bleeds:
+        steps.append(S.BLEED)
     injury = INJURIES[row.kind]
     steps.extend(injury.care)
     if injury.broken and walking:
@@ -77,7 +85,7 @@ async def treat(ctx: TickContext, row: InjuryRow, *, skill: int, medicine: int, 
         row.misdiagnosed = False
         row.treatments = [*row.treatments, S.DIAGNOSE.value]
         done.append(S.DIAGNOSE)
-    for step in wanted_steps(row, walking=walking):
+    for step in wanted_steps(row, walking=walking, bleeds=await bloodletters(ctx, community_id)):
         chosen = step
         if medicine < step_level(ctx.rules, step) or not await supplied(ctx, community_id, step):
             if step is not S.SUTURE or medicine < step_level(ctx.rules, S.CAUTERISE):
@@ -86,6 +94,22 @@ async def treat(ctx: TickContext, row: InjuryRow, *, skill: int, medicine: int, 
         stanch(row, chosen)
         done.append(chosen)
     return Treatment(tuple(done))
+
+
+async def bloodletters(ctx: TickContext, community_id: int | None) -> bool:
+    if community_id is None:
+        return False
+    found = await ctx.session.scalar(
+        select(TheoryAdherentRow.theory_entity_id)
+        .join(TheoryProfileRow, TheoryProfileRow.theory_entity_id == TheoryAdherentRow.theory_entity_id)
+        .where(
+            TheoryAdherentRow.adherent_entity_id == community_id,
+            TheoryProfileRow.domain == TheoryDomain.MEDICINE,
+            TheoryProfileRow.correctness < ctx.rules.treatment.bleeding_belief,
+        )
+        .limit(1)
+    )
+    return found is not None
 
 
 async def first_aid(ctx: TickContext, bearer: EntityRow) -> int:

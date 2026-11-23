@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { BookPlus, Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import { wordKindValues } from '@/api/generated/schema'
+import { partOfSpeechValues, wordKindValues } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select'
 import { Paged, Section } from '@/components/domain'
 import { useLoreGate } from '@/features/entity/actions/gate'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { useLoreMutation } from '@/features/entity/api/mutations'
 import {
   ANY_KIND,
@@ -107,7 +107,7 @@ export function AddWordsForm({
                     <SelectItem value={ANY_KIND}>Any kind</SelectItem>
                     {wordKindValues.map((kind) => (
                       <SelectItem key={kind} value={kind}>
-                        {humanize(kind)}
+                        {wordOf(partOfSpeechValues, kind)}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -9,10 +9,12 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.plants import PlantPartRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.plants import PlantPart
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
@@ -21,6 +23,7 @@ from aerona.engine.ecology.domestication import domestic_head
 from aerona.engine.ecology.extinction import cascade
 from aerona.engine.ecology.foodweb import appetites
 from aerona.engine.ecology.hosts import acquire_immunity
+from aerona.engine.ecology.living_ways import keep_living_ways
 from aerona.engine.ecology.pests import plague_of_pests
 from aerona.engine.ecology.ranges import (
     RangeMarks,
@@ -36,6 +39,8 @@ from aerona.engine.ecology.ranges import (
     size_weights,
     spread,
 )
+from aerona.engine.ecology.w52_life import backfill_biochemistry, backfill_hunting_role, backfill_social
+from aerona.engine.ecology.w52_products import backfill_beast_products, backfill_products, backfill_regulation
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -247,6 +252,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "species.might",
     "species.strength",
     "spirit.unrest",
+    "table.applied_fixups",
     "table.augment_effects",
     "table.augments",
     "table.bonds",
@@ -268,12 +274,17 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "table.galaxy_clusters",
     "table.game_reserves",
     "table.gardens",
+    "table.gatherings",
     "table.goods_flows",
     "table.herds",
+    "table.node_births",
     "table.nodes",
     "table.outbreaks",
+    "table.plant_anatomy",
+    "table.plant_parts",
     "table.protected_areas",
     "table.region_environment",
+    "table.region_underground",
     "table.reverences",
     "table.sense_profiles",
     "table.sons",
@@ -284,6 +295,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "table.species_ranges",
     "table.species_relations",
     "table.species_traits",
+    "table.species_uses",
     "table.stars",
     "table.tradition_profiles",
     "table.world_biochemistries",
@@ -295,6 +307,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
 @writes(
     "species.abundance",
     "spirit.unrest",
+    "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -302,6 +315,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "table.entities",
     "table.entity_flags",
     "table.goods_flows",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.species_hosts",
@@ -351,6 +365,20 @@ async def ecology(ctx: TickContext) -> None:
         set_stats(item, abundance=clamp_int(value, 0, 100))
         warnings = await track_endangered(ctx, item, marks, warnings)
     ctx.count("extinct", extinct)
+    resin = set(await ctx.session.scalars(select(PlantPartRow.species_entity_id).where(PlantPartRow.part == PlantPart.RESIN)))
+    ctx.count("products_moved", await backfill_products(ctx))
+    ctx.count("beast_products_moved", await backfill_beast_products(ctx))
+    ctx.count("made_athermic", await backfill_regulation(ctx))
+    ctx.count("swarms_named", await backfill_social(ctx))
+    ctx.count("chemistry_rederived", await backfill_biochemistry(ctx))
+    ctx.count("hunters_named", await backfill_hunting_role(ctx))
+    ways = await keep_living_ways(ctx, resin)
+    ctx.count("hosts_drained", ways.drained)
+    ctx.count("dead_returned", ways.returned)
+    ctx.count("kinds_thinned", ways.thinned)
+    ctx.count("swarms", ways.swarmed)
+    ctx.count("commensal", ways.commensal)
+    ctx.count("feral", ways.feral)
     await ctx.session.flush()
 
 

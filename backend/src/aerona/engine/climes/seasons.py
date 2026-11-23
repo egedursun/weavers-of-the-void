@@ -2,16 +2,17 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.life.climes import PHASE_AT_OSCILLATION_PHASES
+from aerona.catalog.life.climes import PHASE_AT_OSCILLATION_PHASES, PHASE_BASE, PHASE_SIGN, STRONGER
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.climes import ClimateOscillationRow, MonsoonSeasonRow, RegionWindRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import NotableYearRow
+from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.climes import OscillationPhase
+from aerona.domain.enums.cosmography import OceanCurrent
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -106,9 +107,13 @@ async def keep_oscillation(ctx: TickContext, world: WorldRow, tally: SeasonTally
     if "step" not in row.locked:
         row.step = (row.step + 1) % max(1, row.period)
     turned = phase_at(row)
-    if turned is not row.phase and "phase" not in row.locked:
+    if turned is not PHASE_BASE[row.phase] and "phase" not in row.locked:
+        if turned in STRONGER and ctx.rng(seed_of("strong_phase", world.id, ctx.epoch)).chance(ctx.rules.climate_effects.strong_phase_pct):
+            turned = STRONGER[turned]
         row.phase = turned
         tally.turned += 1
+        if PHASE_SIGN[turned] > 0:
+            await fail_upwelling(ctx, world)
         if turned is not OscillationPhase.NEUTRAL:
             await record(
                 ctx,
@@ -117,6 +122,24 @@ async def keep_oscillation(ctx: TickContext, world: WorldRow, tally: SeasonTally
                 facts={"phase": turned, "period": row.period, "strength": row.strength},
                 world_id=world.id,
             )
+
+
+async def fail_upwelling(ctx: TickContext, world: WorldRow) -> None:
+    coasts = list(
+        await ctx.session.scalars(
+            select(RegionEnvironmentRow.entity_id)
+            .where(RegionEnvironmentRow.world_id == world.id, RegionEnvironmentRow.current == OceanCurrent.UPWELLING)
+            .order_by(RegionEnvironmentRow.entity_id)
+        )
+    )
+    if coasts:
+        await record(
+            ctx,
+            "sea.upwelling_failed",
+            roles={IncidentRole.SUBJECT: world.id, IncidentRole.PLACE: coasts},
+            facts={"cut": ctx.rules.currents.warm_phase_upwelling_cut_pct},
+            world_id=world.id,
+        )
 
 
 async def carry_kinds(ctx: TickContext, tally: SeasonTally) -> None:

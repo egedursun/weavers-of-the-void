@@ -1,11 +1,12 @@
 from collections.abc import Mapping
 from types import MappingProxyType
 
+from aerona.catalog.grief import OPEN_GRIEF_STAGES
 from aerona.core.total import total
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.military import CasualtyFate, DuelEnd, SackChoice, SpyOperation
-from aerona.domain.enums.mind import GriefStage, MemoryKind, SkillKind
+from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.polity import TreatyKind
 from aerona.domain.enums.travel import JourneyIntent, RouteState
 from aerona.domain.enums.war import CaptiveStatus, WarEnding
@@ -68,7 +69,7 @@ BASE_STATS_FACTION_KINDS = frozenset({FactionKind.MERCHANT_GUILD, FactionKind.CR
 BASE_STATS_FACTION_KINDS_2 = frozenset(
     {FactionKind.PRIESTHOOD, FactionKind.SCHOLARS_ACADEMY, FactionKind.SECRET_SOCIETY, FactionKind.NOBLE_COUNCIL, FactionKind.SOCIAL_CIRCLE}
 )
-MIND_GRIEF_GRIEF_STAGES = (GriefStage.SHOCK, GriefStage.MOURNING)
+MIND_GRIEF_GRIEF_STAGES = OPEN_GRIEF_STAGES
 PRISONERS_CAPTIVE_STATUSS = (CaptiveStatus.HELD, CaptiveStatus.WARD)
 SEND_SPONTANEOUSLY_JOURNEY_INTENTS = (JourneyIntent.COLONY, JourneyIntent.CONQUEST)
 ARRIVE_JOURNEY_INTENTS = (JourneyIntent.EXPLORATION, JourneyIntent.PILGRIMAGE)

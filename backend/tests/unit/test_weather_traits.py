@@ -28,6 +28,20 @@ def test_every_trait_is_read_outside_the_catalogue() -> None:
 
 
 def test_traits_keep_the_sets_they_replace() -> None:
-    assert with_trait(WeatherTrait.COLD) == {WeatherKind.SNOW, WeatherKind.BLIZZARD}
-    assert with_trait(WeatherTrait.LIQUID) == {WeatherKind.RAIN, WeatherKind.DOWNPOUR}
+    assert with_trait(WeatherTrait.COLD) == {
+        WeatherKind.SNOW,
+        WeatherKind.BLIZZARD,
+        WeatherKind.SLEET,
+        WeatherKind.FROST,
+        WeatherKind.ICE_STORM,
+        WeatherKind.FREEZING_FOG,
+    }
+    assert with_trait(WeatherTrait.LIQUID) == {
+        WeatherKind.RAIN,
+        WeatherKind.DOWNPOUR,
+        WeatherKind.DRIZZLE,
+        WeatherKind.THUNDERSTORM,
+        WeatherKind.CYCLONE,
+        WeatherKind.ICE_STORM,
+    }
     assert has_trait(WeatherKind.SANDSTORM, WeatherTrait.COVERING) and not has_trait(None, WeatherTrait.COVERING)

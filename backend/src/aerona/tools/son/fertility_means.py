@@ -47,7 +47,7 @@ async def move_fertility(call: SonCall, args: MoveFertilityInput) -> str:
     if row is None:
         row = await adopt(call.tick, people.id, args.means, MeansSource.POWER, reliability=max(0, args.reliability_change), tally=MeansTally())
     elif "reliability" in row.locked:
-        fail(SonResult.FERTILITY_REFUSED, why="a stronger hand holds that means as it is")
+        fail(SonResult.FERTILITY_REFUSED, why="that means is held as it is")
     else:
         row.reliability = clamp_int(row.reliability + args.reliability_change, 0, PERCENT)
     call.target(people.id)

@@ -40,6 +40,7 @@ import {
 import { LineChart } from '@/components/domain/LineChart'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
+import { RESOURCE_MECHANIC_WORDS } from '@/features/entity/affairs/labels'
 import { useNames } from '@/features/entity/api/queries'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -859,9 +860,7 @@ function Workings({
                 className='size-icon-xs text-muted-foreground'
               />
               <Text as='span' weight='medium'>
-                {param.mechanic
-                  .replaceAll('_', ' ')
-                  .replace(/^./, (first) => first.toUpperCase())}
+                {RESOURCE_MECHANIC_WORDS[param.mechanic]}
               </Text>
               <Badge size='sm' variant='secondary'>
                 {param.magnitude === null

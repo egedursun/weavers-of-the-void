@@ -264,7 +264,7 @@ async def test_plantings_bear_after_epochs_pay_their_owner_and_fall_to_war(sessi
 
 
 async def test_an_overused_common_wears_down_and_its_enclosure_fills_the_city(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await surveyed(session, commons={"enclose_pct": 100, "council_chance": 0})
+    ctx = await surveyed(session, commons={"enclose_pct": 100, "council_chance": 0, "state_take_pct": 0, "licensed_take_pct": 0})
     village = await town(session, world, "Brack", 1, BIG, tier=SizeTier.VILLAGE)
     city = await town(session, world, "Hollin", 3, BIG, tier=SizeTier.CITY)
     ruler = await mortal(session, "Ruler", world, city.id)
@@ -477,7 +477,9 @@ async def test_a_workshop_of_fine_work_earns_a_brand_that_passes_with_it(session
 
 
 async def test_the_salt_of_ages(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await surveyed(session, boserup={"onset": 0, "drift_pct": 100}, commons={"enclose_pct": 50, "council_chance": 0})
+    ctx = await surveyed(
+        session, boserup={"onset": 0, "drift_pct": 100}, commons={"enclose_pct": 50, "council_chance": 0, "state_take_pct": 0, "licensed_take_pct": 0}
+    )
     village = await town(session, world, "Riverside", 1, BIG * 10, tier=SizeTier.VILLAGE)
     city = await town(session, world, "Hollin", 3, BIG, tier=SizeTier.CITY)
     usurper = await mortal(session, "Usurper", world, city.id)
@@ -558,7 +560,7 @@ async def tenure(session: AsyncSession, world: CoreWorld, place: EntityRow, valu
 
 
 async def test_a_freehold_law_hastens_enclosure_by_mandate_and_cottagers_lose_their_wealth(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await surveyed(session, commons={"enclose_pct": 34, "council_chance": 0})
+    ctx = await surveyed(session, commons={"enclose_pct": 34, "council_chance": 0, "state_take_pct": 0, "licensed_take_pct": 0})
     village = await town(session, world, "Brack", 1, BIG, tier=SizeTier.VILLAGE)
     city = await town(session, world, "Hollin", 3, BIG, tier=SizeTier.CITY)
     ruler = await mortal(session, "Ruler", world, city.id)
@@ -578,7 +580,7 @@ async def test_a_freehold_law_hastens_enclosure_by_mandate_and_cottagers_lose_th
 
 
 async def test_a_communal_tenure_law_holds_enclosure_back(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await surveyed(session, commons={"enclose_pct": 100, "communal_pct": 0, "council_chance": 0})
+    ctx = await surveyed(session, commons={"enclose_pct": 100, "communal_pct": 0, "council_chance": 0, "state_take_pct": 0, "licensed_take_pct": 0})
     village = await town(session, world, "Brack", 1, BIG, tier=SizeTier.VILLAGE)
     ruler = await mortal(session, "Ruler", world, village.id)
     await realm(session, world, [village], ruler)

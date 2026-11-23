@@ -12,29 +12,33 @@ import {
   Handshake,
   Heart,
   HeartCrack,
+  HeartHandshake,
   Hourglass,
   Laugh,
   Lightbulb,
   Medal,
   Meh,
   Moon,
+  Search,
   Skull,
   Smile,
   SmilePlus,
   Sparkles,
   Sun,
   Sunrise,
+  ThumbsDown,
   Users,
   Wind,
   Zap,
 } from 'lucide-react'
+import type { components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
 
 export const FEELINGS_ICON = Heart
 export const DREAM_ICON = Moon
 export const GRIEF_ICON = HeartCrack
 
-export const EMOTION_ICONS: Record<string, Named> = {
+export const EMOTION_ICONS: Record<components['schemas']['Emotion'], Named> = {
   joy: { label: 'Joy', icon: Laugh, tone: 'gold' },
   contentment: { label: 'Contentment', icon: Smile, tone: 'success' },
   pride: { label: 'Pride', icon: Medal, tone: 'gold' },
@@ -59,6 +63,10 @@ export const EMOTION_ICONS: Record<string, Named> = {
   boredom: { label: 'Boredom', icon: Meh, tone: 'muted' },
   despair: { label: 'Despair', icon: Skull, tone: 'muted' },
   longing: { label: 'Longing', icon: Moon, tone: 'verdigris' },
+  surprise: { label: 'Surprise', icon: Zap, tone: 'gold' },
+  curiosity: { label: 'Curiosity', icon: Search, tone: 'info' },
+  compassion: { label: 'Compassion', icon: HeartHandshake, tone: 'success' },
+  contempt: { label: 'Contempt', icon: ThumbsDown, tone: 'danger' },
 }
 
 export const MOOD_ICONS: Record<string, Named> = {
@@ -71,16 +79,19 @@ export const MOOD_ICONS: Record<string, Named> = {
   broken: { label: 'Broken', icon: HeartCrack, tone: 'danger' },
 }
 
-export const GRIEF_STAGES: Record<string, Named> = {
-  shock: { label: 'Shock', icon: Zap, tone: 'danger' },
-  mourning: { label: 'Mourning', icon: CloudRain, tone: 'info' },
-  acceptance: { label: 'Acceptance', icon: Handshake, tone: 'success' },
-  complicated: {
-    label: 'A grief that will not heal',
-    icon: HeartCrack,
-    tone: 'muted',
-  },
-}
+export const GRIEF_STAGES: Record<components['schemas']['GriefStage'], Named> =
+  {
+    shock: { label: 'Shock', icon: Zap, tone: 'danger' },
+    anger: { label: 'Anger', icon: Flame, tone: 'danger' },
+    mourning: { label: 'Mourning', icon: CloudRain, tone: 'info' },
+    yearning: { label: 'Yearning', icon: Hourglass, tone: 'verdigris' },
+    acceptance: { label: 'Acceptance', icon: Handshake, tone: 'success' },
+    complicated: {
+      label: 'A grief that will not heal',
+      icon: HeartCrack,
+      tone: 'muted',
+    },
+  }
 
 export const DREAM_KINDS: Record<string, Named> = {
   ordinary: { label: 'Ordinary dream', icon: Moon, tone: 'info' },

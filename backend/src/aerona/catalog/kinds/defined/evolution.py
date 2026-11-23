@@ -11,5 +11,6 @@ CYCLE_EFFECT = total(
             "Sea level", checked_by=("catalog.planetary_cycles.cycle_label",), used_by=("catalog.planetary_cycles.CYCLES", "engine.cosmos.cycles.raise_seas")
         ),
         CycleEffect.SOIL: Defined("Soil", checked_by=(), used_by=("catalog.planetary_cycles.CYCLES", "engine.cosmos.cycles.soil_swing")),
+        CycleEffect.BREATH: Defined("Breath", checked_by=(), used_by=("catalog.planetary_cycles.CYCLES", "engine.cosmos.cycles.thin_air")),
     },
 )

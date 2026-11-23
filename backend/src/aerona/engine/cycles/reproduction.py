@@ -7,7 +7,7 @@ from aerona.db.tables.cycles import MortalCasteRow, PeopleReproductionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import ReproductiveSystem
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import MortalStats, revised
@@ -20,7 +20,7 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 
-FLIPPED = {Sex.FEMALE.value: Sex.MALE.value, Sex.MALE.value: Sex.FEMALE.value}
+FLIPPED = {SexKind.BEARER.value: SexKind.BEGETTER.value, SexKind.BEGETTER.value: SexKind.BEARER.value}
 
 
 @dataclass
@@ -61,7 +61,7 @@ async def change_sex(ctx: TickContext, mortal: EntityRow, row: PeopleReproductio
         ctx,
         "reproduction.changed",
         roles={IncidentRole.SUBJECT: mortal.id},
-        facts={"age": age, "sex": Sex(mortal.stats.sex or Sex.OTHER.value), "change_age": row.change_age},
+        facts={"age": age, "sex": SexKind(mortal.stats.sex or SexKind.BOTH.value), "change_age": row.change_age},
     )
 
 

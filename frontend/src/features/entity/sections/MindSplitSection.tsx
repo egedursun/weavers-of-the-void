@@ -19,6 +19,7 @@ import {
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
+import { TRAIT_ICONS } from '@/features/entity/mind/labels'
 import { STRAINS } from '@/features/folkways/labels'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -208,7 +209,7 @@ function FacetBar({ item, threshold }: { item: MindFacet; threshold: number }) {
         showMax={false}
       />
       <Muted variant='caption'>
-        {`Their people lean ${signed(item.mean)}${marked && trait ? ` · makes them ${trait.replace(/_/g, ' ')}` : ''}`}
+        {`Their people lean ${signed(item.mean)}${marked && trait ? ` · makes them ${TRAIT_ICONS[trait].label.toLowerCase()}` : ''}`}
       </Muted>
     </div>
   )

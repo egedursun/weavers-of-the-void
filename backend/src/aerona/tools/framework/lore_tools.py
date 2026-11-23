@@ -1,5 +1,6 @@
 from aerona.catalog.arcana import SCHOOL_GRAMMAR
 from aerona.core.errors import AeronaError
+from aerona.core.grammar import spoken
 from aerona.db.tables.culture import RiteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityType
@@ -46,7 +47,7 @@ async def design(tick: TickContext, holder: EntityRow, args: DesignRiteInput) ->
         myth_id=await known(tick, args.myth_id, EntityType.LEGEND),
     )
     rite, _ = await rites.design(tick, plan, holder)
-    names = ", ".join(item.effect.value.replace("_", " ") for item in args.workings)
+    names = ", ".join(spoken(item.effect) for item in args.workings)
     return result(LoreToolResult.DESIGNED, id=rite.id, name=rite.name, workings=names)
 
 
@@ -78,4 +79,4 @@ async def cast(tick: TickContext, caster: EntityRow, rite_id: int, target_id: in
 
 async def found(tick: TickContext, founder: EntityRow, args: FoundSchoolInput) -> str:
     creed = await ideology.found_school(tick, founder, list(args.tenets), args.name)
-    return result(LoreToolResult.FOUNDED, id=creed.id, name=creed.name, tenets=", ".join(item.value.replace("_", " ") for item in args.tenets))
+    return result(LoreToolResult.FOUNDED, id=creed.id, name=creed.name, tenets=", ".join(spoken(item) for item in args.tenets))

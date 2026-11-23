@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EntityLink, PagedList, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { BOND_ROLE_WORDS } from '@/features/entity/affairs/labels'
 import { type EntityContext } from '../actions/context'
 import { type BondView } from '../api/types'
 
@@ -25,11 +26,7 @@ function WarRow({ bond, selfId }: { bond: BondView; selfId: number }) {
   return (
     <li className='flex min-w-0 flex-wrap items-center gap-2'>
       <Badge size='sm' variant={ongoing ? 'destructive' : 'secondary'}>
-        {ongoing
-          ? 'Ongoing'
-          : bond.role
-            ? bond.role.replace('_', ' ')
-            : 'Ended'}
+        {ongoing ? 'Ongoing' : bond.role ? BOND_ROLE_WORDS[bond.role] : 'Ended'}
       </Badge>
       {war && war.id !== selfId ? (
         <EntityLink kind='entity' id={String(war.id)}>

@@ -26,6 +26,7 @@ import {
   StatBar,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { busyOf } from '@/features/entity/lore/model'
 import {
   Card,
@@ -42,9 +43,6 @@ import {
 } from './api'
 import { heldLabel } from './labels'
 import { NodeName, PickRow, RegardForm, StandingList } from './parts'
-
-const actLabel = (value: string) =>
-  value.replaceAll('_', ' ').replace(/^./, (first) => first.toUpperCase())
 
 function TaboosCard({
   view,
@@ -67,7 +65,7 @@ function TaboosCard({
   }))
   const pending = busyOf(busy, set.isPending, remove.isPending)
   const table = Object.fromEntries(
-    actKindValues.map((value) => [value, actLabel(value)])
+    actKindValues.map((value) => [value, wordOf(actKindValues, value)])
   )
   const problem = act === '' ? 'Choose an act' : null
   return (

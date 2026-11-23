@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.constants.tool_inputs import NAME_MAX
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -53,7 +54,7 @@ async def reveal_tenet(call: SonCall, args: RevealTenetInput) -> str:
         fail(SonResult.TENET_REFUSED, reason=str(error))
     call.spend_essence(table.reveal_cost)
     call.target(cult.id)
-    label = (row.name if row is not None and row.name else None) or args.tenet.value.replace("_", " ")
+    label = (row.name if row is not None and row.name else None) or spoken(args.tenet)
     await call.record(
         "tools.son.tenet", roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: cult.id}, facts={"tenet": str(label)}, kind=ChronicleKind.WORSHIP
     )

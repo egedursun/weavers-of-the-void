@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.ages import GiantMigration, PayoffKind, SeasonSpell, SetupKind
+from aerona.domain.enums.ages import GiantMigration, PayoffKind, SeasonSource, SeasonSpell, SetupKind
 
 GIANT_MIGRATION = total(
     GiantMigration,
@@ -60,27 +60,54 @@ PAYOFF_KIND = total(
     },
 )
 
+SEASON_SOURCE = total(
+    SeasonSource,
+    {
+        SeasonSource.IMPACT: Defined("Impact", checked_by=("engine.storyteller.control.source_belongs",), used_by=("catalog.long_seasons.CAUSES",)),
+        SeasonSource.REGION: Defined("Region", checked_by=("engine.storyteller.control.source_belongs",), used_by=("catalog.long_seasons.CAUSES",)),
+        SeasonSource.STAR: Defined("Star", checked_by=("engine.storyteller.control.source_belongs",), used_by=("catalog.long_seasons.CAUSES",)),
+        SeasonSource.INCIDENT: Defined("Incident", checked_by=("engine.storyteller.control.source_belongs",), used_by=("catalog.long_seasons.CAUSES",)),
+    },
+)
+
 SEASON_SPELL = total(
     SeasonSpell,
     {
         SeasonSpell.SUMMER: Defined(
             "Long summer",
-            checked_by=("engine.environment.long_seasons.turn",),
-            used_by=("db.tables.ages.IrregularSeasonRow", "engine.environment.long_seasons.begin", "engine.environment.long_seasons.turn"),
+            checked_by=("engine.environment.long_seasons.summer_drought", "engine.environment.long_seasons.turn", "engine.environment.spells.pull_of"),
+            used_by=(
+                "db.tables.ages.IrregularSeasonRow",
+                "engine.environment.long_seasons.begin",
+                "engine.environment.long_seasons.current_spell",
+                "engine.environment.long_seasons.made_spell",
+                "engine.environment.long_seasons.stellar_spells",
+                "engine.environment.long_seasons.turn",
+                "engine.storyteller.control.SpellDraft",
+                "services.player.ages.SeasonDraft",
+                "tools.son.ages.UnsettleSeasonsInput",
+            ),
         ),
         SeasonSpell.WINTER: Defined(
             "Long winter",
             checked_by=(
-                "agents.context.ages_lines.season_lines",
-                "agents.context.ages_lines.son_ages_lines",
-                "engine.environment.long_seasons.keep_seasons",
+                "engine.environment.long_seasons.bite",
                 "engine.environment.long_seasons.lost_cause",
+                "engine.environment.long_seasons.stellar_spells",
                 "engine.environment.long_seasons.turn",
-                "engine.environment.long_seasons.winter_share",
+                "engine.environment.spells.pull_of",
                 "engine.folkways.nutrition.light_of",
                 "tools.son.ages.lengthen_winter",
             ),
-            used_by=("engine.environment.long_seasons.turn",),
+            used_by=(
+                "engine.environment.long_seasons.begin",
+                "engine.environment.long_seasons.current_spell",
+                "engine.environment.long_seasons.made_spell",
+                "engine.environment.long_seasons.single_winter",
+                "engine.environment.long_seasons.stellar_spells",
+                "engine.environment.long_seasons.turn",
+                "services.integrity.season_shares.impact_winters",
+            ),
         ),
     },
 )

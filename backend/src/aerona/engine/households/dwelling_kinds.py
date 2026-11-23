@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.genetics import DWELLINGS
 from aerona.db.tables.dwelling_kinds import DwellingKindRow
 from aerona.db.tables.kinds import KindHoldingRow
+from aerona.domain.enums.genetics import DwellingKind
 from aerona.domain.enums.kinds import KindConcept, KindStance
 
 HOUSED = (KindStance.MAKES, KindStance.USES, KindStance.FAVOURS)
@@ -31,7 +32,7 @@ async def built_in_dwelling(session: AsyncSession, key: str) -> DwellingKindRow:
     if found is not None:
         known[key] = found
         return found
-    spec = DWELLINGS[key]
+    spec = DWELLINGS[DwellingKind(key)]
     row = DwellingKindRow(
         name=spec.label,
         category=spec.level,

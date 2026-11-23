@@ -62,3 +62,6 @@ class MobilityEvent(StrEnum):
     ENSLAVED = "enslaved"
     FREED = "freed"
     RUINED = "ruined"
+    ENRICHED = "enriched"
+    ORDAINED = "ordained"
+    OUTCAST = "outcast"

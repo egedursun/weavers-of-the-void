@@ -6,15 +6,29 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.arts import ArtMarketRole, CanonPath, ClubKind, FandomLine, ForgeryKind, ForgeryStatus
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
-PRICE_FIELDS = ("price", "provenance", "interest", "last_buyer_node_id")
+PRICE_FIELDS = ("price", "provenance", "interest", "acclaim", "last_buyer_node_id")
 SALE_FIELDS = ("seller_node_id", "buyer_node_id", "price", "fair_place_entity_id")
 COLLECTOR_FIELDS = ("role", "taste_form_entity_id", "connoisseurship")
 FORGERY_FIELDS = ("kind", "forger_entity_id", "original_entity_id", "skill", "status", "exposed_by_entity_id")
 CANON_FIELDS = ("path", "weight", "contested")
 MOVEMENT_FIELDS = ("art_form_entity_id", "orthodoxy", "scandals", "patrons")
-CLUB_FIELDS = ("kind", "league_entity_id", "arena_entity_id", "wins", "losses", "rating", "fandom", "line", "line_entity_id", "leverage", "bought_by_entity_id")
+CLUB_FIELDS = (
+    "kind",
+    "league_entity_id",
+    "arena_entity_id",
+    "wins",
+    "losses",
+    "rating",
+    "fandom",
+    "line",
+    "line_entity_id",
+    "leverage",
+    "bought_by_entity_id",
+    "fixed_by_entity_id",
+    "fixed_winner_entity_id",
+)
 LEAGUE_FIELDS = ("polity_entity_id", "champion_entity_id", "season_epoch")
-MATCH_FIELDS = ("home_entity_id", "away_entity_id", "winner_entity_id", "stake", "riot")
+MATCH_FIELDS = ("home_entity_id", "away_entity_id", "winner_entity_id", "stake", "riot", "fixed_by_entity_id", "fixing_exposed")
 BET_FIELDS = ("club_entity_id", "stake", "won")
 
 
@@ -26,6 +40,7 @@ class ArtPriceRow(Base):
     price: Mapped[int] = mapped_column(default=0)
     provenance: Mapped[int] = mapped_column(default=0)
     interest: Mapped[int] = mapped_column(default=0)
+    acclaim: Mapped[int] = mapped_column(default=0, server_default="0")
     last_buyer_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     last_sale_epoch: Mapped[int | None]
     updated_epoch: Mapped[int] = mapped_column(default=0)
@@ -127,6 +142,8 @@ class ClubRow(Base):
     line_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     leverage: Mapped[int] = mapped_column(default=0)
     bought_by_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    fixed_by_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    fixed_winner_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     founded_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -152,6 +169,8 @@ class MatchRow(Base):
     winner_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     stake: Mapped[int] = mapped_column(default=0)
     riot: Mapped[bool] = mapped_column(default=False)
+    fixed_by_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    fixing_exposed: Mapped[bool] = mapped_column(default=False, server_default="0")
     epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

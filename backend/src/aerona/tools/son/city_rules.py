@@ -39,7 +39,7 @@ async def bless_city(call: SonCall, args: BlessCityInput) -> str:
         fail(SonResult.BLESSING_REFUSED, why="there is no such settlement")
     await ensure_in_reach(call, town)
     if held(town.id):
-        fail(SonResult.BLESSING_REFUSED, why="a stronger hand holds that settlement as it is")
+        fail(SonResult.BLESSING_REFUSED, why="that settlement is held as it is")
     choice = args.service_or_rule
     if isinstance(choice, MunicipalService):
         kept = select(MunicipalServiceRow).where(MunicipalServiceRow.settlement_entity_id == town.id, MunicipalServiceRow.service == choice)

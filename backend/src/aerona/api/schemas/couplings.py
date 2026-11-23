@@ -9,9 +9,9 @@ from aerona.domain.enums.couplings import (
     SealKind,
     SignCause,
     SociolectKind,
-    TeachingKind,
     TeachingState,
 )
+from aerona.domain.enums.knowledge import KnowledgeKind
 
 
 class SociolectView(ApiModel):
@@ -49,7 +49,7 @@ class SpiritTeachingView(ApiModel):
     id: int
     teacher: NodeRef | None
     learner: NodeRef | None
-    kind: TeachingKind
+    kind: KnowledgeKind
     subject: NodeRef | None
     fidelity: int
     state: TeachingState
@@ -99,7 +99,15 @@ class SealView(ApiModel):
     sealer: NodeRef | None
     epoch: int
     broken_epoch: int | None
+    pact_oath_id: int | None
+    power_id: int | None
+    living_line_id: int | None
     locked: list[str]
+
+
+class SealLinkChoice(ApiModel):
+    id: int
+    label: str
 
 
 class NoveltyView(ApiModel):
@@ -140,5 +148,8 @@ class CouplingNodeView(ApiModel):
     agreements: list[FieldAgreementView]
     wars: list[WarChoice]
     seals: list[SealView]
+    oath_choices: list[SealLinkChoice]
+    power_choices: list[SealLinkChoice]
+    line_choices: list[SealLinkChoice]
     novelty: NoveltyView | None
     sinecures: list[SinecureView]

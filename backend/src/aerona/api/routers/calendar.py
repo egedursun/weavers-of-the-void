@@ -5,6 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.calendar import (
     CalendarDetail,
+    FestivalEntry,
+    FestivalYearView,
     HolyDayDetail,
     LeyWorkView,
     RegionWorksView,
@@ -12,18 +14,23 @@ from aerona.api.schemas.calendar import (
     SettlementWorks,
     WorldCalendarView,
 )
+from aerona.api.schemas.environment import SeasonView
+from aerona.api.views.culture_cards import slot_state
+from aerona.catalog.lore import SLEEP_CUSTOMS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import CalendarRow, RegionEnvironmentRow, StructureLeyRow
+from aerona.db.tables.environment import CalendarRow, RegionEnvironmentRow, StructureLeyRow, WorldSeasonRow
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.engine.environment.profile import Works, irrigation_pct
+from aerona.engine.environment.season_shape import season_phase
 from aerona.engine.environment.works import region_works
-from aerona.engine.lore.calendar_rites import SLEEP_CUSTOMS, keepers_of, long_days
+from aerona.engine.lore.calendar_rites import keepers_of, long_days
+from aerona.engine.lore.calendar_slots import festivals_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
 
@@ -105,6 +112,57 @@ async def world_calendar(services: ServicesDep, world_id: int = Path(ge=1)) -> W
             sleep_customs=sum(1 for view in views if view.kind in SLEEP_CUSTOMS),
             calendars=details,
             traditions=views,
+        )
+
+
+FESTIVAL_HELD = frozenset({"season_position", "calendar_slot"})
+
+
+@router.get("/peoples/{people_id}/festival-year", response_model=FestivalYearView)
+async def festival_year(services: ServicesDep, people_id: int = Path(ge=1)) -> FestivalYearView:
+    async with reader(services) as session:
+        people = await session.get(EntityRow, people_id)
+        if people is None or people.entity_type is not EntityType.PEOPLE:
+            raise NotFoundError("No such people.")
+        seasons = list(await session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == people.world_id).order_by(WorldSeasonRow.position)))
+        phases = season_phase(seasons)
+        festivals = []
+        for tradition, profile in await festivals_of(session, people.id):
+            state = await slot_state(session, profile, people.id)
+            festivals.append(
+                FestivalEntry(
+                    id=tradition.id,
+                    name=tradition.name,
+                    kind=profile.kind,
+                    calendar_slot=profile.calendar_slot,
+                    season_position=profile.season_position,
+                    in_season=profile.in_season,
+                    slot_open=state.open if state is not None else None,
+                    slot_reason=state.reason if state is not None else None,
+                    held=sorted(key for key in profile.locked if key in FESTIVAL_HELD),
+                )
+            )
+        return FestivalYearView(
+            people_id=people.id,
+            world_id=people.world_id,
+            seasons=[
+                SeasonView(
+                    id=season.id,
+                    position=season.position,
+                    name=season.name,
+                    temperature_shift=season.temperature_shift,
+                    rain_shift=season.rain_shift,
+                    growth=season.growth,
+                    travel=season.travel,
+                    campaign=season.campaign,
+                    share_pct=season.share_pct,
+                    warmth=phases[season.position].warmth,
+                    water=phases[season.position].water,
+                    edited=season.edited,
+                )
+                for season in seasons
+            ],
+            festivals=festivals,
         )
 
 

@@ -215,6 +215,16 @@
 {% endfor %}
 
 {% endif %}
+{% if article.festivals %}{% if article.festivals.figure %}![{{ article.festivals.caption | cell }}]({{ links.heaven(article.anchor ~ "-festivals", article.festivals.figure) }})
+
+{% endif %}**{{ article.festivals.caption }}**
+
+| Season | Festivals kept |
+|---|---|
+{% for label, value in article.festivals.facts %}| {{ label | cell }} | {{ value | cell }} |
+{% endfor %}
+
+{% endif %}
 {% if article.made %}
 {{ made_kind(article.made) }}
 {% endif %}
@@ -326,7 +336,7 @@
 ### Laws of nature
 
 {% for law in book.laws %}
-- **{{ law.entity.name }}.** {{ law.description }}{% if law.entity.natural_law %} *(Mechanism: {{ law.entity.natural_law.value | replace("_", " ") }})*{% endif %}
+- **{{ law.entity.name }}.** {{ law.description }}{% if law.entity.natural_law %} *(Mechanism: {{ law.entity.natural_law | spoken }})*{% endif %}
 
 {% endfor %}
 
@@ -473,6 +483,10 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 ![{{ world.world.name }}: the known world]({{ links.terrain(world.picture) }})
 
 {% endif %}
+{% if world.wheel %}
+![The year of {{ world.world.name | cell }}]({{ links.heaven(world.anchor ~ "-year", world.wheel) }})
+
+{% endif %}
 {% if world.world.cosmology %}
 **What its peoples believe.** {{ world.world.cosmology | prose }}
 
@@ -491,7 +505,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 | Between | Way | Epochs | Danger | Opened |
 |---|---|---|---|---|
 {% for first, second, route in book.routes %}
-| {{ first | cell }} ↔ {{ second | cell }}{% if route.description %} — {{ route.description | cell }}{% endif %} | {{ route.method.value | replace("_", " ") }}{% if not route.active %}, sealed{% endif %}{% if not route.known %}, unknown{% endif %} | {{ route.duration_epochs }} | {{ route.danger }} | {{ route.created_epoch }} |
+| {{ first | cell }} ↔ {{ second | cell }}{% if route.description %} — {{ route.description | cell }}{% endif %} | {{ route.method | spoken }}{% if not route.active %}, sealed{% endif %}{% if not route.known %}, unknown{% endif %} | {{ route.duration_epochs }} | {{ route.danger }} | {{ route.created_epoch }} |
 {% endfor %}
 
 {% endif %}
@@ -499,7 +513,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 ### Journeys
 
 {% for traveller, journey in book.journeys %}
-- **Epoch {{ journey.start_epoch }}.** {{ traveller }} · {{ journey.intent.value | replace("_", " ") }} · *{{ journey.status.value | replace("_", " ") }}*
+- **Epoch {{ journey.start_epoch }}.** {{ traveller }} · {{ journey.intent | spoken }} · *{{ journey.status | spoken }}*
 {% endfor %}
 
 {% endif %}
@@ -517,7 +531,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 
 {{ image(article.cover, article.god.name) }}
-*{{ article.world }} · {{ article.god.status.value | replace("_", " ") }}* · Power **{{ article.god.power }}** · Faith **{{ article.god.faith }}** · Attitude **{{ article.god.stance }}**
+*{{ article.world }} · {{ article.god.status | spoken }}* · Power **{{ article.god.power }}** · Faith **{{ article.god.faith }}** · Attitude **{{ article.god.stance }}**
 
 {% if article.god.description %}
 {{ article.god.description | prose }}
@@ -706,7 +720,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 ### ⚔ {{ war.name }}
 
-*{{ war.world }} · {{ war.war.cause.value | replace("_", " ") }} · {% if war.war.ended_epoch is not none %}epochs {{ war.war.started_epoch }}–{{ war.war.ended_epoch }}{% else %}since epoch {{ war.war.started_epoch }}, {{ war.war.status.value }}{% endif %}{% if war.war.ending %} · ended in {{ war.war.ending.value | replace("_", " ") }}{% endif %}{% if war.instigator %} · stirred by {{ war.instigator }}{% endif %}*
+*{{ war.world }} · {{ war.war.cause | spoken }} · {% if war.war.ended_epoch is not none %}epochs {{ war.war.started_epoch }}–{{ war.war.ended_epoch }}{% else %}since epoch {{ war.war.started_epoch }}, {{ war.war.status.value }}{% endif %}{% if war.war.ending %} · ended in {{ war.war.ending | spoken }}{% endif %}{% if war.instigator %} · stirred by {{ war.instigator }}{% endif %}*
 
 {% if war.war.cause_text %}
 {{ war.war.cause_text }}
@@ -824,7 +838,7 @@ Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.w
 ### Prayers and answers
 
 {% for sender, recipient, message in book.prayers %}
-> **{{ sender }} → {{ recipient }}** · *{{ message.intent.value | replace("_", " ") }}{% if message.request %} · {{ message.request.value | replace("_", " ") }}{% endif %}*
+> **{{ sender }} → {{ recipient }}** · *{{ message.intent | spoken }}{% if message.request %} · {{ message.request | spoken }}{% endif %}*
 > {{ message.text | replace("\n", " ") }}
 
 {% endfor %}

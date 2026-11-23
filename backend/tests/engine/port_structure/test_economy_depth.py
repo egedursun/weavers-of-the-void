@@ -16,7 +16,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.economy import CommodityKind, FoeNature, GoodsFlow, LoanStatus, MaterialFamily, MaterialOrigin, MaterialSlot, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -245,7 +245,7 @@ async def test_every_debt_law_settles_debts_its_own_way(session: AsyncSession, w
                 CohortRow(
                     community_entity_id=debtor.id,
                     age_band=AgeBand.ADULT,
-                    sex=Sex.MALE,
+                    sex_kind=SexKind.BEGETTER,
                     social_class=social_class,
                     condition=CohortCondition.NONE,
                     count=600,

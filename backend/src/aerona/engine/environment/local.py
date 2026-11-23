@@ -4,6 +4,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import active_sky, forced_weather
+from aerona.engine.environment.season_shape import season_of_index
 from aerona.engine.environment.weather import Weather, WeatherInputs, weather_at, weather_of
 from aerona.engine.primitives.distance import RegionAtlas
 
@@ -17,7 +18,7 @@ async def weather_here(ctx: TickContext, entity_id: int, slot: str, atlas: Regio
     if ground is None:
         return None
     seasons = list(await ctx.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == ground.world_id).order_by(WorldSeasonRow.position)))
-    season = seasons[ctx.epoch % len(seasons)] if seasons else None
+    season = season_of_index(seasons, ctx.epoch)
     for row in (await forced_weather(ctx.session, ctx.epoch)).get(ground.entity_id, []):
         if row.season_position is None or (season is not None and season.position == row.season_position):
             return weather_of(ctx.rules, row.kind)

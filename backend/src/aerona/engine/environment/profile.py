@@ -7,11 +7,14 @@ from aerona.catalog.goods_tables import WORLD_MINERALS
 from aerona.catalog.goods_traits import materials_with
 from aerona.catalog.life.environment import WORLD_SOIL, WORLD_TEMPERATURE, WORLD_TERRAIN
 from aerona.catalog.movement import MOVEMENT, MovementSpec
-from aerona.catalog.terrain import TERRAIN
+from aerona.catalog.scars import SCARS
+from aerona.catalog.soils import SOILS
+from aerona.catalog.terrain import TERRAIN, terrain_has
+from aerona.catalog.wind_belts import CURRENTS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
-from aerona.core.total import total
 from aerona.db.tables.physics import WorldPhysicsRow
+from aerona.domain.enums.cosmography import OceanCurrent
 from aerona.domain.enums.environment import (
     CoastKind,
     MovementMedium,
@@ -21,6 +24,7 @@ from aerona.domain.enums.environment import (
     SoilKind,
     TemperatureBand,
     TerrainKind,
+    TerrainTrait,
 )
 from aerona.domain.enums.goods_traits import MaterialTrait
 from aerona.domain.enums.material import MaterialKind
@@ -28,43 +32,6 @@ from aerona.domain.enums.world import ClimateEra, WorldType
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
-SOIL_FERTILITY: Mapping[SoilKind, Callable[[Rules], int]] = total(
-    SoilKind,
-    {
-        SoilKind.THIN: lambda rules: rules.environment.soil_thin,
-        SoilKind.LOAM: lambda rules: rules.environment.soil_loam,
-        SoilKind.CLAY: lambda rules: rules.environment.soil_clay,
-        SoilKind.SAND: lambda rules: rules.environment.soil_sand,
-        SoilKind.VOLCANIC: lambda rules: rules.environment.soil_volcanic,
-        SoilKind.PEAT: lambda rules: rules.environment.soil_peat,
-        SoilKind.SALINE: lambda rules: rules.environment.soil_salt,
-        SoilKind.TEPHRA: lambda rules: rules.environment.soil_ash,
-        SoilKind.CRYSTALLINE: lambda rules: rules.environment.soil_crystal,
-        SoilKind.CALCAREOUS: lambda rules: rules.environment.soil_bone,
-        SoilKind.LATERITE: lambda rules: rules.environment.soil_laterite,
-        SoilKind.PERMAFROST: lambda rules: rules.environment.soil_permafrost,
-        SoilKind.REGOLITH: lambda rules: rules.environment.soil_regolith,
-        SoilKind.ARTIFICIAL: lambda rules: rules.environment.soil_artificial,
-    },
-)
-
-SCAR_FERTILITY: Mapping[ScarKind, Callable[[Rules], int]] = total(
-    ScarKind,
-    {
-        ScarKind.BATTLEFIELD: lambda rules: rules.scars.battlefield_fertility_pct,
-        ScarKind.PLAGUE_GROUND: lambda rules: rules.scars.plague_ground_fertility_pct,
-        ScarKind.MADE_BARREN: lambda rules: rules.scars.salted_earth_fertility_pct,
-        ScarKind.BURNED: lambda rules: rules.scars.burned_fertility_pct,
-        ScarKind.CRATER: lambda rules: rules.scars.crater_fertility_pct,
-        ScarKind.HAUNTED: lambda rules: rules.scars.haunted_fertility_pct,
-        ScarKind.BLIGHTED: lambda rules: rules.scars.blighted_fertility_pct,
-        ScarKind.LEAK_WOUND: lambda rules: rules.scars.leak_wound_fertility_pct,
-        ScarKind.PLUNDERED: lambda rules: rules.campaign_depth.plunder_harvest_pct,
-        ScarKind.EARTHWORKS: lambda rules: rules.army_depth.earthworks_fertility_pct,
-        ScarKind.MILITARY_ROAD: lambda rules: rules.army_depth.road_fertility_pct,
-        ScarKind.BRIDGE_DOWN: lambda rules: rules.army_depth.bridge_down_fertility_pct,
-    },
-)
 RIVER_IRRIGATION: dict[RiverClass, Callable[[Rules], int]] = {
     RiverClass.NONE: lambda rules: 0,
     RiverClass.STREAM: lambda rules: rules.environment.stream_irrigation_pct,
@@ -75,6 +42,10 @@ RIVER_IRRIGATION: dict[RiverClass, Callable[[Rules], int]] = {
 RIVER_RANK: dict[RiverClass, int] = {RiverClass.NONE: 0, RiverClass.STREAM: 1, RiverClass.RIVER: 2, RiverClass.GREAT_RIVER: 3}
 RIVER_TOP_RANK = 3
 
+COLD_INDEX = 4
+MONTHS = 12
+WARD_STEPS = 4
+
 
 @dataclass(frozen=True)
 class Works:
@@ -83,6 +54,7 @@ class Works:
     harbours: int = 0
     irrigation: int = 0
     waystations: int = 0
+    wards: int = 0
 
 
 @dataclass(frozen=True)
@@ -93,12 +65,15 @@ class Surroundings:
     highland: bool
     ruins: int = 0
     chokepoints: int = 0
+    airless: bool = False
+    gaseous: bool = False
     star_heat: int = 0
     works: Works = field(default_factory=Works)
     cleared: int = 0
     shift_heat: int = 0
     shift_rain: int = 0
     pass_shift: int = 0
+    deltas: int = 0
 
 
 @dataclass(frozen=True)
@@ -188,6 +163,7 @@ class TerrainReading:
     rainfall: int
     wetland: int
     built: int
+    soil: SoilKind | None = None
 
 
 def _special_terrain(rules: Rules, reading: TerrainReading) -> TerrainKind | None:
@@ -199,7 +175,12 @@ def _special_terrain(rules: Rules, reading: TerrainReading) -> TerrainKind | Non
         (reading.around.ruins >= settings.ruin_field_ruins, TerrainKind.RUIN_FIELD),
     )
     found = next((terrain for matched, terrain in checks if matched), None)
-    return found or WORLD_TERRAIN.get(reading.around.world_type)
+    if found is None and reading.around.gaseous:
+        return TerrainKind.CLOUD_DECK
+    world_terrain = WORLD_TERRAIN.get(reading.around.world_type)
+    if found is None and world_terrain is None and reading.around.airless:
+        return TerrainKind.REGOLITH_PLAIN
+    return found or world_terrain
 
 
 def _natural_terrain(rules: Rules, reading: TerrainReading) -> TerrainKind:
@@ -207,22 +188,38 @@ def _natural_terrain(rules: Rules, reading: TerrainReading) -> TerrainKind:
     dominant = settings.terrain_dominant_share_pct
     geography = reading.geography
     mix = geography.biome_mix
+    depth = rules.terrain_depth
     warm = reading.temperature >= settings.warm_below
     rough = geography.roughness >= settings.canyon_roughness
+    hilly = share(mix, Biome.DRY_HILLS, Biome.WET_HILLS) >= dominant
+    wooded = share(mix, Biome.WET_LOWLAND) >= dominant or geography.base_forest >= settings.forest_terrain_pct
+    marshy = reading.wetland >= settings.marsh_wetland_pct
+    shore = share(mix, Biome.SHORE) >= dominant or reading.around.coastal
+    arid = reading.rainfall < settings.desert_rainfall_below
+    dry_months = MONTHS * max(0, settings.ideal_rainfall - reading.rainfall) // max(1, settings.ideal_rainfall)
     checks = (
         (reading.temperature < settings.frozen_below, TerrainKind.ICE_SHEET),
         (share(mix, Biome.SHALLOW_WATER, Biome.DEEP_WATER) >= settings.island_water_share_pct, TerrainKind.ISLAND),
         (share(mix, Biome.MOUNTAINS, Biome.PEAKS) >= dominant, TerrainKind.MOUNTAINS),
-        (reading.wetland >= settings.marsh_wetland_pct, TerrainKind.MARSH),
-        (share(mix, Biome.DRY_HILLS, Biome.WET_HILLS) >= dominant, TerrainKind.CANYON if rough else TerrainKind.HILLS),
+        (marshy and shore and warm, TerrainKind.MANGROVE),
+        (marshy and reading.temperature < settings.cold_below, TerrainKind.MOOR),
+        (marshy, TerrainKind.MARSH),
+        (hilly and rough and arid, TerrainKind.BADLANDS),
+        (hilly and reading.soil is SoilKind.CALCAREOUS and reading.rainfall >= settings.ideal_rainfall, TerrainKind.KARST),
+        (hilly, TerrainKind.CANYON if rough else TerrainKind.HILLS),
+        (wooded and reading.temperature < rules.weather.cold_threshold + depth.taiga_cold_below, TerrainKind.TAIGA),
         (reading.temperature < settings.cold_below, TerrainKind.TUNDRA),
-        (
-            share(mix, Biome.WET_LOWLAND) >= dominant or geography.base_forest >= settings.forest_terrain_pct,
-            TerrainKind.JUNGLE if warm else TerrainKind.FOREST,
-        ),
-        (reading.rainfall < settings.desert_rainfall_below and reading.temperature >= settings.temperate_below, TerrainKind.DESERT),
+        (wooded, TerrainKind.JUNGLE if warm else TerrainKind.FOREST),
+        (arid and reading.temperature >= settings.temperate_below and reading.soil is SoilKind.SALINE, TerrainKind.EVAPORITE_FLAT),
+        (arid and reading.temperature >= settings.temperate_below, TerrainKind.DESERT),
         (geography.river_class is RiverClass.GREAT_RIVER, TerrainKind.RIVER_VALLEY),
+        (geography.river_class is RiverClass.RIVER and share(mix, Biome.WET_LOWLAND) * 2 >= dominant, TerrainKind.FLOODPLAIN),
         (share(mix, Biome.SHORE) >= dominant, TerrainKind.COAST),
+        (share(mix, Biome.DRY_LOWLAND) >= dominant and warm and dry_months >= depth.savanna_dry_months, TerrainKind.SAVANNA),
+        (
+            share(mix, Biome.DRY_LOWLAND) >= dominant and reading.rainfall < settings.ideal_rainfall and reading.temperature >= settings.temperate_below,
+            TerrainKind.SCRUBLAND,
+        ),
         (share(mix, Biome.DRY_LOWLAND) >= dominant, TerrainKind.STEPPE),
     )
     return next((terrain for matched, terrain in checks if matched), TerrainKind.PLAIN)
@@ -238,20 +235,24 @@ def soil_of(rules: Rules, geography: Geography, world_type: WorldType, wetland: 
     if special is not None:
         return special
     mix = geography.biome_mix
-    if wetland >= settings.peat_wetland_pct:
-        return SoilKind.PEAT
-    if share(mix, Biome.MOUNTAINS, Biome.PEAKS, Biome.DRY_HILLS) >= settings.terrain_dominant_share_pct:
-        return SoilKind.THIN
-    if share(mix, Biome.DRY_LOWLAND, Biome.SHORE) >= settings.terrain_dominant_share_pct:
-        return SoilKind.SAND
-    if share(mix, Biome.WET_LOWLAND) >= settings.terrain_dominant_share_pct:
-        return SoilKind.CLAY
-    return SoilKind.LOAM
+    dominant = settings.terrain_dominant_share_pct
+    damp = geography.moisture < settings.ideal_rainfall and geography.latitude < settings.cold_latitude_pct // 2
+    checks = (
+        (wetland >= settings.peat_wetland_pct, SoilKind.PEAT),
+        (wetland >= settings.peat_wetland_pct * 2 // 3, SoilKind.GLEY),
+        (geography.river_class is RiverClass.GREAT_RIVER or (share(mix, Biome.SHORE) >= dominant and geography.river_class is RiverClass.RIVER), SoilKind.SILT),
+        (geography.base_forest >= settings.forest_terrain_pct and geography.latitude >= settings.cold_latitude_pct, SoilKind.LEACHED),
+        (share(mix, Biome.DRY_LOWLAND) >= dominant and settings.ideal_rainfall // 2 <= geography.moisture <= settings.ideal_rainfall, SoilKind.HUMIC),
+        (share(mix, Biome.MOUNTAINS, Biome.PEAKS, Biome.DRY_HILLS) >= dominant, SoilKind.THIN),
+        (share(mix, Biome.DRY_LOWLAND, Biome.SHORE) >= dominant, SoilKind.SAND),
+        (share(mix, Biome.WET_LOWLAND) >= dominant, SoilKind.CRACKING_CLAY if damp else SoilKind.CLAY),
+    )
+    return next((soil for matched, soil in checks if matched), SoilKind.LOAM)
 
 
 def natural_soil(rules: Rules, soil: SoilKind, moisture: int) -> int:
     settings = rules.environment
-    return clamp_int(SOIL_FERTILITY[soil](rules) + (moisture - settings.ideal_rainfall) * settings.soil_moisture_pct / PERCENT, 0, PERCENT)
+    return clamp_int(SOILS[soil].fertility(rules) + (moisture - settings.ideal_rainfall) * settings.soil_moisture_pct / PERCENT, 0, PERCENT)
 
 
 def fit(value: int, ideal: int, tolerance: int, floor_pct: int) -> float:
@@ -262,7 +263,7 @@ def scar_penalty(rules: Rules, scars: Mapping[str, int]) -> float:
     kept = 1.0
     for key, depth in scars.items():
         kind = ScarKind(key)
-        kept *= 1 - SCAR_FERTILITY[kind](rules) / PERCENT * min(depth, PERCENT) / PERCENT
+        kept *= 1 - SCARS[kind].fertility(rules) / PERCENT * min(depth, PERCENT) / PERCENT
     return 1 - kept
 
 
@@ -347,6 +348,10 @@ class Ground:
     terrain: TerrainKind
     tides: int = 0
     works: Works = field(default_factory=Works)
+    sacred: int = 0
+    scars: Mapping[str, int] = field(default_factory=dict)
+    deltas: int = 0
+    current: OceanCurrent = OceanCurrent.NONE
 
 
 def water_passage(rules: Rules, ground: Ground, river_pct: int, spec: MovementSpec) -> float:
@@ -354,7 +359,12 @@ def water_passage(rules: Rules, ground: Ground, river_pct: int, spec: MovementSp
     tide = ground.tides * settings.tide_boat_pct / PERCENT if ground.coast is not CoastKind.NONE else 0
     shored = ground.coast is not CoastKind.NONE or ground.river is not RiverClass.NONE
     harbours = ground.works.harbours * settings.harbour_works_pct if shored and spec.takes(MovementWork.HARBOURS) else 0
-    return river_pct * settings.boat_river_pct / PERCENT + COAST_BOATING[ground.coast](rules) - tide + harbours
+    return river_pct * settings.boat_river_pct / PERCENT + COAST_BOATING[ground.coast](rules) - tide + harbours + ground.deltas * rules.places.delta_harbour
+
+
+def afloat(rules: Rules, ground: Ground, river_pct: int, spec: MovementSpec, terrain_pct: int) -> float:
+    water = water_passage(rules, ground, river_pct, spec)
+    return max(water, terrain_pct) if terrain_has(ground.terrain, TerrainTrait.WATERY) else water
 
 
 def passability_of(rules: Rules, ground: Ground) -> dict[str, int]:
@@ -364,18 +374,36 @@ def passability_of(rules: Rules, ground: Ground) -> dict[str, int]:
     bridged = max(0.0, 1 - works.bridges * settings.bridge_crossing_pct / PERCENT)
     river_pct = RIVER_RANK[ground.river] * PERCENT // RIVER_TOP_RANK
     passage = TERRAIN[ground.terrain].passage(rules)
+    scarred = scar_passage(rules, ground.scars)
     values: dict[str, int] = {}
     for mode, spec in MOVEMENT.items():
         share = passage[mode] / PERCENT
         if spec.medium is MovementMedium.WATER_SURFACE:
-            values[mode.value] = clamp_int(water_passage(rules, ground, river_pct, spec) * share, 0, PERCENT)
+            chilled = PERCENT - cold * spec.sensitivity(rules)[COLD_INDEX] // PERCENT
+            values[mode.value] = clamp_int(afloat(rules, ground, river_pct, spec, passage[mode]) * share * chilled / PERCENT, 0, PERCENT)
+            continue
+        if spec.medium is MovementMedium.UNDER_WATER:
+            iced = PERCENT - cold * settings.submerged_ice_cut_pct // PERCENT
+            beneath = afloat(rules, ground, river_pct, spec, passage[mode]) * share * iced / PERCENT
+            drift = CURRENTS[ground.current].sailing_pct(rules) * settings.submerged_current_pct / PERCENT if beneath > 0 else 0
+            values[mode.value] = clamp_int(beneath + drift, 0, PERCENT)
+            continue
+        if spec.medium is MovementMedium.THROUGH_MATTER and not any(spec.sensitivity(rules)):
+            warded = min(
+                PERCENT, works.wards * settings.incorporeal_ward_cut_pct // WARD_STEPS + ground.sacred * settings.incorporeal_sacred_cut_pct // PERCENT
+            )
+            values[mode.value] = clamp_int(passage[mode] * (PERCENT - warded) / PERCENT, 0, PERCENT)
             continue
         crossing = bridged if spec.takes(MovementWork.BRIDGES) else 1.0
         features = (ground.roughness, ground.forest, ground.wetland, river_pct * crossing, cold)
         loss = sum(weight * value / PERCENT for weight, value in zip(spec.sensitivity(rules), features, strict=True))
         roads = min(settings.road_cap_pct, works.roads * settings.road_step_pct) if spec.takes(MovementWork.ROADS) else 0
-        values[mode.value] = clamp_int((PERCENT - loss) * share + roads, settings.floor, PERCENT)
+        values[mode.value] = clamp_int(((PERCENT - loss) * share + roads) * (PERCENT - scarred) / PERCENT, settings.floor, PERCENT)
     return values
+
+
+def scar_passage(rules: Rules, scars: Mapping[str, int]) -> int:
+    return clamp_int(round_half_up(sum(depth * SCARS[ScarKind(key)].passage(rules) / PERCENT for key, depth in sorted(scars.items()))), 0, PERCENT)
 
 
 def defensibility_of(rules: Rules, *, roughness: int, forest: int, river: RiverClass, chokepoints: int) -> int:
@@ -441,7 +469,8 @@ def mineral_layers(
     candidates[MaterialKind.GEMS] = mountains // 5
     candidates[MaterialKind.FLINT] = hills // 2 + lowland // 4
     candidates[MaterialKind.CLAY] = lowland // 2 + geography.base_wetland // 2
-    candidates[MaterialKind.HALITE] = shore + (settings.desert_halite if terrain is TerrainKind.DESERT else 0)
+    flats = rules.terrain_depth.evaporite_flat_yield if terrain is TerrainKind.EVAPORITE_FLAT else 0
+    candidates[MaterialKind.HALITE] = shore + (settings.desert_halite if terrain is TerrainKind.DESERT else 0) + flats
     candidates[MaterialKind.AMBER] = shore // 2 + geography.base_forest // 4
     if terrain is TerrainKind.VOLCANIC or world_type is WorldType.LAVA:
         candidates[MaterialKind.OBSIDIAN] = settings.volcanic_mineral

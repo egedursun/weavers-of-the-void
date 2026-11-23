@@ -29,6 +29,18 @@ PRODUCT_PART = total(
         ProductPart.WOOD: Defined("Wood", checked_by=(), used_by=("catalog.plants.PARTS", "db.kind_concepts.nature.PLANT_PARTS")),
         ProductPart.SAP: Defined("Sap", checked_by=(), used_by=("catalog.plants.PARTS",)),
         ProductPart.DYE: Defined("Dye", checked_by=(), used_by=("catalog.plants.PARTS", "db.kind_concepts.nature.PLANT_PARTS")),
-        ProductPart.TOXIN: Defined("Toxin", checked_by=(), used_by=("db.kind_concepts.nature.PLANT_PARTS",)),
+        ProductPart.TOXIN: Defined("Toxin", checked_by=(), used_by=("catalog.plants.PARTS", "db.kind_concepts.nature.PLANT_PARTS")),
+        ProductPart.OIL: Defined(
+            "Oil", checked_by=(), used_by=("catalog.plants.PARTS", "db.kind_concepts.nature.PLANT_PARTS", "db.kind_concepts.nature.YIELD_PARTS")
+        ),
+        ProductPart.SUGAR: Defined(
+            "Sugar", checked_by=(), used_by=("catalog.plants.PARTS", "db.kind_concepts.nature.PLANT_PARTS", "db.kind_concepts.nature.YIELD_PARTS")
+        ),
+        ProductPart.SPICE: Defined("Spice", checked_by=(), used_by=("catalog.plants.PARTS", "db.kind_concepts.nature.PLANT_PARTS")),
+        ProductPart.RESIN: Defined(
+            "Resin", checked_by=(), used_by=("catalog.plants.PARTS", "db.kind_concepts.nature.PLANT_PARTS", "db.kind_concepts.nature.YIELD_PARTS")
+        ),
+        ProductPart.STIMULANT: Defined("Stimulant", checked_by=(), used_by=("catalog.plants.PARTS", "db.kind_concepts.nature.PLANT_PARTS")),
+        ProductPart.FODDER: Defined("Fodder", checked_by=(), used_by=("catalog.plants.PARTS", "db.kind_concepts.nature.PLANT_PARTS")),
     },
 )

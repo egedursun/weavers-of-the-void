@@ -24,8 +24,6 @@ class EpidemiologyRules(Spanned):
     crowd_spread_pct: int = rule(60, 0, 300, G, "Extra spread at the most crowded land (%)")
     load_spread_pct: int = rule(50, 0, 300, G, "Extra spread at the heaviest disease load of the land (%)")
     sanitation_spread_pct: int = rule(50, 0, 100, G, "Spread removed by full sanitation (%)")
-    climate_match_pct: int = rule(140, 0, 500, G, "Spread where the climate suits the disease (%)")
-    climate_mismatch_pct: int = rule(60, 0, 500, G, "Spread where the climate is wrong for the disease (%)")
     route_spread_chance: int = rule(25, 0, 100, G, "A busy trade route carries an outbreak to its far end in an epoch (%)")
     army_spread_chance: int = rule(35, 0, 100, G, "An army leaving a sick land carries the disease home or to the foe (%)")
     journey_spread_chance: int = rule(20, 0, 100, G, "Travellers leaving a sick land carry the disease to where they arrive (%)")

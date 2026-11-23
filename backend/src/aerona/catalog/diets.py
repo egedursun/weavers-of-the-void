@@ -20,6 +20,8 @@ class DietSpec:
     produces: bool
     needs: tuple[Nutrient, ...]
     text: str
+    eats_refuse: bool = False
+    feeds_on_hosts: bool = False
 
 
 DIETS: Mapping[Diet, DietSpec] = total(
@@ -27,8 +29,12 @@ DIETS: Mapping[Diet, DietSpec] = total(
     {
         Diet.HERBIVORE: DietSpec(False, True, False, False, True, True, True, False, (N.ENERGY, N.FRESH, N.MINERAL), "grazes on forest and soil"),
         Diet.CARNIVORE: DietSpec(True, False, True, True, True, True, False, False, (N.ENERGY, N.PROTEIN, N.FAT, N.MINERAL), "lives on the prey of its land"),
-        Diet.OMNIVORE: DietSpec(True, True, True, True, True, True, False, False, (N.ENERGY, N.PROTEIN, N.FAT, N.FRESH, N.MINERAL), "grazes and hunts alike"),
-        Diet.SCAVENGER: DietSpec(False, False, False, True, True, True, False, False, (N.ENERGY, N.PROTEIN, N.MINERAL), "lives on what others leave"),
+        Diet.OMNIVORE: DietSpec(
+            True, True, True, True, True, True, False, False, (N.ENERGY, N.PROTEIN, N.FAT, N.FRESH, N.MINERAL), "grazes and hunts alike", eats_refuse=True
+        ),
+        Diet.SCAVENGER: DietSpec(
+            False, False, False, True, True, True, False, False, (N.ENERGY, N.PROTEIN, N.MINERAL), "lives on what others leave", eats_refuse=True
+        ),
         Diet.FILTER: DietSpec(False, True, False, False, True, True, True, False, (N.ENERGY, N.PROTEIN, N.MINERAL), "sifts the waters for its food"),
         Diet.PHOTOSYNTHETIC: DietSpec(
             False, False, False, False, True, False, False, True, (N.ENERGY, N.LIGHT, N.MINERAL), "lives on light and yields no meat"
@@ -39,7 +45,19 @@ DIETS: Mapping[Diet, DietSpec] = total(
         Diet.PISCIVORE: DietSpec(
             False, False, False, False, True, True, False, False, (N.ENERGY, N.PROTEIN, N.FAT, N.MINERAL), "lives on the fish of its waters"
         ),
-        Diet.SANGUIVORE: DietSpec(False, False, False, False, True, True, False, False, (N.ENERGY, N.PROTEIN), "lives on the blood of other creatures"),
+        Diet.SANGUIVORE: DietSpec(
+            False, False, False, False, True, True, False, False, (N.ENERGY, N.PROTEIN), "lives on the blood of other creatures", feeds_on_hosts=True
+        ),
+        Diet.PARASITE: DietSpec(
+            False, False, False, False, True, True, False, False, (N.ENERGY, N.PROTEIN), "draws its food from a living host", feeds_on_hosts=True
+        ),
+        Diet.DECOMPOSER: DietSpec(False, False, False, False, True, False, False, False, (N.ENERGY, N.MINERAL), "breaks down what has died", eats_refuse=True),
+        Diet.CHEMOSYNTHETIC: DietSpec(
+            False, False, False, False, True, False, False, True, (N.ENERGY, N.MINERAL), "draws its strength from chemicals in the deep"
+        ),
+        Diet.ENERGY: DietSpec(
+            False, False, False, False, False, False, False, True, (N.ENERGY, N.ESSENCE), "feeds on heat, light and power and cannot be eaten"
+        ),
     },
 )
 

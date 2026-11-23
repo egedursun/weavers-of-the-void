@@ -14,21 +14,34 @@ from aerona.api.schemas.environment import (
     NotableYearView,
     PlaceEnvironmentView,
     RegionEnvironmentView,
+    SeasonOnsetView,
     SeasonView,
     WeatherForecast,
     WorldSeasonsView,
 )
 from aerona.catalog.climate import CLIMATES
 from aerona.catalog.weather import WEATHER
+from aerona.constants.calendar import SEASONS_MAX
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.environment import (
+    CalendarRow,
+    ForcedWeatherRow,
+    LeyLineRow,
+    NotableYearRow,
+    PlaceEnvironmentRow,
+    RegionEnvironmentRow,
+    SeasonOnsetRow,
+    WorldSeasonRow,
+)
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.season_shape import season_phase
+from aerona.engine.lore.tellings import node_names
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
 
@@ -226,6 +239,13 @@ async def world_seasons(services: ServicesDep, world_id: int = Path(ge=1)) -> Wo
             )
             .order_by(EntityRow.name)
         )
+        phases = season_phase(book.seasons_of(world.id))
+        onsets = list(
+            await session.scalars(
+                select(SeasonOnsetRow).where(SeasonOnsetRow.world_id == world.id).order_by(SeasonOnsetRow.year.desc(), SeasonOnsetRow.season_position)
+            )
+        )
+        onset_names = await node_names(session, [row.by_node_id for row in onsets])
         return WorldSeasonsView(
             world_id=world.id,
             astronomy_records=[AstronomyRecordView(id=row.id, name=row.name) for row in astronomy if row.id not in kept],
@@ -236,6 +256,7 @@ async def world_seasons(services: ServicesDep, world_id: int = Path(ge=1)) -> Wo
             day_length_hours=world.day_length_hours,
             moon_count=world.moon_count,
             tidal_strength=world.tidal_strength,
+            seasons_max=SEASONS_MAX,
             seasons=[
                 SeasonView(
                     id=season.id,
@@ -246,9 +267,24 @@ async def world_seasons(services: ServicesDep, world_id: int = Path(ge=1)) -> Wo
                     growth=season.growth,
                     travel=season.travel,
                     campaign=season.campaign,
+                    share_pct=season.share_pct,
+                    warmth=phases[season.position].warmth,
+                    water=phases[season.position].water,
                     edited=season.edited,
                 )
                 for season in book.seasons_of(world.id)
+            ],
+            onsets=[
+                SeasonOnsetView(
+                    id=row.id,
+                    year=row.year,
+                    season_position=row.season_position,
+                    onset=row.onset,
+                    locked=row.locked,
+                    by_node_id=row.by_node_id,
+                    by_name=onset_names.get(row.by_node_id) if row.by_node_id is not None else None,
+                )
+                for row in onsets
             ],
             calendars=[
                 CalendarView(

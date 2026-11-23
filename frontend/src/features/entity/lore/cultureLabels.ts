@@ -1,15 +1,17 @@
 import {
   Ban,
-  Fence,
-  Rabbit,
+  Bird,
   BookX,
   Church,
   CircleSlash,
   Crown,
+  Dices,
   DoorOpen,
   Droplet,
   Feather,
+  Fence,
   Flame,
+  Gem,
   GraduationCap,
   Handshake,
   HeartCrack,
@@ -17,13 +19,18 @@ import {
   Home,
   Landmark,
   Link,
+  MessageSquareWarning,
   Pickaxe,
+  Rabbit,
+  Shovel,
   Snowflake,
+  Sprout,
   Store,
   Swords,
   Unlink,
   UserX,
   Wheat,
+  Wine,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type LoreNamed, TRADITION_TERMS, VALUES, lookup } from './model'
@@ -73,6 +80,8 @@ export const TRADITION_EFFECTS: Record<TraditionEffect['effect'], LoreNamed> = {
   food_saved: TRADITION_TERMS.food_saved,
   rest: TRADITION_TERMS.rest,
   vigil: TRADITION_TERMS.vigil,
+  trade: { label: 'Fair trade', icon: Store, tone: 'warning' },
+  forage: { label: 'Wild food gathered', icon: Sprout, tone: 'success' },
 }
 
 export const ACTS: Record<ActKind, LoreNamed> = {
@@ -182,6 +191,29 @@ export const ACTS: Record<ActKind, LoreNamed> = {
   enclosing: {
     label: 'Enclosing the common land of the folk',
     icon: Fence,
+    tone: 'danger',
+  },
+  lying: { label: 'Lying', icon: MessageSquareWarning, tone: 'warning' },
+  drunkenness: { label: 'Drunkenness', icon: Wine, tone: 'warning' },
+  tomb_robbing: {
+    label: 'Robbing graves and hoards',
+    icon: Shovel,
+    tone: 'danger',
+  },
+  using_charms: { label: 'Using charms', icon: Gem, tone: 'verdigris' },
+  feeding_on_hosts: {
+    label: 'Feeding on a living host',
+    icon: Droplet,
+    tone: 'danger',
+  },
+  killing_sacred_animal: {
+    label: 'Killing a sacred animal',
+    icon: Bird,
+    tone: 'danger',
+  },
+  fixing_contests: {
+    label: 'Fixing a contest',
+    icon: Dices,
     tone: 'danger',
   },
 }

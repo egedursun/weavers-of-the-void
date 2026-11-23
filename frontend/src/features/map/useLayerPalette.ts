@@ -8,6 +8,7 @@ import {
 import { REMNANT_KIND } from '@/features/arsenal/labels'
 import { GROUP_FORM } from '@/features/creatureGroups/labels'
 import { MONEY_FORM } from '@/features/entity/economy/labels'
+import { DANGER_SOURCE } from '@/features/entity/environment/regionLabels'
 import { PROTECTION_BASIS } from '@/features/protectedNature/labels'
 import { WAVE_ORIGIN } from '@/features/seaWaves/labels'
 import { type MapView } from './api'
@@ -182,17 +183,6 @@ export const RAIN_BANDS = [
 ] as const
 
 const HOLY_FROM = 40
-
-const DANGER_LABEL: Record<string, string> = {
-  beasts: 'Beasts',
-  bandits: 'Bandits',
-  monsters: 'Monsters',
-  phenomena: 'Strange phenomena',
-  disease: 'Disease',
-  avalanche: 'Avalanches',
-  quicksand: 'Quicksand',
-  volcanic: 'Volcanic ground',
-}
 
 const LAND_LABEL: Record<string, string> = {
   arid: 'Arid',
@@ -583,7 +573,7 @@ function labelFor(
   if (kind === 'language') return names.languages.get(id) ?? `Language ${id}`
   if (kind === 'ley')
     return raw === 'nexus' ? 'Nexus of ley lines' : 'On a ley line'
-  if (kind === 'danger') return DANGER_LABEL[raw] ?? words(raw)
+  if (kind === 'danger') return dangerLabel(raw)
   if (kind === 'rainfall' || kind === 'sacred')
     return LAND_LABEL[raw] ?? words(raw)
   if (kind === 'scars') return words(raw)
@@ -791,4 +781,10 @@ export function useLayerPalette(
     () => (view ? buildLayerPalette(view, mode, names, tokens, range) : null),
     [view, mode, names, tokens, range]
   )
+}
+
+function dangerLabel(raw: string): string {
+  return raw in DANGER_SOURCE
+    ? DANGER_SOURCE[raw as keyof typeof DANGER_SOURCE].label
+    : words(raw)
 }

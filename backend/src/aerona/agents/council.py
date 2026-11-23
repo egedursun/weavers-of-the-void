@@ -128,9 +128,9 @@ async def ruling_line(scope: Scope, row: CouncilRulingRow) -> str:
     if row.world_id is not None:
         parts.append(scope.world_name(row.world_id) or str(row.world_id))
     if row.school is not None:
-        parts.append(row.school.value.replace("_", " "))
+        parts.append(spoken(row.school))
     if row.punishment is not None and row.motion is CouncilMotion.PUNISH_SON:
-        parts.append(row.punishment.value.replace("_", " "))
+        parts.append(spoken(row.punishment))
     until = f" until epoch {row.until_epoch}" if row.until_epoch is not None else ""
     tail = f": {', '.join(parts[1:])}" if len(parts) > 1 else ""
     return f"{parts[0]}{tail}{until}"

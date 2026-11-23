@@ -12,6 +12,7 @@ from aerona.domain.enums.collective import (
     ChargeArrangement,
     CollectiveActKind,
     CollectiveTrigger,
+    CrowdFeeling,
     DatingSystemKind,
     DesignComponentKind,
     DesignKind,
@@ -40,7 +41,7 @@ from aerona.domain.enums.mind import EthicalStance, ValueAxis
 from aerona.domain.enums.vehicles import FireControl, Propulsion, VehicleDomain, VehicleFamily, VehicleFrame, VehicleSize
 
 KEY_LENGTH = 80
-MOOD_FIELDS = ("anger", "anxiety", "fervour", "deterrence", "agitation", "last_trigger")
+MOOD_FIELDS = ("deterrence", "agitation", "last_trigger")
 MOB_FIELDS = ("act", "size", "anger", "damage", "target", "target_entity_id", "leader_entity_id", "status")
 MOVEMENT_FIELDS = ("act", "trigger", "members", "strength", "leader_entity_id", "cult_entity_id", "faction_entity_id", "ended_epoch")
 ACCOUNT_FIELDS = ("kind", "fidelity", "credence", "defaced", "medium", "author_node_id", "subject_node_id", "authenticity")
@@ -54,7 +55,7 @@ BIAS_FIELDS = ("prestige_pct", "conformity_pct", "content_pct")
 GENERATION_FIELDS = ("alive", "passed_epoch")
 DIASPORA_FIELDS = ("population", "ties", "remittance", "home_entity_id")
 TRANSITION_FIELDS = ("fertility_pct", "elder_share", "urban_share", "literacy")
-SEX_RATIO_FIELDS = ("males_per_hundred", "widows")
+SEX_RATIO_FIELDS = ("begetters_per_hundred", "bereaved_partners")
 ROLE_FIELDS = ("eligibility", "min_age", "classes", "stance")
 DATING_FIELDS = ("kind", "anchor_year", "anchor_node_id", "cycle_years", "label_node_id")
 ARMS_FIELDS = (
@@ -118,21 +119,25 @@ WEAR_FIELDS = ("wear",)
 class CrowdMoodRow(Base):
     __tablename__ = "crowd_moods"
     __table_args__ = (
-        between("anger", PERCENT_MIN, PERCENT_MAX),
-        between("anxiety", PERCENT_MIN, PERCENT_MAX),
-        between("fervour", PERCENT_MIN, PERCENT_MAX),
         between("deterrence", PERCENT_MIN, PERCENT_MAX),
         between("agitation", PERCENT_MIN, PERCENT_MAX),
     )
 
     settlement_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
-    anger: Mapped[int] = mapped_column(default=0)
-    anxiety: Mapped[int] = mapped_column(default=0)
-    fervour: Mapped[int] = mapped_column(default=0)
     deterrence: Mapped[int] = mapped_column(default=0)
     agitation: Mapped[int] = mapped_column(default=0)
     last_trigger: Mapped[CollectiveTrigger | None] = mapped_column(enum_type(CollectiveTrigger, "last_trigger"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class CrowdFeelingRow(Base):
+    __tablename__ = "crowd_feelings"
+    __table_args__ = (between("level", PERCENT_MIN, PERCENT_MAX),)
+
+    settlement_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    feeling: Mapped[CrowdFeeling] = mapped_column(enum_type(CrowdFeeling, "feeling"), primary_key=True)
+    level: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[bool] = mapped_column(default=False)
 
 
 class CascadeRow(Base):
@@ -417,11 +422,11 @@ class DemographicTransitionRow(Base):
 
 class SexRatioRow(Base):
     __tablename__ = "sex_ratios"
-    __table_args__ = (between("males_per_hundred", 0, 1000), at_least("widows", 0))
+    __table_args__ = (between("begetters_per_hundred", 0, 1000), at_least("bereaved_partners", 0))
 
     community_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
-    males_per_hundred: Mapped[int] = mapped_column(default=100)
-    widows: Mapped[int] = mapped_column(default=0)
+    begetters_per_hundred: Mapped[int] = mapped_column(default=100)
+    bereaved_partners: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

@@ -3,7 +3,9 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.calendar_slots import SLOTS
 from aerona.catalog.techniques import TECHNIQUES
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import (
     HolderTechniqueRow,
@@ -64,7 +66,7 @@ async def tongue_lines(session: AsyncSession, home_id: int) -> list[str]:
         registers = await session.scalars(
             select(LanguageRegisterRow.register).where(LanguageRegisterRow.holder_entity_id == home_id, LanguageRegisterRow.language_entity_id == language_id)
         )
-        marks.extend(f"spoken at {words(register.value)}" for register in sorted(set(registers)))
+        marks.extend(f"spoken at {spoken(register)}" for register in sorted(set(registers)))
         found.append(f"{language.name} ({', '.join(marks)})" if marks else language.name)
     return found
 
@@ -74,7 +76,7 @@ async def creed_line(session: AsyncSession, realm_id: int | None) -> str:
     creed = await session.get(EntityRow, profile.ideology_entity_id) if profile is not None and profile.ideology_entity_id is not None else None
     if creed is None:
         return ""
-    tenets = [words(tenet.value) for tenet in await session.scalars(select(IdeologyTenetRow.tenet).where(IdeologyTenetRow.ideology_entity_id == creed.id))]
+    tenets = [spoken(tenet) for tenet in await session.scalars(select(IdeologyTenetRow.tenet).where(IdeologyTenetRow.ideology_entity_id == creed.id))]
     return f"{creed.name} ({', '.join(sorted(tenets))})" if tenets else creed.name
 
 
@@ -85,8 +87,15 @@ async def legend_lines(session: AsyncSession, home_id: int) -> list[str]:
         legend = await session.get(EntityRow, legend_id)
         if row is not None and legend is not None and legend.status is EntityStatus.CANON and row.credence >= BELIEVED:
             fixed = ", fixed in a work" if row.fixed_in_entity_id is not None else f", distorted {row.distortion}%"
-            found.append(f"{legend.name} (a tale of {words(row.archetype.value)}, believed {row.credence}%{fixed})")
+            found.append(f"{legend.name} (a tale of {spoken(row.archetype)}, believed {row.credence}%{fixed})")
     return found
+
+
+def slot_words(row: TraditionProfileRow) -> str:
+    if row.calendar_slot is None:
+        return ""
+    comes = {True: ", it comes this epoch", False: ", its time does not come this epoch", None: ""}[row.in_season]
+    return f", kept at {SLOTS[row.calendar_slot].label.lower()}{comes}"
 
 
 async def tradition_lines(session: AsyncSession, home_id: int) -> list[str]:
@@ -96,12 +105,12 @@ async def tradition_lines(session: AsyncSession, home_id: int) -> list[str]:
         tradition = await session.get(EntityRow, tradition_id)
         if row is not None and tradition is not None and tradition.status is EntityStatus.CANON:
             taboo = f", nothing of {words(row.taboo_target)}" if row.taboo_target else ""
-            deed = f", never {words(row.taboo_act.value)}" if row.taboo_act is not None else ""
-            season = f", kept at {words(row.calendar_slot.value)}" if row.calendar_slot is not None else ""
+            deed = f", never {spoken(row.taboo_act)}" if row.taboo_act is not None else ""
+            season = slot_words(row)
             brings = await session.scalars(select(TraditionEffectRow.effect).where(TraditionEffectRow.tradition_entity_id == tradition_id))
-            gifts = sorted({words(effect.value) for effect in brings})
+            gifts = sorted({spoken(effect) for effect in brings})
             brought = f"; it brings {', '.join(gifts)}" if gifts else ""
-            found.append(f"{tradition.name} ({words(row.kind.value)}{taboo}{deed}{season}{brought})")
+            found.append(f"{tradition.name} ({spoken(row.kind)}{taboo}{deed}{season}{brought})")
     return found
 
 
@@ -114,7 +123,7 @@ async def prophecy_lines(session: AsyncSession, named: set[int]) -> list[str]:
         prophecy = await session.get(EntityRow, row.prophecy_entity_id)
         if prophecy is not None:
             deadline = f", before epoch {row.deadline_epoch}" if row.deadline_epoch is not None else ""
-            found.append(f"{prophecy.name} (foretells: {words(row.predicate.value)}{deadline})")
+            found.append(f"{prophecy.name} (foretells: {spoken(row.predicate)}{deadline})")
     return found
 
 
@@ -130,9 +139,9 @@ async def lore_lines(session: AsyncSession, me: EntityRow, home: EntityRow, real
         if entity is None or entity.status is not EntityStatus.CANON:
             continue
         if rite is not None:
-            rites.append(f"{entity.name} ({words(rite.school.value)}, power {rite.power})")
+            rites.append(f"{entity.name} ({spoken(rite.school)}, power {rite.power})")
         if item is not None and (item.renown >= RENOWNED or item.regalia_of_entity_id is not None):
-            treasures.append(f"{entity.name} ({words(item.item_class.value)}, renown {item.renown})")
+            treasures.append(f"{entity.name} ({spoken(item.item_class)}, renown {item.renown})")
     named = {me.id, home.id, *([realm_id] if realm_id is not None else []), *([house_id] if house_id is not None else [])}
     return LoreLines(
         tongues=await tongue_lines(session, home.id),

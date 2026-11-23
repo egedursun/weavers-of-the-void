@@ -176,7 +176,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     EntityType.LANGUAGE: {**WORD_FIELDS, "words": "The language's first words (at most {{ rules.son_tools.coin_word_max_words }}); matching the naming rule"},
     EntityType.MORTAL: {
         "title": "Their nickname or title, drawn from their own deeds or nature; do not bury it in the name, write it here",
-        "sex": "female, male or other",
+        "sex": "Which of the people's sexes, as its biology has them: bearer (bears young), begetter (begets young), both, neither, or none for a people without sexes",
         "traits": "Up to five typed traits of temper",
     },
     EntityType.EVENT: {
@@ -530,6 +530,20 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "growth": "How well things grow in it, 0 to 100",
             "travel": "How easy travel is in it, 0 to 100",
             "campaign": "How easy war is in it, 0 to 100",
+            "share_pct": "Its share of the year in percent, 1 to 100; the other seasons give up their shares in proportion. Leave it empty for an even share",
+            "position": "Where it falls in the year, 0 for first, up to 7; leave it empty to add it last",
+        },
+    ),
+    T.RESHAPE_SEASON: ToolText(
+        "As a god of one of these domains, {{ season_domains }}, you reshape one season of a world you reach: its share of the year, "
+        "its warmth or its rain. The other seasons that no one holds take up or give back the share in proportion. "
+        "{{ rules.son_tools.reorder_seasons_essence }} essence, {{ rules.son_tools.reorder_seasons_ap | several('action', 'actions') }}.",
+        {
+            "season_id": "The id of the season (see SEASONS in the world summary)",
+            "share_pct": "Its new share of the year in percent, 1 to 100",
+            "temperature_shift": "How much warmer (positive) or colder (negative) it becomes, -100 to 100",
+            "rain_shift": "How much wetter (positive) or drier (negative) it becomes, -100 to 100",
+            "reason": "Why you reshape it",
         },
     ),
     T.OPEN_ROAD: ToolText(
@@ -627,7 +641,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SPREAD_WORD: ToolText(
         "You spread word of someone in a community: their name grows or darkens there for one kind of reputation "
-        "(heroism, honour, cruelty, piety, generosity, wisdom, trickery, skill_renown or troublemaker). "
+        "(heroism, honour, cruelty, piety, generosity, wisdom, trickery, skill_renown, troublemaker, mercy or justice). "
         "Costs {{ rules.costs.influence }} essence and one action.",
         {
             "subject_id": "Whose name you spread",
@@ -791,7 +805,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "symmetry": "How much they favour balance, from 0 (asymmetric) to 100 (strictly symmetric)",
             "funeral_rite": "How the dead are handled: {{ funeral_rites | join(', ') }}",
             "remains_treatment": "What is done with the remains, within what the funeral rite allows: {{ remains_treatments | join(', ') }}",
-            "inheritance": "Inheritance (equal_shares, primogeniture, ultimogeniture, through_second_line, elective, by_merit)",
+            "inheritance": "Inheritance (equal_shares, primogeniture, ultimogeniture, through_second_line, elective, by_merit, seniority, designated)",
             "diet": "What they eat: {{ diets | join(', ') }}",
             "practice": "A practice of theirs to set: {{ practices | join(', ') }}",
             "practice_level": "How far they keep that practice, from 0 (not at all) to 100 (fully); it then follows what they know, hold and build",
@@ -969,9 +983,10 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"case_id": "The case awaiting trial", "verdict": "guilty or acquitted", "reason": "Why you answer so"},
     ),
     T.STIR_CROWD: ToolText(
-        "You stir the folk of a town in your reach with a grievance ({{ collective_triggers }}); their anger, fear or fervour rises and the "
-        "town may rise in a riot, a panic, a mass conversion or a lasting movement. Its guards and garrison hold them back. 1 action.",
-        {"town_id": "The town", "grievance": "The grievance you stir", "reason": "Why you stir them"},
+        "You stir the folk of a town in your reach with a grievance ({{ collective_triggers }}); the feelings it grows from rise "
+        "({{ crowd_feelings }}) and the town may act. Name an act ({{ collective_acts }}) to call them to it now, or leave it for the "
+        "town's own grievance to choose. Its guards and garrison hold them back. 1 action.",
+        {"town_id": "The town", "grievance": "The grievance you stir", "act": "The act you call them to, or none", "reason": "Why you stir them"},
     ),
     T.REVEAL_TRUE_HISTORY: ToolText(
         "You bring to light an older account that contradicts one a realm in your reach rewrote; the rewritten account loses credence, the "
@@ -996,8 +1011,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.MOVE_PLAGUE_RESPONSE: ToolText(
         "You move a community to answer a sickness one way ({{ plague_responses }}): closed borders cost trade and calm, a quarantine "
         "slows the spread but may set off riots, burning the dead slows it but grieves folk whose rites forbid it, driving out the sick "
-        "slows it at home and marks the sick, prayer comforts but crowds, and seeking a cure sets the learned of its hospitals, academies "
-        "and monasteries to work. 1 action.",
+        "slows it at home and marks the sick, prayer comforts but crowds, seeking a cure sets the learned of its hospitals, academies "
+        "and monasteries to work, and cleaning water and carrying away refuse costs treasury, raises the town's sanitation and cuts part "
+        "of the spread by the routes it reaches. Each answer cuts only the routes it reaches. 1 action.",
         {"community_id": "The community", "disease_id": "The sickness", "response": "The answer", "reason": "Why you move them"},
     ),
     T.REVEAL_TONGUE: ToolText(
@@ -1032,21 +1048,24 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"host_id": "Who hosts it", "kind": "The kind of gathering", "reason": "Why you call it"},
     ),
     T.LOOSE_DISEASE: ToolText(
-        "You forge a new sickness of your own design and loose it on a region or community: you choose how it spreads (vector), the body functions "
-        "it strikes, how readily it passes on, how many it kills, how long it hides before the sick show it, which beast carries it and the climate where it spreads fastest. "
-        "It spreads along roads, armies and journeys by its vector, survivors grow immune, and you gain essence from every outbreak of it. "
+        "You forge a new sickness of your own design and loose it on a region or community: you choose how it spreads (route), the body functions "
+        "it strikes, how readily it passes on, how many it kills, how long it hides before the sick show it, which beast carries it and the warmth and moisture where it spreads fastest. "
+        "It spreads along roads, armies and journeys by its route, survivors grow immune, and you gain essence from every outbreak of it. "
         "{{ rules.son_tools.loose_disease_essence }} essence, 1 action.",
         {
             "target_id": "The region or community it first strikes",
             "name": "The sickness's name in the world's language",
-            "vector": "How it passes on: air (crowds and cold), water (rivers, marsh, poor sanitation), touch (traders, armies and travellers), "
-            "bite (needs its host beast), spirit (magic, ley lines, the impious), void (lands touched by void leakage), curse (bound to you while you live)",
+            "route": "How it passes on: inhalation (crowds and cold), water (rivers, marsh, poor sanitation), contact (traders, armies and travellers), "
+            "bite (needs its host beast), spirit (magic, ley lines, the impious), void (lands touched by void leakage), curse (bound to you while you live), "
+            "ingestion (food and stores), blood, birth (parent to child), rite, gaze, experience, intimate or objects (goods and bedding along trade); "
+            "rite, gaze and experience pass afflictions, not sickness, and are refused here",
             "target_functions": "The body functions it strikes; survivors may keep a lasting weakness there",
             "virulence": "How readily it spreads, 1 to 100",
             "lethality": "How many of the sick die, 1 to 100",
             "incubation": "Sampled years before the sick show it (0 to 20): long incubation spreads it unseen, past quarantines",
             "chronic_rate": "How many survivors keep a lasting weakness, 0 to 100",
-            "climate_affinity": "The climate where it spreads fastest",
+            "affinity_warmth": "The warmth where it spreads fastest: warm, cold or any",
+            "affinity_moisture": "The moisture where it spreads fastest: wet, dry or any",
             "host_species_id": "Optional: the species that carries it; killing that species weakens the sickness",
             "severity": "How hard the first outbreak strikes, 1 to 100",
             "reason": "Why you loose it",
@@ -1080,6 +1099,17 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "{{ rules.places.raise_nexus_essence }} essence, 1 action.",
         {"place_id": "The place's id", "reason": "Why you raise it"},
     ),
+    T.WOUND_LAND: ToolText(
+        "You leave a scar on a land ({{ scar_kinds | join(', ') }}). Each scar takes fertility and passage while it lasts and fades "
+        "at its own pace; a deep scar holds the land's growth back at an early stage. {{ rules.son_tools.wound_land_essence }} essence, "
+        "{{ rules.son_tools.reshape_land_ap | several('action', 'actions') }}.",
+        {"region_id": "The land's id", "scar": "The scar you leave", "depth": "How deep it lies, 1 to 100", "reason": "Why you do it"},
+    ),
+    T.HEAL_LAND: ToolText(
+        "You heal one scar of a land ({{ scar_kinds | join(', ') }}) at once, whatever its depth. "
+        "{{ rules.son_tools.heal_land_essence }} essence, {{ rules.son_tools.reshape_land_ap | several('action', 'actions') }}.",
+        {"region_id": "The land's id", "scar": "The scar you heal", "reason": "Why you do it"},
+    ),
     T.RESHAPE_LAND: ToolText(
         "You reshape a land: move its river into a neighbouring land (shift_river), parch it into desert (parch), "
         "bring the grass back to a desert (green), make its soil saline (make_saline), make its soil rich (enrich_soil), raise or lower "
@@ -1101,11 +1131,43 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "{{ rules.terrain.sanctify_essence }} essence, 1 action.",
         {"region_id": "The region's id", "sacredness": "How holy, 0-100 (leave out for the usual sanctification)", "reason": "Why you hallow it"},
     ),
+    T.MARK_LAND: ToolText(
+        "You set a memory into a land ({{ region_memory_kinds | join(', ') }}). The land keeps it: dark memories breed unrest and hauntings, "
+        "holy ones draw pilgrims, and each fades at its own pace unless a tradition keeps it. {{ rules.son_tools.mark_land_essence }} essence, 1 action.",
+        {
+            "region_id": "The land's id",
+            "memory": "What the land remembers",
+            "magnitude": "How strongly, 1 to 100",
+            "title": "What it is called",
+            "reason": "Why you do it",
+        },
+    ),
+    T.OPEN_THE_DEEP: ToolText(
+        "You open a depth beneath a region ({{ underground_strata | join(', ') }}): it counts as reached, and what it holds breaks loose. "
+        "{{ rules.underground.open_essence }} essence, 1 action.",
+        {"region_id": "The region's id", "stratum": "Which depth", "reason": "Why you open it"},
+    ),
+    T.CLOSE_THE_DEEP: ToolText(
+        "You close a depth beneath a region ({{ underground_strata | join(', ') }}), so that it counts as unreached again. "
+        "{{ rules.underground.open_essence }} essence, 1 action.",
+        {"region_id": "The region's id", "stratum": "Which depth", "reason": "Why you close it"},
+    ),
+    T.QUELL_DANGER: ToolText(
+        "You quell a danger of a region ({{ danger_sources | join(', ') }}), lowering its strength; a danger the land breeds may grow back. "
+        "{{ rules.terrain.quell_essence }} essence, 1 action.",
+        {"region_id": "The region's id", "danger": "Which danger", "strength": "How much to take away, 1-100", "reason": "Why you quell it"},
+    ),
     T.CURSE_REGION: ToolText(
-        "You loose a danger upon a region: beasts, bandits, monsters, phenomena, disease, avalanche, quicksand or volcanic (fire from the ground). It harms settlers, herds, "
-        "travellers, armies and merchants there, and fades over the ages unless the land breeds it. {{ rules.terrain.curse_essence }} essence, 1 action, "
+        "You loose a danger upon a region ({{ danger_sources | join(', ') }}). It harms what its source can reach "
+        "({{ danger_targets | join(', ') }}), and fades over the ages unless the land breeds it. {{ rules.terrain.curse_essence }} essence, 1 action, "
         "strength at most {{ rules.terrain.curse_strength_max }}.",
-        {"region_id": "The region's id", "danger": "Which danger", "strength": "How strong, 1-100", "reason": "Why you curse it"},
+        {
+            "region_id": "The region's id",
+            "danger": "Which danger",
+            "strength": "How strong, 1-100",
+            "targets": "Which of what it can reach it harms (leave empty for all it can reach)",
+            "reason": "Why you curse it",
+        },
     ),
     T.REDIRECT_RIVER: ToolText(
         "You turn a river out of its bed into a neighbouring region: the old valley dries to a stream or a dry bed, the new one floods and grows. "
@@ -1592,8 +1654,14 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.SEND_EXPEDITION: ToolText(
         "You move a mortal in your reach to lead an expedition, with its companions, into a site, a land, an underworld or another realm; "
         "each leg uses provisions, and light on dark ground; running short raises danger and stress, members may break or rise to the test and come home with "
-        "quirks, and those who return bring finds and renown. 1 action.",
-        {"leader_id": "The mortal who leads it", "target_id": "Where it goes", "reason": "Why you send it"},
+        "quirks, and those who return bring finds and renown. It travels by one way its leader's people can use ({{ movement_modes }}); "
+        "a way that finds little passage in the land it seeks adds legs. 1 action.",
+        {
+            "leader_id": "The mortal who leads it",
+            "target_id": "Where it goes",
+            "mode": "How it travels; leave empty for the way with the best passage",
+            "reason": "Why you send it",
+        },
     ),
     T.STOCK_DEPOT: ToolText(
         "You move a realm or a people in your reach to stock a field depot in a land from its own food stores; depots feed its armies "
@@ -1724,12 +1792,25 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"mortal_id": "The mortal", "dreaded": "True for a dreaded sign, false for a kindly one", "reason": "Why you mark it"},
     ),
     T.UNSETTLE_SEASONS: ToolText(
-        "You unsettle the seasons of the world you walk: from now its summers and winters run for spells of no set length, and a long winter uses up the food of every town unless its people heeded a forecast. 1 action.",
-        {"world_id": "The world you walk", "reason": "Why you unsettle them"},
+        "You unsettle the seasons of the world you walk: a long summer or winter falls on it, either cycling between the two while you leave it, "
+        "or a single spell that ends by its length. A long winter uses up the food of every town unless its people heeded a forecast; "
+        "a long summer takes the harvest of hot and dry lands and helps cold ones. 1 action.",
+        {
+            "world_id": "The world you walk",
+            "shape": "cycling (summers and winters turn while it holds) or single (one spell that ends)",
+            "spell": "summer or winter: the spell it begins with",
+            "length": "Epochs the spell lasts, 1 to 20",
+            "severity": "How hard it bites, 0 to 100",
+            "reason": "Why you unsettle them",
+        },
     ),
     T.LENGTHEN_WINTER: ToolText(
-        "You make the long winter now holding the world you walk last longer. 1 action.",
-        {"world_id": "The world you walk", "epochs": "How many epochs longer it holds", "reason": "Why you lengthen it"},
+        "You make a long winter holding the world you walk last longer. 1 action.",
+        {"long_season_id": "The id of the long winter (see LONG SEASONS)", "epochs": "How many epochs longer it holds", "reason": "Why you lengthen it"},
+    ),
+    T.END_LONG_SEASON: ToolText(
+        "You end a long summer or winter holding the world you walk; its seasons keep their measure again. 1 action.",
+        {"long_season_id": "The id of the long season (see LONG SEASONS)", "reason": "Why you end it"},
     ),
     T.SHIFT_WORLD_NATURE: ToolText(
         "You move one share of the nature of the world you walk: how much timber, food, ore and room for life it gives, and how often "
@@ -1775,8 +1856,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.SEAL_BREACH: ToolText(
-        "You seal the deep beneath a place in your reach, so that nothing comes up from it and no one digs into it until the seal wears away or is broken. 1 action.",
-        {"place_id": "The place whose deep you seal (an id)", "reason": "Why you seal it"},
+        "You seal the deep beneath a place in your reach, so that nothing comes up from it and no one digs into it until the seal wears away or is broken. "
+        "Choose what holds it ({{ seal_kinds | join(', ') }}); a pact names its oath, a power its power and a grown barrier its living line. 1 action.",
+        {
+            "place_id": "The place whose deep you seal (an id)",
+            "kind": "What holds the seal",
+            "oath_id": "For a pact: the oath that binds it",
+            "power_id": "For a power: the power that holds it",
+            "line_id": "For a grown barrier: the living line grown as it",
+            "reason": "Why you seal it",
+        },
     ),
     T.PRESS_TRANSFORMATION: ToolText(
         "You press a thing in your reach toward becoming another kind of thing, a change whose conditions it already meets in part. "
@@ -2007,9 +2096,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.STIR_REVIVAL: ToolText(
-        "You stir a movement among a people within your reach that others press on: to revive its language, restore its old god, expel "
-        "foreigners or adopt the ways pressed on it; the movement passes through stress, distortion and revival to a new steady way. 1 action.",
-        {"people_id": "The people", "goal": "What the movement seeks", "reason": "Why you stir it"},
+        "You stir a movement among a people within your reach that others press on. It takes a way ({{ revival_ways }}) and seeks a goal "
+        "({{ revival_goals }}); restoring clashes with the rulers, a prophet's synthesis founds a faith of its own, adopting ends in "
+        "assimilation, waiting holds the people ready for a sign, withdrawing lives apart. Restoring may seek any goal; synthesis seeks the "
+        "old god or the language; adopting seeks rule by the people itself; waiting seeks rule, land or the foreigners gone; withdrawing seeks "
+        "the language or the old god. The movement passes through stress, distortion and revival to a new steady way. 1 action.",
+        {"people_id": "The people", "way": "The way the movement takes", "goal": "What the movement seeks", "reason": "Why you stir it"},
     ),
     T.PROCLAIM_RIGHT: ToolText(
         "You proclaim in a realm within your reach that a category of its folk (citizens, subjects, resident foreigners, protected minorities "
@@ -2033,8 +2125,19 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.TURN_WIND: ToolText(
         "You turn the prevailing wind of a land within your reach to blow from another direction (0 from the north, counting round by eighths "
-        "through the east to 7 from the north-west); the wind moves the rain, the ships and the foul air of the land. 1 action.",
-        {"region_id": "The land", "wind_from": "The direction the wind blows from, 0 to 7", "reason": "Why you turn it"},
+        "through the east to 7 from the north-west), and may set the belt it blows in ({{ wind_bands | join(', ') }}); the wind moves the rain, "
+        "the ships and the foul air of the land, and a belt brings its own rain, calm or storms. 1 action.",
+        {
+            "region_id": "The land",
+            "wind_from": "The direction the wind blows from, 0 to 7",
+            "band": "The belt it blows in (leave empty to keep it)",
+            "reason": "Why you turn it",
+        },
+    ),
+    T.SHAPE_CYCLE: ToolText(
+        "You move one planetary cycle of the world you stand on ({{ planetary_cycles | join(', ') }}) up or down; the cycle then flows on "
+        "from where you set it. 1 action.",
+        {"world_id": "The world you stand on", "cycle": "Which cycle", "change": "How far to move it, -30 to 30", "reason": "Why you move it"},
     ),
     T.MOVE_ICE: ToolText(
         "You add months of ice to the seas, rivers and ground of a land within your reach, or take them away. More ice closes its waters to "
@@ -2054,10 +2157,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.STIR_IDENTITY: ToolText(
         "You make one of the identities of a town or people within your reach matter more to it, or quiet it. The identity that matters most "
-        "decides whom its folk trust, how loyal they stay to their realm and along which line it divides. Layers: {{ identity_layers | join(', ') }}. 1 action.",
+        "decides whom its folk trust, how loyal they stay to their realm and along which line it divides. Layers: {{ identity_layers | join(', ') }}. "
+        "You may work through a driver ({{ salience_drivers }}); each stirs only the layers it reaches, and god is your own hand on any layer. 1 action.",
         {
             "community_id": "The town or people",
             "layer": "Which identity",
+            "driver": "What you stir it through",
             "calm": "True to quiet the identity instead of stirring it",
             "reason": "Why you do it",
         },
@@ -2081,7 +2186,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You sharpen one sense of a kind of creature or of a people on the world you stand on, so it finds, tracks, sees or steers better. 1 action.",
         {
             "holder_id": "The kind or the people",
-            "sense": "The sense: sight, night_vision, smell, hearing, echolocation, vibration, magnetic, spirit_sight or heat",
+            "sense": "The sense: sight, night_vision, smell, hearing, echolocation, vibration, magnetic, spirit_sight, heat, electric or ultraviolet",
             "reason": "Why you sharpen it",
         },
     ),
@@ -2240,5 +2345,21 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.SHAPE_TRAIT: ToolText(
         "You raise or lower a trait in a kind of creature where it lives. 1 action.",
         {"species_id": "The kind of creature", "trait": "The trait", "raise_it": "True to raise it, false to lower it", "reason": "Why"},
+    ),
+    T.STIR_EMOTION: ToolText(
+        "Stir a feeling in a mortal within your reach; it colours what they think and do this age and fades by the nature of the feeling. 1 action.",
+        {"node_id": "The mortal", "emotion": "The feeling", "reason": "Why you stir it"},
+    ),
+    T.EASE_GRIEF: ToolText(
+        "Move the grief of a mortal within your reach to another stage: back to shock, on through anger, mourning and yearning, to acceptance, or into a grief that will not heal. 1 action.",
+        {"mourner_id": "The mortal who grieves", "stage": "The stage their grief moves to", "reason": "Why you move it"},
+    ),
+    T.CURSE_WITH: ToolText(
+        "Lay an affliction of any kind on a being within your reach, as a curse; a fortune laid this way leans to ill. {{ rules.costs.curse }} essence, 1 action.",
+        {"node_id": "The being", "package": "The kind of affliction", "reason": "Why you lay it"},
+    ),
+    T.BLESS_WITH: ToolText(
+        "Lay an affliction of any kind on a being within your reach, as a blessing given by rite; a fortune laid this way leans to good. {{ rules.costs.curse }} essence, 1 action.",
+        {"node_id": "The being", "package": "The kind of affliction", "reason": "Why you give it"},
     ),
 }

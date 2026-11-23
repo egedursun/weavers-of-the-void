@@ -111,7 +111,7 @@ async def offer(call: MortalCall, args: TermsInput) -> str:
     if siege is None or town is None:
         fail(MortalResult.TERMS_IMPOSSIBLE, why="your army besieges no such town")
     if held(town.id):
-        fail(MortalResult.TERMS_IMPOSSIBLE, why="a stronger hand holds that town")
+        fail(MortalResult.TERMS_IMPOSSIBLE, why="that town is held")
     await call.record("tools.mortal.terms", roles={IncidentRole.ENVOY: call.me.id, IncidentRole.TARGET: town.id}, facts={"rounds": siege.rounds}, place=town.id)
     table = call.rules.field_diplomacy
     if siege.rounds < table.fraternise_rounds and siege.supplies > table.terms_supplies:

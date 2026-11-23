@@ -34,6 +34,7 @@ from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.customs import people_id_of, people_of
 from aerona.engine.context import TickContext
+from aerona.engine.environment.spells import stacked
 from aerona.engine.lore.traditions import keeps
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.split import MIDPOINT, attributes_of, has_attributes, store_attributes
@@ -134,8 +135,10 @@ async def season_and_craft(ctx: TickContext, town: EntityRow, row: DietRow) -> N
 async def light_of(ctx: TickContext, world_id: int) -> int:
     if (await ctx.laws()).has(NaturalLaw.ETERNAL_NIGHT, world_id):
         return ctx.rules.nutrition.night_light
-    season = await ctx.session.get(IrregularSeasonRow, world_id)
-    return PERCENT - season.severity // 2 if season is not None and season.spell is SeasonSpell.WINTER else PERCENT
+    winters = await ctx.session.scalars(
+        select(IrregularSeasonRow.severity).where(IrregularSeasonRow.world_id == world_id, IrregularSeasonRow.spell == SeasonSpell.WINTER)
+    )
+    return PERCENT - stacked(ctx.rules, list(winters)) // 2
 
 
 def adequacy(ctx: TickContext, diet: DietRow, nutrient: Nutrient, light: int, magic: int) -> int:

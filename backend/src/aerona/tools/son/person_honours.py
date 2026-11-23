@@ -53,7 +53,7 @@ async def honour_servant(call: SonCall, args: HonourServantInput) -> str:
     await ensure_in_reach(call, holder)
     kind = await own_honour(call)
     if held(holder.id) or await holds(call.session, holder.id, kind.id):
-        fail(SonResult.HONOUR_REFUSED, why="they hold your favour already, or a stronger hand holds them")
+        fail(SonResult.HONOUR_REFUSED, why="they hold your favour already, or they are held")
     await confer(call.tick, kind, holder, tally=HonourTally(), by=call.son.id)
     call.target(holder.id)
     return result(SonResult.SERVANT_HONOURED, holder=holder.name, honour=kind.name)

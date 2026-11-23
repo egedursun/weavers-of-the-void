@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AudioLines, Dices, PenLine, Save } from 'lucide-react'
+import { writingSystemValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +15,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { FormRow, PagedList, Section } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import {
   WRITING_SYSTEMS,
   useEditLanguage,
@@ -101,7 +102,7 @@ export function LanguageShaper({
                 <SelectItem value={UNWRITTEN}>Unwritten</SelectItem>
                 {WRITING_SYSTEMS.map((system) => (
                   <SelectItem key={system} value={system}>
-                    {humanize(system)}
+                    {wordOf(writingSystemValues, system)}
                   </SelectItem>
                 ))}
               </SelectContent>

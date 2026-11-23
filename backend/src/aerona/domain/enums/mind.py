@@ -475,6 +475,13 @@ class ActKind(StrEnum):
     SELLING_OFFICES = "selling_offices"
     POACHING = "poaching"
     ENCLOSING = "enclosing"
+    LYING = "lying"
+    DRUNKENNESS = "drunkenness"
+    TOMB_ROBBING = "tomb_robbing"
+    USING_CHARMS = "using_charms"
+    FEEDING_ON_HOSTS = "feeding_on_hosts"
+    KILLING_SACRED_ANIMAL = "killing_sacred_animal"
+    FIXING_CONTESTS = "fixing_contests"
 
 
 class NeedKind(StrEnum):
@@ -540,6 +547,10 @@ class Emotion(StrEnum):
     BOREDOM = "boredom"
     DESPAIR = "despair"
     LONGING = "longing"
+    SURPRISE = "surprise"
+    CURIOSITY = "curiosity"
+    COMPASSION = "compassion"
+    CONTEMPT = "contempt"
 
 
 class ThoughtKind(StrEnum):
@@ -692,6 +703,10 @@ class ThoughtKind(StrEnum):
     PASSION_STIRRED = "passion_stirred"
     PASSION_BROKE = "passion_broke"
     CAUGHT_FEELING = "caught_feeling"
+    WAS_SURPRISED = "was_surprised"
+    GREW_CURIOUS = "grew_curious"
+    FELT_COMPASSION = "felt_compassion"
+    FELT_CONTEMPT = "felt_contempt"
 
 
 class LifeGoal(StrEnum):
@@ -873,7 +888,9 @@ class MoodState(StrEnum):
 
 class GriefStage(StrEnum):
     SHOCK = "shock"
+    ANGER = "anger"
     MOURNING = "mourning"
+    YEARNING = "yearning"
     ACCEPTANCE = "acceptance"
     COMPLICATED = "complicated"
 

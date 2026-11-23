@@ -85,6 +85,7 @@ export function useStoryletCatalog() {
 
 export type CollectiveAction =
   | 'crowd_mood:set'
+  | 'crowd_feeling:set'
   | 'crowd_mood:edit'
   | 'crowd_mood:delete'
   | 'cascade:spark'

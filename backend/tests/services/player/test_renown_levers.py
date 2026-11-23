@@ -6,7 +6,8 @@ from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.renown import DeedClaimRow, DeedRow, LoreTradeRow, ReputationRow, RulerCurrencyRow
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LoreKind, ReputationAxis
+from aerona.domain.enums.knowledge import KnowledgeKind
+from aerona.domain.enums.renown import ClaimKind, ClaimStatus, ReputationAxis
 from aerona.services.player import renown
 from aerona.services.player.scope import PlayerScope
 from tests.services.player.factories import PlayerWorld, make_entity
@@ -59,10 +60,10 @@ async def test_the_god_passes_lore_and_strikes_the_record(scope: PlayerScope, se
     technique = next(iter(Technique))
     session.add(HolderTechniqueRow(holder_entity_id=seller.id, technique=technique, since_epoch=1, secret=False))
     await session.flush()
-    made = await renown.trade_lore(scope, renown.TradeLore(seller_id=seller.id, buyer_id=buyer.id, kind=LoreKind.TECHNIQUE, key=technique.value))
+    made = await renown.trade_lore(scope, renown.TradeLore(seller_id=seller.id, buyer_id=buyer.id, kind=KnowledgeKind.TECHNIQUE, key=technique.value))
     trade = await session.get(LoreTradeRow, made.values["trade_id"])
     assert trade is not None and await session.get(HolderTechniqueRow, (buyer.id, technique)) is not None
     with pytest.raises(ValidationFailedError):
-        await renown.trade_lore(scope, renown.TradeLore(seller_id=seller.id, buyer_id=buyer.id, kind=LoreKind.TECHNIQUE, key=technique.value))
+        await renown.trade_lore(scope, renown.TradeLore(seller_id=seller.id, buyer_id=buyer.id, kind=KnowledgeKind.TECHNIQUE, key=technique.value))
     await renown.remove_trade(scope, renown.TradeTarget(trade_id=trade.id))
     assert await session.get(LoreTradeRow, trade.id) is None

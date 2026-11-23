@@ -23,6 +23,7 @@ from aerona.engine.phase import Phase
     "table.house_members",
     "table.house_profiles",
     "table.injuries",
+    "table.irregular_seasons",
     "table.law_profiles",
     "table.learned_tactics",
     "table.loans",

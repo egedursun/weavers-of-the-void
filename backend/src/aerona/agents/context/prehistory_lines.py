@@ -1,17 +1,13 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.prehistory import PrehistoryEventRow, PrehistoryRow
 from aerona.domain.enums.prehistory import PrehistoryState
-
-
-def label(value: str) -> str:
-    return value.replace("_", " ")
 
 
 async def happening_text(session: AsyncSession, event: PrehistoryEventRow) -> str | None:
@@ -35,6 +31,6 @@ async def prehistory_digests(session: AsyncSession, epoch: int) -> list[str]:
         told = [text for event in list(events) if (text := await happening_text(session, event)) is not None]
         if world is None or not told:
             continue
-        header = f"{world.name}, {label(row.kind.value)} prehistory, {several(row.rounds_done, 'epoch', 'epochs')}, {label(row.source.value)}"
+        header = f"{world.name}, {spoken(row.kind)} prehistory, {several(row.rounds_done, 'epoch', 'epochs')}, {spoken(row.source)}"
         lines.append(f"{header}: " + " | ".join(told))
     return lines

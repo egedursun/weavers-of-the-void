@@ -17,6 +17,7 @@ export type CircleKind = components['schemas']['CircleKind']
 export type ContestKind = components['schemas']['ContestKind']
 export type ContestStake = components['schemas']['ContestStake']
 export type AppealKind = components['schemas']['AppealKind']
+export type PersuasionAim = components['schemas']['PersuasionAim']
 export type GroupKind = components['schemas']['GroupKind']
 export type ValueAxis = components['schemas']['ValueAxis']
 

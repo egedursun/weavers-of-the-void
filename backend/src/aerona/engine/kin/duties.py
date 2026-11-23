@@ -26,7 +26,7 @@ from aerona.engine.economy.purse import shift_points
 from aerona.engine.kin.roles import kin_by_role
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.memories import remember
-from aerona.engine.mortal.kin import parents_of
+from aerona.engine.mortal.kin import parents_of, sworn_kin_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.recording.record import record
@@ -124,6 +124,34 @@ async def help_in_need(ctx: TickContext, duties: Duties, tally: KinTally) -> Non
                 break
             if given:
                 break
+        else:
+            await sworn_aid(ctx, needy, tally)
+
+
+async def sworn_answers(ctx: TickContext, kin_id: int, owed_id: int, key: str) -> bool:
+    return ctx.rng(f"kin.sworn.{key}.{kin_id}.{owed_id}.{ctx.epoch}").chance(ctx.rules.relations.sworn_kin_duty)
+
+
+async def sworn_aid(ctx: TickContext, needy: EntityRow, tally: KinTally) -> None:
+    table = ctx.rules.kin
+    for kin_id in await sworn_kin_of(ctx.session, needy.id):
+        found = await living(ctx, kin_id)
+        if found is None or found[1].wealth < table.need_wealth * 2 or not await sworn_answers(ctx, kin_id, needy.id, "aid"):
+            continue
+        giver, giver_profile = found
+        share = round_half_up(giver_profile.wealth * table.help_share_pct * ctx.rules.relations.sworn_kin_duty / (PERCENT * PERCENT))
+        if share <= 0:
+            continue
+        with explaining():
+            term("relations.sworn_kin_duty", share, source_node_id=giver.id)
+            await shift_points(ctx.session, giver, -share)
+            await shift_points(ctx.session, needy, share)
+        await remember(ctx.session, ctx.rules, holder_id=needy.id, subject_id=giver.id, kind=MemoryKind.GIFTED_ME, magnitude=share, epoch=ctx.epoch)
+        await record(
+            ctx, "relation.sworn_aid", roles={IncidentRole.ACTOR: giver.id, IncidentRole.TARGET: needy.id}, facts={"share": share}, place=needy.location_id
+        )
+        tally.helped += 1
+        return
 
 
 async def breach(ctx: TickContext, actor: EntityRow, owed: EntityRow, role: KinRole, duty: KinDuty) -> None:
@@ -217,6 +245,8 @@ async def mourn_and_avenge(ctx: TickContext, duties: Duties, tally: KinTally) ->
                     tally.mourned += 1
         for role, _strength in bound(owed, KinDuty.AVENGE, table.duty_floor):
             avengers += len([kin_id for kin_id in await kin_by_role(ctx.session, dead.id, role) if await living(ctx, kin_id) is not None])
+        for kin_id in await sworn_kin_of(ctx.session, dead.id):
+            avengers += await living(ctx, kin_id) is not None and await sworn_answers(ctx, kin_id, dead.id, "avenge")
         if avengers and folk is not None:
             await avenge(ctx, dead, folk.id, avengers, tally)
 

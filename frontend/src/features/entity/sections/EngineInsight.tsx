@@ -10,10 +10,12 @@ import {
   Sparkles,
   Undo2,
 } from 'lucide-react'
+import { knowledgeBranchValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { EntityLink, MiniStat, PagedList } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { type EntityContext } from '../actions/context'
 import { humanize } from '../actions/schema'
 
@@ -35,7 +37,7 @@ export function EngineInsight({ ctx }: { ctx: EntityContext }) {
             tone='verdigris'
             label={
               knowledge.branch
-                ? `${humanize(knowledge.branch)} multiplier`
+                ? `${wordOf(knowledgeBranchValues, knowledge.branch)} multiplier`
                 : 'Branch multiplier'
             }
             value={`×${knowledge.branch_multiplier}`}

@@ -6,6 +6,7 @@ from aerona.catalog.backfill_words import MATERIAL_WORDS, RESOURCE_WORDS, WORKSH
 from aerona.catalog.goods_traits import commodities_with, materials_with, workshops_with
 from aerona.catalog.production import EXTRACTION
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -258,7 +259,7 @@ async def hide_world_seam(ctx: TickContext, place: EntityRow, world_material_id:
     material = await ctx.session.get(WorldMaterialRow, world_material_id)
     if material is None:
         return False
-    label = material.name or (material.base_kind.value.replace("_", " ") if material.base_kind is not None else "strange stone")
+    label = material.name or (spoken(material.base_kind) if material.base_kind is not None else "strange stone")
     stony = material.base_kind in STONY
     await open_deposit(
         ctx,

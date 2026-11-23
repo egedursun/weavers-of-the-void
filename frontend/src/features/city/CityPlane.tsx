@@ -23,7 +23,11 @@ import { CONURBATION_GOVERNANCE } from '@/features/cityRules/labels'
 import { RecordRow } from '@/features/cosmography/parts'
 import { hasWebGL2 } from '@/features/cosmos/useCosmosViewSettings'
 import { why } from '@/features/dominion/model'
-import { DISTRICT_SPEC } from '@/features/entity/society/labels'
+import {
+  SIZE_SPEC,
+  WATER_SPEC,
+  DISTRICT_SPEC,
+} from '@/features/entity/society/labels'
 import { KIND_SPEC } from '@/features/entity/society/structureLabels'
 import { Ref } from '@/features/gatherings/parts'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -326,7 +330,7 @@ function CityBody({
             />
           </div>
           <Text variant='caption' tone='muted'>
-            {`A ${scene.tier.replaceAll('_', ' ')}, ${MORPHOLOGIES[scene.morphology].label.toLowerCase()}; walls of level ${scene.walls_level}${scene.walls_radius ? ` ${plural(scene.walls_radius, 'hex', 'hexes')} out` : ''}; roads of level ${scene.roads}; water from ${scene.water.replaceAll('_', ' ')}. Each house drawn stands for ${plural(scene.scale, 'home', 'homes')}, each tent for ${scene.scale} homeless households.${scene.conurbation ? ` Part of one city around ${scene.conurbation.core.name} with ${scene.conurbation.members.map((member) => member.name).join(', ') || 'no other quarter'}, under ${CONURBATION_GOVERNANCE[scene.conurbation.governance]}.` : ''}`}
+            {`A ${SIZE_SPEC[scene.tier].label.toLowerCase()}, ${MORPHOLOGIES[scene.morphology].label.toLowerCase()}; walls of level ${scene.walls_level}${scene.walls_radius ? ` ${plural(scene.walls_radius, 'hex', 'hexes')} out` : ''}; roads of level ${scene.roads}; water from ${WATER_SPEC[scene.water].label.toLowerCase()}. Each house drawn stands for ${plural(scene.scale, 'home', 'homes')}, each tent for ${scene.scale} homeless households.${scene.conurbation ? ` Part of one city around ${scene.conurbation.core.name} with ${scene.conurbation.members.map((member) => member.name).join(', ') || 'no other quarter'}, under ${CONURBATION_GOVERNANCE[scene.conurbation.governance]}.` : ''}`}
           </Text>
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList aria-label='City panel' className='w-full'>

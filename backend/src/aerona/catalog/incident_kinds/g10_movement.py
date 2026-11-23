@@ -5,6 +5,7 @@ from aerona.domain.enums.communication import DispatchContent, Medium
 from aerona.domain.enums.cycles import MobilityMode
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType as E
+from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.means import NavigationAid
 from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.node import ActorKind
@@ -336,7 +337,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "expedition.set_out",
         G.MOVEMENT,
-        "{leader} set out with {companions:companion|companions} into the {ground} of {destination}.",
+        "{leader} set out with {companions:companion|companions} into the {ground} of {destination}, going {mode}.",
         roles=(RoleSpec(R.LEADER), RoleSpec(R.DESTINATION), RoleSpec(R.MEMBER, required=False, many=True), RoleSpec(R.PATRON, required=False)),
         facts=(
             FactSpec("ground", FactValue.ENUM, enum=ExpeditionGround),
@@ -344,6 +345,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             FactSpec("legs", FactValue.NUMBER, FactUnit.COUNT),
             FactSpec("provisions", FactValue.NUMBER, FactUnit.COUNT),
             FactSpec("light", FactValue.NUMBER, FactUnit.COUNT),
+            FactSpec("mode", FactValue.ENUM, enum=MovementMode),
         ),
         place=PlaceRule.REQUIRED,
         clock=C.MARCH,
@@ -432,12 +434,13 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "migration.famine",
         G.MOVEMENT,
-        "Famine drove {migrants:person|people} from {actor} to the lands of {destination}, where they settled {product}.",
+        "Famine drove {migrants:person|people} from {actor} to the lands of {destination}, where they settled {product}; they went {mode}.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.PEOPLE, E.SETTLEMENT, E.POLITY})), RoleSpec(R.DESTINATION), RoleSpec(R.PRODUCT)),
         facts=(
             FactSpec("migrants", FactValue.NUMBER, FactUnit.PEOPLE),
             FactSpec("lost_on_road", FactValue.NUMBER, FactUnit.PEOPLE),
             FactSpec("rebuilt", FactValue.NUMBER, FactUnit.COUNT),
+            FactSpec("mode", FactValue.ENUM, enum=MovementMode),
         ),
         steps=frozenset({A.DEPART, A.TRAVEL, A.ARRIVE, A.SETTLE, A.FOUND}),
         place=PlaceRule.REQUIRED,
@@ -781,9 +784,13 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.lead_expedition",
         G.MOVEMENT,
-        "{leader} set out on an expedition to {destination} with {party:member|members}.",
+        "{leader} set out on an expedition to {destination} with {party:member|members}, going {mode}.",
         roles=(RoleSpec(R.LEADER), RoleSpec(R.DESTINATION), RoleSpec(R.MEMBER, required=False, many=True)),
-        facts=(FactSpec("party", FactValue.NUMBER, FactUnit.PEOPLE), FactSpec("legs", FactValue.NUMBER, FactUnit.COUNT)),
+        facts=(
+            FactSpec("party", FactValue.NUMBER, FactUnit.PEOPLE),
+            FactSpec("legs", FactValue.NUMBER, FactUnit.COUNT),
+            FactSpec("mode", FactValue.ENUM, enum=MovementMode),
+        ),
         steps=frozenset({A.DEPART}),
         chronicle_kind=K.EXPLORATION,
         place=PlaceRule.REQUIRED,

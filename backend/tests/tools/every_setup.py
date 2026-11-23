@@ -5,12 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.agrarian import CommonsRow, GameReserveRow, ReconstructionRow
 from aerona.db.tables.arcana import LawUpkeepRow, VisStockRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.collective import AccountRow, StoryletRunRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionRow, PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.crafts import CatchGroundRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, LegendProfileRow, RiteProfileRow
 from aerona.db.tables.cycles import DivineDebtRow, GiftRow, LongPlanRow
 from aerona.db.tables.demography import CohortRow
@@ -22,7 +24,7 @@ from aerona.db.tables.ecology import HerdRow, SpeciesProductRow, SpeciesProfileR
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.endowments import EndowmentRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import LeyLineRow, WorldSeasonRow
+from aerona.db.tables.environment import LeyLineRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.estates import EstateProfileRow
 from aerona.db.tables.evolution import CarrierRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -31,6 +33,8 @@ from aerona.db.tables.folk_knowledge import FolkClassRow, FolkKnowledgeRow
 from aerona.db.tables.forecasting import ObservationMethodRow
 from aerona.db.tables.fossils import FossilBedRow
 from aerona.db.tables.gatherings import CollectionRow
+from aerona.db.tables.geology import RegionStratumRow
+from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.intimacy import LegitimacyRuleRow
 from aerona.db.tables.intrigue import HookRow, SecretRow, TrueNameRow
@@ -39,7 +43,7 @@ from aerona.db.tables.kin import KinGroupMemberRow, KinGroupRow, KinRoleDutyRow
 from aerona.db.tables.law_depth import LegalSystemRow, OutlawRow, PrisonerRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.media import MediaOutletRow
-from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.mind import GriefRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, ServitorRow
 from aerona.db.tables.operations import EchelonRow, ExpeditionMemberRow, ExpeditionRow, TheatreRow
@@ -63,6 +67,7 @@ from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.db.tables.water import CoastRow
 from aerona.db.tables.works import PublicWorksRow
 from aerona.db.tables.youth import YouthGroupRow, YouthStandingRow
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.agrarian import CommonsKind, RebuildCause
 from aerona.domain.enums.arcana import LawSource, SpellForm
 from aerona.domain.enums.body import BodyPlan
@@ -70,27 +75,30 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.collective import AccountKind, StoryletId, StoryletStatus
 from aerona.domain.enums.cosmography import BeingKind, BeingScale, DimensionKind, PhenomenonCause, PhenomenonKind, RiftCause, RiftState
+from aerona.domain.enums.crafts import CatchGround, Gear
 from aerona.domain.enums.culture import LegendArchetype, MagicSchool, Technique
 from aerona.domain.enums.cycles import GiftState, LongPlanKind
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
-from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
+from aerona.domain.enums.disease import ClimateWarmth
 from aerona.domain.enums.divine import DivineCost, DivineMode, DivineObject, DivineScope, DivineVerb, DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import MagicSiteKind
 from aerona.domain.enums.ecology import AnimalRole, Diet, DomesticationStage, SpeciesClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode, TradeRouteStatus, WorkshopKind
-from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityOrigin, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.faction import FactionKind, FactionRank
 from aerona.domain.enums.folk_knowledge import FolkDomain, FolkTaking
 from aerona.domain.enums.forecasting import ObservationMethod
 from aerona.domain.enums.fossil import FossilSource
 from aerona.domain.enums.gathering import CollectionKind
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.intimacy import ChildLegitimacy, LegitimacyPath
 from aerona.domain.enums.intrigue import HookSource, HookStrength, IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.kin import KinDuty, KinGroupForm, KinRole
 from aerona.domain.enums.law_depth import LegalSystem
-from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import ActKind, GriefStage, SkillKind, SkillSource, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, LifeStage
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRole
@@ -100,6 +108,7 @@ from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
 from aerona.domain.enums.place import PlaceKind, SecretKind, SecretOrigin
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.records import IncidentTier, StepAction, WitnessMode
+from aerona.domain.enums.region import DangerSource
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.sacred import BureauRank, DivinationKind, GeniusLocusKind, MysticState, PetitionKind, TheodicyCause
 from aerona.domain.enums.settlement import DistrictKind, SizeTier
@@ -138,6 +147,9 @@ from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure
 from aerona.engine.cosmos.maps import refresh_world_maps
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.environment.book import add_scar
+from aerona.engine.environment.geology import lay_columns
+from aerona.engine.environment.region_control import set_danger
 from aerona.engine.environment.secrets import draft_for, hide
 from aerona.engine.households.formation import found_household
 from aerona.engine.intimacy.legitimacy import parent_union
@@ -163,6 +175,44 @@ async def surveyed(session: AsyncSession, _realm: Realm) -> Ids:
     await refresh_world_maps(session, context.rules, EPOCH)
     await environment_survey(context)
     return {}
+
+
+async def poisoned_land(session: AsyncSession, realm: Realm) -> Ids:
+    await surveyed(session, realm)
+    ground = await session.get(RegionEnvironmentRow, realm.cosmos.region_id)
+    assert ground is not None
+    add_scar(ground, ScarKind.POISONED, 40)
+    await session.flush()
+    return {}
+
+
+async def dangerous_land(session: AsyncSession, realm: Realm) -> Ids:
+    await surveyed(session, realm)
+    context = await manual_context(session, "danger")
+    await set_danger(session, context.rules, realm.cosmos.region_id, DangerSource.LANDSLIDE, 40, epoch=EPOCH, held=False)
+    await session.flush()
+    return {}
+
+
+async def deep_land(session: AsyncSession, realm: Realm) -> Ids:
+    await surveyed(session, realm)
+    context = await manual_context(session, "deep")
+    await lay_columns(context)
+    region = realm.cosmos.region_id
+    present = set(await session.scalars(select(RegionStratumRow.stratum).where(RegionStratumRow.region_entity_id == region)))
+    for stratum, volume in ((UndergroundStratum.AQUIFER, 0), (UndergroundStratum.RESERVOIR, 60), (UndergroundStratum.MAGMA_SEA, 0)):
+        if stratum not in present:
+            session.add(RegionStratumRow(region_entity_id=region, stratum=stratum, volume=volume, pressure=20, locked=[]))
+    await session.flush()
+    return {}
+
+
+async def shore_ground(session: AsyncSession, realm: Realm) -> Ids:
+    await surveyed(session, realm)
+    region = realm.cosmos.region_id
+    session.add(CatchGroundRow(source_entity_id=region, region_entity_id=region, ground=CatchGround.SHORE_GATHERING, gear=Gear.NETS, locked=[]))
+    await session.flush()
+    return {"source": region}
 
 
 async def buried_secret(session: AsyncSession, realm: Realm) -> Ids:
@@ -1053,13 +1103,13 @@ async def sickness(session: AsyncSession, realm: Realm) -> Ids:
     session.add(
         DiseaseProfileRow(
             disease_entity_id=disease.id,
-            vector=next(iter(DiseaseVector)),
+            primary_route=next(iter(Transmission)),
             virulence=40,
             lethality=20,
             chronic_rate=0,
             incubation=1,
             target_functions=[],
-            climate_affinity=ClimateAffinity.ANY,
+            affinity_warmth=ClimateWarmth.ANY,
             immunity_epochs=4,
             mutation_rate=5,
             stigma=10,
@@ -1405,6 +1455,13 @@ async def owed_gift(session: AsyncSession, realm: Realm) -> Ids:
     return {"gift": gift.id}
 
 
+async def given_gift(session: AsyncSession, realm: Realm) -> Ids:
+    gift = GiftRow(giver_node_id=realm.mortal_id, receiver_node_id=realm.son_id, value=10, state=GiftState.OPEN, due_epoch=5, epoch=1, locked=[])
+    session.add(gift)
+    await session.flush()
+    return {"gift": gift.id}
+
+
 async def devout(session: AsyncSession, realm: Realm) -> Ids:
     await wealthy(session, realm)
     await connect(session, realm.mortal_id, realm.son_id, BondKind.WORSHIPS)
@@ -1417,7 +1474,7 @@ async def bound_town(session: AsyncSession, realm: Realm) -> Ids:
         CohortRow(
             community_entity_id=realm.settlement_id,
             age_band=AgeBand.ADULT,
-            sex=Sex.FEMALE,
+            sex_kind=SexKind.BEARER,
             social_class=SocialClass.SERF_OR_SLAVE,
             condition=CohortCondition.ENSLAVED,
             count=20,
@@ -1503,6 +1560,11 @@ async def land_common(session: AsyncSession, realm: Realm) -> Ids:
     session.add(row)
     await session.flush()
     return {"commons": row.id}
+
+
+async def ruled_common(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    return {**found, **await land_common(session, realm)}
 
 
 async def game_reserve(session: AsyncSession, realm: Realm) -> Ids:
@@ -1655,3 +1717,60 @@ async def witnessed_happening(session: AsyncSession, realm: Realm) -> Ids:
     await connect(session, realm.people_id, realm.son_id, BondKind.WORSHIPS)
     await session.flush()
     return {"incident": incident.id, "step": step.id}
+
+
+async def sworn_friend(session: AsyncSession, realm: Realm) -> Ids:
+    friend = await second_mortal(session, realm)
+    for holder, subject in ((realm.mortal_id, friend["mortal"]), (friend["mortal"], realm.mortal_id)):
+        session.add(
+            RelationshipRow(
+                holder_node_id=holder, subject_node_id=subject, friendship=70, familiarity=60, kinds=[], since_epoch=EPOCH, last_epoch=EPOCH, locked=[]
+            )
+        )
+    await session.flush()
+    return friend
+
+
+async def child_and_house(session: AsyncSession, realm: Realm) -> Ids:
+    found = await child_at_home(session, realm)
+    head = await make_entity(session, "Ilse Moor", EntityType.MORTAL, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)
+    household = HouseholdRow(name="House of Ilse", head_node_id=head.id, settlement_node_id=realm.settlement_id)
+    session.add(household)
+    await session.flush()
+    return {**found, "household": household.id}
+
+
+async def grieving_mortal(session: AsyncSession, realm: Realm) -> Ids:
+    dead = await second_mortal(session, realm)
+    session.add(
+        GriefRow(
+            mourner_node_id=realm.mortal_id,
+            deceased_node_id=dead["mortal"],
+            stage=GriefStage.MOURNING,
+            strength=70,
+            started_epoch=1,
+            stage_epoch=1,
+            length_epochs=2,
+        )
+    )
+    await session.flush()
+    return dead
+
+
+async def afflicted_healer(session: AsyncSession, realm: Realm) -> Ids:
+    healer = await session.get(EntityRow, realm.mortal_id)
+    assert healer is not None
+    healer.mortal_role = MortalRole.HEALER
+    row = AfflictionRow(
+        bearer_node_id=realm.mortal_id,
+        package=PackageKind.TRAUMA,
+        stage=1,
+        since_epoch=1,
+        stage_since_epoch=1,
+        transmission=Transmission.EXPERIENCE,
+        applied={},
+        locked=[],
+    )
+    session.add(row)
+    await session.flush()
+    return {"affliction": row.id}

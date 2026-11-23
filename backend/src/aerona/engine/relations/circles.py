@@ -10,22 +10,28 @@ from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.mind import PreferenceRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.relations import SocialCircleRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held, write_blocked
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faction import FactionKind, FactionRank
-from aerona.domain.enums.mind import PreferenceKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import ActKind, MemoryKind, PreferenceKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction
-from aerona.domain.enums.relations import CircleKind
+from aerona.domain.enums.relations import CircleKind, ContestKind, ContestStake
+from aerona.engine.collective.norms import breach
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import is_locked, mind_of, stored_values, write_values
+from aerona.engine.mind.ethics import conscience
+from aerona.engine.mind.memories import remember
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import ensure_relation, shift
+from aerona.engine.relations.contests import Bout, ContestTally, hold_contest, pass_wealth
 
 VALUE_SPAN = 100
 Interest = tuple[PreferenceKind | None, str | None, ValueAxis | None]
@@ -38,6 +44,8 @@ class CircleTally:
     bonded: int = 0
     spread: int = 0
     disbanded: int = 0
+    matches: int = 0
+    debts: int = 0
 
 
 def kind_for_taste(kind: PreferenceKind) -> CircleKind | None:
@@ -218,3 +226,68 @@ async def tend_circles(ctx: TickContext, place: EntityRow, mortals: list[EntityR
             continue
         await bind(ctx, circle, members, tally)
         await pull(ctx, circle, members, tally)
+        if CIRCLES[circle.kind].wagers:
+            await wager(ctx, circle, members, tally)
+
+
+async def champion(ctx: TickContext, members: list[int]) -> EntityRow | None:
+    profiles = list(await ctx.session.scalars(select(MortalProfileRow).where(MortalProfileRow.entity_id.in_(members)).order_by(MortalProfileRow.entity_id)))
+    best = max(profiles, key=lambda row: (row.renown, -row.entity_id), default=None)
+    return await living_entity(ctx.session, best.entity_id) if best is not None else None
+
+
+async def match_clubs(ctx: TickContext, tally: CircleTally) -> None:
+    clubs = [
+        row
+        for row in await ctx.session.scalars(
+            select(SocialCircleRow)
+            .join(EntityRow, EntityRow.id == SocialCircleRow.faction_entity_id)
+            .where(EntityRow.status == EntityStatus.CANON)
+            .order_by(SocialCircleRow.faction_entity_id)
+        )
+        if CIRCLES[row.kind].fields and not held(row.faction_entity_id)
+    ]
+    for club in clubs:
+        rivals = [row for row in clubs if row.meeting_place_id != club.meeting_place_id and row.faction_entity_id > club.faction_entity_id]
+        if not rivals or not ctx.rng(f"circle.match.{club.faction_entity_id}.{ctx.epoch}").chance(ctx.rules.circles.sport_rivalry_pct):
+            continue
+        rival = rivals[0]
+        ours = await champion(ctx, await members_of(ctx.session, club.faction_entity_id))
+        theirs = await champion(ctx, await members_of(ctx.session, rival.faction_entity_id))
+        if ours is None or theirs is None or ours.id == theirs.id:
+            continue
+        row = await hold_contest(ctx, Bout(ContestKind.RACE, ContestStake.HONOUR, ours, theirs, place_id=club.meeting_place_id), ContestTally())
+        if row is None:
+            continue
+        tally.matches += 1
+        await record(
+            ctx,
+            "circle.match",
+            roles={IncidentRole.ACTOR: club.faction_entity_id, IncidentRole.OPPONENT: rival.faction_entity_id},
+            facts={"outcome": row.outcome},
+            place=club.meeting_place_id,
+        )
+
+
+async def wager(ctx: TickContext, circle: SocialCircleRow, members: list[int], tally: CircleTally) -> None:
+    if len(members) < 2 or not ctx.rng(f"circle.debt.{circle.faction_entity_id}.{ctx.epoch}").chance(ctx.rules.circles.gaming_debt_pct):
+        return
+    loser, winner = ctx.rng(f"circle.debtors.{circle.faction_entity_id}.{ctx.epoch}").sample(members, 2)
+    if held(loser, winner):
+        return
+    await pass_wealth(ctx.session, loser, winner, ctx.rules.contests.wager_wealth)
+    await remember(
+        ctx.session, ctx.rules, holder_id=loser, subject_id=winner, kind=MemoryKind.ILL_WILL, magnitude=-ctx.rules.contests.wager_wealth, epoch=ctx.epoch
+    )
+    stance = await conscience(ctx, winner, ActKind.USURY, loser)
+    place = await ctx.session.get(SettlementProfileRow, circle.meeting_place_id) if circle.meeting_place_id is not None else None
+    if stance is not None and breach(stance) and place is not None and "crime" not in place.locked:
+        place.crime = clamp_int(place.crime + ctx.rules.contests.wager_wealth, 0, PERCENT)
+    tally.debts += 1
+    await record(
+        ctx,
+        "circle.debt",
+        roles={IncidentRole.ACTOR: loser, IncidentRole.TARGET: winner, IncidentRole.SUBJECT: circle.faction_entity_id},
+        facts={"debt": ctx.rules.contests.wager_wealth},
+        place=circle.meeting_place_id,
+    )

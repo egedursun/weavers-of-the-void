@@ -18,6 +18,7 @@ from aerona.engine.genetics.pools import leaned
 from aerona.engine.mortal.kin import parents_of
 
 WIDEN_FIXUP = "genetics.loci_widened"
+W52_FIXUP = "genetics.w52"
 GENES = "genes"
 FREQUENCIES = "frequencies"
 
@@ -58,8 +59,8 @@ async def widen_genome(ctx: TickContext, mortal: EntityRow, genome: GenomeRow) -
     return True
 
 
-async def widen_loci(ctx: TickContext) -> tuple[int, int]:
-    if await ctx.session.get(AppliedFixupRow, WIDEN_FIXUP) is not None:
+async def widen_loci(ctx: TickContext, key: str = WIDEN_FIXUP) -> tuple[int, int]:
+    if await ctx.session.get(AppliedFixupRow, key) is not None:
         return 0, 0
     pools = 0
     for pool in list(await ctx.session.scalars(select(AllelePoolRow).order_by(AllelePoolRow.people_node_id))):
@@ -73,6 +74,6 @@ async def widen_loci(ctx: TickContext) -> tuple[int, int]:
     )
     for mortal, genome in list(await ctx.session.execute(statement)):
         genomes += await widen_genome(ctx, mortal, genome)
-    ctx.session.add(AppliedFixupRow(key=WIDEN_FIXUP, result={"pools": pools, "genomes": genomes}))
+    ctx.session.add(AppliedFixupRow(key=key, result={"pools": pools, "genomes": genomes}))
     await ctx.session.flush()
     return pools, genomes

@@ -64,6 +64,7 @@ export type CycleAction =
   | 'gift:give'
   | 'gift:return'
   | 'gift:refuse'
+  | 'gift:release'
   | 'gift:edit'
   | 'gift:delete'
   | 'circuit:create'

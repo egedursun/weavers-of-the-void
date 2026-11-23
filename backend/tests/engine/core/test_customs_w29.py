@@ -13,6 +13,7 @@ from aerona.db.tables.customs import (
     CommuteRow,
     CooperativeRow,
     EvidenceRow,
+    GradeDutyRow,
     IntoxicantCustomRow,
     MarkCustomRow,
     MeasureStandardRow,
@@ -41,6 +42,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.customs import (
     AgeGrade,
     CoopPurpose,
+    GradeDuty,
     Intoxicant,
     IntoxicantUse,
     MarkKind,
@@ -49,9 +51,9 @@ from aerona.domain.enums.customs import (
     Membership,
     NamingPattern,
     ReliefKind,
-    RevivalAim,
     RevivalGoal,
     RevivalStage,
+    RevivalWay,
 )
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import GatheringKind
@@ -68,7 +70,7 @@ from aerona.engine.body.afflictions import active
 from aerona.engine.context import TickContext
 from aerona.engine.customs.age_sets import AgeSetTally, keep_age_sets
 from aerona.engine.customs.civics import CivicsTally, keep_civics
-from aerona.engine.customs.grades import too_young_to_wed, warriors_ready
+from aerona.engine.customs.grades import too_young_to_wed
 from aerona.engine.customs.intoxicants import IntoxicationTally, keep_intoxication
 from aerona.engine.customs.marks import MarkTally, keep_marks
 from aerona.engine.customs.naming import NamingTally, keep_naming
@@ -121,10 +123,11 @@ async def test_a_pressed_people_raises_a_movement_that_passes_its_stages(session
     tally = RevivalTally()
     await keep_revivals(await at(session, 3), tally)
     row = await session.scalar(select(RevivalRow).where(RevivalRow.people_entity_id == folk.id))
-    assert row is not None and row.aim is RevivalAim.RESTORE and row.stage is RevivalStage.STRESS and tally.begun == 1
+    assert row is not None and row.way in RevivalWay and row.stage is RevivalStage.STRESS and tally.begun == 1
     for epoch in range(4, 8):
         await keep_revivals(await at(session, epoch, revivals={"stage_gain": 100}), tally)
-    assert row.stage is RevivalStage.NEW_STEADY and row.ended_epoch is not None and tally.settled == 1
+    row = await session.scalar(select(RevivalRow).where(RevivalRow.people_entity_id == folk.id))
+    assert row is not None and row.stage is RevivalStage.NEW_STEADY and row.ended_epoch is not None and tally.settled == 1
 
 
 async def test_daily_intoxicants_breed_dependence(session: AsyncSession, world: CoreWorld) -> None:
@@ -211,7 +214,7 @@ async def test_youths_form_an_age_set_that_may_not_wed_and_rises_to_warriors(ses
     assert member is not None and tally.initiated == 2 and await too_young_to_wed(session, first, second)
     await keep_age_sets(await at(session, 6, age_sets={"span_years": 50, "grade_years": 50}), tally)
     found = await session.get(AgeSetRow, member.age_set_id)
-    assert found is not None and found.grade is AgeGrade.WARRIORS and await warriors_ready(session, folk.id)
+    assert found is not None and found.grade is AgeGrade.YOUNG_ADULTS
     ceremony = await session.scalar(select(GatheringRow).where(GatheringRow.host_node_id == folk.id, GatheringRow.kind == GatheringKind.MILESTONE))
     assert ceremony is not None
 
@@ -298,9 +301,11 @@ async def test_customs_reach_minds_and_integrity_ends_movements_of_vanished_peop
     reader = await mortal(session, "Mira", world, town.id)
     session.add(profile(reader.id))
     session.add(BodyMarkRow(holder_node_id=reader.id, kind=MarkKind.SCAR, meaning=MarkMeaning.DEED, placed_epoch=1, locked=[]))
+    session.add(NamingCustomRow(people_entity_id=folk.id, pattern=NamingPattern.CLAN, locked=[]))
+    session.add(GradeDutyRow(people_entity_id=folk.id, duty=GradeDuty.HERDING, grade=AgeGrade.YOUTHS, locked=[]))
     session.add(
         RevivalRow(
-            people_entity_id=folk.id, aim=RevivalAim.RESTORE, goal=RevivalGoal.REVIVE_LANGUAGE, stage=RevivalStage.DISTORTION, started_epoch=1, locked=[]
+            people_entity_id=folk.id, way=RevivalWay.RESTORE, goal=RevivalGoal.REVIVE_LANGUAGE, stage=RevivalStage.DISTORTION, started_epoch=1, locked=[]
         )
     )
     session.add(
@@ -315,8 +320,10 @@ async def test_customs_reach_minds_and_integrity_ends_movements_of_vanished_peop
     await session.flush()
     scope = await load_scope(session, tuned_rules())
     lines = await mortal_customs_lines(scope, reader)
-    assert any("scar" in line for line in lines) and any("revive language" in line for line in lines)
-    assert any("revive language" in line for line in await son_customs_lines(scope, world.son))
+    assert any("scar" in line for line in lines) and any("revive the language" in line for line in lines)
+    assert "how your people name: named for the clan" in lines
+    assert "among your people the grade of youths carries the duty of herding" in lines
+    assert any("revive the language" in line for line in await son_customs_lines(scope, world.son))
     assert await poverty_relief(session, tuned_rules(), town.id) > 0
     folk.status, folk.end_epoch = EntityStatus.DESTROYED, 4
     await session.flush()
@@ -333,7 +340,7 @@ async def test_a_movement_restores_the_old_god_or_is_put_down_by_the_realm_that_
     await session.flush()
     row = RevivalRow(
         people_entity_id=folk.id,
-        aim=RevivalAim.RESTORE,
+        way=RevivalWay.RESTORE,
         stage=RevivalStage.REVITALISATION,
         goal=RevivalGoal.RESTORE_GOD,
         strength=0,
@@ -407,7 +414,7 @@ async def test_a_corvee_turns_work_into_service_rest_breeds_children_and_youths_
     session.add(AgeSetMemberRow(mortal_entity_id=youth.id, age_set_id=young_set.id, locked=[]))
     await session.flush()
     assert Profession.SOLDIER.value in await unarmed(session, youth.id)
-    young_set.grade = AgeGrade.WARRIORS
+    young_set.grade = AgeGrade.YOUNG_ADULTS
     await session.flush()
     assert await unarmed(session, youth.id) == frozenset()
 

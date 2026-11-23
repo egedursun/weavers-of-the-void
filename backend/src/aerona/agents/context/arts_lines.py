@@ -1,12 +1,14 @@
 from sqlalchemy import select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.catalog.life.agents import OPEN
-from aerona.core.grammar import several
-from aerona.db.tables.arts import ArtPriceRow, ClubRow, CollectorRow, ForgeryRow
+from aerona.catalog.market_kinds import CLUBS, FORGERIES, ROLES, WAYS
+from aerona.core.grammar import several, spoken
+from aerona.db.tables.arts import ArtPriceRow, ClubRow, CollectorRow, ForgeryRow, MatchRow
 from aerona.db.tables.constructs import ConstructRow, InstructionSetRow, RemadeRow
 from aerona.db.tables.contracts import MonsterContractRow
+from aerona.db.tables.crafts import IncorporealRightRow
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -26,7 +28,7 @@ async def work_lines(scope: Scope, me: EntityRow) -> list[str]:
     found: list[str] = []
     collector = await session.get(CollectorRow, me.id)
     if collector is not None:
-        found.append(f"you deal in works as {words(collector.role.value)}, with an eye of {collector.connoisseurship}")
+        found.append(f"you work in the art market as {ROLES[collector.role].label.lower()}, with an eye of {collector.connoisseurship}")
     for profile, price in await session.execute(
         select(ArtworkProfileRow, ArtPriceRow)
         .join(ArtPriceRow, ArtPriceRow.artwork_entity_id == ArtworkProfileRow.artwork_entity_id)
@@ -38,7 +40,11 @@ async def work_lines(scope: Scope, me: EntityRow) -> list[str]:
     for row in await session.scalars(
         select(ForgeryRow).where(ForgeryRow.forger_entity_id == me.id, ForgeryRow.status == ForgeryStatus.HIDDEN).order_by(ForgeryRow.id).limit(LIST_LINES)
     ):
-        found.append(f"your forgery of {await named(scope, row.original_entity_id)} still passes for the real thing")
+        found.append(f"your forgery of {await named(scope, row.original_entity_id)} ({FORGERIES[row.kind].label.lower()}) still passes for the real thing")
+    for right in await session.scalars(
+        select(IncorporealRightRow).where(IncorporealRightRow.holder_node_id == me.id).order_by(IncorporealRightRow.id).limit(LIST_LINES)
+    ):
+        found.append(f"you hold the right to {right.name} ({spoken(right.kind)}), gained as {WAYS[right.acquired].label.lower()}")
     return found
 
 
@@ -47,14 +53,14 @@ async def body_lines(scope: Scope, me: EntityRow) -> list[str]:
     found: list[str] = []
     remade = await session.get(RemadeRow, me.id)
     if remade is not None:
-        taken = words(remade.lost_function.value) if remade.lost_function is not None else "nothing"
-        given = words(remade.forced_function.value) if remade.forced_function is not None else "nothing"
+        taken = spoken(remade.lost_function) if remade.lost_function is not None else "nothing"
+        given = spoken(remade.forced_function) if remade.forced_function is not None else "nothing"
         found.append(f"the law remade your body: it took your {taken} and forced {given} on you; grievance {remade.grievance}")
     sign = await session.get(BirthSignRow, me.id)
     if sign is not None:
         ruler = await named(scope, sign.ruling_celestial_entity_id) if sign.ruling_celestial_entity_id is not None else "no body of the sky"
         dread = "a dreaded sign" if sign.dreaded else "an ordinary sign"
-        found.append(f"you were born under {dread} ruled by {ruler}, {words(sign.influence.value)}, fortune {sign.fortune}")
+        found.append(f"you were born under {dread} ruled by {ruler}, {spoken(sign.influence)}, fortune {sign.fortune}")
     for rules, body in await session.execute(
         select(InstructionSetRow, EntityRow)
         .join(EntityRow, EntityRow.id == InstructionSetRow.owner_entity_id)
@@ -64,9 +70,9 @@ async def body_lines(scope: Scope, me: EntityRow) -> list[str]:
     ):
         construct = await session.get(ConstructRow, body.id)
         mind = await session.get(MindProfileRow, body.id)
-        will = words(mind.will.value) if mind is not None else "unknown"
+        will = spoken(mind.will) if mind is not None else "unknown"
         state = f": power {construct.power}, decay {construct.decay}, will {will}" if construct is not None else ""
-        found.append(f"{body.name} (construct {body.id}) answers you through its {words(rules.command_token.value)}{state}")
+        found.append(f"{body.name} (construct {body.id}) answers you through its {spoken(rules.command_token)}{state}")
     return found
 
 
@@ -97,10 +103,20 @@ async def club_lines(scope: Scope, town: EntityRow) -> list[str]:
         .order_by(ClubRow.fandom.desc())
         .limit(LIST_LINES)
     ):
-        line = f", its fans split by {words(club.line.value)}" if club.line.value != "none" else ""
+        line = f", its fans split by {spoken(club.line)}" if club.line.value != "none" else ""
         wins_counted = several(club.wins, "win", "wins")
         losses_counted = several(club.losses, "loss", "losses")
-        found.append(f"{await named(scope, profile.faction_entity_id)} plays in your town: {wins_counted}, {losses_counted}, fandom {club.fandom}{line}")
+        kind = CLUBS[club.kind].label.lower()
+        found.append(
+            f"{await named(scope, profile.faction_entity_id)} ({kind}) plays in your town: {wins_counted}, {losses_counted}, fandom {club.fandom}{line}"
+        )
+        exposed = await scope.session.scalar(
+            select(MatchRow.id)
+            .where(MatchRow.fixing_exposed.is_(True), (MatchRow.home_entity_id == club.faction_entity_id) | (MatchRow.away_entity_id == club.faction_entity_id))
+            .limit(1)
+        )
+        if exposed is not None:
+            found.append(f"{await named(scope, profile.faction_entity_id)} is suspected of fixed contests")
     return found
 
 
@@ -128,7 +144,7 @@ async def son_arts_lines(scope: Scope, son: SonRow) -> list[str]:
         .limit(LIST_LINES)
     ):
         mind = await session.get(MindProfileRow, body.id)
-        will = words(mind.will.value) if mind is not None else "unknown"
+        will = spoken(mind.will) if mind is not None else "unknown"
         found.append(f"{body.name} (construct {body.id}): power {construct.power}, decay {construct.decay}, will {will}")
     for row, beast in await session.execute(
         select(MonsterContractRow, EntityRow)
@@ -137,7 +153,7 @@ async def son_arts_lines(scope: Scope, son: SonRow) -> list[str]:
         .order_by(MonsterContractRow.id)
         .limit(LIST_LINES)
     ):
-        found.append(f"a bounty of {several(row.bounty, 'stand', 'stands')} on {beast.name} ({words(row.status.value)})")
+        found.append(f"a bounty of {several(row.bounty, 'stand', 'stands')} on {beast.name} ({spoken(row.status)})")
     hidden = list(
         await session.execute(
             select(ForgeryRow, EntityRow)

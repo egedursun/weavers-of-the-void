@@ -233,7 +233,7 @@ async def set_level(scope: PlayerScope, command: HolderLevel) -> Effect:
 async def set_technique(scope: PlayerScope, command: HolderTechnique) -> Effect:
     ctx = await scope.context("research_technique")
     row = await control.set_technique(ctx, command.holder_id, command.technique, held=command.held, secret=command.secret)
-    label = command.technique.value.replace("_", " ")
+    label = spoken(command.technique)
     return Effect(f"They know {label}." if row is not None else f"They forget {label}.", command.holder_id)
 
 
@@ -250,7 +250,7 @@ async def set_focus(scope: PlayerScope, command: ResearchFocus) -> Effect:
 async def set_institution(scope: PlayerScope, command: Institution) -> Effect:
     ctx = await scope.context("research_institution")
     row = await research_control.set_institution(ctx, command.community_id, command.technique, command.values, command.release, present=command.present)
-    label = command.technique.value.replace("_", " ")
+    label = spoken(command.technique)
     if row is None:
         return Effect(f"{label.capitalize()} is gone from there.", command.community_id)
     return Effect(f"{label.capitalize()} is {'embraced' if row.embraced else 'known but refused'} there.", command.community_id)
@@ -277,7 +277,7 @@ async def remove_boost(scope: PlayerScope, command: BoostTarget) -> Effect:
 @player_action("creed:tenet", ActionKind.EDIT_RECORD)
 async def set_creed_tenet(scope: PlayerScope, command: CreedTenet) -> Effect:
     row = await control.set_creed_tenet(await scope.context("creed_tenet"), command.ideology_id, command.tenet, held=command.held)
-    label = command.tenet.value.replace("_", " ")
+    label = spoken(command.tenet)
     return Effect(f"The creed teaches {label}." if row is not None else f"The creed casts off {label}.", command.ideology_id)
 
 
@@ -304,7 +304,7 @@ async def devise_rite(scope: PlayerScope, command: DeviseRite) -> Effect:
 async def set_rite_effect(scope: PlayerScope, command: RiteEffect) -> Effect:
     shape = control.EffectShape(command.detail, command.damage_type, command.summon_form, command.custom_kind_id)
     row = await control.set_rite_effect(await scope.context("rite_effect"), command.rite_id, command.effect, command.magnitude, shape)
-    label = command.effect.value.replace("_", " ")
+    label = spoken(command.effect)
     return Effect(f"The rite works {label} at {row.magnitude}." if row is not None else f"The rite no longer works {label}.", command.rite_id)
 
 
@@ -323,7 +323,7 @@ async def resolve_prophecy(scope: PlayerScope, command: ResolveProphecy) -> Effe
 @player_action("item:enchant", ActionKind.EDIT_RECORD)
 async def set_enchantment(scope: PlayerScope, command: Enchantment) -> Effect:
     row = await control.set_enchantment(await scope.context("item_enchant"), command.item_id, command.effect, command.strength)
-    label = command.effect.value.replace("_", " ")
+    label = spoken(command.effect)
     return Effect(f"It holds {label} at {row.strength}." if row is not None else f"The {label} fades from it.", command.item_id)
 
 

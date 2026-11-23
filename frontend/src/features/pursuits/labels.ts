@@ -1,4 +1,5 @@
 import {
+  type LucideIcon,
   Anvil,
   Ban,
   Bird,
@@ -12,6 +13,7 @@ import {
   CircleDot,
   CircleHelp,
   CircleX,
+  Coins,
   Copy,
   Crown,
   Dumbbell,
@@ -21,6 +23,7 @@ import {
   Footprints,
   Gavel,
   Gem,
+  GitBranch,
   GraduationCap,
   Hammer,
   Handshake,
@@ -30,14 +33,15 @@ import {
   KeyRound,
   Landmark,
   Link,
-  type LucideIcon,
   Map as MapIcon,
   MessageSquare,
+  MessageSquareQuote,
   Mountain,
   Network,
   Package,
   Palette,
   PauseCircle,
+  PawPrint,
   Pickaxe,
   Radio,
   Repeat,
@@ -74,6 +78,9 @@ export const MARKET_ROLES: Record<Schema['ArtMarketRole'], Named> = {
   dealer: { label: 'Dealer', icon: Briefcase, tone: 'info' },
   patron: { label: 'Patron', icon: Crown, tone: 'verdigris' },
   connoisseur: { label: 'Connoisseur', icon: Eye, tone: 'success' },
+  curator: { label: 'Curator', icon: Landmark, tone: 'gold' },
+  critic: { label: 'Critic', icon: MessageSquareQuote, tone: 'warning' },
+  forger: { label: 'Forger', icon: Stamp, tone: 'danger' },
 }
 
 export const FORGERY_KINDS: Record<Schema['ForgeryKind'], Named> = {
@@ -81,6 +88,9 @@ export const FORGERY_KINDS: Record<Schema['ForgeryKind'], Named> = {
   relic: { label: 'A relic', icon: Sparkles, tone: 'verdigris' },
   document: { label: 'A charter', icon: FileSignature, tone: 'info' },
   brand: { label: 'A brand', icon: Stamp, tone: 'warning' },
+  coin: { label: 'False coin', icon: Coins, tone: 'warning' },
+  lineage: { label: 'A forged lineage', icon: GitBranch, tone: 'danger' },
+  seal: { label: 'A forged seal', icon: Stamp, tone: 'info' },
 }
 
 export const FORGERY_STATUS: Record<Schema['ForgeryStatus'], Named> = {
@@ -101,6 +111,8 @@ export const CLUB_KINDS: Record<Schema['ClubKind'], Named> = {
   racing: { label: 'Racing', icon: Footprints, tone: 'success' },
   combat: { label: 'Combat', icon: Swords, tone: 'danger' },
   athletics: { label: 'Athletics', icon: Dumbbell, tone: 'gold' },
+  animal_contest: { label: 'Animal contests', icon: PawPrint, tone: 'warning' },
+  mind_games: { label: 'Games of the mind', icon: Brain, tone: 'verdigris' },
 }
 
 export const FANDOM_LINES: Record<Schema['FandomLine'], Named> = {

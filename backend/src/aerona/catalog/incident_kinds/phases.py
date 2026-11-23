@@ -106,6 +106,7 @@ PHASE_NAMES: tuple[str, ...] = (
     "plant_bodies",
     "body_systems",
     "disease_agents",
+    "disease_paths",
     "securities",
     "leagues",
     "departures",

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Medallion, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { why } from '@/features/dominion/model'
+import { TECHNIQUE_WORDS } from '@/features/entity/affairs/labels'
 import { type ErasNodeView, useEraAction } from './api'
 import { CHANNELS, ERAS } from './labels'
 import { signed } from './model'
@@ -73,7 +74,7 @@ function TechniqueTile({
           <Muted variant='caption'>{row.effect}</Muted>
           {missing.length > 0 && (
             <Muted variant='caption'>
-              {`Needs ${missing.map((item) => labels[item] ?? item.replaceAll('_', ' ')).join(', ')}`}
+              {`Needs ${missing.map((item) => labels[item] ?? TECHNIQUE_WORDS[item]).join(', ')}`}
             </Muted>
           )}
         </div>

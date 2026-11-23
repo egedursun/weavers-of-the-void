@@ -1,4 +1,4 @@
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.culture import LanguageRegister, SpeakerKind, TraditionEffectKind
 from aerona.engine.lore import culture_control
@@ -71,7 +71,7 @@ async def release_participation(scope: PlayerScope, command: KeeperTarget) -> Ef
 async def set_tradition_effect(scope: PlayerScope, command: TraditionEffect) -> Effect:
     ctx = await scope.context("tradition_effect")
     row = await culture_control.set_tradition_effect(ctx, command.tradition_id, command.effect, command.target, command.magnitude)
-    label = command.effect.value.replace("_", " ")
+    label = spoken(command.effect)
     return Effect(f"It brings {label} at {row.magnitude}." if row is not None else f"It no longer brings {label}.", command.tradition_id)
 
 

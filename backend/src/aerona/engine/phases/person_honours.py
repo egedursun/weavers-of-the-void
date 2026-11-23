@@ -14,6 +14,7 @@ from aerona.engine.phase import Phase
     "table.honours_held",
     "table.node_births",
     "table.nodes",
+    "table.offices",
     "table.org_governance",
     "table.polity_profiles",
     "table.traits",

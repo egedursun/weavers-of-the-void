@@ -29,12 +29,12 @@ from aerona.domain.enums.couplings import (
     SealKind,
     SignCause,
     SociolectKind,
-    TeachingKind,
     TeachingState,
 )
 from aerona.domain.enums.culture import ArtMode, MagicSchool, MagicSource
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.son import SonStatus
@@ -153,10 +153,10 @@ async def test_a_spirit_teaches_its_living_kin_a_rite_unless_the_creator_forbids
         )
         await connect(ctx.session, shade.id, elder.id, BondKind.DESCENDS_FROM, 1)
         await control.block_teaching(ctx, shade.id, folk.id)
-        assert await lesson(ctx, shade, folk, kinds=(TeachingKind.RITE,)) is None
-        row = await control.grant_teaching(ctx, shade.id, folk.id, TeachingKind.RITE)
+        assert await lesson(ctx, shade, folk, kinds=(KnowledgeKind.RITE,)) is None
+        row = await control.grant_teaching(ctx, shade.id, folk.id, KnowledgeKind.RITE)
         assert row.state is TeachingState.TAUGHT and row.subject_node_id == rite_id
-        owns = await ctx.session.scalar(select(TeachingRow.id).where(TeachingRow.learner_entity_id == folk.id, TeachingRow.kind == TeachingKind.RITE))
+        owns = await ctx.session.scalar(select(TeachingRow.id).where(TeachingRow.learner_entity_id == folk.id, TeachingRow.kind == KnowledgeKind.RITE))
         assert owns == row.id
 
 
@@ -173,7 +173,7 @@ async def test_an_elder_beast_remembers_tells_and_takes_its_memory_when_it_dies(
         memory = await control.grant_lore(ctx, beast.id, happening.id)
         assert memory.kind is AccountKind.ELDER_MEMORY
         told = await control.reveal_lore(ctx, beast.id, folk.id)
-        assert told.kind is TeachingKind.ACCOUNT
+        assert told.kind is KnowledgeKind.ACCOUNT
         assert await memory_dies(ctx, beast) >= 1
         assert await ctx.session.scalar(select(AccountRow.id).where(AccountRow.holder_entity_id == beast.id)) is None
         assert await ctx.session.scalar(select(AccountRow.id).where(AccountRow.holder_entity_id == folk.id)) is not None

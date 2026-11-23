@@ -1,13 +1,17 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.core.total import total
 from aerona.domain.enums.body_systems import BodySystem, Sensitivity
 from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.environment import SoilKind
 from aerona.domain.enums.fossil import Preservation
+from aerona.domain.enums.geology import RockKind
 from aerona.domain.enums.plants import PlantReproduction
 from aerona.domain.enums.space_weather import SpaceWeatherKind
 from aerona.domain.enums.water import CoastForm, LocalClimateCause, SedimentCarrier, SedimentKind
+from aerona.rules.registry import Rules
 
 
 @dataclass(frozen=True)
@@ -38,7 +42,8 @@ class SpaceWeatherSpec:
 @dataclass(frozen=True)
 class CoastSpec:
     label: str
-    wear_pct: int
+    build: Callable[[Rules], int]
+    wear: Callable[[Rules], int]
     silting_pct: int
 
 
@@ -58,7 +63,11 @@ class CarrierSpec:
 @dataclass(frozen=True)
 class SedimentSpec:
     label: str
-    fertility_pct: int
+    fertility: Callable[[Rules], int]
+    fill: Callable[[Rules], int]
+    carriers: frozenset[SedimentCarrier]
+    soil: SoilKind
+    rock: RockKind
 
 
 @dataclass(frozen=True)
@@ -130,14 +139,19 @@ C = CoastForm
 COAST_FORMS: MappingProxyType[CoastForm, CoastSpec] = total(
     C,
     {
-        C.CLIFF: CoastSpec("Cliff", 50, 50),
-        C.BEACH: CoastSpec("Beach", 150, 100),
-        C.DELTA: CoastSpec("Delta", 100, 150),
-        C.MARSH: CoastSpec("Marsh", 80, 150),
-        C.REEF: CoastSpec("Reef", 30, 80),
-        C.ICE_SHELF: CoastSpec("Ice shelf", 200, 30),
-        C.FJORD: CoastSpec("Fjord", 40, 30),
-        C.LAGOON: CoastSpec("Lagoon", 60, 200),
+        C.CLIFF: CoastSpec("Cliff", lambda rules: rules.coasts.cliff_build_rate, lambda rules: rules.coasts.cliff_wear_rate, 50),
+        C.BEACH: CoastSpec("Beach", lambda rules: rules.coasts.beach_build_rate, lambda rules: rules.coasts.beach_wear_rate, 100),
+        C.DELTA: CoastSpec("Delta", lambda rules: rules.coasts.delta_build_rate, lambda rules: rules.coasts.delta_wear_rate, 150),
+        C.MARSH: CoastSpec("Marsh", lambda rules: rules.coasts.marsh_build_rate, lambda rules: rules.coasts.marsh_wear_rate, 150),
+        C.REEF: CoastSpec("Reef", lambda rules: rules.coasts.reef_build_rate, lambda rules: rules.coasts.reef_wear_rate, 80),
+        C.ICE_SHELF: CoastSpec("Ice shelf", lambda rules: rules.coasts.ice_shelf_build_rate, lambda rules: rules.coasts.ice_shelf_wear_rate, 30),
+        C.FJORD: CoastSpec("Fjord", lambda rules: rules.coasts.fjord_build_rate, lambda rules: rules.coasts.fjord_wear_rate, 30),
+        C.LAGOON: CoastSpec("Lagoon", lambda rules: rules.coasts.lagoon_build_rate, lambda rules: rules.coasts.lagoon_wear_rate, 200),
+        C.ESTUARY: CoastSpec("Estuary", lambda rules: rules.coasts.estuary_build_rate, lambda rules: rules.coasts.estuary_wear_rate, 160),
+        C.MANGROVE: CoastSpec("Mangrove", lambda rules: rules.coasts.mangrove_build_rate, lambda rules: rules.coasts.mangrove_wear_rate, 120),
+        C.BARRIER_ISLAND: CoastSpec(
+            "Barrier island", lambda rules: rules.coasts.barrier_island_build_rate, lambda rules: rules.coasts.barrier_island_wear_rate, 60
+        ),
     },
 )
 
@@ -157,11 +171,70 @@ K = SedimentKind
 SEDIMENTS: MappingProxyType[SedimentKind, SedimentSpec] = total(
     K,
     {
-        K.SILT: SedimentSpec("Silt", 150),
-        K.SAND: SedimentSpec("Sand", 50),
-        K.GRAVEL: SedimentSpec("Gravel", 30),
-        K.VOLCANIC: SedimentSpec("Volcanic ash", 200),
-        K.ORGANIC: SedimentSpec("Organic matter", 180),
+        K.SILT: SedimentSpec(
+            "Silt",
+            lambda rules: rules.sediment.silt_fertility,
+            lambda rules: rules.sediment.silt_fill,
+            frozenset({SedimentCarrier.RIVER, SedimentCarrier.WIND}),
+            SoilKind.SILT,
+            RockKind.SHALE,
+        ),
+        K.SAND: SedimentSpec(
+            "Sand",
+            lambda rules: rules.sediment.sand_fertility,
+            lambda rules: rules.sediment.sand_fill,
+            frozenset({SedimentCarrier.WIND, SedimentCarrier.WAVE, SedimentCarrier.RIVER}),
+            SoilKind.SAND,
+            RockKind.SANDSTONE,
+        ),
+        K.GRAVEL: SedimentSpec(
+            "Gravel",
+            lambda rules: rules.sediment.gravel_fertility,
+            lambda rules: rules.sediment.gravel_fill,
+            frozenset({SedimentCarrier.ICE, SedimentCarrier.SLOPE, SedimentCarrier.RIVER}),
+            SoilKind.THIN,
+            RockKind.SANDSTONE,
+        ),
+        K.VOLCANIC: SedimentSpec(
+            "Volcanic ash",
+            lambda rules: rules.sediment.volcanic_fertility,
+            lambda rules: rules.sediment.volcanic_fill,
+            frozenset({SedimentCarrier.WIND, SedimentCarrier.SLOPE}),
+            SoilKind.TEPHRA,
+            RockKind.TUFF,
+        ),
+        K.ORGANIC: SedimentSpec(
+            "Organic matter",
+            lambda rules: rules.sediment.organic_fertility,
+            lambda rules: rules.sediment.organic_fill,
+            frozenset({SedimentCarrier.RIVER, SedimentCarrier.WAVE}),
+            SoilKind.PEAT,
+            RockKind.COAL,
+        ),
+        K.CLAY: SedimentSpec(
+            "Clay",
+            lambda rules: rules.sediment.clay_fertility,
+            lambda rules: rules.sediment.clay_fill,
+            frozenset({SedimentCarrier.RIVER, SedimentCarrier.WAVE}),
+            SoilKind.CLAY,
+            RockKind.SHALE,
+        ),
+        K.CARBONATE: SedimentSpec(
+            "Carbonate",
+            lambda rules: rules.sediment.carbonate_fertility,
+            lambda rules: rules.sediment.carbonate_fill,
+            frozenset({SedimentCarrier.WAVE}),
+            SoilKind.CALCAREOUS,
+            RockKind.LIMESTONE,
+        ),
+        K.EVAPORITE: SedimentSpec(
+            "Evaporite",
+            lambda rules: rules.sediment.evaporite_fertility,
+            lambda rules: rules.sediment.evaporite_fill,
+            frozenset({SedimentCarrier.RIVER, SedimentCarrier.WIND}),
+            SoilKind.SALINE,
+            RockKind.HALITE,
+        ),
     },
 )
 

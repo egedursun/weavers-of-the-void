@@ -5,6 +5,7 @@ from aerona.db.tables.warfare import BattleRow
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.season_shape import season_of_index
 
 BATTLE_FIXUP = "environment.battle_ground"
 
@@ -27,7 +28,7 @@ async def backfill_battle_ground(ctx: TickContext) -> int:
         if region is None:
             continue
         seasons = book.seasons_of(region.world_id)
-        season = seasons[battle.year % len(seasons)] if seasons else None
+        season = season_of_index(seasons, battle.year)
         if battle.terrain is None:
             battle.terrain = place.terrain if place is not None and place.terrain is not None else region.dominant_terrain
         if battle.season_name is None and season is not None:

@@ -10,8 +10,10 @@ REMNANT_KIND = total(
             checked_by=(),
             used_by=("db.tables.mass_weapons.WarRemnantRow", "engine.mass_weapons.book.REMNANT_OF", "engine.mass_weapons.remnants.LAND_ARMS"),
         ),
-        RemnantKind.POISONED_GROUND: Defined("Poisoned ground", checked_by=(), used_by=("engine.mass_weapons.book.REMNANT_OF",)),
-        RemnantKind.FALLOUT: Defined("Fallout", checked_by=(), used_by=("engine.mass_weapons.book.REMNANT_OF",)),
+        RemnantKind.POISONED_GROUND: Defined(
+            "Poisoned ground", checked_by=(), used_by=("engine.mass_weapons.book.REMNANT_OF", "engine.mass_weapons.remnants.POISONING")
+        ),
+        RemnantKind.FALLOUT: Defined("Fallout", checked_by=(), used_by=("engine.mass_weapons.book.REMNANT_OF", "engine.mass_weapons.remnants.POISONING")),
         RemnantKind.WRECK_FIELD: Defined("Field of wrecks", checked_by=(), used_by=("engine.mass_weapons.remnants.left_by",)),
         RemnantKind.UNQUIET_DEAD: Defined("Unquiet dead", checked_by=(), used_by=("engine.mass_weapons.remnants.LAND_ARMS",)),
         RemnantKind.CURSED_GROUND: Defined("Cursed ground", checked_by=(), used_by=("engine.mass_weapons.book.REMNANT_OF",)),

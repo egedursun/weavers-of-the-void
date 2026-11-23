@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mass_weapons import MassWeaponRow
 from aerona.db.write_guard import held
@@ -9,6 +10,7 @@ from aerona.domain.enums.mass_weapons import MassHarm, MassReach
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
+from aerona.engine.environment.long_seasons import made_spell
 from aerona.engine.mass_weapons.book import BURNING, KILL_WEIGHT, REACH_RANK, REMNANT_OF, ArsenalTally
 from aerona.engine.mass_weapons.remnants import leave_remnant
 from aerona.engine.means.building import burn_structures
@@ -22,6 +24,8 @@ from aerona.engine.recording.record import record
 
 GALE = 1.0
 GRIEF_SCALE = 100
+
+MADE_WINTER_PER_RANK = 10
 
 
 async def victims(ctx: TickContext, atlas: RegionAtlas, weapon: MassWeaponRow, target: EntityRow) -> list[EntityRow]:
@@ -77,6 +81,9 @@ async def use_weapon(ctx: TickContext, weapon: MassWeaponRow, target: EntityRow,
         for region in regions:
             await leave_remnant(ctx, kind, ctx.rules.mass_weapons.remnant_density, tally, region=region, weapon=weapon.id)
     await advance_doom(ctx.session, ctx.rules, ctx.rules.mass_weapons.doom_per_reach * REACH_RANK[weapon.reach])
+    world = await ctx.session.get(WorldRow, target.world_id) if target.world_id is not None else None
+    if world is not None and REACH_RANK[weapon.reach] >= REACH_RANK[MassReach.REGION]:
+        await made_spell(ctx, world, winter=True, severity=min(PERCENT, REACH_RANK[weapon.reach] * MADE_WINTER_PER_RANK), incident_id=None)
     tally.used += 1
     tally.killed += killed
     return killed

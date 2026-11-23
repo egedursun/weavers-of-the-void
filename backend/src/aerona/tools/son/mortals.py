@@ -133,7 +133,7 @@ async def bind_mortals(call: SonCall, args: BindInput) -> str:
     await call.record(
         "tools.son.bind_mortals",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [first.id, second.id]},
-        facts={"binding": str(args.binding.value.replace("_", " ")), "reason": str(args.reason)},
+        facts={"binding": str(spoken(args.binding)), "reason": str(args.reason)},
         kind=ChronicleKind.LINEAGE,
     )
     return result(SonResult.MORTALS_BOUND, first=first.name, second=second.name, binding=spoken(args.binding))
@@ -166,7 +166,7 @@ async def touch_mortal(call: SonCall, args: TouchInput) -> str:
     await call.record(
         "tools.son.touch_mortal",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: mortal.id},
-        facts={"touch": str(args.touch.value.replace("_", " ")), "reason": str(args.reason)},
+        facts={"touch": str(spoken(args.touch)), "reason": str(args.reason)},
         kind=ChronicleKind.INTRIGUE,
     )
     return result(SonResult.MORTAL_TOUCHED, name=mortal.name, touch=spoken(args.touch))

@@ -8,12 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.made import MadeRealmRow
 from aerona.domain.enums.records import ProcessClock
 from aerona.domain.models.calendar import YearWindow, epoch_start_year
 from aerona.domain.models.moment import Moment
 from aerona.engine.context import TickContext
+from aerona.engine.environment.season_shape import position_at_fraction
 from aerona.engine.recording.births import born_floor
 from aerona.rules.registry.records import RecordsRules
 
@@ -25,10 +27,18 @@ class Calendar:
     year_days: int | None
     seasons: int | None
     day_hours: int | None
+    shares: tuple[int, ...] = ()
+
+    def season_at(self, fraction: float) -> int | None:
+        if not self.seasons:
+            return None
+        if len(self.shares) == self.seasons:
+            return position_at_fraction(self.shares, fraction)
+        return min(self.seasons - 1, int(min(max(fraction, 0.0), 1.0 - 1e-9) * self.seasons))
 
     def place(self, year: int, fraction: float) -> Moment:
         share = min(max(fraction, 0.0), 1.0 - 1e-9)
-        season = int(share * self.seasons) if self.seasons else None
+        season = self.season_at(share)
         if not self.year_days:
             return Moment(year, season)
         position = share * self.year_days
@@ -44,7 +54,7 @@ class Calendar:
             year, day = year + day // self.year_days, day % self.year_days
         if not self.year_days:
             return Moment(year, moment.season)
-        season = day * self.seasons // self.year_days if self.seasons else None
+        season = self.season_at(day / self.year_days)
         return Moment(year, season, day, hour if self.day_hours else None)
 
 
@@ -96,7 +106,8 @@ async def calendar_of(session: AsyncSession, world_id: int | None) -> Calendar:
         row = (
             await session.execute(select(WorldRow.year_length_days, WorldRow.season_count, WorldRow.day_length_hours).where(WorldRow.id == world_id))
         ).first()
-        found = known[world_id] = Calendar(row[0], row[1], row[2]) if row is not None else NO_CALENDAR
+        shares = tuple(await session.scalars(select(WorldSeasonRow.share_pct).where(WorldSeasonRow.world_id == world_id).order_by(WorldSeasonRow.position)))
+        found = known[world_id] = Calendar(row[0], row[1], row[2], shares) if row is not None else NO_CALENDAR
     return found
 
 

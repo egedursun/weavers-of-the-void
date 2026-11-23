@@ -42,7 +42,7 @@ async def town_in_reach(call: SonCall, town_id: int, refused: SonResult) -> Any:
         fail(refused, why="there is no such town")
     await ensure_in_reach(call, town)
     if held(town.id):
-        fail(refused, why="a stronger hand holds that town")
+        fail(refused, why="that town is held")
     return town
 
 

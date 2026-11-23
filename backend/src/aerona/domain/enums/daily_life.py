@@ -11,6 +11,8 @@ class HouseDuty(StrEnum):
     ELDERCARE = "eldercare"
     ANIMALS = "animals"
     REPAIRS = "repairs"
+    SICKCARE = "sickcare"
+    HOUSEHOLD_RITES = "household_rites"
 
 
 class LeisureKind(StrEnum):
@@ -27,6 +29,9 @@ class LeisureKind(StrEnum):
     WORSHIP_EXTRA = "worship_extra"
     REST = "rest"
     MEDIA = "media"
+    DANCE = "dance"
+    STORYTELLING = "storytelling"
+    HUNTING = "hunting"
 
 
 class WashFrequency(StrEnum):

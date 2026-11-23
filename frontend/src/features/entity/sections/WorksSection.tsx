@@ -14,7 +14,7 @@ import {
   Section,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
-import { type Named } from '@/features/entity/economy/labels'
+import { MATERIAL_LABEL, type Named } from '@/features/entity/economy/labels'
 import { ChoiceSelect } from '@/features/entity/economy/parts'
 import { useKinds } from '@/features/kinds/api'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
@@ -403,7 +403,7 @@ function StockRow({
     <ItemRow
       icon={TIER_ICON}
       tone={tone}
-      title={`${lot.label}${lot.material ? ` of ${lot.material.replaceAll('_', ' ')}` : ''}`}
+      title={`${lot.label}${lot.material ? ` of ${MATERIAL_LABEL[lot.material].toLowerCase()}` : ''}`}
       meta={`${lot.quantity} held · quality ${lot.quality}${lot.perishable ? ` · ${lot.preserved} preserved` : ''}`}
       badges={
         <>

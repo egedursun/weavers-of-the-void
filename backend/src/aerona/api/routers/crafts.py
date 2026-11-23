@@ -20,11 +20,15 @@ from aerona.api.schemas.crafts import (
     LinkView,
     NumberReadingView,
     NumbersView,
+    RightLinkChoice,
     SpiritView,
+    TechniqueChoice,
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
+from aerona.catalog.techniques import TECHNIQUES
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.tables.crafts import (
     AssistiveAidRow,
     CatchGroundRow,
@@ -38,8 +42,13 @@ from aerona.db.tables.crafts import (
     PublicClockRow,
     SympatheticLinkRow,
 )
+from aerona.db.tables.cuisine import DishRow
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.economy import ResourceProfileRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mortal import MarriageRow
+from aerona.db.tables.node import NodeRow
+from aerona.db.tables.relations import ContestRow
 from aerona.domain.enums.folk_knowledge import NumberReading
 from aerona.domain.enums.node import NodeKind
 from aerona.engine.body.customs import people_of
@@ -62,7 +71,7 @@ async def refs_of(session: AsyncSession, ids: Iterable[int | None]) -> dict[int,
 
 
 def material_name(row: WorldMaterialRow) -> str:
-    return row.name or (row.base_kind.value.replace("_", " ") if row.base_kind is not None else f"material of world {row.world_id}")
+    return row.name or (spoken(row.base_kind) if row.base_kind is not None else f"material of world {row.world_id}")
 
 
 @router.get("/crafts/of/{node_id}", response_model=CraftsNodeView)
@@ -131,6 +140,40 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
             )
         )
         spirits = list(await session.scalars(select(EmotionSpiritRow).where(EmotionSpiritRow.region_entity_id.in_(near)).order_by(EmotionSpiritRow.id.desc())))
+        dishes = {
+            int(key): name
+            for key, name in await session.execute(
+                select(DishRow.id, DishRow.name)
+                .where(or_(DishRow.world_id == world_id, DishRow.id.in_([row.dish_id for row in rights if row.dish_id is not None])))
+                .order_by(DishRow.id)
+            )
+        }
+        known = sorted(
+            set(await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == node_id))), key=lambda item: item.value
+        )
+        contests = list(
+            await session.scalars(
+                select(ContestRow).where(or_(ContestRow.challenger_node_id == node_id, ContestRow.defender_node_id == node_id)).order_by(ContestRow.id.desc())
+            )
+        )
+        unions = list(
+            await session.scalars(select(MarriageRow).where(or_(MarriageRow.first_id == node_id, MarriageRow.second_id == node_id)).order_by(MarriageRow.id))
+        )
+        contest_names = {
+            int(key): name
+            for key, name in await session.execute(
+                select(NodeRow.id, NodeRow.name).where(
+                    NodeRow.id.in_(
+                        sorted(
+                            {
+                                *(side for row in contests for side in (row.challenger_node_id, row.defender_node_id)),
+                                *(side for row in unions for side in (row.first_id, row.second_id)),
+                            }
+                        )
+                    )
+                )
+            )
+        }
         refs = await refs_of(
             session,
             [
@@ -162,6 +205,7 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
                 collapsed=row.collapsed,
                 last_catch=row.last_catch,
                 first_stock=row.first_stock,
+                stock=row.stock,
                 locked=row.locked,
             )
             for row in grounds
@@ -214,6 +258,12 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
                 name=row.name,
                 acquired=row.acquired,
                 licensed_to=at(refs, row.licensed_to_node_id),
+                dish_id=row.dish_id,
+                dish=dishes.get(row.dish_id) if row.dish_id is not None else None,
+                technique=row.technique,
+                technique_label=TECHNIQUES[row.technique].label if row.technique is not None else None,
+                contest_id=row.contest_id,
+                marriage_id=row.marriage_id,
                 since_epoch=row.since_epoch,
                 locked=row.locked,
             )
@@ -265,4 +315,16 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
             for row in spirits
         ],
         materials=[AffinityMaterialChoice(id=row.id, name=material_name(row)) for row in materials],
+        dish_choices=[RightLinkChoice(id=key, name=name) for key, name in sorted(dishes.items())],
+        technique_choices=[TechniqueChoice(technique=item, label=TECHNIQUES[item].label) for item in known],
+        contest_choices=[
+            RightLinkChoice(
+                id=row.id,
+                name=f"{contest_names.get(row.challenger_node_id, 'someone')} against {contest_names.get(row.defender_node_id, 'someone')}, epoch {row.epoch}",
+            )
+            for row in contests
+        ],
+        union_choices=[
+            RightLinkChoice(id=row.id, name=f"{contest_names.get(row.first_id, 'someone')} and {contest_names.get(row.second_id, 'someone')}") for row in unions
+        ],
     )

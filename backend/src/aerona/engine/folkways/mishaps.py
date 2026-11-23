@@ -3,9 +3,11 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.death_causes import DEATH_CAUSES
 from aerona.catalog.life.folkways import ANSWER_MISHAP_RESPONSES, EXPLAINERS, LEANINGS, RESPONSES, SIGN_WORDS, WEIGHTS_FOR_MISHAP_ATTRIBUTIONS
-from aerona.catalog.life_traits import CHARM_POWER_TRAITS, DEATH_CAUSE_TRAITS, LIFE_STAGE_TRAITS, having
+from aerona.catalog.life_traits import CHARM_POWER_TRAITS, LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.concealment import HiddenTruthRow
@@ -24,8 +26,8 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.enums.folkways import CharmPower, LuckReach, LuckSign, MishapAttribution, MishapKind, MishapResponse, PurityState
 from aerona.domain.enums.fortune import FortuneSourceKind
-from aerona.domain.enums.life_traits import CharmPowerTrait, DeathCauseTrait, LifeStageTrait
-from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.life_traits import CharmPowerTrait, LifeStageTrait
+from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis
 from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import KnowledgeBranch
@@ -37,6 +39,7 @@ from aerona.engine.fortune.everyday import everyday
 from aerona.engine.fortune.profiles import shift_fortune
 from aerona.engine.lore.rumours import enemies_of
 from aerona.engine.mind.book import values_for
+from aerona.engine.mind.hooks import committed
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
@@ -47,7 +50,6 @@ from aerona.engine.services.community_relations import change_relation
 
 WITNESSES = 3
 YOUNG = having(LIFE_STAGE_TRAITS, LifeStageTrait.GROWING)
-VIOLENT = having(DEATH_CAUSE_TRAITS, DeathCauseTrait.VIOLENT)
 WARDS = having(CHARM_POWER_TRAITS, CharmPowerTrait.WARDS)
 HEALTH = frozenset({LuckReach.HEALTH})
 HARVEST = frozenset({LuckReach.HARVEST})
@@ -119,10 +121,10 @@ async def deaths_in(ctx: TickContext, town: EntityRow) -> list[Befell]:
         .order_by(EntityRow.id)
     )
     for mortal_id, cause, stage in rows:
-        if cause is None or cause in VIOLENT:
+        if cause is None or DEATH_CAUSES[cause].violent or DEATH_CAUSES[cause].natural:
             continue
         if stage in YOUNG:
-            found.append(Befell(MishapKind.CHILD_DEATH, cause.value.replace("_", " "), mortal_id))
+            found.append(Befell(MishapKind.CHILD_DEATH, spoken(cause), mortal_id))
         elif cause is DeathCause.ACCIDENT:
             found.append(Befell(MishapKind.ACCIDENT, "an accident", mortal_id))
         elif cause is DeathCause.DISEASE:
@@ -306,6 +308,7 @@ async def make_charm(ctx: TickContext, bearer_id: int, power: CharmPower) -> Cha
     row = CharmRow(item_entity_id=item_id, power=power, real=await is_real(ctx, item_id), strength=ctx.rules.mishaps.charm_strength, locked=[])
     ctx.session.add(row)
     await ctx.session.flush()
+    await committed(ctx, bearer_id, ActKind.USING_CHARMS)
     return row
 
 

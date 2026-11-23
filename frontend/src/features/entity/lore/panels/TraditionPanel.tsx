@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import {
   Ban,
+  CalendarCheck,
   CalendarDays,
+  CalendarX,
   Coins,
   HeartPulse,
   History,
@@ -22,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { KpiTile, Paged, FieldTile } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { CustomKindChoice, HeldBadge, OptionalChoice } from '../CultureParts'
 import {
@@ -60,14 +63,17 @@ import {
   VALUES,
   busyOf,
   lookup,
-  sentence,
 } from '../model'
 import { type Card, COST_ONLY, average } from './shared'
 
 const COMMODITIES = Object.fromEntries(
   commodityKindValues.map((key) => [
     key,
-    { label: sentence(key), icon: Ban, tone: 'danger' as const },
+    {
+      label: wordOf(commodityKindValues, key),
+      icon: Ban,
+      tone: 'danger' as const,
+    },
   ])
 )
 const ANYONE = ''
@@ -270,6 +276,16 @@ export function TraditionPanel({
         {card.calendar_slot && (
           <NamedChip spec={lookup(CALENDAR_SLOTS, card.calendar_slot)}>
             {lookup(CALENDAR_SLOTS, card.calendar_slot).label}
+          </NamedChip>
+        )}
+        {card.slot_open === true && (
+          <NamedChip spec={{ label: '', icon: CalendarCheck, tone: 'success' }}>
+            Its time comes on this world
+          </NamedChip>
+        )}
+        {card.slot_open === false && (
+          <NamedChip spec={{ label: '', icon: CalendarX, tone: 'warning' }}>
+            {`Its time does not come: ${card.slot_reason ?? 'its season never arrives'}`}
           </NamedChip>
         )}
         {card.in_season === true && (

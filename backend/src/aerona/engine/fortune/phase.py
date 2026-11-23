@@ -15,7 +15,7 @@ from aerona.engine.interconnect.annotations import reads, writes
     "table.fortune_sources",
     "table.nodes",
 )
-@writes("settlement.population", "table.applied_fixups", "table.cohort_mishap_rates", "table.entities", "table.fortune_profiles")
+@writes("settlement.population", "table.applied_fixups", "table.cohort_mishap_rates", "table.entities", "table.fortune_profiles", "table.fortune_sources")
 async def fortune(ctx: TickContext) -> None:
     ctx.count("fortune_backfilled", await legacy_backfill(ctx))
     ctx.count("divine_judgements_kept", await keep_judgements(ctx))

@@ -8,6 +8,7 @@ from aerona.catalog.life.domain import PERIODIC_BODIES
 from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.physics import (
@@ -175,7 +176,7 @@ async def create_feature(ctx: TickContext, kind: CosmicFeatureKind, name: str, v
         raise ValidationFailedError("A rogue world drifts among the stars of a galaxy; choose its star or its galaxy.")
     row = CosmicFeatureRow(
         kind=kind,
-        name=name.strip() or kind.value.replace("_", " ").capitalize(),
+        name=name.strip() or spoken(kind).capitalize(),
         galaxy_id=star.galaxy_id if star is not None else values.get("galaxy_id"),
         x=star.x if star is not None else 0.0,
         y=star.y if star is not None else 0.0,

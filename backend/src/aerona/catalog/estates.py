@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
 from aerona.core.total import total
-from aerona.domain.enums.faction import EstatePrivilege, MovementCause
+from aerona.domain.enums.faction import EstatePrivilege
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 
@@ -79,13 +79,4 @@ PRIVILEGE_LABELS: dict[EstatePrivilege, str] = {
     EstatePrivilege.COUNCIL_SEAT: "A seat in council",
     EstatePrivilege.ARMS: "The right to bear arms",
     EstatePrivilege.JUDICIAL_IMMUNITY: "Immunity from the courts",
-}
-CAUSE_LABELS: dict[MovementCause, str] = {
-    MovementCause.ABOLITION: "Abolition of slavery",
-    MovementCause.INDEPENDENCE: "Independence",
-    MovementCause.REVIVAL: "A revival of faith",
-    MovementCause.LAND_REFORM: "Land reform",
-    MovementCause.FRANCHISE: "A wider franchise",
-    MovementCause.PEACE: "Peace",
-    MovementCause.CONSERVATION: "Protection of the wild",
 }

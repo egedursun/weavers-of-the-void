@@ -26,3 +26,5 @@ class CureClass(StrEnum):
     EXORCISM = "exorcism"
     POWER = "power"
     DESIGNED = "designed"
+    SURGERY = "surgery"
+    ANTIVIRAL = "antiviral"

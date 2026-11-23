@@ -11,6 +11,8 @@ class ReputationAxis(StrEnum):
     TRICKERY = "trickery"
     SKILL_RENOWN = "skill_renown"
     TROUBLEMAKER = "troublemaker"
+    MERCY = "mercy"
+    JUSTICE = "justice"
 
 
 class Currency(StrEnum):
@@ -30,17 +32,6 @@ class ClaimStatus(StrEnum):
     STANDING = "standing"
     VERIFIED = "verified"
     EXPOSED = "exposed"
-
-
-class LoreKind(StrEnum):
-    TECHNIQUE = "technique"
-    SITE = "site"
-    MAP = "map"
-    PROPHECY = "prophecy"
-    TRUE_NAME = "true_name"
-    WEAKNESS = "weakness"
-    PATTERN = "pattern"
-    SOURCE = "source"
 
 
 class LorePrice(StrEnum):

@@ -1,17 +1,20 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from aerona.catalog.terrain import terrain_has
 from aerona.catalog.weather import WEATHER
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.environment import TerrainKind, WeatherDraw, WeatherEffect, WeatherKind
+from aerona.domain.enums.environment import SeasonWarmth, TerrainKind, TerrainTrait, WeatherDraw, WeatherEffect, WeatherKind, WeatherTrait
 from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
 SKY_DARKNESS = frozenset({SkyEventKind.ECLIPSE, SkyEventKind.BLACK_SUN})
+TURNING_SEASONS = frozenset({SeasonWarmth.WARMING, SeasonWarmth.COOLING})
+SUMMER_TRAITS = frozenset({WeatherTrait.HOT, WeatherTrait.DRY})
 
 
 @dataclass(frozen=True)
@@ -26,6 +29,9 @@ class WeatherInputs:
     season_temperature: int = 0
     season_rain: int = 0
     sky: frozenset[SkyEventKind] = frozenset()
+    season_warmth: SeasonWarmth = SeasonWarmth.EVEN
+    winter_pull: int = 0
+    summer_pull: int = 0
 
 
 @dataclass(frozen=True)
@@ -57,6 +63,7 @@ class Climate:
     hot: float
     dry: float
     wet: float
+    temperature: int = 0
 
 
 def aurora_draw(climate: Climate) -> float:
@@ -83,6 +90,29 @@ def void_draw(climate: Climate) -> float:
     return _ramp(climate.inputs.leakage - settings.void_rain_threshold, PERCENT - settings.void_rain_threshold) + storm
 
 
+def turning(climate: Climate) -> float:
+    return climate.rules.weather.frost_transition_pct / PERCENT if climate.inputs.season_warmth in TURNING_SEASONS else 1.0
+
+
+def freezing_clear_draw(climate: Climate) -> float:
+    settings = climate.rules.weather
+    near = _ramp(settings.cold_threshold + settings.frost_band - climate.temperature, settings.frost_band)
+    return near * max(0.0, 1 - climate.wet) * turning(climate)
+
+
+def freezing_wet_draw(climate: Climate) -> float:
+    settings = climate.rules.weather
+    near = max(0.0, 1 - abs(climate.temperature - settings.cold_threshold) / settings.glaze_band)
+    return near * climate.wet
+
+
+def warm_sea_draw(climate: Climate) -> float:
+    settings = climate.rules.weather
+    if not terrain_has(climate.inputs.terrain, TerrainTrait.COASTAL) and not terrain_has(climate.inputs.terrain, TerrainTrait.WATERY):
+        return 0.0
+    return _ramp(climate.temperature - settings.warm_sea_threshold, PERCENT - settings.warm_sea_threshold) * climate.wet
+
+
 DRAWS: Mapping[WeatherDraw, Callable[[Climate], float]] = total(
     WeatherDraw,
     {
@@ -99,6 +129,10 @@ DRAWS: Mapping[WeatherDraw, Callable[[Climate], float]] = total(
         WeatherDraw.ASH: ash_draw,
         WeatherDraw.VOID: void_draw,
         WeatherDraw.ECLIPSE: lambda climate: 1.0 if climate.inputs.sky & SKY_DARKNESS else 0.0,
+        WeatherDraw.FREEZING_CLEAR: freezing_clear_draw,
+        WeatherDraw.FREEZING_WET: freezing_wet_draw,
+        WeatherDraw.WET_HOT: lambda climate: climate.wet * climate.hot,
+        WeatherDraw.WARM_SEA: warm_sea_draw,
     },
 )
 
@@ -114,8 +148,17 @@ def weather_weights(rules: Rules, inputs: WeatherInputs) -> dict[WeatherKind, fl
         hot=_ramp(temperature - settings.hot_threshold, settings.hot_span),
         dry=_ramp(settings.dry_threshold - rain, settings.dry_span),
         wet=rain / settings.wet_pivot,
+        temperature=temperature,
     )
-    return {kind: max(0.0, float(spec.weight(rules)) * DRAWS[spec.draw](climate)) for kind, spec in WEATHER.items()}
+    shift = rules.long_seasons.weather_shift_pct / PERCENT / PERCENT
+    cold = 1 + inputs.winter_pull * shift
+    warm = 1 + inputs.summer_pull * shift
+    return {
+        kind: max(0.0, float(spec.weight(rules)) * DRAWS[spec.draw](climate))
+        * (cold if WeatherTrait.COLD in spec.traits else 1.0)
+        * (warm if spec.traits & SUMMER_TRAITS else 1.0)
+        for kind, spec in WEATHER.items()
+    }
 
 
 def weather_of(rules: Rules, kind: WeatherKind) -> Weather:

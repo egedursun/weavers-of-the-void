@@ -37,7 +37,7 @@ async def hallow_wild(call: SonCall, args: HallowWildInput) -> str:
         fail(SonResult.HALLOWING_REFUSED, why="there is no such land")
     await ensure_in_reach(call, region)
     if held(region.id):
-        fail(SonResult.HALLOWING_REFUSED, why="a stronger hand holds that land as it is")
+        fail(SonResult.HALLOWING_REFUSED, why="that land is held as it is")
     row = await protect_area(
         call.tick, region, ProtectionBasis.DIVINE_DECREE, [ProtectedUse.HUNTING, ProtectedUse.LOGGING], NatureTally(), protector=call.son.id
     )

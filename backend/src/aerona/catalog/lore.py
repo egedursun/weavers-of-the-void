@@ -1,9 +1,11 @@
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from aerona.catalog.art_modes import ART_MODES
 from aerona.core.total import total
 from aerona.domain.enums.culture import (
+    CalendarSlot,
     IdeologyTenet,
     ItemClass,
     LegendArchetype,
@@ -16,7 +18,9 @@ from aerona.domain.enums.culture import (
 )
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
+from aerona.rules.registry import Rules
 
 V = ValueAxis
 A = LegendArchetype
@@ -98,9 +102,111 @@ TRADITIONS = MappingProxyType(
             TraditionSpec(K.PURIFICATION, {}, {"piety": 2}, {V.PURITY: 2}),
             TraditionSpec(K.COMMEMORATION, {"food": 1}, {"cohesion": 3}, {V.TRADITION: 2}),
             TraditionSpec(K.COMPETITION, {"food": 1}, {"satisfaction": 2, "martial": 1}, {V.COMPETITION: 2}),
+            TraditionSpec(K.FAIR, {"goods": 1}, {"trade": 2, "satisfaction": 1}, {V.WEALTH: 1}),
         )
     }
 )
+
+
+@dataclass(frozen=True)
+class FunctionSpec:
+    slot: CalendarSlot | None
+    cost: Callable[[Rules], int]
+    festive: bool = False
+    absorbable: bool = False
+    seer: bool = False
+    sleep: bool = False
+    defied_by: LawKind | None = None
+    tenets: frozenset[IdeologyTenet] = frozenset()
+
+
+FUNCTIONS: Mapping[TraditionFunction, FunctionSpec] = total(
+    TraditionFunction,
+    {
+        K.FESTIVAL: FunctionSpec(
+            CalendarSlot.HARVEST,
+            lambda rules: rules.traditions.festival_cost,
+            festive=True,
+            absorbable=True,
+            defied_by=LawKind.SUMPTUARY,
+            tenets=frozenset({IT.ASCETICISM}),
+        ),
+        K.FAST: FunctionSpec(CalendarSlot.HOLY_DAY, lambda rules: rules.traditions.fast_cost, tenets=frozenset({IT.RATIONALISM})),
+        K.RITE_OF_PASSAGE: FunctionSpec(None, lambda rules: rules.traditions.rite_of_passage_cost, absorbable=True, seer=True, tenets=frozenset({IT.ANTI_GOD})),
+        K.TABOO: FunctionSpec(None, lambda rules: rules.traditions.taboo_cost, tenets=frozenset({IT.COSMOPOLITANISM})),
+        K.OFFERING: FunctionSpec(
+            CalendarSlot.HOLY_DAY,
+            lambda rules: rules.traditions.offering_cost,
+            seer=True,
+            defied_by=LawKind.WORSHIP_BAN,
+            tenets=frozenset({IT.RATIONALISM, IT.ANTI_GOD, IT.CREATORISM}),
+        ),
+        K.PILGRIMAGE: FunctionSpec(
+            CalendarSlot.PILGRIMAGE,
+            lambda rules: rules.traditions.pilgrimage_cost,
+            defied_by=LawKind.WORSHIP_BAN,
+            tenets=frozenset({IT.RATIONALISM, IT.ANTI_GOD}),
+        ),
+        K.HOSPITALITY: FunctionSpec(
+            None, lambda rules: rules.traditions.hospitality_cost, defied_by=LawKind.FOREIGNER_RIGHTS, tenets=frozenset({IT.COSMOPOLITANISM})
+        ),
+        K.DUEL_CUSTOM: FunctionSpec(
+            None, lambda rules: rules.traditions.duel_custom_cost, defied_by=LawKind.PENAL_CODE, tenets=frozenset({IT.EGALITARIANISM, IT.RESTRAINT})
+        ),
+        K.MOURNING: FunctionSpec(CalendarSlot.REMEMBRANCE, lambda rules: rules.traditions.mourning_cost),
+        K.SEASONAL_RITE: FunctionSpec(CalendarSlot.SOWING, lambda rules: rules.traditions.seasonal_rite_cost, festive=True, absorbable=True),
+        K.MARTIAL_DISPLAY: FunctionSpec(CalendarSlot.CAMPAIGN, lambda rules: rules.traditions.martial_display_cost, tenets=frozenset({IT.RESTRAINT})),
+        K.BODY_MARKING: FunctionSpec(
+            None, lambda rules: rules.traditions.body_marking_cost, seer=True, defied_by=LawKind.PENAL_CODE, tenets=frozenset({IT.EGALITARIANISM})
+        ),
+        K.ANCESTRAL_RITE: FunctionSpec(
+            CalendarSlot.REMEMBRANCE,
+            lambda rules: rules.traditions.ancestral_rite_cost,
+            festive=True,
+            absorbable=True,
+            defied_by=LawKind.WORSHIP_BAN,
+            tenets=frozenset({IT.RATIONALISM, IT.ASCETICISM, IT.CREATORISM}),
+        ),
+        K.REST_CUSTOM: FunctionSpec(CalendarSlot.NEW_YEAR, lambda rules: rules.traditions.rest_custom_cost, sleep=True),
+        K.VIGIL: FunctionSpec(CalendarSlot.HOLY_DAY, lambda rules: rules.traditions.vigil_cost, sleep=True),
+        K.GIFT_CUSTOM: FunctionSpec(CalendarSlot.MIDWINTER, lambda rules: rules.traditions.gift_custom_cost),
+        K.PURIFICATION: FunctionSpec(CalendarSlot.HOLY_DAY, lambda rules: rules.traditions.purification_cost),
+        K.COMMEMORATION: FunctionSpec(CalendarSlot.REMEMBRANCE, lambda rules: rules.traditions.commemoration_cost),
+        K.COMPETITION: FunctionSpec(CalendarSlot.MIDSUMMER, lambda rules: rules.traditions.competition_cost),
+        K.FAIR: FunctionSpec(CalendarSlot.MARKET, lambda rules: rules.traditions.fair_cost),
+    },
+)
+FESTIVE = frozenset(kind for kind, spec in FUNCTIONS.items() if spec.festive)
+ABSORBABLE = frozenset(kind for kind, spec in FUNCTIONS.items() if spec.absorbable)
+SEER_RITES = frozenset(kind for kind, spec in FUNCTIONS.items() if spec.seer)
+SLEEP_CUSTOMS = frozenset(kind for kind, spec in FUNCTIONS.items() if spec.sleep)
+DEFIED_BY: Mapping[TraditionFunction, LawKind] = MappingProxyType({kind: spec.defied_by for kind, spec in FUNCTIONS.items() if spec.defied_by is not None})
+CREED_DEFIES: Mapping[IdeologyTenet, frozenset[TraditionFunction]] = MappingProxyType(
+    {tenet: frozenset(kind for kind, spec in FUNCTIONS.items() if tenet in spec.tenets) for tenet in IdeologyTenet}
+)
+SLEEP_TEXTS: Mapping[TraditionFunction, tuple[str, str]] = MappingProxyType(
+    {
+        K.REST_CUSTOM: ("The Midday Rest of {name}", "Under a day of {hours:hour|hours} the work stops in the middle of the day and the folk rest."),
+        K.VIGIL: ("The Long Night Vigil of {name}", "Through a night of {hours:hour|hours} some keep watch while the rest sleep in turns."),
+    }
+)
+SLOT_NAMED = (K.COMMEMORATION, K.FAIR)
+STAGE_SLOTS: Mapping[RiteStage, CalendarSlot | None] = total(
+    RiteStage,
+    {
+        RiteStage.BIRTH: None,
+        RiteStage.NAMING: CalendarSlot.NEW_YEAR,
+        RiteStage.COMING_OF_AGE: None,
+        RiteStage.UNION: None,
+        RiteStage.ELDERHOOD: None,
+        RiteStage.DEATH: CalendarSlot.REMEMBRANCE,
+    },
+)
+
+
+def slot_fit(kind: TraditionFunction, stage: RiteStage | None) -> CalendarSlot | None:
+    return STAGE_SLOTS[stage] if kind is TraditionFunction.RITE_OF_PASSAGE and stage is not None else FUNCTIONS[kind].slot
+
 
 STAGES = total(
     RiteStage,
@@ -372,6 +478,7 @@ ITEM_WORDS = MappingProxyType(
 )
 
 ART_MESSAGES = MappingProxyType({mode: spec.message for mode, spec in ART_MODES.items()})
+COURT_MESSAGE = MappingProxyType({ValueAxis.HIERARCHY.value: 5, ValueAxis.HONOUR.value: 2})
 
 ART_WORDS = MappingProxyType({mode: spec.words for mode, spec in ART_MODES.items()})
 

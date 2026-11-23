@@ -468,6 +468,7 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
 )
 @writes(
     "mortal.agility",
+    "mortal.charisma",
     "mortal.intellect",
     "mortal.lifespan",
     "mortal.strength",

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import WorldSeasonRow
@@ -13,7 +14,7 @@ from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.warfare import SiegeRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.entity import LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityType
 from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.modifier import IncidentRole
@@ -83,7 +84,7 @@ async def season_for(ctx: TickContext, world_id: int | None, kind: EngineKind | 
         return None
     wanted = KIND_RAIN.get(kind) if kind is not None else None
     match = ctx.rules.events.season_match_weight
-    weights = [float(match) if wanted is not None and rain_sign(season) == wanted else 1.0 for season in seasons]
+    weights = [max(1, season.share_pct) * (float(match) if wanted is not None and rain_sign(season) == wanted else 1.0) for season in seasons]
     return ctx.rng(stream).weighted(seasons, weights).position
 
 
@@ -122,14 +123,14 @@ async def derive_footprint(session: AsyncSession, atlas: RegionAtlas, event: Ent
     return added
 
 
-def cohort_split(rows: Mapping[CohortKey, CohortRow], category: FlowCategory, amount: int, combat: Mapping[Sex, float]) -> dict[CohortKey, int]:
+def cohort_split(rows: Mapping[CohortKey, CohortRow], category: FlowCategory, amount: int, combat: Mapping[SexKind, float]) -> dict[CohortKey, int]:
     if amount <= 0:
         return {}
     copies = {
         key: CohortRow(
             community_entity_id=row.community_entity_id,
             age_band=row.age_band,
-            sex=row.sex,
+            sex_kind=row.sex_kind,
             social_class=row.social_class,
             condition=row.condition,
             count=row.count,
@@ -144,7 +145,7 @@ def cohort_split(rows: Mapping[CohortKey, CohortRow], category: FlowCategory, am
     return {key: before[key] - row.count for key, row in copies.items() if before[key] > row.count}
 
 
-def even_split(amount: int, ages: Mapping[AgeBand, float], kinds: Mapping[Sex, float]) -> dict[CohortKey, int]:
+def even_split(amount: int, ages: Mapping[AgeBand, float], kinds: Mapping[SexKind, float]) -> dict[CohortKey, int]:
     shares = {(age, sex, FALLBACK_CLASS, CohortCondition.NONE): age_share * sex_share for age, age_share in ages.items() for sex, sex_share in kinds.items()}
     total = sum(shares.values()) or 1.0
     ordered = sorted(shares.items(), key=lambda item: (-item[1], item[0][0].value, item[0][1].value))
@@ -158,7 +159,7 @@ async def record_casualties(ctx: TickContext, event_id: int, community: EntityRo
     combat = await combat_weights(ctx.session, community)
     split = cohort_split(rows, category, dead, combat) or even_split(dead, pyramid(ctx.rules), sexes(ctx.rules, await sex_spec(ctx.session, community)))
     counted = {
-        (row.event_entity_id, row.community_entity_id, row.age_band, row.sex, row.social_class, row.phase): row
+        (row.event_entity_id, row.community_entity_id, row.age_band, row.sex_kind, row.social_class, row.phase): row
         for row in await ctx.session.scalars(
             select(EventCasualtyRow).where(
                 EventCasualtyRow.event_entity_id == event_id, EventCasualtyRow.community_entity_id == community.id, EventCasualtyRow.phase == phase
@@ -170,7 +171,7 @@ async def record_casualties(ctx: TickContext, event_id: int, community: EntityRo
         row = counted.get(key)
         if row is None:
             counted[key] = EventCasualtyRow(
-                event_entity_id=event_id, community_entity_id=community.id, age_band=age, sex=sex, social_class=social_class, phase=phase, count=count
+                event_entity_id=event_id, community_entity_id=community.id, age_band=age, sex_kind=sex, social_class=social_class, phase=phase, count=count
             )
             ctx.session.add(counted[key])
         else:
@@ -181,7 +182,7 @@ async def record_casualties(ctx: TickContext, event_id: int, community: EntityRo
 
 async def casualties_of(session: AsyncSession, event_id: int) -> list[EventCasualtyRow]:
     statement = select(EventCasualtyRow).where(EventCasualtyRow.event_entity_id == event_id)
-    return list(await session.scalars(statement.order_by(EventCasualtyRow.community_entity_id, EventCasualtyRow.age_band, EventCasualtyRow.sex)))
+    return list(await session.scalars(statement.order_by(EventCasualtyRow.community_entity_id, EventCasualtyRow.age_band, EventCasualtyRow.sex_kind)))
 
 
 async def toll_of(session: AsyncSession, event_id: int) -> int:
@@ -279,7 +280,7 @@ async def happen(
             power=ctx.rules.events.event_power,
             world_id=where.world_id,
             location_id=where.id if where.entity_type in LOCATION_TYPES else where.location_id,
-            subtype=happening.kind.value.replace("_", " "),
+            subtype=spoken(happening.kind),
             engine_kind=happening.kind,
         ),
     )

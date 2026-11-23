@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Send } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { entityTypeValues } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Input } from '@/components/ui/input'
 import {
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/select'
 import { FormRow } from '@/components/domain'
 import { Muted } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { CosmicActionButton } from './CosmicActionButton'
 import { type JourneyIntent } from './api'
 import {
@@ -25,7 +27,6 @@ import {
   JOURNEY_INTENTS,
   JOURNEY_INTENT_LABEL,
   TRAVEL_METHOD_LABEL,
-  humanize,
 } from './model/labels'
 import { type RuleBook, ruleText } from './model/rules'
 import { useCosmicAction } from './useCosmicAction'
@@ -147,7 +148,7 @@ export function SendVoyageForm({
             <SelectContent>
               {travellers.map((item) => (
                 <SelectItem key={item.id} value={String(item.id)}>
-                  {`${item.name} · ${humanize(item.entity_type)}`}
+                  {`${item.name} · ${wordOf(entityTypeValues, item.entity_type)}`}
                 </SelectItem>
               ))}
             </SelectContent>

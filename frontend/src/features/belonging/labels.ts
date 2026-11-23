@@ -1,13 +1,16 @@
 import {
+  type LucideIcon,
   Baby,
   Ban,
   BookOpen,
   Castle,
   Church,
   Crown,
+  Dna,
   Drama,
   Feather,
   Fingerprint,
+  Flag,
   Flame,
   Gamepad2,
   Gavel,
@@ -17,8 +20,8 @@ import {
   HeartCrack,
   Home,
   Landmark,
+  Languages,
   Laugh,
-  type LucideIcon,
   Map as MapIcon,
   Megaphone,
   Minus,
@@ -31,8 +34,10 @@ import {
   Swords,
   Target,
   Tent,
+  Trophy,
   UserRound,
   Users,
+  Vote,
   Wheat,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
@@ -59,6 +64,9 @@ export const LAYERS: Record<Schema['IdentityLayer'], Named> = {
   generation: { label: 'Generation', icon: UserRound, tone: 'muted' },
   polity: { label: 'Realm', icon: Castle, tone: 'success' },
   circle: { label: 'Circle', icon: Handshake, tone: 'verdigris' },
+  language: { label: 'Tongue', icon: Languages, tone: 'info' },
+  kind: { label: 'Kind of being', icon: Dna, tone: 'verdigris' },
+  cause: { label: 'Cause', icon: Flag, tone: 'warning' },
 }
 
 export const DRIVERS: Record<Schema['SalienceDriver'], Named> = {
@@ -71,6 +79,14 @@ export const DRIVERS: Record<Schema['SalienceDriver'], Named> = {
   segregation: { label: 'Kept apart', icon: Ban, tone: 'warning' },
   crossing: { label: 'Mixed marriages', icon: Heart, tone: 'success' },
   god: { label: 'A god', icon: Sparkles, tone: 'gold' },
+  persecution: { label: 'Persecution', icon: ShieldAlert, tone: 'danger' },
+  commemoration: {
+    label: 'Remembering the past',
+    icon: Landmark,
+    tone: 'muted',
+  },
+  election: { label: 'A vote', icon: Vote, tone: 'info' },
+  contest: { label: 'A match', icon: Trophy, tone: 'warning' },
 }
 
 export const PLAYS: Record<Schema['PlayKind'], Named> = {

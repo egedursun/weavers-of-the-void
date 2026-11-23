@@ -881,7 +881,7 @@ export function FeedingPanel({
     'The god feeds on that feeling'
   )
   const busy = why(gate, setting.isPending)
-  const drawn = new Map<string, number>()
+  const drawn = new Map<keyof typeof EMOTION_ICONS, number>()
   for (const item of data.harvests)
     drawn.set(item.emotion, (drawn.get(item.emotion) ?? 0) + item.essence)
   return (

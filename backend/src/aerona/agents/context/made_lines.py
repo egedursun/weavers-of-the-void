@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.equipment import FAMILIES
 from aerona.catalog.units import UNITS
 from aerona.catalog.vehicles import FRAMES
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cuisine import CommunityDishRow, DishRow
 from aerona.db.tables.entities import EntityRow
@@ -42,10 +42,10 @@ async def vehicle_lines(session: AsyncSession, holder_id: int) -> list[str]:
             continue
         frame = words(FRAMES[design.frame].label.lower()) if design.frame is not None else "vehicle"
         hits = list(await session.scalars(select(VehicleGroupSectionRow).where(VehicleGroupSectionRow.group_id == group.id)))
-        broken = [f"{words(row.section.value)} {row.disabled + row.destroyed} out" for row in hits if row.disabled + row.destroyed > 0]
+        broken = [f"{spoken(row.section)} {row.disabled + row.destroyed} out" for row in hits if row.disabled + row.destroyed > 0]
         damage = f"; {', '.join(broken)}" if broken else ""
         count = several(group.count, "vehicle", "vehicles")
-        parts.append(f"{design.name} ({count}, {frame}, {words(group.status.value)}, condition {group.condition}{damage})")
+        parts.append(f"{design.name} ({count}, {frame}, {spoken(group.status)}, condition {group.condition}{damage})")
     return [f"Vehicles: {listed(parts)}"] if parts else []
 
 
@@ -76,8 +76,8 @@ async def own_kind_lines(session: AsyncSession, holder_id: int) -> list[str]:
         ("vehicle types", [f"{row.name} ({FRAMES[row.frame].label.lower() if row.frame is not None else 'vehicle'})" for row in vehicles]),
         ("kinds of soldier", [f"{row.name} ({UNITS[row.base_kind].label.lower()})" for row in units]),
         ("equipment", [f"{row.name} ({FAMILIES[row.family].label.lower()})" for row in models]),
-        ("dishes", [f"{row.name} ({words(row.course.value)})" for row in dishes]),
-        ("building types", [f"{row.name} ({words(row.base_kind.value)})" for row in buildings]),
+        ("dishes", [f"{row.name} ({spoken(row.course)})" for row in dishes]),
+        ("building types", [f"{row.name} ({spoken(row.base_kind)})" for row in buildings]),
     ]
     found = [f"{label}: {listed(items)}" for label, items in groups if items]
     return [f"Its own kinds: {'; '.join(found)}"] if found else []
@@ -90,7 +90,7 @@ async def kitchen_lines(session: AsyncSession, community_id: int) -> list[str]:
         .where(CommunityDishRow.community_entity_id == community_id)
         .order_by(CommunityDishRow.popularity.desc())
     )
-    parts = [f"{dish.name} ({words(dish.course.value)}, {words(dish.method.value)}, liked {row.popularity})" for row, dish in rows]
+    parts = [f"{dish.name} ({spoken(dish.course)}, {spoken(dish.method)}, liked {row.popularity})" for row, dish in rows]
     return [f"Dishes cooked here: {listed(parts)}"] if parts else []
 
 
@@ -99,7 +99,7 @@ async def section_lines(session: AsyncSession, entity: EntityRow) -> list[str]:
         damaged = list(
             await session.scalars(select(VesselSectionRow).where(VesselSectionRow.vessel_entity_id == entity.id, VesselSectionRow.state != SectionState.SOUND))
         )
-        parts = [f"{words(row.section.value)} {words(row.state.value)}" for row in damaged]
+        parts = [f"{spoken(row.section)} {spoken(row.state)}" for row in damaged]
         return [f"Damaged sections: {listed(parts)}"] if parts else []
     if entity.entity_type is not EntityType.STRUCTURE:
         return []
@@ -107,7 +107,7 @@ async def section_lines(session: AsyncSession, entity: EntityRow) -> list[str]:
         await session.scalars(select(StructureSectionRow).where(StructureSectionRow.structure_entity_id == entity.id).order_by(StructureSectionRow.section))
     )
     lines: list[str] = []
-    hurt = [f"{words(row.section.value)} {words(row.state.value)}" for row in rows if row.state is not SectionState.SOUND]
+    hurt = [f"{spoken(row.section)} {spoken(row.state)}" for row in rows if row.state is not SectionState.SOUND]
     if hurt:
         lines.append(f"Damaged sections: {listed(hurt)}")
     mega = await session.get(MegastructureRow, entity.id)

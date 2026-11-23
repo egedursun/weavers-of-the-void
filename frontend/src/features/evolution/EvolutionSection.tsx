@@ -14,11 +14,14 @@ import {
   EmptyState,
   KpiTile,
   LoadingBlock,
+  Medallion,
   PagedList,
   Section,
+  ShowMore,
+  useShowMore,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
-import { Label, Muted } from '@/components/typography'
+import { Label, Muted, Text } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { useEntityType } from '@/features/arcana/model'
 import {
@@ -566,6 +569,8 @@ function ServiceForm({
   )
 }
 
+const STAGE_PATH_SHOWN = 6
+
 function HerdCard({
   herd,
   blocked,
@@ -618,6 +623,7 @@ function LandCard({
   land: NonNullable<NodeEvolutionView['land']>
   blocked: string | null
 }) {
+  const path = useShowMore(land.stage_path, STAGE_PATH_SHOWN)
   const set = useEvolutionAction(
     'environment:set',
     (vars: { field: string; value: number | string }) => ({
@@ -652,6 +658,30 @@ function LandCard({
         tone='success'
       />
       <Chip>{`Forest it can hold: ${land.stage_cover}`}</Chip>
+      <Chip>{`Epochs at this stage before it moves on: ${land.advance_epochs}`}</Chip>
+      <div
+        className='flex min-w-0 flex-wrap items-center gap-2'
+        role='list'
+        aria-label='The path this land grows along'
+      >
+        {path.visible.map((step) => (
+          <div key={step} role='listitem' className='flex items-center gap-1'>
+            <Medallion
+              icon={STAGES[step].icon}
+              tone={step === land.succession ? STAGES[step].tone : 'muted'}
+              size='sm'
+            />
+            <Text
+              as='span'
+              variant='caption'
+              weight={step === land.succession ? 'medium' : undefined}
+            >
+              {STAGES[step].label}
+            </Text>
+          </div>
+        ))}
+      </div>
+      <ShowMore state={path} />
       <RecordEditor
         title='Set the stage'
         note='A held stage does not grow, burn or get cleared.'

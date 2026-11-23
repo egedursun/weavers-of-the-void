@@ -56,6 +56,7 @@ import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { SeasonCalendarPanel } from './SeasonCalendarPanel'
+import { SEASON_WARMTH, SEASON_WATER } from './seasonLabels'
 
 type WorldSeasons = components['schemas']['WorldSeasonsView']
 type Season = components['schemas']['SeasonView']
@@ -251,6 +252,8 @@ function SeasonCard({
     success: 'The year turns in a new order',
   })
   const busy = blocked ?? (reorder.isPending ? WORKING : null)
+  const WarmthIcon = SEASON_WARMTH[season.warmth].icon
+  const WaterIcon = SEASON_WATER[season.water].icon
   const earlier = busy ?? (index === 0 ? FIRST : null)
   const later = busy ?? (index === seasons.length - 1 ? LAST : null)
   return (
@@ -291,6 +294,14 @@ function SeasonCard({
         </Button>
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+        <Badge size='sm' variant='secondary'>
+          <WarmthIcon aria-hidden='true' />
+          {SEASON_WARMTH[season.warmth].label}
+        </Badge>
+        <Badge size='sm' variant='secondary'>
+          <WaterIcon aria-hidden='true' />
+          {SEASON_WATER[season.water].label}
+        </Badge>
         <ChangeChip
           value={season.temperature_shift}
           icon={Thermometer}
@@ -298,6 +309,13 @@ function SeasonCard({
         />
         <ChangeChip value={season.rain_shift} icon={Droplets} label='Rain' />
       </div>
+      <StatBar
+        label='Share of the year'
+        value={season.share_pct}
+        max={PERCENT}
+        icon={CalendarDays}
+        tone='warning'
+      />
       <StatBar
         label='Crop growth'
         value={season.growth}
@@ -532,6 +550,13 @@ function controlGroups(data: WorldSeasons): AdjustGroup[] {
     ...data.seasons.map((season) => ({
       title: season.name,
       fields: [
+        {
+          key: `${SEASON_KEY}${season.id}:share_pct`,
+          label: 'Share of the year',
+          value: season.share_pct,
+          min: 1,
+          max: PERCENT,
+        },
         {
           key: `${SEASON_KEY}${season.id}:temperature_shift`,
           label: 'Warmth',

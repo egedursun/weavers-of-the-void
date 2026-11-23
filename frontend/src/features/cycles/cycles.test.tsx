@@ -145,6 +145,9 @@ describe('cycles, gifts, kin and bound labour', () => {
           item: null,
           state: 'open',
           answers_gift_id: null,
+          circuit_id: null,
+          owed: true,
+          owed_back: 40,
           due_epoch: 7,
           settled_epoch: null,
           epoch: 5,
@@ -182,6 +185,70 @@ describe('cycles, gifts, kin and bound labour', () => {
     })
   })
 
+  it('releases a debt and shows a gift answered with more', async () => {
+    serveBase()
+    onApi('GET', '/api/cycles/of/20', {
+      ...EMPTY,
+      node: TOWN,
+      gifts: [
+        {
+          id: 11,
+          giver: TOWN,
+          receiver: REALM,
+          value: 30,
+          occasion: 'amends',
+          item: null,
+          state: 'open',
+          answers_gift_id: null,
+          circuit_id: null,
+          owed: true,
+          owed_back: 15,
+          due_epoch: 8,
+          settled_epoch: null,
+          epoch: 6,
+          locked: [],
+        },
+        {
+          id: 12,
+          giver: REALM,
+          receiver: TOWN,
+          value: 20,
+          occasion: 'hospitality',
+          item: null,
+          state: 'exceeded',
+          answers_gift_id: null,
+          circuit_id: null,
+          owed: false,
+          owed_back: 20,
+          due_epoch: null,
+          settled_epoch: 6,
+          epoch: 5,
+          locked: [],
+        },
+      ],
+      gift_balance: 15,
+    })
+    onApi('POST', '/api/actions/gift:release', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CyclesSection nodeId={20} />)
+    await screen.getByRole('tab', { name: /Gifts/ }).click()
+    await expect
+      .element(screen.getByText('Amends for a wrong, worth 30'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Answered with more, the giver now owes'))
+      .toBeVisible()
+    await screen
+      .getByRole('button', { name: 'Release the debt' })
+      .first()
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/gift:release'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/gift:release')[0].body).toEqual({
+      gift_id: 11,
+    })
+  })
+
   it('shows a people’s ways of kin and sets them', async () => {
     serveBase()
     onApi('GET', '/api/cycles/of/60', {
@@ -193,7 +260,7 @@ describe('cycles, gifts, kin and bound labour', () => {
         descent_group: 'clan',
         kin_terms: 'bifurcate_merging',
         adoption: 'heir',
-        first_side: 'female',
+        first_side: 'bearer',
         sibling_union_first: true,
         sibling_union_second: false,
         locked: [],
@@ -223,7 +290,9 @@ describe('cycles, gifts, kin and bound labour', () => {
     const set = screen.getByRole('button', { name: 'Set them' })
     await expect.element(set).toHaveAttribute('aria-disabled', 'true')
     await screen.getByRole('combobox', { name: 'Which side is first' }).click()
-    await screen.getByRole('option', { name: 'The male side is first' }).click()
+    await screen
+      .getByRole('option', { name: 'The begetting side is first' })
+      .click()
     await set.click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/kinship:set'))
@@ -234,7 +303,7 @@ describe('cycles, gifts, kin and bound labour', () => {
       residence: 'new_household',
       kin_terms: 'lineal',
       adoption: 'foster',
-      first_side: 'male',
+      first_side: 'begetter',
     })
   })
 

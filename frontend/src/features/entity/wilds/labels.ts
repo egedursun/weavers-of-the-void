@@ -1,4 +1,5 @@
 import {
+  type LucideIcon,
   Angry,
   Apple,
   Axe,
@@ -11,7 +12,9 @@ import {
   Bone,
   Brain,
   Bug,
+  Candy,
   Carrot,
+  Coffee,
   Crosshair,
   Dna,
   Dog,
@@ -35,6 +38,7 @@ import {
   Grape,
   Hand,
   HandHeart,
+  HeartCrack,
   HeartPulse,
   Hexagon,
   History,
@@ -56,19 +60,23 @@ import {
   Palette,
   PartyPopper,
   PawPrint,
+  Pill,
   Rabbit,
   Radar,
   Rat,
+  Recycle,
   Repeat,
   ScanEye,
   Send,
   Shield,
   ShieldHalf,
+  ShieldOff,
   Shovel,
   Shrimp,
   Shrub,
   Skull,
   Snowflake,
+  Sparkle,
   Sparkles,
   Spline,
   Split,
@@ -78,11 +86,13 @@ import {
   Syringe,
   Target,
   Tractor,
+  TreeDeciduous,
   TreePine,
   Trees,
   TrendingDown,
   TrendingUp,
   Triangle,
+  Trophy,
   User,
   Users,
   Utensils,
@@ -90,7 +100,8 @@ import {
   Waves,
   Wheat,
   WheatOff,
-  type LucideIcon,
+  Wind,
+  Zap,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type ProgressTone } from '@/components/ui/progress'
@@ -189,6 +200,14 @@ export const DIET: Record<components['schemas']['Diet'], Named> = {
   mineral: { label: 'Stone-fed', icon: Gem, tone: 'verdigris' },
   soul: { label: 'Soul-fed', icon: Ghost, tone: 'verdigris' },
   void: { label: 'Void-fed', icon: Eclipse, tone: 'danger' },
+  parasite: { label: 'Parasite', icon: Bug, tone: 'danger' },
+  decomposer: { label: 'Decomposer', icon: Recycle, tone: 'muted' },
+  chemosynthetic: {
+    label: 'Ground-fed',
+    icon: FlaskConical,
+    tone: 'verdigris',
+  },
+  energy: { label: 'Power-fed', icon: Zap, tone: 'gold' },
 }
 
 export const SOCIALITY: Record<string, Named> = {
@@ -196,6 +215,8 @@ export const SOCIALITY: Record<string, Named> = {
   pack: { label: 'Runs in packs', icon: PawPrint, tone: 'warning' },
   herd: { label: 'Lives in herds', icon: Users, tone: 'success' },
   hive: { label: 'Lives in a hive', icon: Hexagon, tone: 'gold' },
+  colony: { label: 'Lives in colonies', icon: Network, tone: 'info' },
+  swarm: { label: 'Moves in swarms', icon: Wind, tone: 'warning' },
 }
 
 export const STAGE: Record<string, Named & { step: number; hint: string }> = {
@@ -210,29 +231,43 @@ export const STAGE: Record<string, Named & { step: number; hint: string }> = {
     label: 'Tamed',
     icon: Hand,
     tone: 'info',
-    step: 1,
+    step: 2,
     hint: 'Caught and gentled one by one',
   },
   herded: {
     label: 'Herded',
     icon: Fence,
     tone: 'verdigris',
-    step: 2,
+    step: 3,
     hint: 'Kept and fed in herds',
   },
   domesticated: {
     label: 'Domesticated',
     icon: House,
     tone: 'success',
-    step: 3,
+    step: 4,
     hint: 'Bred by people for generations',
   },
   breed: {
     label: 'A breed of its own',
     icon: Dna,
     tone: 'gold',
-    step: 4,
+    step: 5,
     hint: 'A kind people made',
+  },
+  commensal: {
+    label: 'Lives beside people',
+    icon: House,
+    tone: 'verdigris',
+    step: 1,
+    hint: 'Lives off what towns leave behind and tames more easily',
+  },
+  feral: {
+    label: 'Gone feral',
+    icon: TreeDeciduous,
+    tone: 'warning',
+    step: 0,
+    hint: 'Once kept, now wild again where its keepers are gone',
   },
 }
 
@@ -258,6 +293,12 @@ export const PRODUCT_PARTS: Record<ProductPart, Named> = {
   sap: { label: 'Sap', icon: Droplets, tone: 'gold' },
   dye: { label: 'Dye', icon: Palette, tone: 'info' },
   toxin: { label: 'Toxin', icon: Skull, tone: 'danger' },
+  oil: { label: 'Oil', icon: Droplet, tone: 'gold' },
+  sugar: { label: 'Sugar', icon: Candy, tone: 'success' },
+  spice: { label: 'Spice', icon: Sparkle, tone: 'warning' },
+  resin: { label: 'Resin', icon: Droplets, tone: 'gold' },
+  stimulant: { label: 'Stimulant', icon: Coffee, tone: 'warning' },
+  fodder: { label: 'Fodder', icon: Wheat, tone: 'success' },
 }
 
 export const USE: Record<string, Named> = {
@@ -280,6 +321,8 @@ export const USE: Record<string, Named> = {
     icon: WandSparkles,
     tone: 'verdigris',
   },
+  sport: { label: 'Sport and racing', icon: Trophy, tone: 'gold' },
+  medicine: { label: 'Source of remedies', icon: Pill, tone: 'success' },
 }
 
 export const SPECIES_CLASS: Record<string, Named & { hint: string }> = {
@@ -346,6 +389,18 @@ export const BIOCHEMISTRY: Record<string, Named & { hint: string }> = {
     tone: 'gold',
     hint: 'Life of spirit; it lives on any world',
   },
+  carbon_methane: {
+    label: 'Carbon and methane',
+    icon: Flame,
+    tone: 'warning',
+    hint: 'Life built on carbon in liquid methane',
+  },
+  plasma: {
+    label: 'Plasma',
+    icon: Zap,
+    tone: 'gold',
+    hint: 'Life held in charged gas',
+  },
 }
 
 export const GROWTH_CYCLE: Record<string, Named & { hint: string }> = {
@@ -403,7 +458,7 @@ export const CULTIVATION: Record<
   },
 }
 
-export const PLANT_YIELD: Record<string, Named> = {
+export const PLANT_YIELD: Record<components['schemas']['PlantYield'], Named> = {
   grain: { label: 'Grain', icon: Wheat, tone: 'gold' },
   tuber: { label: 'Tubers', icon: Nut, tone: 'warning' },
   fruit: { label: 'Fruit', icon: Grape, tone: 'success' },
@@ -418,6 +473,12 @@ export const PLANT_YIELD: Record<string, Named> = {
     tone: 'verdigris',
   },
   poison: { label: 'Poison', icon: Skull, tone: 'danger' },
+  fodder: { label: 'Fodder', icon: Sprout, tone: 'success' },
+  oil: { label: 'Oil', icon: Droplet, tone: 'gold' },
+  resin: { label: 'Resin', icon: Droplets, tone: 'warning' },
+  spice: { label: 'Spice', icon: Flame, tone: 'danger' },
+  stimulant: { label: 'Stimulant', icon: Zap, tone: 'warning' },
+  sugar: { label: 'Sugar', icon: Candy, tone: 'gold' },
 }
 
 export const TREND: Record<string, Named & { badge: BadgeTone }> = {
@@ -478,6 +539,24 @@ export const TEMPER: Record<string, Named & { hint: string }> = {
     icon: HandHeart,
     tone: 'success',
     hint: 'Kept at a mortal’s side as a pet',
+  },
+  wounded: {
+    label: 'Wounded',
+    icon: HeartCrack,
+    tone: 'danger',
+    hint: 'Keeps to its lair to heal, and strikes harder if cornered',
+  },
+  brooding: {
+    label: 'Brooding',
+    icon: Egg,
+    tone: 'warning',
+    hint: 'Guards its young in its lair against all who come near',
+  },
+  cowed: {
+    label: 'Cowed',
+    icon: ShieldOff,
+    tone: 'muted',
+    hint: 'Keeps away from where it was driven off',
   },
 }
 

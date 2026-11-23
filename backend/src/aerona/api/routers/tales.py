@@ -100,7 +100,15 @@ async def node_tales(services: ServicesDep, node_id: NodeId) -> TalesNodeView:
             raise NotFoundError("No such thing.")
         cosmos = await CosmosRepository(session).require_cosmos()
         formation = await session.get(FormationHistoryRow, node_id)
-        season = await session.get(IrregularSeasonRow, node_id)
+        seasons = list(
+            await session.scalars(
+                select(IrregularSeasonRow)
+                .where(
+                    or_(IrregularSeasonRow.world_id == node_id, IrregularSeasonRow.source_region_id == node_id, IrregularSeasonRow.source_star_id == node_id)
+                )
+                .order_by(IrregularSeasonRow.id)
+            )
+        )
         forecasts = list(
             await session.scalars(
                 select(WinterForecastRow)
@@ -121,7 +129,7 @@ async def node_tales(services: ServicesDep, node_id: NodeId) -> TalesNodeView:
             session,
             [
                 node_id,
-                *((season.by_node_id,) if season is not None else ()),
+                *(item for season in seasons for item in (season.world_id, season.by_node_id, season.source_region_id, season.source_star_id)),
                 *(item for row in forecasts for item in (row.world_id, row.people_entity_id, row.scholar_entity_id)),
                 *(item for _, plan in plans for item in (plan.holder_node_id, plan.target_node_id)),
                 *(item for row in echoes for item in (row.source_node_id, row.echo_node_id)),
@@ -148,21 +156,30 @@ async def node_tales(services: ServicesDep, node_id: NodeId) -> TalesNodeView:
             )
             if formation is not None
             else None,
-            season=LongSeasonView(
-                world=ref(refs, season.world_id),
-                cause=season.cause,
-                spell=season.spell,
-                spell_started_epoch=season.spell_started_epoch,
-                spell_length=season.spell_length,
-                severity=season.severity,
-                by_node=at(refs, season.by_node_id),
-                locked=season.locked,
-            )
-            if season is not None
-            else None,
+            seasons=[
+                LongSeasonView(
+                    id=season.id,
+                    world=ref(refs, season.world_id),
+                    cause=season.cause,
+                    shape=season.shape,
+                    spell=season.spell,
+                    spell_started_epoch=season.spell_started_epoch,
+                    spell_length=season.spell_length,
+                    severity=season.severity,
+                    reach=season.reach,
+                    source_impact_id=season.source_impact_id,
+                    source_region=at(refs, season.source_region_id),
+                    source_star=at(refs, season.source_star_id),
+                    source_incident_id=season.source_incident_id,
+                    by_node=at(refs, season.by_node_id),
+                    locked=season.locked,
+                )
+                for season in seasons
+            ],
             forecasts=[
                 ForecastView(
                     id=row.id,
+                    long_season_id=row.long_season_id,
                     world=ref(refs, row.world_id),
                     people=ref(refs, row.people_entity_id),
                     scholar=at(refs, row.scholar_entity_id),

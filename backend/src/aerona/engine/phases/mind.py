@@ -58,7 +58,8 @@ from aerona.engine.mind.book import (
 )
 from aerona.engine.mind.depth import backfill_depth
 from aerona.engine.mind.dreams import dream, visitations
-from aerona.engine.mind.ethics import SCHISM_FACTION, drift_ethics, restore, schism, seed_ethics, seed_honour, spread_shame
+from aerona.engine.mind.emotions_w52 import stir_and_act
+from aerona.engine.mind.ethics import SCHISM_FACTION, backfill_acts, drift_ethics, restore, schism, seed_ethics, seed_honour, spread_shame
 from aerona.engine.mind.feelings import feel
 from aerona.engine.mind.grief import GriefTally, advance
 from aerona.engine.mind.hooks import FIGHTING_ROLES, judged
@@ -84,6 +85,7 @@ from aerona.engine.mind.thoughts import forget_faded as forget_faded_thoughts
 from aerona.engine.mind.thoughts import settle_mood, think
 from aerona.engine.mind.traits import seed_traits
 from aerona.engine.mind.values import drift_body, drift_culture, drift_divine, drift_person, seed_values
+from aerona.engine.mortal.hosts import feed_on_hosts
 from aerona.engine.phase import Phase
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.phases.heroes import active_quest, start_quest
@@ -569,6 +571,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.mind_facets",
     "table.minds",
     "table.mortal_profiles",
+    "table.personality_values",
     "table.skills",
     "table.thoughts",
     "table.traits",
@@ -879,6 +882,7 @@ async def mind_split(ctx: TickContext) -> None:
     "table.polity_profiles",
     "table.sons",
     "table.stars",
+    "table.thoughts",
     "table.worlds",
 )
 @writes(
@@ -943,6 +947,8 @@ async def mind_ideas(ctx: TickContext) -> None:
 @reads(
     "table.applied_fixups",
     "table.artwork_profiles",
+    "table.augment_effects",
+    "table.augments",
     "table.bonds",
     "table.calendars",
     "table.community_stocks",
@@ -955,14 +961,19 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.entity_flags",
     "table.forced_weather",
     "table.geasa",
+    "table.incidents",
+    "table.incubating_ideas",
+    "table.irregular_seasons",
     "table.item_profiles",
     "table.marriages",
     "table.memories",
     "table.messages",
+    "table.mind_attributes",
     "table.mind_facets",
     "table.minds",
     "table.mortal_profiles",
     "table.needs",
+    "table.node_births",
     "table.nodes",
     "table.offices",
     "table.personality_values",
@@ -973,6 +984,7 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.region_environment",
     "table.reputations",
     "table.ruler_currencies",
+    "table.skills",
     "table.sky_events",
     "table.stars",
     "table.thoughts",
@@ -983,31 +995,40 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.worlds",
 )
 @writes(
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.deed_claims",
     "table.deeds",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
     "table.memories",
     "table.mind_facets",
     "table.mortal_profiles",
     "table.personality_values",
     "table.professions_of_value",
     "table.reputations",
+    "table.skills",
     "table.thoughts",
 )
 async def mind_thoughts(ctx: TickContext) -> None:
     sleeping = await dormant_ids(ctx)
-    felt = relived = forgotten = 0
+    felt = relived = forgotten = acted = 0
     moods: dict[str, int] = defaultdict(int)
     for mortal in unheld(await living_minds(ctx.session)):
         if mortal.entity_type is not EntityType.MORTAL or mortal.id in sleeping:
             continue
         tally = await feel(ctx, mortal)
         felt, relived = felt + tally.thoughts, relived + tally.relived
+        moved = await stir_and_act(ctx, mortal)
+        felt, acted = felt + moved.stirred, acted + moved.acted
         forgotten += await forget_faded_thoughts(ctx.session, ctx.rules, mortal.id, ctx.epoch)
         state = await settle_mood(ctx.session, ctx.rules, mortal, ctx.epoch)
         if state is not None:
             moods[state.value] += 1
     ctx.count("thoughts", felt)
     ctx.count("memories_relived", relived)
+    ctx.count("emotions_acted_on", acted)
     ctx.count("thoughts_forgotten", forgotten)
     for name, count in moods.items():
         ctx.count(f"mood_{name}", count)
@@ -1033,13 +1054,24 @@ async def mind_thoughts(ctx: TickContext) -> None:
     "table.minds",
     "table.mortal_profiles",
     "table.needs",
+    "table.node_births",
     "table.nodes",
     "table.personality_values",
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
 )
-@writes("table.griefs", "table.memories", "table.thoughts", "table.traits")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.griefs",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.thoughts",
+    "table.traits",
+)
 async def mind_grief(ctx: TickContext) -> None:
     tally = GriefTally()
     mourners = set(await ctx.session.scalars(select(GriefRow.mourner_node_id).where(GriefRow.stage.in_(MIND_GRIEF_GRIEF_STAGES))))
@@ -1064,6 +1096,8 @@ async def mind_grief(ctx: TickContext) -> None:
     "mortal.willpower",
     "table.applied_fixups",
     "table.artwork_profiles",
+    "table.augment_effects",
+    "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -1105,6 +1139,7 @@ async def mind_grief(ctx: TickContext) -> None:
     "table.prostheses",
     "table.reading_kinds",
     "table.routes",
+    "table.sense_profiles",
     "table.skills",
     "table.sons",
     "table.stars",
@@ -1222,7 +1257,7 @@ async def mind_preferences(ctx: TickContext) -> None:
     "table.thoughts",
     "table.traits",
 )
-@writes("table.culture_ethics", "table.culture_honour", "table.memories", "table.mortal_profiles", "table.thoughts")
+@writes("table.applied_fixups", "table.culture_ethics", "table.culture_honour", "table.memories", "table.mortal_profiles", "table.thoughts")
 async def mind_ethics(ctx: TickContext) -> None:
     peoples, _, mortals = await peoples_and_members(ctx)
     cults = unheld(await canon(ctx.session, [EntityType.CULT]))
@@ -1231,6 +1266,8 @@ async def mind_ethics(ctx: TickContext) -> None:
         seeded += await seed_ethics(ctx, culture)
         await seed_honour(ctx, culture)
         moved += await drift_ethics(ctx, culture)
+    ctx.count("ethics_acts_backfilled", await backfill_acts(ctx, [*peoples, *cults]))
+    ctx.count("hosts_fed_on", await feed_on_hosts(ctx, peoples))
     for people in peoples:
         call = await schism(ctx, people)
         if call is None or await split_already(ctx, people):

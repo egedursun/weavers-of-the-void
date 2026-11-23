@@ -55,6 +55,7 @@ class ArmedTally:
     "table.collection_places",
     "table.community_societies",
     "table.creator",
+    "table.crowd_feelings",
     "table.crowd_moods",
     "table.dimensions",
     "table.districts",
@@ -89,6 +90,7 @@ class ArmedTally:
     "table.collection_members",
     "table.collection_places",
     "table.community_societies",
+    "table.crowd_feelings",
     "table.crowd_moods",
     "table.incident_collections",
     "table.incident_facts",
@@ -148,6 +150,7 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
     "table.collection_members",
     "table.collection_places",
     "table.creator",
+    "table.crowd_feelings",
     "table.crowd_moods",
     "table.dimensions",
     "table.entities",
@@ -343,6 +346,7 @@ async def lost_lands(ctx: TickContext) -> None:
 
 @reads(
     "mortal.age",
+    "mortal.charisma",
     "mortal.lifespan",
     "settlement.population",
     "table.arcs",
@@ -352,11 +356,13 @@ async def lost_lands(ctx: TickContext) -> None:
     "table.collection_places",
     "table.community_societies",
     "table.creator",
+    "table.crowd_feelings",
     "table.dimensions",
     "table.entities",
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.house_members",
     "table.incident_collections",
     "table.incident_participants",
     "table.incidents",
@@ -379,12 +385,16 @@ async def lost_lands(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.claims",
     "table.collection_members",
+    "table.crowd_feelings",
+    "table.crowd_moods",
     "table.designated_heirs",
     "table.incident_collections",
     "table.incident_facts",
     "table.incident_participants",
     "table.incident_steps",
     "table.incidents",
+    "table.mortal_profiles",
+    "table.settlement_profiles",
     "table.storylet_runs",
 )
 async def storylets(ctx: TickContext) -> None:
@@ -396,6 +406,7 @@ async def storylets(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.crowd_feelings",
     "table.crowd_moods",
     "table.entities",
     "table.learning_biases",
@@ -426,6 +437,7 @@ async def social_learning(ctx: TickContext) -> None:
     "table.galaxy_clusters",
     "table.generations",
     "table.incident_collections",
+    "table.irregular_seasons",
     "table.node_births",
     "table.nodes",
     "table.settlement_profiles",
@@ -434,6 +446,7 @@ async def social_learning(ctx: TickContext) -> None:
     "table.worlds",
 )
 @writes(
+    "table.applied_fixups",
     "table.chronicle",
     "table.chronicle_entities",
     "table.culture_values",
@@ -454,6 +467,7 @@ async def generations(ctx: TickContext) -> None:
     "table.demographic_transitions",
     "table.diasporas",
     "table.entities",
+    "table.marriages",
     "table.nodes",
     "table.people_culture",
     "table.role_norms",

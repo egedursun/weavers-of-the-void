@@ -27,6 +27,8 @@ from aerona.api.schemas.lineage import (
     PoolView,
     ResemblanceView,
     TiedTraitView,
+    WillHeirView,
+    WillView,
 )
 from aerona.api.schemas.mind import LabelView
 from aerona.api.views.common import node_ref, node_refs
@@ -34,7 +36,7 @@ from aerona.catalog.genetic_effects import EFFECT_POINTS, GENETIC_EFFECT_LABELS
 from aerona.catalog.genetics import GIFT_STANCE_LABELS, HARMFUL, HOUSEHOLD_DECISION_LABELS, HOUSEHOLD_ROLE_LABELS, LOCI, LOCUS_GROUP_LABELS
 from aerona.catalog.mind import TRAITS
 from aerona.core.errors import NotFoundError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.dwelling_kinds import DwellingKindRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
@@ -46,6 +48,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.genetics import GeneticEffect
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.society import SocialClass
+from aerona.engine.demography.wills import heirs_of_will, will_of
 from aerona.engine.genetics.genome import appearance_text, aptitudes, carried_alleles, describe_effects, effect_pct, pair_of, phenotype, score_of, tied_traits
 from aerona.engine.households.dwelling_kinds import dwelling_kind_row
 from aerona.engine.households.homes import expectation, furnishings
@@ -83,11 +86,11 @@ def labels[K: StrEnum](table: Mapping[K, str]) -> list[LabelView]:
 
 
 def kind_label(kind: EntityType | None) -> str:
-    return kind.value.replace("_", " ") if kind is not None else "thing"
+    return spoken(kind) if kind is not None else "thing"
 
 
 def class_label(social_class: SocialClass) -> str:
-    return social_class.value.replace("_", " ").capitalize()
+    return spoken(social_class).capitalize()
 
 
 def loci_views(rules: Rules, frequencies: Mapping[str, Mapping[str, int]] | None) -> list[LocusView]:
@@ -346,6 +349,24 @@ async def aggregate_view(session: AsyncSession, row: HouseholdAggregateRow) -> A
     )
 
 
+async def will_view(session: AsyncSession, testator_id: int) -> WillView | None:
+    will = await will_of(session, testator_id)
+    if will is None:
+        return None
+    lines = await heirs_of_will(session, will.id)
+    refs = await node_refs(session, [*(line.heir_node_id for line in lines), *will.witnesses])
+    return WillView(
+        made_epoch=will.made_epoch,
+        witnesses=[refs[node] for node in will.witnesses if node in refs],
+        forged=will.forged,
+        read_epoch=will.read_epoch,
+        contested=will.contested,
+        set_aside=will.set_aside,
+        held=bool(will.locked),
+        heirs=[WillHeirView(heir=refs[line.heir_node_id], share=line.share) for line in lines if line.heir_node_id in refs],
+    )
+
+
 @router.get("/home/{node_id}", response_model=HomeView)
 async def home_view(services: ServicesDep, node_id: int = Path(ge=1)) -> HomeView:
     async with reader(services) as session:
@@ -394,6 +415,7 @@ async def home_view(services: ServicesDep, node_id: int = Path(ge=1)) -> HomeVie
             can_hold_household=can_household,
             can_hold_aggregates=can_aggregates,
             reason=reason,
+            will=await will_view(session, node_id) if kind is EntityType.MORTAL else None,
             household=await household_view(session, rules, own) if own is not None else None,
             households=[await household_view(session, rules, row) for row in local],
             aggregates=[await aggregate_view(session, row) for row in sorted(aggregates, key=lambda row: row.social_class.value)],

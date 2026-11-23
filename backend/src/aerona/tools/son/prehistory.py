@@ -34,7 +34,7 @@ async def plan_prehistory(call: SonCall, args: PlanPrehistoryInput) -> str:
     if world is None or world.creator_son_id != call.son.id:
         fail(SonResult.PREHISTORY_REFUSED, why="you can give a past only to a world you made")
     if held(world.id):
-        fail(SonResult.PREHISTORY_REFUSED, why="a stronger hand holds that world")
+        fail(SonResult.PREHISTORY_REFUSED, why="that world is held")
     cost = call.rules.prehistory.son_seed_cost
     require_essence(call, cost)
     try:

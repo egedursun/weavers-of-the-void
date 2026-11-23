@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { mortalRoleValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityLink, Section, Paged } from '@/components/domain'
 import { Label, Text } from '@/components/typography'
-import { humanize } from '@/features/entity/actions/schema'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { WarsPanel } from './WarsPanel'
 import { CaptivesList, TributesList } from './WarsTables'
 import { useCommunityHeroes, useCommunityWars } from './api'
@@ -25,7 +26,7 @@ function Heroes({ entityId }: { entityId: number }) {
             </EntityLink>
             {hero.role && (
               <Badge size='sm' variant='outline'>
-                {humanize(hero.role)}
+                {wordOf(mortalRoleValues, hero.role)}
               </Badge>
             )}
           </li>

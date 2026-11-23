@@ -52,6 +52,8 @@ GATHERING_COLLECTIONS = total(
         G.MOURNING: C.FUNERAL,
         G.INITIATION: C.CEREMONY,
         G.SPORT_MATCH: C.COMPETITION,
+        G.COMMEMORATION: C.CEREMONY,
+        G.MUSTER: C.WAR,
     },
 )
 
@@ -92,6 +94,8 @@ GATHERING_THOUGHTS = total(
         G.MOURNING: ThoughtKind.MOURNED,
         G.INITIATION: ThoughtKind.BELONGED,
         G.SPORT_MATCH: ThoughtKind.FELT_STIMULATED,
+        G.COMMEMORATION: ThoughtKind.BELONGED,
+        G.MUSTER: ThoughtKind.FELT_PURPOSE,
     },
 )
 

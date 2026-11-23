@@ -7,7 +7,7 @@ from aerona.db.tables.demography import CohortRow, LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Job, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition, Job, SexKind
 from aerona.domain.enums.entity import EntityOrigin, EntityType
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
@@ -40,7 +40,7 @@ async def town(session: AsyncSession, world: PlayerWorld) -> EntityRow:
         CohortRow(
             community_entity_id=created.id,
             age_band=AgeBand.ADULT,
-            sex=Sex.MALE,
+            sex_kind=SexKind.BEGETTER,
             social_class=SocialClass.PRIEST,
             condition=CohortCondition.NONE,
             count=300,

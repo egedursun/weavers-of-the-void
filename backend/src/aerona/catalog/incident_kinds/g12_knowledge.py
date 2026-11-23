@@ -7,13 +7,14 @@ from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.collective import CommemorationFeeling, DatingSystemKind
 from aerona.domain.enums.concealment import BreachCause, HiddenTruthKind
 from aerona.domain.enums.constructs import MindWill
-from aerona.domain.enums.couplings import SignCause, TeachingKind
+from aerona.domain.enums.couplings import SignCause
 from aerona.domain.enums.culture import ArtMode, BoostTrigger, SpeakerKind, Technique
 from aerona.domain.enums.discovery import AgeKind, BlueprintKind, GreatField, ResearchIncident, TheoryDomain
 from aerona.domain.enums.entity import EntityType as E
 from aerona.domain.enums.eras import ProgrammeStage
 from aerona.domain.enums.industry import MethodKind, ProcessKind
 from aerona.domain.enums.kinds import KindConcept
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.made import Attribution, IntrusionAim, IntrusionApproach, IntrusionOutcome
 from aerona.domain.enums.means import WritingMedium
 from aerona.domain.enums.mind import ActKind, GratitudeDeed, MemoryKind, SkillKind, TraitKind, ValueAxis, ValuePole
@@ -850,14 +851,21 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     *per_value(
         "teaching.",
-        TeachingKind,
+        KnowledgeKind,
         IncidentKindSpec(
             "teaching.",
             G.KNOWLEDGE,
             "{teacher} taught {learner} in {teaching} {price:for nothing|for # in wealth|for # in wealth}.",
             roles=(RoleSpec(R.TEACHER), RoleSpec(R.LEARNER)),
-            facts=(FactSpec("teaching", FactValue.ENUM, enum=TeachingKind), FactSpec("price", FactValue.NUMBER, FactUnit.WEALTH_POINTS)),
+            facts=(FactSpec("teaching", FactValue.ENUM, enum=KnowledgeKind), FactSpec("price", FactValue.NUMBER, FactUnit.WEALTH_POINTS)),
         ),
+    ),
+    IncidentKindSpec(
+        "knowledge.lost_with_holder",
+        G.KNOWLEDGE,
+        "{knowledge} that {subject} never taught died with it.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("knowledge", FactValue.ENUM, enum=KnowledgeKind),),
     ),
     IncidentKindSpec(
         "theories.founded",

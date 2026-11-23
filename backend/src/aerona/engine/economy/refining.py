@@ -55,7 +55,7 @@ class StepRun:
 
 
 def artisan_pool(ctx: TickContext, book: EconomyBook, community: EntityRow) -> int:
-    hands = book.hands(community.id, Job.CRAFTING)
+    hands = book.hands(community.id, Job.CRAFTING, Job.INDUSTRY)
     if hands is not None:
         return hands
     row = book.societies.get(community.id)

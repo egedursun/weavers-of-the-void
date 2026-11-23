@@ -5,7 +5,7 @@ from aerona.catalog.mind import MEMORIES, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.record_context import current_scope
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -396,7 +396,7 @@ async def set_need(scope: PlayerScope, command: SetNeed) -> Effect:
     await mind_for(scope, node)
     await write_needs(scope.session, node.id, {command.need: command.value})
     await hold(scope, node, NEED_LOCK, command.lock)
-    return Effect(f"{node.name}'s {label(command.need.value)} is now {command.value:d}.", target_node_id=node.id)
+    return Effect(f"{node.name}'s {spoken(command.need)} is now {command.value:d}.", target_node_id=node.id)
 
 
 @player_action("mind:pressure", ActionKind.OTHER)
@@ -407,7 +407,7 @@ async def set_pressure(scope: PlayerScope, command: SetPressure) -> Effect:
     await mind_for(scope, node)
     await write_pressures(scope.session, node.id, {command.pressure: command.value})
     await hold(scope, node, NEED_LOCK, command.lock)
-    return Effect(f"{node.name}'s {label(command.pressure.value)} is now {command.value:d}.", target_node_id=node.id)
+    return Effect(f"{node.name}'s {spoken(command.pressure)} is now {command.value:d}.", target_node_id=node.id)
 
 
 @player_action("mind:role", ActionKind.OTHER)
@@ -428,7 +428,7 @@ async def set_role(scope: PlayerScope, command: SetRole) -> Effect:
             roles={IncidentRole.SUBJECT: node.id, IncidentRole.AUTHORITY: acting.actor_node_id if (acting := current_scope()) is not None else None},
             facts={"reason": move.reason, "before": move.old, "after": move.new},
         )
-    return Effect(f"{node.name} is now {an(label(command.role.value))}.", target_node_id=node.id)
+    return Effect(f"{node.name} is now {an(spoken(command.role))}.", target_node_id=node.id)
 
 
 async def bodied_of(scope: PlayerScope, node_id: int) -> Bodied:

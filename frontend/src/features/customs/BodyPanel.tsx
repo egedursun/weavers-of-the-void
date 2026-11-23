@@ -43,7 +43,7 @@ function MarkCard({ row, blocked }: { row: Mark; blocked: string | null }) {
       icon={kind.icon}
       tone={kind.tone}
       title={`${kind.label} of ${MEANINGS[row.meaning].label.toLowerCase()}`}
-      caption={`Placed in epoch ${row.placed_epoch}`}
+      caption={`Placed in epoch ${row.placed_epoch}${row.augment_id !== null ? ' · shows an augment' : ''}`}
       removeLabel='Take the mark away'
       editTitle='Set the mark'
       note='Others read the mark: deeds and status bring renown, clan, marriage and age-set bind to the community, protection and mourning calm, and a brand of crime shames.'

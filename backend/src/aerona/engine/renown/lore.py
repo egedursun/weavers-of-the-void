@@ -17,7 +17,8 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.renown import LoreKind, LorePrice, ReputationAxis
+from aerona.domain.enums.knowledge import KnowledgeKind
+from aerona.domain.enums.renown import LorePrice, ReputationAxis
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
@@ -28,7 +29,7 @@ from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.renown.book import acclaim
 from aerona.engine.renown.lore_kinds import WIDER_LORE, HeldIndex, by_holder
 
-Item = tuple[LoreKind, str, int | None]
+Item = tuple[KnowledgeKind, str, int | None]
 SEEKERS = frozenset({EntityType.FACTION, EntityType.CULT, EntityType.BEAST, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.POLITY})
 
 
@@ -38,12 +39,12 @@ class LoreTally:
     value: int = 0
 
 
-async def wants_of(session: AsyncSession, seeker: EntityRow) -> frozenset[LoreKind]:
+async def wants_of(session: AsyncSession, seeker: EntityRow) -> frozenset[KnowledgeKind]:
     if seeker.entity_type is EntityType.FACTION:
         profile = await session.get(FactionProfileRow, seeker.id)
         return FACTION_LORE.get(profile.kind, frozenset()) if profile is not None else frozenset()
     if seeker.entity_type is EntityType.POLITY:
-        return frozenset({LoreKind.MAP})
+        return frozenset({KnowledgeKind.MAP})
     return ENTITY_LORE.get(seeker.entity_type, frozenset())
 
 
@@ -84,18 +85,18 @@ async def prophecy_index(session: AsyncSession) -> HeldIndex:
     return by_holder(found)
 
 
-async def holdings(session: AsyncSession, holder_id: int, kind: LoreKind) -> set[tuple[str, int | None]]:
+async def holdings(session: AsyncSession, holder_id: int, kind: KnowledgeKind) -> set[tuple[str, int | None]]:
     if kind in WIDER_LORE:
         return await WIDER_LORE[kind].holdings(session, holder_id)
-    if kind is LoreKind.TECHNIQUE:
+    if kind is KnowledgeKind.TECHNIQUE:
         return set((await technique_index(session)).get(holder_id, frozenset()))
-    if kind is LoreKind.SITE:
+    if kind is KnowledgeKind.SITE:
         places = select(EntityRow.id).where(EntityRow.entity_type == EntityType.PLACE)
         bonds = select(BondRow.target_node_id).where(
             BondRow.source_node_id == holder_id, BondRow.kind == BondKind.KNOWS, BondRow.state == BondState.ACTIVE, BondRow.target_node_id.in_(places)
         )
         return {("site", place) for place in await session.scalars(bonds)}
-    if kind is LoreKind.MAP:
+    if kind is KnowledgeKind.MAP:
         return set((await map_index(session)).get(holder_id, frozenset()))
     return set((await prophecy_index(session)).get(holder_id, frozenset()))
 
@@ -104,16 +105,16 @@ async def holders(session: AsyncSession, item: Item) -> int:
     kind, key, subject = item
     if kind in WIDER_LORE:
         return await WIDER_LORE[kind].holders(session, subject)
-    if kind is LoreKind.TECHNIQUE:
+    if kind is KnowledgeKind.TECHNIQUE:
         return (await technique_counts(session))[Technique(key)]
-    if kind is LoreKind.SITE:
+    if kind is KnowledgeKind.SITE:
         query = (
             select(func.count())
             .select_from(BondRow)
             .where(BondRow.target_node_id == subject, BondRow.kind == BondKind.KNOWS, BondRow.state == BondState.ACTIVE)
         )
         return int(await session.scalar(query) or 0)
-    if kind is LoreKind.MAP:
+    if kind is KnowledgeKind.MAP:
         return (await map_counts(session))[subject] if subject is not None else 0
     row = await session.get(ProphecyConditionRow, subject) if subject is not None else None
     return len(row.audience or []) if row is not None else 0
@@ -131,19 +132,19 @@ async def grant(ctx: TickContext, holder: EntityRow, item: Item) -> bool:
         granted = await WIDER_LORE[kind].grant(ctx, holder, subject)
         await ctx.session.flush()
         return granted
-    if kind is LoreKind.TECHNIQUE:
+    if kind is KnowledgeKind.TECHNIQUE:
         if await ctx.session.get(HolderTechniqueRow, (holder.id, Technique(key))) is not None:
             return False
         ctx.session.add(HolderTechniqueRow(holder_entity_id=holder.id, technique=Technique(key), since_epoch=ctx.epoch, secret=False))
-    elif kind is LoreKind.SITE and subject is not None:
+    elif kind is KnowledgeKind.SITE and subject is not None:
         await connect(ctx.session, holder.id, subject, BondKind.KNOWS, ctx.epoch, description="told where it lies")
-    elif kind is LoreKind.MAP and subject is not None:
+    elif kind is KnowledgeKind.MAP and subject is not None:
         row = await ctx.session.get(PolityMapKnowledgeRow, (holder.id, subject))
         if row is None:
             ctx.session.add(PolityMapKnowledgeRow(polity_entity_id=holder.id, region_entity_id=subject, level=1, held=False, updated_epoch=ctx.epoch))
         elif not row.held:
             row.level, row.updated_epoch = row.level + 1, ctx.epoch
-    elif kind is LoreKind.PROPHECY and subject is not None:
+    elif kind is KnowledgeKind.PROPHECY and subject is not None:
         prophecy = await ctx.session.get(ProphecyConditionRow, subject)
         if prophecy is None or holder.id in (prophecy.audience or []):
             return False
@@ -182,7 +183,7 @@ async def neighbours(ctx: TickContext, atlas: RegionAtlas, seeker: EntityRow) ->
     return found
 
 
-async def best_offer(ctx: TickContext, seeker: EntityRow, sellers: list[EntityRow], kinds: frozenset[LoreKind]) -> tuple[EntityRow, Item, int] | None:
+async def best_offer(ctx: TickContext, seeker: EntityRow, sellers: list[EntityRow], kinds: frozenset[KnowledgeKind]) -> tuple[EntityRow, Item, int] | None:
     best: tuple[EntityRow, Item, int] | None = None
     for kind in sorted(kinds, key=lambda item: item.value):
         mine = await holdings(ctx.session, seeker.id, kind)
@@ -236,9 +237,9 @@ async def confide(ctx: TickContext, actor: EntityRow, target: EntityRow) -> bool
     secrets = await ctx.session.scalars(
         select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == source, HolderTechniqueRow.secret.is_(True))
     )
-    known = await holdings(ctx.session, keeper.id, LoreKind.TECHNIQUE)
+    known = await holdings(ctx.session, keeper.id, KnowledgeKind.TECHNIQUE)
     for technique in secrets:
-        item = (LoreKind.TECHNIQUE, technique.value, None)
+        item = (KnowledgeKind.TECHNIQUE, technique.value, None)
         if (technique.value, None) in known:
             continue
         value = await value_of(ctx, item)

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { damageTypeValues } from '@/api/generated/schema'
 import {
   EmptyState,
   EntityLink,
@@ -32,6 +33,7 @@ import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Muted, Text } from '@/components/typography'
 import { Chip, Facts, RecordRow } from '@/features/cosmography/parts'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { named } from '@/features/entity/environment/labels'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { IncidentNameForge } from './IncidentNameForge'
@@ -235,7 +237,9 @@ function StepLine({ step }: { step: EventStep }) {
             {step.locus_name ?? spokenKey(step.locus_key ?? step.locus_kind)}
           </Chip>
         )}
-        {step.damage_type && <Chip>{spokenKey(step.damage_type)}</Chip>}
+        {step.damage_type && (
+          <Chip>{wordOf(damageTypeValues, step.damage_type)}</Chip>
+        )}
         {step.amount !== null && (
           <Chip>{amountText(step.amount, step.unit)}</Chip>
         )}

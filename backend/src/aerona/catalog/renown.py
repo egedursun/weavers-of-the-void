@@ -1,11 +1,15 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.catalog.knowledge import KNOWLEDGE
+from aerona.core.total import total
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
-from aerona.domain.enums.mind import ActKind, SkillKind
+from aerona.domain.enums.knowledge import KnowledgeKind
+from aerona.domain.enums.mind import ActKind, SkillKind, ValueAxis
 from aerona.domain.enums.relations import ContestKind
-from aerona.domain.enums.renown import ClaimKind, ClaimStatus, Currency, LoreKind, LorePrice, ReputationAxis
+from aerona.domain.enums.renown import ClaimKind, ClaimStatus, Currency, LorePrice, ReputationAxis
 
 A = ActKind
 X = ReputationAxis
@@ -22,12 +26,13 @@ def renown(approved: ReputationAxis | None, condemned: ReputationAxis | None, al
     return ActRenown(approved, condemned, always)
 
 
-ACT_RENOWN: MappingProxyType[ActKind, ActRenown] = MappingProxyType(
+ACT_RENOWN: Mapping[ActKind, ActRenown] = total(
+    ActKind,
     {
-        A.EXECUTION: renown(X.HONOUR, X.CRUELTY),
+        A.EXECUTION: renown(X.JUSTICE, X.CRUELTY),
         A.MUTILATION: renown(X.HONOUR, X.CRUELTY),
         A.BETRAYAL: renown(X.TRICKERY, X.TRICKERY, X.TRICKERY),
-        A.MERCY_TO_ENEMY: renown(X.HONOUR, X.TRICKERY),
+        A.MERCY_TO_ENEMY: renown(X.MERCY, X.TRICKERY),
         A.SACRIFICE_OF_PEOPLE: renown(X.PIETY, X.CRUELTY),
         A.TRADE_WITH_OUTSIDERS: renown(X.GENEROSITY, X.TROUBLEMAKER),
         A.BUILDING_TEMPLES: renown(X.PIETY, None, X.PIETY),
@@ -76,10 +81,18 @@ ACT_RENOWN: MappingProxyType[ActKind, ActRenown] = MappingProxyType(
         A.SELLING_OFFICES: renown(X.WISDOM, X.TROUBLEMAKER),
         A.POACHING: renown(X.TRICKERY, X.TROUBLEMAKER),
         A.ENCLOSING: renown(X.WISDOM, X.CRUELTY),
-    }
+        A.LYING: renown(X.TRICKERY, X.TRICKERY, X.TRICKERY),
+        A.DRUNKENNESS: renown(X.GENEROSITY, X.TROUBLEMAKER),
+        A.TOMB_ROBBING: renown(X.TRICKERY, X.CRUELTY),
+        A.USING_CHARMS: renown(X.WISDOM, X.TROUBLEMAKER),
+        A.FEEDING_ON_HOSTS: renown(None, X.CRUELTY),
+        A.KILLING_SACRED_ANIMAL: renown(X.HEROISM, X.CRUELTY),
+        A.FIXING_CONTESTS: renown(X.TRICKERY, X.TRICKERY, X.TRICKERY),
+    },
 )
 
-CONTEST_RENOWN: MappingProxyType[ContestKind, tuple[ReputationAxis, SkillKind | None]] = MappingProxyType(
+CONTEST_RENOWN: Mapping[ContestKind, tuple[ReputationAxis, SkillKind | None]] = total(
+    ContestKind,
     {
         ContestKind.RIDDLE_GAME: (X.WISDOM, None),
         ContestKind.INSULT_CONTEST: (X.SKILL_RENOWN, SkillKind.ORATORY),
@@ -88,24 +101,38 @@ CONTEST_RENOWN: MappingProxyType[ContestKind, tuple[ReputationAxis, SkillKind | 
         ContestKind.TRIAL_OF_WISDOM: (X.WISDOM, None),
         ContestKind.SONG_CONTEST: (X.SKILL_RENOWN, SkillKind.RITUAL),
         ContestKind.STORYTELLING: (X.SKILL_RENOWN, SkillKind.LORE),
-    }
+        ContestKind.RACE: (X.SKILL_RENOWN, SkillKind.RIDING),
+        ContestKind.CRAFT_CONTEST: (X.SKILL_RENOWN, SkillKind.SMITHING),
+    },
 )
 
-AXIS_LABELS: MappingProxyType[ReputationAxis, str] = MappingProxyType(
+
+@dataclass(frozen=True)
+class AxisSpec:
+    label: str
+    glorious: bool
+    value: ValueAxis | None = None
+
+
+AXES: Mapping[ReputationAxis, AxisSpec] = total(
+    ReputationAxis,
     {
-        X.HEROISM: "Heroism",
-        X.HONOUR: "Honour",
-        X.CRUELTY: "Cruelty",
-        X.PIETY: "Piety",
-        X.GENEROSITY: "Generosity",
-        X.WISDOM: "Wisdom",
-        X.TRICKERY: "Trickery",
-        X.SKILL_RENOWN: "Renown for a skill",
-        X.TROUBLEMAKER: "Troublemaking",
-    }
+        X.HEROISM: AxisSpec("Heroism", glorious=True, value=ValueAxis.MARTIAL),
+        X.HONOUR: AxisSpec("Honour", glorious=True, value=ValueAxis.HONOUR),
+        X.CRUELTY: AxisSpec("Cruelty", glorious=False, value=ValueAxis.MERCY),
+        X.PIETY: AxisSpec("Piety", glorious=True, value=ValueAxis.PIETY),
+        X.GENEROSITY: AxisSpec("Generosity", glorious=True, value=ValueAxis.FRIENDSHIP),
+        X.WISDOM: AxisSpec("Wisdom", glorious=True, value=ValueAxis.KNOWLEDGE),
+        X.TRICKERY: AxisSpec("Trickery", glorious=False, value=ValueAxis.TRUTH),
+        X.SKILL_RENOWN: AxisSpec("Renown for a skill", glorious=True, value=ValueAxis.CRAFTSMANSHIP),
+        X.TROUBLEMAKER: AxisSpec("Troublemaking", glorious=False, value=ValueAxis.LAW),
+        X.MERCY: AxisSpec("Mercy", glorious=True, value=ValueAxis.MERCY),
+        X.JUSTICE: AxisSpec("Justice", glorious=True, value=ValueAxis.LAW),
+    },
 )
-GLORIOUS = frozenset({X.HEROISM, X.HONOUR, X.PIETY, X.GENEROSITY, X.WISDOM, X.SKILL_RENOWN})
-INFAMOUS = frozenset({X.CRUELTY, X.TRICKERY, X.TROUBLEMAKER})
+AXIS_LABELS: Mapping[ReputationAxis, str] = {axis: spec.label for axis, spec in AXES.items()}
+GLORIOUS = frozenset(axis for axis, spec in AXES.items() if spec.glorious)
+INFAMOUS = frozenset(axis for axis, spec in AXES.items() if not spec.glorious)
 
 CURRENCY_LABELS: MappingProxyType[Currency, str] = MappingProxyType(
     {Currency.PRESTIGE: "Prestige", Currency.PIETY: "Piety", Currency.DREAD: "Dread", Currency.TYRANNY: "Tyranny"}
@@ -114,44 +141,33 @@ CLAIM_LABELS: MappingProxyType[ClaimKind, str] = MappingProxyType({ClaimKind.TRU
 STATUS_LABELS: MappingProxyType[ClaimStatus, str] = MappingProxyType(
     {ClaimStatus.STANDING: "Believed", ClaimStatus.VERIFIED: "Proven", ClaimStatus.EXPOSED: "Exposed"}
 )
-LORE_LABELS: MappingProxyType[LoreKind, str] = MappingProxyType(
-    {
-        LoreKind.TECHNIQUE: "A technique",
-        LoreKind.SITE: "A hidden site",
-        LoreKind.MAP: "Knowledge of a land",
-        LoreKind.PROPHECY: "A prophecy",
-        LoreKind.TRUE_NAME: "A true name",
-        LoreKind.WEAKNESS: "A weakness",
-        LoreKind.PATTERN: "A pattern of a made thing",
-        LoreKind.SOURCE: "Where a source of power lies",
-    }
-)
+LORE_LABELS: Mapping[KnowledgeKind, str] = {kind: spec.label for kind, spec in KNOWLEDGE.items()}
 PRICE_LABELS: MappingProxyType[LorePrice, str] = MappingProxyType({LorePrice.WEALTH: "Wealth", LorePrice.FAVOUR: "A favour", LorePrice.RENOWN: "Renown"})
 
-FACTION_LORE: MappingProxyType[FactionKind, frozenset[LoreKind]] = MappingProxyType(
+FACTION_LORE: MappingProxyType[FactionKind, frozenset[KnowledgeKind]] = MappingProxyType(
     {
-        FactionKind.SCHOLARS_ACADEMY: frozenset({LoreKind.TECHNIQUE, LoreKind.PROPHECY}),
-        FactionKind.CRAFT_GUILD: frozenset({LoreKind.TECHNIQUE}),
-        FactionKind.MERCHANT_GUILD: frozenset({LoreKind.MAP, LoreKind.SITE}),
-        FactionKind.WANDERING_MARKET: frozenset({LoreKind.MAP}),
-        FactionKind.SECRET_SOCIETY: frozenset({LoreKind.SITE, LoreKind.PROPHECY, LoreKind.TRUE_NAME}),
-        FactionKind.MAGE_ORDER: frozenset({LoreKind.SOURCE, LoreKind.TRUE_NAME}),
-        FactionKind.ENGINEERS_SOCIETY: frozenset({LoreKind.PATTERN, LoreKind.TECHNIQUE}),
-        FactionKind.CHARTERED_COMPANY: frozenset({LoreKind.PATTERN, LoreKind.MAP}),
-        FactionKind.PRIESTHOOD: frozenset({LoreKind.PROPHECY}),
-        FactionKind.BANDITS: frozenset({LoreKind.SITE, LoreKind.MAP}),
-        FactionKind.PIRATES: frozenset({LoreKind.MAP}),
-        FactionKind.REBELS: frozenset({LoreKind.MAP, LoreKind.SITE}),
-        FactionKind.ASSASSINS: frozenset({LoreKind.SITE, LoreKind.WEAKNESS}),
-        FactionKind.MERCENARY_COMPANY: frozenset({LoreKind.MAP}),
-        FactionKind.WARRIOR_ORDER: frozenset({LoreKind.TECHNIQUE}),
+        FactionKind.SCHOLARS_ACADEMY: frozenset({KnowledgeKind.TECHNIQUE, KnowledgeKind.PROPHECY}),
+        FactionKind.CRAFT_GUILD: frozenset({KnowledgeKind.TECHNIQUE}),
+        FactionKind.MERCHANT_GUILD: frozenset({KnowledgeKind.MAP, KnowledgeKind.SITE}),
+        FactionKind.WANDERING_MARKET: frozenset({KnowledgeKind.MAP}),
+        FactionKind.SECRET_SOCIETY: frozenset({KnowledgeKind.SITE, KnowledgeKind.PROPHECY, KnowledgeKind.TRUE_NAME}),
+        FactionKind.MAGE_ORDER: frozenset({KnowledgeKind.SOURCE, KnowledgeKind.TRUE_NAME}),
+        FactionKind.ENGINEERS_SOCIETY: frozenset({KnowledgeKind.PATTERN, KnowledgeKind.TECHNIQUE}),
+        FactionKind.CHARTERED_COMPANY: frozenset({KnowledgeKind.PATTERN, KnowledgeKind.MAP}),
+        FactionKind.PRIESTHOOD: frozenset({KnowledgeKind.PROPHECY}),
+        FactionKind.BANDITS: frozenset({KnowledgeKind.SITE, KnowledgeKind.MAP}),
+        FactionKind.PIRATES: frozenset({KnowledgeKind.MAP}),
+        FactionKind.REBELS: frozenset({KnowledgeKind.MAP, KnowledgeKind.SITE}),
+        FactionKind.ASSASSINS: frozenset({KnowledgeKind.SITE, KnowledgeKind.WEAKNESS}),
+        FactionKind.MERCENARY_COMPANY: frozenset({KnowledgeKind.MAP}),
+        FactionKind.WARRIOR_ORDER: frozenset({KnowledgeKind.TECHNIQUE}),
     }
 )
-ENTITY_LORE: MappingProxyType[EntityType, frozenset[LoreKind]] = MappingProxyType(
+ENTITY_LORE: MappingProxyType[EntityType, frozenset[KnowledgeKind]] = MappingProxyType(
     {
-        EntityType.CULT: frozenset({LoreKind.PROPHECY, LoreKind.SITE}),
-        EntityType.BEAST: frozenset({LoreKind.SITE}),
-        EntityType.SETTLEMENT: frozenset({LoreKind.TECHNIQUE}),
-        EntityType.PEOPLE: frozenset({LoreKind.TECHNIQUE, LoreKind.MAP}),
+        EntityType.CULT: frozenset({KnowledgeKind.PROPHECY, KnowledgeKind.SITE}),
+        EntityType.BEAST: frozenset({KnowledgeKind.SITE}),
+        EntityType.SETTLEMENT: frozenset({KnowledgeKind.TECHNIQUE}),
+        EntityType.PEOPLE: frozenset({KnowledgeKind.TECHNIQUE, KnowledgeKind.MAP}),
     }
 )

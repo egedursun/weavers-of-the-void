@@ -14,7 +14,7 @@ from aerona.domain.enums.crafts import (
     RightAcquired,
     RightKind,
 )
-from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.culture import MagicSchool, Technique
 from aerona.domain.enums.folk_knowledge import NumberReading
 from aerona.domain.enums.mind import Emotion
 
@@ -31,6 +31,7 @@ class GroundView(ApiModel):
     collapsed: bool
     last_catch: int
     first_stock: int
+    stock: int
     locked: list[str]
 
 
@@ -76,6 +77,12 @@ class HeldRightView(ApiModel):
     name: str
     acquired: RightAcquired
     licensed_to: NodeRef | None
+    dish_id: int | None
+    dish: str | None
+    technique: Technique | None
+    technique_label: str | None
+    contest_id: int | None
+    marriage_id: int | None
     since_epoch: int
     locked: list[str]
 
@@ -143,6 +150,16 @@ class AffinityMaterialChoice(ApiModel):
     name: str
 
 
+class RightLinkChoice(ApiModel):
+    id: int
+    name: str
+
+
+class TechniqueChoice(ApiModel):
+    technique: Technique
+    label: str
+
+
 class CraftsNodeView(ApiModel):
     node: NodeRef
     people: NodeRef | None
@@ -159,3 +176,7 @@ class CraftsNodeView(ApiModel):
     links: list[LinkView]
     spirits: list[SpiritView]
     materials: list[AffinityMaterialChoice]
+    dish_choices: list[RightLinkChoice]
+    technique_choices: list[TechniqueChoice]
+    contest_choices: list[RightLinkChoice]
+    union_choices: list[RightLinkChoice]

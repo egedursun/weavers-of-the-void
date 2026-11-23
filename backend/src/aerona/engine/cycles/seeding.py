@@ -21,7 +21,7 @@ from aerona.domain.enums.cycles import (
     ReproductiveSystem,
     ResidenceRule,
 )
-from aerona.domain.enums.demography import InheritanceCustom, NaturalTrait, Sex
+from aerona.domain.enums.demography import InheritanceCustom, NaturalTrait, SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.unions import KinMatch, PartnerScope, UnionExchange
@@ -31,8 +31,8 @@ from aerona.engine.mind.book import stored_values
 from aerona.engine.unions.axes import Spousing, fresh_custom
 from aerona.rules.registry import Rules
 
-MALE_LINES = frozenset({RoleEligibility.MALE_ONLY, RoleEligibility.MALE_PREFERRED})
-FEMALE_LINES = frozenset({RoleEligibility.FEMALE_ONLY, RoleEligibility.FEMALE_PREFERRED})
+MALE_LINES = frozenset({RoleEligibility.BEGETTERS_ONLY, RoleEligibility.BEGETTERS_PREFERRED})
+BEARER_LINES = frozenset({RoleEligibility.BEARERS_ONLY, RoleEligibility.BEARERS_PREFERRED})
 
 
 @dataclass
@@ -87,22 +87,22 @@ def line_for(people_id: int) -> KinshipDescent:
     return SeededRandom.for_epoch(people_id, 0, "descent").pick(LINE_FOR_KINSHIP_DESCENTS)
 
 
-def line_of_sex(first: Sex, sex: Sex) -> KinshipDescent:
+def line_of_sex(first: SexKind, sex: SexKind) -> KinshipDescent:
     return KinshipDescent.THROUGH_FIRST_LINE if first is sex else KinshipDescent.THROUGH_SECOND_LINE
 
 
-def named_line(culture: PeopleCultureRow | None, heirs: RoleEligibility | None, first: Sex) -> KinshipDescent | None:
+def named_line(culture: PeopleCultureRow | None, heirs: RoleEligibility | None, first: SexKind) -> KinshipDescent | None:
     if culture is not None and culture.inheritance is InheritanceCustom.THROUGH_SECOND_LINE:
         return KinshipDescent.THROUGH_SECOND_LINE
-    if heirs in FEMALE_LINES:
-        return line_of_sex(first, Sex.FEMALE)
+    if heirs in BEARER_LINES:
+        return line_of_sex(first, SexKind.BEARER)
     if heirs in MALE_LINES:
-        return line_of_sex(first, Sex.MALE)
+        return line_of_sex(first, SexKind.BEGETTER)
     return None
 
 
 def descent_for(
-    culture: PeopleCultureRow | None, heirs: RoleEligibility | None, reading: Reading, rules: Rules, *, people_id: int, first: Sex
+    culture: PeopleCultureRow | None, heirs: RoleEligibility | None, reading: Reading, rules: Rules, *, people_id: int, first: SexKind
 ) -> KinshipDescent:
     table = rules.kinship_systems
     named = named_line(culture, heirs, first)

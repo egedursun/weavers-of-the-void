@@ -34,7 +34,7 @@ async def still_weapon(call: SonCall, args: StillWeaponInput) -> str:
         fail(SonResult.ARSENAL_REFUSED, why="there is no such weapon")
     await ensure_in_reach(call, holder)
     if held(holder.id) or any(field in (weapon.locked or []) for field in ("count", "stage", "readiness")):
-        fail(SonResult.ARSENAL_REFUSED, why="a stronger hand holds that weapon as it is")
+        fail(SonResult.ARSENAL_REFUSED, why="that weapon is held as it is")
     weapon.count, weapon.readiness, weapon.stage = 0, 0, ProgrammeStage.SOUGHT
     call.target(holder.id)
     await call.record("war.mass_weapon_stilled", roles={IncidentRole.SUBJECT: holder.id}, facts={"harm": weapon.harm})

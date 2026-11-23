@@ -81,14 +81,14 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "household_id": "Your household",
             "terms": "The terms of service: wage, board or bound",
             "wage": "The wage your household pays each epoch when the terms are a wage",
-            "duties": "Duties of the house the servant keeps: food, water, fuel, cleaning, textiles, childcare, eldercare, animals or repairs",
+            "duties": "Duties of the house the servant keeps: food, water, fuel, cleaning, textiles, childcare, eldercare, animals, repairs, sickcare or household_rites",
         },
     ),
     T.TAKE_LEISURE: ToolText(
         "You give part of your time to a pursuit you enjoy, at a place if you name one: it lifts your mood and eases your stress, "
         "and a pursuit of travel spends your coin at the place you visit. 1 action.",
         {
-            "kind": "The pursuit: conversation, games, sport, music, crafts, collecting, reading, excursion, tourism, drinking, worship_extra, rest or media",
+            "kind": "The pursuit: conversation, games, sport, music, crafts, collecting, reading, excursion, tourism, drinking, worship_extra, rest, media, dance, storytelling or hunting",
             "venue_id": "Where you pursue it, if anywhere in particular",
         },
     ),
@@ -99,7 +99,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "household_id": "Your household",
             "assignments": "Who keeps which duty",
             "assignments.member_id": "A member or servant of your household",
-            "assignments.duty": "The duty: food, water, fuel, cleaning, textiles, childcare, eldercare, animals or repairs",
+            "assignments.duty": "The duty: food, water, fuel, cleaning, textiles, childcare, eldercare, animals, repairs, sickcare or household_rites",
         },
     ),
     T.CALL_ON_KIN: ToolText(
@@ -108,7 +108,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "Kin whom no strong duty binds may refuse, and a refusal counts as a breached duty. 1 action.",
         {
             "role": "Which kin: parent, child, sibling, grandparent, grandchild, parent_sibling_first_line, parent_sibling_second_line, "
-            "sibling_child, cousin_parallel, cousin_cross, parent_in_law, child_in_law, sibling_in_law, co_spouse, chosen_kin, godparent or sworn_kin",
+            "sibling_child, cousin_parallel, cousin_cross, parent_in_law, child_in_law, sibling_in_law, co_spouse, chosen_kin, godparent, sworn_kin or foster_kin",
             "need": "What you need: food, coin, care, shelter or protection",
         },
     ),
@@ -279,6 +279,48 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "Warn the coast you stand on of the sea by a way your people watch the waters, so that a wave in the coming epoch finds them ready "
         "and kills fewer. 1 action.",
         {"region_id": "The coast you stand on", "method": "How you watch the waters ({{ observation_methods | join(', ') }})"},
+    ),
+    T.DIG_DEEPER: ToolText(
+        "Dig deeper beneath the land you stand on, adding {{ rules.underground.dig_step }} to its mining; the next layer of its ground "
+        "({{ rock_kinds | join(', ') }}) is reached when the mining goes deep enough. 1 action.",
+        {"region_id": "The land you stand on"},
+    ),
+    T.DIVERT_RIVER: ToolText(
+        "Turn the river of the land you stand on through a canal of your people into a neighbouring land. Fields and wells follow the "
+        "water; a realm downstream that loses it holds the turning against those who rule your land. 1 action.",
+        {"region_id": "The land you stand on", "to_region_id": "The neighbouring land the river should flow into"},
+    ),
+    T.SEAL_DEPTH: ToolText(
+        "Seal the deep beneath a place in the land you stand on ({{ seal_kinds | join(', ') }}, though no mortal makes a god's seal). "
+        "A pact names an oath you swore to those below, a power names a power you hold and a grown barrier names a living line your people keep. 1 action.",
+        {
+            "place_id": "The place whose deep you seal",
+            "kind": "What holds the seal",
+            "oath_id": "For a pact: your oath",
+            "power_id": "For a power: your power",
+            "line_id": "For a grown barrier: your people's living line",
+        },
+    ),
+    T.BORE: ToolText(
+        "Bore down to a body of water or a trap beneath the land you stand on ({{ underground_strata | join(', ') }}); only the aquifer, the "
+        "ocean under the ice and a reservoir can be bored. A bore into water may flood. 1 action.",
+        {"region_id": "The land you stand on", "stratum": "What you bore to"},
+    ),
+    T.DRILL_RESERVOIR: ToolText(
+        "Drill the reservoir beneath the land you stand on for fuel; it yields {{ rules.underground.reservoir_draw }} at a time and may blow out "
+        "under high pressure. 1 action.",
+        {"region_id": "The land you stand on"},
+    ),
+    T.COMMEMORATE: ToolText(
+        "Mark the land you stand on with a memory of what happened there ({{ region_memory_kinds | join(', ') }}); the land keeps it at "
+        "magnitude {{ rules.land_memory.commemorate_magnitude }}. 1 action.",
+        {"region_id": "The land you stand on", "memory": "What the land should remember", "title": "What it is called"},
+    ),
+    T.CLEANSE_LAND: ToolText(
+        "Lift poison from the land you stand on, by works, by a rite or by a power ({{ cleansing_methods | join(', ') }}). Works lift "
+        "{{ rules.scars.cleanse_works_depth }}, a rite {{ rules.scars.cleanse_rite_depth }} and a power {{ rules.scars.cleanse_power_depth }} of "
+        "its depth; a power needs land with magic density of at least {{ rules.scars.cleanse_power_magic }}. 1 action.",
+        {"region_id": "The land you stand on", "method": "How you cleanse it"},
     ),
     T.CONFER_HONOUR: ToolText(
         "As head of a realm, faith or order, confer one of its honours on someone for a deed on record. They gain renown, goodwill toward "
@@ -607,7 +649,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "compulsory. 1 action.",
         {
             "form": "Its form: craft_union, industrial_union, general_union, companion_society, mutual_aid, worker_cooperative or made_mind_collective",
-            "trades": "The trades it speaks for: farming, herding, fishing, mining, crafting, trade, soldiering, clergy, scholarship, building, service or idle",
+            "trades": "The trades it speaks for: farming, herding, fishing, mining, crafting, trade, soldiering, clergy, scholarship, building, service, idle, transport, administration, gathering, industry or arts",
             "settlement_id": "Your town",
         },
     ),
@@ -724,8 +766,9 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.FORECAST: ToolText(
         "You read the coming weather of your land by one of the ways your people read it ({{ observation_methods | join(', ') }}). How true "
-        "the reading is follows how well that way reads the weather. 1 action.",
-        {"method": "The way you read it"},
+        "the reading is follows how well that way reads the weather; name a season to also read whether it will come early, on time, late, "
+        "or fail next year. 1 action.",
+        {"method": "The way you read it", "season_position": "Optional: the position of a season of your world (0 to 7) whose coming you read"},
     ),
     T.WORK_WEATHER: ToolText(
         "You work the weather of your land toward rain, dry, calm, cold or warmth ({{ weather_aims | join(', ') }}) by a way you know "
@@ -734,9 +777,10 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"aim": "What you work the weather toward", "method": "How you work it", "strength": "How strongly, 1 to 100"},
     ),
     T.STUDY_FOSSILS: ToolText(
-        "You study a bed of remains found in your land: the theories you hold grow stronger, and with living "
-        "craft a kind whose remains are well preserved may be raised again from its remains. 1 action.",
-        {"bed_id": "The bed of remains you study"},
+        "You study a bed of remains found in your land and read it one way ({{ fossil_readings | join(', ') }}). Read as deep time, the theories "
+        "you hold grow stronger, and with living craft a kind whose remains are well preserved may be raised again; read otherwise, your "
+        "people tell it, revere it, work it as a substance or grind it into remedies. 1 action.",
+        {"bed_id": "The bed of remains you study", "reading": "How you read it"},
     ),
     T.DREDGE: ToolText(
         "You pay to dredge the harbour of the land you live in: each point of silting you clear costs coin, and a clear harbour keeps its "
@@ -912,6 +956,13 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "others have, and the town may rise in a riot, a panic or a lasting movement. Its guards and garrison hold them back. 1 action.",
         {"grievance": "What you speak about"},
     ),
+    T.STIR_CROWD: ToolText(
+        "You call the folk of the town you are in to one act ({{ collective_acts }}); your sway feeds the feeling the act grows from "
+        "({{ crowd_feelings }}), and whether they follow depends on how many already feel it and on the guards that hold them back. "
+        "A demonstration presses a demand without violence, a boycott refuses trade with those the town blames, an exodus leaves "
+        "together, a jubilation rejoices. 1 action.",
+        {"settlement_id": "The town you are in", "act": "What you call them to"},
+    ),
     T.COMMISSION_ACCOUNT: ToolText(
         "As ruler you have your realm issue its official account of an event; you choose whom it praises and whom it blames, and the further "
         "it strays from what happened the more a scholar may one day expose. 1 action.",
@@ -937,8 +988,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "As ruler of a realm, or as a healer of your community, you set how it answers a sickness ({{ plague_responses }}): closed borders "
         "cost trade and calm, a quarantine slows the spread but may set off riots, burning the dead slows it but grieves folk whose rites "
         "forbid it, driving out the sick slows it at home and turns folk against the sick, prayer comforts but crowds, seeking a cure sets the learned "
-        "to work. You may also treat it with a kind of cure ({{ cure_classes | join(', ') }}); a cure works only on the kind of thing the "
-        "sickness is, and one that fails costs your healers trust. 1 action.",
+        "to work, and cleaning water and carrying away refuse costs treasury, cuts the routes by water, food and goods, and leaves works that keep "
+        "cutting them; your order backs it even where no theory of your healers does. Each answer cuts only the routes it reaches. "
+        "You may also treat it with a kind of cure ({{ cure_classes | join(', ') }}); a cure works only on the kind of thing the "
+        "sickness is, one that fails costs your healers trust, cutting it out may kill or infect where healers know little, and an antiviral "
+        "needs advanced medicine and loses its hold faster when overused. 1 action.",
         {"disease_id": "The sickness", "response": "The answer", "cure_class": "The kind of cure you treat it with, or none"},
     ),
     T.SEEK_CURE: ToolText(
@@ -951,6 +1005,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "condition_id": "The condition to seek relief for, or none when you work at a cure for a sickness",
             "cure_class": "The kind of cure you seek ({{ cure_classes | join(', ') }}), or none",
         },
+    ),
+    T.MAKE_WILL: ToolText(
+        "You write your will: the heirs who receive what you own when you die, and the share of it each receives. The shares add up to 100. "
+        "Kin you leave out may contest it; where your people do not pass property by will, the law may set it aside. A new will replaces the old. 1 action.",
+        {"heirs": "The living heirs you name", "shares": "The share each heir receives, in the same order, adding up to 100"},
     ),
     T.FIND_CARRIER: ToolText(
         "With deep medicine you find that a mortal in your land carries a sickness without falling ill; once found, a carrier spreads it no further. 1 action.",
@@ -1078,9 +1137,28 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.PERSUADE: ToolText(
-        "You try to bring another mortal where you are round to your view of a belief, appealing to belief, self-interest, authority, evidence or fear. "
-        "Your oratory, how well the appeal fits them, their stubbornness and their passions decide it. 1 action.",
-        {"target_id": "The mortal", "appeal": "How you argue", "axis": "The belief at stake", "toward": "How far toward it (-100 to 100)"},
+        "You try to bring another being round by an appeal of one kind: belief, self_interest, authority, evidence, fear, feeling or bond. "
+        "You may aim at a belief, a decision, a faith, a vote, a treaty, a surrender or a confession: a surrender is sought from the ruler of a town "
+        "your side besieges and works only once its defenders falter; a confession is sought from one you hold accused. An appeal to a bond fails "
+        "where none ties you. Your oratory, how well the appeal fits them, their stubbornness and their passions decide it. 1 action.",
+        {
+            "target_id": "The being you try to persuade",
+            "appeal": "How you argue",
+            "aim": "What you seek from them",
+            "axis": "For a belief: the belief at stake",
+            "toward": "For a belief: how far toward it (-100 to 100)",
+            "subject_id": "For a surrender: the town besieged",
+        },
+    ),
+    T.SWEAR_KINSHIP: ToolText(
+        "You swear kinship with a friend where you are, by the rite you name, and become sworn kin: you owe each other aid and vengeance "
+        "as blood kin do, and breaking it is oathbreaking. You both must count each other as friends. 1 action.",
+        {"target_id": "The friend you swear kinship with", "rite": "The rite by which you swear it"},
+    ),
+    T.FOSTER_CHILD: ToolText(
+        "You send a child of yours, still young, to be raised in another household, whose head becomes its fosterer: the child grows loyal "
+        "to that house and the two houses are bound. 1 action.",
+        {"child_id": "Your child", "household_id": "The household that raises the child"},
     ),
     T.FOUND_SCHOOL: ToolText(
         "You found a school of thought, a creed that spreads from person to person and town to town, and can move a realm. 1 action.",
@@ -1492,13 +1570,26 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"child_id": "The named mortal you adopt", "reason": "Why and how you adopt"},
     ),
     T.BESTOW_GIFT: ToolText(
-        "You give someone a gift from your purse, or from your realm's if you rule one. It raises your standing and their regard; it binds "
-        "them to answer it in time, and an unanswered gift costs them face. One who hates you may refuse it as an insult. 1 action.",
-        {"receiver_id": "Who receives it", "value": "Coin it is worth", "item_id": "A thing of yours to give with it, or empty"},
+        "You give someone a gift from your purse, or from your realm's if you rule one, on an occasion ({{ gift_occasions | join(', ') }}). It raises your "
+        "standing and their regard. The occasion sets what is owed back: a gift at a birth binds the child to you, one to the bereaved is owed back "
+        "at your own losses, amends settle a wrong and can end a feud, a patron's gift is repaid in loyalty, and a guest gift seals guest right. "
+        "An unanswered gift costs its receiver face, and one who hates you may refuse it as an insult. 1 action.",
+        {
+            "receiver_id": "Who receives it",
+            "value": "Coin it is worth",
+            "item_id": "A thing of yours to give with it, or empty",
+            "occasion": "The occasion of the gift",
+        },
     ),
     T.ANSWER_GIFT: ToolText(
-        "You answer a gift someone gave you, so you owe them nothing; answer a rank-claiming gift with more or lose face. 1 action.",
+        "You answer a gift someone gave you, so you owe them nothing; answer a rank-claiming gift with more or lose face. An answer worth "
+        "{{ rules.gifts.exceed_ratio_pct }}% of the gift or more exceeds it and puts the first giver in your debt; two houses answering each other "
+        "so spend their coin and raise their standing. 1 action.",
         {"gift_id": "The gift you owe", "value": "Coin your answer is worth, or empty to match what custom asks"},
+    ),
+    T.RELEASE_DEBT: ToolText(
+        "You release someone from the return they owe you for a gift; your standing rises and they owe you gratitude instead. 1 action.",
+        {"gift_id": "The gift whose return you forgive"},
     ),
     T.REFUSE_GIFT: ToolText(
         "You refuse a gift someone gave you; you owe them nothing, but the giver takes it as an insult. 1 action.",
@@ -1579,6 +1670,29 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You set a council over a common of your land; a common ruled by its users wears down far more slowly when many depend on it. 1 action.",
         {"commons_id": "The common the council rules"},
     ),
+    T.OPEN_GROUND: ToolText(
+        "Open a ground for your people to catch from in the land you stand on ({{ catch_grounds | join(', ') }}), worked with gear it allows "
+        "({{ catch_gear | join(', ') }}). Shores and beds are worked from the land itself; land game and fowl from a kind of beast that lives there. 1 action.",
+        {"region_id": "The land you stand on", "ground": "What you catch", "gear": "What you catch it with", "kind_id": "For game and fowl: the kind you hunt"},
+    ),
+    T.BUILD_PONDS: ToolText(
+        "Build fish ponds for your town by its river; they yield fish without taking from the wild, eat grain and are ruined by floods. 1 action.",
+        {"settlement_id": "Your town"},
+    ),
+    T.CHANGE_GEAR: ToolText(
+        "Change the gear a ground of your land is worked with ({{ catch_gear | join(', ') }}); gear the ground does not allow is refused. 1 action.",
+        {"source_id": "What the ground draws on", "region_id": "The land of the ground", "gear": "The new gear"},
+    ),
+    T.SET_COMMONS_RULE: ToolText(
+        "As ruler of a realm, set how a common in it is ruled ({{ commons_rules | join(', ') }}). Under state rule your officials hold its use to "
+        "the quota and its yield goes to your treasury; under licensed rule its use is sold as permits at the price you name. 1 action.",
+        {
+            "commons_id": "The common",
+            "rule": "How it is ruled",
+            "quota": "Use allowed each epoch, 0 to 200",
+            "licence_price": "Coin a permit costs for each point of quota",
+        },
+    ),
     T.RESERVE_GAME: ToolText(
         "You reserve the game of your land for your own hunts; the reserve protects its beasts from hunting, but the hungry poach "
         "and the folk resent the law. 1 action.",
@@ -1650,8 +1764,9 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.LEAD_EXPEDITION: ToolText(
         "You lead an expedition with your companions into a site, a land, an underworld or another realm; each leg uses provisions, and light on dark ground; "
-        "running short raises danger and stress, and those who return bring finds and renown. 1 action.",
-        {"target_id": "Where you go"},
+        "running short raises danger and stress, and those who return bring finds and renown. You travel by one way your people's bodies can use "
+        "({{ movement_modes }}); a way that finds little passage in the land you seek adds legs. 1 action.",
+        {"target_id": "Where you go", "mode": "How you travel; leave empty to take the way with the best passage"},
     ),
     T.MAKE_CAMP: ToolText(
         "You make your expedition camp now; the party rests off fatigue and stress for a ration each, though a night ambush may come. 1 action.",
@@ -1686,13 +1801,40 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {},
     ),
     T.FORGE_WORK: ToolText(
-        "You make a forgery of a work, a relic, a charter or a town's brand; it may sell or serve as the real thing until an expert sees through it. 1 action.",
-        {"original_id": "What you copy"},
+        "You make a forgery ({{ forgery_kinds }}): a work, a relic, a charter or a town's brand to copy, a realm whose coin you counterfeit or whose "
+        "seal passes your false orders, or a title whose lineage you forge to claim it. It may serve as the real thing until the expert of its kind "
+        "sees through it; then you are tried for its crime. 1 action.",
+        {"original_id": "What you copy, or the realm or title you forge against", "kind": "The kind of forgery, or empty to let what you copy decide"},
+    ),
+    T.REVIEW_WORK: ToolText(
+        "As a critic of renown you judge a work before the market: praise raises its price and the standing of its movement, a pan sinks them, "
+        "by up to {{ rules.art_market.critic_price_swing_pct }}% as your renown allows. 1 action.",
+        {"artwork_id": "The work you judge"},
+    ),
+    T.CLAIM_RIGHT: ToolText(
+        "You claim a right ({{ right_kinds }}) over something you made or know: a work, a song, a name, a dish you created or a technique you hold. "
+        "Or you take a right staked in a contest you won, or a right your partner's line passes with your union. Others who use it then owe you "
+        "or infringe it. 1 action.",
+        {
+            "kind": "The kind of right",
+            "name": "What the right is called",
+            "subject_id": "The work, rite, house or realm it covers, or empty",
+            "dish_id": "The dish a right to a recipe covers, or empty",
+            "technique": "The technique a right to a technique covers, or empty",
+            "contest_id": "A contest you won in which the right was staked, or empty",
+            "marriage_id": "Your union through which the right passes, or empty",
+        },
     ),
     T.BUY_WORK: ToolText("You buy a work of art at its market price from whoever holds it. 1 action.", {"artwork_id": "The work"}),
     T.FOUND_CLUB: ToolText(
-        "You found a club in your town ({{ club_kinds }}); it plays matches, gathers fans and may come to sway the town. 1 action.",
+        "You found a club in your town ({{ club_kinds }}); it plays matches, gathers fans and may come to sway the town. A club of animal "
+        "contests keeps and breeds the beasts of its sport and needs a town that keeps them; a club of games of the mind trains its players and draws patrons. 1 action.",
         {"kind": "What the club plays, or empty to let it be chosen"},
+    ),
+    T.FIX_CONTEST: ToolText(
+        "You arrange that a club of a match you name wins its next contest, for a wager or a patron. If it is found out, by "
+        "{{ rules.clubs.fixing_detect_pct }}% chance, the wagers are void, both clubs lose standing, you are tried for it and the crowd may rise. 1 action.",
+        {"match_id": "A match between the clubs", "side": "The club of that match that is to win"},
     ),
     T.TAKE_CONTRACT: ToolText(
         "You take an open contract on a beast of your world; you study it and hunt it each epoch until it falls or you are too hurt to go on. 1 action.",
@@ -1703,8 +1845,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"construct_id": "The construct", "kind": "The order", "target_id": "Whom or what it aims at, or empty"},
     ),
     T.FORECAST_SEASONS: ToolText(
-        "As one learned in the sky, you read when the long season of your world will turn; your people may heed you and store food. 1 action.",
-        {},
+        "As one learned in the sky, you read when a long season of your world will end; your people may heed you and store food. 1 action.",
+        {"long_season_id": "The id of the long season (see the long seasons of your world)"},
     ),
     T.SET_ECONOMIC_ORDER: ToolText(
         "As ruler of a realm, you set its economic order, or that of one good it makes: who owns, how goods are allotted, how labour is "
@@ -1760,6 +1902,13 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.JOIN_COOPERATIVE: ToolText(
         "You join a cooperative of your town and pool your means with its members; it eases their want. 1 action.",
         {"faction_id": "The cooperative"},
+    ),
+    T.LEAD_REVIVAL: ToolText(
+        "You lead a movement of your own people against those who press on it, choosing its way ({{ revival_ways }}) and its goal "
+        "({{ revival_goals }}); you become its prophet. Restoring may seek any goal; synthesis seeks the old god or the language; adopting "
+        "seeks rule by the people itself; waiting seeks rule, land or the foreigners gone; withdrawing seeks the language or the old god. "
+        "1 action.",
+        {"people_id": "Your people", "way": "The way the movement takes", "goal": "What it seeks"},
     ),
     T.SEEK_CITIZENSHIP: ToolText(
         "As a foreigner in your realm, you pay to become its citizen and gain the rights citizens hold. 1 action.",
@@ -2280,5 +2429,33 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.DEVISE_CUSTOM: ToolText(
         "You devise a new kind of technique, tenet, tradition, tale, item or working, built on one your world knows; the result names the bases you can build on if yours is not one. 1 action.",
         {"catalog": "Which kind of thing it is", "base": "What it is built on", "name": "Its name", "description": "What it is, in a sentence or two"},
+    ),
+    T.BIND_WITH_CHARM: ToolText(
+        "You make a charm that someone where you are takes in, binding them to you in love, obedience or devotion until it fades; if it is found, trust in you breaks. 1 action.",
+        {"target_id": "Who takes it in", "kind": "What it binds them to feel"},
+    ),
+    T.LIFT_AFFLICTION: ToolText(
+        "As a healer or a priest, you lift an affliction from someone where you are, by one of the cures it yields to. 1 action.",
+        {"affliction_id": "The affliction", "cure": "The cure you use"},
+    ),
+    T.CHOOSE_PATH: ToolText(
+        "You take up a new path in life among those open to you where you are; each trains its own skills and leads its own way. 1 action.",
+        {"path": "The path"},
+    ),
+    T.IMPROVE_SOIL: ToolText(
+        "You work the soil of the land you live in to restore one of its stocks ({{ nutrient_kinds }}); salinity is washed out rather than "
+        "raised. How much it takes depends on how easily the soil there is worked and how acid it is. Soils: {{ soil_kinds }}. 1 action.",
+        {"nutrient": "The stock you restore"},
+    ),
+    T.CLAIM_IDENTITY: ToolText(
+        "You hold one of the identities you have closer, or loosen your hold on it. How much each counts for you decides whom you trust and "
+        "with whom you side when your town divides. Layers: {{ identity_layers | join(', ') }}. You can claim only a layer you have. 1 action.",
+        {"layer": "Which identity", "loosen": "True to loosen your hold instead of holding it closer"},
+    ),
+    T.MARK_BODY: ToolText(
+        "You put a mark on your own body, or on someone where you are who takes it from you. Marks: {{ mark_kinds }}; an implant shows "
+        "an augment the bearer carries and has not yet shown. Meanings: {{ mark_meanings }}. What a mark tells changes how others see "
+        "its bearer, as the people of your town read it. 1 action.",
+        {"kind": "The mark", "meaning": "What it tells", "target_id": "Who bears it; leave empty for yourself"},
     ),
 }

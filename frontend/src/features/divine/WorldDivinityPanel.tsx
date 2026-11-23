@@ -19,6 +19,7 @@ import {
   StatBar,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { busyOf } from '@/features/entity/lore/model'
 import {
   Card,
@@ -29,9 +30,6 @@ import {
 import { useGodGate } from '@/features/pantheon/gate'
 import { useDivineAction, useWorldDivinity } from './api'
 import { PickRow } from './parts'
-
-const words = (value: string) =>
-  value.replaceAll('_', ' ').replace(/^./, (first) => first.toUpperCase())
 
 export function WorldDivinityPanel({ worldId }: { worldId: number }) {
   const view = useWorldDivinity(worldId)
@@ -115,7 +113,7 @@ export function WorldDivinityPanel({ worldId }: { worldId: number }) {
                       className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
                     >
                       <Badge size='sm' variant='outline'>
-                        {words(row.domain)}
+                        {wordOf(domainValues, row.domain)}
                       </Badge>
                       <Text as='span' weight='medium'>
                         {row.label}
@@ -146,7 +144,10 @@ export function WorldDivinityPanel({ worldId }: { worldId: number }) {
                 <PickRow
                   label='Domain'
                   table={Object.fromEntries(
-                    domainValues.map((value) => [value, words(value)])
+                    domainValues.map((value) => [
+                      value,
+                      wordOf(domainValues, value),
+                    ])
                   )}
                   value={domain}
                   blocked={busy}
@@ -155,7 +156,10 @@ export function WorldDivinityPanel({ worldId }: { worldId: number }) {
                 <PickRow
                   label='Hook'
                   table={Object.fromEntries(
-                    domainHookValues.map((value) => [value, words(value)])
+                    domainHookValues.map((value) => [
+                      value,
+                      wordOf(domainHookValues, value),
+                    ])
                   )}
                   value={hook}
                   blocked={busy}

@@ -266,6 +266,13 @@ async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, 
     return moved
 
 
+async def committed(ctx: TickContext, actor_id: int, act: ActKind, victim_id: int | None = None, *, seen: bool = True) -> int:
+    if not seen:
+        await conscience(ctx, actor_id, act, victim_id)
+        return 0
+    return await judged(ctx, actor_id, actor_id if victim_id is None else victim_id, act)
+
+
 async def converted(ctx: TickContext, convert_id: int, converter_id: int, *, note: str | None = None) -> int:
     if convert_id == converter_id:
         return 0

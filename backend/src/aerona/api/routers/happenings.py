@@ -86,7 +86,7 @@ async def event(services: ServicesDep, entity_id: int = Path(ge=1)) -> EventView
             await session.scalars(
                 select(EventCasualtyRow)
                 .where(EventCasualtyRow.event_entity_id == entity.id)
-                .order_by(EventCasualtyRow.community_entity_id, EventCasualtyRow.phase, EventCasualtyRow.age_band, EventCasualtyRow.sex)
+                .order_by(EventCasualtyRow.community_entity_id, EventCasualtyRow.phase, EventCasualtyRow.age_band, EventCasualtyRow.sex_kind)
             )
         )
         names = await names_of(
@@ -131,7 +131,7 @@ async def event(services: ServicesDep, entity_id: int = Path(ge=1)) -> EventView
                     community_id=row.community_entity_id,
                     community=names.get(row.community_entity_id, ""),
                     age_band=row.age_band,
-                    sex=row.sex,
+                    sex_kind=row.sex_kind,
                     social_class=row.social_class,
                     phase=row.phase,
                     count=row.count,

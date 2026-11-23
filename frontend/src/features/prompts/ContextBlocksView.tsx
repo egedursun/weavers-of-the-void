@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Blocks, FileText, ToggleRight, X } from 'lucide-react'
+import { summarySectionValues } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { CodeBlock, EmptyState, FormRow, Section } from '@/components/domain'
 import { ChoiceTiles, SwitchRow } from '@/components/domain/SettingsKit'
 import { Muted, Text } from '@/components/typography'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { NamePicker } from '@/features/pantheon/NamePicker'
 import {
   type BlockQuery,
@@ -204,7 +206,7 @@ function BlockControls({
                   </SelectItem>
                   {SUMMARY_SECTIONS.map((section) => (
                     <SelectItem key={section} value={section}>
-                      {sectionLabel(section)}
+                      {wordOf(summarySectionValues, section)}
                     </SelectItem>
                   ))}
                 </SelectContent>

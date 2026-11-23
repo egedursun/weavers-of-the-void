@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.demography import MINOR_BANDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cycles import PolityStressRow, StressReadingRow
 from aerona.db.tables.demography import CohortRow
@@ -12,7 +13,6 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.titles import TitleProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import CyclePhase
-from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
@@ -82,7 +82,7 @@ async def youth_share(ctx: TickContext, town_ids: list[int]) -> float:
     )
     counts = {band: int(total or 0) for band, total in rows.all()}
     whole = sum(counts.values())
-    return counts.get(AgeBand.CHILD, 0) * PERCENT / whole if whole else 0.0
+    return sum(counts.get(band, 0) for band in MINOR_BANDS) * PERCENT / whole if whole else 0.0
 
 
 def realm_capacity(model: CapacityModel, towns: list[EntityRow]) -> float:

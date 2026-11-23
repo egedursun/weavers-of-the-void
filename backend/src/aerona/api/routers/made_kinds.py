@@ -64,7 +64,7 @@ from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.db.tables.vehicles import DesignMountRow, DesignSectionRow, DesignTechniqueRow, VehicleGroupRow, VehicleGroupSectionRow, VesselSectionRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import InjuryState
-from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.integrity import Criticality, SectionState
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.structure import BuildingForm
@@ -687,7 +687,7 @@ async def attraction_view(session: AsyncSession, node_id: int) -> AttractionView
     profile = await session.get(MortalProfileRow, node_id)
     if profile is None:
         return None
-    drawn = [Sex(value) for value in profile.drawn_to] if profile.drawn_to is not None else None
+    drawn = [SexKind(value) for value in profile.drawn_to] if profile.drawn_to is not None else None
     return AttractionView(
         drawn_to=drawn,
         attraction=profile.attraction,

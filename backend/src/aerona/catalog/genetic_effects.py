@@ -142,6 +142,7 @@ LOCUS_EFFECTS: Mapping[Locus, LocusEffect] = total(
         ),
         Locus.LONGEVITY: effect(effects={G.LIFESPAN: 1}, line_trait=LineTrait.LIFESPAN),
         Locus.FERTILITY: effect(effects={G.FERTILITY: 1}),
+        Locus.TWINNING: NONE,
         Locus.DISEASE_RESISTANCE: effect(effects={G.DISEASE: -1}, line_trait=LineTrait.DISEASE_RESISTANCE),
         Locus.MADNESS: effect(effects={G.MADNESS: 1}),
         Locus.COLOUR_BLINDNESS: effect(skills={S.WEAVING: -30, S.POTTERY: -30, S.JEWELLING: -30}),

@@ -1,16 +1,6 @@
 from enum import StrEnum
 
 
-class DiseaseVector(StrEnum):
-    AIR = "air"
-    WATER = "water"
-    TOUCH = "touch"
-    BITE = "bite"
-    SPIRIT = "spirit"
-    VOID = "void"
-    CURSE = "curse"
-
-
 class DiseaseTarget(StrEnum):
     BREATH = "breath"
     VITAL = "vital"
@@ -19,10 +9,14 @@ class DiseaseTarget(StrEnum):
     SKIN = "skin"
 
 
-class ClimateAffinity(StrEnum):
+class ClimateWarmth(StrEnum):
     WARM = "warm"
-    WET = "wet"
     COLD = "cold"
+    ANY = "any"
+
+
+class ClimateMoisture(StrEnum):
+    WET = "wet"
     DRY = "dry"
     ANY = "any"
 
@@ -41,6 +35,10 @@ class SpreadPath(StrEnum):
     SIEGE = "siege"
     LOOSED = "loosed"
     MUTATION = "mutation"
+    WILDLIFE = "wildlife"
+    MIGRATION = "migration"
+    GATHERING = "gathering"
+    WATERWAY = "waterway"
 
 
 class CureSource(StrEnum):

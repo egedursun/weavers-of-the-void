@@ -45,6 +45,7 @@ import {
 } from '../mind/parts'
 import { DISTRICT_SPEC } from '../society/labels'
 import { DwellingTenureCard, HouseholdFormCard } from './HomeForms'
+import { WillCard } from './WillCard'
 
 const SPAN = 100
 const WORKING = 'Working on it.'
@@ -562,7 +563,9 @@ function HouseholdCard({ household, ctx }: { household: Household; ctx: Ctx }) {
       <div className='flex min-w-0 flex-wrap gap-2'>
         {household.social_class && (
           <Badge variant='outline'>
-            {household.social_class.replaceAll('_', ' ')}
+            {ctx.view.classes.find(
+              (item) => item.key === household.social_class
+            )?.label ?? 'A class of its own'}
           </Badge>
         )}
         <Badge variant='outline'>{`${plural(household.servants, 'servant', 'servants')}`}</Badge>
@@ -927,6 +930,14 @@ export function HomeSection({ nodeId }: { nodeId: number }) {
             ) : (
               <NoHousehold ctx={ctx} />
             ))}
+          {view.can_hold_household && (
+            <WillCard
+              testatorId={view.node_id}
+              will={view.will}
+              blocked={ctx.blocked}
+              hold={hold}
+            />
+          )}
           {view.can_hold_aggregates && <CommunityCards ctx={ctx} />}
         </div>
         <ControlPanel

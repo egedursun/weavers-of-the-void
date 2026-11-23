@@ -14,8 +14,10 @@ from aerona.api.schemas.depth_society import (
     ClassMood,
     CultureView,
     CureView,
+    DeathReadingView,
     DefenceView,
     DemographyView,
+    DiseaseRouteView,
     DiseaseView,
     DistrictDesignView,
     DistrictEffectsView,
@@ -44,13 +46,15 @@ from aerona.api.schemas.depth_society import (
 from aerona.api.views.disease import afflictions, community_holds, disease_incidents, disease_sick, host_views, named_mortals, unseen_pct
 from aerona.catalog.life.demography import AGE_WORK
 from aerona.catalog.peoples import KIN
+from aerona.catalog.transmission import main_share
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
-from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow
+from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, DiseaseRouteRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.mortal import DeathReadingRow
 from aerona.db.tables.settlement import (
     DESIGN_PARAMETERS,
     DistrictRow,
@@ -83,6 +87,7 @@ from aerona.engine.demography.biology import (
     record_of,
     scaled,
 )
+from aerona.engine.demography.cohorts import sex_spec
 from aerona.engine.demography.labour import condition_work, jobs_for, mobilisation
 from aerona.engine.demography.mobility import inequality
 from aerona.engine.disease.harm import community_targets
@@ -156,7 +161,7 @@ async def demography(services: ServicesDep, entity_id: int = Path(ge=1)) -> Demo
         entity = await entity_of(session, entity_id)
         people = await people_of(session, entity)
         cohorts = [
-            PopulationCohortView(age_band=row.age_band, sex=row.sex, social_class=row.social_class, condition=row.condition, count=row.count)
+            PopulationCohortView(age_band=row.age_band, sex_kind=row.sex_kind, social_class=row.social_class, condition=row.condition, count=row.count)
             for row in await session.scalars(select(CohortRow).where(CohortRow.community_entity_id == entity.id))
             if row.count > 0
         ]
@@ -179,6 +184,7 @@ async def demography(services: ServicesDep, entity_id: int = Path(ge=1)) -> Demo
         values = await culture_of(session, people.id) if people is not None else {}
         return DemographyView(
             entity_id=entity.id,
+            sex_kinds=list((await sex_spec(session, entity)).sexes),
             people_id=people.id if people is not None else None,
             cohorts=cohorts,
             labour=labour,
@@ -269,6 +275,12 @@ async def culture_view(session: AsyncSession, culture: PeopleCultureRow) -> Cult
         funeral_rite=culture.funeral_rite,
         remains_treatment=culture.remains_treatment,
         funeral_tradition=await linked_record(session, culture.funeral_rite_id),
+        death_readings=[
+            DeathReadingView(cause=row.cause, reading=row.reading, authored=row.authored, held=bool(row.locked))
+            for row in await session.scalars(
+                select(DeathReadingRow).where(DeathReadingRow.people_entity_id == culture.people_entity_id).order_by(DeathReadingRow.cause)
+            )
+        ],
         martial_record=record,
         martial_net=wins - losses,
         locked=list(culture.locked),
@@ -346,6 +358,11 @@ async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> Disease
         endemic = list(await session.scalars(select(EndemicDiseaseRow).where(EndemicDiseaseRow.disease_entity_id == entity.id)))
         cures = list(await session.scalars(select(DiseaseCureRow).where(DiseaseCureRow.disease_entity_id == entity.id)))
         immunities = list(await session.scalars(select(ImmunityRow).where(ImmunityRow.disease_entity_id == entity.id)))
+        routes = [
+            row
+            for row in await session.scalars(select(DiseaseRouteRow).where(DiseaseRouteRow.disease_entity_id == entity.id).order_by(DiseaseRouteRow.route))
+            if row.route is not profile.primary_route
+        ]
         ids = {
             entity.id,
             *(row.disease_entity_id for row in strains),
@@ -362,13 +379,16 @@ async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> Disease
         return DiseaseView(
             entity_id=entity.id,
             name=entity.name,
-            vector=profile.vector,
+            primary_route=profile.primary_route,
+            primary_share=main_share(row.share for row in routes),
+            routes=[DiseaseRouteView(route=row.route, share=row.share, held=bool(row.locked)) for row in routes],
             virulence=profile.virulence,
             lethality=profile.lethality,
             chronic_rate=profile.chronic_rate,
             incubation=profile.incubation,
             target_functions=[DiseaseTarget(item) for item in profile.target_functions],
-            climate_affinity=profile.climate_affinity,
+            affinity_warmth=profile.affinity_warmth,
+            affinity_moisture=profile.affinity_moisture,
             host_species_id=profile.host_species_id,
             immunity_epochs=profile.immunity_epochs,
             mutation_rate=profile.mutation_rate,

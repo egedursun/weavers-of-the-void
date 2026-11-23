@@ -14,6 +14,9 @@ class EvolvedTrait(StrEnum):
     HEAT_TOLERANCE = "heat_tolerance"
     DROUGHT_TOLERANCE = "drought_tolerance"
     KEEN_SENSES = "keen_senses"
+    DISEASE_RESISTANCE = "disease_resistance"
+    DOCILITY = "docility"
+    LONGEVITY = "longevity"
 
 
 class KeystoneRole(StrEnum):
@@ -21,12 +24,17 @@ class KeystoneRole(StrEnum):
     SOIL_MAKER = "soil_maker"
     DAM_BUILDER = "dam_builder"
     SCAVENGER = "scavenger"
+    SEED_DISPERSER = "seed_disperser"
+    REGULATOR = "regulator"
+    REEF_BUILDER = "reef_builder"
 
 
 class PlanetaryCycle(StrEnum):
     CARBON = "carbon"
     WATER = "water"
     NUTRIENTS = "nutrients"
+    OXYGEN = "oxygen"
+    ROCK = "rock"
 
 
 class CycleSource(StrEnum):
@@ -41,6 +49,9 @@ class CycleSource(StrEnum):
     FREEZING = "freezing"
     RIVERS = "rivers"
     EROSION = "erosion"
+    INDUSTRY = "industry"
+    UPLIFT = "uplift"
+    BURIAL = "burial"
 
 
 class CycleEffect(StrEnum):
@@ -48,6 +59,7 @@ class CycleEffect(StrEnum):
     RAIN = "rain"
     SEA_LEVEL = "sea_level"
     SOIL = "soil"
+    BREATH = "breath"
 
 
 class TrophicLevel(StrEnum):
@@ -55,6 +67,7 @@ class TrophicLevel(StrEnum):
     HERBIVORE = "herbivore"
     CARNIVORE = "carnivore"
     APEX = "apex"
+    DECOMPOSER = "decomposer"
 
 
 class PlagueResponse(StrEnum):
@@ -64,6 +77,7 @@ class PlagueResponse(StrEnum):
     EXPEL_SICK = "expel_sick"
     PRAYER = "prayer"
     SEEK_CURE = "seek_cure"
+    SANITATION = "sanitation"
 
 
 class SuccessionStage(StrEnum):
@@ -74,3 +88,8 @@ class SuccessionStage(StrEnum):
     OLD_FOREST = "old_forest"
     MARSH = "marsh"
     SWAMP_FOREST = "swamp_forest"
+    PIONEER = "pioneer"
+    OPEN_WATER = "open_water"
+    BOG = "bog"
+    HEATH = "heath"
+    COASTAL_DUNE = "coastal_dune"

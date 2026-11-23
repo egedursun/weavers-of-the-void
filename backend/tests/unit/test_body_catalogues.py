@@ -21,7 +21,7 @@ def test_injury_traits_keep_their_memberships() -> None:
 
 def test_conditions_capacities_and_states_keep_their_memberships() -> None:
     assert MADNESS_CONDITIONS == (ConditionKind.PARANOIA, ConditionKind.VISIONS, ConditionKind.RAGE, ConditionKind.MELANCHOLY)
-    assert set(AGE_CONDITIONS) == {ConditionKind.AGE_BLINDNESS, ConditionKind.AGE_DEAFNESS, ConditionKind.CHRONIC_ILLNESS}
-    assert set(BEDRIDDEN_LOSSES) == {Capacity.MELEE, Capacity.MISSILE, Capacity.COMMAND, Capacity.MOBILITY, Capacity.CRAFT}
-    assert {InjuryState.FRESH, InjuryState.INFECTED, InjuryState.HEALING} == OPEN_INJURY_STATES
+    assert set(AGE_CONDITIONS) == {ConditionKind.AGE_BLINDNESS, ConditionKind.AGE_DEAFNESS, ConditionKind.CHRONIC_ILLNESS, ConditionKind.INFERTILITY}
+    assert set(BEDRIDDEN_LOSSES) == {Capacity.MELEE, Capacity.MISSILE, Capacity.COMMAND, Capacity.MOBILITY, Capacity.CRAFT, Capacity.ENDURANCE}
+    assert {InjuryState.FRESH, InjuryState.INFECTED, InjuryState.HEALING, InjuryState.REOPENED, InjuryState.GANGRENOUS} == OPEN_INJURY_STATES
     assert sorted(STATES, key=lambda state: STATES[state].rank)[-1] is InjuryState.LETHAL

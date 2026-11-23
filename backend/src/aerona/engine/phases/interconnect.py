@@ -92,6 +92,7 @@ async def modifier_upkeep(ctx: TickContext) -> None:
     "table.calendars",
     "table.entities",
     "table.forced_weather",
+    "table.irregular_seasons",
     "table.modifiers",
     "table.nodes",
     "table.place_environment",

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Package, Plus, Swords } from 'lucide-react'
+import { equipmentFamilyValues, unitKindValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Medallion, Paged } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
@@ -7,11 +8,12 @@ import { Held, Listed } from '@/features/collective/parts'
 import { ForgeCard } from '@/features/cosmography/parts'
 import { SPAN } from '@/features/cycles/model'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
 import { unitIcon } from '@/features/wars/military/labels'
 import { type EquipmentModel, type ThingKinds, useLever } from './api'
-import { SLOT, familyLabel, sectionLabel } from './labels'
+import { SLOT } from './labels'
 import { numberProblem, useKindStep } from './model'
 
 type Store = ThingKinds['stores'][number]
@@ -46,7 +48,7 @@ function StoreCard({
       icon={slot.icon}
       tone={slot.tone}
       title={`${row.count} × ${row.model_name}`}
-      caption={`${slot.label} · ${familyLabel(row.family).toLowerCase()}`}
+      caption={`${slot.label} · ${wordOf(equipmentFamilyValues, row.family).toLowerCase()}`}
       removeLabel='Empty the store'
       editTitle='Set the store'
       note='Pieces held ready; armies draw on them at muster and when they rearm, and forges add to them each epoch.'
@@ -162,7 +164,7 @@ function StackKit({
     <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={unitIcon(stack.kind, Swords)} tone='gold' size='sm' />
-        <Label>{`${stack.count} ${stack.design_name ?? sectionLabel(stack.kind).toLowerCase()}`}</Label>
+        <Label>{`${stack.count} ${stack.design_name ?? wordOf(unitKindValues, stack.kind).toLowerCase()}`}</Label>
       </div>
       {stack.carried.length === 0 ? (
         <Muted variant='caption'>

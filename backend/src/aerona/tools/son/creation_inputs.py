@@ -18,7 +18,7 @@ from aerona.constants.tool_inputs import (
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ArtMode, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionFunction
-from aerona.domain.enums.demography import FuneralCustom, Sex
+from aerona.domain.enums.demography import FuneralCustom, SexKind
 from aerona.domain.enums.ecology import (
     AttackDelivery,
     AttackEffect,
@@ -98,7 +98,7 @@ MORTAL_TRAITS_MAX = 5
 
 def _stats_input(spec: EntityTypeSpec) -> type[ToolInput]:
     fields: dict[str, Any] = {field.key: (int | None, None) for field in spec.stats}
-    model: type[ToolInput] = create_model(f"{spec.type.value.title().replace('_', '')}StatsInput", __base__=ToolInput, **fields)
+    model: type[ToolInput] = create_model(f"{''.join(part.capitalize() for part in spec.type.value.split('_'))}StatsInput", __base__=ToolInput, **fields)
     return model
 
 
@@ -154,7 +154,7 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.LANGUAGE: {"words": (Annotated[list[WordInput], Field(min_length=1)], ...)},
         EntityType.MORTAL: {
             "title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None),
-            "sex": (Sex | None, None),
+            "sex": (SexKind | None, None),
             "traits": (Annotated[list[TraitKind], Field(max_length=MORTAL_TRAITS_MAX)] | None, None),
         },
         EntityType.EVENT: {"effects": (list[EventEffectInput] | None, None)},
@@ -215,7 +215,9 @@ def creation_input(entity_type: EntityType) -> type[CreationInput]:
     fields: dict[str, Any] = {"stats": (_stats_input(spec) | None, None), **_extra_fields(entity_type)}
     if spec.placeable:
         fields["location_id"] = (int | None, None)
-    model: type[CreationInput] = create_model(f"Create{entity_type.value.title().replace('_', '')}Input", __base__=CreationInput, **fields)
+    model: type[CreationInput] = create_model(
+        f"Create{''.join(part.capitalize() for part in entity_type.value.split('_'))}Input", __base__=CreationInput, **fields
+    )
     return model
 
 

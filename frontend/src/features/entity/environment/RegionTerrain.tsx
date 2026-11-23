@@ -45,6 +45,7 @@ import {
   Paged,
   FieldTile,
 } from '@/components/domain'
+import { MultiSelect } from '@/components/domain/MultiSelect'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -76,6 +77,7 @@ type Memory = components['schemas']['RegionMemoryView']
 type Knowledge = components['schemas']['MapKnowledgeView']
 type DangerSource = components['schemas']['DangerSource']
 type MemoryKind = components['schemas']['RegionMemoryKind']
+type Harm = components['schemas']['DangerHarm']
 
 const PERCENT = 100
 const WORKING = 'Working…'
@@ -107,8 +109,9 @@ function useBusy(...pending: boolean[]): string | null {
 
 function DangerRow({ danger, busy }: { danger: Danger; busy: string | null }) {
   const [strength, setStrength] = useState(String(danger.strength))
+  const [targets, setTargets] = useState<string[]>(danger.targets)
   const edit = useGodAction({
-    run: (body: { strength?: number; hold?: boolean }) =>
+    run: (body: { strength?: number; hold?: boolean; targets?: Harm[] }) =>
       unwrap(
         api.POST('/api/actions/region:danger_edit', {
           body: { danger_id: danger.id, ...body },
@@ -156,11 +159,29 @@ function DangerRow({ danger, busy }: { danger: Danger; busy: string | null }) {
           onChange={setStrength}
         />
       </div>
+      <div className='min-w-48'>
+        <MultiSelect
+          label='Harms only (none chosen: all it reaches)'
+          size='sm'
+          options={danger.reachable.map((harm) => ({
+            value: harm,
+            label: named(HARM, harm).label,
+          }))}
+          value={targets}
+          onChange={setTargets}
+        />
+      </div>
       <Button
         size='sm'
         disabled={blocked !== null}
         disabledReason={blocked ?? undefined}
-        onClick={() => edit.mutate({ strength: percent(strength), hold: true })}
+        onClick={() =>
+          edit.mutate({
+            strength: percent(strength),
+            hold: true,
+            targets: targets as Harm[],
+          })
+        }
       >
         <Save />
         Set and hold
@@ -278,7 +299,7 @@ function DangerCard({ regionId, view }: { regionId: number; view: Terrain }) {
         title='Dangers of the land'
         icon={ShieldAlert}
         tone={dangerTone(view.danger)}
-        hint='Each source harms settlers, herds, travellers, armies and merchants by its own weight'
+        hint='Each source harms what it can reach by its own weight; set which of those it harms on each danger'
       >
         {view.dangers.length === 0 ? (
           <Muted>
@@ -856,9 +877,7 @@ function HazardCard({ view }: { view: Terrain }) {
         hint='Struck in sampled years, in the season each belongs to'
       >
         {view.exposure.length === 0 ? (
-          <Muted>
-            No avalanche, flood, wildfire or whiteout threatens this land.
-          </Muted>
+          <Muted>No seasonal hazard threatens this land.</Muted>
         ) : (
           <TileGrid>
             <Paged items={view.exposure}>

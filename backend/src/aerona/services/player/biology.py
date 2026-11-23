@@ -1,4 +1,4 @@
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.biology import BiologyVariant
 from aerona.engine.body import variant_control as control
@@ -21,10 +21,6 @@ class BiologyTarget(Command):
 
 class RunNow(Command):
     pass
-
-
-def spoken(variant: BiologyVariant) -> str:
-    return variant.value.replace("_", " ")
 
 
 @player_action("biology:edit", ActionKind.EDIT_RECORD)

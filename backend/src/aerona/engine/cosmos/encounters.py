@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 
 from aerona.catalog.life.cosmos import ARRIVALS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
@@ -104,7 +105,7 @@ async def draw(ctx: TickContext, route: RouteRow, world_id: int, rng: SeededRand
 
 
 def told(row: JourneyEncounterRow) -> str:
-    return row.name or row.effect.value.replace("_", " ")
+    return row.name or spoken(row.effect)
 
 
 async def meet(ctx: TickContext, journey: JourneyRow, row: JourneyEncounterRow) -> int:

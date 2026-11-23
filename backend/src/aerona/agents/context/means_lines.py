@@ -3,7 +3,7 @@ from sqlalchemy import select
 from aerona.agents.context.cycle_lines import named as name_of
 from aerona.agents.context.scope import Scope
 from aerona.catalog.means import AIDS, CONTAINERS, LIFTS, MEDIA
-from aerona.core.grammar import plural, several
+from aerona.core.grammar import plural, several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.governance import OrgGovernanceRow
 from aerona.db.tables.honours import HonourHeldRow, HonourKindRow, NamedUnitRow, VeteranGrantRow
@@ -22,10 +22,6 @@ from aerona.engine.sacred.places import town_of
 
 LIST_LINES = 3
 LIVE = (TransitionStage.PROCLAIMED, TransitionStage.TRANSFERRING)
-
-
-def spoken(value: str) -> str:
-    return value.replace("_", " ")
 
 
 async def realm_of_town(scope: Scope, town_id: int | None) -> int | None:
@@ -64,13 +60,13 @@ async def order_lines(scope: Scope, realm_id: int) -> list[str]:
     session = scope.session
     found = []
     for order in await session.scalars(select(EconomicOrderRow).where(EconomicOrderRow.polity_entity_id == realm_id).order_by(EconomicOrderRow.id)):
-        what = f"for {spoken(order.sector.value)}" if order.sector is not None else "for the realm"
+        what = f"for {spoken(order.sector)}" if order.sector is not None else "for the realm"
         found.append(
-            f"the economic order {what}: {spoken(order.ownership.value)} ownership, {spoken(order.allocation.value)} allocation, "
-            f"{spoken(order.labour.value)} labour, shared {spoken(order.distribution.value)} (planning {order.planning_capacity})"
+            f"the economic order {what}: {spoken(order.ownership)} ownership, {spoken(order.allocation)} allocation, "
+            f"{spoken(order.labour)} labour, shared {spoken(order.distribution)} (planning {order.planning_capacity})"
         )
     for row in await session.scalars(select(OrderTransitionRow).where(OrderTransitionRow.polity_entity_id == realm_id, OrderTransitionRow.stage.in_(LIVE))):
-        found.append(f"a change of order by {spoken(row.kind.value)} stands at {spoken(row.stage.value)} (change {row.id}, resistance {row.resistance})")
+        found.append(f"a change of order by {spoken(row.kind)} stands at {spoken(row.stage)} (change {row.id}, resistance {row.resistance})")
     return found
 
 
@@ -87,7 +83,7 @@ async def mortal_economy_lines(scope: Scope, me: EntityRow) -> list[str]:
     household = await session.scalar(select(HouseholdMemberRow.household_id).where(HouseholdMemberRow.member_node_id == me.id).limit(1))
     saving = await session.get(SavingRow, household) if household is not None else None
     if saving is not None:
-        found.append(f"your household saves {saving.share_pct}% as {spoken(saving.form.value)}, {saving.saved} put by so far")
+        found.append(f"your household saves {saving.share_pct}% as {spoken(saving.form)}, {saving.saved} put by so far")
     return found
 
 
@@ -125,7 +121,7 @@ async def mortal_honours_lines(scope: Scope, me: EntityRow) -> list[str]:
     for grant in await session.scalars(
         select(VeteranGrantRow).where(VeteranGrantRow.polity_entity_id == realm).order_by(VeteranGrantRow.epoch.desc()).limit(LIST_LINES)
     ):
-        found.append(f"your realm granted {several(grant.veterans, 'veteran', 'veterans')} {spoken(grant.kind.value)} in epoch {grant.epoch}")
+        found.append(f"your realm granted {several(grant.veterans, 'veteran', 'veterans')} {spoken(grant.kind)} in epoch {grant.epoch}")
     return found
 
 

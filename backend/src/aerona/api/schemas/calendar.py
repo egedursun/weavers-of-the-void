@@ -1,5 +1,6 @@
 from aerona.api.schemas.common import ApiModel
-from aerona.domain.enums.culture import TraditionFunction
+from aerona.api.schemas.environment import SeasonView
+from aerona.domain.enums.culture import CalendarSlot, TraditionFunction
 
 
 class HolyDayDetail(ApiModel):
@@ -73,3 +74,22 @@ class RegionWorksView(ApiModel):
     cleared: int
     settlements: list[SettlementWorks]
     ley_works: list[LeyWorkView]
+
+
+class FestivalEntry(ApiModel):
+    id: int
+    name: str
+    kind: TraditionFunction
+    calendar_slot: CalendarSlot | None
+    season_position: int | None
+    in_season: bool | None
+    slot_open: bool | None
+    slot_reason: str | None
+    held: list[str]
+
+
+class FestivalYearView(ApiModel):
+    people_id: int
+    world_id: int | None
+    seasons: list[SeasonView]
+    festivals: list[FestivalEntry]

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.civics import OFFICE_GATES, OFFICE_LEVELS
 from aerona.catalog.life.polity import COUNCIL, DEFAULT_POWERS, OFFICE_SKILLS, POWER_SKILLS, SUCCESSION_LINE_SUCCESSION_RULES
 from aerona.catalog.life_traits import OFFICE_KIND_TRAITS, having
+from aerona.catalog.reproduction import kind_of_sex, sex_rule_fit
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
@@ -24,6 +25,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import RoleKind
 from aerona.domain.enums.customs import MemberRight
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.intrigue import FavourOrigin
@@ -31,7 +33,7 @@ from aerona.domain.enums.life_traits import OfficeKindTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.polity import CoupCause, GenderRule, LawKind, OathBreach, OathKind, OfficeKind, OfficePower, SuccessionRule, TreatyStatus
+from aerona.domain.enums.polity import CoupCause, LawKind, OathBreach, OathKind, OfficeKind, OfficePower, SexRule, SuccessionRule, TreatyStatus
 from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.settlement import TIER_ORDER
 from aerona.domain.enums.society import SocialClass
@@ -39,11 +41,13 @@ from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.belonging.peers import companions_of
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.body.marks import marked
 from aerona.engine.collective.roles import RANK_PREFERRED, freed_rank, role_rank
 from aerona.engine.context import TickContext
 from aerona.engine.customs.rights import has_right
 from aerona.engine.cycles.book import stress_factor
+from aerona.engine.cycles.sides import PAIRED, drawn_side, second_sex, system_of_people
 from aerona.engine.folkways.biases import lean
 from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.intrigue.favours import owe
@@ -283,22 +287,23 @@ async def living_mortal(ctx: TickContext, node_id: int) -> EntityRow | None:
 RANK_SPAN = 10
 
 
-def gender_rank(rule: GenderRule, mortal: EntityRow) -> int | None:
+def sex_rank(rule: SexRule, mortal: EntityRow) -> int | None:
     sex = sex_of(mortal)
-    if rule is GenderRule.MALE_ONLY:
-        return 0 if sex == "male" else None
-    if rule is GenderRule.FEMALE_ONLY:
-        return 0 if sex == "female" else None
-    if rule is GenderRule.MALE_PREFERENCE:
-        return 0 if sex == "male" else 1
-    if rule is GenderRule.FEMALE_PREFERENCE:
-        return 0 if sex == "female" else 1
-    return 0
+    fit = sex_rule_fit(rule, kind_of_sex(sex))
+    if fit is None:
+        return None
+    return 0 if fit >= 1 else 1
 
 
 async def whole(ctx: TickContext, mortal: EntityRow) -> bool:
     found = await ctx.session.scalar(select(InjuryRow.id).where(InjuryRow.bearer_node_id == mortal.id, marked()).limit(1))
     return found is None
+
+
+async def second_side_of(ctx: TickContext, ruler: EntityRow) -> str:
+    people_id = await people_id_of(ctx.session, ruler)
+    system = await system_of_people(ctx.session, people_id)
+    return second_sex(system) if system is not None else PAIRED.get(drawn_side(people_id or ruler.id), SexKind.BOTH).value
 
 
 async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list[EntityRow]:
@@ -307,7 +312,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
         return []
     polity = realm.entity.id
     rule = SuccessionRule(str(laws.param(polity, LawKind.SUCCESSION_RULE, "rule") or SuccessionRule.PRIMOGENITURE.value))
-    gender = GenderRule(str(laws.param(polity, LawKind.SUCCESSION_RULE, "gender") or GenderRule.ANY.value))
+    sex_rule = SexRule(str(laws.param(polity, LawKind.SUCCESSION_RULE, "sex_rule") or SexRule.ANY.value))
     wholeness = bool(laws.param(polity, LawKind.SUCCESSION_RULE, "wholeness_required"))
     min_age = int(laws.param(polity, LawKind.SUCCESSION_RULE, "min_age") or 0)
     children, grandchildren, siblings = await kin(ctx, ruler)
@@ -323,7 +328,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
         SuccessionRule.SENIORITY: [*siblings, *children, *housemates],
         SuccessionRule.ELECTIVE: [*housemates, *children, *siblings, *await subjects(ctx, realm)],
         SuccessionRule.TANISTRY: [*housemates, *children, *siblings],
-        SuccessionRule.THROUGH_SECOND_LINE: [*[item for item in siblings if sex_of(item) == "female"], *grandchildren, *children],
+        SuccessionRule.THROUGH_SECOND_LINE: [*[item for item in siblings if sex_of(item) == await second_side_of(ctx, ruler)], *grandchildren, *children],
         SuccessionRule.BY_COMBAT: [*children, *siblings, *housemates],
         SuccessionRule.DIVINE_CHOICE: [*children, *housemates, *siblings],
         SuccessionRule.ULTIMOGENITURE: [*sorted(children, key=lambda item: (stat(item, "age") or 0, item.id)), *grandchildren, *siblings],
@@ -336,7 +341,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
             pool.append(item)
     eligible = []
     for item in pool:
-        rank = gender_rank(gender, item)
+        rank = sex_rank(sex_rule, item)
         custom = await credential_rank(
             ctx.session,
             item.id,

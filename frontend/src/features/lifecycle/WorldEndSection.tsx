@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
-import type { components } from '@/api/generated/schema'
+import { worldTypeValues, type components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { EmptyState, KpiTile, LoadingBlock, Section } from '@/components/domain'
 import { table } from '@/features/arcana/labels'
@@ -12,8 +12,8 @@ import {
 } from '@/features/cosmography/parts'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { Ref } from '@/features/gatherings/parts'
-import { humanize } from '@/features/pantheon/labels'
 import { Bars } from '@/features/sacred/parts'
 import { ChoiceField } from '@/features/wars/military/parts'
 import { useEndsAction, useNodeWorldEnd } from './api'
@@ -118,7 +118,7 @@ export function WorldEndSection({
                 [
                   'Kind of world',
                   query.data.world_type
-                    ? humanize(query.data.world_type)
+                    ? wordOf(worldTypeValues, query.data.world_type)
                     : 'none',
                 ],
                 [
@@ -161,7 +161,7 @@ export function WorldEndSection({
                   tone='muted'
                   hint={
                     query.data.former_type
-                      ? `once ${humanize(query.data.former_type)}${query.data.new_type ? `, now ${humanize(query.data.new_type)}` : ''}`
+                      ? `once ${wordOf(worldTypeValues, query.data.former_type)}${query.data.new_type ? `, now ${wordOf(worldTypeValues, query.data.new_type)}` : ''}`
                       : undefined
                   }
                 />

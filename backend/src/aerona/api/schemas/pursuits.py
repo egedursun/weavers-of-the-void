@@ -12,6 +12,7 @@ class ArtPriceView(ApiModel):
     artwork: NodeRef
     price: int
     provenance: int
+    acclaim: int
     interest: int
     last_buyer: NodeRef | None
     last_sale_epoch: int | None
@@ -89,6 +90,8 @@ class ClubView(ApiModel):
     line_node: NodeRef | None
     leverage: int
     bought_by: NodeRef | None
+    fixed_by: NodeRef | None
+    fixed_winner: NodeRef | None
     founded_epoch: int
     locked: list[str]
 
@@ -109,6 +112,8 @@ class MatchView(ApiModel):
     winner: NodeRef | None
     stake: int
     riot: bool
+    fixed_by: NodeRef | None
+    fixing_exposed: bool
     epoch: int
     locked: list[str]
 

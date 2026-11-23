@@ -149,6 +149,7 @@ async def node_climes(services: ServicesDep, node_id: NodeId) -> ClimesNodeView:
             RegionWindView(
                 region=ref(refs, row.region_entity_id),
                 band=row.band,
+                summer_band=row.summer_band,
                 wind_from=row.wind_from,
                 strength=row.strength,
                 windward=row.windward,

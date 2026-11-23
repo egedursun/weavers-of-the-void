@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.constants.calendar import SEASONS_MAX
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.worlds import StarDraft, WorldRepository
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
@@ -304,7 +305,7 @@ async def test_a_bright_companion_doubles_the_seasons(session: AsyncSession, ctx
     other = await WorldRepository(session).create_star(StarDraft("Second Sun", StarType.YELLOW_DWARF, 70, 0.0, 0.0, 1))
     await physics_control.create_system(ctx, "The Pair", [cosmos.star.id, other.id], 1.5)
     await world_physics(tick(session, rules))
-    assert single is not None and cosmos.home.season_count == min(6, single * 2)
+    assert single is not None and cosmos.home.season_count == min(SEASONS_MAX, single * 2)
 
 
 def test_an_old_world_locks_farther_from_its_star(rules: Rules) -> None:

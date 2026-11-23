@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.core.grammar import an, spoken
 from aerona.db.tables.agrarian import (
@@ -35,10 +35,10 @@ async def land_lines(scope: Scope, land: EntityRow) -> list[str]:
     ring = await session.get(LandRingRow, land.id)
     if ring is not None:
         market = f" around the market of {await named(scope, ring.market_entity_id)}" if ring.market_entity_id is not None else ""
-        found.append(f"your land {land.name} lies in the {words(ring.ring.value)} ring{market}, gap between markets {ring.gap}")
+        found.append(f"your land {land.name} lies in the {spoken(ring.ring)} ring{market}, gap between markets {ring.gap}")
     stocks = {row.nutrient: row.stock for row in await session.scalars(select(SoilNutrientRow).where(SoilNutrientRow.region_entity_id == land.id))}
     if stocks:
-        found.append("its soil holds " + ", ".join(f"{words(kind.value)} {stocks[kind]}" for kind in NutrientKind if kind in stocks))
+        found.append("its soil holds " + ", ".join(f"{spoken(kind)} {stocks[kind]}" for kind in NutrientKind if kind in stocks))
     pressed = await session.get(IntensificationRow, land.id)
     if pressed is not None and pressed.intensity > 0:
         found.append(f"its farmers work it at intensity {pressed.intensity} under a pressure of {pressed.pressure}% on the land")
@@ -60,7 +60,7 @@ async def town_lines(scope: Scope, town: EntityRow) -> list[str]:
         found.append(f"{town.name} is a central place of {spoken(place.rank)} goods, centrality {place.centrality}")
     works = list(await session.scalars(select(PreparednessRow).where(PreparednessRow.settlement_entity_id == town.id).order_by(PreparednessRow.kind)))
     if works:
-        found.append(f"{town.name} stands ready with " + ", ".join(f"{words(work.kind.value)} level {work.level}" for work in works))
+        found.append(f"{town.name} stands ready with " + ", ".join(f"{spoken(work.kind)} level {work.level}" for work in works))
     rebuild = await session.scalar(
         select(ReconstructionRow).where(ReconstructionRow.settlement_entity_id == town.id, ReconstructionRow.finished_epoch.is_(None)).limit(1)
     )

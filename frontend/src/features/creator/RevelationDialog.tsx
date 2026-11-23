@@ -22,11 +22,12 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { FormRow } from '@/components/domain'
+import { wordOf } from '@/features/entity/affairs/labels'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useWorldState } from '@/features/pantheon/api'
 import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { humanize, useLabels } from '@/features/pantheon/labels'
+import { useLabels } from '@/features/pantheon/labels'
 
 const FATE = 'fate'
 const LAW_TYPES = new Set([FATE, 'law', 'natural_law'])
@@ -148,7 +149,7 @@ export function RevelationDialog({
                       .filter((law) => law !== 'none')
                       .map((law) => (
                         <SelectItem key={law} value={law}>
-                          {humanize(law)}
+                          {wordOf(naturalLawValues, law)}
                         </SelectItem>
                       ))}
                   </SelectContent>

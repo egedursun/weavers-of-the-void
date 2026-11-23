@@ -64,6 +64,7 @@ describe('winds, seasons and crossings', () => {
         {
           region: LAND,
           band: 'westerly',
+          summer_band: 'doldrums',
           wind_from: 6,
           strength: 65,
           windward: false,
@@ -82,7 +83,9 @@ describe('winds, seasons and crossings', () => {
       .toBeVisible()
     await expect
       .element(
-        screen.getByText('From the west · strength 65 · read in epoch 5')
+        screen.getByText(
+          'From the west · strength 65 · in summer doldrums · read in epoch 5'
+        )
       )
       .toBeVisible()
     await expect
@@ -92,6 +95,12 @@ describe('winds, seasons and crossings', () => {
     await expect
       .poll(() => callsTo('POST', '/api/actions/region_wind:set'))
       .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/region_wind:set')[0].body).toEqual({
+      region_id: 42,
+      band: 'trade',
+      summer_band: 'trade',
+      wind_from: 2,
+    })
   })
 
   it('shows a failed monsoon and keeps the swing control with its reason', async () => {

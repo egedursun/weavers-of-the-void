@@ -16,6 +16,9 @@ class PackageKind(StrEnum):
     VIS_DEPENDENCE = "vis_dependence"
     GEAS_DOOM = "geas_doom"
     SOUL_TRAPPED = "soul_trapped"
+    FORTUNE = "fortune"
+    TRANSFORMATION = "transformation"
+    CHARM = "charm"
 
 
 class Transmission(StrEnum):
@@ -29,6 +32,11 @@ class Transmission(StrEnum):
     RITE = "rite"
     GAZE = "gaze"
     EXPERIENCE = "experience"
+    WATER = "water"
+    SPIRIT = "spirit"
+    VOID = "void"
+    INTIMATE = "intimate"
+    OBJECTS = "objects"
 
 
 class Visibility(StrEnum):
@@ -48,3 +56,17 @@ class CureKind(StrEnum):
     SYMBIONT = "symbiont"
     TRANSFER = "transfer"
     AUGMENT = "augment"
+
+
+class ChangeSign(StrEnum):
+    SEASON = "season"
+    SKY_EVENT = "sky_event"
+    EMOTION = "emotion"
+    WORD = "word"
+    NONE = "none"
+
+
+class CharmKind(StrEnum):
+    LOVE = "love"
+    OBEDIENCE = "obedience"
+    DEVOTION = "devotion"

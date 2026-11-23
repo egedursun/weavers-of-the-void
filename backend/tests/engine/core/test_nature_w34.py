@@ -154,8 +154,8 @@ async def test_senses_are_read_for_kinds_and_peoples_and_sharpen_detection(sessi
     session.add(SenseProfileRow(holder_entity_id=world.people.id, sense=SenseKind.SMELL, acuity=100, locked=[]))
     await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
     await session.flush()
-    assert await sense_score(session, town.id, AGENTS) > 0.5
-    assert await sense_score(session, town.id, TRACKING) > 0.0
+    assert await sense_score(session, ctx.rules, town.id, AGENTS) > 0.5
+    assert await sense_score(session, ctx.rules, town.id, TRACKING) > 0.0
 
 
 async def test_island_kinds_drift_and_revered_endemics_are_spared(session: AsyncSession, world: CoreWorld) -> None:

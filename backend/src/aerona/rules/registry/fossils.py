@@ -28,3 +28,8 @@ class FossilRules:
     revival_abundance: int = rule(10, 0, 100, E, "Abundance a kind raised again from its remains has in the land of its bed")
     bog_wetland: int = rule(50, 0, 100, E, "Wetland of a land from which its beds are kept in bog")
     dry_rainfall: int = rule(20, 0, 100, E, "Rainfall of a land below which its beds are kept dry")
+    dead_god_richness: int = rule(60, 0, 100, E, "Richness of the bed a dead god's remains lay")
+    dead_god_draw: int = rule(20, 0, 100, E, "Sacredness a found bed of a dead god's remains adds to its land")
+    material_yield: int = rule(10, 0, 100, E, "Goods every ten points of richness give a people that works its find as a substance")
+    medicine_demand: int = rule(10, 0, 100, E, "Medicine every ten points of richness give a people that grinds its find into remedies")
+    medicine_effect: int = rule(0, -50, 50, E, "Health a finder who takes ground remains as medicine gains, or loses where the remedy harms")

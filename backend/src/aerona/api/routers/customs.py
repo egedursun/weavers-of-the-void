@@ -15,6 +15,7 @@ from aerona.api.schemas.customs import (
     CooperativeView,
     CustomsNodeView,
     EvidenceView,
+    GradeDutyView,
     IntoxicantView,
     MarkCustomView,
     MeasureView,
@@ -38,6 +39,7 @@ from aerona.db.tables.customs import (
     CommuteRow,
     CooperativeRow,
     EvidenceRow,
+    GradeDutyRow,
     IntoxicantCustomRow,
     MarkCustomRow,
     MeasureStandardRow,
@@ -88,7 +90,11 @@ async def node_customs(services: ServicesDep, node_id: NodeId) -> CustomsNodeVie
         )
         mark_customs = list(await session.scalars(select(MarkCustomRow).where(MarkCustomRow.people_entity_id == folk).order_by(MarkCustomRow.kind)))
         marks = list(await session.scalars(select(BodyMarkRow).where(BodyMarkRow.holder_node_id == node_id).order_by(BodyMarkRow.id.desc())))
-        budgets = list(await session.scalars(select(TimeBudgetRow).where(TimeBudgetRow.people_entity_id == folk).order_by(TimeBudgetRow.social_class)))
+        budgets = list(
+            await session.scalars(
+                select(TimeBudgetRow).where(TimeBudgetRow.people_entity_id == folk).order_by(TimeBudgetRow.social_class, TimeBudgetRow.life_stage)
+            )
+        )
         naming = await session.get(NamingCustomRow, folk)
         names = list(await session.scalars(select(NameFormRow).where(NameFormRow.holder_node_id == node_id).order_by(NameFormRow.form)))
         sets = list(
@@ -102,6 +108,11 @@ async def node_customs(services: ServicesDep, node_id: NodeId) -> CustomsNodeVie
         taverns = list(await session.scalars(select(TavernRow).where(TavernRow.structure_entity_id.in_(hosted)).order_by(TavernRow.structure_entity_id)))
         welfare = list(await session.scalars(select(WelfareRow).where(WelfareRow.structure_entity_id.in_(hosted)).order_by(WelfareRow.structure_entity_id)))
         commute = await session.get(CommuteRow, node_id)
+        duties = (
+            list(await session.scalars(select(GradeDutyRow).where(GradeDutyRow.people_entity_id == folk_row.id).order_by(GradeDutyRow.duty)))
+            if folk_row is not None
+            else []
+        )
         cooperative = await session.get(CooperativeRow, node_id)
         cases = select(CrimeCaseRow.id).where(CrimeCaseRow.accused_entity_id == node_id)
         evidence = list(
@@ -137,7 +148,7 @@ async def node_customs(services: ServicesDep, node_id: NodeId) -> CustomsNodeVie
             RevivalView(
                 id=row.id,
                 dominant=at(refs, row.dominant_entity_id),
-                aim=row.aim,
+                way=row.way,
                 stage=row.stage,
                 goal=row.goal,
                 strength=row.strength,
@@ -167,6 +178,7 @@ async def node_customs(services: ServicesDep, node_id: NodeId) -> CustomsNodeVie
             )
             for row in sets
         ],
+        grade_duties=[GradeDutyView(duty=row.duty, grade=row.grade, held=bool(row.locked)) for row in duties],
         age_set_id=member.age_set_id if member is not None else None,
         taverns=[
             TavernView(

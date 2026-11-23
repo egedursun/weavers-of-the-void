@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.catalog.kinds.siege import STARVATION
 from aerona.catalog.life.military import ACTION_WORKS
+from aerona.catalog.soils import soft
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
@@ -13,7 +14,6 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.couplings import FieldAgreementState
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.environment import SoilKind
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.military import CaptiveFate, CommanderTrait, DefenderAction, SackChoice, SiegeAction, SiegeWork, Stance
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
@@ -35,7 +35,6 @@ from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
-SOFT_GROUND = frozenset({SoilKind.LOAM, SoilKind.CLAY, SoilKind.SAND, SoilKind.PEAT, SoilKind.TEPHRA, SoilKind.CALCAREOUS})
 WATER_DAYS = {WaterSupply.NONE: 60, WaterSupply.WELL: 100, WaterSupply.CISTERN: 160, WaterSupply.AQUEDUCT: 220}
 MERCIFUL_TENETS = frozenset({TenetKind.PACIFISM})
 
@@ -63,7 +62,7 @@ def mining_factor(ctx: TickContext, region: RegionEnvironmentRow | None) -> floa
     table = ctx.rules.siege_depth
     if region is None:
         return 1.0
-    return (table.soil_mine_pct if region.soil in SOFT_GROUND else table.rock_mine_pct) / PERCENT
+    return (table.soil_mine_pct if soft(ctx.rules, region.soil) else table.rock_mine_pct) / PERCENT
 
 
 def build_works(ctx: TickContext, siege: SiegeRow, action: SiegeAction) -> list[SiegeWork]:

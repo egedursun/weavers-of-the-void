@@ -1,17 +1,23 @@
 import {
+  type LucideIcon,
   Anchor,
   Baby,
   Beer,
   BookOpen,
   Briefcase,
+  Bug,
   CalendarDays,
+  Church,
   Coins,
+  Cpu,
   Crown,
   Droplets,
   Eye,
   Feather,
   FileText,
   Flame,
+  FlaskConical,
+  Flower2,
   Footprints,
   Gavel,
   Gem,
@@ -25,10 +31,12 @@ import {
   Landmark,
   Languages,
   Leaf,
-  type LucideIcon,
+  MapPin,
   Moon,
   Paintbrush,
+  Pill,
   RefreshCcw,
+  Scissors,
   Scroll,
   Shield,
   Ship,
@@ -38,8 +46,10 @@ import {
   Star,
   Swords,
   Tag,
+  Tent,
   TrendingUp,
   User,
+  UserRound,
   Users,
   Wheat,
   Wind,
@@ -60,10 +70,12 @@ export const TAB_ICONS = {
   civics: Landmark,
 } as const
 
-export const AIMS: Record<Schema['RevivalAim'], Named> = {
+export const WAYS: Record<Schema['RevivalWay'], Named> = {
   restore: { label: 'Restore the old ways', icon: RefreshCcw, tone: 'gold' },
-  synthesise: { label: 'Join old and new', icon: Sparkles, tone: 'verdigris' },
-  adopt: { label: 'Adopt the pressed ways', icon: TrendingUp, tone: 'info' },
+  synthesis: { label: 'Join old and new', icon: Sparkles, tone: 'verdigris' },
+  adopt: { label: "Take the rulers' ways", icon: TrendingUp, tone: 'info' },
+  await: { label: 'Wait for a sign', icon: Hourglass, tone: 'warning' },
+  withdraw: { label: 'Live apart', icon: Tent, tone: 'muted' },
 }
 
 export const STAGES: Record<Schema['RevivalStage'], Named> = {
@@ -83,7 +95,8 @@ export const GOALS: Record<Schema['RevivalGoal'], Named> = {
   },
   restore_god: { label: 'Restore the old god', icon: Sparkles, tone: 'gold' },
   expel_foreigners: { label: 'Expel foreigners', icon: Swords, tone: 'danger' },
-  adopt_ways: { label: 'Adopt the ways', icon: TrendingUp, tone: 'verdigris' },
+  restore_land: { label: 'Take back the land', icon: MapPin, tone: 'warning' },
+  restore_rule: { label: 'Rule itself', icon: Crown, tone: 'gold' },
 }
 
 export const INTOXICANTS: Record<Schema['Intoxicant'], Named> = {
@@ -94,6 +107,8 @@ export const INTOXICANTS: Record<Schema['Intoxicant'], Named> = {
   leaf: { label: 'Leaf', icon: Leaf, tone: 'success' },
   fungus: { label: 'Fungus', icon: Sprout, tone: 'verdigris' },
   essence: { label: 'Essence', icon: Sparkles, tone: 'info' },
+  synthetic: { label: 'Made substance', icon: FlaskConical, tone: 'warning' },
+  animal_derived: { label: 'Drawn from beasts', icon: Bug, tone: 'danger' },
 }
 
 export const USES: Record<Schema['IntoxicantUse'], Named> = {
@@ -102,6 +117,8 @@ export const USES: Record<Schema['IntoxicantUse'], Named> = {
   rite: { label: 'In rites', icon: Sparkles, tone: 'verdigris' },
   mourning: { label: 'In mourning', icon: HeartCrack, tone: 'muted' },
   forbidden: { label: 'Forbidden', icon: Shield, tone: 'danger' },
+  medicine: { label: 'As medicine', icon: Pill, tone: 'success' },
+  hospitality: { label: 'Offered to guests', icon: HandHeart, tone: 'gold' },
 }
 
 export const MARK_KINDS: Record<Schema['MarkKind'], Named> = {
@@ -113,6 +130,8 @@ export const MARK_KINDS: Record<Schema['MarkKind'], Named> = {
   cosmetic: { label: 'Cosmetic', icon: Sparkles, tone: 'verdigris' },
   jewellery: { label: 'Jewellery', icon: Gem, tone: 'gold' },
   brand: { label: 'Brand', icon: Flame, tone: 'danger' },
+  hair: { label: 'Hair', icon: Scissors, tone: 'info' },
+  implant: { label: 'Implant', icon: Cpu, tone: 'verdigris' },
 }
 
 export const MEANINGS: Record<Schema['MarkMeaning'], Named> = {
@@ -124,6 +143,9 @@ export const MEANINGS: Record<Schema['MarkMeaning'], Named> = {
   mourning: { label: 'Mourning', icon: Moon, tone: 'muted' },
   protection: { label: 'Protection', icon: Shield, tone: 'success' },
   crime: { label: 'Crime', icon: Gavel, tone: 'danger' },
+  faith: { label: 'Faith', icon: Church, tone: 'gold' },
+  profession: { label: 'Trade', icon: Hammer, tone: 'info' },
+  beauty: { label: 'Beauty', icon: Flower2, tone: 'success' },
 }
 
 export const PATTERNS: Record<Schema['NamingPattern'], Named> = {
@@ -131,6 +153,8 @@ export const PATTERNS: Record<Schema['NamingPattern'], Named> = {
   parent: { label: 'Named for a parent', icon: Users, tone: 'info' },
   clan: { label: 'Named for the clan', icon: Crown, tone: 'gold' },
   teknonym: { label: 'Named for a child', icon: Baby, tone: 'verdigris' },
+  place: { label: 'Named for the birthplace', icon: MapPin, tone: 'info' },
+  trade: { label: 'Named for the trade', icon: Hammer, tone: 'warning' },
 }
 
 export const NAME_FORMS: Record<Schema['NameForm'], Named> = {
@@ -141,14 +165,22 @@ export const NAME_FORMS: Record<Schema['NameForm'], Named> = {
   marriage: { label: 'Marriage name', icon: Heart, tone: 'gold' },
   vow: { label: 'Vow name', icon: BookOpen, tone: 'info' },
   ascension: { label: 'Ascension name', icon: Crown, tone: 'gold' },
+  posthumous: { label: 'Name after death', icon: Flower2, tone: 'muted' },
 }
 
 export const GRADES: Record<Schema['AgeGrade'], Named> = {
   children: { label: 'Children', icon: Baby, tone: 'muted' },
   youths: { label: 'Youths', icon: Footprints, tone: 'info' },
-  warriors: { label: 'Warriors', icon: Swords, tone: 'danger' },
+  young_adults: { label: 'Young adults', icon: UserRound, tone: 'info' },
   junior_elders: { label: 'Junior elders', icon: Scroll, tone: 'verdigris' },
   senior_elders: { label: 'Senior elders', icon: Crown, tone: 'gold' },
+}
+
+export const DUTIES: Record<Schema['GradeDuty'], Named> = {
+  war: { label: 'War', icon: Swords, tone: 'danger' },
+  herding: { label: 'Herding', icon: Footprints, tone: 'success' },
+  labour: { label: 'Labour', icon: Hammer, tone: 'info' },
+  council: { label: 'Council', icon: Landmark, tone: 'gold' },
 }
 
 export const PURPOSES: Record<Schema['CoopPurpose'], Named> = {

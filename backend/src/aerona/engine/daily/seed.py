@@ -39,6 +39,9 @@ LEISURE_AXES: tuple[tuple[ValueAxis, LeisureKind], ...] = (
     (ValueAxis.XENOPHILIA, LeisureKind.EXCURSION),
     (ValueAxis.PIETY, LeisureKind.WORSHIP_EXTRA),
     (ValueAxis.PERSEVERANCE, LeisureKind.REST),
+    (ValueAxis.KINSHIP, LeisureKind.DANCE),
+    (ValueAxis.TRADITION, LeisureKind.STORYTELLING),
+    (ValueAxis.HIERARCHY, LeisureKind.HUNTING),
 )
 LEISURE_SHARES = (50, 30, 20)
 CARE_DUTIES = having(HOUSE_DUTY_TRAITS, HouseDutyTrait.CARE_DUTIES)

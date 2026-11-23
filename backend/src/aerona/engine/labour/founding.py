@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.catalog.labour import TRADE_CLASS, TRADE_FORM
 from aerona.catalog.life_traits import JOB_TRAITS, having
+from aerona.core.grammar import spoken
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -81,7 +82,7 @@ async def found_body(ctx: TickContext, community: EntityRow, trades: list[Job], 
         ctx,
         "labour.body_founded",
         roles={IncidentRole.PRODUCT: faction.id, IncidentRole.ACTOR: founder, IncidentRole.PLACE: community.id},
-        facts={"form": form, "trades": ", ".join(trade.value.replace("_", " ") for trade in trades_of(body))},
+        facts={"form": form, "trades": ", ".join(spoken(trade) for trade in trades_of(body))},
         place=community.id,
     )
     return body

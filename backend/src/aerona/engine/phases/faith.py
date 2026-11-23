@@ -186,6 +186,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.dimensions",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.disease_routes",
     "table.districts",
     "table.drink_kinds",
     "table.endemic_diseases",

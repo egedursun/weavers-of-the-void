@@ -1,6 +1,6 @@
 from sqlalchemy import or_, select
 
-from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.core.grammar import spoken
 from aerona.db.tables.cosmography import CelestialReadingRow
@@ -31,9 +31,7 @@ async def constitution_line(scope: Scope, polity_id: int | None) -> list[str]:
     if row is None:
         return []
     creed = f", written for {await named(scope, row.ideology_entity_id)}" if row.ideology_entity_id is not None else ""
-    return [
-        f"constitution of {await named(scope, polity_id)}: chosen by {words(row.selectorate.value)}, offices {row.offices}, rights {row.rights} of 100{creed}"
-    ]
+    return [f"constitution of {await named(scope, polity_id)}: chosen by {spoken(row.selectorate)}, offices {row.offices}, rights {row.rights} of 100{creed}"]
 
 
 async def diet_lines(scope: Scope, town: EntityRow | None) -> list[str]:
@@ -49,8 +47,8 @@ async def bias_lines(scope: Scope, holder_id: int, whose: str) -> list[str]:
     found: list[str] = []
     for row in await scope.session.scalars(select(BiasWeightRow).where(BiasWeightRow.holder_node_id == holder_id).order_by(BiasWeightRow.bias)):
         if abs(row.weight - MIDDLE) >= STRONG:
-            last = f", last bent a choice of {words(row.last_decision.value)} by {row.last_shift}" if row.last_decision is not None else ""
-            found.append(f"{whose} bias {words(row.bias.value)}: {row.weight} of 100{last}")
+            last = f", last bent a choice of {spoken(row.last_decision)} by {row.last_shift}" if row.last_decision is not None else ""
+            found.append(f"{whose} bias {spoken(row.bias)}: {row.weight} of 100{last}")
     return found[: LIST_LINES * 2]
 
 
@@ -59,8 +57,8 @@ async def oath_lines(scope: Scope, me: EntityRow) -> list[str]:
     sworn = select(OathRow).where(OathRow.swearer_entity_id == me.id, OathRow.status == OathStatus.SWORN).order_by(OathRow.id).limit(LIST_LINES)
     for oath in await scope.session.scalars(sworn):
         witness = f", witnessed by {await named(scope, oath.witness_node_id)}" if oath.witness_node_id is not None else ""
-        penalty = f", penalty if broken: {words(oath.penalty.value)}" if oath.penalty is not None else ""
-        found.append(f"your oath of {words(oath.kind.value)}{witness}{penalty}")
+        penalty = f", penalty if broken: {spoken(oath.penalty)}" if oath.penalty is not None else ""
+        found.append(f"your oath of {spoken(oath.kind)}{witness}{penalty}")
     return found
 
 
@@ -75,7 +73,7 @@ async def feud_lines(scope: Scope, sides: list[int]) -> list[str]:
     for row in await scope.session.scalars(query):
         mediator = f", mediator {await named(scope, row.mediator_node_id)}" if row.mediator_node_id is not None else ""
         pair = f"{await named(scope, row.first_entity_id)} and {await named(scope, row.second_entity_id)}"
-        found.append(f"feud of {pair}: level {words(row.level.value)}, intensity {row.intensity}{mediator}")
+        found.append(f"feud of {pair}: level {spoken(row.level)}, intensity {row.intensity}{mediator}")
     return found
 
 
@@ -104,7 +102,7 @@ async def reading_lines(scope: Scope, people_id: int | None) -> list[str]:
     )
     for row in rows:
         seen = "seen" if row.visible else "hidden from view"
-        found.append(f"{await named(scope, row.celestial_entity_id)} in your sky: {seen}, read as {words(row.reading.value)}")
+        found.append(f"{await named(scope, row.celestial_entity_id)} in your sky: {seen}, read as {spoken(row.reading)}")
     return found
 
 
@@ -126,7 +124,7 @@ async def encounter_lines(scope: Scope, world_id: int | None) -> list[str]:
     query = select(JourneyEncounterRow).where(or_(JourneyEncounterRow.world_id.is_(None), JourneyEncounterRow.world_id == world_id))
     rows = await scope.session.scalars(query.order_by(JourneyEncounterRow.weight.desc(), JourneyEncounterRow.id).limit(LIST_LINES))
     return [
-        f"road encounter on {words(row.environment.value)} roads: {row.name or words(row.effect.value)}, weight {row.weight}, travellers lost {row.loss_pct}%"
+        f"road encounter on {spoken(row.environment)} roads: {row.name or spoken(row.effect)}, weight {row.weight}, travellers lost {row.loss_pct}%"
         for row in rows
     ]
 
@@ -139,7 +137,7 @@ async def relation_part_lines(scope: Scope, community_id: int | None) -> list[st
     found: list[str] = []
     for row in rows:
         other = row.entity_b_id if row.entity_a_id == community_id else row.entity_a_id
-        found.append(f"relation with {await named(scope, other)}, part {words(row.component.value)}: {spoken(row)}")
+        found.append(f"relation with {await named(scope, other)}, part {spoken(row.component)}: {spoken(row)}")
     return found
 
 

@@ -119,7 +119,7 @@ export function SickCohorts({
           <ul className='flex min-w-0 flex-col gap-2'>
             <Paged items={view.afflictions} as='li'>
               {(item) => {
-                const vector = VECTOR_SPEC[item.vector]
+                const vector = VECTOR_SPEC[item.primary_route]
                 const status = STATUS_SPEC[item.status]
                 return (
                   <li
@@ -222,7 +222,7 @@ export function SetCohort({
   const [sex, setSex] = useState<Sex>(
     () =>
       [...view.cohorts].sort((left, right) => right.count - left.count)[0]
-        ?.sex ?? 'other'
+        ?.sex_kind ?? 'none'
   )
   const [socialClass, setSocialClass] = useState<SocialClass>('farmer')
   const [condition, setCondition] = useState<CohortCondition>('none')
@@ -230,7 +230,7 @@ export function SetCohort({
     view.cohorts.find(
       (cohort) =>
         cohort.age_band === band &&
-        cohort.sex === sex &&
+        cohort.sex_kind === sex &&
         cohort.social_class === socialClass &&
         cohort.condition === condition
     )?.count ?? 0
@@ -242,7 +242,7 @@ export function SetCohort({
           body: {
             community_id: view.entity_id,
             age_band: band,
-            sex,
+            sex_kind: sex,
             social_class: socialClass,
             condition,
             count: Math.max(0, Math.round(Number(count))),
@@ -269,9 +269,11 @@ export function SetCohort({
           onPick={(value) => setBand(value as AgeBand)}
         />
         <IconPicker
-          label='Sex'
+          label='Sex kind of the biology'
           value={sex}
-          table={SEX_SPEC}
+          table={Object.fromEntries(
+            view.sex_kinds.map((kind) => [kind, SEX_SPEC[kind]])
+          )}
           blocked={busy}
           onPick={(value) => setSex(value as Sex)}
         />

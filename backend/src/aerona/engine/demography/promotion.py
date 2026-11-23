@@ -4,14 +4,16 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.catalog.conditions import MAIMS
+from aerona.catalog.life.demography import EMERGING_CONDITIONS, GROWN_BANDS, MINOR_BANDS
 from aerona.db.tables.body import MaimedCohortRow
+from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.disease import DiseaseProfileRow, OutbreakRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause, MaimedKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import AgeBand, CohortCondition
+from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import DeathCause
@@ -86,6 +88,12 @@ async def notable_moments(ctx: TickContext) -> list[Moment]:
         if community is not None and count >= table.promotion_maimed_min:
             common = max(sorted(kinds[community_id].items(), key=lambda item: item[0].value), key=lambda item: item[1])[0]
             moments.append(Moment(community, SocialClass.WARRIOR, "maimed", maimed=common))
+    emerging = select(CohortRow).where(CohortRow.condition.in_(sorted(EMERGING_CONDITIONS)), CohortRow.count > 0)
+    for cohort in await ctx.session.scalars(emerging.order_by(CohortRow.community_entity_id)):
+        community = await living_entity(ctx.session, cohort.community_entity_id)
+        key = f"emerge.{cohort.community_entity_id}.{cohort.condition.value}.{cohort.age_band.value}.{cohort.social_class.value}.{ctx.epoch}"
+        if community is not None and ctx.rng(key).chance(ctx.rules.demography.orphan_emerge_pct):
+            moments.append(Moment(community, cohort.social_class, "orphan" if cohort.condition is CohortCondition.ORPHANED else "displaced"))
     for community_id, count in sorted(famine_dead(ctx).items()):
         community = await living_entity(ctx.session, community_id)
         if community is not None and count >= table.promotion_famine_dead_min:
@@ -105,7 +113,9 @@ async def matching_wound(ctx: TickContext, mortal: EntityRow, kind: MaimedKind) 
     parts = anatomy_for(body).with_function(function)
     if not parts:
         return 0
-    chosen = parts if MAIMS[kind].both_sides else parts[:1]
+    target = MAIMS[kind].part
+    named = anatomy_for(body).part(target) if target is not None else None
+    chosen = (named,) if named is not None else parts if MAIMS[kind].both_sides else parts[:1]
     severity = ctx.rules.cohorts.promotion_injury_severity
     for part in chosen:
         harm = Harm(
@@ -204,8 +214,8 @@ async def sync_maimed(ctx: TickContext, community: EntityRow) -> int:
     source = CohortCondition.NONE if gap > 0 else CohortCondition.MAIMED
     fighters = await combat_sexes(ctx.session, community)
     keys: list[CohortKey] = sorted(
-        (key for key in rows if key[0] is not AgeBand.CHILD and key[3] is source and rows[key].count > 0),
-        key=lambda key: (key[0] is not AgeBand.ADULT, key[1] not in fighters, -rows[key].count, tuple(part.value for part in key)),
+        (key for key in rows if key[0] not in MINOR_BANDS and key[3] is source and rows[key].count > 0),
+        key=lambda key: (key[0] not in GROWN_BANDS, key[1] not in fighters, -rows[key].count, tuple(part.value for part in key)),
     )
     moved = 0
     for key in keys:
@@ -230,7 +240,7 @@ async def sync_veterans(ctx: TickContext, community: EntityRow) -> int:
         return 0
     fighters = await combat_sexes(ctx.session, community)
     keys: list[CohortKey] = sorted(
-        (key for key in rows if key[0] is AgeBand.ADULT and key[1] in fighters and key[3] is (CohortCondition.NONE if gap > 0 else CohortCondition.VETERAN)),
+        (key for key in rows if key[0] in GROWN_BANDS and key[1] in fighters and key[3] is (CohortCondition.NONE if gap > 0 else CohortCondition.VETERAN)),
         key=lambda key: -rows[key].count,
     )
     moved = 0

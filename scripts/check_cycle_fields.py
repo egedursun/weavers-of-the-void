@@ -10,6 +10,8 @@ SKIPPED = ("db/alembic/", "catalog/kinds/")
 ENUM = "PlanetaryCycle"
 NAMES = frozenset({"carbon", "water", "nutrients"})
 FLOW_COLUMNS = frozenset(f"{name}_{side}" for name in NAMES for side in ("in", "out"))
+CROWD_FEELINGS = frozenset({"anger", "anxiety", "fear", "fervour", "grief", "hope"})
+CROWD_HOLDERS = ("mood", "crowd")
 
 
 @dataclass(frozen=True)
@@ -53,6 +55,13 @@ def cycle_column(node: ast.AST) -> bool:
     return node.attr in NAMES and "cycle" in holder.lower()
 
 
+def crowd_column(node: ast.AST) -> bool:
+    if not isinstance(node, ast.Attribute) or node.attr not in CROWD_FEELINGS:
+        return False
+    holder = node.value.id if isinstance(node.value, ast.Name) else ""
+    return any(word in holder.lower() for word in CROWD_HOLDERS)
+
+
 def named_list(node: ast.AST) -> bool:
     if not isinstance(node, ast.Set | ast.List | ast.Tuple):
         return False
@@ -76,7 +85,7 @@ def fixed_in(relative: str, text: str) -> list[Fixed]:
         compared = isinstance(node, ast.Compare) and any(
             is_member(side, names) for side in (node.left, *node.comparators)
         )
-        if listed or compared or cycle_column(node) or named_list(node):
+        if listed or compared or cycle_column(node) or named_list(node) or crowd_column(node):
             found.append(
                 Fixed(relative, getattr(node, "lineno", 0), ast.unparse(node)[:140])
             )
@@ -97,7 +106,8 @@ def main() -> int:
     found = fixed_cycles()
     for item in found:
         print(
-            f"backend/src/aerona/{item.path}:{item.line}: {item.text} names a fixed planetary cycle; loop over CYCLES in catalog/planetary_cycles.py"
+            f"backend/src/aerona/{item.path}:{item.line}: {item.text} names a fixed planetary cycle or crowd feeling; loop over CYCLES in "
+            "catalog/planetary_cycles.py or read crowd feelings from their rows through engine/collective/feelings.py"
         )
     print(f"fixed cycle references: {len(found)}")
     return 1 if found else 0

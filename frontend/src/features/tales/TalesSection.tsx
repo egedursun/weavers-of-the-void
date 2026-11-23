@@ -30,7 +30,7 @@ const PANES: {
     label: 'Forming, seasons and remaking',
     count: (data) =>
       (data.formation ? 1 : 0) +
-      (data.season ? 1 : 0) +
+      data.seasons.length +
       data.forecasts.length +
       data.transformations.length,
   },

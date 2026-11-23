@@ -14,3 +14,7 @@ class BiologyVariant(StrEnum):
     GASEOUS = "gaseous"
     CRYSTALLINE = "crystalline"
     UNDEAD = "undead"
+    FUNGAL = "fungal"
+    COLONIAL = "colonial"
+    ENERGY = "energy"
+    SYMBIOTIC = "symbiotic"

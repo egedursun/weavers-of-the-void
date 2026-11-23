@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.place_terrain import DEFAULT_KIND, height_of, kind_spec
+from aerona.catalog.place_terrain import DEFAULT_KIND, HEIGHT_BONUS, height_of, kind_spec
 from aerona.catalog.terrain import TERRAIN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import BeastProfileRow
@@ -41,7 +41,7 @@ def apply_kind(rules: Rules, ground: PlaceEnvironmentRow, kind: PlaceKind) -> li
         "terrain": spec.terrain,
         "cover": spec.cover,
         "water_source": spec.water,
-        "height_advantage": clamp_int(height_of(rules, spec.height), 0, PERCENT),
+        "height_advantage": clamp_int(height_of(rules, spec.height) + (HEIGHT_BONUS[kind](rules) if kind in HEIGHT_BONUS else 0), 0, PERCENT),
         "chokepoint": spec.chokepoint,
     }
     changed = []

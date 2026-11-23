@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.core.dispatch import Handlers
 from aerona.db.read_memo import memoized
 from aerona.db.tables.collective import DesignRow
+from aerona.db.tables.crafts import IncorporealRightRow
 from aerona.db.tables.customs import MembershipRow
 from aerona.db.tables.discovery import BlueprintRow
 from aerona.db.tables.entities import EntityRow
@@ -17,6 +18,7 @@ from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.crafts import RightKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.minds import MindOrigin
@@ -78,7 +80,15 @@ async def companies(ctx: TickContext) -> list[Entry]:
 @SOURCES.on(RegistryKind.PATENT)
 async def patents(ctx: TickContext) -> list[Entry]:
     rows = await ctx.session.scalars(select(BlueprintRow).where(BlueprintRow.since_epoch == ctx.epoch).order_by(BlueprintRow.id))
-    return [Entry(await where(ctx, row.holder_node_id), row.holder_node_id, row.book_entity_id, row.id) for row in rows]
+    found = [Entry(await where(ctx, row.holder_node_id), row.holder_node_id, row.book_entity_id, row.id) for row in rows]
+    rights = await ctx.session.scalars(
+        select(IncorporealRightRow)
+        .where(IncorporealRightRow.kind == RightKind.TECHNIQUE, IncorporealRightRow.since_epoch == ctx.epoch)
+        .order_by(IncorporealRightRow.id)
+    )
+    for row in list(rights):
+        found.append(Entry(await where(ctx, row.holder_node_id), row.holder_node_id, None, row.id))
+    return found
 
 
 @SOURCES.on(RegistryKind.PATTERN)

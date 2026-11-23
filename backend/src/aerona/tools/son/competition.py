@@ -39,7 +39,7 @@ async def break_market(call: SonCall, args: BreakMarketInput) -> str:
         fail(SonResult.MARKET_REFUSED, why=f"no one is counted as selling {spoken(args.goods_kind)} there")
     await ensure_in_reach(call, market)
     if held(market.id) or "barriers" in (structure.locked or []):
-        fail(SonResult.MARKET_REFUSED, why="a stronger hand holds that market")
+        fail(SonResult.MARKET_REFUSED, why="that market is held")
     undone: list[str] = []
     for barrier in sorted(structure.barriers or {}):
         await call.record(

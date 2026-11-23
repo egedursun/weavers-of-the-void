@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 
 from aerona.catalog.mythic import OFFICE_DOMAINS, OFFICE_FORMS
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.kind_concepts.spec import ConceptSpec, KindProperty
 from aerona.db.tables.nature_kinds import DivineOfficeKindRow, ProductionMethodKindRow, RealmKindRow, TraitKindRow
@@ -15,11 +16,6 @@ from aerona.domain.enums.nature_kinds import MaterialSource, OfficeDuty, Product
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.polity import HouseTrait
 from aerona.domain.enums.society import CreatureTrait
-
-
-def words(value: str) -> str:
-    return value.replace("_", " ").capitalize()
-
 
 D = OfficeDuty
 R = RealmFunction
@@ -118,9 +114,9 @@ CREATURE_TRAITS: Mapping[CreatureTrait, tuple[TraitFunction, int]] = total(
     },
 )
 LEGACY_TRAITS: tuple[tuple[str, str, TraitFunction, int], ...] = (
-    *((f"natural.{trait.value}", words(trait.value), function, strength) for trait, (function, strength) in NATURAL_TRAITS.items()),
-    *((f"house.{trait.value}", words(trait.value), function, strength) for trait, (function, strength) in HOUSE_TRAITS.items()),
-    *((f"creature.{trait.value}", words(trait.value), function, strength) for trait, (function, strength) in CREATURE_TRAITS.items()),
+    *((f"natural.{trait.value}", spoken(trait).capitalize(), function, strength) for trait, (function, strength) in NATURAL_TRAITS.items()),
+    *((f"house.{trait.value}", spoken(trait).capitalize(), function, strength) for trait, (function, strength) in HOUSE_TRAITS.items()),
+    *((f"creature.{trait.value}", spoken(trait).capitalize(), function, strength) for trait, (function, strength) in CREATURE_TRAITS.items()),
 )
 TRAIT_STATS: Mapping[TraitFunction, tuple[str | None, str | None, str | None]] = total(
     TraitFunction,
@@ -145,7 +141,7 @@ METHOD_SPEC = ConceptSpec(
     hint="Ways a community works a process: what it yields, the hands and energy it needs, and how it wears its tools",
     table=ProductionMethodKindRow,
     category=ProcessKind,
-    category_labels={process.value: words(process.value) for process in ProcessKind},
+    category_labels={process.value: spoken(process).capitalize() for process in ProcessKind},
     properties=(
         KindProperty("output_pct", "Output", "Share of the process's yield this method brings in (%)", 0, 500),
         KindProperty("quality_bonus", "Quality", "Quality it adds to or takes from what it makes", -50, 50),
@@ -162,7 +158,7 @@ OFFICE_SPEC = ConceptSpec(
     hint="Offices a god can hold in the cosmos, each with a duty; a neglected office lets its duty go undone",
     table=DivineOfficeKindRow,
     category=OfficeDuty,
-    category_labels={duty.value: words(duty.value) for duty in OfficeDuty},
+    category_labels={duty.value: spoken(duty).capitalize() for duty in OfficeDuty},
     properties=(KindProperty("income_pct", "Income", "Share of the essence of its domains the holder takes (%)", 0, 500),),
     readers=("cosmic_offices",),
 )
@@ -173,7 +169,7 @@ REALM_SPEC = ConceptSpec(
     hint="Realms beyond the world where heroquests go, each with the function it serves",
     table=RealmKindRow,
     category=RealmFunction,
-    category_labels={function.value: words(function.value) for function in RealmFunction},
+    category_labels={function.value: spoken(function).capitalize() for function in RealmFunction},
     properties=(
         KindProperty("steps", "Extra trials", "Trials a heroquest into it faces on top of the usual", 0, 10),
         KindProperty("danger", "Danger", "How likely a quester is to fall in each trial"),
@@ -187,7 +183,7 @@ TRAIT_SPEC = ConceptSpec(
     hint="Traits of the body or a gift a species, people or house carries; each strengthens or weakens one capacity",
     table=TraitKindRow,
     category=TraitFunction,
-    category_labels={function.value: words(function.value) for function in TraitFunction},
+    category_labels={function.value: spoken(function).capitalize() for function in TraitFunction},
     properties=(KindProperty("strength", "Strength", "How far it raises the capacity, or lowers it when below 0", -100, 100),),
     readers=("ways_of_life",),
 )
@@ -231,6 +227,12 @@ YIELD_PARTS: Mapping[YieldProduct, ProductPart] = total(
         YieldProduct.MAGIC_REAGENTS: P.REAGENT,
         YieldProduct.GREAT_BEAST_TISSUE: P.BONE,
         YieldProduct.EGGS: P.EGGS,
+        YieldProduct.BLOOD: P.FLESH,
+        YieldProduct.ORGANS: P.FLESH,
+        YieldProduct.FAT: P.OIL,
+        YieldProduct.SCENT: P.REAGENT,
+        YieldProduct.HONEY: P.SUGAR,
+        YieldProduct.WAX: P.RESIN,
     },
 )
 PLANT_PARTS: Mapping[PlantYield, ProductPart] = total(
@@ -246,6 +248,12 @@ PLANT_PARTS: Mapping[PlantYield, ProductPart] = total(
         PlantYield.BREW_BASE: P.SEED,
         PlantYield.REAGENT: P.REAGENT,
         PlantYield.POISON: P.TOXIN,
+        PlantYield.OIL: P.OIL,
+        PlantYield.SUGAR: P.SUGAR,
+        PlantYield.SPICE: P.SPICE,
+        PlantYield.RESIN: P.RESIN,
+        PlantYield.STIMULANT: P.STIMULANT,
+        PlantYield.FODDER: P.FODDER,
     },
 )
 PRODUCT_PARTS: Mapping[str, ProductPart] = {

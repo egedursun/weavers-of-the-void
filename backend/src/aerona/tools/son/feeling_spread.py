@@ -38,7 +38,7 @@ async def move_hearts(call: SonCall, args: MoveHeartsInput) -> str:
     await ensure_in_reach(call, place)
     row = await mood_of(call.tick, settlement=place.id)
     if held(place.id) or "feelings" in (row.locked or []):
-        fail(SonResult.HEARTS_REFUSED, why="a stronger hand holds that mood as it is")
+        fail(SonResult.HEARTS_REFUSED, why="that mood is held as it is")
     feelings = dict(row.feelings or {})
     feelings[args.feeling.value] = args.strength
     row.feelings, row.leading, row.updated_epoch = feelings, args.feeling, call.tick.epoch

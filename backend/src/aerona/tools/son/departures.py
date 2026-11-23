@@ -36,7 +36,7 @@ async def call_to_step_aside(call: SonCall, args: CallToStepAsideInput) -> str:
     if not found:
         fail(SonResult.DEPARTURE_REFUSED, why=f"{holder.name} holds no office to step aside from")
     if held(holder.id):
-        fail(SonResult.DEPARTURE_REFUSED, why="a stronger hand holds them as they are")
+        fail(SonResult.DEPARTURE_REFUSED, why="they are held as they are")
     call.target(holder.id)
     if not call.tick.rng(f"departures.call.{holder.id}.{call.tick.epoch}").chance(call.tick.rules.departures.call_heed_pct):
         await call.record("office.call_refused", roles={IncidentRole.ACTOR: holder.id}, facts={"why": args.reason})
