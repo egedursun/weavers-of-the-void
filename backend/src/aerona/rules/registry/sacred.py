@@ -9,6 +9,43 @@ D = RuleGroup.THE_DIVINE
 
 @dataclass(frozen=True)
 class GeniusLociRules(Spanned):
+    river_mood_rate: int = rule(50, 0, 100, R, "How fast the mood of a spirit of a river turns with offerings and offences (50 = as the step gives)")
+    spring_mood_rate: int = rule(50, 0, 100, R, "How fast the mood of a spirit of a spring turns with offerings and offences (50 = as the step gives)")
+    lake_mood_rate: int = rule(45, 0, 100, R, "How fast the mood of a spirit of a lake turns with offerings and offences (50 = as the step gives)")
+    well_mood_rate: int = rule(55, 0, 100, R, "How fast the mood of a spirit of a well turns with offerings and offences (50 = as the step gives)")
+    shore_mood_rate: int = rule(50, 0, 100, R, "How fast the mood of a spirit of a shore turns with offerings and offences (50 = as the step gives)")
+    grove_mood_rate: int = rule(55, 0, 100, R, "How fast the mood of a spirit of a grove turns with offerings and offences (50 = as the step gives)")
+    forest_mood_rate: int = rule(45, 0, 100, R, "How fast the mood of a spirit of a forest turns with offerings and offences (50 = as the step gives)")
+    mountain_mood_rate: int = rule(35, 0, 100, R, "How fast the mood of a spirit of a mountain turns with offerings and offences (50 = as the step gives)")
+    cave_mood_rate: int = rule(45, 0, 100, R, "How fast the mood of a spirit of a cave turns with offerings and offences (50 = as the step gives)")
+    crossroads_mood_rate: int = rule(60, 0, 100, R, "How fast the mood of a spirit of a crossroads turns with offerings and offences (50 = as the step gives)")
+    wilds_mood_rate: int = rule(45, 0, 100, R, "How fast the mood of a spirit of the wilds turns with offerings and offences (50 = as the step gives)")
+    field_mood_rate: int = rule(55, 0, 100, R, "How fast the mood of a spirit of a field turns with offerings and offences (50 = as the step gives)")
+    city_mood_rate: int = rule(40, 0, 100, R, "How fast the mood of a spirit of a city turns with offerings and offences (50 = as the step gives)")
+    hearth_mood_rate: int = rule(60, 0, 100, R, "How fast the mood of a spirit of a hearth turns with offerings and offences (50 = as the step gives)")
+    sea_mood_rate: int = rule(40, 0, 100, R, "How fast the mood of a spirit of the open sea turns with offerings and offences (50 = as the step gives)")
+    ruin_mood_rate: int = rule(55, 0, 100, R, "How fast the mood of a spirit of a ruin turns with offerings and offences (50 = as the step gives)")
+    battlefield_mood_rate: int = rule(
+        70, 0, 100, R, "How fast the mood of a spirit of a battlefield turns with offerings and offences (50 = as the step gives)"
+    )
+    pollution_weight: int = rule(60, 0, 100, R, "How deeply fouled land offends a place spirit (50 = as the step gives)")
+    clearing_weight: int = rule(60, 0, 100, R, "How deeply cleared woods offends a place spirit (50 = as the step gives)")
+    unpaid_weight: int = rule(50, 0, 100, R, "How deeply unpaid offerings offends a place spirit (50 = as the step gives)")
+    taboo_weight: int = rule(50, 0, 100, R, "How deeply a broken taboo offends a place spirit (50 = as the step gives)")
+    bloodshed_weight: int = rule(70, 0, 100, R, "How deeply blood spilled in its place offends a place spirit (50 = as the step gives)")
+    overharvest_weight: int = rule(55, 0, 100, R, "How deeply taking more than its due offends a place spirit (50 = as the step gives)")
+    bloodshed_deaths: int = rule(10, 1, 100000, R, "Deaths in a spirit's place or land in one epoch that offend it")
+    overharvest_pct: int = rule(
+        40, 0, 100, R, "Share of its first stock below which a ground of game, fish or plants in a spirit's land offends it by overharvest (%)"
+    )
+    sea_catch_food: int = rule(
+        3, 0, 100, R, "Food a favouring spirit of the sea gives each ten points of favour to the town it watches (supply index, 100 = one epoch of its needs)"
+    )
+    sea_wreck_goods: int = rule(
+        4, 0, 100, R, "Goods an offended spirit of the sea takes from the town it watches each epoch (supply index, 100 = one epoch of its needs)"
+    )
+    battlefield_memory: int = rule(40, 0, 100, R, "Strength of a land's memory of battle from which a battlefield there gains a spirit of its own")
+    battlefield_unrest: int = rule(10, 0, 100, R, "Unrest an offended spirit of a battlefield lays on the dead of its land each epoch")
     bind_chance: int = rule(20, 0, 100, R, "Chance each epoch that a notable place, town or house without a spirit of its own gains one (%)")
     binds_per_epoch: int = rule(12, 0, 100000, R, "Base of the place spirits that may arise in one epoch, grown by the number of places without a spirit")
     binds_place_divisor: int = rule(
@@ -143,6 +180,9 @@ class TheodicyRules(Spanned):
     famine_suffering: int = rule(55, 0, 100, R, "Suffering hunger in a town brings")
     defeat_suffering: int = rule(45, 0, 100, R, "Suffering a lost battle brings the towns of the losing realm")
     disaster_suffering: int = rule(50, 0, 100, R, "Suffering a disaster in a land brings its towns")
+    persecution_suffering: int = rule(55, 0, 100, R, "Suffering the persecution of the faithful in a town brings")
+    long_season_suffering: int = rule(45, 0, 100, R, "Suffering a long winter or summer that grinds on brings the towns of its world")
+    long_season_years: int = span(100, 0, 2500, R, "Years a long winter or summer must last before it tests the doctrine of the faithful under it")
     window_years: int = span(5, 1, 1250, R, "Years a crisis waits for the patron god to answer visibly before the faithful seek another way")
     argue_base: int = rule(25, 0, 100, R, "Chance theologians' arguments settle the crisis before their intellect (%)")
     doctrine_chance: int = rule(30, 0, 100, R, "Chance the crisis yields a new doctrine of suffering as a trial (%)")
@@ -172,6 +212,17 @@ class SacramentRules:
     unrest_relief: int = rule(25, 0, 100, R, "Unrest at death a sacrament against unrest lifts at full strength")
     missed_unrest: int = rule(15, 0, 100, R, "Unrest at death a missed sacrament against unrest adds")
     missed_rite_pct: int = rule(20, 0, 100, R, "Chance of dying without rites a missed routing sacrament adds (%)")
+    birth_blessing_cost: int = rule(2, 0, 100, R, "Goods a town gives its church for a birth blessing (supply index, 100 = one epoch of its needs)")
+    initiation_cost: int = rule(3, 0, 100, R, "Goods a town gives its church for an initiation (supply index, 100 = one epoch of its needs)")
+    marriage_cost: int = rule(4, 0, 100, R, "Goods a town gives its church for a marriage rite (supply index, 100 = one epoch of its needs)")
+    last_rites_cost: int = rule(2, 0, 100, R, "Goods a town gives its church for last rites (supply index, 100 = one epoch of its needs)")
+    purification_cost: int = rule(4, 0, 100, R, "Goods a town gives its church for a purification (supply index, 100 = one epoch of its needs)")
+    ordination_cost: int = rule(6, 0, 100, R, "Goods a town gives its church for an ordination (supply index, 100 = one epoch of its needs)")
+    curse_ward_pct: int = rule(
+        30, 0, 100, R, "Share of curses a sacrament against curses turns aside at full strength, where its church's god stands behind it (%)"
+    )
+    purification_guilt: int = rule(20, 0, 100, R, "Stress of guilt a purification lifts from the one cleansed")
+    ordination_piety: int = rule(5, 0, 100, R, "Piety an ordination binds into the one made clergy")
 
 
 @dataclass(frozen=True)
@@ -206,6 +257,18 @@ class SecularisationRules:
 @dataclass(frozen=True)
 class DivinationRules:
     found_chance: int = rule(8, 0, 100, R, "Chance each epoch that a people without a divination system takes one up (%)")
+    augury_accuracy: int = rule(50, 0, 100, R, "How often a valid reading of birds and flights reads true (50 = as validity gives)")
+    haruspicy_accuracy: int = rule(50, 0, 100, R, "How often a valid reading of entrails reads true (50 = as validity gives)")
+    astrology_accuracy: int = rule(50, 0, 100, R, "How often a valid reading of the sky reads true (50 = as validity gives)")
+    oracle_accuracy: int = rule(55, 0, 100, R, "How often a valid oracle reads true (50 = as validity gives)")
+    lots_accuracy: int = rule(45, 0, 100, R, "How often valid lots read true (50 = as validity gives)")
+    dream_reading_accuracy: int = rule(50, 0, 100, R, "How often a valid reading of dreams reads true (50 = as validity gives)")
+    scrying_accuracy: int = rule(50, 0, 100, R, "How often a valid gaze into a surface reads true (50 = as validity gives)")
+    spirit_consultation_accuracy: int = rule(55, 0, 100, R, "How often a valid asking of the dead reads true (50 = as validity gives)")
+    earth_signs_accuracy: int = rule(45, 0, 100, R, "How often a valid reading of signs in the earth reads true (50 = as validity gives)")
+    voyage_prosperity: int = rule(3, 0, 50, R, "Prosperity the realm's ports gain or lose when a heeded voyage omen hastens or delays their sailings")
+    founding_prosperity: int = rule(3, 0, 50, R, "Prosperity a realm's newest town gains or loses when a heeded founding omen hastens or delays its building")
+    illness_health: int = rule(8, 0, 100, R, "Health a ruler gains or loses when a heeded omen about its sickness sways its care")
     systems_per_people: int = rule(2, 0, 20, R, "Divination systems a people may keep")
     consult_chance: int = rule(50, 0, 100, R, "Chance each epoch that a ruler with court diviners consults them (%)")
     valid_truth: int = rule(85, 0, 100, R, "Chance a valid system reads the true omen (%)")

@@ -30,6 +30,9 @@ from aerona.catalog.incident_kinds.w52_agent_c import KINDS as W52_AGENT_C
 from aerona.catalog.incident_kinds.w52_agent_d import KINDS as W52_AGENT_D
 from aerona.catalog.incident_kinds.w52_agent_e import KINDS as W52_AGENT_E
 from aerona.catalog.incident_kinds.w52_agent_f import KINDS as W52_AGENT_F
+from aerona.catalog.incident_kinds.w52_agent_g import KINDS as W52_AGENT_G
+from aerona.catalog.incident_kinds.w52_agent_h import KINDS as W52_AGENT_H
+from aerona.catalog.incident_kinds.w52_agent_i import KINDS as W52_AGENT_I
 
 GROUP_KINDS: tuple[tuple[IncidentKindSpec, ...], ...] = (
     SINGLE_COMBAT,
@@ -58,6 +61,9 @@ GROUP_KINDS: tuple[tuple[IncidentKindSpec, ...], ...] = (
     W52_AGENT_C,
     W52_AGENT_E,
     W52_AGENT_F,
+    W52_AGENT_G,
+    W52_AGENT_I,
+    W52_AGENT_H,
     W52_AGENT_A,
     W52_AGENT_D,
 )

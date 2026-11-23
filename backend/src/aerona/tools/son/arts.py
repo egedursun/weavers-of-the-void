@@ -8,6 +8,7 @@ from aerona.core.grammar import spoken
 from aerona.db.tables.arts import ClubRow, ForgeryRow
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.intrigue import TrueNameRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -57,6 +58,7 @@ class OrderConstructInput(ToolInput):
 
 class SeizeConstructInput(ToolInput):
     construct_id: int
+    by_true_name: bool = False
     reason: Reason
 
 
@@ -162,7 +164,14 @@ async def seize_construct(call: SonCall, args: SeizeConstructInput) -> str:
     rules = await constructs.rules_of(call.tick, body.id)
     if rules is None:
         fail(SonResult.CONSTRUCT_SEIZE_REFUSED, why="it answers no token at all")
-    await constructs.edit_record(call.tick, "instruction_set", rules.id, {"command_token": CommandToken.WORD, "holder_node_id": call.son.id}, [])
+    token = CommandToken.WORD
+    if args.by_true_name:
+        name = await call.session.get(TrueNameRow, body.id)
+        if name is None:
+            fail(SonResult.CONSTRUCT_SEIZE_REFUSED, why=f"{body.name} has no true name to command it by")
+        name.known_by = sorted({*name.known_by, call.son.id})
+        token = CommandToken.TRUE_NAME
+    await constructs.edit_record(call.tick, "instruction_set", rules.id, {"command_token": token, "holder_node_id": call.son.id}, [])
     call.target(body.id)
     await call.record(
         "tools.son.seize_construct",

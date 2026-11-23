@@ -29,6 +29,7 @@ from aerona.domain.enums.records import FactValue, PlaceRule, ProcessClock
 from aerona.domain.enums.records import ProcessGroup as G
 from aerona.domain.enums.records import StepAction as A
 from aerona.domain.enums.society import NaturalLaw, SocialClass
+from aerona.domain.enums.world_view import SettleMode
 
 BIRTH_STEPS = frozenset({A.GO_INTO_LABOUR, A.GIVE_BIRTH, A.NAME_CHILD})
 LOST_BIRTH_STEPS = frozenset({A.GO_INTO_LABOUR, A.LOSE_CHILD, A.DIE})
@@ -211,9 +212,9 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "births.village",
-        "{actor} grew crowded; {migrants:settler|settlers} founded {product} in {place}.",
+        "{actor} grew crowded; {migrants:settler|settlers} founded {product} in {place}; its way of settling is {mode}.",
         roles=(role(R.ACTOR), role(R.PRODUCT), role(R.PLACE)),
-        facts=(number("migrants", U.PEOPLE), number("settlements_before", U.COUNT)),
+        facts=(number("migrants", U.PEOPLE), number("settlements_before", U.COUNT), FactSpec("mode", FactValue.ENUM, enum=SettleMode)),
         place=PlaceRule.REQUIRED,
         collection=C.FOUNDING,
     ),

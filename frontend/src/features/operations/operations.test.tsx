@@ -165,6 +165,7 @@ describe('command, supply, ships and expeditions', () => {
           legs_total: 4,
           provisions: 6,
           light: 0,
+          air: 0,
           tools: 2,
           medicine: 1,
           darkness: 0,
@@ -185,6 +186,7 @@ describe('command, supply, ships and expeditions', () => {
               hunger: 0,
               fatigue: 30,
               fallen: false,
+              departed: false,
               locked: [],
             },
           ],
@@ -228,6 +230,78 @@ describe('command, supply, ships and expeditions', () => {
       kind: 'hardy',
       source_id: null,
     })
+  })
+  it('reads a party under the water with its air, a warder and one who left', async () => {
+    serveBase()
+    onApi('GET', '/api/operations/of/60', {
+      ...EMPTY,
+      node: SCOUT,
+      expeditions: [
+        {
+          id: 5,
+          name: 'Expedition of Ilse below the waves',
+          leader: SCOUT,
+          sponsor: null,
+          target: LAND,
+          ground: 'under_water',
+          status: 'underway',
+          legs_done: 2,
+          legs_total: 4,
+          provisions: 6,
+          light: 3,
+          air: 4,
+          tools: 1,
+          medicine: 1,
+          darkness: 0,
+          danger: 20,
+          found: 1,
+          started_epoch: 6,
+          ended_epoch: null,
+          missing_roles: ['cartographer'],
+          members: [
+            {
+              id: 9,
+              mortal: SCOUT,
+              role: 'warder',
+              stress: 40,
+              resolve: 'compassionate',
+              cold: 0,
+              wet: 20,
+              hunger: 0,
+              fatigue: 10,
+              fallen: false,
+              departed: true,
+              locked: [],
+            },
+          ],
+          log: [
+            {
+              id: 22,
+              epoch: 6,
+              leg: 2,
+              event: 'discovery',
+              member: SCOUT,
+              provisions_used: 0,
+              light_used: 0,
+              stress: 40,
+              resolve: null,
+              quirk: null,
+              locked: [],
+            },
+          ],
+          locked: [],
+        },
+      ],
+    })
+    const { screen } = await renderApp(<OperationsSection nodeId={60} />)
+    await expect
+      .element(screen.getByText('Expedition of Ilse below the waves'))
+      .toBeVisible()
+    await expect.element(screen.getByText('No cartographer')).toBeVisible()
+    await expect.element(screen.getByText('Air').first()).toBeVisible()
+    await expect
+      .element(screen.getByText('Warder · Compassionate · left the party'))
+      .toBeVisible()
   })
   it('mans only the stations a vessel’s sections call for and names each crew', async () => {
     serveBase()

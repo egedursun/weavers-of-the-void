@@ -371,6 +371,7 @@ async def soul_card(services: ServicesDep, entity_id: Id) -> SoulCard:
                     profile.bound_entity_id,
                     held.host_entity_id if held is not None else None,
                     reborn.newborn_entity_id if reborn is not None else None,
+                    reborn.species_entity_id if reborn is not None else None,
                     stratum.realm_entity_id if stratum is not None else None,
                     stratum.dimension_id if stratum is not None else None,
                 )
@@ -404,6 +405,8 @@ async def soul_card(services: ServicesDep, entity_id: Id) -> SoulCard:
             ],
             possession=possession_view(held, refs) if held is not None else None,
             reborn_as=ref(refs, reborn.newborn_entity_id) if reborn is not None else None,
+            reborn_kind=ref(refs, reborn.species_entity_id) if reborn is not None else None,
+            rebirth_path=reborn.path if reborn is not None else None,
             gate=reborn.gate if reborn is not None else None,
             locked=list(profile.locked or []),
         )

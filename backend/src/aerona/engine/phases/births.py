@@ -68,7 +68,7 @@ from aerona.engine.mortal.kin import betrothed_of, children_of, partners_of
 from aerona.engine.mortal.kinship import add_parent, marry
 from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_summaries, refresh_life, sex_of_stats
 from aerona.engine.mortal.profile import ensure_profile
-from aerona.engine.mythic.geasa import birth_geas
+from aerona.engine.mythic.geasa import birth_geas, inherit_geasa
 from aerona.engine.numbers.book import PolicyBook
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
@@ -98,6 +98,7 @@ from aerona.engine.primitives.records import RecordSpec, open_record, sentence_c
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_bounds, set_stats, stat, stat_or
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
+from aerona.engine.settlement.modes import choose_mode
 from aerona.engine.storyteller.pace import recovered
 from aerona.engine.transform.record import blocked, record_transformation
 from aerona.engine.unions.axes import spousing_of
@@ -568,7 +569,15 @@ async def found_settlement(
         await connect(ctx.session, settlement.id, patron.id, BondKind.WORSHIPS, ctx.epoch)
     await bind_language_and_faith(ctx, settlement, atlas, people)
     founded: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: people.id, IncidentRole.PRODUCT: settlement.id, IncidentRole.PLACE: region.id}
-    await record(ctx, "births.village", roles=founded, facts={"migrants": migrants, "settlements_before": existing}, place=region.id, destination=settlement.id)
+    mode = await choose_mode(ctx.session, ctx.rules, settlement)
+    await record(
+        ctx,
+        "births.village",
+        roles=founded,
+        facts={"migrants": migrants, "settlements_before": existing, "mode": mode},
+        place=region.id,
+        destination=settlement.id,
+    )
     ctx.count("villages")
     return settlement
 
@@ -909,6 +918,7 @@ async def bear_child(
     if patron is not None:
         await connect(ctx.session, child.id, patron.id, BondKind.WORSHIPS, ctx.epoch)
         await birth_geas(ctx, child, patron.id)
+    await inherit_geasa(ctx, child, (first, second))
     mother = bearer or first
     roles: dict[IncidentRole, RoleValue] = {
         IncidentRole.CHILD: child.id,

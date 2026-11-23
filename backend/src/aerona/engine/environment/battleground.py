@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 
+from aerona.catalog.terrain import terrain_has
 from aerona.catalog.world_views import WORLD_VIEWS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.environment import PlaceCover, ScarKind, TerrainKind, WeatherEffect
+from aerona.domain.enums.environment import PlaceCover, ScarKind, TerrainKind, TerrainTrait, WeatherEffect
+from aerona.domain.enums.world_view import WarTerrain
 from aerona.engine.environment.book import EnvironmentBook, add_scar, season_attrition
 from aerona.engine.environment.weather import Weather
 from aerona.rules.registry import Rules
@@ -24,6 +26,7 @@ class BattleGround:
     night: bool = False
     urban: bool = False
     site_id: int | None = None
+    war: WarTerrain = WarTerrain.LAND
 
     @property
     def cover(self) -> PlaceCover | None:
@@ -49,6 +52,10 @@ class BattleGround:
         if terrain is not None:
             parts.append(f"on {spoken(terrain)} ground")
         return ", ".join(parts)
+
+
+def war_ground(default: WarTerrain, terrain: TerrainKind | None) -> WarTerrain:
+    return WarTerrain.UNDERGROUND if terrain_has(terrain, TerrainTrait.UNDERGROUND) else default
 
 
 def night_chance(rules: Rules, nights: bool, day_length_hours: int | None) -> float:

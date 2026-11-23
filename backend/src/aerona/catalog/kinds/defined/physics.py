@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.physics import CosmicFeatureKind, ImpactBody, LifeComplexity, LifeEnvironment
+from aerona.domain.enums.physics import CosmicFeatureKind, LifeComplexity
 
 COSMIC_FEATURE_KIND = total(
     CosmicFeatureKind,
@@ -39,20 +39,10 @@ COSMIC_FEATURE_KIND = total(
     },
 )
 
-IMPACT_BODY = total(
-    ImpactBody,
-    {
-        ImpactBody.ASTEROID: Defined("Asteroid", checked_by=(), used_by=("engine.cosmos.formation.mark_craters", "engine.cosmos.impacts.forecast")),
-        ImpactBody.COMET: Defined("Comet", checked_by=(), used_by=("engine.cosmos.formation.mark_craters", "engine.cosmos.impacts.forecast")),
-        ImpactBody.ROGUE_WORLD: Defined("Rogue world", checked_by=(), used_by=("engine.cosmos.impacts.forecast",)),
-        ImpactBody.CALLED: Defined("Called by a god", checked_by=(), used_by=("engine.cosmos.impacts.call_impact",)),
-    },
-)
-
 LIFE_COMPLEXITY = total(
     LifeComplexity,
     {
-        LifeComplexity.NONE: Defined("No life", checked_by=(), used_by=("engine.cosmos.lifeforms.inferred_life",)),
+        LifeComplexity.NONE: Defined("No life", checked_by=("engine.cosmos.lifeforms.rehome_life",), used_by=("engine.cosmos.lifeforms.inferred_life",)),
         LifeComplexity.MICROBIAL: Defined("Microbial", checked_by=(), used_by=("engine.cosmos.lifeforms.inferred_life",)),
         LifeComplexity.SIMPLE: Defined("Simple", checked_by=(), used_by=("engine.cosmos.lifeforms.inferred_life",)),
         LifeComplexity.COMPLEX: Defined(
@@ -71,15 +61,5 @@ LIFE_COMPLEXITY = total(
             checked_by=(),
             used_by=("engine.cosmos.lifeforms.inferred_life", "engine.phases.life_seed.life_seed", "engine.phases.life_seed.seed_life"),
         ),
-    },
-)
-
-LIFE_ENVIRONMENT = total(
-    LifeEnvironment,
-    {
-        LifeEnvironment.MARINE: Defined("Marine", checked_by=(), used_by=("engine.cosmos.lifeforms.environments_of",)),
-        LifeEnvironment.TERRESTRIAL: Defined("Terrestrial", checked_by=(), used_by=("engine.cosmos.lifeforms.environments_of",)),
-        LifeEnvironment.AERIAL: Defined("Aerial", checked_by=(), used_by=("engine.cosmos.lifeforms.environments_of",)),
-        LifeEnvironment.SUBTERRANEAN: Defined("Subterranean", checked_by=(), used_by=("engine.cosmos.lifeforms.environments_of",)),
     },
 )

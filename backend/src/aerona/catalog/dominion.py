@@ -1,11 +1,13 @@
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.catalog.peoples import Style
 from aerona.core.total import total
 from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.dominion import CreatureDeed, DivineScale, Manifestation, PerceivedAlignment
+from aerona.domain.enums.dominion import CreatureDeed, DivineScale, Manifestation, PerceivedAlignment, PrayerTone, WorshipMode
+from aerona.rules.registry import Rules
 
 D = Domain
 ORDER = DivineScale.ORDER
@@ -152,9 +154,45 @@ ALIGNMENT_MANIFESTATIONS = total(
 )
 MANIFESTATION_ORDER = total(
     Manifestation,
-    {Manifestation.RADIANT: 0, Manifestation.SERENE: 0, Manifestation.STERN: -100, Manifestation.DREADFUL: 50},
+    {Manifestation.RADIANT: 0, Manifestation.SERENE: 0, Manifestation.STERN: -100, Manifestation.DREADFUL: 50, Manifestation.VEILED: 0},
 )
 
 HELPFUL_DEEDS = frozenset({CreatureDeed.TEND_FIELDS, CreatureDeed.HEAL_SICK, CreatureDeed.GUARD_HOLY_SITES})
 HARMFUL_DEEDS = frozenset({CreatureDeed.HUNT_FOLK, CreatureDeed.WRECK_WORKS, CreatureDeed.STRIKE_FOES})
 FEEDING_DEEDS = frozenset({CreatureDeed.HUNT_FOLK, CreatureDeed.TEND_FIELDS})
+
+
+@dataclass(frozen=True)
+class WorshipModeSpec:
+    label: str
+    bargains: bool = False
+
+
+WORSHIP_MODES = total(
+    WorshipMode,
+    {
+        WorshipMode.DEVOTION: WorshipModeSpec("Devotion"),
+        WorshipMode.APPEASEMENT: WorshipModeSpec("Appeasement"),
+        WorshipMode.BARGAIN: WorshipModeSpec("Bargain", bargains=True),
+    },
+)
+BARGAINING_MODES = frozenset(mode for mode, spec in WORSHIP_MODES.items() if spec.bargains)
+
+
+@dataclass(frozen=True)
+class PrayerToneSpec:
+    label: str
+    essence: Callable[[Rules], int]
+    asks: bool = False
+    praises: bool = False
+
+
+PRAYER_TONES = total(
+    PrayerTone,
+    {
+        PrayerTone.THANKS: PrayerToneSpec("Thanks", lambda rules: rules.worship.thanks_essence),
+        PrayerTone.MERCY: PrayerToneSpec("Mercy", lambda rules: rules.worship.mercy_essence, asks=True),
+        PrayerTone.REQUEST: PrayerToneSpec("Request", lambda rules: rules.worship.request_essence, asks=True),
+        PrayerTone.PRAISE: PrayerToneSpec("Praise", lambda rules: rules.worship.praise_essence, praises=True),
+    },
+)

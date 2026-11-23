@@ -18,6 +18,7 @@ from aerona.engine.phases.world_balance import living_worlds
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.recording.record import record as record_incident
+from aerona.engine.sites.accounts import mark_ordnance
 from aerona.engine.sites.digs import DigTally, mark_battlefields, start_digs, tend_battlefields, tend_digs
 from aerona.engine.sites.rooms import RoomTally, keep_sites
 from aerona.engine.storyteller.pace import StorytellerTally, measure, recovered
@@ -267,6 +268,7 @@ async def recover(ctx: TickContext, world_id: int, boost: int, atlas: RegionAtla
     "table.storytellers",
     "table.subsystem_tensions",
     "table.wars",
+    "table.world_seasons",
     "table.worlds",
 )
 @writes(
@@ -292,6 +294,7 @@ async def storyteller(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.deep_seals",
     "table.entities",
     "table.made_realm_profiles",
     "table.mind_profiles",
@@ -352,8 +355,18 @@ async def excavations(ctx: TickContext) -> None:
     count(ctx, "dig", tally)
 
 
-@reads("table.battlefield_features", "table.battles", "table.bonds", "table.entities", "table.name_registry", "table.node_births", "table.nodes")
+@reads(
+    "table.battlefield_features",
+    "table.battles",
+    "table.bonds",
+    "table.entities",
+    "table.name_registry",
+    "table.node_births",
+    "table.nodes",
+    "table.war_remnants",
+)
 @writes(
+    "table.applied_fixups",
     "table.battlefield_features",
     "table.bonds",
     "table.chronicle",
@@ -367,6 +380,7 @@ async def excavations(ctx: TickContext) -> None:
 )
 async def battlefields(ctx: TickContext) -> None:
     tally = DigTally()
+    tally.graves += await mark_ordnance(ctx)
     await mark_battlefields(ctx, tally)
     await tend_battlefields(ctx, tally)
     count(ctx, "battlefield", tally)

@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.life.constructs import ASSIGN_HUNTER_CONTRACT_STATUSS
+from aerona.catalog.orders import TIMED_CONDITIONS
 from aerona.core.errors import ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.constructs import (
@@ -17,12 +18,13 @@ from aerona.db.tables.contracts import CONTRACT_FIELDS, MonsterContractRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.sacred import SIGN_FIELDS, BirthSignRow
-from aerona.domain.enums.constructs import CommandToken, ConstructEnd, ContractStatus, MindWill, OrderCondition, OrderKind
+from aerona.domain.enums.constructs import CommandToken, ConstructEnd, ContractStatus, MindWill, OrderCondition, OrderKind, OrderTime
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faith import BindingKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.minds import WillCause
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.collective.control import of_type, saved
 from aerona.engine.constructs.making import Design, make_construct
 from aerona.engine.constructs.orders import holder_of, unmake
@@ -34,6 +36,7 @@ from aerona.engine.ecology.contracts import open_contract
 from aerona.engine.gatherings.control import Values, allowed, found
 from aerona.engine.minds.phase import change_will
 from aerona.engine.minds.profiles import profile_of
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.astrology import SignTally, sign_birth
 
 MORTALS = frozenset({EntityType.MORTAL})
@@ -92,15 +95,35 @@ async def refresh_holder(ctx: TickContext, set_id: int) -> InstructionSetRow:
 
 
 async def give_order(
-    ctx: TickContext, set_id: int, kind: OrderKind, *, target_id: int | None, priority: int, condition: OrderCondition, until_epoch: int | None
+    ctx: TickContext,
+    set_id: int,
+    kind: OrderKind,
+    *,
+    target_id: int | None,
+    priority: int,
+    condition: OrderCondition,
+    until_epoch: int | None,
+    times: OrderTime | None = None,
+    giver_id: int | None = None,
 ) -> InstructionOrderRow:
-    await found(ctx, InstructionSetRow, set_id, "instruction set")
+    rules = await found(ctx, InstructionSetRow, set_id, "instruction set")
     if target_id is not None:
         await node_exists(ctx, target_id, "target")
     if condition is OrderCondition.UNTIL_DATE and until_epoch is None:
         raise ValidationFailedError("An order kept until a date needs the epoch it ends.")
-    row = InstructionOrderRow(set_id=set_id, kind=kind, target_node_id=target_id, priority=priority, condition=condition, until_epoch=until_epoch, locked=[])
-    return await saved(ctx, row)
+    if condition in TIMED_CONDITIONS and times is None:
+        raise ValidationFailedError("An order kept at set times needs the times it runs.")
+    row = InstructionOrderRow(
+        set_id=set_id, kind=kind, target_node_id=target_id, priority=priority, condition=condition, until_epoch=until_epoch, times=times, locked=[]
+    )
+    saved_row = await saved(ctx, row)
+    await record(
+        ctx,
+        "orders.given",
+        roles={IncidentRole.SUBJECT: rules.owner_entity_id, IncidentRole.AUTHORITY: giver_id, IncidentRole.TARGET: target_id},
+        facts={"order": kind, "condition": condition},
+    )
+    return saved_row
 
 
 async def remake_mortal(ctx: TickContext, mortal_id: int) -> RemadeRow:

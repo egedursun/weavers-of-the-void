@@ -1,5 +1,6 @@
 import { Leaf, Users } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
+import { lifeEnvironmentValues as environmentValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList } from '@/components/domain'
 import { Label } from '@/components/typography'
@@ -52,7 +53,7 @@ export function LifeClassSection({ worldId }: { worldId: number }) {
               description='The heavens read it at the next epoch.'
             />
           )
-        const places = new Set(life.environments)
+        const places = new Set<string>(life.environments)
         return (
           <div className='flex min-w-0 flex-col gap-3'>
             <div className='flex min-w-0 flex-wrap gap-1'>
@@ -68,28 +69,31 @@ export function LifeClassSection({ worldId }: { worldId: number }) {
             <div className='flex min-w-0 flex-col gap-1.5'>
               <Label>Where it lives</Label>
               <div className='flex min-w-0 flex-wrap gap-1.5'>
-                {Object.entries(ENVIRONMENTS).map(([key, spec]) => (
-                  <Button
-                    key={key}
-                    size='sm'
-                    variant={places.has(key) ? 'default' : 'outline'}
-                    aria-pressed={places.has(key)}
-                    disabled={busy !== null}
-                    disabledReason={busy ?? undefined}
-                    onClick={() =>
-                      edit.mutate({
-                        values: {
-                          environments: places.has(key)
-                            ? life.environments.filter((item) => item !== key)
-                            : [...life.environments, key],
-                        },
-                      })
-                    }
-                  >
-                    <spec.icon />
-                    {spec.label}
-                  </Button>
-                ))}
+                {environmentValues.map((key) => {
+                  const spec = ENVIRONMENTS[key]
+                  return (
+                    <Button
+                      key={key}
+                      size='sm'
+                      variant={places.has(key) ? 'default' : 'outline'}
+                      aria-pressed={places.has(key)}
+                      disabled={busy !== null}
+                      disabledReason={busy ?? undefined}
+                      onClick={() =>
+                        edit.mutate({
+                          values: {
+                            environments: places.has(key)
+                              ? life.environments.filter((item) => item !== key)
+                              : [...life.environments, key],
+                          },
+                        })
+                      }
+                    >
+                      <spec.icon />
+                      {spec.label}
+                    </Button>
+                  )
+                })}
               </div>
             </div>
             <RecordEditor

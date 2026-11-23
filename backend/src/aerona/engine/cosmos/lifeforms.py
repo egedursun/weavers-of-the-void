@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.cosmos import AIR_GAS, LIFE_BARRING_WORLDS
 from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
+from aerona.catalog.physics_life import LIFE_PLACES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -16,7 +17,7 @@ from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import AirNeed, LifeComplexity, LifeEnvironment
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.orbits import GAS_WORLDS, LIFELESS_WORLDS
+from aerona.engine.cosmos.orbits import GAS_WORLDS, LIFELESS_WORLDS, gravity_band
 from aerona.engine.ecology.biochemistry import bearable, tolerated
 from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
@@ -33,18 +34,29 @@ def rank(complexity: LifeComplexity) -> int:
     return COMPLEXITY_ORDER.index(complexity)
 
 
-def environments_of(world: WorldRow, physics: WorldPhysicsRow | None) -> list[str]:
-    found: list[LifeEnvironment] = []
+def place_holds(rules: Rules, place: LifeEnvironment, world: WorldRow, physics: WorldPhysicsRow | None) -> bool:
+    spec = LIFE_PLACES[place]
+    gas = world.world_type in GAS_WORLDS
     sea = physics.hydrosphere if physics is not None else round(world.terrain_sea * PERCENT)
-    if sea > 0 and world.world_type not in GAS_WORLDS:
-        found.append(LifeEnvironment.MARINE)
-    if sea < PERCENT and world.world_type not in GAS_WORLDS:
-        found.append(LifeEnvironment.TERRESTRIAL)
-    if world.world_type in GAS_WORLDS or (physics is not None and physics.pressure > 0):
-        found.append(LifeEnvironment.AERIAL)
-    if world.world_type in BURIED_WORLDS:
-        found.append(LifeEnvironment.SUBTERRANEAN)
-    return [item.value for item in found]
+    table = rules.physics
+    heat = max(physics.tectonics, physics.volcanism) if physics is not None else 0
+    iced = physics is not None and physics.cryosphere >= table.under_ice_cryosphere and heat >= table.under_ice_heat
+    temperate = physics is not None and table.cloud_low_kelvin <= physics.surface_temperature <= table.cloud_high_kelvin
+    return all(
+        (
+            spec.gas_world is None or spec.gas_world is gas,
+            not spec.sea or sea > 0,
+            not spec.land or sea < PERCENT,
+            not spec.frozen or iced,
+            not spec.buried or world.world_type in BURIED_WORLDS,
+            not spec.clouds or temperate,
+            not spec.air or gas or (physics is not None and physics.pressure > 0),
+        )
+    )
+
+
+def environments_of(rules: Rules, world: WorldRow, physics: WorldPhysicsRow | None) -> list[str]:
+    return [place.value for place in LifeEnvironment if place_holds(rules, place, world, physics)]
 
 
 async def living_kinds(session: AsyncSession, world_id: int, kind: EntityType) -> int:
@@ -54,7 +66,7 @@ async def living_kinds(session: AsyncSession, world_id: int, kind: EntityType) -
     return int(await session.scalar(statement) or 0)
 
 
-async def inferred_life(session: AsyncSession, world: WorldRow, physics: WorldPhysicsRow | None) -> WorldLifeRow:
+async def inferred_life(session: AsyncSession, rules: Rules, world: WorldRow, physics: WorldPhysicsRow | None) -> WorldLifeRow:
     if await living_kinds(session, world.id, EntityType.PEOPLE):
         complexity = LifeComplexity.SAPIENT
     elif await living_kinds(session, world.id, EntityType.SPECIES):
@@ -67,20 +79,20 @@ async def inferred_life(session: AsyncSession, world: WorldRow, physics: WorldPh
         complexity = LifeComplexity.COMPLEX
     else:
         complexity = LifeComplexity.SIMPLE
-    return WorldLifeRow(world_id=world.id, complexity=complexity, environments=environments_of(world, physics), locked=[])
+    return WorldLifeRow(world_id=world.id, complexity=complexity, environments=environments_of(rules, world, physics), locked=[])
 
 
-async def life_of(session: AsyncSession, world: WorldRow) -> WorldLifeRow:
+async def life_of(session: AsyncSession, rules: Rules, world: WorldRow) -> WorldLifeRow:
     row = await session.get(WorldLifeRow, world.id)
     if row is None:
-        row = await inferred_life(session, world, await session.get(WorldPhysicsRow, world.id))
+        row = await inferred_life(session, rules, world, await session.get(WorldPhysicsRow, world.id))
         session.add(row)
         await session.flush()
     return row
 
 
 async def may_arise(session: AsyncSession, rules: Rules, world: WorldRow, *, people: bool) -> bool:
-    life = await life_of(session, world)
+    life = await life_of(session, rules, world)
     needed = rules.life_classes.people_complexity if people else rules.life_classes.species_complexity
     return rank(life.complexity) >= needed
 
@@ -125,8 +137,8 @@ def disease_load(rules: Rules, fit: int) -> float:
     return (PERCENT - fit) / 10 * rules.life_classes.disease_per_point / PERCENT
 
 
-async def raise_life(session: AsyncSession, world: WorldRow, complexity: LifeComplexity) -> bool:
-    life = await life_of(session, world)
+async def raise_life(session: AsyncSession, rules: Rules, world: WorldRow, complexity: LifeComplexity) -> bool:
+    life = await life_of(session, rules, world)
     if "complexity" in life.locked or rank(life.complexity) >= rank(complexity):
         return False
     life.complexity = complexity
@@ -140,7 +152,7 @@ async def quicken(ctx: TickContext, worlds: dict[int, WorldRow], physics: dict[i
         world = worlds.get(world_id)
         if world is None or held(world_id) or not row.habitable or world.biosphere_health < table.rise_health or world.world_type in BARREN_WORLDS:
             continue
-        life = await life_of(ctx.session, world)
+        life = await life_of(ctx.session, ctx.rules, world)
         if "complexity" in life.locked or rank(life.complexity) >= rank(LifeComplexity.COMPLEX):
             continue
         if ctx.rng(f"life_rise.{world_id}.{ctx.epoch}").chance(table.rise_chance):
@@ -194,3 +206,41 @@ async def fit_peoples(session: AsyncSession, rules: Rules) -> int:
             fitted += 1
     await session.flush()
     return fitted
+
+
+LIFE_FIXUP = "physics.w52_life"
+GRAVITY_FIXUP = "physics.w52_gravity"
+
+
+async def rehome_life(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, LIFE_FIXUP) is not None:
+        return 0
+    moved = 0
+    for life in list(await ctx.session.scalars(select(WorldLifeRow).order_by(WorldLifeRow.world_id))):
+        world = await ctx.session.get(WorldRow, life.world_id)
+        if world is None or held(world.id) or "environments" in life.locked or life.complexity is LifeComplexity.NONE:
+            continue
+        found = environments_of(ctx.rules, world, await ctx.session.get(WorldPhysicsRow, world.id))
+        if found != life.environments:
+            life.environments = found
+            moved += 1
+    ctx.session.add(AppliedFixupRow(key=LIFE_FIXUP, result={"worlds": moved}))
+    await ctx.session.flush()
+    return moved
+
+
+async def rederive_gravity(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, GRAVITY_FIXUP) is not None:
+        return 0
+    moved = 0
+    for physics in list(await ctx.session.scalars(select(WorldPhysicsRow).order_by(WorldPhysicsRow.world_id))):
+        world = await ctx.session.get(WorldRow, physics.world_id)
+        if world is None or held(world.id) or "gravity" in world.locked:
+            continue
+        band = gravity_band(ctx.rules, physics.gravity_g)
+        if band is not world.gravity:
+            world.gravity = band
+            moved += 1
+    ctx.session.add(AppliedFixupRow(key=GRAVITY_FIXUP, result={"worlds": moved}))
+    await ctx.session.flush()
+    return moved

@@ -25,6 +25,7 @@ import {
   TimelineItem,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { RITE_ENDS } from '@/features/arcana/labels'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useGodAction } from '@/features/pantheon/godAction'
 import {
@@ -284,6 +285,11 @@ export function RitePanel({
                               spec={lookup(BACKLASHES, row.backlash)}
                             />
                           )}
+                          {row.end && row.ended_epoch !== null ? (
+                            <NamedChip spec={RITE_ENDS[row.end]}>
+                              {`${RITE_ENDS[row.end].label} in epoch ${row.ended_epoch}`}
+                            </NamedChip>
+                          ) : null}
                         </div>
                       </TimelineItem>
                     )

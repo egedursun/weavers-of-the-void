@@ -8,6 +8,7 @@ from aerona.domain.enums.world import Gravity
 from aerona.engine.body.systems import BodySystemTally, keep_body_systems
 from aerona.engine.body.tolerance import world_excess
 from aerona.engine.context import TickContext
+from aerona.rules.registry import Rules
 from tests.engine.core.factories import CoreWorld
 
 
@@ -28,4 +29,4 @@ async def test_a_world_heavier_than_a_body_bears_strains_it(session: AsyncSessio
     for row in await session.scalars(select(BodySystemRow).where(BodySystemRow.holder_entity_id == world.people.id)):
         row.gravity_max = 30
     await session.flush()
-    assert await world_excess(session, world.people.id, world.world) > 0
+    assert await world_excess(session, Rules(), world.people.id, world.world) > 0

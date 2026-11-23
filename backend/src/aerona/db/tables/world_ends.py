@@ -6,7 +6,7 @@ from aerona.db.columns import at_least, enum_type
 from aerona.domain.enums.world import WorldType
 from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
 
-WORLD_END_FIELDS = ("state", "cause")
+WORLD_END_FIELDS = ("state", "cause", "source_node_id")
 
 
 class WorldEndRow(Base):
@@ -25,6 +25,7 @@ class WorldEndRow(Base):
     epoch: Mapped[int] = mapped_column(default=0)
     former_type: Mapped[WorldType] = mapped_column(enum_type(WorldType, "former_type"))
     new_type: Mapped[WorldType | None] = mapped_column(enum_type(WorldType, "new_type"))
+    source_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     lives_ended: Mapped[int] = mapped_column(default=0)
     homeless: Mapped[int] = mapped_column(default=0)
     anchors_lost: Mapped[int] = mapped_column(default=0)

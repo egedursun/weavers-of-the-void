@@ -11,7 +11,7 @@ from aerona.db.tables.evolution import CureResearchRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.discovery import TheoryDomain
+from aerona.domain.enums.discovery import BlueprintKind, TheoryDomain
 from aerona.domain.enums.disease import CureSource, OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
@@ -20,6 +20,7 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.aiding import lens_in
 from aerona.engine.economy.purse import give_coin, take_coin
+from aerona.engine.lore.blueprints import design_factor, draw, remedy_of
 from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.lore.truth import ruling_truths
 from aerona.engine.primitives.distance import RegionAtlas
@@ -79,6 +80,7 @@ async def found_cure(ctx: TickContext, row: CureResearchRow, institution: Entity
         return
     if await ctx.session.get(DiseaseCureRow, (disease.id, holder.id)) is None:
         ctx.session.add(DiseaseCureRow(disease_entity_id=disease.id, community_entity_id=holder.id, source=CureSource.KNOWLEDGE, since_epoch=ctx.epoch))
+    await draw(ctx, holder, BlueprintKind.REMEDY, remedy_of(disease.id), label=f"the cure of {disease.name}")
     shift_bounded(ctx.rules, holder, PRESTIGE, ctx.rules.cure_research.prestige)
     roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: institution.id, IncidentRole.BENEFICIARY: holder.id, IncidentRole.TARGET: disease.id}
     await record(
@@ -141,7 +143,8 @@ async def spread_cures(ctx: TickContext, tally: ResearchTally) -> None:
         for partner_id in sorted(await trade_partners(ctx.session, holder.id)):
             if held(partner_id) or await ctx.session.get(DiseaseCureRow, (cure.disease_entity_id, partner_id)) is not None:
                 continue
-            if not ctx.rng(f"cure_trade.{cure.disease_entity_id}.{holder.id}.{partner_id}").chance(table.diffusion_pct):
+            remedy = await design_factor(ctx.session, ctx.rules, holder.id, BlueprintKind.REMEDY, remedy_of(cure.disease_entity_id))
+            if not ctx.rng(f"cure_trade.{cure.disease_entity_id}.{holder.id}.{partner_id}").chance(table.diffusion_pct * remedy):
                 continue
             buyer = await ctx.session.get(EntityRow, partner_id)
             if buyer is None or not await take_coin(ctx.session, ctx.rules, buyer, table.price):

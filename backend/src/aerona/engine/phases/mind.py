@@ -1010,6 +1010,7 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.personality_values",
     "table.professions_of_value",
     "table.reputations",
+    "table.ruler_currencies",
     "table.skills",
     "table.thoughts",
 )

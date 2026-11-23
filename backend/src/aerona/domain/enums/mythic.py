@@ -13,6 +13,8 @@ class QuestTrial(StrEnum):
     PASSION = "passion"
     CONVICTION = "conviction"
     FAITH = "faith"
+    CUNNING = "cunning"
+    ENDURANCE = "endurance"
 
 
 class HeroquestState(StrEnum):
@@ -46,6 +48,8 @@ class ServitorOrigin(StrEnum):
     MADE = "made"
     RAISED = "raised"
     SUMMONED = "summoned"
+    DEFECTED = "defected"
+    BORN = "born"
 
 
 class ServitorRole(StrEnum):
@@ -76,6 +80,8 @@ class GeasLayer(StrEnum):
     SEER = "seer"
     GOD = "god"
     RITE = "rite"
+    KIN = "kin"
+    SELF = "self"
 
 
 class CosmicOffice(StrEnum):

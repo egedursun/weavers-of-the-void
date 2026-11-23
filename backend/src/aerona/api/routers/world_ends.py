@@ -22,7 +22,8 @@ async def node_world_end(services: ServicesDep, node_id: NodeId) -> WorldEndNode
         rules = await world_rules(services, session)
         world = await world_of(session, node_id)
         row = await session.get(WorldEndRow, world.id) if world is not None else None
-        refs = await node_refs(session, [world.id]) if world is not None else {}
+        linked = [item for item in (world.id if world is not None else None, row.source_node_id if row is not None else None) if item is not None]
+        refs = await node_refs(session, linked)
         return WorldEndNodeView(
             node=own[node_id],
             world=refs.get(world.id) if world is not None else None,
@@ -32,6 +33,7 @@ async def node_world_end(services: ServicesDep, node_id: NodeId) -> WorldEndNode
             epoch=row.epoch if row is not None else None,
             former_type=row.former_type if row is not None else None,
             new_type=row.new_type if row is not None else None,
+            source=refs.get(row.source_node_id) if row is not None and row.source_node_id is not None else None,
             lives_ended=row.lives_ended if row is not None else 0,
             homeless=row.homeless if row is not None else 0,
             anchors_lost=row.anchors_lost if row is not None else 0,

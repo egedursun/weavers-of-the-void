@@ -5,7 +5,7 @@ from aerona.agents.context.scope import Scope
 from aerona.catalog.ethics import DUEL_END_LABELS
 from aerona.catalog.life.agents import WAR_OFFICES
 from aerona.catalog.life_traits import CAPTIVE_STATUS_TRAITS, having
-from aerona.catalog.operations import CREW_STATIONS, GROUND_LABELS, QUIRKS, RESOLVE_EFFECTS
+from aerona.catalog.operations import CREW_STATIONS, GROUND_LABELS, QUIRKS, RESOLVE_EFFECTS, ROLE_CAPACITY
 from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -55,10 +55,11 @@ async def expedition_lines(scope: Scope, me: EntityRow) -> list[str]:
         target = await named(scope, row.target_entity_id)
         found.append(
             f"you travel with {row.name} (expedition {row.id}) into {GROUND_LABELS[row.ground]}, {target}: leg {row.legs_done} of {row.legs_total}, "
-            f"provisions {row.provisions}, light {row.light}, darkness {row.darkness}, medicine {row.medicine}"
+            f"provisions {row.provisions}, light {row.light}, air {row.air}, darkness {row.darkness}, medicine {row.medicine}"
         )
         found.append(
-            f"you go as its {spoken(member.role)}; stress {member.stress}, you {RESOLVE_EFFECTS[member.resolve]} ({spoken(member.resolve)}); "
+            f"you go as its {spoken(member.role)} ({ROLE_CAPACITY[member.role]}); stress {member.stress}, "
+            f"you {RESOLVE_EFFECTS[member.resolve]} ({spoken(member.resolve)}); "
             f"cold {member.cold}, wet {member.wet}, hunger {member.hunger}, fatigue {member.fatigue}"
         )
     return found

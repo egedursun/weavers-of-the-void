@@ -117,5 +117,6 @@ class BattlefieldFeatureRow(Base):
     feature: Mapped[BattlefieldFeature] = mapped_column(enum_type(BattlefieldFeature, "feature"))
     strength: Mapped[int] = mapped_column(default=0)
     battle_id: Mapped[int | None] = mapped_column(ForeignKey("battles.id", ondelete="SET NULL"))
+    remnant_id: Mapped[int | None] = mapped_column(ForeignKey("war_remnants.id", ondelete="SET NULL"))
     epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

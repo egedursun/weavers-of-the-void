@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.catalog.kinds.crafts_labels import GAME_LABELS, MEANING_LABELS
+from aerona.catalog.notations import NOTATIONS
 from aerona.core.grammar import an, spoken
 from aerona.db.tables.crafts import (
     AssistiveAidRow,
@@ -19,7 +20,6 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.kind_crafts import ColourMeaningRow, ColourTermRow
 from aerona.db.tables.kinds import KindHoldingRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.crafts import Notation
 from aerona.domain.enums.kind_crafts import ColourMeaning
 from aerona.domain.enums.kinds import KindConcept
 from aerona.engine.body.customs import people_of
@@ -51,7 +51,7 @@ async def people_lines(scope: Scope, folk_id: int) -> list[str]:
     found += [f"to your people the colour {name} means {MEANING_LABELS[meaning.value].lower()}" for name, meaning in meanings.all()]
     system = await session.get(NumberSystemRow, folk_id)
     if system is not None:
-        marks = [*(["with a zero"] if system.zero else []), *(["written by place"] if system.notation is Notation.POSITIONAL else [])]
+        marks = [*(["with a zero"] if system.zero else []), NOTATIONS[system.notation].phrase]
         found.append(f"your people count in base {system.base}{(', ' + ' and '.join(marks)) if marks else ''}; numeracy {system.numeracy} of 100")
     return found
 

@@ -68,6 +68,7 @@ from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.queries import active_bonds, flags_by_entity, living_entity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
+from aerona.engine.sacred.guards import curse_ward
 
 AFFLICTION_KEY = "afflictions"
 STAGE_HOLD = "stage"
@@ -178,6 +179,8 @@ async def afflict(
     shape: Shape | None = None,
 ) -> AfflictionRow | None:
     if bearer is None or not bearable(bearer) or blocked(bearer.id, AFFLICTION_KEY):
+        return None
+    if transmission is Transmission.CURSE and ctx.rng(f"curse.ward.{bearer.id}.{package.value}.{ctx.epoch}").chance(await curse_ward(ctx, bearer.id)):
         return None
     for row in await active(ctx.session, bearer.id):
         if row.package is package:

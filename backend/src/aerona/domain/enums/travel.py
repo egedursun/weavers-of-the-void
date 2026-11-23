@@ -40,6 +40,9 @@ class JourneyIntent(StrEnum):
     EXPLORATION = "exploration"
     CONQUEST = "conquest"
     PILGRIMAGE = "pilgrimage"
+    EXILE = "exile"
+    FLIGHT = "flight"
+    EMBASSY = "embassy"
 
 
 class JourneyStatus(StrEnum):

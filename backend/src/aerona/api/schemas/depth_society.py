@@ -23,6 +23,7 @@ from aerona.domain.enums.mortal import DeathCause, DeathReading
 from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.world_view import SettleMode
 
 
 class PopulationCohortView(ApiModel):
@@ -414,6 +415,7 @@ class SettlementPlanView(ApiModel):
     entity_id: int
     world_id: int | None
     size_tier: SizeTier
+    settle_mode: SettleMode
     treasury: int
     tax_rate: int
     public_order: int

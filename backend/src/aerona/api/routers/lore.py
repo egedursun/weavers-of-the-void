@@ -338,6 +338,8 @@ async def rite_card(session: AsyncSession, entity_id: int) -> RiteCard | None:
                 succeeded=item.succeeded,
                 backlash=item.backlash,
                 effect=item.effect,
+                ended_epoch=item.ended_epoch,
+                end=item.end,
             )
             for item in castings
         ],

@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
@@ -50,7 +50,14 @@ async def luck_lines(scope: Scope, me: EntityRow) -> list[str]:
         for belief in await scope.session.scalars(
             select(LuckBeliefRow).where(LuckBeliefRow.people_entity_id == folk.id).order_by(LuckBeliefRow.id).limit(LIST_LINES)
         ):
-            found.append(f"your people hold {belief.name} for {spoken(belief.reach)}")
+            mark = (
+                f", read in {await named(scope, belief.species_entity_id)}"
+                if belief.species_entity_id is not None
+                else f", read in {spoken(belief.colour)}"
+                if belief.colour is not None
+                else ""
+            )
+            found.append(f"your people hold {belief.name} for {spoken(belief.reach)}{mark}")
     owned = await scope.session.scalars(
         select(CharmRow).where(CharmRow.item_entity_id.in_(select(EntityRow.id).where(EntityRow.location_id == me.id))).limit(LIST_LINES)
     )
@@ -61,6 +68,14 @@ async def luck_lines(scope: Scope, me: EntityRow) -> list[str]:
         hunt = await scope.session.scalar(select(WitchHuntRow).where(WitchHuntRow.settlement_entity_id == town.id, WitchHuntRow.ended_epoch.is_(None)))
         if hunt is not None:
             found.append(f"a witch hunt runs in {town.name} at fervour {hunt.fervour}")
+        ended = await scope.session.execute(
+            select(AccusationRow.outcome, func.count())
+            .where(AccusationRow.settlement_entity_id == town.id, AccusationRow.outcome != AccusationOutcome.PENDING)
+            .group_by(AccusationRow.outcome)
+        )
+        closed = [f"{spoken(outcome)} {count}" for outcome, count in ended]
+        if closed:
+            found.append(f"accusations of witchcraft in {town.name} have ended: " + ", ".join(closed))
         for mishap in await scope.session.scalars(
             select(MishapRow).where(MishapRow.settlement_entity_id == town.id).order_by(MishapRow.id.desc()).limit(LIST_LINES)
         ):

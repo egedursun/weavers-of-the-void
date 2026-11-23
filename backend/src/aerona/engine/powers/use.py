@@ -4,13 +4,15 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.kinds.resistances import RESISTANCES
+from aerona.catalog.life.powers import REGISTERING_LEVELS
 from aerona.catalog.life_traits import POWER_STATE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.minds import MindProfileRow
-from aerona.db.tables.powers import MagicSystemLinkRow, MagicSystemRow, PowerRestrictionRow, PowerRow, PowerSourceRow
+from aerona.db.tables.powers import MagicSystemLinkRow, MagicSystemRow, PowerRestrictionRow, PowerRow, PowerSourceKnowledgeRow, PowerSourceRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -28,12 +30,13 @@ from aerona.domain.enums.powers import (
     PowerVisibility,
     ResistanceKind,
     RestrictionKind,
+    SourceAccess,
     SourceLawLevel,
 )
 from aerona.engine.arcana.resistance import carries_iron, sanctity_at
 from aerona.engine.concealment.truths import overt_breach
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import points_of, shift_points
+from aerona.engine.economy.purse import give_coin, points_of, receive_coin, shift_points, take_coin
 from aerona.engine.fortune.profiles import shift_fortune
 from aerona.engine.mind.split import attribute
 from aerona.engine.mortal.standing import add_infamy, add_renown
@@ -45,6 +48,7 @@ from aerona.engine.powers.sources import draw, drawn_from_land, hazard_of, knows
 from aerona.engine.primitives.augment_bonus import bonus
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 
@@ -139,6 +143,17 @@ async def unpaid(ctx: TickContext, asked: Asked) -> bool:
 @BLOCKS.on(RestrictionKind.FORBIDDEN_ACT)
 async def kept(_ctx: TickContext, _asked: Asked) -> bool:
     return False
+
+
+@BLOCKS.on(RestrictionKind.ONLY_WITH_TOKEN)
+async def tokenless(ctx: TickContext, asked: Asked) -> bool:
+    owned = [bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.OWNS], sources=[asked.user.id])]
+    if asked.row.ref_node_id is not None:
+        return asked.row.ref_node_id not in owned
+    tokens = await ctx.session.scalar(
+        select(EntityRow.id).where(EntityRow.id.in_(owned), EntityRow.entity_type == EntityType.ITEM, EntityRow.status == EntityStatus.CANON).limit(1)
+    )
+    return tokens is None
 
 
 BLOCKS.seal()
@@ -263,7 +278,35 @@ async def source_refused(ctx: TickContext, user: EntityRow, source: PowerSourceR
     level = await source_level(ctx.session, user.id, user.location_id, polity, source.id)
     if level is SourceLawLevel.BANNED:
         return f"drawing on {source.name} is banned here"
-    return await licence_refused(ctx, user, polity) if level is SourceLawLevel.LICENSED else None
+    return await licence_refused(ctx, user, polity) if level in REGISTERING_LEVELS else None
+
+
+async def pay_to_draw(ctx: TickContext, user: EntityRow, source: PowerSourceRow) -> None:
+    if source.access is SourceAccess.BOUGHT:
+        price = ctx.rules.power_sources.bought_price
+        keeper = await keeper_of(ctx, user, source)
+        if keeper is not None and await take_coin(ctx.session, ctx.rules, user, price):
+            await give_coin(ctx.session, ctx.rules, keeper, price)
+    polity = await polity_of(ctx.session, user.location_id)
+    if polity is None or await source_level(ctx.session, user.id, user.location_id, polity, source.id) is not SourceLawLevel.TAXED:
+        return
+    realm = await ctx.session.get(EntityRow, polity)
+    tax = ctx.rules.gifted.power_tax
+    if realm is not None and not held(realm.id) and await take_coin(ctx.session, ctx.rules, user, tax):
+        await receive_coin(ctx.session, ctx.rules, realm, tax)
+
+
+async def keeper_of(ctx: TickContext, user: EntityRow, source: PowerSourceRow) -> EntityRow | None:
+    keepers = await ctx.session.scalars(
+        select(PowerSourceKnowledgeRow.holder_node_id)
+        .where(PowerSourceKnowledgeRow.source_id == source.id, PowerSourceKnowledgeRow.holder_node_id != user.id)
+        .order_by(PowerSourceKnowledgeRow.level.desc(), PowerSourceKnowledgeRow.holder_node_id)
+    )
+    for keeper_id in keepers:
+        keeper = await ctx.session.get(EntityRow, keeper_id)
+        if keeper is not None and keeper.status is EntityStatus.CANON and not held(keeper.id):
+            return keeper
+    return None
 
 
 async def allowed(ctx: TickContext, user: EntityRow, power: PowerRow, source: PowerSourceRow | None) -> str | None:
@@ -321,6 +364,8 @@ async def use(ctx: TickContext, power: PowerRow, user: EntityRow, target: Entity
     restricted = await restriction_factor(ctx, power, user, target)
     if restricted is None:
         return Outcome(None, False, False, False, "its restrictions forbid this use")
+    if source is not None:
+        await pay_to_draw(ctx, user, source)
     rng = ctx.rng(f"power.use.{power.id}.{ctx.epoch}.{target.id if target is not None else 0}")
     amplified, steadied = await device_factor(ctx, user)
     control = clamp_int(power.control + steadied, 0, PERCENT)

@@ -1,6 +1,6 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
-from aerona.domain.enums.arcana import LawSource, RechargeRule, SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
+from aerona.domain.enums.arcana import LawSource, RechargeRule, RiteCondition, SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.culture import RiteEffectKind
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.mythic import (
@@ -26,6 +26,9 @@ class GrammarView(ApiModel):
     range: SpellRange
     duration: SpellDuration
     target: SpellTarget
+    condition: RiteCondition | None
+    condition_act: ActKind | None
+    condition_epoch: int | None
     difficulty: int
     paradigm: NodeRef | None
     myth: NodeRef | None
@@ -114,6 +117,7 @@ class HeroquestView(ApiModel):
     state: HeroquestState
     boon: HeroquestBoon | None
     interference: int
+    trial: QuestTrial | None
     next_trial: QuestTrial | None
     members: list[NodeRef]
     start_epoch: int
@@ -142,6 +146,7 @@ class ServitorView(ApiModel):
     post: NodeRef | None
     loyalty: int
     fallen_to: NodeRef | None
+    former_god: NodeRef | None = None
     since_epoch: int
     locked: list[str]
 

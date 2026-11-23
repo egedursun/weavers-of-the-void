@@ -11,6 +11,7 @@ from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.ages import ArcBeatRow, ArcFigureRow, ArcRow, SetupRow
 from aerona.db.tables.culture import ProphecyConditionRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.kin import WillHeirRow, WillRow
 from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.db.tables.mind import DreamRow
 from aerona.db.tables.sacred import DivinationRow, ForesightRow
@@ -24,6 +25,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import ForesightStatus
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record as record_incident
 
 
@@ -126,6 +128,11 @@ async def log_setups(ctx: TickContext, tally: DramaTally) -> None:
             select(ThreadLinkRow.entity_id).where(ThreadLinkRow.thread_id == thread.id).order_by(ThreadLinkRow.entity_id).limit(1)
         )
         await log_setup(ctx, SetupKind.INCIDENT_ARC, thread.id, subject, tally)
+    for will in await ctx.session.scalars(select(WillRow).where(WillRow.read_epoch.is_not(None), WillRow.read_epoch >= since).order_by(WillRow.id)):
+        heir = await ctx.session.scalar(
+            select(WillHeirRow.heir_node_id).where(WillHeirRow.will_id == will.id).order_by(WillHeirRow.share.desc(), WillHeirRow.heir_node_id).limit(1)
+        )
+        await log_setup(ctx, SetupKind.INHERITANCE, will.id, heir, tally)
     await ctx.session.flush()
 
 
@@ -186,6 +193,20 @@ async def omen_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     if reading.verdict is reading.true_verdict:
         return PayoffKind.FULFILLED, "the omen read true"
     return PayoffKind.SUBVERTED, "the omen read false"
+
+
+@PAYERS.on(SetupKind.INHERITANCE)
+async def inheritance_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
+    will = await ctx.session.get(WillRow, setup.source_id)
+    if will is None or will.read_epoch is None:
+        return None
+    if will.set_aside or will.contested:
+        return PayoffKind.SUBVERTED, "the heir refused or lost what was left"
+    if ctx.epoch - will.read_epoch < ctx.rules.arcs.epochs(ctx.rules.arcs.inheritance_wait_years):
+        return None
+    if await living_entity(ctx.session, setup.subject_node_id) is None:
+        return PayoffKind.SUBVERTED, "the heir did not live to take up what was left"
+    return PayoffKind.FULFILLED, "the heir took up what was left"
 
 
 @PAYERS.on(SetupKind.PORTENT)

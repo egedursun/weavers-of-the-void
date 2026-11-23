@@ -33,6 +33,7 @@ import { GOD_KINDS, why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { TextField } from '@/features/entity/economy/parts'
+import { ACTS } from '@/features/entity/lore/cultureLabels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/wilds/parts'
 import { Ref } from '@/features/gatherings/parts'
@@ -54,6 +55,7 @@ import {
   MAGIC_ICON,
   RANGES,
   RECHARGES,
+  RITE_CONDITIONS,
   TARGETS,
   TECHNIQUES,
   listed,
@@ -115,6 +117,11 @@ function GrammarCard({
         <Chip icon={TARGETS[grammar.target].icon}>
           {TARGETS[grammar.target].label}
         </Chip>
+        {grammar.condition ? (
+          <Chip icon={RITE_CONDITIONS[grammar.condition].icon}>
+            {RITE_CONDITIONS[grammar.condition].label}
+          </Chip>
+        ) : null}
       </div>
       <Facts
         items={[
@@ -130,11 +137,21 @@ function GrammarCard({
             'Myth it re-enacts',
             <Ref key='myth' node={grammar.myth} empty='none' />,
           ],
+          [
+            'Act that ends it',
+            grammar.condition_act ? ACTS[grammar.condition_act].label : 'none',
+          ],
+          [
+            'Epoch it ends',
+            grammar.condition_epoch === null
+              ? 'none'
+              : `Epoch ${grammar.condition_epoch}`,
+          ],
         ]}
       />
       <RecordEditor
         title='Reshape the grammar'
-        note='Technique, form, range, duration and target set the difficulty, the price and the backlash of the rite.'
+        note='Technique, form, range, duration and target set the difficulty, the price and the backlash of the rite. A rite that lasts until a condition needs the condition, and the act or epoch that ends it.'
         fields={[
           {
             key: 'technique',
@@ -155,6 +172,24 @@ function GrammarCard({
             label: 'Target',
             kind: 'pick',
             table: table(TARGETS),
+          },
+          {
+            key: 'condition',
+            label: 'Condition that ends it',
+            kind: 'pick',
+            table: table(RITE_CONDITIONS),
+          },
+          {
+            key: 'condition_act',
+            label: 'Act that ends it',
+            kind: 'pick',
+            table: table(ACTS),
+          },
+          {
+            key: 'condition_epoch',
+            label: 'Epoch it ends',
+            kind: 'number',
+            min: 0,
           },
           {
             key: 'paradigm_entity_id',

@@ -236,11 +236,81 @@ TYPED: tuple[InvariantSpec, ...] = (
         "healed to a scar",
     ),
     InvariantSpec(
+        "spirit_fits_place",
+        "genius_loci",
+        "a place spirit is of the kind its place calls for",
+        Remedy.REPAIR,
+        "made the kind its place calls for",
+    ),
+    InvariantSpec(
+        "vengeance_names_target",
+        "petitions",
+        "an open petition for vengeance names the one it is against",
+        Remedy.REPAIR,
+        "the petition dismissed",
+    ),
+    InvariantSpec(
+        "luck_sign_marked",
+        "luck_beliefs",
+        "a sign of luck read in a creature names the kind, and one read in a colour names the colour",
+        Remedy.REPAIR,
+        "the unmarked belief dropped",
+    ),
+    InvariantSpec(
+        "rebirth_kind_named",
+        "reincarnations",
+        "a soul born again as another kind names that kind",
+        Remedy.REPAIR,
+        "counted as born again among its people",
+    ),
+    InvariantSpec(
         "betrothal_living",
         "bonds",
         "both who are promised in marriage still live",
         Remedy.REPAIR,
         "the promise ended",
+    ),
+    InvariantSpec(
+        "law_named_kind",
+        "natural_law_profiles",
+        "a law that spares a named kind names a living species or people",
+        Remedy.REPAIR,
+        "the law spares no one",
+    ),
+    InvariantSpec(
+        "air_fits_biochemistry",
+        "people_biology",
+        "what a people breathes fits the chemistry of its bodies",
+        Remedy.REPAIR,
+        "the people breathes what its chemistry allows",
+    ),
+    InvariantSpec(
+        "life_place_fits_world",
+        "world_life",
+        "life dwells only in places its world can hold",
+        Remedy.REPAIR,
+        "the places its world cannot hold dropped",
+    ),
+    InvariantSpec(
+        "fall_has_source",
+        "impact_events",
+        "a fragment falls from the ring of a broken moon of its world and a made thing from one circling it",
+        Remedy.REPAIR,
+        "the fall passes by",
+    ),
+    InvariantSpec(
+        "world_end_source",
+        "world_ends",
+        "an end names a source only when its cause has one",
+        Remedy.REPAIR,
+        "the source cleared",
+    ),
+    InvariantSpec(
+        "gravity_fits_mass",
+        "worlds",
+        "a world's gravity band fits the pull of its mass",
+        Remedy.REPAIR,
+        "the band read anew from its mass",
     ),
     InvariantSpec(
         "hand_over_names_person",
@@ -263,6 +333,15 @@ TYPED: tuple[InvariantSpec, ...] = (
         Remedy.REPAIR,
         "the claim ended",
     ),
+    InvariantSpec("linked_rite_has_link", "rite_grammar", "a rite cast through a link is kept by one who holds a link", Remedy.REPAIR, "reaching by sight"),
+    InvariantSpec(
+        "rite_condition_named", "rite_grammar", "a rite that lasts until a condition names that condition in full", Remedy.REPAIR, "lasting an epoch"
+    ),
+    InvariantSpec("true_name_link_known", "sympathetic_links", "a link by a true name is held by one who knows the name", Remedy.REPAIR, "a link by name"),
+    InvariantSpec("timed_order_has_times", "instruction_orders", "an order kept at set times names its times", Remedy.REPAIR, "run by day"),
+    InvariantSpec(
+        "true_name_command_named", "instruction_sets", "a made thing commanded by its true name has a true name", Remedy.REPAIR, "commanded by a word"
+    ),
     InvariantSpec(
         "spy_institution_in_target",
         "spy_networks",
@@ -276,6 +355,20 @@ TYPED: tuple[InvariantSpec, ...] = (
         "a besieged place floods its approaches only where a river or water works lets it",
         Remedy.REPAIR,
         "the defence cleared",
+    ),
+    InvariantSpec(
+        "settle_mode_fits",
+        "settlement_profiles",
+        "a settlement the god has not fixed lives in a way of settling its people's bodies and its ground allow",
+        Remedy.REPAIR,
+        "the way of settling chosen again from its people and ground",
+    ),
+    InvariantSpec(
+        "battle_ground_fits",
+        "battles",
+        "a battle off open land was fought on its world's ground of war, or in tunnels and caverns",
+        Remedy.REPAIR,
+        "the ground set to its world's ground of war",
     ),
     InvariantSpec(
         "unit_honour_names_place",
@@ -355,13 +448,46 @@ TYPED: tuple[InvariantSpec, ...] = (
         "the fixing cleared",
     ),
     InvariantSpec(
+        "mortal_slayer_named", "divine_wounds", "a wound dealt by a mortal's deed names the mortal", Remedy.REPAIR, "counted as dealt by the Creator"
+    ),
+    InvariantSpec(
+        "penance_names_deed", "council_rulings", "a penance names its deed and the day it is due", Remedy.REPAIR, "set to restore a wounded land by its term"
+    ),
+    InvariantSpec(
+        "defector_names_former_god", "servitors", "a servitor that came over from another god names that god", Remedy.REPAIR, "counted as made by its god"
+    ),
+    InvariantSpec(
         "crew_station_fits",
         "ship_crews",
         "a crew works a station that a section of its vessel calls for",
         Remedy.REPAIR,
         "the crew of a station no section calls for struck",
     ),
+    InvariantSpec(
+        "being_scale_reach",
+        "cosmic_being_profiles",
+        "a cosmic being the size of a region lies in a region of its own world",
+        Remedy.REPAIR,
+        "placed in the first region of its world, or counted the size of its world when it has none",
+    ),
+    InvariantSpec(
+        "rift_cause_source",
+        "rifts",
+        "a rift torn by a weapon or opened by an outer bargain names who opened it",
+        Remedy.REPAIR,
+        "counted as opened by convergence",
+    ),
     InvariantSpec("parole_names_oath", "captives", "a captive freed on parole names the oath it swore", Remedy.REPAIR, "counted as freed outright"),
+    InvariantSpec(
+        "ordnance_names_remnant", "battlefield_features", "a field of remnant arms names the war remnant it lies from", Remedy.REPAIR, "cleared from the field"
+    ),
+    InvariantSpec(
+        "expedition_ground_fits",
+        "expeditions",
+        "an expedition under the water, into the void or into another dimension goes where that ground lies",
+        Remedy.REPAIR,
+        "turned back to the wilds or the site it seeks",
+    ),
     InvariantSpec(
         "married_in_names_union", "captives", "a captive married into its captors' people names the one it married", Remedy.REPAIR, "counted as freed outright"
     ),

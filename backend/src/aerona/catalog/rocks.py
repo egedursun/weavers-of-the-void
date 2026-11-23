@@ -24,6 +24,7 @@ class RockSpec:
     organic: bool = False
 
 
+GASSY_ROCKS = frozenset({RockKind.COAL, RockKind.SHALE, RockKind.FROZEN_METHANE})
 ROCKS: Mapping[RockKind, RockSpec] = total(
     RockKind,
     {

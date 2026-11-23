@@ -2,7 +2,7 @@ from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.arts import ArtMarketRole, CanonPath, ClubKind, FandomLine, ForgeryKind, ForgeryStatus
 from aerona.domain.enums.body import BodyFunction
-from aerona.domain.enums.constructs import CommandToken, ContractStatus, InstructionBinding, MindWill, OrderCondition, OrderKind
+from aerona.domain.enums.constructs import CommandToken, ContractStatus, InstructionBinding, MindWill, OrderCondition, OrderKind, OrderTime
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.sacred import SignInfluence
@@ -135,6 +135,7 @@ class InstructionOrderView(ApiModel):
     priority: int
     condition: OrderCondition
     until_epoch: int | None
+    times: OrderTime | None
     lapsed: bool
     locked: list[str]
 

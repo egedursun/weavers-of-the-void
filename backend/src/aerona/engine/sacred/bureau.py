@@ -1,19 +1,26 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.life.sacred import COMMON_NEEDS
+from aerona.catalog.life.sacred import COMMON_NEEDS, PETITION_GRANTS, WRONGS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sacred import GeniusLocusRow, PetitionRow, SpiritOfficeRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import PetitionKind, PetitionStatus
 from aerona.domain.enums.society import Commodity
+from aerona.engine.body.afflictions import afflict
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import god_of
 from aerona.engine.divine.standing import present, standing_row
@@ -24,10 +31,12 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import record
+from aerona.engine.sacred.places import region_of
 from aerona.engine.sacred.spirits import rank_above, rank_below
 
 OPEN = (PetitionStatus.FILED, PetitionStatus.DELAYED, PetitionStatus.APPEALED)
 TEN = 10
+HALF = 50
 
 
 @dataclass
@@ -49,13 +58,21 @@ def due_after(ctx: TickContext, office: SpiritOfficeRow, bribe: int) -> int:
 
 
 async def file_petition(
-    ctx: TickContext, petitioner_id: int, office: SpiritOfficeRow, kind: PetitionKind, *, defendant_id: int | None, bribe: int
+    ctx: TickContext,
+    petitioner_id: int,
+    office: SpiritOfficeRow,
+    kind: PetitionKind,
+    *,
+    defendant_id: int | None,
+    bribe: int,
+    target_id: int | None = None,
 ) -> PetitionRow:
     row = PetitionRow(
         petitioner_node_id=petitioner_id,
         office_spirit_id=office.spirit_entity_id,
         kind=kind,
         defendant_spirit_id=defendant_id if kind is PetitionKind.SUIT else None,
+        target_node_id=target_id if kind is PetitionKind.VENGEANCE else None,
         bribe=max(0, bribe),
         status=PetitionStatus.FILED,
         filed_epoch=ctx.epoch,
@@ -64,6 +81,12 @@ async def file_petition(
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await record(
+        ctx,
+        "petition.filed",
+        roles={IncidentRole.ACTOR: petitioner_id, IncidentRole.SUBJECT: office.spirit_entity_id, IncidentRole.TARGET: row.target_node_id},
+        facts={"petition": kind},
+    )
     return row
 
 
@@ -83,7 +106,24 @@ async def need_of(ctx: TickContext, community: EntityRow, office: SpiritOfficeRo
     food = await stock(ctx.session, ctx.rules, community.id, Commodity.FOOD)
     if food < ctx.rules.needs.hunger_food:
         return PetitionKind.HARVEST, None
+    region = await region_of(ctx.session, community)
+    land = await ctx.session.get(RegionEnvironmentRow, region.id) if region is not None else None
+    if land is not None and land.rainfall < ctx.rules.petitions.drought_rainfall:
+        return PetitionKind.RAIN, None
+    profile = await ctx.session.get(SettlementProfileRow, community.id)
+    if profile is not None and profile.unrest >= ctx.rules.petitions.protection_unrest_at:
+        return PetitionKind.PROTECTION, None
     return ctx.rng(f"petition.need.{community.id}").pick(COMMON_NEEDS), None
+
+
+async def wronged_by(ctx: TickContext, petitioner_id: int) -> int | None:
+    found = await ctx.session.scalar(
+        select(MemoryRow.subject_node_id)
+        .where(MemoryRow.holder_node_id == petitioner_id, MemoryRow.kind.in_(WRONGS), MemoryRow.magnitude < 0, MemoryRow.subject_node_id.is_not(None))
+        .order_by(MemoryRow.magnitude, MemoryRow.id)
+        .limit(1)
+    )
+    return int(found) if found is not None and not held(int(found)) else None
 
 
 async def petitioner_in(ctx: TickContext, community: EntityRow) -> int:
@@ -115,14 +155,19 @@ async def file_petitions(ctx: TickContext, tally: BureauTally) -> None:
             food = await stock(ctx.session, ctx.rules, community.id, Commodity.FOOD)
             bribe = min(bribe, food)
             await shift_stock(ctx.session, ctx.rules, community.id, Commodity.FOOD, -bribe, epoch=ctx.epoch, flow=GoodsFlow.OFFERING)
-        await file_petition(ctx, await petitioner_in(ctx, community), office, kind, defendant_id=defendant, bribe=bribe)
+        petitioner = await petitioner_in(ctx, community)
+        wrongdoer = await wronged_by(ctx, petitioner) if kind in COMMON_NEEDS else None
+        if wrongdoer is not None:
+            kind = PetitionKind.VENGEANCE
+        await file_petition(ctx, petitioner, office, kind, defendant_id=defendant, bribe=bribe, target_id=wrongdoer)
         tally.filed += 1
 
 
 def grant_chance(ctx: TickContext, office: SpiritOfficeRow, petition: PetitionRow) -> int:
     table = ctx.rules.celestial_bureaucracy
     merit = table.merit_grant_pct * min(office.merit, table.promote_merit) // max(1, table.promote_merit)
-    return clamp_int(table.grant_base + merit - office.corruption // TEN * table.corruption_deny_pct + petition.bribe * table.bribe_grant, 0, PERCENT)
+    chance = table.grant_base + merit - office.corruption // TEN * table.corruption_deny_pct + petition.bribe * table.bribe_grant
+    return clamp_int(round(chance * PETITION_GRANTS[petition.kind](ctx.rules) / HALF), 0, PERCENT)
 
 
 async def community_of(ctx: TickContext, petition: PetitionRow, office: SpiritOfficeRow) -> EntityRow | None:
@@ -132,24 +177,91 @@ async def community_of(ctx: TickContext, petition: PetitionRow, office: SpiritOf
     return await living_entity(ctx.session, office.jurisdiction_entity_id)
 
 
+@dataclass(frozen=True)
+class Plea:
+    ctx: TickContext
+    petition: PetitionRow
+    office: SpiritOfficeRow
+    community: EntityRow | None
+    profile: MortalProfileRow | None
+
+    @property
+    def town(self) -> EntityRow | None:
+        return self.community if self.community is not None and not held(self.community.id) else None
+
+
+async def heal(plea: Plea) -> None:
+    if plea.profile is not None and "health" not in plea.profile.locked:
+        plea.profile.health = clamp_int(plea.profile.health + plea.ctx.rules.celestial_bureaucracy.healing, 0, PERCENT)
+
+
+async def bear(plea: Plea) -> None:
+    if plea.profile is not None and "fertility" not in plea.profile.locked:
+        plea.profile.fertility = clamp_int(plea.profile.fertility + plea.ctx.rules.celestial_bureaucracy.fertility, 0, PERCENT)
+
+
+async def pass_safely(plea: Plea) -> None:
+    if plea.profile is not None and "stress" not in plea.profile.locked:
+        plea.profile.stress = max(0, plea.profile.stress - plea.ctx.rules.celestial_bureaucracy.passage_safety)
+
+
+async def reap(plea: Plea) -> None:
+    if plea.town is not None:
+        table = plea.ctx.rules.celestial_bureaucracy
+        await shift_stock(plea.ctx.session, plea.ctx.rules, plea.town.id, Commodity.FOOD, table.harvest_food, epoch=plea.ctx.epoch, flow=GoodsFlow.OFFERING)
+
+
+async def prosper(plea: Plea) -> None:
+    if plea.town is not None:
+        set_stats(plea.town, prosperity=clamp_int(stat_or(plea.town, "prosperity", 0) + plea.ctx.rules.celestial_bureaucracy.prosperity, 0, PERCENT))
+
+
+async def try_suit(plea: Plea) -> None:
+    if plea.petition.defendant_spirit_id is not None:
+        await uphold_suit(plea.ctx, plea.petition.defendant_spirit_id)
+
+
+async def bring_rain(plea: Plea) -> None:
+    region = await region_of(plea.ctx.session, plea.town) if plea.town is not None else None
+    land = await plea.ctx.session.get(RegionEnvironmentRow, region.id) if region is not None and not held(region.id) else None
+    if land is not None and "rainfall" not in land.locked:
+        land.rainfall = clamp_int(land.rainfall + plea.ctx.rules.petitions.rain_shift, 0, PERCENT)
+
+
+async def ward(plea: Plea) -> None:
+    if plea.town is not None:
+        set_stats(plea.town, defense=clamp_int(stat_or(plea.town, "defense", 0) + plea.ctx.rules.petitions.protection_defence, 0, PERCENT))
+
+
+async def avenge(plea: Plea) -> None:
+    target = await living_entity(plea.ctx.session, plea.petition.target_node_id)
+    if target is not None and not held(target.id):
+        await afflict(plea.ctx, target, PackageKind.FORTUNE, Transmission.CURSE, source_node_id=plea.office.spirit_entity_id)
+
+
+ANSWERS: Mapping[PetitionKind, Callable[[Plea], Awaitable[None]]] = total(
+    PetitionKind,
+    {
+        PetitionKind.HEALING: heal,
+        PetitionKind.HARVEST: reap,
+        PetitionKind.FERTILITY: bear,
+        PetitionKind.SAFE_PASSAGE: pass_safely,
+        PetitionKind.PROSPERITY: prosper,
+        PetitionKind.SUIT: try_suit,
+        PetitionKind.RAIN: bring_rain,
+        PetitionKind.PROTECTION: ward,
+        PetitionKind.VENGEANCE: avenge,
+    },
+)
+
+
 async def answer(ctx: TickContext, petition: PetitionRow, office: SpiritOfficeRow) -> None:
     table = ctx.rules.celestial_bureaucracy
     community = await community_of(ctx, petition, office)
     profile = await ctx.session.get(MortalProfileRow, petition.petitioner_node_id)
     if profile is not None and held(profile.entity_id):
         profile = None
-    if petition.kind is PetitionKind.HEALING and profile is not None and "health" not in profile.locked:
-        profile.health = clamp_int(profile.health + table.healing, 0, PERCENT)
-    elif petition.kind is PetitionKind.FERTILITY and profile is not None and "fertility" not in profile.locked:
-        profile.fertility = clamp_int(profile.fertility + table.fertility, 0, PERCENT)
-    elif petition.kind is PetitionKind.SAFE_PASSAGE and profile is not None and "stress" not in profile.locked:
-        profile.stress = max(0, profile.stress - table.passage_safety)
-    elif petition.kind is PetitionKind.HARVEST and community is not None and not held(community.id):
-        await shift_stock(ctx.session, ctx.rules, community.id, Commodity.FOOD, table.harvest_food, epoch=ctx.epoch, flow=GoodsFlow.OFFERING)
-    elif petition.kind is PetitionKind.PROSPERITY and community is not None and not held(community.id):
-        set_stats(community, prosperity=clamp_int(stat_or(community, "prosperity", 0) + table.prosperity, 0, PERCENT))
-    elif petition.kind is PetitionKind.SUIT and petition.defendant_spirit_id is not None:
-        await uphold_suit(ctx, petition.defendant_spirit_id)
+    await ANSWERS[petition.kind](Plea(ctx, petition, office, community, profile))
     if office.overseer_node_id is not None and community is not None and not held(community.id):
         standing = await standing_row(ctx, community.id, office.overseer_node_id)
         if "love" not in standing.locked:

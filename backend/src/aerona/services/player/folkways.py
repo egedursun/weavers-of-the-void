@@ -3,6 +3,7 @@ from pydantic import Field
 from aerona.core.grammar import agree, several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.folkways import CharmPower, DecisionBias, ImpuritySource, LuckReach, LuckSign, MishapKind, Nutrient, Purification
+from aerona.domain.enums.kind_crafts import ColourFocus
 from aerona.domain.enums.mind import Profession
 from aerona.engine.folkways import control
 from aerona.services.player.cosmography import Edited
@@ -88,6 +89,8 @@ class BeliefDraft(Command):
     reach: LuckReach = LuckReach.HARVEST
     lucky: bool = True
     name: str = Field(min_length=1, max_length=NAME)
+    species_id: int | None = None
+    colour: ColourFocus | None = None
 
 
 class CharmDraft(Command):
@@ -303,7 +306,14 @@ async def mishap_create(scope: PlayerScope, command: MishapDraft) -> Effect:
 @player_action("luck_belief:create", ActionKind.EDIT_RECORD)
 async def luck_belief_create(scope: PlayerScope, command: BeliefDraft) -> Effect:
     row = await control.add_belief(
-        await scope.context("luck_belief_create"), command.people_id, command.sign, command.reach, lucky=command.lucky, name=command.name
+        await scope.context("luck_belief_create"),
+        command.people_id,
+        command.sign,
+        command.reach,
+        lucky=command.lucky,
+        name=command.name,
+        species_id=command.species_id,
+        colour=command.colour,
     )
     return Effect("The people believe it.", command.people_id, values={"belief_id": row.id})
 

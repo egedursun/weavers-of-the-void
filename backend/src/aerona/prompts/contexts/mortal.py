@@ -138,6 +138,7 @@ class StoresLine(ContextItem):
 class HomeLine(ContextItem):
     community: str
     tier: str = ""
+    settled: str = ""
     order: int | None = None
     crime: int | None = None
     unrest: int | None = None

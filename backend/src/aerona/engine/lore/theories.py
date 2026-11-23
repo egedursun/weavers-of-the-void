@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.lore import COMMON_ANOMALIES, MEET_ANOMALIES_ANOMALY_KINDS
-from aerona.catalog.theories import DOMAINS
+from aerona.catalog.theories import ANOMALY_DOMAINS, DOMAINS, RECORDED_ANOMALIES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderLevelRow, InstitutionRow
@@ -36,6 +36,7 @@ from aerona.engine.primitives.stats import set_stats
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.regime.book import inquiry_factor
 from aerona.engine.renown.book import acclaim
+from aerona.rules.model import keyed
 from aerona.rules.registry import Rules
 
 
@@ -192,10 +193,23 @@ async def meet_anomalies(ctx: TickContext) -> int:
             chance *= 1 - table.endorsed_anomaly_pct / PERCENT
         rng = ctx.rng(f"theory.anomaly.{profile.theory_entity_id}.{community.id}.{ctx.epoch}")
         if rng.chance(chance):
-            kinds = [*COMMON_ANOMALIES, *(MEET_ANOMALIES_ANOMALY_KINDS if profile.domain in CONTRARY else [])]
+            kinds = [
+                *COMMON_ANOMALIES,
+                *(MEET_ANOMALIES_ANOMALY_KINDS if profile.domain in CONTRARY else []),
+                *(kind for kind in RECORDED_ANOMALIES if profile.domain in ANOMALY_DOMAINS[kind]),
+            ]
+            kind = rng.pick(kinds)
+            weight = max(1, keyed(table, kind.value, "weight") // 10) if kind in RECORDED_ANOMALIES else 1
             ctx.session.add(
-                TheoryAnomalyRow(theory_entity_id=profile.theory_entity_id, kind=rng.pick(kinds), weight=1, witness_entity_id=community.id, epoch=ctx.epoch)
+                TheoryAnomalyRow(theory_entity_id=profile.theory_entity_id, kind=kind, weight=weight, witness_entity_id=community.id, epoch=ctx.epoch)
             )
+            if kind in RECORDED_ANOMALIES:
+                await record_incident(
+                    ctx,
+                    "theory.challenged",
+                    roles={IncidentRole.SUBJECT: profile.theory_entity_id, IncidentRole.WITNESS: community.id},
+                    facts={"anomaly": kind, "domain": profile.domain, "weight": weight},
+                )
             struck.add(profile.theory_entity_id)
             met += 1
         else:

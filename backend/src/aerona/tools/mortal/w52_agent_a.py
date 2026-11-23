@@ -2,6 +2,7 @@ from typing import Any
 
 from aerona.catalog.careers import CAREERS
 from aerona.catalog.effect_packages import PACKAGES
+from aerona.catalog.mythic import GEAS_ACTS
 from aerona.catalog.soils import SOILS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
@@ -15,14 +16,17 @@ from aerona.domain.enums.affliction import CharmKind, CureKind, PackageKind, Tra
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.agrarian import NutrientKind
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.mind import ActKind, SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CareerPath
+from aerona.domain.enums.mythic import GeasLayer, GeasMode
 from aerona.engine.body.afflictions import afflict, cure
 from aerona.engine.body.packages_w52 import Shape
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mortal.acts import openings
+from aerona.engine.mortal.kin import children_of
 from aerona.engine.mortal.profile import ensure_profile, is_held
+from aerona.engine.mythic.geasa import lay_geas
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.prompts import MortalToolId
@@ -51,6 +55,17 @@ class ChoosePathInput(ToolInput):
 
 class ImproveSoilInput(ToolInput):
     nutrient: NutrientKind
+
+
+class LayGeasInput(ToolInput):
+    child_id: int
+    mode: GeasMode
+    act: ActKind
+
+
+class SwearGeasInput(ToolInput):
+    mode: GeasMode
+    act: ActKind
 
 
 async def bind_with_charm(call: MortalCall, args: BindWithCharmInput) -> str:
@@ -135,6 +150,35 @@ async def improve_soil(call: MortalCall, args: ImproveSoilInput) -> str:
     )
 
 
+def geas_act(mode: GeasMode, act: ActKind, refused: MortalResult) -> None:
+    if act not in GEAS_ACTS[mode]:
+        fail(refused, why=f"a geas of that kind cannot turn on {spoken(act)}")
+
+
+async def lay_kin_geas(call: MortalCall, args: LayGeasInput) -> str:
+    child = await call.session.get(EntityRow, args.child_id)
+    if child is None or child.entity_type is not EntityType.MORTAL or args.child_id not in await children_of(call.session, call.me.id):
+        fail(MortalResult.GEAS_REFUSED, why="you can lay a geas only on a child of your own")
+    if held(child.id):
+        fail(MortalResult.GEAS_REFUSED, why=f"{child.name} is held")
+    geas_act(args.mode, args.act, MortalResult.GEAS_REFUSED)
+    await lay_geas(call.tick, child, layer_node_id=call.me.id, layer=GeasLayer.KIN, mode=args.mode, act=args.act)
+    call.target(child.id)
+    await call.record(
+        "tools.mortal.lay_geas_on_kin", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: child.id}, facts={"mode": args.mode, "act": args.act}
+    )
+    return result(MortalResult.GEAS_LAID, name=child.name, mode=spoken(args.mode), act=spoken(args.act))
+
+
+async def swear_geas(call: MortalCall, args: SwearGeasInput) -> str:
+    if held(call.me.id):
+        fail(MortalResult.GEAS_REFUSED, why="your own course is held")
+    geas_act(args.mode, args.act, MortalResult.GEAS_REFUSED)
+    await lay_geas(call.tick, call.me, layer_node_id=call.me.id, layer=GeasLayer.SELF, mode=args.mode, act=args.act)
+    await call.record("tools.mortal.swear_geas", roles={IncidentRole.ACTOR: call.me.id}, facts={"mode": args.mode, "act": args.act})
+    return result(MortalResult.GEAS_SWORN, mode=spoken(args.mode), act=spoken(args.act))
+
+
 def specs() -> list[ToolSpec[MortalCall, Any]]:
     mortal = AgentKind.MORTAL
     meta = ToolMeta(ActionKind.INFLUENCE, mortal_standard_action)
@@ -143,4 +187,6 @@ def specs() -> list[ToolSpec[MortalCall, Any]]:
         ToolSpec(MortalToolId.LIFT_AFFLICTION, mortal, LiftAfflictionInput, meta, lift_affliction),
         ToolSpec(MortalToolId.CHOOSE_PATH, mortal, ChoosePathInput, meta, choose_path_tool),
         ToolSpec(MortalToolId.IMPROVE_SOIL, mortal, ImproveSoilInput, ToolMeta(ActionKind.RESHAPE_LAND, mortal_standard_action), improve_soil),
+        ToolSpec(MortalToolId.LAY_GEAS_ON_KIN, mortal, LayGeasInput, meta, lay_kin_geas),
+        ToolSpec(MortalToolId.SWEAR_GEAS, mortal, SwearGeasInput, meta, swear_geas),
     ]

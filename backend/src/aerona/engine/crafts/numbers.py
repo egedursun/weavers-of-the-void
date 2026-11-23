@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.life.crafts import SCHOOLING
 from aerona.catalog.life_traits import TECHNIQUE_TRAITS, having
+from aerona.catalog.notations import NOTATIONS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import UNTAUGHT_NUMERACY, NumberSystemRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -15,8 +16,10 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.life_traits import TechniqueTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.lore.research import has_technique, techniques_of
+from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import StepDraft, record
@@ -30,6 +33,7 @@ class NumberTally:
     read: int = 0
     taught: int = 0
     milestones: int = 0
+    notations: int = 0
 
 
 async def seed_system(ctx: TickContext, people: EntityRow, tally: NumberTally) -> NumberSystemRow:
@@ -38,11 +42,13 @@ async def seed_system(ctx: TickContext, people: EntityRow, tally: NumberTally) -
         return row
     rng = ctx.rng(seed_of("numbers", people.id))
     culture = await ctx.session.get(PeopleCultureRow, people.id)
-    placed = bool(await techniques_of(ctx.session, people.id) & PLACE_VALUE_RECKONING)
+    known = await techniques_of(ctx.session, people.id)
+    placed = bool(known & PLACE_VALUE_RECKONING)
+    written = Technique.ALPHABET in known or (culture is not None and culture.literacy > 0)
     row = NumberSystemRow(
         people_entity_id=people.id,
         base=rng.pick(list(BASES)),
-        notation=Notation.POSITIONAL if placed else Notation.ADDITIVE,
+        notation=Notation.POSITIONAL if placed else (Notation.ADDITIVE if written else Notation.TALLY),
         zero=placed,
         numeracy=max(UNTAUGHT_NUMERACY, culture.literacy if culture is not None else 0),
         locked=[],
@@ -50,6 +56,24 @@ async def seed_system(ctx: TickContext, people: EntityRow, tally: NumberTally) -
     ctx.session.add(row)
     tally.read += 1
     return row
+
+
+async def symbolic_ready(ctx: TickContext, people_id: int) -> bool:
+    levels = (await known_levels(ctx.session, [people_id])).get(people_id, {})
+    return levels.get(KnowledgeBranch.MATHEMATICS, 0) >= ctx.rules.numeracy.symbolic_level
+
+
+async def adopt(ctx: TickContext, people: EntityRow, row: NumberSystemRow, notation: Notation, tally: NumberTally) -> None:
+    before = row.notation
+    row.notation = notation
+    tally.notations += 1
+    await record(
+        ctx,
+        "numeracy.notation_adopted",
+        roles={IncidentRole.SUBJECT: people.id},
+        facts={"notation": notation, "before": before, "rank": NOTATIONS[notation].rank},
+        steps=(StepDraft(StepAction.LEARN, actor=people.id, outcome=StepOutcome.SUCCESS),),
+    )
 
 
 async def keep_numbers(ctx: TickContext, tally: NumberTally) -> None:
@@ -65,6 +89,8 @@ async def keep_numbers(ctx: TickContext, tally: NumberTally) -> None:
         if schooled and "numeracy" not in row.locked:
             row.numeracy = clamp_int(row.numeracy + table.numeracy_gain, 0, PERCENT)
             tally.taught += 1
+        if row.notation is Notation.TALLY and "notation" not in row.locked and await has_technique(ctx.session, people.id, Technique.ALPHABET):
+            await adopt(ctx, people, row, Notation.ADDITIVE, tally)
         if not await has_technique(ctx.session, people.id, Technique.LOGIC):
             continue
         if not ctx.rng(seed_of("numbers.milestone", people.id, ctx.epoch)).chance(table.milestone_chance):
@@ -73,8 +99,11 @@ async def keep_numbers(ctx: TickContext, tally: NumberTally) -> None:
             row.zero = True
             found = NumberMilestone.ZERO
         elif row.notation is Notation.ADDITIVE and "notation" not in row.locked:
-            row.notation = Notation.POSITIONAL
+            await adopt(ctx, people, row, Notation.POSITIONAL, tally)
             found = NumberMilestone.PLACE_VALUE
+        elif row.notation is Notation.POSITIONAL and "notation" not in row.locked and await symbolic_ready(ctx, people.id):
+            await adopt(ctx, people, row, Notation.SYMBOLIC, tally)
+            continue
         else:
             continue
         if "numeracy" not in row.locked:

@@ -133,6 +133,9 @@ export const WOUND_CAUSES: Record<Schema['WoundCause'], string> = {
   creator: 'the Creator',
   avatar_slain: 'the death of its mortal form',
   outer_bargain: 'a bargain with an outer being',
+  neglect: 'neglect',
+  betrayal: 'betrayal by one in its service',
+  mortal_slayer: "a mortal's deed",
 }
 
 export const MOTIONS: Record<Schema['CouncilMotion'], Named> = {
@@ -250,6 +253,14 @@ export const PUNISHMENTS: Record<Schema['SonPunishment'], string> = {
   exile: 'Exile',
   strip_power: 'Strip a power',
   strip_divinity: 'Strip of divinity',
+  penance: 'Bind to a penance',
+  essence_fine: 'Fine its essence',
+}
+
+export const PENANCE_DEEDS: Record<Schema['PenanceDeed'], string> = {
+  restore_world: 'Restore a wounded land',
+  raise_hero: 'Raise a hero',
+  undo_curse: 'Undo a curse',
 }
 
 export const LAW_SCOPES: Record<Schema['LawScope'], Named> = {
@@ -265,6 +276,7 @@ export const LAW_EXCEPTIONS: Record<Schema['LawException'], string> = {
   author_worshippers: 'Except the author’s faithful',
   heroes: 'Except heroes',
   avatars: 'Except avatars of the gods',
+  named_kind: 'Except one named kind of being',
 }
 
 export const HUNGERS: Record<Schema['OuterHunger'], Named> = {
@@ -279,12 +291,16 @@ export const GAINS: Record<Schema['BargainGain'], string> = {
   essence: 'Essence',
   power: 'A power',
   might: 'Might',
+  knowledge: 'Knowledge out of reach',
+  longevity: 'A longer span',
 }
 
 export const PRICES: Record<Schema['BargainPrice'], string> = {
   world_sanity: 'A world’s sanity',
   domain: 'One of its domains',
   true_name: 'Its true name',
+  worshippers: 'The souls of its faithful',
+  descendants: 'Its line, bound for years',
 }
 
 export const STANDING_AXES = ['awe', 'love', 'fear', 'neglect'] as const

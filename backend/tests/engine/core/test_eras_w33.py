@@ -125,7 +125,7 @@ async def test_a_programme_paid_by_the_treasury_completes_and_teaches_its_capita
     assert await session.get(HolderTechniqueRow, (capital.id, Technique.NUCLEAR_POWER)) is not None
 
 
-async def test_a_realm_without_coin_abandons_and_a_spying_rival_sets_a_programme_back(session: AsyncSession, world: CoreWorld) -> None:
+async def test_a_realm_without_coin_suspends_then_abandons_and_a_spying_rival_sets_a_programme_back(session: AsyncSession, world: CoreWorld) -> None:
     poor_town = await settlement(session, "Brin", world, world.regions[0])
     poor = await realm(session, world, poor_town, treasury=10)
     starved = await programme(session, poor, Technique.ROCKETRY, 50)
@@ -139,9 +139,12 @@ async def test_a_realm_without_coin_abandons_and_a_spying_rival_sets_a_programme
     ctx = await at(session, 3, programmes={"start_chance": 0, "sabotage_chance": 100, "abandon_below": 100, "base_years": 400})
     tally = EraTally()
     await keep_programmes(ctx, tally)
-    assert starved.stage is ProgrammeStage.ABANDONED and tally.abandoned == 1
+    assert starved.stage is ProgrammeStage.SUSPENDED and tally.suspended == 1 and starved.progress == 50
     table = ctx.rules.programmes
     assert watched.sabotaged == 1 and watched.progress == 50 + table.base_progress - table.sabotage_loss
+    starved.progress = table.suspended_decay
+    await keep_programmes(ctx, tally)
+    assert starved.stage is ProgrammeStage.ABANDONED and tally.abandoned == 1
 
 
 async def test_the_starting_era_gives_fresh_towns_their_floor_of_knowledge(session: AsyncSession, world: CoreWorld) -> None:

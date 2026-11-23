@@ -38,6 +38,14 @@ async def tokens_within_reach(ctx: TickContext, caster_id: int, target_id: int) 
     )
     if touched is not None:
         found.append(LinkToken.FRAGMENT)
+    kept = await ctx.session.scalar(
+        select(BondRow.target_node_id)
+        .join(EntityRow, EntityRow.id == BondRow.target_node_id)
+        .where(BondRow.source_node_id == target_id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE, EntityRow.entity_type == EntityType.ITEM)
+        .limit(1)
+    )
+    if kept is not None:
+        found.append(LinkToken.POSSESSION)
     return found
 
 
@@ -100,13 +108,13 @@ async def take_links(ctx: TickContext, tally: SympathyTally) -> None:
         token = rng.pick(await tokens_within_reach(ctx, caster.id, grudge.subject_node_id))
         true_name = await ctx.session.get(TrueNameRow, grudge.subject_node_id)
         if true_name is not None and caster.id in true_name.known_by:
-            token = LinkToken.NAME
+            token = LinkToken.TRUE_NAME
         ctx.session.add(
             SympatheticLinkRow(
                 holder_node_id=caster.id,
                 target_node_id=grudge.subject_node_id,
                 token=token,
-                strength=TOKEN_STRENGTH[token],
+                strength=TOKEN_STRENGTH[token](ctx.rules),
                 obtained_epoch=ctx.epoch,
                 locked=[],
             )

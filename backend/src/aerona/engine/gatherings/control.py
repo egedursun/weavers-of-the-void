@@ -39,6 +39,7 @@ from aerona.engine.gatherings.hold import GatheringTally, hold, plan
 from aerona.engine.gatherings.occasions import Guest, Occasion
 from aerona.engine.history.collections import add_members, add_places, open_collection
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.sites.accounts import remnant_near
 from aerona.engine.sites.digs import DigTally, begin, dig_on
 from aerona.engine.sites.rooms import Walk, delve, rooms_of
 from aerona.engine.storyteller.pace import storyteller_of
@@ -314,9 +315,21 @@ async def edit_stage(ctx: TickContext, stage_id: int, values: Values, release: l
     return row
 
 
-async def create_feature(ctx: TickContext, place_id: int, feature: BattlefieldFeature, strength: int) -> BattlefieldFeatureRow:
-    await entity(ctx, place_id, "battlefield")
-    row = BattlefieldFeatureRow(place_entity_id=place_id, feature=feature, strength=strength, epoch=ctx.epoch, locked=["strength"])
+async def create_feature(ctx: TickContext, place_id: int, feature: BattlefieldFeature, strength: int, remnant_id: int | None = None) -> BattlefieldFeatureRow:
+    place = await entity(ctx, place_id, "battlefield")
+    if feature is BattlefieldFeature.ORDNANCE and remnant_id is None:
+        remnant = await remnant_near(ctx, place)
+        if remnant is None:
+            raise ValidationFailedError("No arms of a war remain in this land to lie on its field.")
+        remnant_id = remnant.id
+    row = BattlefieldFeatureRow(
+        place_entity_id=place_id,
+        feature=feature,
+        strength=strength,
+        remnant_id=remnant_id if feature is BattlefieldFeature.ORDNANCE else None,
+        epoch=ctx.epoch,
+        locked=["strength"],
+    )
     ctx.session.add(row)
     await ctx.session.flush()
     return row

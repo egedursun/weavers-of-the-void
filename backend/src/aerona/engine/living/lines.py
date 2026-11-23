@@ -10,6 +10,7 @@ from aerona.catalog.life_traits import CULTIVATION_METHOD_TRAITS, LINE_TRAIT_TRA
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import spoken
+from aerona.core.random import SeededRandom
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
@@ -27,7 +28,7 @@ from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.genetics.genome import line_traits
-from aerona.engine.living.society import faith_on_maker
+from aerona.engine.living.society import faith_on_maker, regulated
 from aerona.engine.living.traits import traits_of
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import best_skill
@@ -35,6 +36,7 @@ from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining, term
 from aerona.rules.registry import Rules
 
 M = CultivationMethod
@@ -133,7 +135,9 @@ def lost_stability(ctx: TickContext, outcome: LineOutcome) -> int:
 def outcome_of(ctx: TickContext, line_key: str, aim: int) -> LineOutcome:
     table = ctx.rules.living_methods
     rng = ctx.rng(f"living.make.{line_key}")
-    if aim >= table.failure_below or not rng.chance(table.failure_below - aim + 10):
+    if aim >= table.failure_below:
+        return LineOutcome.EXCEEDED if aim >= PERCENT and rng.chance(table.exceeded_pct) else LineOutcome.AS_MEANT
+    if not rng.chance(table.failure_below - aim + 10):
         return LineOutcome.AS_MEANT
     weights = {outcome: int(getattr(table, result.weight_rule)) for outcome, result in LINE_OUTCOMES.items() if result.weight_rule is not None}
     roll = rng.random() * sum(weights.values())
@@ -218,7 +222,9 @@ async def make_line(ctx: TickContext, draft: LineDraft, *, forced: bool = False)
         if trait not in carried:
             carried.add(trait)
             ctx.session.add(LivingLineTraitRow(line_id=line.id, trait=trait, strength=strength, side_effect=False, locked=[]))
+    add_gift(ctx, line, carried, rng)
     await ctx.session.flush()
+    await cross_or_release(ctx, line, draft)
     await record(
         ctx,
         "living.line_made",
@@ -228,12 +234,38 @@ async def make_line(ctx: TickContext, draft: LineDraft, *, forced: bool = False)
     return line
 
 
+def add_gift(ctx: TickContext, line: LivingLineRow, carried: set[LineTrait], rng: SeededRandom) -> None:
+    free = [item for item in LineTrait if item not in carried]
+    if free and LINE_OUTCOMES[line.outcome].gifted:
+        gift = rng.pick(free)
+        carried.add(gift)
+        ctx.session.add(LivingLineTraitRow(line_id=line.id, trait=gift, strength=ctx.rules.living.exceeded_gift, side_effect=False, locked=[]))
+
+
+async def cross_or_release(ctx: TickContext, line: LivingLineRow, draft: LineDraft) -> None:
+    table = ctx.rules.living
+    if line.method is CultivationMethod.HYBRIDISING and len(set(draft.source_ids)) >= 2:
+        if ctx.rng(f"living.hybrid.{line.id}").chance(table.hybrid_sterile_pct):
+            if "fertility" not in line.locked:
+                line.fertility = Fertility.STERILE
+        else:
+            for row in await ctx.session.scalars(select(LivingLineTraitRow).where(LivingLineTraitRow.line_id == line.id, LivingLineTraitRow.strength > 0)):
+                row.strength = clamp_int(row.strength + table.hybrid_vigour, -PERCENT, PERCENT)
+    elif line.method is CultivationMethod.WILD_RELEASE:
+        await run_wild(ctx, line)
+
+
 async def escape(ctx: TickContext, line: LivingLineRow) -> bool:
     if line.escaped or line.species_entity_id is None or held(line.species_entity_id):
         return False
     traits = await traits_of(ctx.session, line.id)
     spreads = any(traits.get(trait, 0) > 0 for trait in SPREADING)
     chance = ctx.rules.living_methods.escape_chance * (PERCENT + (ctx.rules.living.escape_spread_pct if spreads else 0)) // PERCENT
+    if line.outcome is LineOutcome.EXCEEDED:
+        chance = chance * (PERCENT + ctx.rules.living.exceeded_escape_pct) // PERCENT
+    owner = await ctx.session.get(EntityRow, line.owner_node_id) if line.owner_node_id is not None else None
+    if await regulated(ctx.session, owner):
+        chance = chance * (PERCENT - ctx.rules.living.regulated_escape_cut_pct) // PERCENT
     if not ctx.rng(f"living.escape.{line.id}.{ctx.epoch}").chance(chance):
         return False
     return await run_wild(ctx, line)
@@ -273,6 +305,7 @@ async def drift(ctx: TickContext, line: LivingLineRow) -> LivingLineRow | None:
     if "drift_pct" not in line.locked and line.generation:
         drift_rule = LINE_OUTCOMES[line.outcome].drift_rule
         extra = int(getattr(table, drift_rule)) if drift_rule is not None else 0
+        extra += ctx.rules.living.wild_release_drift_pct if line.method is CultivationMethod.WILD_RELEASE else 0
         line.drift_pct = clamp_percent(line.drift_pct + table.drift_per_generation + extra)
     if line.drift_pct < table.new_line_drift or "drift_pct" in line.locked:
         return None
@@ -302,6 +335,28 @@ async def drift(ctx: TickContext, line: LivingLineRow) -> LivingLineRow | None:
     return child
 
 
+async def cross_wild(ctx: TickContext, line: LivingLineRow) -> bool:
+    table = ctx.rules.living
+    if line.fertility is not Fertility.CROSSES_WILD or line.species_entity_id is None or held(line.species_entity_id):
+        return False
+    if not ctx.rng(f"living.cross_wild.{line.id}.{ctx.epoch}").chance(table.wild_cross_pct):
+        return False
+    lean = sum(1 if strength > 0 else -1 for strength in (await traits_of(ctx.session, line.id)).values())
+    shift = table.wild_cross_fit if lean >= 0 else -table.wild_cross_fit
+    ranges = list(
+        await ctx.session.scalars(
+            select(SpeciesRangeRow).where(SpeciesRangeRow.species_entity_id == line.species_entity_id).order_by(SpeciesRangeRow.region_entity_id)
+        )
+    )
+    for row in ranges:
+        if "fit" not in row.locked and not held(row.region_entity_id):
+            with explaining():
+                term("living.wild_cross_fit", shift, source_node_id=line.species_entity_id)
+                row.fit = clamp_percent(row.fit + shift)
+    await record(ctx, "line.crossed_wild", roles={IncidentRole.SUBJECT: line.species_entity_id}, facts={"line": line.name, "fit": shift, "ranges": len(ranges)})
+    return True
+
+
 async def keep_lines(ctx: TickContext) -> int:
     kept = 0
     for line in list(await ctx.session.scalars(select(LivingLineRow).order_by(LivingLineRow.id))):
@@ -309,5 +364,6 @@ async def keep_lines(ctx: TickContext) -> int:
             continue
         await drift(ctx, line)
         await escape(ctx, line)
+        await cross_wild(ctx, line)
         kept += 1
     return kept

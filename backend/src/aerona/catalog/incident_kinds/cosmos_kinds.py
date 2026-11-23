@@ -562,9 +562,9 @@ IMPACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "impact.called",
         S,
-        "A body of size {size} was called down upon {subject}.",
+        "A body of the heavens ({body}) of size {size} was called down upon {subject}.",
         roles=(maybe(R.ACTOR), one(R.SUBJECT), maybe(R.PLACE)),
-        facts=(amount("size", U.STRENGTH), amount("due", U.COUNT)),
+        facts=(chosen("body", ImpactBody), amount("size", U.STRENGTH), amount("due", U.COUNT)),
         steps=(A.INVOKE,),
         clock=C.INSTANT,
         kind=K.MIRACLE,
@@ -921,7 +921,7 @@ ACTS: tuple[IncidentKindSpec, ...] = (
             f"world_end.{end.value}",
             S,
             "{subject} was " + spoken(end) + " by {cause}: {lives:life ended|lives ended} and {homeless:tie was|ties were} cut abroad.",
-            roles=(one(R.SUBJECT),),
+            roles=(one(R.SUBJECT), maybe(R.ACTOR)),
             facts=(
                 chosen("end", WorldEnd),
                 chosen("cause", WorldEndCause),

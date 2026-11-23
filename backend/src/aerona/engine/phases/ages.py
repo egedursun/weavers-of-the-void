@@ -75,6 +75,7 @@ async def ages(ctx: TickContext) -> None:
     "table.thread_links",
     "table.threads",
     "table.traits",
+    "table.wills",
     "table.worlds",
 )
 @writes(
@@ -86,6 +87,7 @@ async def ages(ctx: TickContext) -> None:
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.memories",
     "table.setups",
 )
 async def arcs(ctx: TickContext) -> None:

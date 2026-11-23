@@ -19,12 +19,15 @@ class AugmentKind(StrEnum):
     SENSE = "sense"
     STORAGE = "storage"
     COSMETIC = "cosmetic"
+    LIFE_SUPPORT = "life_support"
+    ARMOUR = "armour"
 
 
 class AugmentMake(StrEnum):
     MADE = "made"
     RITE_BOUND = "rite_bound"
     GROWN = "grown"
+    POWER_BOUND = "power_bound"
 
 
 class EffectTarget(StrEnum):
@@ -33,6 +36,7 @@ class EffectTarget(StrEnum):
     SKILL = "skill"
     SENSE = "sense"
     RESISTANCE = "resistance"
+    LIFESPAN = "lifespan"
 
 
 class RealmPurpose(StrEnum):
@@ -46,6 +50,8 @@ class RealmPurpose(StrEnum):
     REFUGE = "refuge"
     EXPERIMENT = "experiment"
     FREE = "free"
+    MEMORIAL = "memorial"
+    MARKET = "market"
 
 
 class RealmEntry(StrEnum):
@@ -54,6 +60,7 @@ class RealmEntry(StrEnum):
     RITE = "rite"
     DEATH = "death"
     BIRTH = "birth"
+    DREAM = "dream"
 
 
 class RealmAwareness(StrEnum):
@@ -72,6 +79,7 @@ class IntrusionTarget(StrEnum):
     STRUCTURE = "structure"
     LEDGER = "ledger"
     SAVED_STATE = "saved_state"
+    SEAL = "seal"
 
 
 class IntrusionApproach(StrEnum):
@@ -89,6 +97,7 @@ class IntrusionAim(StrEnum):
     SEIZE = "seize"
     PLANT = "plant"
     EXTORT = "extort"
+    EXPOSE = "expose"
 
 
 class Attribution(StrEnum):
@@ -102,6 +111,7 @@ class IntrusionOutcome(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     CAUGHT = "caught"
+    UNDETECTED = "undetected"
 
 
 class DataContent(StrEnum):
@@ -112,6 +122,7 @@ class DataContent(StrEnum):
     LEDGER = "ledger"
     IDENTITY = "identity"
     ORDERS = "orders"
+    LOCATION = "location"
 
 
 class SurveillanceFocus(StrEnum):
@@ -122,6 +133,8 @@ class SurveillanceFocus(StrEnum):
     MINDS = "minds"
     GIFTED = "gifted"
     EVERYTHING = "everything"
+    KIND = "kind"
+    LANGUAGE = "language"
 
 
 class Authenticity(StrEnum):
@@ -137,6 +150,7 @@ class CompanyCharter(StrEnum):
     FREE = "free"
     STATE_OWNED = "state_owned"
     COOPERATIVE = "cooperative"
+    GUILD = "guild"
 
 
 class CompanyHoldingKind(StrEnum):
@@ -148,6 +162,7 @@ class CompanyHoldingKind(StrEnum):
     LIVING_LINE = "living_line"
     ROUTE = "route"
     ENCLAVE = "enclave"
+    LAND = "land"
 
 
 class ReplicatorScale(StrEnum):
@@ -165,6 +180,7 @@ class ReplicatorOutput(StrEnum):
     MEDICINE = "medicine"
     TERRAFORMING = "terraforming"
     DISASSEMBLY = "disassembly"
+    ENERGY = "energy"
 
 
 class ReplicatorStage(StrEnum):
@@ -181,6 +197,7 @@ class RelicState(StrEnum):
     FAILING = "failing"
     DORMANT = "dormant"
     BROKEN = "broken"
+    RESTORED = "restored"
 
 
 class RelicUse(StrEnum):
@@ -190,6 +207,7 @@ class RelicUse(StrEnum):
     DISPLAYED = "displayed"
     FEARED = "feared"
     IGNORED = "ignored"
+    DISMANTLED = "dismantled"
 
 
 class MadeMindStance(StrEnum):
@@ -198,6 +216,7 @@ class MadeMindStance(StrEnum):
     KIN = "kin"
     SACRED = "sacred"
     SILENT = "silent"
+    REGULATED = "regulated"
 
 
 class RelicStance(StrEnum):

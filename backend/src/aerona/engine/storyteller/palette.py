@@ -21,8 +21,9 @@ from aerona.db.tables.storyteller import StorytellerRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import NaturalLaw
-from aerona.domain.enums.storyteller import PaletteDirection, PaletteSubsystem, RecoveryKind, SpontaneousKind, TensionBand
+from aerona.domain.enums.storyteller import PaletteDirection, PaletteSubsystem, RecoveryKind, SpontaneousKind, StorytellerProfile, TensionBand
 from aerona.engine.context import TickContext
+from aerona.rules.model import keyed
 
 P = PaletteSubsystem
 D = PaletteDirection
@@ -41,6 +42,7 @@ class PaletteEntry:
     entity: EntityType | None = None
     table: type[Base] | None = None
     excluded_by: tuple[NaturalLaw, ...] = ()
+    rule: str | None = None
 
 
 def entry(key: str, subsystem: P, direction: D, struck: tuple[str, ...], *, magnitude: int = 10, weight: int = 10, **cause: object) -> PaletteEntry:
@@ -60,7 +62,7 @@ def entry(key: str, subsystem: P, direction: D, struck: tuple[str, ...], *, magn
     )
 
 
-PALETTE: tuple[PaletteEntry, ...] = (
+BASE_PALETTE: tuple[PaletteEntry, ...] = (
     entry(
         SpontaneousKind.BEAST_AWAKENING.value,
         P.ECOLOGY,
@@ -141,6 +143,38 @@ PALETTE: tuple[PaletteEntry, ...] = (
     entry("art_scandal", P.ART, D.DISRUPTION, ("art.banned", "art.destroyed"), entity=E.ARTWORK),
     entry("art_flowering", P.ART, D.RECOVERY, ("art.made", "art.masterwork"), entity=E.ARTWORK),
 )
+SPEC_PALETTE: tuple[PaletteEntry, ...] = tuple(
+    PaletteEntry(key, subsystem, direction, struck, 10, 10, entity, None, (), rule=rule)
+    for key, rule, subsystem, direction, struck, entity in (
+        ("late_frost", "palette_late_frost", P.CLIMATE, D.DISRUPTION, ("weather.late_frost", "weather.ice_storm_harm"), E.SETTLEMENT),
+        ("long_season", "palette_long_season", P.CLIMATE, D.DISRUPTION, ("seasons.spell_began", "seasons.summer_drought", "seasons.irregular"), E.SETTLEMENT),
+        ("land_shift", "palette_land_shift", P.CLIMATE, D.DISRUPTION, ("land.river_shift", "river.dammed_by_slide", "terrain.changed"), E.REGION),
+        ("upwelling_failure", "palette_upwelling_failure", P.ECOLOGY, D.DISRUPTION, ("sea.upwelling_failed", "catch.ponds_ruined"), E.REGION),
+        (
+            "swarm_strike",
+            "palette_swarm_strike",
+            P.ECOLOGY,
+            D.DISRUPTION,
+            ("life.swarm_struck", "ecology.herd_feral", "ecology.gone_feral", "ecology.feral_breed"),
+            E.SPECIES,
+        ),
+        ("keystone_loss", "palette_keystone_loss", P.ECOLOGY, D.DISRUPTION, ("ecology.keystone_lost",), E.SPECIES),
+        ("beast_woken", "palette_beast_woken", P.ECOLOGY, D.DISRUPTION, ("beast.woken",), E.BEAST),
+        ("ruler_gangrene", "palette_ruler_gangrene", P.DISEASE, D.DISRUPTION, ("body.gangrene",), E.MORTAL),
+        ("fortune_curse", "palette_fortune_curse", P.FAITH, D.DISRUPTION, ("affliction.charmed", "affliction.fortune_turned"), E.MORTAL),
+        ("grief_vengeance", "palette_grief_vengeance", P.HOUSEHOLDS, D.DISRUPTION, ("mind.grief_stage", "memory.vengeance"), E.MORTAL),
+        ("boycott", "palette_boycott", P.ECONOMY, D.DISRUPTION, ("crowd.boycotted",), E.SETTLEMENT),
+        ("route_season_closed", "palette_route_season_closed", P.ECONOMY, D.DISRUPTION, ("route.season_closed", "travel.way_closed"), E.TRADE_ROUTE),
+        ("impact_strike", "palette_impact_strike", P.COSMOS, D.DISRUPTION, ("impact.struck", "impact.struck_world", "climate.impact_winter"), None),
+        ("fair_held", "palette_fair_held", P.ECONOMY, D.RECOVERY, ("tradition.fair_held",), E.SETTLEMENT),
+        ("seasons_settled", "palette_seasons_settled", P.CLIMATE, D.RECOVERY, ("seasons.spell_ended", "seasons.settled"), E.SETTLEMENT),
+        ("sanitation", "palette_sanitation", P.DISEASE, D.RECOVERY, ("disease.sanitation_ordered",), E.SETTLEMENT),
+        ("relief_given", "palette_relief_given", P.ECONOMY, D.RECOVERY, ("relief.given", "relief.sent"), E.SETTLEMENT),
+        ("crisis_mediated", "palette_crisis_mediated", P.WAR, D.RECOVERY, ("crisis.mediated", "treaty.mediated"), E.POLITY),
+        ("gift_released", "palette_gift_released", P.HOUSEHOLDS, D.RECOVERY, ("gift.released", "gifts.returned"), E.MORTAL),
+    )
+)
+PALETTE: tuple[PaletteEntry, ...] = (*BASE_PALETTE, *SPEC_PALETTE)
 BY_KEY: Mapping[str, PaletteEntry] = {item.key: item for item in PALETTE}
 BAND_DIRECTION: Mapping[TensionBand, PaletteDirection | None] = {
     TensionBand.QUIET: PaletteDirection.DISRUPTION,
@@ -182,13 +216,14 @@ async def keep_palette(ctx: TickContext, row: StorytellerRow) -> dict[str, int]:
     table = ctx.rules.storyteller
     laws = await world_laws(ctx, row.world_id)
     acted = await subsystem_activity(ctx, row.world_id)
-    favoured = BAND_DIRECTION[row.band]
+    favoured = PaletteDirection.RECOVERY if row.profile is StorytellerProfile.GENTLE else BAND_DIRECTION[row.band]
     weights: dict[str, int] = {}
     for item in PALETTE:
         if not await cause_holds(ctx, row.world_id, item, laws):
             continue
         rest = max(0, table.variety_window - acted[item.subsystem]) * table.palette_rest_pct // table.variety_window
-        lean = table.palette_lean_pct * (item.tension_weight + item.magnitude) // PERCENT if item.direction is favoured else 0
+        tension = keyed(table, item.rule, "weight") if item.rule is not None else item.tension_weight
+        lean = table.palette_lean_pct * (tension + item.magnitude) // PERCENT if item.direction is favoured else 0
         weights[item.key] = PERCENT + rest + lean
     if "palette" not in row.locked:
         row.palette = weights

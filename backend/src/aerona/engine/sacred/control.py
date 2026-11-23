@@ -6,6 +6,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.culture import ProphecyConditionRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultTenetRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.sacred import (
@@ -45,6 +46,7 @@ from aerona.db.tables.sacred import (
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.culture import ProphecyPredicate
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import Emotion
 from aerona.domain.enums.sacred import (
@@ -61,6 +63,7 @@ from aerona.domain.enums.sacred import (
     SacramentProtection,
     TheodicyCause,
     TheodicyResolution,
+    VisionKind,
 )
 from aerona.engine.collective.control import of_type, saved
 from aerona.engine.context import TickContext
@@ -79,7 +82,7 @@ from aerona.engine.sacred.places import church_of, plagued_regions, realm_of_tow
 from aerona.engine.sacred.rites import climate_of, taught_model
 from aerona.engine.sacred.spirits import bind_spirit, town_near
 
-PLACES = frozenset({EntityType.PLACE, EntityType.SETTLEMENT, EntityType.HOUSE})
+PLACES = frozenset({EntityType.PLACE, EntityType.SETTLEMENT, EntityType.HOUSE, EntityType.REGION})
 SPIRITS = frozenset({EntityType.SPIRIT})
 MORTALS = frozenset({EntityType.MORTAL})
 TOWNS = frozenset({EntityType.SETTLEMENT})
@@ -97,13 +100,16 @@ async def kind_for(ctx: TickContext, place: EntityRow, kind: GeniusLocusKind | N
         return GeniusLocusKind.CITY
     if place.entity_type is EntityType.HOUSE:
         return GeniusLocusKind.HEARTH
+    if place.entity_type is EntityType.REGION:
+        land = await ctx.session.get(RegionEnvironmentRow, place.id)
+        return GeniusLocusKind.SEA if land is not None and land.dominant_terrain is TerrainKind.SEA else GeniusLocusKind.WILDS
     profile = await ctx.session.get(PlaceProfileRow, place.id)
     found_kind = PLACE_SPIRITS.get(profile.kind) if profile is not None else None
     return found_kind or GeniusLocusKind.WILDS
 
 
 async def raise_spirit(ctx: TickContext, place_id: int, kind: GeniusLocusKind | None, community_id: int | None, son_id: int | None) -> GeniusLocusRow:
-    place = await of_type(ctx, place_id, PLACES, "a place, town or house")
+    place = await of_type(ctx, place_id, PLACES, "a place, land, town or house")
     if await ctx.session.scalar(select(GeniusLocusRow.spirit_entity_id).where(GeniusLocusRow.place_entity_id == place.id).limit(1)) is not None:
         raise ValidationFailedError(f"{place.name} already has a spirit of its own.")
     community = await of_type(ctx, community_id, TOWNS, "a town") if community_id is not None else await town_near(ctx, place)
@@ -156,8 +162,14 @@ async def reward_work(ctx: TickContext, god_id: int, community_id: int | None) -
         standing.love = clamp_int(standing.love + ctx.rules.celestial_bureaucracy.work_standing, 0, PERCENT)
 
 
-async def lodge_petition(ctx: TickContext, petitioner_id: int, office_id: int, kind: PetitionKind, *, defendant_id: int | None, bribe: int) -> PetitionRow:
+async def lodge_petition(
+    ctx: TickContext, petitioner_id: int, office_id: int, kind: PetitionKind, *, defendant_id: int | None, bribe: int, target_id: int | None = None
+) -> PetitionRow:
     await node_exists(ctx, petitioner_id, "petitioner")
+    if kind is PetitionKind.VENGEANCE:
+        if target_id is None:
+            raise ValidationFailedError("A petition for vengeance names the wrongdoer.")
+        await node_exists(ctx, target_id, "wrongdoer")
     office = await found(ctx, SpiritOfficeRow, office_id, "spirit office")
     if office.dismissed:
         raise ValidationFailedError("That office stands empty.")
@@ -165,7 +177,7 @@ async def lodge_petition(ctx: TickContext, petitioner_id: int, office_id: int, k
         if defendant_id is None:
             raise ValidationFailedError("A suit names the spirit it is brought against.")
         await of_type(ctx, defendant_id, SPIRITS, "a spirit")
-    return await file_petition(ctx, petitioner_id, office, kind, defendant_id=defendant_id, bribe=bribe)
+    return await file_petition(ctx, petitioner_id, office, kind, defendant_id=defendant_id, bribe=bribe, target_id=target_id)
 
 
 async def judge(ctx: TickContext, petition_id: int, granted: bool, son_id: int | None) -> PetitionRow:
@@ -184,23 +196,25 @@ async def judge(ctx: TickContext, petition_id: int, granted: bool, son_id: int |
     return petition
 
 
-async def make_mystic(ctx: TickContext, mortal_id: int, sender_id: int | None) -> MysticRow:
+async def make_mystic(ctx: TickContext, mortal_id: int, sender_id: int | None, kind: VisionKind | None = None) -> MysticRow:
     mortal = await of_type(ctx, mortal_id, MORTALS, "a mortal")
     if sender_id is not None:
         await require_god(ctx, sender_id)
     existing = await ctx.session.get(MysticRow, mortal.id)
-    if existing is not None:
-        await see_vision(ctx, existing, mortal, sender_id, MysteryTally())
-        return existing
-    return await become_mystic(ctx, mortal, sender_id, MysteryTally())
+    if existing is None:
+        existing = await become_mystic(ctx, mortal, sender_id, MysteryTally())
+        if kind is None:
+            return existing
+    await see_vision(ctx, existing, mortal, sender_id, MysteryTally(), chosen=kind)
+    return existing
 
 
-async def send_vision(ctx: TickContext, mystic_id: int, sender_id: int | None) -> VisionRow:
+async def send_vision(ctx: TickContext, mystic_id: int, sender_id: int | None, kind: VisionKind | None = None) -> VisionRow:
     row = await found(ctx, MysticRow, mystic_id, "mystic")
     mortal = await of_type(ctx, mystic_id, MORTALS, "a mortal")
     if sender_id is not None:
         await require_god(ctx, sender_id)
-    return await see_vision(ctx, row, mortal, sender_id, MysteryTally())
+    return await see_vision(ctx, row, mortal, sender_id, MysteryTally(), chosen=kind)
 
 
 async def stir_movement(ctx: TickContext, town_id: int, prophet_id: int | None, prophecy_id: int | None) -> MillenarianRow:

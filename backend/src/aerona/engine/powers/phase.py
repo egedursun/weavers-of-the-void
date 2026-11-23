@@ -2,15 +2,17 @@ from collections import defaultdict
 
 from sqlalchemy import func, select
 
-from aerona.catalog.life.powers import FADE_POWER_ORIGINS, TRAIN_POWER_STATES
+from aerona.catalog.life.powers import BINDABLE, FADE_POWER_ORIGINS, TRAIN_POWER_STATES
 from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, POWER_STATE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmography import PhenomenonFootprintRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.equipment import EquipmentModelRow, EquipmentStoreRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
-from aerona.db.tables.powers import PowerRow, PowerSpanRow, PowerTriggerRow, SourceDensityRow
+from aerona.db.tables.powers import GiftedAttitudeRow, PowerRow, PowerSpanRow, PowerTriggerRow, SourceDensityRow
+from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.bond import BondKind, BondState
@@ -20,10 +22,12 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.life_traits import LifeStageTrait, PowerStateTrait
 from aerona.domain.enums.minds import MindOrigin, MindSeat
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.powers import PowerDeviceEffect, PowerOrigin, PowerState, PowerTrigger, PowerVisibility
+from aerona.domain.enums.powers import GiftedAttitude, PowerDeviceEffect, PowerOrigin, PowerState, PowerTrigger, PowerVisibility
 from aerona.domain.enums.records import InstrumentKind, StepAction, StepOutcome
 from aerona.domain.enums.society import CreatureTrait
+from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import species_of, species_traits
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.profiles import profile_of
@@ -37,6 +41,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining, term
 
 E = RiteEffectKind
 QUIET = having(POWER_STATE_TRAITS, PowerStateTrait.QUIET)
@@ -105,6 +110,75 @@ async def recover(ctx: TickContext, power: PowerRow) -> None:
         power.state = PowerState.ACTIVE
     if power.state is PowerState.EXHAUSTED and ctx.rng(f"power.return.{power.id}.{ctx.epoch}").chance(table.burnout_recovery_chance):
         power.state, power.strain = PowerState.ACTIVE, 0
+    stored = (await devices_of(ctx.session, [power.holder_node_id])).count(PowerDeviceEffect.STORE)
+    if stored and "strain" not in power.locked:
+        power.strain = max(0, power.strain - stored * table.store_recovery)
+
+
+async def binding_of(ctx: TickContext, holder: EntityRow) -> bool:
+    captive = await ctx.session.scalar(select(CaptiveRow.id).where(CaptiveRow.captive_entity_id == holder.id, CaptiveRow.status == CaptiveStatus.HELD).limit(1))
+    if captive is not None:
+        return True
+    return holder.location_id is not None and PowerDeviceEffect.DAMPEN in await devices_of(ctx.session, [holder.location_id])
+
+
+async def bind(ctx: TickContext, power: PowerRow, holder: EntityRow) -> None:
+    if "state" in power.locked:
+        return
+    bound = await binding_of(ctx, holder)
+    if bound and power.state in BINDABLE:
+        power.state = PowerState.BOUND
+        await record(ctx, "power.bound", roles={IncidentRole.SUBJECT: holder.id}, facts={"strength": power.strength})
+    elif not bound and power.state is PowerState.BOUND:
+        power.state = PowerState.ACTIVE
+
+
+async def envied(ctx: TickContext, holder: EntityRow) -> bool:
+    town = await ctx.session.get(EntityRow, holder.location_id) if holder.location_id is not None else None
+    folk = await people_of(ctx.session, town) if town is not None else None
+    row = await ctx.session.get(GiftedAttitudeRow, folk.id) if folk is not None else None
+    return row is not None and row.attitude is GiftedAttitude.ENVIED
+
+
+async def take_powers(ctx: TickContext) -> int:
+    table = ctx.rules.powers
+    takers = await ctx.session.scalars(
+        select(EquipmentStoreRow.holder_node_id)
+        .join(EquipmentModelRow, EquipmentModelRow.id == EquipmentStoreRow.model_id)
+        .where(EquipmentModelRow.power_effect == PowerDeviceEffect.TRANSFER, EquipmentStoreRow.count > 0)
+        .distinct()
+        .order_by(EquipmentStoreRow.holder_node_id)
+    )
+    taken = 0
+    for taker_id in list(takers):
+        taker = await ctx.session.get(EntityRow, taker_id)
+        if taker is None or taker.status is not EntityStatus.CANON or held(taker.id) or taker.location_id is None:
+            continue
+        near = select(EntityRow.id).where(EntityRow.location_id == taker.location_id, EntityRow.id != taker.id, EntityRow.status == EntityStatus.CANON)
+        for power in list(
+            await ctx.session.scalars(select(PowerRow).where(PowerRow.holder_node_id.in_(near), PowerRow.state == PowerState.ACTIVE).order_by(PowerRow.id))
+        ):
+            victim = await ctx.session.get(EntityRow, power.holder_node_id)
+            if victim is None or held(victim.id) or "holder_node_id" in power.locked:
+                continue
+            chance = table.transfer_device_pct * (PERCENT + (ctx.rules.gifted.envy_theft_pct if await envied(ctx, victim) else 0)) // PERCENT
+            if ctx.rng(f"power.transfer.{taker.id}.{power.id}.{ctx.epoch}").chance(chance):
+                await transfer_power(ctx, power, victim, taker)
+                taken += 1
+                break
+    return taken
+
+
+async def transfer_power(ctx: TickContext, power: PowerRow, victim: EntityRow, taker: EntityRow) -> None:
+    kept = max(1, power.strength * (PERCENT - ctx.rules.powers.transfer_loss_pct) // PERCENT)
+    power.holder_node_id = taker.id
+    power.origin = PowerOrigin.TRANSFER
+    power.gained_epoch = ctx.epoch
+    if "strength" not in power.locked:
+        with explaining():
+            term("powers.transfer_loss_pct", kept - power.strength, source_node_id=victim.id)
+            power.strength = kept
+    await record(ctx, "power.transferred", roles={IncidentRole.ACTOR: taker.id, IncidentRole.VICTIM: victim.id}, facts={"strength": power.strength})
 
 
 async def fade(ctx: TickContext, power: PowerRow, holder: EntityRow) -> None:
@@ -307,6 +381,7 @@ async def train(ctx: TickContext, power: PowerRow) -> None:
     "mortal.age",
     "mortal.lifespan",
     "table.bonds",
+    "table.captives",
     "table.creator",
     "table.dimensions",
     "table.entities",
@@ -375,6 +450,7 @@ async def keep_powers(ctx: TickContext) -> None:
         holder = await ctx.session.get(EntityRow, power.holder_node_id)
         if holder is None or holder.status is not EntityStatus.CANON or held(holder.id):
             continue
+        await bind(ctx, power, holder)
         await recover(ctx, power)
         await awaken(ctx, power, holder)
         await train(ctx, power)
@@ -383,6 +459,7 @@ async def keep_powers(ctx: TickContext) -> None:
             await live_with(ctx, power, holder)
         ctx.count("powers_kept")
     ctx.count("powers_by_exposure", await exposed(ctx))
+    ctx.count("powers_taken", await take_powers(ctx))
     ctx.count("gestalts_formed", await gestalts(ctx))
     ctx.count("hive_minds_formed", await hive_minds(ctx))
     await ctx.session.flush()

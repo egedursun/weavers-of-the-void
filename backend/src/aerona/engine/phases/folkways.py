@@ -144,6 +144,7 @@ async def purity(ctx: TickContext) -> None:
     "table.conditions",
     "table.creator",
     "table.cult_tenets",
+    "table.culture_ethics",
     "table.culture_values",
     "table.dimensions",
     "table.divine_wounds",

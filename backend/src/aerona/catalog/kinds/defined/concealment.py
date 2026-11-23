@@ -6,13 +6,18 @@ SEEKER_AIM = total(
     SeekerAim,
     {
         SeekerAim.EXPOSE: Defined("To expose it", checked_by=(), used_by=("engine.powers.backfill.buried_histories",)),
-        SeekerAim.EXPLOIT: Defined("To use it", checked_by=("engine.concealment.kinds.after_seeking",), used_by=()),
+        SeekerAim.EXPLOIT: Defined("To use it", checked_by=("engine.concealment.kinds.after_seeking",), used_by=("engine.concealment.truths.draw_seekers",)),
         SeekerAim.DESTROY_THE_HIDDEN: Defined("To destroy the hidden", checked_by=("engine.concealment.kinds.after_seeking",), used_by=()),
-        SeekerAim.JOIN_THE_HIDDEN: Defined("To join the hidden", checked_by=("engine.concealment.truths.seek",), used_by=()),
+        SeekerAim.JOIN_THE_HIDDEN: Defined("To join the hidden", checked_by=(), used_by=("catalog.life.concealment.JOINING_AIMS",)),
         SeekerAim.UNDERSTAND: Defined(
             "To understand it",
             checked_by=("engine.concealment.kinds.after_seeking",),
             used_by=("db.tables.concealment.TruthSeekerRow", "tools.mortal.powers.InvestigateInput"),
+        ),
+        SeekerAim.PROTECT: Defined(
+            "Protect",
+            checked_by=("engine.concealment.truths.live_with_truth", "engine.concealment.truths.seek"),
+            used_by=("catalog.life.concealment.JOINING_AIMS",),
         ),
     },
 )

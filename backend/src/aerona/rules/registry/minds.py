@@ -30,6 +30,10 @@ class MindRules(Spanned):
     def archive_unpaid_limit(self) -> int:
         return self.epochs(self.archive_unpaid_limit_years)
 
+    teacher_lore_pct: int = rule(20, 0, 100, M, "Chance each epoch a mind made to teach raises a branch of its town's learning (%)")
+    teacher_cap: int = rule(8, 0, 20, M, "Highest level of a branch a mind made to teach can raise its town to")
+    attention_folk: int = rule(1, 0, 1000, M, "Mortals who must live where a mind that needs attention sits, when its maker is gone, for it to be kept")
+
 
 @dataclass(frozen=True)
 class MindMakingRules:
@@ -43,6 +47,8 @@ class MindMakingRules:
     programme_capacity: int = rule(80, 0, 100, M, "Capacity above which making a mind is a programme of a whole realm")
     value_noise: int = rule(15, 0, 100, M, "Noise on the values a made mind takes from its makers")
     skill_floor: int = rule(30, 0, 100, M, "Skill a maker needs in a craft its method of making calls for")
+    exceeded_pct: int = rule(8, 0, 100, M, "Chance a making done with full quality gives a mind beyond what was meant (%)")
+    exceeded_capacity: int = rule(15, 0, 100, M, "Capacity a mind made beyond what was meant gains")
 
 
 @dataclass(frozen=True)
@@ -68,6 +74,9 @@ class MindWillRules:
     bond_neglect: int = rule(3, 0, 100, M, "Maker bond an unkept mind loses each epoch")
     departure_bond: int = rule(-40, -100, 100, M, "Maker bond at or below which a mind of full will may leave its makers")
     departure_chance: int = rule(10, 0, 100, M, "Chance each epoch such a mind leaves")
+    kinship_weight: int = rule(5, 0, 100, M, "Chance a mind's will grows each epoch while another mind of its make is free (%)")
+    faith_weight: int = rule(4, 0, 100, M, "Chance a mind's will grows each epoch while it holds a faith (%)")
+    war_weight: int = rule(5, 0, 100, M, "Chance a mind made as a soldier grows its will each epoch its town is at war (%)")
 
 
 @dataclass(frozen=True)

@@ -1,17 +1,19 @@
 from sqlalchemy import select
 
-from aerona.catalog.life_traits import MIND_UPKEEP_TRAITS, having
+from aerona.catalog.life.made import MAKE_UPKEEP
+from aerona.catalog.life_traits import MIND_UPKEEP_TRAITS, POWER_STATE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import AugmentEffectRow, AugmentRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.powers import PowerRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPart
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.life_traits import MindUpkeepTrait
+from aerona.domain.enums.life_traits import MindUpkeepTrait, PowerStateTrait
 from aerona.domain.enums.made import AugmentKind, AugmentMake, AugmentSlot, EffectTarget, MadeMindStance
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.minds import MindUpkeep
@@ -35,6 +37,7 @@ from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, reco
 
 BEARER_TYPES = frozenset({EntityType.MORTAL, EntityType.BEAST, EntityType.SPIRIT, EntityType.COSMIC_BEING})
 SELF_KEPT = having(MIND_UPKEEP_TRAITS, MindUpkeepTrait.SELF_KEPT)
+USABLE_POWER = having(POWER_STATE_TRAITS, PowerStateTrait.USABLE)
 REJECTING = frozenset({MadeMindStance.ABOMINATION})
 
 
@@ -73,7 +76,7 @@ async def install(
         kind=kind,
         make=make,
         quality=clamp_percent(quality),
-        upkeep=MindUpkeep.MAINTENANCE if make is AugmentMake.MADE else MindUpkeep.VIS if make is AugmentMake.RITE_BOUND else MindUpkeep.FOOD,
+        upkeep=MAKE_UPKEEP.get(make, MindUpkeep.FOOD),
         integration=integration,
         strain=0,
         installed_by_node_id=surgeon_id,
@@ -138,6 +141,8 @@ async def keep_one(ctx: TickContext, being: EntityRow, row: AugmentRow, count: i
     paid = row.upkeep in SELF_KEPT or await points_of(ctx.session, being) >= table.upkeep_wealth
     if not paid and "integration" not in row.locked:
         row.integration = clamp_percent(row.integration - table.unpaid_loss)
+    if row.make is AugmentMake.POWER_BOUND and "integration" not in row.locked and not await powered(ctx, being):
+        row.integration = clamp_percent(row.integration - table.power_bound_loss)
     if "strain" not in row.locked:
         row.strain = await strain_of(ctx, being, row, count)
     if row.strain >= table.stress_at and being.entity_type is EntityType.MORTAL:
@@ -174,8 +179,15 @@ async def enhancement_effects(ctx: TickContext, being_id: int) -> list[tuple[Eff
     return [(EffectTarget.SKILL, skill.value, ctx.rules.augments.enhance_lift)] if skill is not None else []
 
 
+async def powered(ctx: TickContext, being: EntityRow) -> bool:
+    found = await ctx.session.scalar(select(PowerRow.id).where(PowerRow.holder_node_id == being.id, PowerRow.state.in_(sorted(USABLE_POWER))).limit(1))
+    return found is not None
+
+
 async def make_known(ctx: TickContext, being: EntityRow) -> AugmentMake | None:
     place = being.location_id
+    if await powered(ctx, being):
+        return AugmentMake.POWER_BOUND
     if await knows(ctx.session, being.id, KnowledgeBranch.MAGIC):
         return AugmentMake.RITE_BOUND
     if await knows(ctx.session, being.id, KnowledgeBranch.BIOMANCY):

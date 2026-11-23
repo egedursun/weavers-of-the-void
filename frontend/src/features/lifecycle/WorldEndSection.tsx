@@ -10,6 +10,7 @@ import {
   ForgeCard,
   RecordEditor,
 } from '@/features/cosmography/parts'
+import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
 import { wordOf } from '@/features/entity/affairs/labels'
@@ -26,6 +27,8 @@ import {
 
 type WorldType = components['schemas']['WorldType']
 
+const SOURCED = new Set<string>(['war', 'outer_hunger'])
+
 const FIELDS: readonly Field[] = [
   {
     key: 'state',
@@ -38,6 +41,12 @@ const FIELDS: readonly Field[] = [
     label: 'What ended it',
     kind: 'pick',
     table: table(WORLD_END_CAUSES),
+  },
+  {
+    key: 'source_node_id',
+    label: 'The war or the being that ended it',
+    kind: 'node',
+    types: ['outer_being', 'polity', 'settlement'],
   },
 ]
 
@@ -57,6 +66,7 @@ export function WorldEndSection({
   const [cause, setCause] =
     useState<keyof typeof WORLD_END_CAUSES>('divine_wrath')
   const [kind, setKind] = useState<string>('ordinary')
+  const [source, setSource] = useState<number | null>(null)
   const declaring = useEndsAction(
     'world_end:declare',
     (_: void) => ({
@@ -64,6 +74,7 @@ export function WorldEndSection({
       state,
       cause,
       new_type: state === 'transfigured' ? (kind as WorldType) : null,
+      source_id: SOURCED.has(cause) ? source : null,
     }),
     'The world comes to its end'
   )
@@ -138,7 +149,7 @@ export function WorldEndSection({
                   tone={WORLD_ENDS[ended].tone}
                   hint={
                     query.data.cause
-                      ? WORLD_END_CAUSES[query.data.cause].label
+                      ? `${WORLD_END_CAUSES[query.data.cause].label}${query.data.source ? `, by ${query.data.source.name}` : ''}`
                       : undefined
                   }
                 />
@@ -242,6 +253,22 @@ export function WorldEndSection({
                   setCause(next as keyof typeof WORLD_END_CAUSES)
                 }
               />
+              {SOURCED.has(cause) ? (
+                <EntityPicker
+                  types={['outer_being', 'polity', 'settlement']}
+                  value={source}
+                  onChange={setSource}
+                  placeholder='What ends it'
+                />
+              ) : (
+                <ChoiceField
+                  label='What ends it, named'
+                  value=''
+                  table={{}}
+                  blocked='Only a war or an outer hunger names what ends a world'
+                  onPick={() => undefined}
+                />
+              )}
               <ChoiceField
                 label='Kind it becomes if transfigured'
                 value={kind}

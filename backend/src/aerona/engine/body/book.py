@@ -38,7 +38,7 @@ from aerona.domain.enums.body import (
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.ecology import SpeciesClass
 from aerona.domain.enums.entity import EntityFlag, EntityType
-from aerona.domain.enums.made import EffectTarget
+from aerona.domain.enums.made import AugmentKind, EffectTarget
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
@@ -49,7 +49,7 @@ from aerona.engine.body.hits import Armour
 from aerona.engine.lore.arms import guard_of, held_profiles
 from aerona.engine.mortal.equipment import worn_coverage
 from aerona.engine.mortal.variants import strength, variants_by_id
-from aerona.engine.primitives.augment_bonus import bonus
+from aerona.engine.primitives.augment_bonus import bonus, kind_strength
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.queries import active_bonds, living_entity
@@ -374,6 +374,8 @@ async def armour_of(session: AsyncSession, rules: Rules, bearer: Bearer, communi
     if worn is not None:
         head = max(head, min(table.coverage_cap, worn[0] * table.armour_head_pct // PERCENT))
         torso = max(torso, min(table.coverage_cap, worn[1] * table.armour_torso_pct // PERCENT))
+    plated = await kind_strength(session, bearer.id, AugmentKind.ARMOUR) * rules.augments.plating_pct // PERCENT
+    torso, limbs = max(torso, min(table.coverage_cap, plated)), max(limbs, min(table.coverage_cap, plated))
     return Armour(head, min(table.coverage_cap, max(torso, guard)), limbs)
 
 

@@ -664,6 +664,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "collections",
     "gardens",
     "world_views",
+    "settle_modes",
     "networks",
     "intrusions",
     "surveillance",

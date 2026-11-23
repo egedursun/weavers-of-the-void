@@ -18,6 +18,7 @@ from aerona.domain.enums.records import StepAction as A
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.titles import TitleTenure
 from aerona.domain.enums.war import WarCause, WarEnding
+from aerona.domain.enums.world_view import WarTerrain
 
 ARMY = frozenset({T.ARMY})
 BATTLE_STEPS = frozenset(
@@ -127,6 +128,7 @@ BATTLE_FACTS = (
     enum("loser_tactic", Tactic),
     enum("terrain", TerrainKind, required=False),
     enum("weather", WeatherKind, required=False),
+    enum("ground", WarTerrain, required=False),
 )
 BATTLE_ROLES = (
     role(R.ACTOR),

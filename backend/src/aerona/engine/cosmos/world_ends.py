@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.life.cosmos import CAUSE_END, END_WORLD_WORLD_ENDS
+from aerona.catalog.life.cosmos import CAUSE_END, END_REMNANT, END_WORLD_WORLD_ENDS
 from aerona.catalog.life_traits import WORLD_END_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
@@ -15,8 +15,11 @@ from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.cosmography import RiftRow
+from aerona.db.tables.divine import BreachPointRow, OuterBeingProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.evolution import WorldCycleRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.mass_weapons import MassWeaponRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.world_ends import WorldEndRow
 from aerona.db.write_guard import held
@@ -25,7 +28,9 @@ from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.life_traits import WorldEndTrait
+from aerona.domain.enums.mass_weapons import MassReach
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.outer import OuterFate
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, SkyEventKind, StarType, WorldType
 from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
@@ -128,12 +133,14 @@ async def anchors_lost(ctx: TickContext, world: WorldRow) -> int:
     return lost
 
 
-async def end_world(ctx: TickContext, world: WorldRow, state: WorldEnd, cause: WorldEndCause, new_type: WorldType | None = None) -> WorldEndRow:
+async def end_world(
+    ctx: TickContext, world: WorldRow, state: WorldEnd, cause: WorldEndCause, new_type: WorldType | None = None, *, source_node_id: int | None = None
+) -> WorldEndRow:
     row = await ctx.session.get(WorldEndRow, world.id)
     if row is None:
         row = WorldEndRow(world_id=world.id, state=state, cause=cause, epoch=ctx.epoch, former_type=world.world_type, locked=[])
         ctx.session.add(row)
-    row.state, row.cause, row.epoch = state, cause, ctx.epoch
+    row.state, row.cause, row.epoch, row.source_node_id = state, cause, ctx.epoch, source_node_id
     repository = WorldRepository(ctx.session)
     if state in LIFELESS:
         row.lives_ended += await lives_end(ctx, world, state)
@@ -145,8 +152,9 @@ async def end_world(ctx: TickContext, world: WorldRow, state: WorldEnd, cause: W
             row.routes_closed += 1
     if state in GONE_FROM_SKY:
         await repository.set_discovery(world, Discovery.FORGOTTEN)
-    if state is E.SHATTERED:
-        world.world_type = WorldType.SHATTERED
+    remnant = END_REMNANT[state]
+    if remnant is not None:
+        world.world_type = remnant
     if state is E.TRANSFIGURED and new_type is not None:
         row.new_type = new_type
         world.world_type = new_type
@@ -155,7 +163,7 @@ async def end_world(ctx: TickContext, world: WorldRow, state: WorldEnd, cause: W
     await record(
         ctx,
         f"world_end.{state.value}",
-        roles={IncidentRole.SUBJECT: world.id},
+        roles={IncidentRole.SUBJECT: world.id, IncidentRole.ACTOR: source_node_id},
         facts={
             "end": state,
             "cause": cause,
@@ -240,6 +248,47 @@ async def forsaken(ctx: TickContext, world: WorldRow) -> bool:
     return living is None and once is not None and world.id != cosmos.primary_world_id
 
 
+async def runaway_cycle(ctx: TickContext, world: WorldRow) -> WorldCycleRow | None:
+    cycles = select(WorldCycleRow).where(WorldCycleRow.world_id == world.id, WorldCycleRow.stock >= ctx.rules.world_ends.runaway_stock)
+    return await ctx.session.scalar(cycles.order_by(WorldCycleRow.cycle).limit(1))
+
+
+@CAUSE_SIGN.on(WorldEndCause.RUNAWAY_CLIMATE)
+async def run_away(ctx: TickContext, world: WorldRow) -> bool:
+    return await runaway_cycle(ctx, world) is not None
+
+
+async def world_weapons(ctx: TickContext, world: WorldRow) -> list[MassWeaponRow]:
+    holders = select(EntityRow.id).where(EntityRow.world_id == world.id)
+    statement = select(MassWeaponRow).where(
+        MassWeaponRow.reach == MassReach.WORLD, MassWeaponRow.used_epoch == ctx.epoch, MassWeaponRow.holder_entity_id.in_(holders)
+    )
+    return list(await ctx.session.scalars(statement.order_by(MassWeaponRow.id)))
+
+
+@CAUSE_SIGN.on(WorldEndCause.WAR)
+async def unmade_by_war(ctx: TickContext, world: WorldRow) -> bool:
+    return len(await world_weapons(ctx, world)) >= ctx.rules.world_ends.war_weapons
+
+
+async def starving_being(ctx: TickContext, world: WorldRow) -> int | None:
+    table = ctx.rules.world_ends
+    breached = select(BreachPointRow.outer_entity_id).where(BreachPointRow.world_id == world.id)
+    statement = select(OuterBeingProfileRow.outer_entity_id).where(
+        OuterBeingProfileRow.outer_entity_id.in_(breached),
+        OuterBeingProfileRow.fate == OuterFate.ACTIVE,
+        OuterBeingProfileRow.reach >= table.hunger_reach,
+        OuterBeingProfileRow.unfed_epochs >= table.hunger_unfed_epochs,
+    )
+    found: int | None = await ctx.session.scalar(statement.order_by(OuterBeingProfileRow.outer_entity_id).limit(1))
+    return found
+
+
+@CAUSE_SIGN.on(WorldEndCause.OUTER_HUNGER)
+async def devoured(ctx: TickContext, world: WorldRow) -> bool:
+    return await starving_being(ctx, world) is not None
+
+
 @CAUSE_SIGN.on(WorldEndCause.DIVINE_WRATH)
 @CAUSE_SIGN.on(WorldEndCause.BELIEF_DRIFT)
 async def never_by_itself(_ctx: TickContext, _world: WorldRow) -> bool:
@@ -247,6 +296,21 @@ async def never_by_itself(_ctx: TickContext, _world: WorldRow) -> bool:
 
 
 CAUSE_SIGN.seal()
+
+
+async def source_of(ctx: TickContext, world: WorldRow, cause: WorldEndCause) -> int | None:
+    if cause is WorldEndCause.WAR:
+        weapons = await world_weapons(ctx, world)
+        return weapons[-1].holder_entity_id if weapons else None
+    if cause is WorldEndCause.OUTER_HUNGER:
+        return await starving_being(ctx, world)
+    return None
+
+
+def ending_of(ctx: TickContext, world: WorldRow, cause: WorldEndCause) -> WorldEnd:
+    if cause is WorldEndCause.RUNAWAY_CLIMATE and world.terrain_sea * PERCENT >= ctx.rules.world_ends.drowned_sea_pct:
+        return E.DROWNED
+    return CAUSE_END[cause]
 
 
 async def keep_world_ends(ctx: TickContext, tally: EndingTally) -> None:
@@ -257,7 +321,7 @@ async def keep_world_ends(ctx: TickContext, tally: EndingTally) -> None:
         for cause, sign in CAUSE_SIGN.items():
             if CAUSE_END[cause] is E.TRANSFIGURED or not await sign(ctx, world):
                 continue
-            await end_world(ctx, world, CAUSE_END[cause], cause)
+            await end_world(ctx, world, ending_of(ctx, world, cause), cause, source_node_id=await source_of(ctx, world, cause))
             tally.frozen += int(cause is WorldEndCause.STAR_DEATH)
             tally.ended += 1
             break

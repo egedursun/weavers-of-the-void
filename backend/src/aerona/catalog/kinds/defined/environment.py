@@ -80,6 +80,7 @@ TERRAIN_TRAIT = total(
             "Wooded",
             checked_by=(),
             used_by=(
+                "catalog.settle_modes.SETTLE_MODES",
                 "catalog.terrain.TERRAIN",
                 "engine.belonging.sanctuary.HIDING",
                 "engine.demography.peoples.COVERED",
@@ -139,6 +140,7 @@ TERRAIN_TRAIT = total(
             "Wet",
             checked_by=(),
             used_by=(
+                "catalog.settle_modes.SETTLE_MODES",
                 "catalog.terrain.TERRAIN",
                 "engine.belonging.sanctuary.HIDING",
                 "engine.demography.peoples.COVERED",
@@ -155,6 +157,7 @@ TERRAIN_TRAIT = total(
             checked_by=(),
             used_by=(
                 "catalog.dangers.HAZARDS",
+                "catalog.settle_modes.SETTLE_MODES",
                 "catalog.terrain.TERRAIN",
                 "engine.demography.peoples.STEPPE",
                 "engine.economy.extraction.DRYLANDS",
@@ -187,6 +190,7 @@ TERRAIN_TRAIT = total(
             checked_by=(),
             used_by=(
                 "catalog.dangers.HAZARDS",
+                "catalog.settle_modes.SETTLE_MODES",
                 "catalog.terrain.TERRAIN",
                 "engine.ecology.profiles.WATER",
                 "engine.economy.extraction.SEAS",
@@ -199,11 +203,15 @@ TERRAIN_TRAIT = total(
             "Watery",
             checked_by=("engine.couplings.carrion.rest_of", "engine.ecology.beast_ways.habitat_ways", "engine.nature.senses.in_water"),
             used_by=(
+                "catalog.settle_modes.SETTLE_MODES",
                 "catalog.terrain.TERRAIN",
                 "engine.demography.biology.WATERS",
                 "engine.environment.glaze.SURGED",
                 "engine.environment.profile.afloat",
                 "engine.environment.weather.warm_sea_draw",
+                "engine.operations.expeditions.ground_of",
+                "engine.operations.expeditions.wreck_ground",
+                "services.integrity.w52_agent_h.ground_fits",
             ),
         ),
         TerrainTrait.UNDERGROUND: Defined(
@@ -211,6 +219,7 @@ TERRAIN_TRAIT = total(
             checked_by=(),
             used_by=(
                 "catalog.terrain.TERRAIN",
+                "engine.environment.battleground.war_ground",
                 "engine.environment.geomorph.DRY_LANDS",
                 "engine.phases.geography.nature_of",
                 "engine.structures.types.CARVED_GROUND",

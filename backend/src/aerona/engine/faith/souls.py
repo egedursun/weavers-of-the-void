@@ -7,12 +7,14 @@ from aerona.catalog.life.faith import FEAR_OF_TORMENT_VALUE_AXISS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import CastingRow, RiteEffectRow
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, PossessionRow, ReincarnationRow, SpiritProfileRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import free_rows
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.bond import BondKind, BondState
@@ -29,11 +31,13 @@ from aerona.domain.enums.faith import (
     StratumValence,
     TenetKind,
 )
-from aerona.domain.enums.mind import TraitKind, TraitSource, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import MemoryKind, TraitKind, TraitSource, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import CreatureTrait, NaturalLaw
 from aerona.domain.enums.transform import TransformKind
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.conditions import condition_of, end_condition
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of as creature_traits
 from aerona.engine.cosmos.sanity import shift_sanity
@@ -49,7 +53,9 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.guards import warded_hosts
+from aerona.engine.sacred.places import enclosing
 from aerona.engine.transform.record import blocked, record_transformation
 
 LIVING_STATES = (AfterlifeState.WANDERING, AfterlifeState.JUDGED, AfterlifeState.IN_REALM)
@@ -201,11 +207,67 @@ async def cradle(ctx: TickContext, profile: SpiritProfileRow, home: EntityRow) -
     return Cradle(home, path)
 
 
+async def kind_to_bear(ctx: TickContext, spirit: EntityRow, home: EntityRow) -> EntityRow | None:
+    region = await enclosing(ctx.session, home, EntityType.REGION)
+    if region is None or not ctx.rng(f"rebirth.kind.{spirit.id}.{ctx.epoch}").chance(ctx.rules.rebirth.kind_path_pct):
+        return None
+    ranges = await ctx.session.scalars(
+        select(SpeciesRangeRow.species_entity_id)
+        .where(SpeciesRangeRow.region_entity_id == region.id, SpeciesRangeRow.abundance > 0)
+        .order_by(SpeciesRangeRow.abundance.desc(), SpeciesRangeRow.species_entity_id)
+    )
+    living = [species for species_id in ranges if (species := await living_entity(ctx.session, species_id)) is not None]
+    return living[0] if living else None
+
+
+async def reborn_as_kind(
+    ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow, home: EntityRow, *, gate: ReincarnationGate, species: EntityRow
+) -> EntityRow:
+    old = await ctx.session.get(EntityRow, profile.origin_mortal_id) if profile.origin_mortal_id is not None else None
+    folk = await people_of(ctx.session, home)
+    if folk is not None and not frozen(folk.id):
+        await remember(
+            ctx.session,
+            ctx.rules,
+            holder_id=folk.id,
+            subject_id=species.id,
+            kind=MemoryKind.GOODWILL,
+            magnitude=ctx.rules.rebirth.kind_reverence,
+            epoch=ctx.epoch,
+            note="one of their dead was born again as one of its kind",
+        )
+    ctx.session.add(
+        ReincarnationRow(
+            spirit_entity_id=spirit.id,
+            past_mortal_id=old.id if old is not None else None,
+            newborn_entity_id=None,
+            community_entity_id=home.id,
+            gate=gate,
+            path=RebirthPath.KIND,
+            species_entity_id=species.id,
+            memory_pct=ctx.rules.afterlife.reincarnation_memory_pct,
+            epoch=ctx.epoch,
+        )
+    )
+    await record(
+        ctx,
+        "soul.reborn",
+        roles={IncidentRole.PREDECESSOR: old.id if old is not None else spirit.id, IncidentRole.PRODUCT: species.id, IncidentRole.PLACE: home.id},
+        facts={"path": RebirthPath.KIND},
+    )
+    await leave_realm(ctx, profile, AfterlifeState.REBORN)
+    await retire_in(ctx, spirit, f"born again as one of the {species.name}", close_bonds=False)
+    return species
+
+
 async def rebirth(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow, home: EntityRow, gate: ReincarnationGate) -> EntityRow:
     table = ctx.rules.afterlife
     old = await ctx.session.get(EntityRow, profile.origin_mortal_id) if profile.origin_mortal_id is not None else None
     name = old.name if old is not None else spirit.name
     place = await cradle(ctx, profile, home)
+    species = await kind_to_bear(ctx, spirit, home) if place.path is RebirthPath.KIND else None
+    if species is not None:
+        return await reborn_as_kind(ctx, profile, spirit, home, gate=gate, species=species)
     plan = BirthPlan(name=name, subtype="reborn", role=MortalRole.COMMONER, body=f"Born again with the soul of {name}.")
     child = await born_mortal(ctx, place.community, plan)
     set_stats(child, age=0)
@@ -237,9 +299,16 @@ async def rebirth(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow
             newborn_entity_id=child.id,
             community_entity_id=place.community.id,
             gate=gate,
+            path=place.path,
             memory_pct=table.reincarnation_memory_pct,
             epoch=ctx.epoch,
         )
+    )
+    await record(
+        ctx,
+        "soul.reborn",
+        roles={IncidentRole.PREDECESSOR: old.id if old is not None else spirit.id, IncidentRole.PRODUCT: child.id, IncidentRole.PLACE: place.community.id},
+        facts={"path": place.path},
     )
     await leave_realm(ctx, profile, AfterlifeState.REBORN)
     await retire_in(ctx, spirit, f"born again as {child.name}", close_bonds=False)

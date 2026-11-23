@@ -162,6 +162,16 @@ class Technique(StrEnum):
     ROCKETRY = "rocketry"
     GENETIC_ENGINEERING = "genetic_engineering"
     ARTIFICIAL_MINDS = "artificial_minds"
+    ANATOMY = "anatomy"
+    CHRONOMETRY = "chronometry"
+    QUAKE_BUILDING = "quake_building"
+    SANITATION = "sanitation"
+    EVAPORATION_WORKS = "evaporation_works"
+    ROPEMAKING = "ropemaking"
+    LACQUER_WORK = "lacquer_work"
+    RUBBER_WORKING = "rubber_working"
+    POSITIONAL_RECKONING = "positional_reckoning"
+    PILOTAGE = "pilotage"
 
 
 class ResearchChooser(StrEnum):

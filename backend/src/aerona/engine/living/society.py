@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.living import STANCE_SIGN
 from aerona.db.tables.bonds import BondRow
@@ -31,11 +32,18 @@ def living_stance(values: dict[ValueAxis, int]) -> LivingCraftStance:
     craft = values.get(ValueAxis.KNOWLEDGE, 0) + values.get(ValueAxis.CRAFTSMANSHIP, 0)
     if order >= LEAN * 2 and order > craft:
         return LivingCraftStance.ABOMINATION
+    if craft >= LEAN * 2 and values.get(ValueAxis.LAW, 0) >= LEAN:
+        return LivingCraftStance.REGULATED
     if craft >= LEAN * 2:
         return LivingCraftStance.PERMITTED
     if values.get(ValueAxis.PIETY, 0) >= LEAN and values.get(ValueAxis.FAMILY, 0) >= LEAN:
         return LivingCraftStance.SACRED_DUTY
     return LivingCraftStance.SILENT
+
+
+async def regulated(session: AsyncSession, being: EntityRow | None) -> bool:
+    doctrine = await doctrine_here(session, being) if being is not None else None
+    return doctrine is not None and doctrine.living_craft_stance is LivingCraftStance.REGULATED
 
 
 async def doctrine_stances(ctx: TickContext) -> int:

@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.catalog.dominion import BARGAINING_MODES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cycles import GiftRow
@@ -14,6 +15,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cycles import GiftOccasion, GiftState, LongPlanKind, ManumissionPath
+from aerona.domain.enums.dominion import WorshipMode
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.structure import ConstructionStatus
@@ -21,6 +23,7 @@ from aerona.engine.cycles import control
 from aerona.engine.cycles.gifts import OBLIGING, give, offer, refuse, release_gift_debt, return_gift
 from aerona.engine.cycles.standing import node_name
 from aerona.engine.demography.society_control import set_corvee
+from aerona.engine.divine.standing import standing_row
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import living_entity
@@ -58,6 +61,7 @@ class RefuseGiftInput(ToolInput):
 
 class OfferingInput(ToolInput):
     value: int = Field(ge=1, le=MANY)
+    mode: WorshipMode | None = None
 
 
 class FreeBoundInput(ToolInput):
@@ -154,6 +158,12 @@ async def make_offering(call: MortalCall, args: OfferingInput) -> str:
         fail(MortalResult.OFFERING_REFUSED, why="you cannot afford it")
     await give(call.tick, call.me.id, god.id, args.value, GiftOccasion.OFFERING, pay=False)
     row = await offer(call.tick, home, god.id, args.value)
+    if args.mode is not None and not held(home, god.id):
+        standing = await standing_row(call.tick, home, god.id)
+        if "mode" not in standing.locked:
+            standing.mode = args.mode
+        if args.mode in BARGAINING_MODES:
+            await call.record("worship.bargain", roles={IncidentRole.SUBJECT: home, IncidentRole.PATRON: god.id}, facts={"answered": 0, "unanswered": 0})
     await call.record(
         "tools.mortal.make_offering",
         roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: god.id},

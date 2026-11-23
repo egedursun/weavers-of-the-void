@@ -1,8 +1,10 @@
 import {
-  type LucideIcon,
   Activity,
   Baby,
   Ban,
+  Biohazard,
+  Bomb,
+  Bone,
   BookOpen,
   BookOpenCheck,
   Brain,
@@ -13,9 +15,11 @@ import {
   CalendarX,
   Castle,
   Clapperboard,
+  CloudSun,
   Crown,
   DoorOpen,
   Drama,
+  Droplets,
   Eye,
   Feather,
   Flag,
@@ -24,6 +28,7 @@ import {
   Gavel,
   Gem,
   Ghost,
+  Hammer,
   Handshake,
   Heart,
   HeartCrack,
@@ -34,6 +39,7 @@ import {
   Layers,
   Library,
   Link2,
+  Lock,
   Map,
   MapPin,
   Megaphone,
@@ -68,9 +74,12 @@ import {
   Tent,
   TrendingUp,
   Trophy,
+  type LucideIcon,
   Users,
   Utensils,
   Vote,
+  Waves,
+  Waypoints,
   Wheat,
   Wind,
   Zap,
@@ -281,6 +290,18 @@ export const STORYTELLER_PROFILES: Record<
     tone: 'info',
     hint: 'Quiet stretches broken by a sharp peak at the end of each episode.',
   },
+  gentle: {
+    label: 'Gentle',
+    icon: Feather,
+    tone: 'success',
+    hint: 'Keeps tension low and leans toward recoveries',
+  },
+  seasonal: {
+    label: 'Seasonal',
+    icon: CloudSun,
+    tone: 'verdigris',
+    hint: 'Raises and lowers tension with the turn of the seasons',
+  },
 }
 
 export const TENSION_BANDS: Record<Schema['TensionBand'], Named> = {
@@ -317,6 +338,8 @@ export const ROOM_KINDS: Record<Schema['SiteRoomKind'], Named> = {
   house: { label: 'House', icon: Home, tone: 'success' },
   store: { label: 'Store', icon: Store, tone: 'gold' },
   heart: { label: 'Heart of the site', icon: Heart, tone: 'danger' },
+  cistern: { label: 'Cistern', icon: Droplets, tone: 'info' },
+  forge: { label: 'Forge', icon: Hammer, tone: 'warning' },
 }
 
 export const CHALLENGES: Record<Schema['SiteChallenge'], Named> = {
@@ -325,6 +348,8 @@ export const CHALLENGES: Record<Schema['SiteChallenge'], Named> = {
   guardian: { label: 'Guardian', icon: Shield, tone: 'danger' },
   puzzle: { label: 'Puzzle', icon: Puzzle, tone: 'info' },
   hazard: { label: 'Hazard', icon: ShieldAlert, tone: 'warning' },
+  seal: { label: 'Seal', icon: Lock, tone: 'gold' },
+  maze: { label: 'Maze', icon: Waypoints, tone: 'verdigris' },
 }
 
 export const CONTENT_KINDS: Record<Schema['RoomContentKind'], Named> = {
@@ -335,6 +360,7 @@ export const CONTENT_KINDS: Record<Schema['RoomContentKind'], Named> = {
   mind: { label: 'Mind', icon: Brain, tone: 'gold' },
   relic: { label: 'Relic', icon: Gem, tone: 'gold' },
   realm_gate: { label: 'Realm gate', icon: DoorOpen, tone: 'gold' },
+  records: { label: 'Records', icon: ScrollText, tone: 'verdigris' },
 }
 
 export const DIG_STAGES: Record<Schema['ExcavationStage'], Named> = {
@@ -358,6 +384,9 @@ export const DIG_RISKS: Record<Schema['ExcavationRisk'], Named> = {
   curse: { label: 'Curse', icon: Skull, tone: 'danger' },
   spirit: { label: 'Spirit', icon: Ghost, tone: 'warning' },
   collapse: { label: 'Collapse', icon: Mountain, tone: 'danger' },
+  flooding: { label: 'Flooding', icon: Waves, tone: 'info' },
+  gas: { label: 'Bad air', icon: Wind, tone: 'warning' },
+  disease: { label: 'Sealed sickness', icon: Biohazard, tone: 'danger' },
 }
 
 export const DIG_FINDS: Record<Schema['ExcavationFind'], Named> = {
@@ -368,6 +397,8 @@ export const DIG_FINDS: Record<Schema['ExcavationFind'], Named> = {
   regalia: { label: 'Regalia', icon: Crown, tone: 'gold' },
   route_map: { label: 'Map of a route', icon: Map, tone: 'success' },
   waking: { label: 'Sleepers woken', icon: Sunrise, tone: 'info' },
+  remains: { label: 'Remains', icon: Bone, tone: 'muted' },
+  records: { label: 'Records', icon: ScrollText, tone: 'verdigris' },
 }
 
 export const BATTLEFIELD_FEATURES: Record<Schema['BattlefieldFeature'], Named> =
@@ -375,6 +406,8 @@ export const BATTLEFIELD_FEATURES: Record<Schema['BattlefieldFeature'], Named> =
     mass_grave: { label: 'Mass grave', icon: Skull, tone: 'muted' },
     salvage_field: { label: 'Field of salvage', icon: Link2, tone: 'warning' },
     earthworks: { label: 'Old earthworks', icon: Shield, tone: 'info' },
+    ordnance: { label: 'Remnants of arms', icon: Bomb, tone: 'danger' },
+    memorial: { label: 'Memorial', icon: Landmark, tone: 'gold' },
   }
 
 export function table(

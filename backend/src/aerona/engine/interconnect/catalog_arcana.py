@@ -218,7 +218,7 @@ MYTHIC_MECHANICS = (
         templates=("mythic.geas_broken",),
         tables=(GeasRow.__tablename__,),
         exposure=Exposure.TOOL,
-        tools=("lay_geas", "lift_geas"),
+        tools=("lay_geas", "lift_geas", "lay_geas_on_kin", "swear_geas"),
         targets=("mortal", "son"),
         couplings=(
             Coupling(S.FAITH, "a kept geas wins its layer favour, awe and dominion", EdgeKind.FLOW, "geasa.favour"),

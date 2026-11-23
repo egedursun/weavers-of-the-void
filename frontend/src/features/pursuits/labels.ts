@@ -58,6 +58,13 @@ import {
   Trophy,
   Users,
   Wrench,
+  KeySquare,
+  Sprout,
+  CheckCircle2,
+  Clock,
+  Sun,
+  Moon,
+  CalendarDays,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -140,6 +147,7 @@ export const TOKENS: Record<Schema['CommandToken'], Named> = {
   bloodline: { label: 'A bloodline', icon: Heart, tone: 'danger' },
   office: { label: 'An office', icon: Crown, tone: 'verdigris' },
   network_key: { label: 'A network key', icon: Network, tone: 'success' },
+  true_name: { label: 'Its true name', icon: KeySquare, tone: 'gold' },
 }
 
 export const ORDERS: Record<Schema['OrderKind'], Named> = {
@@ -156,6 +164,8 @@ export const ORDERS: Record<Schema['OrderKind'], Named> = {
   hold_still: { label: 'Hold still', icon: PauseCircle, tone: 'muted' },
   follow: { label: 'Follow', icon: Footprints, tone: 'info' },
   forbid: { label: 'Forbid', icon: Ban, tone: 'danger' },
+  carry: { label: 'Carry', icon: Package, tone: 'success' },
+  tend: { label: 'Tend', icon: Sprout, tone: 'verdigris' },
 }
 
 export const CONDITIONS: Record<Schema['OrderCondition'], Named> = {
@@ -172,6 +182,23 @@ export const CONDITIONS: Record<Schema['OrderCondition'], Named> = {
     icon: KeyRound,
     tone: 'gold',
   },
+  until_done: {
+    label: 'Until its task is done',
+    icon: CheckCircle2,
+    tone: 'success',
+  },
+  at_set_times: { label: 'At set times', icon: Clock, tone: 'info' },
+}
+
+export const ORDER_TIMES: Record<Schema['OrderTime'], Named> = {
+  day: { label: 'By day', icon: Sun, tone: 'gold' },
+  night: { label: 'By night', icon: Moon, tone: 'info' },
+  season: {
+    label: 'In one season of the year',
+    icon: CalendarDays,
+    tone: 'verdigris',
+  },
+  sky_event: { label: 'At a sign in the sky', icon: Star, tone: 'warning' },
 }
 
 export const WILLS: Record<Schema['MindWill'], Named> = {

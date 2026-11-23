@@ -41,6 +41,7 @@ from aerona.engine.phase import Phase
     "table.passions",
     "table.pedagogy",
     "table.personality_values",
+    "table.polity_members",
     "table.routes",
     "table.socialization",
     "table.sons",

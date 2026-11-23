@@ -3,13 +3,16 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.arcana import DURATIONS, RANGES, RECHARGES, RITE_CONDITIONS, TARGETS
 from aerona.catalog.calendar_slots import SLOTS
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.core.grammar import spoken
+from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import (
     HolderTechniqueRow,
     IdeologyTenetRow,
+    ItemEnchantmentRow,
     ItemProfileRow,
     LanguageRegisterRow,
     LanguageStandingRow,
@@ -127,6 +130,14 @@ async def prophecy_lines(session: AsyncSession, named: set[int]) -> list[str]:
     return found
 
 
+def condition_words(grammar: RiteGrammarRow) -> str:
+    if grammar.condition is None:
+        return ""
+    detail = f" ({spoken(grammar.condition_act)})" if grammar.condition_act is not None else ""
+    when = f" (epoch {grammar.condition_epoch})" if grammar.condition_epoch is not None else ""
+    return f", {RITE_CONDITIONS[grammar.condition].label.lower()}{detail}{when}"
+
+
 async def lore_lines(session: AsyncSession, me: EntityRow, home: EntityRow, realm_id: int | None, house_id: int | None) -> LoreLines:
     held = await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == home.id))
     owned = await linked(session, me.id, [BondKind.OWNS])
@@ -139,9 +150,19 @@ async def lore_lines(session: AsyncSession, me: EntityRow, home: EntityRow, real
         if entity is None or entity.status is not EntityStatus.CANON:
             continue
         if rite is not None:
-            rites.append(f"{entity.name} ({spoken(rite.school)}, power {rite.power})")
+            grammar = await session.get(RiteGrammarRow, target)
+            shape = (
+                f", reaching {RANGES[grammar.range].label.lower()}, lasting {DURATIONS[grammar.duration].label.lower()}, "
+                f"touching {TARGETS[grammar.target].label.lower()}{condition_words(grammar)}"
+                if grammar is not None
+                else ""
+            )
+            rites.append(f"{entity.name} ({spoken(rite.school)}, power {rite.power}{shape})")
         if item is not None and (item.renown >= RENOWNED or item.regalia_of_entity_id is not None):
-            treasures.append(f"{entity.name} ({spoken(item.item_class)}, renown {item.renown})")
+            charges = await session.scalars(select(ItemEnchantmentRow.recharge).where(ItemEnchantmentRow.item_entity_id == target))
+            refills = sorted({RECHARGES[rule].label.lower() for rule in charges})
+            filled = f", refilled {', '.join(refills)}" if refills else ""
+            treasures.append(f"{entity.name} ({spoken(item.item_class)}, renown {item.renown}{filled})")
     named = {me.id, home.id, *([realm_id] if realm_id is not None else []), *([house_id] if house_id is not None else [])}
     return LoreLines(
         tongues=await tongue_lines(session, home.id),

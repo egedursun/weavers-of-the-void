@@ -7,10 +7,10 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | Axis | Count |
 |---|---|
 | table | 997 |
-| enum | 1575 |
-| step | 500 |
+| enum | 1579 |
+| step | 501 |
 | incident | 5 |
-| tool | 769 |
+| tool | 771 |
 | lever | 2284 |
 | screen | 1405 |
 | text | 195 |
@@ -1085,6 +1085,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.agrarian.RebuildPlan | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.arcana.LawSource | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.arcana.RechargeRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.arcana.RiteCondition | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.arcana.RiteEnd | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.arcana.SpellDuration | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.arcana.SpellForm | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.arcana.SpellRange | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1225,6 +1227,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.constructs.MindWill | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.constructs.OrderCondition | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.constructs.OrderKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.constructs.OrderTime | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.cosmography.ApocalypseVariant | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.cosmography.BeingAgenda | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.cosmography.BeingKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1424,6 +1427,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.divine.LawException | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.divine.LawScope | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.divine.OuterHunger | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine.PenanceDeed | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.divine.SonPunishment | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.divine.VotingRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.divine.WoundCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2991,6 +2995,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | securities | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | semantic_drift | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | servitors | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | settle_modes | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | settlement_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | settlement_laws | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | settlement_life | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -3319,6 +3324,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:launch_campaign | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:launch_expedition | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:lay_corvee | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:lay_geas_on_kin | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:lay_trade_policy | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:lead_expedition | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:lead_migration | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3496,6 +3502,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:suborn_garrison | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:suspend_treaty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:swear_fealty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:swear_geas | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:swear_kinship | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:swear_oath | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:swear_vengeance | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |

@@ -7,7 +7,7 @@ from aerona.catalog.dominion import ALIGNMENT_MANIFESTATIONS, MANIFESTATION_ORDE
 from aerona.catalog.kinds.belief_stances import BELIEF_STANCES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.divine import DivineStandingRow
-from aerona.db.tables.dominion import GodImageRow, MiracleRecordRow
+from aerona.db.tables.dominion import GodDesignRow, GodImageRow, MiracleRecordRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import FolkBeliefRow
@@ -153,10 +153,17 @@ async def shape(ctx: TickContext, god: God, row: GodImageRow, tally: ImageTally)
     )
 
 
-def manifestation_of(ctx: TickContext, alignment: PerceivedAlignment, *, wrath: float, mercy: float) -> Manifestation:
+def manifestation_of(ctx: TickContext, alignment: PerceivedAlignment, *, wrath: float, mercy: float, shown: int = PERCENT) -> Manifestation:
+    if shown < ctx.rules.dominion.veiled_below:
+        return Manifestation.VEILED
     if alignment is PerceivedAlignment.AMBIVALENT and wrath - mercy >= ctx.rules.god_images.stern_gap:
         return Manifestation.STERN
     return ALIGNMENT_MANIFESTATIONS[alignment]
+
+
+async def shown_of(ctx: TickContext, god_id: int) -> int:
+    design = await ctx.session.get(GodDesignRow, god_id)
+    return design.manifestation_strength if design is not None else PERCENT
 
 
 async def bear_image(ctx: TickContext, manifestation: Manifestation, believers: list[int]) -> None:
@@ -185,7 +192,9 @@ async def read_image(ctx: TickContext, god: God, tally: ImageTally) -> None:
         "believed_wrath": clamp_int(NEUTRAL + (fear - love) / 2, 0, PERCENT),
         "believed_mercy": clamp_int(NEUTRAL + (love - fear) / 2, 0, PERCENT),
         "believed_domain": await believed_domain(ctx, god),
-        "manifestation": manifestation_of(ctx, common[0], wrath=NEUTRAL + (fear - love) / 2, mercy=NEUTRAL + (love - fear) / 2),
+        "manifestation": manifestation_of(
+            ctx, common[0], wrath=NEUTRAL + (fear - love) / 2, mercy=NEUTRAL + (love - fear) / 2, shown=await shown_of(ctx, god.id)
+        ),
     }
     for key, value in values.items():
         if key not in row.locked:

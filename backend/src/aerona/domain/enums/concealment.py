@@ -11,6 +11,8 @@ class HiddenTruthKind(StrEnum):
     AWAKENING = "awakening"
     PROGRAMME = "programme"
     COSMIC = "cosmic"
+    LOCATION = "location"
+    LINEAGE = "lineage"
 
 
 class ConcealScope(StrEnum):
@@ -20,6 +22,8 @@ class ConcealScope(StrEnum):
     THE_UNINITIATED = "the_uninitiated"
     A_WORLD = "a_world"
     THE_COSMOS = "the_cosmos"
+    A_HOUSE = "a_house"
+    A_FAITH = "a_faith"
 
 
 class KeeperRole(StrEnum):
@@ -27,6 +31,8 @@ class KeeperRole(StrEnum):
     GUARDIAN = "guardian"
     MEMBER = "member"
     PATRON = "patron"
+    ARCHIVIST = "archivist"
+    GO_BETWEEN = "go_between"
 
 
 class SeekerAim(StrEnum):
@@ -35,6 +41,7 @@ class SeekerAim(StrEnum):
     DESTROY_THE_HIDDEN = "destroy_the_hidden"
     JOIN_THE_HIDDEN = "join_the_hidden"
     UNDERSTAND = "understand"
+    PROTECT = "protect"
 
 
 class TruthAttitude(StrEnum):
@@ -45,6 +52,8 @@ class TruthAttitude(StrEnum):
     REVERED = "revered"
     ACCEPTED = "accepted"
     EXPLOITED = "exploited"
+    PROTECTED = "protected"
+    BARGAINED = "bargained"
 
 
 class BreachCause(StrEnum):
@@ -57,6 +66,9 @@ class BreachCause(StrEnum):
     RECORD_LEAK = "record_leak"
     INTRUSION = "intrusion"
     REVELATION_BY_GOD = "revelation_by_god"
+    CHILDREN = "children"
+    DREAMS = "dreams"
+    EXCAVATION = "excavation"
 
 
 class KeeperResponse(StrEnum):
@@ -66,3 +78,5 @@ class KeeperResponse(StrEnum):
     DISCREDITING = "discrediting"
     LAW = "law"
     SILENCING = "silencing"
+    BARGAIN = "bargain"
+    RELOCATION = "relocation"

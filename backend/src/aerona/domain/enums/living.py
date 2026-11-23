@@ -11,6 +11,8 @@ class CultivationMethod(StrEnum):
     CLONING = "cloning"
     MERGING = "merging"
     INDUCTION = "induction"
+    HYBRIDISING = "hybridising"
+    WILD_RELEASE = "wild_release"
 
 
 class Metabolism(StrEnum):
@@ -21,6 +23,7 @@ class Metabolism(StrEnum):
     SOURCE = "source"
     PARTNER = "partner"
     DORMANT = "dormant"
+    HEAT = "heat"
 
 
 class GrowthStage(StrEnum):
@@ -38,6 +41,7 @@ class Fertility(StrEnum):
     BREEDS_TRUE = "breeds_true"
     BREEDS_WILD = "breeds_wild"
     NEEDS_MAKER = "needs_maker"
+    CROSSES_WILD = "crosses_wild"
 
 
 class HostPlacement(StrEnum):
@@ -46,6 +50,7 @@ class HostPlacement(StrEnum):
     ORGAN = "organ"
     NERVE = "nerve"
     MIND = "mind"
+    GUT = "gut"
 
 
 class HostRelation(StrEnum):
@@ -60,6 +65,7 @@ class LivingCraftStance(StrEnum):
     PERMITTED = "permitted"
     SACRED_DUTY = "sacred_duty"
     SILENT = "silent"
+    REGULATED = "regulated"
 
 
 class LineTrait(StrEnum):
@@ -82,6 +88,10 @@ class LineTrait(StrEnum):
     GIFT = "gift"
     NERVOUS_SYSTEM = "nervous_system"
     SAPIENCE = "sapience"
+    LIGHT_MAKING = "light_making"
+    INHERITED_LEARNING = "inherited_learning"
+    FILTERING = "filtering"
+    SECRETES_BUILDING = "secretes_building"
 
 
 class LineOutcome(StrEnum):
@@ -91,3 +101,4 @@ class LineOutcome(StrEnum):
     SIDE_EFFECTS = "side_effects"
     NON_VIABLE = "non_viable"
     ESCAPED = "escaped"
+    EXCEEDED = "exceeded"

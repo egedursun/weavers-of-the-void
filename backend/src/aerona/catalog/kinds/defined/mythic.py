@@ -1,19 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.mythic import GeasLayer, HeroquestBoon, OfficeChoice, QuestTrial
-
-GEAS_LAYER = total(
-    GeasLayer,
-    {
-        GeasLayer.SEER: Defined("A seer", checked_by=(), used_by=("engine.mythic.geasa.birth_geas",)),
-        GeasLayer.GOD: Defined(
-            "A god",
-            checked_by=(),
-            used_by=("db.tables.mythic.GeasRow", "engine.mythic.geasa.birth_geas", "services.player.mythic.GeasDraft", "tools.son.mythic.lay_geas"),
-        ),
-        GeasLayer.RITE: Defined("A rite", checked_by=(), used_by=("engine.lore.rites.bind_by_geas",)),
-    },
-)
+from aerona.domain.enums.mythic import HeroquestBoon, OfficeChoice
 
 HEROQUEST_BOON = total(
     HeroquestBoon,
@@ -45,17 +32,5 @@ OFFICE_CHOICE = total(
         ),
         OfficeChoice.CONQUEST: Defined("Taken by conquest", checked_by=(), used_by=("engine.mythic.offices.conquer_offices",)),
         OfficeChoice.MANTLING: Defined("Taken by mantling", checked_by=(), used_by=("engine.mythic.mantling.replace",)),
-    },
-)
-
-QUEST_TRIAL = total(
-    QuestTrial,
-    {
-        QuestTrial.SKILL: Defined("A trial of skill", checked_by=(), used_by=("catalog.mythic.ARCHETYPE_TRIALS", "catalog.mythic.trial_at")),
-        QuestTrial.PASSION: Defined("A trial of passion", checked_by=("engine.mythic.heroquests.trial_value",), used_by=("catalog.mythic.ARCHETYPE_TRIALS",)),
-        QuestTrial.CONVICTION: Defined(
-            "A trial of conviction", checked_by=("engine.mythic.heroquests.trial_value",), used_by=("catalog.mythic.ARCHETYPE_TRIALS",)
-        ),
-        QuestTrial.FAITH: Defined("A trial of faith", checked_by=("engine.mythic.heroquests.trial_value",), used_by=("catalog.mythic.ARCHETYPE_TRIALS",)),
     },
 )

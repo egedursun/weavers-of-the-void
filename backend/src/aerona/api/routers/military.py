@@ -245,6 +245,7 @@ async def battle_reports(session: AsyncSession, rows: list[BattleRow]) -> list[B
             siege_id=row.siege_id,
             weather=row.weather,
             terrain=row.terrain,
+            ground=row.ground,
             season_name=row.season_name,
             year=row.year,
             night=row.night,

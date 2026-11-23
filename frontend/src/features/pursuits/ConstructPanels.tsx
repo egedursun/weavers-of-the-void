@@ -31,6 +31,7 @@ import {
   BINDINGS,
   BUILD_ICON,
   CONDITIONS,
+  ORDER_TIMES,
   ORDERS,
   TOKENS,
   WILLS,
@@ -402,10 +403,10 @@ function OrderCard({ row, blocked }: { row: Order; blocked: string | null }) {
       icon={order.icon}
       tone={row.lapsed ? 'muted' : order.tone}
       title={`${row.priority}. ${order.label}`}
-      caption={`${condition.label}${row.until_epoch !== null ? ` · until epoch ${row.until_epoch}` : ''}${row.lapsed ? ' · lapsed' : ''}`}
+      caption={`${condition.label}${row.until_epoch !== null ? ` · until epoch ${row.until_epoch}` : ''}${row.times ? ` · ${ORDER_TIMES[row.times].label.toLowerCase()}` : ''}${row.lapsed ? ' · lapsed' : ''}`}
       removeLabel='Strike out the order'
       editTitle='Set the order'
-      note='Orders run in their priority each epoch, to the letter: a lost target leaves a literal construct working at nothing, while a loose one turns the order on its holder. An order kept while its maker lives lapses at the maker’s death, and one kept until an epoch lapses after it. Holding still stops every order below it.'
+      note='Orders run in their priority each epoch, to the letter: a lost target leaves a literal construct working at nothing, while a loose one turns the order on its holder. An order kept while its maker lives lapses at the maker’s death, one kept until an epoch lapses after it, and one kept until its task is done lapses the first epoch it finds nothing left to do. An order kept at set times runs only then. Holding still stops every order below it.'
       fields={[
         { key: 'kind', label: 'Order', kind: 'pick', table: table(ORDERS) },
         {
@@ -434,6 +435,12 @@ function OrderCard({ row, blocked }: { row: Order; blocked: string | null }) {
           kind: 'number',
           min: 0,
           max: MANY,
+        },
+        {
+          key: 'times',
+          label: 'Runs',
+          kind: 'pick',
+          table: table(ORDER_TIMES),
         },
         { key: 'lapsed', label: 'Lapsed', kind: 'pick', table: YES_NO },
       ]}
@@ -467,6 +474,7 @@ function OrderForge({
   const [priority, setPriority] = useState('1')
   const [condition, setCondition] = useState('always')
   const [until, setUntil] = useState('')
+  const [times, setTimes] = useState('')
   const writing = usePursuitsAction(
     'instruction_order:create',
     (_: void) => ({
@@ -476,6 +484,7 @@ function OrderForge({
       priority: Number(priority || '1'),
       condition: condition as Order['condition'],
       until_epoch: until === '' ? null : Number(until),
+      times: times === '' ? null : (times as NonNullable<Order['times']>),
     }),
     'A new order is written'
   )
@@ -483,7 +492,9 @@ function OrderForge({
     blocked ??
       (condition === 'until_date' && until === ''
         ? 'An order kept until an epoch needs that epoch'
-        : null),
+        : condition === 'at_set_times' && times === ''
+          ? 'An order kept at set times needs the times it runs'
+          : null),
     writing.isPending
   )
   return (
@@ -545,6 +556,14 @@ function OrderForge({
         placeholder='No end'
         blocked={blocked}
         onChange={setUntil}
+      />
+      <MindPicker
+        label='Runs'
+        value={times}
+        table={table(ORDER_TIMES)}
+        placeholder='At any time'
+        blocked={blocked}
+        onPick={setTimes}
       />
     </ForgeCard>
   )

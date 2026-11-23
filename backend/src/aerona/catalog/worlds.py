@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from aerona.catalog.gravity import GRAVITY
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, SkyEventKind, SurfaceLiquid, WorldType
 
@@ -219,7 +220,7 @@ WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
     )
 }
 
-GRAVITY_LABELS: dict[Gravity, str] = {Gravity.LOW: "Low", Gravity.NORMAL: "Normal", Gravity.HIGH: "High"}
+GRAVITY_LABELS: dict[Gravity, str] = {band: spec.label for band, spec in GRAVITY.items()}
 
 ATMOSPHERE_LABELS: dict[Atmosphere, str] = {
     Atmosphere.NONE: "None",

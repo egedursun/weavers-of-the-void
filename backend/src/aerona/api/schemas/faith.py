@@ -178,6 +178,8 @@ class SoulCard(ApiModel):
     stratum: StratumView | None
     judgements: list[JudgementView]
     reborn_as: NodeRef | None
+    reborn_kind: NodeRef | None
+    rebirth_path: RebirthPath | None
     gate: ReincarnationGate | None
     locked: list[str]
     seal_strength: int

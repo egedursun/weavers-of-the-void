@@ -78,5 +78,7 @@ AUGMENT_MEANINGS: Mapping[AugmentKind, MarkMeaning] = total(
         AugmentKind.SENSE: M.PROFESSION,
         AugmentKind.STORAGE: M.PROFESSION,
         AugmentKind.COSMETIC: M.BEAUTY,
+        AugmentKind.LIFE_SUPPORT: M.STATUS,
+        AugmentKind.ARMOUR: M.PROTECTION,
     },
 )

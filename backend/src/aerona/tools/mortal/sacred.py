@@ -12,10 +12,11 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import MortalRole
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.sacred import DivinationQuestion, MysticState, PetitionKind
+from aerona.domain.enums.sacred import DivinationKind, DivinationQuestion, MysticState, PetitionKind
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.sacred import control
+from aerona.engine.sacred.foresight import court_systems
 from aerona.engine.sacred.mysteries import LIVING_MOVEMENT, MysteryTally, answering_god, become_mystic, open_to_visions, see_vision
 from aerona.engine.sacred.places import realm_ruled_by, town_of
 from aerona.prompts import MortalToolId
@@ -29,6 +30,7 @@ from aerona.tools.framework.validation import fail
 class PetitionSpiritInput(ToolInput):
     spirit_id: int
     kind: PetitionKind
+    target_id: int | None = None
 
 
 class OfferToSpiritInput(ToolInput):
@@ -41,6 +43,7 @@ class SeekVisionInput(ToolInput):
 
 class ConsultDivinerInput(ToolInput):
     question: DivinationQuestion
+    method: DivinationKind | None = None
 
 
 class PreachEndTimeInput(ToolInput):
@@ -67,11 +70,15 @@ async def petition_spirit(call: MortalCall, args: PetitionSpiritInput) -> str:
             fail(MortalResult.PETITION_DECLINED, why="no spirit under that office has wronged your town")
         defendant = int(offended)
     try:
-        row = await control.lodge_petition(call.tick, call.me.id, spirit.id, args.kind, defendant_id=defendant, bribe=0)
+        row = await control.lodge_petition(call.tick, call.me.id, spirit.id, args.kind, defendant_id=defendant, bribe=0, target_id=args.target_id)
     except ValidationFailedError as error:
         fail(MortalResult.PETITION_DECLINED, why=str(error).rstrip("."))
     call.target(spirit.id)
-    await call.record("tools.mortal.petition_spirit", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: spirit.id}, kind=ChronicleKind.PRAYER)
+    await call.record(
+        "tools.mortal.petition_spirit",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: spirit.id, IncidentRole.TARGET: row.target_node_id},
+        kind=ChronicleKind.PRAYER,
+    )
     return result(MortalResult.PETITION_FILED, spirit=spirit.name, kind=spoken(args.kind), due=row.due_epoch)
 
 
@@ -109,8 +116,13 @@ async def consult_diviner(call: MortalCall, args: ConsultDivinerInput) -> str:
     realm_id = await realm_ruled_by(call.session, call.me.id)
     if realm_id is None:
         fail(MortalResult.OMENS_DECLINED, why="only a ruler keeps court diviners")
+    systems = [system for system in await court_systems(call.tick, realm_id) if args.method is None or system.kind is args.method]
+    if args.method is not None and not systems:
+        fail(MortalResult.OMENS_DECLINED, why=f"no diviner at your court reads by {spoken(args.method)}")
     try:
-        row = await control.read_omens(call.tick, realm_id, args.question, verdict=None, swayed_by=None, system_id=None)
+        row = await control.read_omens(
+            call.tick, realm_id, args.question, verdict=None, swayed_by=None, system_id=systems[0].id if args.method is not None else None
+        )
     except ValidationFailedError as error:
         fail(MortalResult.OMENS_DECLINED, why=str(error).rstrip("."))
     call.target(realm_id)

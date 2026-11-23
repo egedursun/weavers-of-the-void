@@ -22,6 +22,7 @@ import {
   Section,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { REMNANT_KIND } from '@/features/arsenal/labels'
 import {
   Chip,
   Facts,
@@ -840,6 +841,14 @@ function FeatureRow({
       }
     >
       <Meter label='Strength' value={feature.strength} tone='warning' />
+      {feature.remnant_id !== null && feature.remnant_kind !== null ? (
+        <Meter
+          label={`${REMNANT_KIND[feature.remnant_kind].label} cleared from the field`}
+          value={feature.remnant_cleared ?? 0}
+          tone='success'
+          icon={REMNANT_KIND[feature.remnant_kind].icon}
+        />
+      ) : null}
       <RecordEditor
         title='Reshape this mark'
         note='A strength you set is held until you release it.'

@@ -67,6 +67,8 @@ class EconomicOrderRules(Spanned):
     def transition_stage_epochs(self) -> int:
         return self.epochs(self.transition_stage_years)
 
+    lottery_calm: int = rule(3, 0, 100, E, "Unrest each town of a realm that shares out its stores by lot loses each epoch, as quarrels over rank fade")
+
 
 @dataclass(frozen=True)
 class PuttingOutRules:

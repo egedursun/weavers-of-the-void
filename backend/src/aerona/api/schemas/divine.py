@@ -14,6 +14,7 @@ from aerona.domain.enums.divine import (
     LawException,
     LawScope,
     OuterHunger,
+    PenanceDeed,
     SonPunishment,
     VotingRule,
     WoundCause,
@@ -174,6 +175,7 @@ class CouncilRulingView(ApiModel):
     world: NodeRef | None = None
     school: MagicSchool | None = None
     punishment: SonPunishment | None = None
+    penance_deed: PenanceDeed | None = None
     voting_rule: VotingRule | None = None
     epoch: int
     until_epoch: int | None = None
@@ -200,6 +202,7 @@ class NaturalLawProfileView(ApiModel):
     stability: int
     author: NodeRef | None = None
     exception: LawException
+    exempt_kind: NodeRef | None = None
     contested: bool
     updated_epoch: int
     drafted: bool = False

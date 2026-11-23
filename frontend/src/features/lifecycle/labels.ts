@@ -41,6 +41,8 @@ import {
   type LucideIcon,
   Undo2,
   Zap,
+  Waves,
+  Thermometer,
 } from 'lucide-react'
 import { type components, worldTypeValues } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -102,6 +104,9 @@ export const WORLD_ENDS: Record<Schema['WorldEnd'], Named> = {
   sunk_into_void: { label: 'Sunk into the void', icon: Orbit, tone: 'muted' },
   forgotten: { label: 'Forgotten', icon: Ghost, tone: 'muted' },
   transfigured: { label: 'Transfigured', icon: Sparkles, tone: 'gold' },
+  drowned: { label: 'Drowned under its seas', icon: Waves, tone: 'info' },
+  burned: { label: 'Burned barren', icon: Flame, tone: 'danger' },
+  devoured: { label: 'Devoured from outside', icon: Skull, tone: 'danger' },
 }
 
 export const WORLD_END_CAUSES: Record<Schema['WorldEndCause'], Named> = {
@@ -112,6 +117,13 @@ export const WORLD_END_CAUSES: Record<Schema['WorldEndCause'], Named> = {
   void: { label: 'The void', icon: Orbit, tone: 'muted' },
   oblivion: { label: 'Oblivion', icon: Ghost, tone: 'muted' },
   belief_drift: { label: 'Belief drifted', icon: Sparkles, tone: 'gold' },
+  runaway_climate: {
+    label: 'Its climate ran away',
+    icon: Thermometer,
+    tone: 'warning',
+  },
+  war: { label: 'A war unmade it', icon: Swords, tone: 'danger' },
+  outer_hunger: { label: 'An outer hunger', icon: Skull, tone: 'danger' },
 }
 
 export const FOSSIL_SOURCES: Record<Schema['FossilSource'], Named> = {

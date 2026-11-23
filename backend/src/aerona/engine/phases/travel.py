@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.civilization import unlocked
+from aerona.catalog.life.cosmos import COLONIES
 from aerona.catalog.life.phases import ARRIVE_JOURNEY_INTENTS, ARRIVE_JOURNEY_INTENTS_2, INTENT_CAPABILITY, LOST_REASONS, SEND_SPONTANEOUSLY_JOURNEY_INTENTS
 from aerona.catalog.travel import TRAVEL_METHODS, medium_of
 from aerona.catalog.worlds import HARSH_ATMOSPHERES
@@ -18,16 +19,20 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.demography import PeopleBiologyRow
+from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.civilization import TierCapability
+from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect
+from aerona.domain.enums.made import AugmentKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
@@ -84,6 +89,8 @@ from aerona.engine.phases.culture_exchange import cultural_contact
 from aerona.engine.phases.exploration import LandSearch, find_land
 from aerona.engine.phases.sky import time_gap_years
 from aerona.engine.polity.accords import Clause, sign
+from aerona.engine.primitives.augment_bonus import kind_strength
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.knowledge import KnowledgeMap, knows
 from aerona.engine.primitives.manual import manual_context
@@ -92,11 +99,11 @@ from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, canon, connect, count_communities, spoken_language
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
-from aerona.engine.primitives.stats import headcount, put_stat, shift_bounded, stat, stat_or
+from aerona.engine.primitives.stats import headcount, move_stat, put_stat, shift_bounded, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.recording.terms import explaining
 from aerona.engine.services.community_relations import change_relation
-from aerona.engine.services.war import declare_war
+from aerona.engine.services.war import declare_war, ongoing_war_count
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
@@ -311,12 +318,28 @@ async def _travelling(session: AsyncSession) -> set[int]:
     return set(await session.scalars(select(JourneyRow.traveller_entity_id).where(JourneyRow.status.in_(list(LIVE_JOURNEYS)))))
 
 
-def choose_intent(rules: Rules, rng: SeededRandom, tier: int, target_empty: bool, *, holy_site: bool = False, warlike: bool = False) -> JourneyIntent:
+def choose_intent(
+    rules: Rules,
+    rng: SeededRandom,
+    tier: int,
+    target_empty: bool,
+    *,
+    holy_site: bool = False,
+    warlike: bool = False,
+    unruly: bool = False,
+    beset: bool = False,
+) -> JourneyIntent:
     travel = rules.travel
-    if not target_empty and holy_site and rng.chance(travel.pilgrimage_intent_chance):
-        return JourneyIntent.PILGRIMAGE
-    if not target_empty and warlike and rng.chance(travel.conquest_intent_chance):
-        return JourneyIntent.CONQUEST
+    drives = (
+        (not target_empty and holy_site, travel.pilgrimage_intent_chance, JourneyIntent.PILGRIMAGE),
+        (not target_empty and warlike, travel.conquest_intent_chance, JourneyIntent.CONQUEST),
+        (unruly, travel.exile_intent_chance, JourneyIntent.EXILE),
+        (beset, travel.flight_intent_chance, JourneyIntent.FLIGHT),
+        (not target_empty, travel.embassy_intent_chance, JourneyIntent.EMBASSY),
+    )
+    for driven, chance, intent in drives:
+        if driven and rng.chance(chance):
+            return intent
     colony_allowed = unlocked(rules, tier, TierCapability.COLONY)
     if colony_allowed and (target_empty or rng.chance(travel.colony_intent_chance)):
         return JourneyIntent.COLONY
@@ -365,6 +388,14 @@ async def planned(ctx: TickContext, community: EntityRow, target: int, intent: J
     return intent
 
 
+async def sick_at_home(ctx: TickContext, community: EntityRow) -> bool:
+    region = (await RegionAtlas.load(ctx.session)).top_region(community.id)
+    if region is None:
+        return False
+    found = await ctx.session.scalar(select(OutbreakRow.id).where(OutbreakRow.region_entity_id == region, OutbreakRow.status == OutbreakStatus.ACTIVE).limit(1))
+    return found is not None
+
+
 async def _send_spontaneously(ctx: TickContext, book: RouteBook, community: EntityRow, chance: int, rng: SeededRandom) -> bool:
     if held(community.id, community.world_id):
         return False
@@ -381,8 +412,18 @@ async def _send_spontaneously(ctx: TickContext, book: RouteBook, community: Enti
     target = other_end(route, community.world_id)
     warlike = max(stat_or(community, "martiality", 0), stat_or(community, "defense", 0)) >= ctx.rules.travel.conquest_min_martiality
     empty = await _world_population(ctx.session, target) == 0
+    profile = await ctx.session.get(SettlementProfileRow, community.id)
+    unruly = profile is not None and profile.unrest >= ctx.rules.travel.exile_unrest
+    beset = await ongoing_war_count(ctx.session, community.id) > 0 or await sick_at_home(ctx, community)
     intent = choose_intent(
-        ctx.rules, rng, community.civ_tier or 0, empty, holy_site=await has_holy_site(ctx.session, community, target, ctx.rules), warlike=warlike
+        ctx.rules,
+        rng,
+        community.civ_tier or 0,
+        empty,
+        holy_site=await has_holy_site(ctx.session, community, target, ctx.rules),
+        warlike=warlike,
+        unruly=unruly,
+        beset=beset,
     )
     intent = await planned(ctx, community, target, intent)
     settling = intent in SEND_SPONTANEOUSLY_JOURNEY_INTENTS
@@ -778,7 +819,9 @@ async def _found_colony(ctx: TickContext, arrival: Arrival) -> EntityRow | None:
     travel = ctx.rules.travel
     journey, traveller = arrival.journey, arrival.traveller
     conquest = journey.intent is JourneyIntent.CONQUEST
-    if arrival.target.atmosphere in HARSH_ATMOSPHERES and not await knows(ctx.session, traveller.id, KnowledgeBranch.VOID_LIVING):
+    founded = COLONIES[journey.intent]
+    supported = await kind_strength(ctx.session, traveller.id, AugmentKind.LIFE_SUPPORT) > 0
+    if arrival.target.atmosphere in HARSH_ATMOSPHERES and not supported and not await knows(ctx.session, traveller.id, KnowledgeBranch.VOID_LIVING):
         await record(
             ctx,
             "travel.colony_failed",
@@ -791,7 +834,7 @@ async def _found_colony(ctx: TickContext, arrival: Arrival) -> EntityRow | None:
     biology = await ctx.session.get(PeopleBiologyRow, people.id) if people is not None else None
     with explaining():
         fit = await habitability(ctx.session, ctx.rules, biology, arrival.target.id)
-        strain = await world_excess(ctx.session, people.id, arrival.target) if people is not None else 0
+        strain = await world_excess(ctx.session, ctx.rules, people.id, arrival.target, bearer_id=traveller.id) if people is not None else 0
         unfit = fit < ctx.rules.life_classes.settle_floor or strain >= ctx.rules.body_systems.system_loss_capacity_pct
         if unfit:
             await record(
@@ -804,7 +847,7 @@ async def _found_colony(ctx: TickContext, arrival: Arrival) -> EntityRow | None:
     if unfit:
         return None
     derived = None if journey.memory_lost else await Namer(ctx.session, ctx.rules).from_speaker(traveller.id, seed_of("colony", journey.id), NameKind.PLACE)
-    kind = "conquest outpost" if conquest else "colony"
+    kind = founded.kind
     travellers_counted = several(journey.population, "traveller", "travellers")
     colony = await open_record(
         ctx.session,
@@ -827,15 +870,16 @@ async def _found_colony(ctx: TickContext, arrival: Arrival) -> EntityRow | None:
             flags=(EntityFlag.COLONY, EntityFlag.NAME_FROM_LANGUAGE) if derived else (EntityFlag.COLONY,),
         ),
     )
-    await _bind_colony(ctx, arrival, colony)
+    await _bind_colony(ctx, arrival, colony, ruled=founded.ruled)
     return colony
 
 
-async def _bind_colony(ctx: TickContext, arrival: Arrival, colony: EntityRow) -> None:
+async def _bind_colony(ctx: TickContext, arrival: Arrival, colony: EntityRow, *, ruled: bool = True) -> None:
     bonds = BondRepository(ctx.session)
     traveller = arrival.traveller
     await bonds.connect(BondDraft(colony.id, traveller.id, BondKind.DESCENDS_FROM, ctx.epoch, "its colony"))
-    await bonds.connect(BondDraft(traveller.id, colony.id, BondKind.RULES, ctx.epoch, "colony beyond the worlds"))
+    if ruled:
+        await bonds.connect(BondDraft(traveller.id, colony.id, BondKind.RULES, ctx.epoch, "colony beyond the worlds"))
     if not arrival.journey.memory_lost:
         language = await spoken_language(ctx.session, traveller.id)
         if language is not None:
@@ -879,6 +923,8 @@ async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> Ste
         await change_relation(ctx, traveller.id, native.id, -travel.invasion_relation_loss, MemoryKind.FOUGHT_US, note="invasion")
         return StepDraft(StepAction.MEET, actor=traveller.id, target=native.id, outcome=StepOutcome.REFUSED if declared else StepOutcome.PARTIAL)
     alive = traveller.status is EntityStatus.CANON
+    if alive and journey.intent is JourneyIntent.EMBASSY:
+        return await _embassy(ctx, arrival, native)
     if alive and (journey.intent is JourneyIntent.TRADE or rng.chance(travel.contact_trade_chance)):
         bonds = BondRepository(ctx.session)
         await bonds.connect(BondDraft(traveller.id, native.id, BondKind.TRADES_WITH, ctx.epoch, f"interworld trade ({arrival.target.name})"))
@@ -915,6 +961,32 @@ async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> Ste
         )
     await change_relation(ctx, traveller.id, native.id, -travel.uneasy_relation_loss, MemoryKind.ILL_WILL, note="uneasy first contact")
     return StepDraft(StepAction.MEET, actor=traveller.id, target=native.id, outcome=StepOutcome.DELAYED)
+
+
+async def _embassy(ctx: TickContext, arrival: Arrival, native: EntityRow) -> StepDraft:
+    travel = ctx.rules.travel
+    traveller = arrival.traveller
+    await change_relation(ctx, traveller.id, native.id, travel.embassy_relation, MemoryKind.TRADED_WITH, note="an embassy across the worlds")
+    gift = 0
+    if not held(native.id, traveller.id):
+        gift = move_stat(traveller, native, "prosperity", travel.embassy_gift_prosperity)
+    exchanged = await cultural_contact(ctx, traveller, native, first_contact=True)
+    await record(
+        ctx,
+        "travel.embassy_received",
+        roles={IncidentRole.ACTOR: traveller.id, IncidentRole.TARGET: native.id, IncidentRole.DESTINATION: arrival.target.id},
+        facts={"gift": gift, "relation": travel.embassy_relation},
+        place=arrival.region.id,
+        cause=arrival.journey.incident_id,
+    )
+    return StepDraft(
+        StepAction.MEET,
+        actor=traveller.id,
+        target=native.id,
+        amount=exchanged or None,
+        unit=FactUnit.COUNT if exchanged else None,
+        outcome=StepOutcome.ACCEPTED,
+    )
 
 
 async def first_contact(ctx: TickContext, arrival: Arrival) -> None:
@@ -1043,6 +1115,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "settlement.piety",
     "settlement.population",
     "species.danger",
+    "table.augments",
     "table.beast_profiles",
     "table.body_systems",
     "table.bonds",
@@ -1070,6 +1143,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.geasa",
     "table.goods_flows",
     "table.held_identities",
+    "table.herds",
     "table.holder_levels",
     "table.incident_participants",
     "table.incident_steps",

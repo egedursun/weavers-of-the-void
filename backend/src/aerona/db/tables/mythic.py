@@ -15,6 +15,7 @@ from aerona.domain.enums.mythic import (
     MantlingState,
     MythicRealm,
     OfficeChoice,
+    QuestTrial,
     ServitorOrigin,
     ServitorRole,
 )
@@ -31,12 +32,13 @@ HEROQUEST_FIELDS = (
     "deviated",
     "state",
     "boon",
+    "trial",
     "interference",
     "start_epoch",
     "end_epoch",
 )
 MANTLING_FIELDS = ("god_node_id", "deeds", "worship", "progress", "state", "blocked", "notified")
-SERVITOR_FIELDS = ("god_node_id", "origin", "role", "post_entity_id", "loyalty", "fallen_to_node_id")
+SERVITOR_FIELDS = ("god_node_id", "origin", "role", "post_entity_id", "loyalty", "fallen_to_node_id", "former_god_node_id")
 GEAS_FIELDS = ("layer_node_id", "layer", "mode", "act", "state", "favour", "laid_epoch", "last_kept_epoch", "broken_epoch")
 OFFICE_FIELDS = ("holder_node_id", "chosen_by", "neglect", "duty", "office_kind_id")
 
@@ -66,6 +68,7 @@ class HeroquestRow(Base):
     deviated: Mapped[bool] = mapped_column(default=False)
     state: Mapped[HeroquestState] = mapped_column(enum_type(HeroquestState, "state"), default=HeroquestState.QUESTING)
     boon: Mapped[HeroquestBoon | None] = mapped_column(enum_type(HeroquestBoon, "boon"))
+    trial: Mapped[QuestTrial | None] = mapped_column(enum_type(QuestTrial, "trial"))
     interference: Mapped[int] = mapped_column(default=0)
     collection_id: Mapped[int | None] = mapped_column(ForeignKey("incident_collections.id", ondelete="SET NULL"))
     start_epoch: Mapped[int] = mapped_column(default=0)
@@ -113,6 +116,7 @@ class ServitorRow(Base):
     post_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     loyalty: Mapped[int] = mapped_column(default=80)
     fallen_to_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    former_god_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     since_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

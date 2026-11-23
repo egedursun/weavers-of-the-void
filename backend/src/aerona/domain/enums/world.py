@@ -46,9 +46,11 @@ class SurfaceLiquid(StrEnum):
 
 
 class Gravity(StrEnum):
+    MICRO = "micro"
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
+    CRUSHING = "crushing"
 
 
 class Atmosphere(StrEnum):
@@ -160,6 +162,7 @@ class CosmosShape(StrEnum):
 
 class TechnologyEra(StrEnum):
     STONE = "stone"
+    COPPER = "copper"
     BRONZE = "bronze"
     IRON = "iron"
     MEDIEVAL = "medieval"

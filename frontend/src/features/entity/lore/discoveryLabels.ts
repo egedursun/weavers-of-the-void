@@ -1,43 +1,55 @@
 import {
-  TrendingUp,
-  TrendingDown,
-  Shuffle,
-  Pause,
-  Network,
-  GitBranch,
-  Cog,
-  Bot,
-  Brain,
-  CircleAlert,
-  Eye,
-  HeartPulse,
-  Landmark,
-  Leaf,
-  Microscope,
-  Orbit,
-  Users,
   Biohazard,
   Bomb,
+  Bone,
+  Bot,
+  Brain,
   Building2,
   Circle,
+  CircleAlert,
+  Clover,
+  Cog,
   Coins,
   Compass,
   Crosshair,
+  Eye,
   Flame,
   FlaskRound,
+  Footprints,
+  Gavel,
   Gem,
   Ghost,
+  GitBranch,
   GraduationCap,
   Hammer,
+  HeartPulse,
   KeyRound,
+  Landmark,
+  Languages,
+  Leaf,
+  Megaphone,
+  Microscope,
   Moon,
+  Network,
+  Orbit,
   Palette,
+  Pause,
   PawPrint,
+  Pill,
+  ScrollText,
+  Search,
   Ship,
+  Shuffle,
   Sparkles,
+  Stethoscope,
   Sun,
+  Sunrise,
   Swords,
+  TrendingDown,
+  TrendingUp,
   Trophy,
+  Users,
+  Wrench,
   Zap,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
@@ -53,6 +65,10 @@ export const GREAT_FIELDS: Record<Schemas['GreatField'], LoreNamed> = {
   engineer: { label: 'Great engineer', icon: Hammer, tone: 'warning' },
   merchant: { label: 'Great merchant', icon: Coins, tone: 'gold' },
   explorer: { label: 'Great explorer', icon: Compass, tone: 'success' },
+  healer: { label: 'Great healer', icon: Stethoscope, tone: 'success' },
+  lawgiver: { label: 'Great lawgiver', icon: Gavel, tone: 'gold' },
+  teacher: { label: 'Great teacher', icon: GraduationCap, tone: 'info' },
+  reformer: { label: 'Great reformer', icon: Megaphone, tone: 'warning' },
 }
 
 export const INCIDENT_KINDS: Record<Schemas['ResearchIncident'], LoreNamed> = {
@@ -72,6 +88,8 @@ export const INCIDENT_KINDS: Record<Schemas['ResearchIncident'], LoreNamed> = {
     icon: Ghost,
     tone: 'verdigris',
   },
+  stolen: { label: 'Work stolen', icon: Search, tone: 'danger' },
+  chance_find: { label: 'Found by chance', icon: Clover, tone: 'success' },
 }
 
 export const BLUEPRINT_LOOK: Record<Schemas['BlueprintKind'], LoreNamed> = {
@@ -92,6 +110,8 @@ export const BLUEPRINT_LOOK: Record<Schemas['BlueprintKind'], LoreNamed> = {
   line: { label: 'Line', icon: GitBranch, tone: 'info' },
   network: { label: 'Network', icon: Network, tone: 'info' },
   rite_pattern: { label: 'Rite pattern', icon: Sparkles, tone: 'info' },
+  process: { label: 'Way of working', icon: Wrench, tone: 'gold' },
+  remedy: { label: 'Remedy', icon: Pill, tone: 'success' },
 }
 
 export const AGE_LOOK: Record<Schemas['AgeKind'], LoreNamed> = {
@@ -103,6 +123,8 @@ export const AGE_LOOK: Record<Schemas['AgeKind'], LoreNamed> = {
   declining: { label: 'Declining', icon: TrendingDown, tone: 'muted' },
   transforming: { label: 'Transforming', icon: Shuffle, tone: 'muted' },
   stagnant: { label: 'Stagnant', icon: Pause, tone: 'muted' },
+  wandering: { label: 'Wandering', icon: Footprints, tone: 'info' },
+  reborn: { label: 'Reborn', icon: Sunrise, tone: 'success' },
 }
 
 export const THEORY_DOMAINS: Record<Schemas['TheoryDomain'], LoreNamed> = {
@@ -114,6 +136,8 @@ export const THEORY_DOMAINS: Record<Schemas['TheoryDomain'], LoreNamed> = {
   magic: { label: 'Magic', icon: Sparkles, tone: 'verdigris' },
   history: { label: 'History', icon: Landmark, tone: 'gold' },
   society: { label: 'Society', icon: Users, tone: 'info' },
+  language: { label: 'Language', icon: Languages, tone: 'verdigris' },
+  law: { label: 'Law', icon: Gavel, tone: 'gold' },
 }
 
 export const ANOMALY_KINDS: Record<Schemas['AnomalyKind'], LoreNamed> = {
@@ -133,6 +157,16 @@ export const ANOMALY_KINDS: Record<Schemas['AnomalyKind'], LoreNamed> = {
     tone: 'info',
   },
   divine_sign: { label: 'A god showed otherwise', icon: Eye, tone: 'gold' },
+  contrary_record: {
+    label: 'Old records disagree',
+    icon: ScrollText,
+    tone: 'warning',
+  },
+  out_of_place_find: {
+    label: 'A find out of place',
+    icon: Bone,
+    tone: 'warning',
+  },
 }
 
 export const ART_DISCIPLINES: Record<Schemas['ArtMode'], LoreNamed> = MEDIUMS

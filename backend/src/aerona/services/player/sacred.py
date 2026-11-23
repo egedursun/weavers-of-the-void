@@ -15,6 +15,7 @@ from aerona.domain.enums.sacred import (
     SacramentKind,
     SacramentProtection,
     TheodicyCause,
+    VisionKind,
 )
 from aerona.engine.sacred import control
 from aerona.services.player.cosmography import Edited
@@ -51,6 +52,7 @@ class PetitionDraft(Command):
     office_id: int
     kind: PetitionKind = PetitionKind.HEALING
     defendant_id: int | None = None
+    target_id: int | None = None
     bribe: int = Field(default=0, ge=0, le=MANY)
 
 
@@ -83,6 +85,7 @@ class MysticEdit(Edited):
 class VisionDraft(Command):
     mystic_id: int
     sender_id: int | None = None
+    kind: VisionKind | None = None
 
 
 class VisionTarget(Command):
@@ -307,7 +310,13 @@ async def spirit_office_delete(scope: PlayerScope, command: SpiritTarget) -> Eff
 @player_action("petition:create", ActionKind.EDIT_RECORD)
 async def petition_create(scope: PlayerScope, command: PetitionDraft) -> Effect:
     row = await control.lodge_petition(
-        await scope.context("petition_create"), command.petitioner_id, command.office_id, command.kind, defendant_id=command.defendant_id, bribe=command.bribe
+        await scope.context("petition_create"),
+        command.petitioner_id,
+        command.office_id,
+        command.kind,
+        defendant_id=command.defendant_id,
+        bribe=command.bribe,
+        target_id=command.target_id,
     )
     return Effect("The petition is filed with the office.", command.office_id, values={"petition_id": row.id})
 
@@ -350,7 +359,7 @@ async def mystic_delete(scope: PlayerScope, command: MysticTarget) -> Effect:
 
 @player_action("vision:create", ActionKind.EDIT_RECORD)
 async def vision_create(scope: PlayerScope, command: VisionDraft) -> Effect:
-    row = await control.send_vision(await scope.context("vision_create"), command.mystic_id, command.sender_id)
+    row = await control.send_vision(await scope.context("vision_create"), command.mystic_id, command.sender_id, command.kind)
     return Effect("The mystic sees another vision.", command.mystic_id, values={"vision_id": row.id})
 
 

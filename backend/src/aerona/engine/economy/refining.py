@@ -9,6 +9,7 @@ from aerona.db.tables.economy import ProductionRunRow, WorkshopDesignRow, Worksh
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
+from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.eras import EraChannel
@@ -26,6 +27,7 @@ from aerona.engine.eras.effects import era_order, tech_factor
 from aerona.engine.factions.guilds import guild_standard
 from aerona.engine.industry.energy import POWER_HEAT, available, scale_by_energy
 from aerona.engine.industry.methods import feed, step_method
+from aerona.engine.lore.blueprints import design_factor
 from aerona.engine.military.war_lines import war_output
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
@@ -326,6 +328,8 @@ async def run_step(
     )
     made = round_half_up(batches * step.output_qty * output_scale(design) * (method_output(ctx.rules, method) / PERCENT if method is not None else 1.0))
     made = round_half_up(made * await war_output(ctx, community.id, step.output) * await chemical_lift(ctx, community.id, step))
+    if method is not None:
+        made = round_half_up(made * await design_factor(ctx.session, ctx.rules, community.id, BlueprintKind.PROCESS, method.kind.value))
     out_material = material if step.keeps_material is not None else step.material
     await goods_of(ctx.session, ctx.epoch).add(
         community.id, step.output, made, GoodsFlow.PRODUCTION, material=out_material, world_material_id=world_material, quality=quality

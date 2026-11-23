@@ -62,6 +62,20 @@ import {
   Waves,
   Wind,
   Zap,
+  Archive,
+  ArrowRightLeft,
+  Baby,
+  BatteryCharging,
+  Church,
+  Frown,
+  HeartHandshake,
+  House,
+  Key,
+  MapPin,
+  Pickaxe,
+  Tag,
+  Truck,
+  Shovel,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/entity/environment/labels'
@@ -89,6 +103,8 @@ export const LOCI: Record<Schema['SourceLocus'], Named> = {
   death: { label: 'The dead nearby', icon: Skull, tone: 'danger' },
   dream: { label: 'Dreams', icon: Cloud, tone: 'verdigris' },
   emotion: { label: 'Feeling', icon: HeartCrack, tone: 'warning' },
+  memory: { label: 'Memory', icon: Archive, tone: 'verdigris' },
+  name: { label: 'Names', icon: Tag, tone: 'gold' },
 }
 
 export const COSTS: Record<Schema['PowerCost'], Named> = {
@@ -117,6 +133,8 @@ export const COSTS: Record<Schema['PowerCost'], Named> = {
   luck: { label: 'Luck', icon: Target, tone: 'warning' },
   warping: { label: 'Warping', icon: Repeat, tone: 'danger' },
   none: { label: 'Nothing', icon: CircleOff, tone: 'muted' },
+  fertility: { label: 'Fertility', icon: Baby, tone: 'warning' },
+  regard: { label: "Others' regard", icon: Frown, tone: 'warning' },
 }
 
 export const RENEWALS: Record<Schema['SourceRenewal'], Named> = {
@@ -134,6 +152,7 @@ export const RENEWALS: Record<Schema['SourceRenewal'], Named> = {
     tone: 'verdigris',
   },
   none: { label: 'Never; it runs out', icon: CircleOff, tone: 'danger' },
+  offering: { label: 'Offerings', icon: Gift, tone: 'gold' },
 }
 
 export const ACCESS: Record<Schema['SourceAccess'], Named> = {
@@ -144,6 +163,7 @@ export const ACCESS: Record<Schema['SourceAccess'], Named> = {
   bloodline: { label: 'A bloodline', icon: GitBranch, tone: 'verdigris' },
   bonded: { label: 'The bonded', icon: Handshake, tone: 'info' },
   made: { label: 'Through a made part', icon: Cpu, tone: 'muted' },
+  bought: { label: 'Bought', icon: Coins, tone: 'gold' },
 }
 
 export const RESISTANCES: Record<Schema['ResistanceKind'], Named> = {
@@ -228,6 +248,12 @@ export const ORIGINS: Record<Schema['PowerOrigin'], Named> = {
   grown: { label: 'By a grown part', icon: Leaf, tone: 'success' },
   bloodline: { label: 'By its line', icon: GitBranch, tone: 'verdigris' },
   held: { label: 'While holding a thing', icon: Gem, tone: 'muted' },
+  transfer: {
+    label: 'Taken from another',
+    icon: ArrowRightLeft,
+    tone: 'danger',
+  },
+  bargain: { label: 'An outer bargain', icon: Handshake, tone: 'danger' },
 }
 
 export const STATES: Record<Schema['PowerState'], Named> = {
@@ -238,6 +264,7 @@ export const STATES: Record<Schema['PowerState'], Named> = {
   exhausted: { label: 'Spent', icon: Flame, tone: 'danger' },
   suppressed: { label: 'Stilled', icon: Ban, tone: 'warning' },
   lost: { label: 'Lost', icon: CircleOff, tone: 'muted' },
+  bound: { label: 'Bound', icon: Lock, tone: 'muted' },
 }
 
 export const TRIGGERS: Record<Schema['PowerTrigger'], Named> = {
@@ -248,6 +275,12 @@ export const TRIGGERS: Record<Schema['PowerTrigger'], Named> = {
   contact: { label: 'Contact with another power', icon: Users, tone: 'info' },
   place: { label: 'A dense place', icon: Mountain, tone: 'verdigris' },
   time: { label: 'Coming of age', icon: Hourglass, tone: 'muted' },
+  sleep: { label: 'Sleep', icon: Moon, tone: 'verdigris' },
+  others_in_danger: {
+    label: 'Others in danger',
+    icon: ShieldAlert,
+    tone: 'danger',
+  },
 }
 
 export const RESTRICTIONS: Record<Schema['RestrictionKind'], Named> = {
@@ -273,6 +306,7 @@ export const RESTRICTIONS: Record<Schema['RestrictionKind'], Named> = {
   must_be_seen: { label: 'Must be seen', icon: Eye, tone: 'info' },
   must_be_unseen: { label: 'Must be unseen', icon: EyeOff, tone: 'info' },
   must_touch: { label: 'Must touch', icon: Hand, tone: 'info' },
+  only_with_token: { label: 'Only with a token', icon: Key, tone: 'info' },
 }
 
 export const ATTITUDES: Record<Schema['GiftedAttitude'], Named> = {
@@ -281,6 +315,8 @@ export const ATTITUDES: Record<Schema['GiftedAttitude'], Named> = {
   persecuted: { label: 'Persecuted', icon: Gavel, tone: 'danger' },
   regulated: { label: 'Regulated', icon: Scale, tone: 'info' },
   ordinary: { label: 'Ordinary', icon: Users, tone: 'muted' },
+  exploited: { label: 'Exploited', icon: Pickaxe, tone: 'danger' },
+  envied: { label: 'Envied', icon: Frown, tone: 'warning' },
 }
 
 export const STANCES: Record<Schema['GiftedStance'], Named> = {
@@ -289,6 +325,7 @@ export const STANCES: Record<Schema['GiftedStance'], Named> = {
   forbidden: { label: 'Forbidden', icon: Ban, tone: 'danger' },
   suspect: { label: 'Suspect', icon: Search, tone: 'warning' },
   silent: { label: 'Silent', icon: CircleOff, tone: 'muted' },
+  pitied: { label: 'Pitied', icon: HeartHandshake, tone: 'info' },
 }
 
 export const BLOODLINES: Record<Schema['BloodlineRule'], Named> = {
@@ -296,12 +333,15 @@ export const BLOODLINES: Record<Schema['BloodlineRule'], Named> = {
   eldest: { label: 'To the eldest', icon: Crown, tone: 'gold' },
   all_children: { label: 'To every child', icon: Users, tone: 'success' },
   skipped: { label: 'Skips generations', icon: GitBranch, tone: 'verdigris' },
+  youngest: { label: 'The youngest', icon: Baby, tone: 'success' },
 }
 
 export const SOURCE_LAWS: Record<Schema['SourceLawLevel'], Named> = {
   free: { label: 'Free', icon: ShieldCheck, tone: 'success' },
   licensed: { label: 'Licensed', icon: KeyRound, tone: 'info' },
   banned: { label: 'Banned', icon: Ban, tone: 'danger' },
+  taxed: { label: 'Taxed', icon: Coins, tone: 'gold' },
+  conscripted: { label: 'Conscripted', icon: Swords, tone: 'warning' },
 }
 
 export const TRUTH_KINDS: Record<Schema['HiddenTruthKind'], Named> = {
@@ -318,6 +358,8 @@ export const TRUTH_KINDS: Record<Schema['HiddenTruthKind'], Named> = {
     tone: 'warning',
   },
   cosmic: { label: 'A truth of the cosmos', icon: Orbit, tone: 'danger' },
+  lineage: { label: 'Lineage', icon: GitBranch, tone: 'gold' },
+  location: { label: 'Location', icon: MapPin, tone: 'info' },
 }
 
 export const SCOPES: Record<Schema['ConcealScope'], Named> = {
@@ -331,6 +373,8 @@ export const SCOPES: Record<Schema['ConcealScope'], Named> = {
   },
   a_world: { label: 'A world', icon: Orbit, tone: 'info' },
   the_cosmos: { label: 'The cosmos', icon: Star, tone: 'gold' },
+  a_house: { label: 'A house', icon: House, tone: 'info' },
+  a_faith: { label: 'A faith', icon: Church, tone: 'verdigris' },
 }
 
 export const KEEPER_ROLES: Record<Schema['KeeperRole'], Named> = {
@@ -338,6 +382,8 @@ export const KEEPER_ROLES: Record<Schema['KeeperRole'], Named> = {
   guardian: { label: 'Guardian', icon: Shield, tone: 'info' },
   member: { label: 'Member', icon: Users, tone: 'muted' },
   patron: { label: 'Patron', icon: Crown, tone: 'gold' },
+  archivist: { label: 'Archivist', icon: Archive, tone: 'info' },
+  go_between: { label: 'Go-between', icon: ArrowRightLeft, tone: 'gold' },
 }
 
 export const AIMS: Record<Schema['SeekerAim'], Named> = {
@@ -354,6 +400,7 @@ export const AIMS: Record<Schema['SeekerAim'], Named> = {
     tone: 'verdigris',
   },
   understand: { label: 'To understand it', icon: Search, tone: 'info' },
+  protect: { label: 'Protect', icon: Shield, tone: 'success' },
 }
 
 export const TRUTH_ATTITUDES: Record<Schema['TruthAttitude'], Named> = {
@@ -364,6 +411,8 @@ export const TRUTH_ATTITUDES: Record<Schema['TruthAttitude'], Named> = {
   revered: { label: 'Revered', icon: Sun, tone: 'gold' },
   accepted: { label: 'Accepted', icon: Handshake, tone: 'success' },
   exploited: { label: 'Used', icon: Coins, tone: 'warning' },
+  protected: { label: 'Protected', icon: ShieldCheck, tone: 'success' },
+  bargained: { label: 'Bargained', icon: Handshake, tone: 'gold' },
 }
 
 export const BREACH_CAUSES: Record<Schema['BreachCause'], Named> = {
@@ -380,6 +429,9 @@ export const BREACH_CAUSES: Record<Schema['BreachCause'], Named> = {
   record_leak: { label: 'A leak of records', icon: Database, tone: 'warning' },
   intrusion: { label: 'An intrusion', icon: Cpu, tone: 'warning' },
   revelation_by_god: { label: 'A god’s revelation', icon: Sun, tone: 'gold' },
+  children: { label: 'Children', icon: Baby, tone: 'warning' },
+  dreams: { label: 'Dreams', icon: Moon, tone: 'verdigris' },
+  excavation: { label: 'A dig', icon: Shovel, tone: 'warning' },
 }
 
 export const RESPONSES: Record<Schema['KeeperResponse'], Named> = {
@@ -393,6 +445,8 @@ export const RESPONSES: Record<Schema['KeeperResponse'], Named> = {
   },
   law: { label: 'The law', icon: Gavel, tone: 'info' },
   silencing: { label: 'Silencing', icon: Ban, tone: 'danger' },
+  bargain: { label: 'An outer bargain', icon: Handshake, tone: 'danger' },
+  relocation: { label: 'Relocation', icon: Truck, tone: 'warning' },
 }
 
 export const TRUTH_METHODS: Record<string, Named> = {
@@ -428,4 +482,10 @@ export const DEVICE_EFFECTS: Record<Schema['PowerDeviceEffect'], Named> = {
   extend_range: { label: 'Extends reach', icon: Footprints, tone: 'info' },
   shield: { label: 'Shields from powers', icon: Shield, tone: 'info' },
   detect: { label: 'Finds the gifted', icon: Search, tone: 'verdigris' },
+  transfer: {
+    label: 'Taken from another',
+    icon: ArrowRightLeft,
+    tone: 'danger',
+  },
+  store: { label: 'Stores power', icon: BatteryCharging, tone: 'info' },
 }

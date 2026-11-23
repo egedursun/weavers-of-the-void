@@ -58,6 +58,7 @@ class LawLine(ContextItem):
     name: str
     description: str
     working: str = ""
+    spares: str = ""
 
 
 class WorldHeaderContext(RulesContext):

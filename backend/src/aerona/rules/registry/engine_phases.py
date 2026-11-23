@@ -884,6 +884,13 @@ class EnginePhasesRules:
     world_views: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: what each world binds its towns to, and the upkeep of floating and sealed towns"
     )
+    settle_modes: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: each settlement lives by its way of settling, weathers by it, and comes down with its forest when it lives in the canopy",
+    )
     biology_variants: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the biology variants of every people and species and the effects they carry"
     )

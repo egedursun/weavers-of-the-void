@@ -67,6 +67,7 @@ import {
   Wheat,
   Zap,
   EyeOff,
+  Palette,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -265,6 +266,8 @@ export const LUCK_SIGNS: Record<Schema['LuckSign'], Named> = {
   place: { label: 'A place', icon: MapPin, tone: 'muted' },
   act: { label: 'An act', icon: Target, tone: 'warning' },
   person: { label: 'A kind of person', icon: User, tone: 'info' },
+  animal: { label: 'A kind of creature', icon: PawPrint, tone: 'verdigris' },
+  colour: { label: 'A colour', icon: Sparkles, tone: 'gold' },
 }
 
 export const LUCK_REACHES: Record<Schema['LuckReach'], Named> = {
@@ -273,6 +276,23 @@ export const LUCK_REACHES: Record<Schema['LuckReach'], Named> = {
   birth: { label: 'Birth', icon: Baby, tone: 'gold' },
   journey: { label: 'Journeys', icon: MapPin, tone: 'info' },
   battle: { label: 'Battle', icon: Swords, tone: 'danger' },
+  trade: { label: 'Trade', icon: Coins, tone: 'gold' },
+  union: { label: 'Unions', icon: Handshake, tone: 'success' },
+  building: { label: 'Building', icon: Hammer, tone: 'info' },
+}
+
+export const COLOURS: Record<Schema['ColourFocus'], Named> = {
+  dark: { label: 'Dark', icon: Palette, tone: 'muted' },
+  light: { label: 'Light', icon: Palette, tone: 'gold' },
+  red: { label: 'Red', icon: Palette, tone: 'danger' },
+  yellow: { label: 'Yellow', icon: Palette, tone: 'gold' },
+  green: { label: 'Green', icon: Palette, tone: 'success' },
+  blue: { label: 'Blue', icon: Palette, tone: 'info' },
+  brown: { label: 'Brown', icon: Palette, tone: 'warning' },
+  purple: { label: 'Purple', icon: Palette, tone: 'verdigris' },
+  pink: { label: 'Pink', icon: Palette, tone: 'danger' },
+  orange: { label: 'Orange', icon: Palette, tone: 'warning' },
+  grey: { label: 'Grey', icon: Palette, tone: 'muted' },
 }
 
 export const CHARM_POWERS: Record<Schema['CharmPower'], Named> = {
@@ -280,6 +300,8 @@ export const CHARM_POWERS: Record<Schema['CharmPower'], Named> = {
   fertility: { label: 'Fertility', icon: Baby, tone: 'gold' },
   luck: { label: 'Luck', icon: Clover, tone: 'success' },
   healing: { label: 'Healing', icon: HeartPulse, tone: 'success' },
+  love: { label: 'Love', icon: HandHeart, tone: 'danger' },
+  travel: { label: 'Safe travel', icon: MapPin, tone: 'info' },
 }
 
 export const OUTCOMES: Record<Schema['AccusationOutcome'], Named> = {
@@ -288,6 +310,8 @@ export const OUTCOMES: Record<Schema['AccusationOutcome'], Named> = {
   punished: { label: 'Punished', icon: Gavel, tone: 'warning' },
   exiled: { label: 'Exiled', icon: TrendingDown, tone: 'danger' },
   killed: { label: 'Killed', icon: Skull, tone: 'danger' },
+  confessed: { label: 'Confessed', icon: Scroll, tone: 'warning' },
+  fled: { label: 'Fled', icon: TrendingUp, tone: 'danger' },
 }
 
 export const STRAINS: Record<Schema['IdeaStrain'], Named> = {

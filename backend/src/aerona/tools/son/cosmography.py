@@ -18,7 +18,7 @@ from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingKind, Cluster
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import ClimateTurn
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.physics import ImpactOutcome, TerraformAim
+from aerona.domain.enums.physics import ImpactBody, ImpactOutcome, TerraformAim
 from aerona.engine.cosmos import control, physics_control
 from aerona.engine.cosmos.ladder import NEW_CLUSTER_RADIUS, NEW_GALAXY_RADIUS
 from aerona.engine.cosmos.placement import Cosmography
@@ -106,6 +106,7 @@ class CreateDimensionInput(ToolInput):
 
 class CallImpactInput(ToolInput):
     region_id: int
+    body: ImpactBody = ImpactBody.CALLED
     reason: Reason
 
 
@@ -424,7 +425,7 @@ async def call_impact(call: SonCall, args: CallImpactInput) -> str:
     cost = call.rules.impacts.call_essence
     require_essence(call, cost)
     try:
-        impact = await physics_control.call(call.tick, region.world_id or 0, region.id, call.son.id, size=None)
+        impact = await physics_control.call(call.tick, region.world_id or 0, region.id, call.son.id, size=None, body=args.body)
     except AeronaError as error:
         fail(SonResult.IMPACT_REFUSED, reason=error.message)
     call.spend_essence(cost)

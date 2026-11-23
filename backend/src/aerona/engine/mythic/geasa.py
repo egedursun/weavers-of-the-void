@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.mythic import GEAS_ACTS
+from aerona.catalog.mythic import GEAS_ACTS, GEAS_LAYERS, LINE_LAYERS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.afflictions import AfflictionRow
@@ -13,13 +13,16 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.mind import ActKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import GeasLayer, GeasMode, GeasState
 from aerona.engine.body.afflictions import afflict
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.gods.queries import community_of
+from aerona.engine.mind.book import stored_values
+from aerona.engine.mind.hooks import judged
 from aerona.engine.mythic.geas_acts import break_geas
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
@@ -49,7 +52,34 @@ async def lay_geas(ctx: TickContext, bearer: EntityRow, *, layer_node_id: int | 
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await record(
+        ctx,
+        "geas.laid",
+        roles={IncidentRole.SUBJECT: bearer.id, IncidentRole.ORIGIN: layer_node_id},
+        facts={"layer": layer, "mode": mode, "act": act},
+    )
     return row
+
+
+async def inherit_geasa(ctx: TickContext, child: EntityRow, parents: tuple[EntityRow, ...]) -> int:
+    if held(child.id):
+        return 0
+    passed = 0
+    for parent in dict.fromkeys(parents):
+        folk = await people_of(ctx.session, parent)
+        kinship = (await stored_values(ctx.session, ValueHolder.CULTURE, folk.id)).get(ValueAxis.KINSHIP, 0) if folk is not None else 0
+        if kinship < ctx.rules.geasa.kin_kinship:
+            continue
+        rows = await ctx.session.scalars(
+            select(GeasRow)
+            .where(GeasRow.bearer_entity_id == parent.id, GeasRow.state == GeasState.KEPT, GeasRow.layer.in_(sorted(LINE_LAYERS)))
+            .order_by(GeasRow.id)
+        )
+        for row in list(rows):
+            if ctx.rng(f"geas.line.{row.id}.{child.id}").chance(ctx.rules.geasa.kin_pass_pct):
+                await lay_geas(ctx, child, layer_node_id=parent.id, layer=GeasLayer.KIN, mode=row.mode, act=row.act)
+                passed += 1
+    return passed
 
 
 async def seer_near(ctx: TickContext, place_id: int | None) -> EntityRow | None:
@@ -80,7 +110,7 @@ async def doom(ctx: TickContext, row: GeasRow, bearer: EntityRow, why: str) -> N
     if "state" in row.locked:
         return
     break_geas(row, ctx.epoch)
-    await afflict(ctx, bearer, PackageKind.GEAS_DOOM, Transmission.CURSE, source_node_id=row.layer_node_id)
+    await fall(ctx, row, bearer)
     await record(ctx, "mythic.geas_broken", roles={IncidentRole.SUBJECT: bearer.id}, facts={"why": why}, kind=ChronicleKind.WORLD)
 
 
@@ -95,9 +125,18 @@ async def doom_broken(ctx: TickContext, tally: GeasTally) -> None:
                 AfflictionRow.bearer_node_id == bearer.id, AfflictionRow.package == PackageKind.GEAS_DOOM, AfflictionRow.cured_epoch.is_(None)
             )
         )
-        if doomed is None and await afflict(ctx, bearer, PackageKind.GEAS_DOOM, Transmission.CURSE, source_node_id=row.layer_node_id) is not None:
+        if doomed is None and await fall(ctx, row, bearer):
             await record(ctx, "mythic.geas_broken", roles={IncidentRole.SUBJECT: bearer.id}, facts={"act": spoken(row.act)}, kind=ChronicleKind.WORLD)
             tally.broken += 1
+
+
+async def fall(ctx: TickContext, row: GeasRow, bearer: EntityRow) -> bool:
+    spec = GEAS_LAYERS[row.layer]
+    if spec.sworn:
+        await judged(ctx, bearer.id, bearer.id, ActKind.OATHBREAKING, note="broke the geas it swore")
+    if not spec.dooms:
+        return spec.sworn
+    return await afflict(ctx, bearer, PackageKind.GEAS_DOOM, Transmission.CURSE, source_node_id=row.layer_node_id) is not None
 
 
 async def favour(ctx: TickContext, atlas: RegionAtlas, row: GeasRow, bearer: EntityRow) -> None:

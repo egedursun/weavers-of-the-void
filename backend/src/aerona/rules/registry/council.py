@@ -53,6 +53,12 @@ class CouncilRules:
     veto_attention: int = rule(20, 0, 300, RuleGroup.COUNCIL, "Essence the Creator spends to veto a ruling of the council")
     sanction_essence: int = rule(10, 0, 300, RuleGroup.COUNCIL, "Essence a god loses when the council sanctions it")
     exclusion_epochs: int = rule(5, 1, 100, RuleGroup.COUNCIL, "Epochs a god is kept from the council once excluded")
+    penance_epochs: int = rule(3, 1, 20, RuleGroup.COUNCIL, "Epochs a god bound to penance has to do the deed the council set it")
+    essence_fine_share_pct: int = rule(
+        20, 0, 100, RuleGroup.COUNCIL, "Share of its essence a god fined by the council pays to the gods it wronged or to the council (%)"
+    )
+    essence_fine_renown: int = rule(4, 0, 200, RuleGroup.COUNCIL, "Renown a god loses when the council fines its essence")
+    penance_kept_renown: int = rule(6, 0, 200, RuleGroup.COUNCIL, "Renown a god regains when it does the penance the council set it")
     duel_relation: int = rule(20, 0, 100, RuleGroup.COUNCIL, "Relation lost between a violator and the council's champion when the ladder reaches a duel")
     tithe_essence: int = rule(5, 0, 300, RuleGroup.COUNCIL, "Essence each member pays to a tithe the council levies for a common work")
     tithe_doom: int = rule(3, 0, 100, RuleGroup.COUNCIL, "Points the doom clock falls when a tithe is paid for a common work")

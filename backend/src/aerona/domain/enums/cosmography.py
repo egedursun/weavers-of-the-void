@@ -209,6 +209,8 @@ class RiftCause(StrEnum):
     PHENOMENON = "phenomenon"
     CREATOR = "creator"
     MADE_REALM_GATE = "made_realm_gate"
+    MASS_WEAPON = "mass_weapon"
+    OUTER_BARGAIN = "outer_bargain"
 
 
 class RouteScope(StrEnum):
@@ -236,6 +238,8 @@ class BeingKind(StrEnum):
     DIMENSION_RULER = "dimension_ruler"
     SWARM_INTELLIGENCE = "swarm_intelligence"
     STAR_PATTERN_MIND = "star_pattern_mind"
+    LIVING_WORLD = "living_world"
+    ANCIENT_MADE_MIND = "ancient_made_mind"
 
 
 class BeingScale(StrEnum):
@@ -244,6 +248,7 @@ class BeingScale(StrEnum):
     GALAXY = "galaxy"
     CLUSTER = "cluster"
     DIMENSION = "dimension"
+    REGION = "region"
 
 
 class BeingPhase(StrEnum):
@@ -265,6 +270,7 @@ class BeingAgenda(StrEnum):
     SEEK_WORSHIP = "seek_worship"
     UNMAKE = "unmake"
     MEND = "mend"
+    SLUMBER = "slumber"
 
 
 class PhenomenonKind(StrEnum):

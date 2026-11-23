@@ -16,6 +16,8 @@ CONTRARY = frozenset(
         frozenset({OrderKind.HOLD_STILL, OrderKind.REPLICATE}),
         frozenset({OrderKind.FORBID, OrderKind.SERVE}),
         frozenset({OrderKind.MAINTAIN, OrderKind.DESTROY}),
+        frozenset({OrderKind.HOLD_STILL, OrderKind.CARRY}),
+        frozenset({OrderKind.TEND, OrderKind.DESTROY}),
     }
 )
 
@@ -35,7 +37,14 @@ BINDING_HOLD: Mapping[InstructionBinding, int] = total(
 )
 
 
-STANCE_BOND = {MadeMindStance.ABOMINATION: -2, MadeMindStance.TOOL: 0, MadeMindStance.KIN: 1, MadeMindStance.SACRED: 2, MadeMindStance.SILENT: 0}
+STANCE_BOND = {
+    MadeMindStance.ABOMINATION: -2,
+    MadeMindStance.TOOL: 0,
+    MadeMindStance.KIN: 1,
+    MadeMindStance.SACRED: 2,
+    MadeMindStance.SILENT: 0,
+    MadeMindStance.REGULATED: 0,
+}
 
 
 MAKING_SKILLS = partial(

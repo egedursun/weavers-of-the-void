@@ -213,6 +213,8 @@ async def social_norms(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.charisma",
+    "settlement.population",
     "table.account_stances",
     "table.accounts",
     "table.artwork_profiles",
@@ -236,6 +238,9 @@ async def social_norms(ctx: TickContext) -> None:
     "table.offices",
     "table.polity_members",
     "table.polity_profiles",
+    "table.polity_territories",
+    "table.secrets",
+    "table.vassalages",
 )
 @writes(
     "table.account_stances",
@@ -247,9 +252,11 @@ async def social_norms(ctx: TickContext) -> None:
     "table.entities",
     "table.incident_facts",
     "table.incident_participants",
+    "table.incident_terms",
     "table.incidents",
     "table.memory_strikes",
     "table.mortal_profiles",
+    "table.movements",
     "table.polity_profiles",
     "table.secrets",
 )

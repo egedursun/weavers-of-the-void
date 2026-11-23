@@ -32,6 +32,7 @@ import {
   Users,
   Wind,
   Zap,
+  Cog,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -103,6 +104,12 @@ export const IMPACT_BODIES: Record<Schema['ImpactBody'], Named> = {
   comet: { label: 'Comet', icon: Sparkles, tone: 'info' },
   rogue_world: { label: 'Rogue world', icon: Globe2, tone: 'danger' },
   called: { label: 'Called by a god', icon: Zap, tone: 'gold' },
+  moon_fragment: {
+    label: 'Fragment of a broken moon',
+    icon: CircleDot,
+    tone: 'warning',
+  },
+  wreck: { label: 'Fallen made thing', icon: Cog, tone: 'danger' },
 }
 
 export const IMPACT_OUTCOMES: Record<Schema['ImpactOutcome'], Named> = {
@@ -110,6 +117,7 @@ export const IMPACT_OUTCOMES: Record<Schema['ImpactOutcome'], Named> = {
   struck: { label: 'Struck', icon: Flame, tone: 'danger' },
   deflected: { label: 'Turned aside', icon: ShieldCheck, tone: 'success' },
   missed: { label: 'Missed', icon: Ban, tone: 'muted' },
+  airburst: { label: 'Burst in the air', icon: Wind, tone: 'danger' },
 }
 
 export const TERRAFORM_AIMS: Record<Schema['TerraformAim'], Named> = {
@@ -139,14 +147,13 @@ export const COMPLEXITY: Record<
   sapient: { label: 'Sapient', icon: Users, tone: 'gold', rank: 4 },
 }
 
-export const ENVIRONMENTS: Record<
-  'marine' | 'terrestrial' | 'aerial' | 'subterranean',
-  Named
-> = {
+export const ENVIRONMENTS: Record<Schema['LifeEnvironment'], Named> = {
   marine: { label: 'Seas', icon: Fish, tone: 'info' },
   terrestrial: { label: 'Land', icon: Mountain, tone: 'verdigris' },
   aerial: { label: 'Air', icon: Bird, tone: 'muted' },
   subterranean: { label: 'Underground', icon: Compass, tone: 'warning' },
+  under_ice: { label: 'Oceans under ice', icon: Snowflake, tone: 'info' },
+  cloud: { label: 'Cloud layers', icon: CloudFog, tone: 'muted' },
 }
 
 export const AIR_NEEDS: Record<Schema['AirNeed'], Named> = {
@@ -157,6 +164,8 @@ export const AIR_NEEDS: Record<Schema['AirNeed'], Named> = {
     tone: 'verdigris',
   },
   methane: { label: 'Breathes methane', icon: Atom, tone: 'warning' },
+  ammonia: { label: 'Breathes ammonia', icon: Atom, tone: 'danger' },
+  hydrogen: { label: 'Breathes hydrogen', icon: Atom, tone: 'info' },
   none: { label: 'Needs no air', icon: Check, tone: 'muted' },
 }
 

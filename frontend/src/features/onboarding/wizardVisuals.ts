@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Anchor,
   Atom,
   AudioLines,
@@ -11,11 +10,13 @@ import {
   CircleOff,
   Clapperboard,
   CloudMoon,
+  CloudSun,
   Cloudy,
   Cog,
   Cpu,
   Crown,
   Droplets,
+  Feather,
   Flame,
   Gem,
   Globe,
@@ -58,6 +59,7 @@ import {
   ThermometerSun,
   TreePine,
   TrendingUp,
+  type LucideIcon,
   Users,
   Waves,
   Wind,
@@ -156,6 +158,7 @@ export const AGE_ICON: Record<WorldAge, LucideIcon> = {
 
 export const TECHNOLOGY_ICON: Record<TechnologyEra, LucideIcon> = {
   stone: Axe,
+  copper: Pickaxe,
   bronze: Shell,
   iron: Hammer,
   medieval: Castle,
@@ -171,6 +174,7 @@ export const TECHNOLOGY_ICON: Record<TechnologyEra, LucideIcon> = {
 
 export const TECHNOLOGY_HINT: Record<TechnologyEra, string> = {
   stone: 'Before metal is worked',
+  copper: 'The first metal smelted into tools',
   bronze: 'Bronze is worked',
   iron: 'Iron is worked',
   medieval: 'Steel and written law',
@@ -223,6 +227,8 @@ export const STORYTELLER_ICON: Record<StorytellerProfile, LucideIcon> = {
   chaotic: Shuffle,
   slow_burn: Flame,
   episodic: Clapperboard,
+  gentle: Feather,
+  seasonal: CloudSun,
 }
 
 export const STORYTELLER_HINT: Record<StorytellerProfile, string> = {
@@ -232,6 +238,8 @@ export const STORYTELLER_HINT: Record<StorytellerProfile, string> = {
   chaotic: 'Tension rises and falls without warning',
   slow_burn: 'Tension starts low and climbs a little every epoch',
   episodic: 'Quiet stretches broken by a sharp peak at the end of each episode',
+  gentle: 'Low tension that leans toward recoveries',
+  seasonal: 'Tension that rises and falls with the seasons',
 }
 
 export const AGE_CYCLE_ICON: Record<AgeCycle, LucideIcon> = {

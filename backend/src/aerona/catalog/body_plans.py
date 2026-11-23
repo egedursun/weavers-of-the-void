@@ -112,6 +112,8 @@ BEING_PLANS: MappingProxyType[BeingKind, BodyPlan] = total(
         BeingKind.DIMENSION_RULER: BodyPlan.DIVINE_MANIFEST,
         BeingKind.SWARM_INTELLIGENCE: BodyPlan.AMORPHOUS,
         BeingKind.STAR_PATTERN_MIND: BodyPlan.INCORPOREAL,
+        BeingKind.LIVING_WORLD: BodyPlan.COLOSSAL,
+        BeingKind.ANCIENT_MADE_MIND: BodyPlan.CONSTRUCT,
     },
 )
 HUNGER_PLANS: MappingProxyType[OuterHunger, BodyPlan] = total(

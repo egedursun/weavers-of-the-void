@@ -6,12 +6,16 @@ POWER_DEVICE_EFFECT = total(
     PowerDeviceEffect,
     {
         PowerDeviceEffect.AMPLIFY: Defined("Strengthens powers", checked_by=(), used_by=("engine.powers.use.device_factor",)),
-        PowerDeviceEffect.DAMPEN: Defined("Dampens powers", checked_by=(), used_by=("engine.powers.use.dampened", "engine.powers.use.dampeners")),
+        PowerDeviceEffect.DAMPEN: Defined(
+            "Dampens powers", checked_by=("engine.powers.phase.binding_of",), used_by=("engine.powers.use.dampened", "engine.powers.use.dampeners")
+        ),
         PowerDeviceEffect.AWAKEN: Defined("Wakes latent powers", checked_by=("engine.powers.phase.awaken",), used_by=()),
         PowerDeviceEffect.STABILISE: Defined("Steadies control", checked_by=(), used_by=("engine.powers.use.device_factor",)),
         PowerDeviceEffect.EXTEND_RANGE: Defined("Extends reach", checked_by=("engine.powers.use.distance",), used_by=()),
         PowerDeviceEffect.SHIELD: Defined("Shields from powers", checked_by=(), used_by=("engine.powers.use.dampened",)),
         PowerDeviceEffect.DETECT: Defined("Finds the gifted", checked_by=("engine.powers.society.keep_registries",), used_by=()),
+        PowerDeviceEffect.STORE: Defined("Stores power", checked_by=(), used_by=("engine.powers.phase.recover",)),
+        PowerDeviceEffect.TRANSFER: Defined("Taken from another", checked_by=("engine.powers.phase.take_powers",), used_by=()),
     },
 )
 
@@ -69,6 +73,7 @@ RESTRICTION_KIND = total(
         RestrictionKind.MUST_BE_SEEN: Defined("Must be seen", checked_by=(), used_by=("engine.powers.use.unseen",)),
         RestrictionKind.MUST_BE_UNSEEN: Defined("Must be unseen", checked_by=(), used_by=("engine.powers.use.seen",)),
         RestrictionKind.MUST_TOUCH: Defined("Must touch", checked_by=(), used_by=("engine.powers.use.out_of_reach",)),
+        RestrictionKind.ONLY_WITH_TOKEN: Defined("Only with a token", checked_by=(), used_by=("engine.powers.use.tokenless",)),
     },
 )
 
@@ -103,6 +108,7 @@ SOURCE_RENEWAL = total(
         SourceRenewal.TAKING: Defined("Taking from others", checked_by=("catalog.life.powers.RENEWAL_KINDS",), used_by=("engine.powers.backfill.BUILT_IN",)),
         SourceRenewal.VOWS_KEPT: Defined("Vows kept", checked_by=("catalog.life.powers.RENEWAL_KINDS",), used_by=()),
         SourceRenewal.RETURN_TO_PLACE: Defined("Return to the place", checked_by=("catalog.life.powers.RENEWAL_KINDS",), used_by=()),
+        SourceRenewal.OFFERING: Defined("Offerings", checked_by=("catalog.life.powers.RENEWAL_KINDS",), used_by=()),
         SourceRenewal.NONE: Defined("Never; it runs out", checked_by=(), used_by=("engine.powers.backfill.BUILT_IN",)),
     },
 )

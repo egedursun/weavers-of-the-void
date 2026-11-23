@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   ArrowDown,
   ArrowUp,
   Ban,
@@ -16,6 +15,7 @@ import {
   Factory,
   Flag,
   Flame,
+  Gift,
   Globe,
   GraduationCap,
   HandHeart,
@@ -40,6 +40,7 @@ import {
   Search,
   Shield,
   Shuffle,
+  Signpost,
   Skull,
   Snowflake,
   Sparkles,
@@ -52,6 +53,7 @@ import {
   Timer,
   TrendingDown,
   TrendingUp,
+  type LucideIcon,
   Undo2,
   Waves,
   Zap,
@@ -195,6 +197,8 @@ export const ROLES: Record<Schema['ArcRole'], Named> = {
   heir: { label: 'Heir', icon: Crown, tone: 'gold' },
   foe: { label: 'Foe', icon: Target, tone: 'danger' },
   ally: { label: 'Ally', icon: Shield, tone: 'success' },
+  witness: { label: 'Witness', icon: Eye, tone: 'info' },
+  guide: { label: 'Guide', icon: Signpost, tone: 'verdigris' },
 }
 
 export const SETUP_KINDS: Record<Schema['SetupKind'], Named> = {
@@ -204,6 +208,7 @@ export const SETUP_KINDS: Record<Schema['SetupKind'], Named> = {
   foresight: { label: 'Foresight', icon: Telescope, tone: 'info' },
   portent: { label: 'Portent of a god', icon: Sparkles, tone: 'gold' },
   incident_arc: { label: 'Open incident arc', icon: ScrollText, tone: 'muted' },
+  inheritance: { label: 'Inheritance', icon: Gift, tone: 'gold' },
 }
 
 export const PAYOFFS: Record<Schema['PayoffKind'], Named> = {

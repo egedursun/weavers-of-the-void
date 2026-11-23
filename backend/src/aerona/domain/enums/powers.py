@@ -17,6 +17,8 @@ class SourceLocus(StrEnum):
     DEATH = "death"
     DREAM = "dream"
     EMOTION = "emotion"
+    MEMORY = "memory"
+    NAME = "name"
 
 
 class PowerCost(StrEnum):
@@ -40,6 +42,8 @@ class PowerCost(StrEnum):
     SURROUNDINGS = "surroundings"
     LUCK = "luck"
     WARPING = "warping"
+    REGARD = "regard"
+    FERTILITY = "fertility"
     NONE = "none"
 
 
@@ -53,6 +57,7 @@ class SourceRenewal(StrEnum):
     TAKING = "taking"
     VOWS_KEPT = "vows_kept"
     RETURN_TO_PLACE = "return_to_place"
+    OFFERING = "offering"
     NONE = "none"
 
 
@@ -64,6 +69,7 @@ class SourceAccess(StrEnum):
     BLOODLINE = "bloodline"
     BONDED = "bonded"
     MADE = "made"
+    BOUGHT = "bought"
 
 
 class ResistanceKind(StrEnum):
@@ -144,6 +150,8 @@ class PowerOrigin(StrEnum):
     GROWN = "grown"
     BLOODLINE = "bloodline"
     HELD = "held"
+    BARGAIN = "bargain"
+    TRANSFER = "transfer"
 
 
 class PowerState(StrEnum):
@@ -154,6 +162,7 @@ class PowerState(StrEnum):
     EXHAUSTED = "exhausted"
     SUPPRESSED = "suppressed"
     LOST = "lost"
+    BOUND = "bound"
 
 
 class PowerTrigger(StrEnum):
@@ -164,6 +173,8 @@ class PowerTrigger(StrEnum):
     CONTACT = "contact"
     PLACE = "place"
     TIME = "time"
+    SLEEP = "sleep"
+    OTHERS_IN_DANGER = "others_in_danger"
 
 
 class RestrictionKind(StrEnum):
@@ -177,6 +188,7 @@ class RestrictionKind(StrEnum):
     MUST_BE_SEEN = "must_be_seen"
     MUST_BE_UNSEEN = "must_be_unseen"
     MUST_TOUCH = "must_touch"
+    ONLY_WITH_TOKEN = "only_with_token"
 
 
 class PowerDeviceEffect(StrEnum):
@@ -187,6 +199,8 @@ class PowerDeviceEffect(StrEnum):
     EXTEND_RANGE = "extend_range"
     SHIELD = "shield"
     DETECT = "detect"
+    STORE = "store"
+    TRANSFER = "transfer"
 
 
 class GiftedAttitude(StrEnum):
@@ -195,6 +209,8 @@ class GiftedAttitude(StrEnum):
     PERSECUTED = "persecuted"
     REGULATED = "regulated"
     ORDINARY = "ordinary"
+    EXPLOITED = "exploited"
+    ENVIED = "envied"
 
 
 class GiftedStance(StrEnum):
@@ -203,6 +219,7 @@ class GiftedStance(StrEnum):
     FORBIDDEN = "forbidden"
     SUSPECT = "suspect"
     SILENT = "silent"
+    PITIED = "pitied"
 
 
 class BloodlineRule(StrEnum):
@@ -210,9 +227,12 @@ class BloodlineRule(StrEnum):
     ELDEST = "eldest"
     ALL_CHILDREN = "all_children"
     SKIPPED = "skipped"
+    YOUNGEST = "youngest"
 
 
 class SourceLawLevel(StrEnum):
     FREE = "free"
     LICENSED = "licensed"
     BANNED = "banned"
+    CONSCRIPTED = "conscripted"
+    TAXED = "taxed"

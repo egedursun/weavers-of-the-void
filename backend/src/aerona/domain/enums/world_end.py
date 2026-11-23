@@ -8,6 +8,9 @@ class WorldEnd(StrEnum):
     SUNK_INTO_VOID = "sunk_into_void"
     FORGOTTEN = "forgotten"
     TRANSFIGURED = "transfigured"
+    DROWNED = "drowned"
+    BURNED = "burned"
+    DEVOURED = "devoured"
 
 
 class WorldEndCause(StrEnum):
@@ -18,3 +21,6 @@ class WorldEndCause(StrEnum):
     VOID = "void"
     OBLIVION = "oblivion"
     BELIEF_DRIFT = "belief_drift"
+    RUNAWAY_CLIMATE = "runaway_climate"
+    WAR = "war"
+    OUTER_HUNGER = "outer_hunger"

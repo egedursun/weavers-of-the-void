@@ -66,6 +66,7 @@ import { CLASS_SPEC } from '@/features/entity/society/labels'
 import { IncitementCard } from '@/features/foundations/IncitementCard'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { WARS } from '@/features/worldview/labels'
 import { ArmyPanel } from './ArmyPanel'
 import { BattleDepthPanel } from './BattleDepth'
 import { AimParams, SiegeDepth, WarLedger, WarOrders } from './Orders'
@@ -1380,6 +1381,9 @@ function BattleItem({ battle, last }: { battle: BattleReport; last: boolean }) {
           {battle.place && <Plain icon={MapPin}>{battle.place.name}</Plain>}
           {battle.terrain && (
             <TableTag table={TERRAIN} value={battle.terrain} />
+          )}
+          {battle.ground !== 'land' && (
+            <TableTag table={WARS} value={battle.ground} />
           )}
           {battle.weather && (
             <TableTag table={WEATHER} value={battle.weather} />

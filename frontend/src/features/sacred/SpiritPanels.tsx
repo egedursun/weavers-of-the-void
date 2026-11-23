@@ -476,7 +476,7 @@ function PetitionCard({
       caption={`${status.label} · filed in epoch ${row.filed_epoch}, due by epoch ${row.due_epoch}${row.resolved_epoch !== null ? `, settled in epoch ${row.resolved_epoch}` : ''}`}
       removeLabel='Strike the petition'
       editTitle='Set the petition'
-      note='A petition waits before its office until it falls due. Granted, a petition for healing restores health, for children grants fertility, for safe passage lifts stress, for the harvest or prosperity enriches the town, and a suit humbles the spirit it is brought against.'
+      note='A petition waits before its office until it falls due. Granted, a petition for healing restores health, for children grants fertility, for safe passage lifts stress, for the harvest or prosperity enriches the town, for rain wets the land, for protection strengthens the town, for vengeance lays a curse on the one it names, and a suit humbles the spirit it is brought against.'
       fields={[
         {
           key: 'office_spirit_id',
@@ -495,6 +495,12 @@ function PetitionCard({
           label: 'Brought against',
           kind: 'node',
           types: SPIRIT_TYPES,
+        },
+        {
+          key: 'target_node_id',
+          label: 'Vengeance sought on',
+          kind: 'node',
+          types: PETITIONERS,
         },
         {
           key: 'bribe',
@@ -555,6 +561,10 @@ function PetitionCard({
           [
             'Brought against',
             <Ref key='defendant' node={row.defendant} empty='no one' />,
+          ],
+          [
+            'Vengeance sought on',
+            <Ref key='target' node={row.target} empty='no one' />,
           ],
           [
             'Appealed to',
@@ -677,6 +687,7 @@ function PetitionForge({
   )
   const [ask, setAsk] = useState<keyof typeof PETITION_KINDS>('healing')
   const [defendant, setDefendant] = useState<number | null>(null)
+  const [wrongdoer, setWrongdoer] = useState<number | null>(null)
   const [bribe, setBribe] = useState('0')
   const filing = useSacredAction(
     'petition:create',
@@ -685,6 +696,7 @@ function PetitionForge({
       office_id: office ?? 0,
       kind: ask,
       defendant_id: ask === 'suit' ? defendant : null,
+      target_id: ask === 'vengeance' ? wrongdoer : null,
       bribe: Number(bribe) || 0,
     }),
     'The petition is filed'
@@ -697,7 +709,9 @@ function PetitionForge({
           ? 'Choose the office it goes before'
           : ask === 'suit' && defendant === null
             ? 'A suit names the spirit it is brought against'
-            : null),
+            : ask === 'vengeance' && wrongdoer === null
+              ? 'A petition for vengeance names the wrongdoer'
+              : null),
     filing.isPending
   )
   return (
@@ -748,6 +762,17 @@ function PetitionForge({
           ask === 'suit' ? blocked : 'Only a suit is brought against a spirit'
         }
         types={SPIRIT_TYPES}
+      />
+      <NodePicker
+        label='Vengeance sought on'
+        value={wrongdoer}
+        onChange={setWrongdoer}
+        blocked={
+          ask === 'vengeance'
+            ? blocked
+            : 'Only a petition for vengeance names a wrongdoer'
+        }
+        types={PETITIONERS}
       />
       <NumberField
         label='Offerings slipped with it'

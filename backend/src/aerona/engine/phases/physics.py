@@ -17,7 +17,7 @@ from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.features import adopt_comets, devour, ensure_wells, harbour_pirates, keep_wormholes, mine_fields, pass_rogues, return_comets
 from aerona.engine.cosmos.impacts import forecast, impact_winters, resolve
-from aerona.engine.cosmos.lifeforms import fit_peoples, inferred_life, quicken
+from aerona.engine.cosmos.lifeforms import fit_peoples, inferred_life, quicken, rederive_gravity, rehome_life
 from aerona.engine.cosmos.orbits import Moon, apply_to_world, calibrate, counted_moons, derive, infer, lose_air, rogue_worlds, root_of, sky_of
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.planetary import planetary_climate, sea_level_of
@@ -83,7 +83,7 @@ async def physics_rows(
         rows[world.id] = row
     for world in sorted(worlds.values(), key=lambda row: row.id):
         if await ctx.session.get(WorldLifeRow, world.id) is None:
-            ctx.session.add(await inferred_life(ctx.session, world, rows.get(world.id)))
+            ctx.session.add(await inferred_life(ctx.session, ctx.rules, world, rows.get(world.id)))
     await ctx.session.flush()
     return rows
 
@@ -178,10 +178,12 @@ async def derive_all(ctx: TickContext, *, quiet: bool) -> int:
     "table.world_physics",
     "table.worlds",
 )
-@writes("table.chronicle", "table.incidents", "table.world_life", "table.world_physics", "table.world_seasons", "table.worlds")
+@writes("table.applied_fixups", "table.chronicle", "table.incidents", "table.world_life", "table.world_physics", "table.world_seasons", "table.worlds")
 async def world_physics(ctx: TickContext) -> None:
+    ctx.count("gravity_rederived", await rederive_gravity(ctx))
     ctx.count("worlds_derived", await derive_all(ctx, quiet=False))
     ctx.count("peoples_fitted", await fit_peoples(ctx.session, ctx.rules))
+    ctx.count("life_rehomed", await rehome_life(ctx))
 
 
 async def rescale_seams(session: AsyncSession, rules: Rules) -> int:
@@ -263,6 +265,7 @@ async def cosmic_features(ctx: TickContext) -> None:
     "table.impact_events",
     "table.nodes",
     "table.stars",
+    "table.war_remnants",
     "table.worlds",
 )
 @writes("table.chronicle", "table.impact_events", "table.incidents", "table.region_environment")

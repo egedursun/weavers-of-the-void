@@ -5,11 +5,13 @@ from aerona.domain.enums.chronicle import FeedCategory as F
 from aerona.domain.enums.collective import FormativeKind
 from aerona.domain.enums.customs import ReliefKind
 from aerona.domain.enums.demography import InheritanceCustom
+from aerona.domain.enums.divine import PenanceDeed, SonPunishment
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.garden import GardenKind
 from aerona.domain.enums.means import LockKind
 from aerona.domain.enums.mind import ActKind, EthicalStance
 from aerona.domain.enums.modifier import IncidentRole as R
+from aerona.domain.enums.mythic import ServitorOrigin
 from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule
 from aerona.domain.enums.records import ProcessClock as C
 from aerona.domain.enums.records import ProcessGroup as G
@@ -499,5 +501,41 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         facts=(FactSpec("cost", FactValue.NUMBER, FactUnit.COIN),),
         place=PlaceRule.REQUIRED,
         clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "council.penalty",
+        G.GODS,
+        "The council of the gods punished {target} with {penalty_label}.",
+        roles=(RoleSpec(R.TARGET),),
+        facts=(FactSpec("penalty", FactValue.ENUM, enum=SonPunishment), FactSpec("penalty_label", FactValue.NAME)),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "council.penance_kept",
+        G.GODS,
+        "{target} did the penance the council set it, to {deed_label}.",
+        roles=(RoleSpec(R.TARGET),),
+        facts=(FactSpec("deed", FactValue.ENUM, enum=PenanceDeed), FactSpec("deed_label", FactValue.NAME)),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "council.penance_failed",
+        G.GODS,
+        "{target} did not {deed_label} by the day the council set, and was chained for it.",
+        roles=(RoleSpec(R.TARGET),),
+        facts=(FactSpec("deed", FactValue.ENUM, enum=PenanceDeed), FactSpec("deed_label", FactValue.NAME)),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "servitor.joined",
+        G.GODS,
+        "{subject} entered the service of {patron}, {origin_label}.",
+        roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PATRON), RoleSpec(R.ORIGIN, required=False)),
+        facts=(FactSpec("origin", FactValue.ENUM, enum=ServitorOrigin), FactSpec("origin_label", FactValue.NAME)),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
     ),
 )

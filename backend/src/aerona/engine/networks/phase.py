@@ -1,6 +1,8 @@
+from collections.abc import Awaitable, Callable
+
 from sqlalchemy import select
 
-from aerona.catalog.life.networks import CARRIER_ENERGY, CARRIER_FAILURE, CAUSE_EPOCHS, ROLE_SHOCK
+from aerona.catalog.life.networks import CARRIER_ENERGY, CARRIER_FAILURE, CAUSE_EPOCHS, JOINING_ROLES, ROLE_SHOCK
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
@@ -10,13 +12,13 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import SiegeRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.networks import NetworkRole, OutageCause
+from aerona.domain.enums.networks import NetworkCarrier, NetworkRole, OutageCause
 from aerona.domain.enums.records import FactUnit, InstrumentKind, StepAction, StepLocus, StepOutcome
-from aerona.domain.enums.society import Commodity
+from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
@@ -26,12 +28,15 @@ from aerona.engine.networks.backfill import keep_relays, relay_backfill
 from aerona.engine.networks.book import carrier_days, running, shake_ledger
 from aerona.engine.networks.energy import starved
 from aerona.engine.networks.kinds import ACCESS_REACH
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.stats import set_stats, shift_stat
 from aerona.engine.recording.record import StepDraft
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.technology.profiles import family_level
+
+Check = Callable[[TickContext, NetworkProfileRow, list[NetworkNodeRow]], Awaitable[bool]]
 
 
 async def members(ctx: TickContext, network_id: int) -> list[NetworkNodeRow]:
@@ -46,6 +51,65 @@ async def besieged(ctx: TickContext, rows: list[NetworkNodeRow]) -> bool:
         else None
     )
     return found is not None
+
+
+async def dreams_carry(ctx: TickContext, rows: list[NetworkNodeRow]) -> bool:
+    laws = await ctx.laws()
+    for row in rows:
+        member = await ctx.session.get(EntityRow, row.member_node_id)
+        if member is not None and member.world_id is not None and laws.has(NaturalLaw.DREAMS_ARE_REAL, member.world_id):
+            return True
+    return False
+
+
+async def quaked(ctx: TickContext, rows: list[NetworkNodeRow]) -> bool:
+    atlas = await RegionAtlas.load(ctx.session)
+    struck = {
+        atlas.top_region(quake)
+        for quake in await ctx.session.scalars(
+            select(EntityRow.id).where(EntityRow.engine_kind == EngineKind.EARTHQUAKE, EntityRow.birth_epoch >= ctx.epoch - 1).order_by(EntityRow.id)
+        )
+    }
+    return any(atlas.top_region(row.member_node_id) in struck for row in rows)
+
+
+async def restless(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> bool:
+    if profile.owner_node_id is None or held(profile.owner_node_id):
+        return False
+    for row in rows:
+        settled = await ctx.session.get(SettlementProfileRow, row.member_node_id)
+        if settled is not None and settled.unrest >= ctx.rules.networks.shutdown_unrest:
+            return True
+    return False
+
+
+async def answer_shutdown(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> None:
+    if profile.owner_node_id is None:
+        return
+    for row in rows:
+        if row.member_node_id != profile.owner_node_id and not held(row.member_node_id):
+            await change_relation(ctx, row.member_node_id, profile.owner_node_id, -ctx.rules.networks.shutdown_trust, MemoryKind.ILL_WILL)
+
+
+async def join_gateways(ctx: TickContext, rows: list[NetworkNodeRow]) -> int:
+    joined = 0
+    for row in rows:
+        if row.role is NetworkRole.GATEWAY or "role" in row.locked or held(row.member_node_id):
+            continue
+        other = await ctx.session.scalar(
+            select(NetworkNodeRow.id)
+            .where(NetworkNodeRow.member_node_id == row.member_node_id, NetworkNodeRow.network_entity_id != row.network_entity_id)
+            .limit(1)
+        )
+        if other is not None and row.role in JOINING_ROLES:
+            row.role = NetworkRole.GATEWAY
+            joined += 1
+    return joined
+
+
+async def gateway_reach(ctx: TickContext, rows: list[NetworkNodeRow]) -> float:
+    gateways = sum(1 for row in rows if row.role is NetworkRole.GATEWAY)
+    return 1 + gateways * ctx.rules.networks.gateway_reach_pct / PERCENT
 
 
 async def repairable(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> bool:
@@ -68,16 +132,43 @@ async def cut(ctx: TickContext, network: EntityRow, profile: NetworkProfileRow, 
 async def outage_cause(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> OutageCause | None:
     table = ctx.rules.networks
     rng = ctx.rng(f"network.outage.{profile.network_entity_id}.{ctx.epoch}")
-    if await besieged(ctx, rows) and rng.chance(table.war_outage):
-        return OutageCause.WAR
-    if not await repairable(ctx, profile, rows) and rng.chance(table.decay_outage):
-        return OutageCause.DECAY
-    for row in rows:
-        if await starved(ctx.session, row.member_node_id, CARRIER_ENERGY[profile.carrier], table.shortage_pct):
-            return OutageCause.SHORTAGE
+    checks: tuple[tuple[OutageCause, Check, int], ...] = (
+        (OutageCause.RITE, dream_cut, PERCENT),
+        (OutageCause.WAR, besieged_check, table.war_outage),
+        (OutageCause.QUAKE, quaked_check, table.quake_outage),
+        (OutageCause.SHUTDOWN, restless, table.shutdown_pct),
+        (OutageCause.DECAY, unrepairable, table.decay_outage),
+        (OutageCause.SHORTAGE, short_of_energy, PERCENT),
+    )
+    for cause, met, chance in checks:
+        if await met(ctx, profile, rows) and rng.chance(chance):
+            return cause
     if rng.chance(table.outage_base * (PERCENT - profile.reliability) / PERCENT):
         return CARRIER_FAILURE[profile.carrier]
     return None
+
+
+async def besieged_check(ctx: TickContext, _profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> bool:
+    return await besieged(ctx, rows)
+
+
+async def quaked_check(ctx: TickContext, _profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> bool:
+    return await quaked(ctx, rows)
+
+
+async def dream_cut(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> bool:
+    return profile.carrier is NetworkCarrier.DREAM_LINK and not await dreams_carry(ctx, rows)
+
+
+async def unrepairable(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> bool:
+    return not await repairable(ctx, profile, rows)
+
+
+async def short_of_energy(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> bool:
+    for row in rows:
+        if await starved(ctx.session, row.member_node_id, CARRIER_ENERGY[profile.carrier], ctx.rules.networks.shortage_pct):
+            return True
+    return False
 
 
 async def shock(ctx: TickContext, row: NetworkNodeRow) -> None:
@@ -207,7 +298,7 @@ async def keep_ledger(ctx: TickContext, network: EntityRow, profile: NetworkProf
 async def converge(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> None:
     if not profile.carries_money or len(rows) < 2:
         return
-    pull = ctx.rules.networks.price_pull_pct * profile.capacity / PERCENT / PERCENT
+    pull = min(1.0, ctx.rules.networks.price_pull_pct * profile.capacity / PERCENT / PERCENT * await gateway_reach(ctx, rows))
     societies = [
         row for row in [await ctx.session.get(CommunitySocietyRow, member.member_node_id) for member in rows] if row is not None and not held(row.entity_id)
     ]
@@ -261,6 +352,9 @@ async def networks(ctx: TickContext) -> None:
             cause = await outage_cause(ctx, profile, rows)
             if cause is not None:
                 await cut(ctx, network, profile, cause, clamp_int(PERCENT - profile.reliability, 1, PERCENT))
+            if cause is OutageCause.SHUTDOWN:
+                await answer_shutdown(ctx, profile, rows)
+        ctx.count("network_gateways", await join_gateways(ctx, rows))
         live = running(profile, ctx.epoch)
         await depend(ctx, profile, rows, live)
         if live:

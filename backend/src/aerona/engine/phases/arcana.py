@@ -1,3 +1,4 @@
+from aerona.engine.arcana.endings import EndingTally, end_rites
 from aerona.engine.arcana.grammar import ensure_all
 from aerona.engine.arcana.items import ChargeTally, recharge_all
 from aerona.engine.arcana.labs import StudyTally, study, write_down_rites
@@ -10,10 +11,13 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases.dominion import count
 
 
-@reads("table.lab_texts", "table.rite_grammar", "table.rite_profiles", "table.skills")
+@reads("table.castings", "table.lab_texts", "table.rite_grammar", "table.rite_profiles", "table.skills")
 @writes("table.rite_grammar")
 async def spell_grammar(ctx: TickContext) -> None:
     ctx.count("grammar_shaped", await ensure_all(ctx))
+    endings = EndingTally()
+    await end_rites(ctx, endings)
+    count(ctx, "rite", endings)
     tally = StudyTally()
     await write_down_rites(ctx, tally)
     await study(ctx, tally)

@@ -4482,8 +4482,8 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("geas:lay", "geas:edit", "geas:break", "geas:delete"),
         ("MythicSection",),
         ("mortal_context", "son_turn_system"),
-        ("lay_geas", "lift_geas"),
-        ("mythic.geas_broken",),
+        ("lay_geas", "lift_geas", "lay_geas_on_kin", "swear_geas"),
+        ("mythic.geas_broken", "geas.laid"),
         ("09d7dc547388",),
     ),
     ComplianceRow(

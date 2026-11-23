@@ -371,4 +371,60 @@ describe('the divine panels', () => {
       .poll(() => callsTo('POST', '/api/actions/breach:close'))
       .toHaveLength(1)
   })
+  it('names the dealer of a wound and asks for the mortal behind a mortal deed', async () => {
+    serve()
+    onApi('GET', '/api/gods/7/divinity', {
+      ...DIVINITY,
+      wounds: [
+        {
+          ...DIVINITY.wounds[0],
+          kind: 'bound',
+          label: 'Binding',
+          domain: null,
+          cause: 'mortal_slayer',
+          cause_node: { id: 31, kind: 'entity', name: 'Vesk' },
+        },
+      ],
+    })
+    const { screen } = await renderApp(<GodDivinitySection godId={7} />)
+    await expect
+      .element(screen.getByText("From a mortal's deed, Vesk, epoch 3"))
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole('button', { name: 'Inflict the wound' }))
+      .toHaveAccessibleDescription('Choose a wound')
+  })
+
+  it('shows a penance the council set and keeps its deed picker for penances', async () => {
+    serve()
+    onApi('GET', '/api/council/rulings', {
+      rulings: [
+        {
+          id: 6,
+          motion: 'punish_son',
+          label: 'Punish a son',
+          target: SON,
+          world: null,
+          school: null,
+          punishment: 'penance',
+          penance_deed: 'raise_hero',
+          epoch: 3,
+          until_epoch: 6,
+          active: true,
+          enacted: true,
+          note: null,
+          locked: [],
+        },
+      ],
+      motions: ['punish_son'],
+    })
+    const { screen } = await renderApp(<CouncilRulingsPanel />)
+    await expect.element(screen.getByText('Bind to a penance')).toBeVisible()
+    await expect
+      .element(screen.getByText('Penance: Raise a hero'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole('combobox', { name: 'Deed of penance' }))
+      .toBeDisabled()
+  })
 })

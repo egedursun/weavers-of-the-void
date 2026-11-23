@@ -30,5 +30,7 @@ MIND_PURPOSES: Mapping[MindPurpose, PurposeSpec] = total(
         P.ARCHIVE: PurposeSpec(60, "mind", "stability", 1),
         P.GUARDIAN: PurposeSpec(90, "town", "crime", -1),
         P.FREE: PurposeSpec(150),
+        P.SOLDIER: PurposeSpec(130, "town", "militia", 1),
+        P.TEACHER: PurposeSpec(90),
     },
 )

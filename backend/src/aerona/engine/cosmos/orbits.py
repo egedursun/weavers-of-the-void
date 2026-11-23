@@ -173,6 +173,10 @@ def heat_of(rules: Rules, temperature: float) -> int:
 
 
 def gravity_band(rules: Rules, gravity: float) -> Gravity:
+    if gravity < hundredths(rules.physics.micro_gravity_g_hundredths):
+        return Gravity.MICRO
+    if gravity > hundredths(rules.physics.crushing_gravity_g_hundredths):
+        return Gravity.CRUSHING
     if gravity < hundredths(rules.orbits.low_gravity_g_hundredths):
         return Gravity.LOW
     if gravity > hundredths(rules.orbits.high_gravity_g_hundredths):
@@ -253,6 +257,11 @@ def infer(rules: Rules, world: WorldRow, star: StarRow | None) -> WorldPhysicsRo
     if body.methane:
         physics.methane = body.methane
         physics.nitrogen = max(0, physics.nitrogen - body.methane)
+    for gas in ("ammonia", "hydrogen"):
+        share = getattr(body, gas)
+        if share:
+            setattr(physics, gas, share)
+            physics.nitrogen = max(0, physics.nitrogen - share)
     return physics
 
 

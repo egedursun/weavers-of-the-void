@@ -63,6 +63,9 @@ class ServitorRules:
     loyalty_drift: int = rule(4, 0, 100, D, "Loyalty a servitor moves each epoch toward its god's mean standing")
     fall_at: int = rule(20, 0, 100, D, "Loyalty below which a servitor may fall to another master")
     fall_pct: int = rule(25, 0, 100, D, "Chance a disloyal servitor falls each epoch (%)")
+    defected_loyalty: int = rule(40, 0, 100, D, "Loyalty a servitor that left another god's service starts with under its new master")
+    defected_fall_pct: int = rule(150, 100, 400, D, "How much readier a servitor that has defected once is to fall again (%)")
+    born_rise_pct: int = rule(25, 0, 100, D, "Chance the soul of a god's own child rises into its parent's service each epoch (%)")
     guard_pct: int = rule(50, 0, 100, D, "Chance a guarding servitor turns back a desecrator of its post (%)")
     host_strength: int = rule(5, 0, 1000, D, "Strength a servitor of the host adds to its god in a divine war")
     herald_dream_pct: int = rule(5, 0, 100, D, "Extra chance each herald gives its god's dreams to win a mortal (%)")
@@ -86,6 +89,8 @@ class GeasRules(Spanned):
     duty_years: int = span(5, 1, 2500, H, "Years within which a duty geas must be done again")
     trap_pct: int = rule(40, 0, 100, H, "Chance a geas trap forces its target to break the geas (%)")
     bind_pct: int = rule(50, 0, 100, H, "Chance a binding rite cast on a mortal lays a geas on it, witnessed by the caster's god (%)")
+    kin_pass_pct: int = rule(60, 0, 100, H, "Chance a geas laid by kin passes to a newborn of the line where its people holds the line's word (%)")
+    kin_kinship: int = rule(20, -100, 100, H, "Regard for kin a people needs before a geas laid by kin passes down its lines")
 
     @property
     def duty_epochs(self) -> int:

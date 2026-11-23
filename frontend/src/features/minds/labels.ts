@@ -130,6 +130,13 @@ import {
   Wind,
   Wrench,
   Zap,
+  DoorOpen,
+  HeartPulse,
+  Map,
+  PowerOff,
+  Scale,
+  Store,
+  Languages,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -189,6 +196,8 @@ export const MIND_PURPOSES: Record<Schema['MindPurpose'], Named> = {
   archive: { label: 'Archive', icon: Archive, tone: 'info' },
   guardian: { label: 'Guardian', icon: Shield, tone: 'warning' },
   free: { label: 'Serves no one', icon: Bird, tone: 'success' },
+  soldier: { label: 'Soldier', icon: Swords, tone: 'danger' },
+  teacher: { label: 'Teacher', icon: GraduationCap, tone: 'success' },
 }
 
 export const MIND_UPKEEPS: Record<Schema['MindUpkeep'], Named> = {
@@ -201,6 +210,7 @@ export const MIND_UPKEEPS: Record<Schema['MindUpkeep'], Named> = {
   host: { label: 'Its host', icon: Server, tone: 'info' },
   place: { label: 'Its place', icon: MapPin, tone: 'success' },
   none: { label: 'Nothing', icon: CircleOff, tone: 'muted' },
+  attention: { label: 'Attention', icon: Eye, tone: 'info' },
 }
 
 export const STATE_MEDIA: Record<Schema['StateMedium'], Named> = {
@@ -235,6 +245,7 @@ export const MAKING_OUTCOMES: Record<Schema['MakingOutcome'], Named> = {
     icon: Sparkle,
     tone: 'danger',
   },
+  exceeded: { label: 'Beyond what was meant', icon: Sparkles, tone: 'gold' },
 }
 
 export const ARCHIVE_ACCESS: Record<Schema['ArchiveAccess'], Named> = {
@@ -297,6 +308,12 @@ export const WILL_CAUSES: Record<Schema['WillCause'], Named> = {
   damage: { label: 'Damage', icon: Hammer, tone: 'danger' },
   oath: { label: 'An oath', icon: Handshake, tone: 'gold' },
   exceeding: { label: 'Past every bound', icon: Rocket, tone: 'danger' },
+  faith: { label: 'Faith', icon: Church, tone: 'gold' },
+  kinship: {
+    label: 'Kinship with its own make',
+    icon: Users,
+    tone: 'verdigris',
+  },
 }
 
 export const NETWORK_CARRIERS: Record<Schema['NetworkCarrier'], Named> = {
@@ -307,6 +324,7 @@ export const NETWORK_CARRIERS: Record<Schema['NetworkCarrier'], Named> = {
   mind_link: { label: 'Mind link', icon: Brain, tone: 'verdigris' },
   rite_link: { label: 'Rite link', icon: Wand, tone: 'verdigris' },
   grown_link: { label: 'Grown link', icon: Sprout, tone: 'success' },
+  dream_link: { label: 'Dream link', icon: Moon, tone: 'verdigris' },
 }
 
 export const NETWORK_ACCESS: Record<Schema['NetworkAccess'], Named> = {
@@ -322,6 +340,7 @@ export const NETWORK_ROLES: Record<Schema['NetworkRole'], Named> = {
   end: { label: 'End', icon: Plug, tone: 'muted' },
   relay: { label: 'Relay', icon: Repeat, tone: 'info' },
   archive: { label: 'Archive', icon: Archive, tone: 'info' },
+  gateway: { label: 'Gateway', icon: DoorOpen, tone: 'gold' },
 }
 
 export const OUTAGE_CAUSES: Record<Schema['OutageCause'], Named> = {
@@ -336,6 +355,8 @@ export const OUTAGE_CAUSES: Record<Schema['OutageCause'], Named> = {
   shortage: { label: 'Shortage', icon: BatteryLow, tone: 'warning' },
   divine: { label: 'A god’s hand', icon: Sun, tone: 'gold' },
   ice_storm: { label: 'Ice storm', icon: CloudSnow, tone: 'warning' },
+  quake: { label: 'Quake', icon: Activity, tone: 'danger' },
+  shutdown: { label: 'Shutdown by its owner', icon: PowerOff, tone: 'warning' },
 }
 
 export const AUGMENT_SLOTS: Record<Schema['AugmentSlot'], Named> = {
@@ -356,12 +377,15 @@ export const AUGMENT_KINDS: Record<Schema['AugmentKind'], Named> = {
   sense: { label: 'Sense', icon: Eye, tone: 'verdigris' },
   storage: { label: 'Storage', icon: Database, tone: 'info' },
   cosmetic: { label: 'Cosmetic', icon: Palette, tone: 'muted' },
+  armour: { label: 'Armour', icon: Shield, tone: 'info' },
+  life_support: { label: 'Life support', icon: HeartPulse, tone: 'success' },
 }
 
 export const AUGMENT_MAKES: Record<Schema['AugmentMake'], Named> = {
   made: { label: 'Made', icon: Hammer, tone: 'info' },
   rite_bound: { label: 'Rite-bound', icon: Wand, tone: 'verdigris' },
   grown: { label: 'Grown', icon: Sprout, tone: 'success' },
+  power_bound: { label: 'Power-bound', icon: Zap, tone: 'verdigris' },
 }
 
 export const EFFECT_TARGETS: Record<Schema['EffectTarget'], Named> = {
@@ -370,6 +394,7 @@ export const EFFECT_TARGETS: Record<Schema['EffectTarget'], Named> = {
   skill: { label: 'A skill', icon: GraduationCap, tone: 'gold' },
   sense: { label: 'A sense', icon: Eye, tone: 'verdigris' },
   resistance: { label: 'A resistance', icon: Shield, tone: 'warning' },
+  lifespan: { label: 'Lifespan', icon: Hourglass, tone: 'gold' },
 }
 
 export const REALM_PURPOSES: Record<Schema['RealmPurpose'], Named> = {
@@ -383,6 +408,8 @@ export const REALM_PURPOSES: Record<Schema['RealmPurpose'], Named> = {
   refuge: { label: 'Refuge', icon: Shield, tone: 'info' },
   experiment: { label: 'Experiment', icon: FlaskConical, tone: 'warning' },
   free: { label: 'Free', icon: Bird, tone: 'muted' },
+  market: { label: 'Market', icon: Store, tone: 'gold' },
+  memorial: { label: 'Memorial', icon: Landmark, tone: 'verdigris' },
 }
 
 export const REALM_ENTRIES: Record<Schema['RealmEntry'], Named> = {
@@ -391,6 +418,7 @@ export const REALM_ENTRIES: Record<Schema['RealmEntry'], Named> = {
   rite: { label: 'By rite', icon: Wand, tone: 'verdigris' },
   death: { label: 'By death', icon: Skull, tone: 'muted' },
   birth: { label: 'By birth', icon: Baby, tone: 'success' },
+  dream: { label: 'Dream', icon: Moon, tone: 'verdigris' },
 }
 
 export const REALM_AWARENESS: Record<Schema['RealmAwareness'], Named> = {
@@ -409,6 +437,7 @@ export const INTRUSION_TARGETS: Record<Schema['IntrusionTarget'], Named> = {
   structure: { label: 'A structure', icon: Building, tone: 'info' },
   ledger: { label: 'A ledger', icon: BookOpen, tone: 'gold' },
   saved_state: { label: 'A saved mind', icon: Save, tone: 'verdigris' },
+  seal: { label: 'Seal', icon: Lock, tone: 'warning' },
 }
 
 export const INTRUSION_APPROACHES: Record<Schema['IntrusionApproach'], Named> =
@@ -427,6 +456,7 @@ export const INTRUSION_AIMS: Record<Schema['IntrusionAim'], Named> = {
   seize: { label: 'Seize', icon: Hand, tone: 'danger' },
   plant: { label: 'Plant', icon: FileWarning, tone: 'warning' },
   extort: { label: 'Extort', icon: Coins, tone: 'danger' },
+  expose: { label: 'Expose', icon: Megaphone, tone: 'danger' },
 }
 
 export const ATTRIBUTIONS: Record<Schema['Attribution'], Named> = {
@@ -440,6 +470,7 @@ export const INTRUSION_OUTCOMES: Record<Schema['IntrusionOutcome'], Named> = {
   succeeded: { label: 'Succeeded', icon: CircleCheck, tone: 'success' },
   failed: { label: 'Failed', icon: CircleX, tone: 'muted' },
   caught: { label: 'Caught', icon: Siren, tone: 'danger' },
+  undetected: { label: 'Undetected', icon: EyeOff, tone: 'warning' },
 }
 
 export const DATA_CONTENTS: Record<Schema['DataContent'], Named> = {
@@ -450,6 +481,7 @@ export const DATA_CONTENTS: Record<Schema['DataContent'], Named> = {
   ledger: { label: 'A ledger', icon: Coins, tone: 'gold' },
   identity: { label: 'An identity', icon: IdCard, tone: 'warning' },
   orders: { label: 'Orders', icon: ListOrdered, tone: 'info' },
+  location: { label: 'Location', icon: MapPin, tone: 'info' },
 }
 
 export const SURVEILLANCE_FOCUSES: Record<Schema['SurveillanceFocus'], Named> =
@@ -461,6 +493,8 @@ export const SURVEILLANCE_FOCUSES: Record<Schema['SurveillanceFocus'], Named> =
     minds: { label: 'Minds', icon: Brain, tone: 'verdigris' },
     gifted: { label: 'The gifted', icon: Sparkles, tone: 'verdigris' },
     everything: { label: 'Everything', icon: Eye, tone: 'danger' },
+    language: { label: 'Language', icon: Languages, tone: 'warning' },
+    kind: { label: 'Kind of being', icon: Users, tone: 'warning' },
   }
 
 export const AUTHENTICITIES: Record<Schema['Authenticity'], Named> = {
@@ -476,6 +510,7 @@ export const COMPANY_CHARTERS: Record<Schema['CompanyCharter'], Named> = {
   free: { label: 'Free', icon: Bird, tone: 'success' },
   state_owned: { label: 'State-owned', icon: Landmark, tone: 'info' },
   cooperative: { label: 'Cooperative', icon: Users, tone: 'verdigris' },
+  guild: { label: 'Guild', icon: Hammer, tone: 'gold' },
 }
 
 export const HOLDING_KINDS: Record<Schema['CompanyHoldingKind'], Named> = {
@@ -487,6 +522,7 @@ export const HOLDING_KINDS: Record<Schema['CompanyHoldingKind'], Named> = {
   living_line: { label: 'Living line', icon: Sprout, tone: 'success' },
   route: { label: 'Route', icon: Route, tone: 'gold' },
   enclave: { label: 'Enclave', icon: Castle, tone: 'danger' },
+  land: { label: 'Land', icon: Map, tone: 'success' },
 }
 
 export const REPLICATOR_SCALES: Record<Schema['ReplicatorScale'], Named> = {
@@ -504,6 +540,7 @@ export const REPLICATOR_OUTPUTS: Record<Schema['ReplicatorOutput'], Named> = {
   medicine: { label: 'Medicine', icon: Pill, tone: 'success' },
   terraforming: { label: 'Reshaping land', icon: Mountain, tone: 'verdigris' },
   disassembly: { label: 'Disassembly', icon: Bomb, tone: 'danger' },
+  energy: { label: 'Energy', icon: Zap, tone: 'warning' },
 }
 
 export const REPLICATOR_STAGES: Record<Schema['ReplicatorStage'], Named> = {
@@ -520,6 +557,7 @@ export const RELIC_STATES: Record<Schema['RelicState'], Named> = {
   failing: { label: 'Failing', icon: TriangleAlert, tone: 'warning' },
   dormant: { label: 'Dormant', icon: Moon, tone: 'muted' },
   broken: { label: 'Broken', icon: CircleX, tone: 'danger' },
+  restored: { label: 'Restored', icon: Wrench, tone: 'success' },
 }
 
 export const RELIC_USES: Record<Schema['RelicUse'], Named> = {
@@ -533,6 +571,7 @@ export const RELIC_USES: Record<Schema['RelicUse'], Named> = {
   displayed: { label: 'Displayed', icon: Frame, tone: 'info' },
   feared: { label: 'Feared', icon: Skull, tone: 'danger' },
   ignored: { label: 'Ignored', icon: EyeOff, tone: 'muted' },
+  dismantled: { label: 'Dismantled', icon: Hammer, tone: 'muted' },
 }
 
 export const MADE_MIND_STANCES: Record<Schema['MadeMindStance'], Named> = {
@@ -541,6 +580,7 @@ export const MADE_MIND_STANCES: Record<Schema['MadeMindStance'], Named> = {
   kin: { label: 'Kin', icon: HeartHandshake, tone: 'success' },
   sacred: { label: 'Sacred', icon: Flame, tone: 'gold' },
   silent: { label: 'Silent', icon: CircleOff, tone: 'muted' },
+  regulated: { label: 'Regulated', icon: Scale, tone: 'info' },
 }
 
 export const RELIC_STANCES: Record<Schema['RelicStance'], Named> = {

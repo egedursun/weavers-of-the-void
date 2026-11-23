@@ -15,6 +15,7 @@ from aerona.domain.enums.folkways import (
     Purification,
     PurityState,
 )
+from aerona.domain.enums.kind_crafts import ColourFocus
 
 
 class DietView(ApiModel):
@@ -113,6 +114,8 @@ class LuckBeliefView(ApiModel):
     reach: LuckReach
     lucky: bool
     name: str
+    species: NodeRef | None
+    colour: ColourFocus | None
     locked: list[str]
 
 

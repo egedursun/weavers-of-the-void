@@ -1425,5 +1425,9 @@ BRANCH_SKILLS: MappingProxyType[KnowledgeBranch, SkillKind] = total(
         KnowledgeBranch.BIOMANCY: S.MEDICINE,
         KnowledgeBranch.FORBIDDEN: S.SPELLCRAFT,
         KnowledgeBranch.CIVICS: S.LAW,
+        KnowledgeBranch.LAW: S.LAW,
+        KnowledgeBranch.NATURAL_HISTORY: S.FORAGING,
+        KnowledgeBranch.LANGUAGE_LORE: S.LANGUAGES,
+        KnowledgeBranch.MATHEMATICS: S.ACCOUNTING,
     },
 )

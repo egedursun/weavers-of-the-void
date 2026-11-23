@@ -89,7 +89,7 @@ class AgeRules:
 
 
 @dataclass(frozen=True)
-class ArcRules:
+class ArcRules(Spanned):
     detect_chance: int = rule(40, 0, 100, F, "Chance each epoch that a pattern in a life is read as the start of an arc (%)")
     arcs_per_epoch: int = rule(6, 0, 1000, F, "Arcs that may start across the cosmos in one epoch")
     rise_and_fall_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of rise and fall (50 is neutral)")
@@ -112,6 +112,11 @@ class ArcRules:
     sacrifice_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of sacrifice (50 is neutral)")
     discovery_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of discovery (50 is neutral)")
     open_arcs: int = rule(3, 1, 20, F, "Open arcs one subject may carry at once")
+    guide_chance: int = rule(40, 0, 100, F, "Chance a tale's subject who serves under a master takes that master as its guide (%)")
+    guide_beats: int = rule(1, 0, 20, F, "Beats more a tale may move in an epoch while its guide lives")
+    witness_chance: int = rule(30, 0, 100, F, "Chance someone living beside a tale's subject is drawn in as its witness (%)")
+    witness_memory: int = rule(40, 0, 100, F, "Weight of the memory a witness keeps of a tale it saw end")
+    inheritance_wait_years: int = span(10, 0, 1000, F, "Years after a will is read before the heir is held to have taken up or refused what was left")
     beats_per_epoch: int = rule(3, 1, 20, F, "Beats an arc may take in one epoch, one for each happening its subject and figures share since its last beat")
     stall_epochs: int = rule(3, 1, 100, F, "Epochs without a beat after which an arc stalls and the drama manager presses it")
     drama_step: int = rule(20, 0, 100, F, "Drama a stalled arc gains each epoch")

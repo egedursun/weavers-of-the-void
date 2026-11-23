@@ -2564,7 +2564,7 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "disease:edit": {"lethality": 20, "incubation": 2, "affinity_warmth": "warm", "affinity_moisture": "wet"},
     "disease:create": {"lethality": 20},
     "outbreak:edit": {"severity": 30},
-    "settlement:edit": {"crime": 20, "sewers": True},
+    "settlement:edit": {"crime": 20, "sewers": True, "settle_mode": "ground"},
     "district:design": {"housing": 10},
     "district:design_edit": {"housing": 10},
     "polity:edit": {"legitimacy": 60, "stability": 55},
@@ -2607,7 +2607,7 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "star_physics:edit": {"mass": 1.2, "metallicity": 40},
     "star_system:edit": {"name": "Twin Lights", "separation": 2.0},
     "world_physics:edit": {"albedo": 35, "pressure": 1.2},
-    "life_class:edit": {"complexity": "complex", "environments": ["marine", "terrestrial"]},
+    "life_class:edit": {"complexity": "complex", "environments": ["marine", "terrestrial", "under_ice", "cloud"]},
     "gathering:edit": {"prestige": 40, "cost": 12, "note": "held by order of the gods"},
     "collection:edit": {"name": "War of the Two Fords", "start_epoch": 1, "note": "a long war"},
     "storyteller:set": {"tension": 40, "boost_pct": 10, "cycle_offset": 2},
@@ -2619,7 +2619,7 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "magic_site:edit": {"strength": 70, "output": 5},
     "throne:edit": {"power": 80},
     "divine_creature:edit": {"hunger": 20, "neglect_epochs": 1},
-    "rite_grammar:edit": {"technique": "ward", "range": "region"},
+    "rite_grammar:edit": {"technique": "ward", "range": "linked", "duration": "until_condition", "condition": "time", "condition_epoch": 9, "target": "line"},
     "lab_text:edit": {"fidelity": 60},
     "warping:edit": {"value": 60},
     "longevity:edit": {"dose": 2, "dependence": 30},
@@ -2664,10 +2664,10 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "spy_cell:edit": {"dead_drops": 4},
     "defection:edit": {"secrets": 2, "protected": False},
     "killing:edit": {"method": "accident", "recognised": False},
-    "heroquest:edit": {"steps": 4, "fidelity": 80},
+    "heroquest:edit": {"steps": 4, "fidelity": 80, "trial": "cunning"},
     "mantling:edit": {"progress": 40, "deeds": 3},
     "servitor:edit": {"loyalty": 60, "role": "judge"},
-    "geas:edit": {"favour": 10},
+    "geas:edit": {"favour": 10, "layer": "kin"},
     "cosmic_office:edit": {"neglect": 20, "duty": 40},
     "excavation_stage:edit": {"difficulty": 45, "risk": "collapse", "find": "book"},
     "battlefield_feature:edit": {"strength": 70},
@@ -3870,7 +3870,7 @@ ARTS_EDITS: Mapping[str, Mapping[str, Any]] = {
         "kill_token_entity_id": None,
         "literalness": 30,
     },
-    "instruction_order:edit": {"kind": "serve", "target_node_id": Pick(TOWN), "priority": 2, "condition": "until_date", "until_epoch": 9, "lapsed": False},
+    "instruction_order:edit": {"kind": "tend", "target_node_id": Pick(TOWN), "priority": 2, "condition": "at_set_times", "times": "night", "lapsed": False},
     "remade:edit": {
         "lost_function": "speech",
         "forced_function": "grasp",
@@ -3921,7 +3921,7 @@ LEVERS.update(
             name: after(CONSTRUCT_UP, RULES_UP, set_id=Newest("instruction_set"))
             for name in ("instruction_set:edit", "instruction_set:delete", "instruction_set:resolve")
         },
-        "instruction_order:create": after(CONSTRUCT_UP, set_id=Newest("instruction_set"), kind="report", target_id=Pick(MORTAL), condition="always"),
+        "instruction_order:create": after(CONSTRUCT_UP, set_id=Newest("instruction_set"), kind="carry", target_id=Pick(MORTAL), condition="until_done"),
         **{name: after(CONSTRUCT_UP, ORDER_UP, order_id=Newest("instruction_order")) for name in ("instruction_order:edit", "instruction_order:delete")},
         "remade:create": given(mortal_id=Pick(MORTAL, 3)),
         **{name: after(REMADE_UP, mortal_id=Pick(MORTAL, 3)) for name in ("remade:edit", "remade:delete")},
@@ -6546,5 +6546,14 @@ LEVERS.update(
             {"id": newest_row(ProfessionOfValueRow, "id")},
             {"gap": 40, "knowers": 2},
         ),
+    }
+)
+LEVERS.update(
+    {
+        "law_profile:edit": given(
+            law_id=Computed(natural_law), values={"strength": 70, "exception": "named_kind", "exempt_kind_entity_id": Pick(EntityType.PEOPLE)}, release=[]
+        ),
+        "impact:call": given(world_id=Pick("world"), body="comet", size=30),
+        "world_end:declare": Lever(values={"world_id": WORLD, "state": "burned", "cause": "war", "source_id": Pick(REALM)}, setup=rich_creator),
     }
 )

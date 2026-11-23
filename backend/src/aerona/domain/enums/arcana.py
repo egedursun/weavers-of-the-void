@@ -43,6 +43,8 @@ class SpellRange(StrEnum):
     SIGHT = "sight"
     REGION = "region"
     WORLD = "world"
+    LINKED = "linked"
+    COSMOS = "cosmos"
 
 
 class SpellDuration(StrEnum):
@@ -50,6 +52,21 @@ class SpellDuration(StrEnum):
     SEASON = "season"
     EPOCH = "epoch"
     PERMANENT = "permanent"
+    SUSTAINED = "sustained"
+    UNTIL_CONDITION = "until_condition"
+
+
+class RiteCondition(StrEnum):
+    ACT = "act"
+    TIME = "time"
+    WORD = "word"
+    DEED = "deed"
+
+
+class RiteEnd(StrEnum):
+    CASTER_GONE = "caster_gone"
+    CASTER_STRUCK = "caster_struck"
+    CONDITION_MET = "condition_met"
 
 
 class SpellTarget(StrEnum):
@@ -57,6 +74,9 @@ class SpellTarget(StrEnum):
     GROUP = "group"
     STRUCTURE = "structure"
     REGION = "region"
+    ITEM = "item"
+    LINE = "line"
+    WORLD = "world"
 
 
 class RechargeRule(StrEnum):
@@ -64,6 +84,8 @@ class RechargeRule(StrEnum):
     VIS = "vis"
     MOON = "moon"
     NONE = "none"
+    SKY_EVENT = "sky_event"
+    BODILY_OFFERING = "bodily_offering"
 
 
 class LawSource(StrEnum):

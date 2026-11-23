@@ -18,7 +18,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.constructs import MindWill
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.life_traits import MemoryKindTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.minds import MindPurpose, MindSeat, MindUpkeep, WillCause
@@ -30,11 +30,12 @@ from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.continuity import keep_disputes
 from aerona.engine.minds.instructions import conflict_of
-from aerona.engine.minds.kinds import ARCHIVE_UPKEEP, fade_state, tend_purpose, will_cause
+from aerona.engine.minds.kinds import ARCHIVE_UPKEEP, fade_state, tend_purpose, will_cause, will_pull
 from aerona.engine.minds.profiles import WILL_ORDER, is_made, law_for, law_lets_will_grow, seed_missing, will_allowed, will_rank, world_of
 from aerona.engine.minds.seat_loss import lose_seat, seat_lost
 from aerona.engine.networks.book import members_of
 from aerona.engine.networks.energy import starved
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import close
 from aerona.engine.primitives.stats import stat_or
@@ -96,6 +97,21 @@ async def by_essence(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> 
         return True
     powered = await ctx.session.scalar(select(PowerRow.id).where(PowerRow.holder_node_id == seat.id, PowerRow.state == PowerState.ACTIVE).limit(1))
     return powered is not None
+
+
+@UPKEEP.on(MindUpkeep.ATTENTION)
+async def by_attention(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> bool:
+    maker = await ctx.session.get(EntityRow, row.made_by_node_id) if row.made_by_node_id is not None else None
+    if maker is not None and maker.status is EntityStatus.CANON and maker.world_id == seat.world_id:
+        return True
+    if seat.location_id is None:
+        return False
+    folk = await ctx.session.scalar(
+        select(func.count())
+        .select_from(EntityRow)
+        .where(await present_among(ctx.session, [seat.location_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+    )
+    return int(folk or 0) >= ctx.rules.minds.attention_folk
 
 
 UPKEEP.seal()
@@ -179,7 +195,7 @@ async def grow_will(ctx: TickContext, row: MindProfileRow, harms: int, cares: in
     run_share = min(1.0, row.run_epochs / table.run_epochs)
     conflict = await conflict_of(ctx, row.node_id)
     chance = table.base_chance + run_share * table.base_chance * 2 + conflict * table.conflict_weight_pct / PERCENT
-    chance += harms * table.harm_weight + cares * table.care_weight + (table.contact_weight if free_near else 0)
+    chance += harms * table.harm_weight + cares * table.care_weight + (table.contact_weight if free_near else 0) + await will_pull(ctx, row)
     chance = chance * MIND_PURPOSES[row.purpose].will_pct / PERCENT
     if not ctx.rng(f"mind.will.{row.node_id}.{ctx.epoch}").chance(min(PERCENT, chance)):
         return

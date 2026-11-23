@@ -1,13 +1,15 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 C = RuleGroup.CIVILIZATION
 M = RuleGroup.MIND
 S = RuleGroup.SETTLEMENTS
 W = RuleGroup.WAR_AND_DIPLOMACY
 R = RuleGroup.REPUTATION
+K = RuleGroup.COSMOS_AND_TRAVEL
+G = RuleGroup.COSMIC_HORROR
 
 
 @dataclass(frozen=True)
@@ -186,3 +188,45 @@ class FavourOriginRules:
     ransom_weight: int = rule(100, 0, 100, R, "Share of its size a favour owed for a ransom paid keeps (%)")
     hospitality_favour: int = rule(25, 0, 100, R, "Size of the favour a sheltered fugitive owes its host")
     ransom_favour: int = rule(40, 0, 100, R, "Size of the favour a freed captive owes those who paid the ransom")
+
+
+@dataclass(frozen=True)
+class GravityBandRules:
+    micro_gravity_g_hundredths: int = rule(10, 1, 100, K, "Gravity below which a world's pull is so slight that things drift, in hundredths of the reference")
+    crushing_gravity_g_hundredths: int = rule(300, 100, 10000, K, "Gravity above which a world's pull crushes, in hundredths of the reference")
+    micro_body_strain: int = rule(30, 0, 100, K, "How hard a micro gravity world wears the bodies of those not made for it each epoch")
+    low_body_strain: int = rule(5, 0, 100, K, "How hard a low gravity world wears the bodies of those not made for it each epoch")
+    normal_body_strain: int = rule(0, 0, 100, K, "How hard a normal gravity world wears the bodies of those not made for it each epoch")
+    high_body_strain: int = rule(15, 0, 100, K, "How hard a high gravity world wears the bodies of those not made for it each epoch")
+    crushing_body_strain: int = rule(60, 0, 100, K, "How hard a crushing gravity world wears the bodies of those not made for it each epoch")
+    micro_martiality: int = rule(-8, -100, 100, K, "Martiality effect in micro gravity")
+    crushing_martiality: int = rule(10, -100, 100, K, "Martiality effect in crushing gravity")
+    micro_speed_pct: int = rule(20, 0, 300, K, "Speed armies gain on a micro gravity world (%)")
+    crushing_speed_pct: int = rule(40, 0, 100, K, "Speed armies lose on a crushing gravity world (%)")
+    crushing_build_pct: int = rule(80, 0, 500, K, "Extra cost of building on a crushing gravity world (%)")
+    micro_flight_pct: int = rule(40, 0, 300, K, "Room flying creatures gain on a micro gravity world (%)")
+    crushing_flight_pct: int = rule(60, 0, 100, K, "Room flying creatures lose on a crushing gravity world (%)")
+    crushing_height_cap: int = rule(3, 1, 20, K, "Highest level a work can be raised to on a crushing gravity world")
+    strain_endurance: int = rule(1, 0, 20, K, "Endurance a body loses each epoch per ten points of strain it bears")
+    under_ice_cryosphere: int = rule(60, 0, 100, K, "Ice cover from which a world's seas lie sealed under ice")
+    under_ice_heat: int = rule(30, 0, 100, K, "Tectonics or volcanism from which an ice-sealed sea is warmed enough from beneath to hold life")
+    cloud_low_kelvin: int = rule(220, 0, 1000, K, "Coldest surface warmth, in kelvin, at which a giant's cloud layers can hold life")
+    cloud_high_kelvin: int = rule(350, 0, 2000, K, "Warmest surface warmth, in kelvin, at which a giant's cloud layers can hold life")
+
+
+@dataclass(frozen=True)
+class OuterBargainRules(Spanned):
+    essence_size: int = rule(100, 0, 100, G, "Size of an outer bargain that gives essence, against the full measure (%)")
+    power_size: int = rule(100, 0, 100, G, "Chance an outer bargain that gives a power finds a free place for it (%)")
+    might_size: int = rule(100, 0, 100, G, "Size of an outer bargain that gives might, against the full measure (%)")
+    knowledge_size: int = rule(60, 0, 100, G, "Progress an outer bargain that gives knowledge grants in a branch the bargainer's faithful lack")
+    longevity_size: int = rule(30, 0, 100, G, "Existence an outer bargain that gives a longer span restores to a god")
+    world_sanity_weight: int = rule(30, 0, 100, G, "How often an outer being asks a world's sanity as its price")
+    domain_weight: int = rule(20, 0, 100, G, "How often an outer being asks a domain as its price")
+    true_name_weight: int = rule(15, 0, 100, G, "How often an outer being asks a true name as its price")
+    worshippers_weight: int = rule(20, 0, 100, G, "How often an outer being asks the souls of a god's faithful as its price")
+    descendants_weight: int = rule(15, 0, 100, G, "How often an outer being asks a god's line as its price")
+    worshippers_taken_pct: int = rule(
+        20, 0, 100, G, "Share of the followers of a god's faithful cults whose souls are handed over when that price falls due (%)"
+    )
+    descendants_years: int = span(150, 1, 5000, G, "Years a line given as a price stays bound before the debt is paid")

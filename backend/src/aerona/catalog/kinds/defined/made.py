@@ -7,7 +7,7 @@ AUGMENT_MAKE = total(
     {
         AugmentMake.MADE: Defined(
             "Made",
-            checked_by=("engine.augments.install", "engine.made.backfill.prostheses"),
+            checked_by=("catalog.life.made.MAKE_UPKEEP", "engine.made.backfill.prostheses"),
             used_by=(
                 "db.tables.made.AugmentRow",
                 "engine.augments.make_known",
@@ -16,8 +16,11 @@ AUGMENT_MAKE = total(
                 "tools.mortal.minds.InstallAugmentInput",
             ),
         ),
-        AugmentMake.RITE_BOUND: Defined("Rite-bound", checked_by=("engine.augments.install",), used_by=("engine.augments.make_known",)),
+        AugmentMake.RITE_BOUND: Defined("Rite-bound", checked_by=("catalog.life.made.MAKE_UPKEEP",), used_by=("engine.augments.make_known",)),
         AugmentMake.GROWN: Defined("Grown", checked_by=(), used_by=("engine.augments.make_known", "engine.living.grown.grow_organ")),
+        AugmentMake.POWER_BOUND: Defined(
+            "Power-bound", checked_by=("catalog.life.made.MAKE_UPKEEP", "engine.augments.keep_one"), used_by=("engine.augments.make_known",)
+        ),
     },
 )
 
@@ -73,6 +76,8 @@ REALM_PURPOSE = total(
         RealmPurpose.REFUGE: Defined("Refuge", checked_by=(), used_by=("engine.made.kinds.steadied",)),
         RealmPurpose.EXPERIMENT: Defined("Experiment", checked_by=(), used_by=("engine.made.kinds.strained",)),
         RealmPurpose.FREE: Defined("Free", checked_by=(), used_by=("engine.made.kinds.freed",)),
+        RealmPurpose.MEMORIAL: Defined("Memorial", checked_by=(), used_by=("engine.made.kinds.remembered",)),
+        RealmPurpose.MARKET: Defined("Market", checked_by=(), used_by=("engine.made.kinds.traded",)),
     },
 )
 
@@ -91,6 +96,7 @@ RELIC_USE = total(
         RelicUse.DISPLAYED: Defined("Displayed", checked_by=(), used_by=("catalog.life.made.STANCE_USE",)),
         RelicUse.FEARED: Defined("Feared", checked_by=(), used_by=("catalog.life.made.STANCE_USE",)),
         RelicUse.IGNORED: Defined("Ignored", checked_by=("engine.made.relics.keep_relic",), used_by=("engine.made.relics.keep_relic",)),
+        RelicUse.DISMANTLED: Defined("Dismantled", checked_by=("engine.made.relics.restore_or_dismantle",), used_by=()),
     },
 )
 
@@ -114,6 +120,7 @@ REPLICATOR_OUTPUT = total(
         ReplicatorOutput.DISASSEMBLY: Defined(
             "Disassembly", checked_by=("engine.made.replicators.yield_to", "engine.minds.war_methods.replicator_weapons"), used_by=()
         ),
+        ReplicatorOutput.ENERGY: Defined("Energy", checked_by=("catalog.life.made.OUTPUT_GOODS",), used_by=()),
     },
 )
 
@@ -136,5 +143,7 @@ SURVEILLANCE_FOCUS = total(
         SurveillanceFocus.MINDS: Defined("Minds", checked_by=(), used_by=("engine.made.kinds.watch_minds",)),
         SurveillanceFocus.GIFTED: Defined("The gifted", checked_by=(), used_by=("engine.made.kinds.register_gifted",)),
         SurveillanceFocus.EVERYTHING: Defined("Everything", checked_by=(), used_by=("engine.made.kinds.watch_all",)),
+        SurveillanceFocus.KIND: Defined("Kind of being", checked_by=(), used_by=("engine.made.kinds.watch_kinds",)),
+        SurveillanceFocus.LANGUAGE: Defined("Language", checked_by=(), used_by=("engine.made.kinds.watch_tongues",)),
     },
 )

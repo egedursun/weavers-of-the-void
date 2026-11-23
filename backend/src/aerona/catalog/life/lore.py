@@ -1,8 +1,10 @@
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.discovery import AgeKind, AnomalyKind, ResearchIncident
+from aerona.domain.enums.discovery import AgeKind, AnomalyKind, EraDeed, GreatField, ResearchIncident
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.records import WitnessMode
+from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.war import WarEnding
 
 PERFORMERS = (SkillKind.ORATORY, SkillKind.LORE)
 
@@ -35,3 +37,12 @@ SETTLE_AGES_AGE_KINDS = frozenset({AgeKind.GOLDEN, AgeKind.HEROIC})
 MEET_ANOMALIES_ANOMALY_KINDS = (AnomalyKind.CONTRARY_CURE,)
 
 COMMON_ANOMALIES = (AnomalyKind.FAILED_PREDICTION, AnomalyKind.OBSERVATION)
+
+PEACEFUL_ENDINGS = frozenset({WarEnding.PEACE, WarEnding.WHITE_PEACE})
+RECOVERING_DEEDS = frozenset({EraDeed.FIRST_TECHNIQUE, EraDeed.GREAT_PERSON, EraDeed.FIRST_INSTITUTION})
+LINGERING_AGES = frozenset({AgeKind.HEROIC, AgeKind.REBORN, AgeKind.WANDERING})
+HEALING_BRANCHES = frozenset({KnowledgeBranch.MEDICINE, KnowledgeBranch.NATURAL_HISTORY})
+TEACHING_BRANCHES = frozenset({KnowledgeBranch.WRITING, KnowledgeBranch.LANGUAGE_LORE, KnowledgeBranch.MATHEMATICS})
+CODES = (Technique.WRITTEN_LAW, Technique.CODIFIED_LAW)
+RETITLED = ((GreatField.HEALER, (SkillKind.MEDICINE, SkillKind.SURGERY)), (GreatField.LAWGIVER, (SkillKind.LAW,)))
+TAKEN_SKILLS = frozenset(skill for _, kinds in RETITLED for skill in kinds)

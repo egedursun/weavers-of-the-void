@@ -8,6 +8,10 @@ K = RuleGroup.CIVILIZATION
 
 @dataclass(frozen=True)
 class TheoriesRules(Spanned):
+    contrary_record_weight: int = rule(20, 0, 100, K, "Weight against a held theory of records found that disagree with it; every 10 counts once in the window")
+    out_of_place_find_weight: int = rule(
+        20, 0, 100, K, "Weight against a held theory of a find that does not fit its account; every 10 counts once in the window"
+    )
     found_pct: int = rule(5, 0, 100, K, "Chance each epoch that learned scholars found a theory in a field their people has none in (%)")
     found_level: int = rule(2, 0, 10, K, "Level a people must reach in a field's branch before its scholars found a theory of it")
     found_strength: int = rule(40, 0, 100, K, "How firmly a people first holds a theory its scholars founded")

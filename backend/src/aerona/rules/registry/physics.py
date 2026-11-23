@@ -122,6 +122,15 @@ class ImpactRules:
     hoard_pct: int = rule(30, 0, 100, C, "Share of their fresh food warned peoples set aside against the impact winter (%)")
     hardy_cold: int = rule(-20, -100, 100, C, "Lowest warmth a kind of creature bears from which it weathers an impact winter")
     hardy_pct: int = rule(40, 0, 100, C, "Share of the loss of an impact winter a kind that bears the cold suffers (%)")
+    fragment_rate: int = rule(5, 0, 100, C, "Chance each epoch a fragment of a broken moon falls from its ring onto the world it circles (%)")
+    fragment_size: int = rule(10, 1, 100, C, "Size of a fragment that falls from a broken moon's ring")
+    wreck_rate: int = rule(5, 0, 100, C, "Chance each epoch a made thing in a decaying orbit falls onto the world it circles (%)")
+    wreck_size: int = rule(15, 1, 100, C, "Size of a fallen made thing")
+    wreck_salvage_pct: int = rule(30, 0, 100, C, "Share of a fallen made thing that lies in its crater as salvage (%)")
+    wreck_relic_pct: int = rule(20, 0, 100, C, "Chance a fallen made thing leaves a relic in its crater (%)")
+    airburst_pct: int = rule(20, 0, 100, C, "Chance a body that strikes bursts in the air above the ground instead (%)")
+    airburst_winter_cut_pct: int = rule(70, 0, 100, C, "Share of the winter of an impact of its size an airburst spares (%)")
+    airburst_reach: int = rule(2, 0, 10, C, "Steps of neighbouring lands an airburst's blast and fire reach")
 
 
 @dataclass(frozen=True)

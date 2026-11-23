@@ -1,10 +1,11 @@
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 from aerona.core.total import total
-from aerona.domain.enums.folkways import AccusationOutcome, LuckSign, MishapAttribution, MishapKind, MishapResponse
+from aerona.domain.enums.folkways import AccusationOutcome, CharmPower, LuckSign, MishapAttribution, MishapKind, MishapResponse
 from aerona.domain.enums.mind import SkillKind, ValueAxis
 from aerona.domain.enums.mortal import PunishmentKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.rules.registry import Rules
 
 COUNTERS = (SkillKind.STRATEGY, SkillKind.TACTICS)
 
@@ -83,15 +84,47 @@ RESPONSES: Mapping[MishapAttribution, MishapResponse] = {
 }
 
 
-SIGN_WORDS: Mapping[LuckSign, str] = {
-    LuckSign.DAY: "day",
-    LuckSign.NUMBER: "number",
-    LuckSign.SIGN: "sign",
-    LuckSign.GESTURE: "gesture",
-    LuckSign.PLACE: "place",
-    LuckSign.ACT: "act",
-    LuckSign.PERSON: "kind of person",
-}
+SIGN_WORDS: Mapping[LuckSign, str] = total(
+    LuckSign,
+    {
+        LuckSign.DAY: "day",
+        LuckSign.NUMBER: "number",
+        LuckSign.SIGN: "sign",
+        LuckSign.GESTURE: "gesture",
+        LuckSign.PLACE: "place",
+        LuckSign.ACT: "act",
+        LuckSign.PERSON: "kind of person",
+        LuckSign.ANIMAL: "kind of creature",
+        LuckSign.COLOUR: "colour",
+    },
+)
+
+SIGN_WEIGHTS: Mapping[LuckSign, Callable[[Rules], int]] = total(
+    LuckSign,
+    {
+        LuckSign.DAY: lambda rules: rules.luck.day_weight,
+        LuckSign.NUMBER: lambda rules: rules.luck.number_weight,
+        LuckSign.SIGN: lambda rules: rules.luck.sign_weight,
+        LuckSign.GESTURE: lambda rules: rules.luck.gesture_weight,
+        LuckSign.PLACE: lambda rules: rules.luck.place_weight,
+        LuckSign.ACT: lambda rules: rules.luck.act_weight,
+        LuckSign.PERSON: lambda rules: rules.luck.person_weight,
+        LuckSign.ANIMAL: lambda rules: rules.luck.animal_weight,
+        LuckSign.COLOUR: lambda rules: rules.luck.colour_weight,
+    },
+)
+
+CHARM_EFFECTS: Mapping[CharmPower, Callable[[Rules], int]] = total(
+    CharmPower,
+    {
+        CharmPower.PROTECTION: lambda rules: rules.charms.protection_effect,
+        CharmPower.FERTILITY: lambda rules: rules.charms.fertility_effect,
+        CharmPower.LUCK: lambda rules: rules.charms.luck_effect,
+        CharmPower.HEALING: lambda rules: rules.charms.healing_effect,
+        CharmPower.LOVE: lambda rules: rules.charms.love_effect,
+        CharmPower.TRAVEL: lambda rules: rules.charms.travel_effect,
+    },
+)
 
 
 PENALTY_OUTCOMES = {PunishmentKind.DEATH: AccusationOutcome.KILLED, PunishmentKind.EXILE: AccusationOutcome.EXILED}

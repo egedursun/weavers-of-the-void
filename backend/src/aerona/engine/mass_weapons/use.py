@@ -5,11 +5,13 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mass_weapons import MassWeaponRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.cosmography import RiftCause
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mass_weapons import MassHarm, MassReach
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.rifts import tear_toward
 from aerona.engine.environment.long_seasons import made_spell
 from aerona.engine.mass_weapons.book import BURNING, KILL_WEIGHT, REACH_RANK, REMNANT_OF, ArsenalTally
 from aerona.engine.mass_weapons.remnants import leave_remnant
@@ -66,6 +68,15 @@ async def strike_town(ctx: TickContext, weapon: MassWeaponRow, town: EntityRow, 
     return dead
 
 
+async def tear_by_weapon(ctx: TickContext, weapon: MassWeaponRow, regions: list[int]) -> None:
+    for region_id in regions:
+        region = await ctx.session.get(EntityRow, region_id)
+        world = await ctx.session.get(WorldRow, region.world_id) if region is not None and region.world_id is not None else None
+        if world is None or not ctx.rng(f"mass_weapon.rift.{weapon.id}.{region_id}.{ctx.epoch}").chance(ctx.rules.rifts.mass_weapon_pct):
+            continue
+        await tear_toward(ctx, world, region, RiftCause.MASS_WEAPON, by_node_id=weapon.holder_entity_id)
+
+
 async def use_weapon(ctx: TickContext, weapon: MassWeaponRow, target: EntityRow, tally: ArsenalTally, *, by: int | None = None) -> int:
     atlas = await RegionAtlas.load(ctx.session)
     towns = [town for town in await victims(ctx, atlas, weapon, target) if not held(town.id)]
@@ -80,6 +91,8 @@ async def use_weapon(ctx: TickContext, weapon: MassWeaponRow, target: EntityRow,
     if kind is not None:
         for region in regions:
             await leave_remnant(ctx, kind, ctx.rules.mass_weapons.remnant_density, tally, region=region, weapon=weapon.id)
+    if REACH_RANK[weapon.reach] >= REACH_RANK[MassReach.REGION]:
+        await tear_by_weapon(ctx, weapon, regions)
     await advance_doom(ctx.session, ctx.rules, ctx.rules.mass_weapons.doom_per_reach * REACH_RANK[weapon.reach])
     world = await ctx.session.get(WorldRow, target.world_id) if target.world_id is not None else None
     if world is not None and REACH_RANK[weapon.reach] >= REACH_RANK[MassReach.REGION]:

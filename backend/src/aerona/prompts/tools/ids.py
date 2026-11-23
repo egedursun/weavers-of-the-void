@@ -725,6 +725,8 @@ class MortalToolId(StrEnum):
     LIFT_AFFLICTION = "lift_affliction"
     CHOOSE_PATH = "choose_path"
     IMPROVE_SOIL = "improve_soil"
+    LAY_GEAS_ON_KIN = "lay_geas_on_kin"
+    SWEAR_GEAS = "swear_geas"
     APPOINT_COURT = "appoint_court"
     TAKE_CLIENT = "take_client"
     SET_RIGHTS = "set_rights"

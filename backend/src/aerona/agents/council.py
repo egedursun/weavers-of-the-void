@@ -259,7 +259,9 @@ async def apply_decision(scope: Scope, members: list[SonRow], output: CouncilOut
             notes.append(peace)
     elif decision is not CouncilMotion.NONE:
         ctx = await manual_context(scope.session, "council", scope.rules, key=str(scope.epoch))
-        motion = Motion(decision, output.target_id, output.world_id, output.school, output.punishment or SonPunishment.CHAIN, output.voting_rule)
+        motion = Motion(
+            decision, output.target_id, output.world_id, output.school, output.punishment or SonPunishment.CHAIN, output.voting_rule, output.penance_deed
+        )
         ruling = await record(ctx, motion, council_id=council_id, note_text=sanitize(output.motion)[:NAME_MAX_LENGTH])
         notes.extend(await enact(ctx, ruling, members))
 

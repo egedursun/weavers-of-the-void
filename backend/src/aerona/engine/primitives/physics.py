@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.gravity import GRAVITY
 from aerona.catalog.life.primitives import AIR_ATTRITION_PCT_ATMOSPHERES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -32,10 +33,7 @@ def capacity_pct(rules: Rules, atmosphere: Atmosphere) -> int:
 
 
 def gravity_war(rules: Rules, gravity: Gravity) -> int:
-    physics = rules.world_physics
-    return {Gravity.LOW: physics.martiality_low_gravity, Gravity.NORMAL: physics.martiality_normal_gravity, Gravity.HIGH: physics.martiality_high_gravity}[
-        gravity
-    ]
+    return GRAVITY[gravity].martial(rules)
 
 
 def world_physics(
@@ -85,18 +83,23 @@ class PhysicsTable:
 
 
 def gravity_speed_pct(rules: Rules, world: WorldRow | None) -> int:
-    table = rules.world_life
-    if world is None:
-        return PERCENT
-    return {Gravity.LOW: PERCENT + table.low_gravity_speed_pct, Gravity.NORMAL: PERCENT, Gravity.HIGH: PERCENT - table.high_gravity_speed_pct}[world.gravity]
+    return GRAVITY[world.gravity].speed(rules) if world is not None else PERCENT
 
 
 def gravity_build_pct(rules: Rules, world: WorldRow | None) -> int:
-    return PERCENT + rules.world_life.high_gravity_build_pct if world is not None and world.gravity is Gravity.HIGH else PERCENT
+    return GRAVITY[world.gravity].build(rules) if world is not None else PERCENT
 
 
 def flight_capacity_pct(rules: Rules, world: WorldRow | None) -> int:
-    return PERCENT + rules.world_life.low_gravity_flight_pct if world is not None and world.gravity is Gravity.LOW else PERCENT
+    return GRAVITY[world.gravity].flight(rules) if world is not None else PERCENT
+
+
+def body_strain(rules: Rules, world: WorldRow | None) -> int:
+    return GRAVITY[world.gravity].strain(rules) if world is not None else 0
+
+
+def launch_delay(world: WorldRow | None) -> int:
+    return GRAVITY[world.gravity].launch if world is not None else 0
 
 
 def air_attrition_pct(rules: Rules, world: WorldRow | None) -> int:

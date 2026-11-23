@@ -187,3 +187,51 @@ class SackRules:
     ransom_pick_pct: int = rule(30, 0, 100, W, "Chance a victor who would sack a rich city takes a ransom instead (%)")
     deport_pick_pct: int = rule(20, 0, 100, W, "Chance a victor who would sack a city and holds bondage lawful takes its people instead (%)")
     ransom_from: int = rule(40, 0, 1000, W, "Treasury from which a fallen city can pay a ransom")
+
+
+@dataclass(frozen=True)
+class SettleModeRules:
+    ground_defence: int = rule(100, 0, 300, C, "How hard a settlement on open ground is to take, against one on open ground (%)")
+    ground_exposure: int = rule(100, 0, 300, C, "How much of the weather a settlement on open ground takes, against one on open ground (%)")
+    floating_defence: int = rule(120, 0, 300, C, "How hard a settlement that floats is to take, against one on open ground (%)")
+    floating_exposure: int = rule(140, 0, 300, C, "How much of the weather a settlement that floats takes, against one on open ground (%)")
+    stilt_defence: int = rule(110, 0, 300, C, "How hard a settlement on stilts is to take, against one on open ground (%)")
+    stilt_exposure: int = rule(120, 0, 300, C, "How much of the weather a settlement on stilts takes, against one on open ground (%)")
+    oasis_defence: int = rule(100, 0, 300, C, "How hard a settlement at an oasis is to take, against one on open ground (%)")
+    oasis_exposure: int = rule(110, 0, 300, C, "How much of the weather a settlement at an oasis takes, against one on open ground (%)")
+    vent_defence: int = rule(100, 0, 300, C, "How hard a settlement around warm vents is to take, against one on open ground (%)")
+    vent_exposure: int = rule(90, 0, 300, C, "How much of the weather a settlement around warm vents takes, against one on open ground (%)")
+    habitat_defence: int = rule(130, 0, 300, C, "How hard a settlement in sealed habitats is to take, against one on open ground (%)")
+    habitat_exposure: int = rule(60, 0, 300, C, "How much of the weather a settlement in sealed habitats takes, against one on open ground (%)")
+    band_defence: int = rule(100, 0, 300, C, "How hard a settlement in a habitable band is to take, against one on open ground (%)")
+    band_exposure: int = rule(100, 0, 300, C, "How much of the weather a settlement in a habitable band takes, against one on open ground (%)")
+    deck_defence: int = rule(120, 0, 300, C, "How hard a settlement on decks is to take, against one on open ground (%)")
+    deck_exposure: int = rule(80, 0, 300, C, "How much of the weather a settlement on decks takes, against one on open ground (%)")
+    burrow_defence: int = rule(140, 0, 300, C, "How hard a settlement in burrows is to take, against one on open ground (%)")
+    burrow_exposure: int = rule(50, 0, 300, C, "How much of the weather a settlement in burrows takes, against one on open ground (%)")
+    submerged_defence: int = rule(150, 0, 300, C, "How hard a settlement beneath the water is to take, against one on open ground (%)")
+    submerged_exposure: int = rule(40, 0, 300, C, "How much of the weather a settlement beneath the water takes, against one on open ground (%)")
+    canopy_defence: int = rule(120, 0, 300, C, "How hard a settlement in the canopy is to take, against one on open ground (%)")
+    canopy_exposure: int = rule(130, 0, 300, C, "How much of the weather a settlement in the canopy takes, against one on open ground (%)")
+    exposure_prosperity: int = rule(5, 0, 100, C, "Prosperity a settlement fully exposed loses each epoch to the full force of wind and flood")
+    canopy_cover: int = rule(40, 0, 100, C, "Forest cover below which a settlement in the canopy loses its trees and comes down")
+    canopy_fall_pct: int = rule(20, 0, 100, C, "Share of the folk of a canopy settlement lost when its forest falls (%)")
+    unfit_unrest: int = rule(10, 0, 100, C, "Unrest a settlement gains each epoch while it lives in a way its people cannot (%)")
+
+
+@dataclass(frozen=True)
+class WarGroundRules:
+    land_frontage: int = rule(100, 0, 100, W, "Width of the front a battle on land can hold, against one on open land (%)")
+    naval_frontage: int = rule(80, 0, 100, W, "Width of the front a battle at sea can hold, against one on open land (%)")
+    sky_frontage: int = rule(
+        100, 0, 100, W, "Width of the front a battle in the sky can hold, against one on open land (%); the ground itself never narrows it"
+    )
+    boarding_frontage: int = rule(30, 0, 100, W, "Width of the front a battle by boarding can hold, against one on open land (%)")
+    strata_frontage: int = rule(60, 0, 100, W, "Width of the front a battle between strata can hold, against one on open land (%)")
+    under_water_frontage: int = rule(
+        90, 0, 100, W, "Width of the front a battle beneath the water can hold, against one on open land (%); the ground itself never narrows it"
+    )
+    space_frontage: int = rule(
+        100, 0, 100, W, "Width of the front a battle in open space can hold, against one on open land (%); the ground itself never narrows it"
+    )
+    underground_frontage: int = rule(25, 0, 100, W, "Width of the front a battle in tunnels and caverns can hold, against one on open land (%)")

@@ -63,6 +63,17 @@ import {
   X,
   Zap,
   type LucideIcon,
+  Link2,
+  Orbit,
+  Lock,
+  MessageSquare,
+  HandHeart,
+  Gem,
+  GitBranch,
+  Droplet,
+  Puzzle,
+  UserX,
+  Baby,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -112,6 +123,8 @@ export const RANGES: Record<Schema['SpellRange'], Named> = {
   sight: { label: 'Sight', icon: Eye, tone: 'info' },
   region: { label: 'Region', icon: Map, tone: 'verdigris' },
   world: { label: 'World', icon: Globe, tone: 'gold' },
+  linked: { label: 'Through a link', icon: Link2, tone: 'danger' },
+  cosmos: { label: 'Beyond the world', icon: Orbit, tone: 'gold' },
 }
 
 export const DURATIONS: Record<Schema['SpellDuration'], Named> = {
@@ -119,6 +132,41 @@ export const DURATIONS: Record<Schema['SpellDuration'], Named> = {
   season: { label: 'A season', icon: Cloud, tone: 'info' },
   epoch: { label: 'An epoch', icon: Clock, tone: 'verdigris' },
   permanent: { label: 'Permanent', icon: InfinityIcon, tone: 'gold' },
+  sustained: { label: 'While sustained', icon: Hourglass, tone: 'warning' },
+  until_condition: {
+    label: 'Until a condition is met',
+    icon: Lock,
+    tone: 'danger',
+  },
+}
+
+export const RITE_CONDITIONS: Record<Schema['RiteCondition'], Named> = {
+  act: {
+    label: 'Until its bearer does an act',
+    icon: Footprints,
+    tone: 'warning',
+  },
+  time: { label: 'Until a set time', icon: Clock, tone: 'info' },
+  word: {
+    label: 'Until its caster lifts it by word',
+    icon: MessageSquare,
+    tone: 'verdigris',
+  },
+  deed: {
+    label: 'Until someone does a deed for its bearer',
+    icon: HandHeart,
+    tone: 'gold',
+  },
+}
+
+export const RITE_ENDS: Record<Schema['RiteEnd'], Named> = {
+  caster_gone: { label: 'Its caster is gone', icon: Ban, tone: 'muted' },
+  caster_struck: { label: 'Its caster was struck', icon: Zap, tone: 'danger' },
+  condition_met: {
+    label: 'Its condition was met',
+    icon: Lock,
+    tone: 'verdigris',
+  },
 }
 
 export const TARGETS: Record<Schema['SpellTarget'], Named> = {
@@ -126,6 +174,9 @@ export const TARGETS: Record<Schema['SpellTarget'], Named> = {
   group: { label: 'A group', icon: Users, tone: 'info' },
   structure: { label: 'A structure', icon: Landmark, tone: 'warning' },
   region: { label: 'A region', icon: Map, tone: 'verdigris' },
+  item: { label: 'An item', icon: Gem, tone: 'info' },
+  line: { label: 'A line of descent', icon: GitBranch, tone: 'warning' },
+  world: { label: 'A whole world', icon: Globe, tone: 'gold' },
 }
 
 export const RECHARGES: Record<Schema['RechargeRule'], Named> = {
@@ -133,6 +184,12 @@ export const RECHARGES: Record<Schema['RechargeRule'], Named> = {
   vis: { label: 'From vis', icon: Sparkles, tone: 'gold' },
   moon: { label: 'Under a full moon', icon: Moon, tone: 'info' },
   none: { label: 'Never', icon: Ban, tone: 'muted' },
+  sky_event: { label: 'At a sign in the sky', icon: Star, tone: 'info' },
+  bodily_offering: {
+    label: 'By an offering of the body',
+    icon: Droplet,
+    tone: 'danger',
+  },
 }
 
 export const LAW_SOURCES: Record<Schema['LawSource'], Named> = {
@@ -175,6 +232,8 @@ export const TRIALS: Record<Schema['QuestTrial'], Named> = {
   passion: { label: 'A trial of passion', icon: Heart, tone: 'danger' },
   conviction: { label: 'A trial of conviction', icon: Gavel, tone: 'warning' },
   faith: { label: 'A trial of faith', icon: Sparkles, tone: 'gold' },
+  cunning: { label: 'A trial of cunning', icon: Puzzle, tone: 'verdigris' },
+  endurance: { label: 'A trial of endurance', icon: Mountain, tone: 'warning' },
 }
 
 export const MANTLING_STATES: Record<Schema['MantlingState'], Named> = {
@@ -193,6 +252,12 @@ export const ORIGINS: Record<Schema['ServitorOrigin'], Named> = {
     tone: 'success',
   },
   summoned: { label: 'Summoned by a rite', icon: Wand2, tone: 'info' },
+  defected: {
+    label: 'Come over from another god',
+    icon: UserX,
+    tone: 'warning',
+  },
+  born: { label: 'Born to its god', icon: Baby, tone: 'gold' },
 }
 
 export const ROLES: Record<Schema['ServitorRole'], Named> = {
@@ -223,6 +288,8 @@ export const GEAS_LAYERS: Record<Schema['GeasLayer'], Named> = {
   seer: { label: 'A seer', icon: Eye, tone: 'info' },
   god: { label: 'A god', icon: Sun, tone: 'gold' },
   rite: { label: 'A rite', icon: Wand2, tone: 'verdigris' },
+  kin: { label: 'Kin', icon: Users, tone: 'warning' },
+  self: { label: 'Its bearer, by vow', icon: Hand, tone: 'danger' },
 }
 
 export const OFFICES: Record<Schema['CosmicOffice'], Named> = {

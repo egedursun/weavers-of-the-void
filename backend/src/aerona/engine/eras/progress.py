@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.eras import ERA_FLOORS, ERA_MARKERS, POWDER, TECHNIQUE_ERAS
-from aerona.catalog.life.eras import LIVE, SPECIALISMS
+from aerona.catalog.life.eras import KEPT, LIVE, SPECIALISMS
 from aerona.catalog.techniques import BRANCH_GRAPH, PROGRAMMES, TECHNIQUES, TechniqueSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
@@ -47,6 +47,8 @@ class EraTally:
     completed: int = 0
     sabotaged: int = 0
     abandoned: int = 0
+    suspended: int = 0
+    resumed: int = 0
 
 
 def requirements_met(spec: TechniqueSpec, known: set[Technique] | frozenset[Technique]) -> bool:
@@ -231,6 +233,22 @@ async def sabotage(ctx: TickContext, row: TechProgrammeRow, tally: EraTally) -> 
             return
 
 
+async def suspend(ctx: TickContext, row: TechProgrammeRow, realm: EntityRow, tally: EraTally) -> None:
+    table = ctx.rules.programmes
+    if "stage" in row.locked:
+        return
+    if row.stage is not ProgrammeStage.SUSPENDED:
+        row.stage = ProgrammeStage.SUSPENDED
+        tally.suspended += 1
+        await tell(ctx, row, realm, ProgrammeStage.SUSPENDED)
+        return
+    row.progress = clamp_int(row.progress - table.suspended_decay, 0, PERCENT)
+    if row.progress <= 0:
+        row.stage = ProgrammeStage.ABANDONED
+        tally.abandoned += 1
+        await tell(ctx, row, realm, ProgrammeStage.ABANDONED)
+
+
 async def advance(ctx: TickContext, row: TechProgrammeRow, tally: EraTally) -> None:
     table = ctx.rules.programmes
     realm = await ctx.session.get(EntityRow, row.polity_entity_id)
@@ -241,9 +259,7 @@ async def advance(ctx: TickContext, row: TechProgrammeRow, tally: EraTally) -> N
     if "progress" not in row.locked:
         short = await coin_of(ctx.session, ctx.rules, realm) - table.treasury_cost < table.abandon_below
         if short or not await take_coin(ctx.session, ctx.rules, realm, table.treasury_cost):
-            if "stage" not in row.locked:
-                row.stage = ProgrammeStage.ABANDONED
-                tally.abandoned += 1
+            await suspend(ctx, row, realm, tally)
             return
         row.progress = clamp_int(row.progress + table.base_progress + await specialists(ctx, realm.id) * table.specialist_progress, 0, PERCENT)
         await sabotage(ctx, row, tally)
@@ -257,6 +273,10 @@ async def advance(ctx: TickContext, row: TechProgrammeRow, tally: EraTally) -> N
         if row.progress >= table.building_at
         else ProgrammeStage.PLANNING
     )
+    if row.stage is ProgrammeStage.SUSPENDED and "stage" not in row.locked:
+        row.stage = stage
+        tally.resumed += 1
+        return
     if stage is row.stage or "stage" in row.locked:
         return
     row.visibility = clamp_int(row.visibility + PERCENT // 4, 0, PERCENT)
@@ -271,7 +291,7 @@ async def advance(ctx: TickContext, row: TechProgrammeRow, tally: EraTally) -> N
 
 async def keep_programmes(ctx: TickContext, tally: EraTally) -> None:
     await begin(ctx, tally)
-    for row in list(await ctx.session.scalars(select(TechProgrammeRow).where(TechProgrammeRow.stage.in_(LIVE)).order_by(TechProgrammeRow.id))):
+    for row in list(await ctx.session.scalars(select(TechProgrammeRow).where(TechProgrammeRow.stage.in_(KEPT)).order_by(TechProgrammeRow.id))):
         if held(row.polity_entity_id):
             continue
         await advance(ctx, row, tally)

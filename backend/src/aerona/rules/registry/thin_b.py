@@ -53,6 +53,8 @@ class BeliefDepthRules:
 @dataclass(frozen=True)
 class StorytellerDepthRules:
     slow_burn_step: int = rule(2, 0, 50, F, "How far the target tension of a slow burn rises each epoch")
+    gentle_pct: int = rule(60, 0, 100, F, "Share of the steady aim a gentle storyteller aims for, leaning toward recoveries whatever the tension (%)")
+    seasonal_swing: int = rule(15, 0, 50, F, "How far a seasonal storyteller raises and lowers its aim through the turn of its world's seasons")
     episode_epochs: int = rule(4, 1, 50, F, "Epochs in one episode of an episodic storyteller")
     episode_peak: int = rule(70, 0, 100, F, "Target tension at the height of an episode")
     region_crisis_at: int = rule(70, 0, 100, F, "Tension of a region at which it counts as in crisis")

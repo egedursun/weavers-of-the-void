@@ -273,6 +273,12 @@ export const REBIRTH_PATHS: Record<string, Named & { hint: string }> = {
     tone: 'info',
     hint: 'The worthy to the rich, the wicked to the poor',
   },
+  kind: {
+    label: 'As another kind',
+    icon: PawPrint,
+    tone: 'success',
+    hint: 'Born again as a creature of its land',
+  },
 }
 
 export const LIVING_STATES: Record<string, Named> = {

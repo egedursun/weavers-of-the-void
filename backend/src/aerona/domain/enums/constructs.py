@@ -19,6 +19,7 @@ class CommandToken(StrEnum):
     BLOODLINE = "bloodline"
     OFFICE = "office"
     NETWORK_KEY = "network_key"
+    TRUE_NAME = "true_name"
 
 
 class OrderKind(StrEnum):
@@ -35,6 +36,8 @@ class OrderKind(StrEnum):
     HOLD_STILL = "hold_still"
     FOLLOW = "follow"
     FORBID = "forbid"
+    CARRY = "carry"
+    TEND = "tend"
 
 
 class OrderCondition(StrEnum):
@@ -43,6 +46,15 @@ class OrderCondition(StrEnum):
     UNTIL_DATE = "until_date"
     WHEN_ATTACKED = "when_attacked"
     WHEN_TOKEN_SHOWN = "when_token_shown"
+    UNTIL_DONE = "until_done"
+    AT_SET_TIMES = "at_set_times"
+
+
+class OrderTime(StrEnum):
+    DAY = "day"
+    NIGHT = "night"
+    SEASON = "season"
+    SKY_EVENT = "sky_event"
 
 
 class MindWill(StrEnum):

@@ -11,6 +11,7 @@ WRITERS = frozenset(
     {
         "engine/cosmos/orbits.py:apply_to_world",
         "engine/cosmos/catastrophe.py:scorch_world",
+        "engine/cosmos/lifeforms.py:rederive_gravity",
         "engine/environment/control.py:set_world_calendar",
         "engine/environment/time_control.py:add_season",
         "engine/environment/time_control.py:remove_season",
@@ -18,6 +19,7 @@ WRITERS = frozenset(
         "engine/environment/time_control.py:release_calendar",
         "engine/phases/environment.py:ensure_world_calendar",
         "services/player/world_edits.py:_physics",
+        "services/integrity/w52_agent_d.py:band_by_mass",
     }
 )
 
@@ -58,6 +60,7 @@ def test_every_value_of_the_heavens_is_produced_or_read_by_the_engine() -> None:
         *(SOURCE / "catalog" / "kinds").glob("*.py"),
         *(SOURCE / "catalog" / "life").glob("*.py"),
         SOURCE / "catalog" / "life_traits.py",
+        SOURCE / "catalog" / "physics_life.py",
     ]
     engine = {node.attr for path in readers for node in ast.walk(ast.parse(path.read_text())) if isinstance(node, ast.Attribute)}
     kinds: list[type[Enum]] = [

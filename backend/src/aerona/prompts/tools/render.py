@@ -9,8 +9,11 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
 from aerona.catalog.equipment import FAMILIES
+from aerona.catalog.impacts import IMPACT_BODIES
 from aerona.catalog.interventions import DISASTERS, MIRACLES
+from aerona.catalog.law_exceptions import LAW_EXCEPTIONS
 from aerona.catalog.mythic import GEAS_ACTS
+from aerona.catalog.outer_bargains import BARGAIN_GAINS, BARGAIN_PRICES
 from aerona.catalog.reproduction import TWO_KINDS
 from aerona.catalog.stars import STAR_TYPES
 from aerona.catalog.structures import STRUCTURES
@@ -23,13 +26,13 @@ from aerona.catalog.worlds import WORLD_TYPES
 from aerona.db.kind_concepts.society import BUILT_IN_ORGANISATIONS
 from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.agrarian import AidKind, CommonsRule, KeystoneUse, NutrientKind, PerennialKind, PreparednessKind
-from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
+from aerona.domain.enums.arcana import RiteCondition, SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.arts import ClubKind, ForgeryKind
 from aerona.domain.enums.belonging import IdentityLayer, SalienceDriver
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.climes import CirculationBand
 from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger, CrowdFeeling, DesignComponentKind, DesignKind, StoryletId
-from aerona.domain.enums.constructs import OrderKind
+from aerona.domain.enums.constructs import CommandToken, OrderCondition, OrderKind, OrderTime
 from aerona.domain.enums.cosmography import DimensionElement
 from aerona.domain.enums.couplings import SealKind
 from aerona.domain.enums.crafts import CatchGround, Gear, RightKind
@@ -53,6 +56,7 @@ from aerona.domain.enums.demography import FuneralCustom, MartialStyle
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.disease_agents import CureClass
 from aerona.domain.enums.divine_conceptions import ConceptionAxis, CreatorPlace, DivineCount, DivineNearness, DivinePersonhood
+from aerona.domain.enums.dominion import WorshipMode
 from aerona.domain.enums.ecology import (
     AttackDelivery,
     AttackEffect,
@@ -78,7 +82,7 @@ from aerona.domain.enums.evolution import PlagueResponse, PlanetaryCycle, Succes
 from aerona.domain.enums.facets import FacetKind
 from aerona.domain.enums.faction import EstatePrivilege, FactionGoalKind, FactionKind
 from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath
-from aerona.domain.enums.folkways import ImpuritySource, MishapKind
+from aerona.domain.enums.folkways import CharmPower, ImpuritySource, MishapKind
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
 from aerona.domain.enums.fossil import FossilReading
 from aerona.domain.enums.geology import RockKind, UndergroundStratum
@@ -101,14 +105,24 @@ from aerona.domain.enums.military import (
     Stance,
 )
 from aerona.domain.enums.mind import Emotion
-from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRole
+from aerona.domain.enums.mythic import CosmicOffice, GeasMode, QuestTrial, ServitorOrigin, ServitorRole
 from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
-from aerona.domain.enums.operations import EchelonOrder, QuirkKind
+from aerona.domain.enums.operations import EchelonOrder, ExpeditionGround, ExpeditionRole, QuirkKind
 from aerona.domain.enums.place import PlaceKind, SecretKind
 from aerona.domain.enums.polity import CLOSURES, ClaimBasis, HouseTrait, LawKind, OathKind
 from aerona.domain.enums.regime import ClientRole, SelectorateKind
 from aerona.domain.enums.region import DangerHarm, DangerSource, RegionMemoryKind, TerrainHazard
-from aerona.domain.enums.sacred import BureauRank, DivinationQuestion, OmenVerdict, PetitionKind, SacramentKind, SacramentProtection
+from aerona.domain.enums.sacred import (
+    BureauRank,
+    DivinationKind,
+    DivinationQuestion,
+    GeniusLocusKind,
+    OmenVerdict,
+    PetitionKind,
+    SacramentKind,
+    SacramentProtection,
+    VisionKind,
+)
 from aerona.domain.enums.statecraft import CouncilTask, CourtPosition, CrisisDemand, MandateKind
 from aerona.domain.enums.structure import BuildingForm
 from aerona.domain.enums.tongues import LanguagePolicy, SoundChangeKind, SoundEnvironment
@@ -126,6 +140,7 @@ from aerona.domain.enums.unions import (
     UnionResidence,
 )
 from aerona.domain.enums.vehicles import MountKind
+from aerona.domain.enums.world_view import SettleMode
 from aerona.prompts.contexts.blocks import SummarySection
 from aerona.prompts.environment import normalize, string_template
 from aerona.prompts.errors import UnknownToolError
@@ -178,6 +193,10 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "miracles": "; ".join(f"{miracle} ({spec.label}: {spec.effect})" for miracle, spec in MIRACLES.items()),
         "disasters": "; ".join(f"{disaster} ({spec.label}: {spec.effect})" for disaster, spec in DISASTERS.items()),
         "natural_laws": natural_laws(),
+        "impact_bodies": ", ".join(f"{body} ({spec.label})" for body, spec in IMPACT_BODIES.items()),
+        "bargain_gains": ", ".join(f"{gain} ({spec.label})" for gain, spec in BARGAIN_GAINS.items()),
+        "bargain_prices": ", ".join(f"{price} ({spec.label})" for price, spec in BARGAIN_PRICES.items()),
+        "law_exceptions": ", ".join(f"{kind} ({spec.label})" for kind, spec in LAW_EXCEPTIONS.items()),
         "resource_mechanics": resource_mechanics(),
         "knowledge_branches": knowledge_branches(),
         "theory_domains": ", ".join(domain.value for domain in TheoryDomain),
@@ -213,6 +232,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "foundable_factions": ", ".join(kind.value for kind, body in BUILT_IN_ORGANISATIONS.items() if body.foundable),
         "faction_kinds": ", ".join(item.value for item in FactionKind),
         "servitor_roles": ", ".join(item.value for item in ServitorRole),
+        "servitor_origins": ", ".join(item.value for item in ServitorOrigin),
         "geas_modes": ", ".join(item.value for item in GeasMode),
         "geas_acts": "; ".join(f"{mode.value}: {', '.join(act.value for act in acts)}" for mode, acts in GEAS_ACTS.items()),
         "cosmic_offices": ", ".join(item.value for item in CosmicOffice),
@@ -254,6 +274,8 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "preparedness_kinds": ", ".join(item.value for item in PreparednessKind),
         "keystone_uses": ", ".join(item.value for item in KeystoneUse),
         "quirk_kinds": ", ".join(item.value for item in QuirkKind),
+        "expedition_roles": ", ".join(item.value for item in ExpeditionRole),
+        "expedition_grounds": ", ".join(item.value for item in ExpeditionGround),
         "impurity_sources": ", ".join(item.value for item in ImpuritySource),
         "mishap_kinds": ", ".join(item.value for item in MishapKind),
         "plot_kinds": ", ".join(item.value for item in PlotKind),
@@ -277,6 +299,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "duel_contexts": ", ".join(item.value for item in DuelContext),
         "duel_ends": ", ".join(item.value for item in DuelEnd),
         "army_stances": ", ".join(item.value for item in Stance),
+        "settle_modes": ", ".join(item.value for item in SettleMode),
         "army_roles": ", ".join(item.value for item in ArmyRole),
         "captive_fates": ", ".join(item.value for item in CaptiveFate),
         "siege_works": ", ".join(item.value for item in SiegeWork),
@@ -291,8 +314,18 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "omen_verdicts": ", ".join(item.value for item in OmenVerdict),
         "divination_questions": ", ".join(item.value for item in DivinationQuestion),
         "petition_kinds": ", ".join(item.value for item in PetitionKind),
+        "spirit_kinds": ", ".join(item.value for item in GeniusLocusKind),
+        "vision_kinds": ", ".join(item.value for item in VisionKind),
+        "divination_kinds": ", ".join(item.value for item in DivinationKind),
+        "charm_powers": ", ".join(item.value for item in CharmPower),
         "emotions": ", ".join(item.value for item in Emotion),
         "order_kinds": ", ".join(item.value for item in OrderKind),
+        "order_conditions": ", ".join(item.value for item in OrderCondition),
+        "order_times": ", ".join(item.value for item in OrderTime),
+        "worship_modes": ", ".join(item.value for item in WorshipMode),
+        "command_tokens": ", ".join(item.value for item in CommandToken),
+        "quest_trials": ", ".join(item.value for item in QuestTrial),
+        "rite_conditions": ", ".join(item.value for item in RiteCondition),
         "club_kinds": ", ".join(item.value for item in ClubKind),
         "forgery_kinds": ", ".join(item.value for item in ForgeryKind),
         "right_kinds": ", ".join(item.value for item in RightKind),

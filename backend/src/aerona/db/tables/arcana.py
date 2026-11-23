@@ -3,10 +3,22 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
-from aerona.domain.enums.arcana import LawSource, SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
+from aerona.domain.enums.arcana import LawSource, RiteCondition, SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.mind import ActKind
 
-GRAMMAR_FIELDS = ("technique", "form", "range", "duration", "target", "paradigm_entity_id", "myth_entity_id")
+GRAMMAR_FIELDS = (
+    "technique",
+    "form",
+    "range",
+    "duration",
+    "target",
+    "condition",
+    "condition_act",
+    "condition_epoch",
+    "paradigm_entity_id",
+    "myth_entity_id",
+)
 LAB_TEXT_FIELDS = ("fidelity", "rite_entity_id", "author_entity_id", "epoch")
 WARPING_FIELDS = ("value", "stage")
 LONGEVITY_FIELDS = ("form", "dose", "dependence", "years_gained", "lapsed_epochs")
@@ -23,6 +35,9 @@ class RiteGrammarRow(Base):
     range: Mapped[SpellRange] = mapped_column(enum_type(SpellRange, "range"), default=SpellRange.SIGHT)
     duration: Mapped[SpellDuration] = mapped_column(enum_type(SpellDuration, "duration"), default=SpellDuration.INSTANT)
     target: Mapped[SpellTarget] = mapped_column(enum_type(SpellTarget, "target"), default=SpellTarget.ONE)
+    condition: Mapped[RiteCondition | None] = mapped_column(enum_type(RiteCondition, "condition"))
+    condition_act: Mapped[ActKind | None] = mapped_column(enum_type(ActKind, "condition_act"))
+    condition_epoch: Mapped[int | None]
     difficulty: Mapped[int] = mapped_column(default=0)
     paradigm_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     myth_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

@@ -23,6 +23,14 @@ class SiteRules:
     guardian_hp: int = rule(30, 0, 200, H, "Harm a guardian or a beast of the room deals when it wins")
     beast_wound: int = rule(30, 0, 200, H, "Harm a delver deals the beast of a room it beats")
     spirit_rest_pct: int = rule(50, 0, 100, H, "Chance a delver who clears a room lays its spirit to rest (%)")
+    records_strength: int = rule(30, 0, 100, H, "Weight of the records a library, shrine or laboratory of a site holds")
+    flooding_pct: int = rule(10, 0, 100, H, "Chance a stage of a dig in porous rock floods (%)")
+    gas_pct: int = rule(8, 0, 100, H, "Chance a stage of a dig in coal, shale or above a reservoir meets bad air (%)")
+    disease_pct: int = rule(8, 0, 100, H, "Chance a stage of a dig where a sickness lies sealed or the dead lie in a mass grave lets it loose (%)")
+    ordnance_harm: int = rule(10, 0, 100, H, "Dead a field of remnant arms at full strength takes each epoch from the community that crosses it")
+    memorial_dead: int = rule(2000, 0, 10000000, H, "Dead a battle must leave for a memorial to be raised on its field")
+    memorial_piety: int = rule(3, 0, 100, H, "Piety a memorial at full strength gives the community whose pilgrims visit it each epoch")
+    remains_piety: int = rule(4, 0, 100, H, "Piety a community gains when remains found in a dig are given its funeral rites")
     holder_shift: int = rule(1, 0, 1, H, "Record a new holder of a site when the one who holds it changes (1) or not (0)")
 
 

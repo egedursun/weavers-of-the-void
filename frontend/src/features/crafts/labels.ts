@@ -37,15 +37,20 @@ import {
   Microscope,
   Music,
   Orbit,
+  Package,
   PawPrint,
   PenTool,
   Pill,
+  Rabbit,
+  Sailboat,
   Scale,
   ScanEye,
   Scroll,
   Search,
   Shell,
   Ship,
+  Sigma,
+  Sparkle,
   Sparkles,
   Sprout,
   Sun,
@@ -53,18 +58,16 @@ import {
   Tag,
   Target,
   Telescope,
+  TestTube,
   TriangleAlert,
   Trophy,
   type LucideIcon,
   Waves,
+  Wheat,
   Wrench,
   Zap,
-  Sparkle,
-  Package,
-  TestTube,
-  Wheat,
-  Sailboat,
-  Rabbit,
+  KeySquare,
+  Shirt,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -189,6 +192,8 @@ export const CLOCKS: Record<Schema['ClockKind'], Named> = {
 export const NOTATIONS: Record<Schema['Notation'], Named> = {
   additive: { label: 'Added up', icon: Hash, tone: 'muted' },
   positional: { label: 'By place', icon: Grid3x3, tone: 'gold' },
+  tally: { label: 'Tallies', icon: Hash, tone: 'muted' },
+  symbolic: { label: 'Signs for unknowns', icon: Sigma, tone: 'verdigris' },
 }
 
 export const READINGS: Record<Schema['NumberReading'], Named> = {
@@ -208,7 +213,9 @@ export const MODES: Record<Schema['AffinityMode'], Named> = {
 export const TOKENS: Record<Schema['LinkToken'], Named> = {
   hair: { label: 'Hair', icon: Link, tone: 'muted' },
   blood: { label: 'Blood', icon: Droplet, tone: 'danger' },
-  name: { label: 'True name', icon: Tag, tone: 'gold' },
+  name: { label: 'A name', icon: Tag, tone: 'info' },
   portrait: { label: 'Likeness', icon: ScanEye, tone: 'info' },
   fragment: { label: 'Fragment', icon: Box, tone: 'warning' },
+  true_name: { label: 'True name', icon: KeySquare, tone: 'gold' },
+  possession: { label: 'A kept possession', icon: Shirt, tone: 'muted' },
 }

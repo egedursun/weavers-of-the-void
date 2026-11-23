@@ -3,6 +3,7 @@ from collections import defaultdict
 from sqlalchemy import select
 
 from aerona.catalog.intrigue import BELIEF_ATTRIBUTES
+from aerona.catalog.life.made import LANDED
 from aerona.constants.units import PERCENT
 from aerona.db.tables.belief_depth import SourceTrustRow
 from aerona.db.tables.entities import EntityRow
@@ -14,7 +15,7 @@ from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
 from aerona.domain.enums.intrigue import BeliefSource
-from aerona.domain.enums.made import Attribution, IntrusionAim, IntrusionOutcome
+from aerona.domain.enums.made import Attribution, IntrusionAim
 from aerona.domain.enums.minds import MindOrigin
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.beliefs import believe
@@ -47,7 +48,7 @@ async def surveillance_reports(ctx: TickContext, tally: SourceTally) -> None:
 async def intrusion_reports(ctx: TickContext, tally: SourceTally) -> None:
     confidence = ctx.rules.belief_depth.intrusion_confidence
     rows = await ctx.session.scalars(
-        select(IntrusionRow).where(IntrusionRow.epoch == ctx.epoch, IntrusionRow.outcome == IntrusionOutcome.SUCCEEDED, IntrusionRow.aim == IntrusionAim.READ)
+        select(IntrusionRow).where(IntrusionRow.epoch == ctx.epoch, IntrusionRow.outcome.in_(sorted(LANDED)), IntrusionRow.aim == IntrusionAim.READ)
     )
     for row in list(rows):
         target = await ctx.session.get(EntityRow, row.target_node_id) if row.target_node_id is not None else None

@@ -255,4 +255,47 @@ describe('myth', () => {
       .element(screen.getByText('The myths could not be read'))
       .toBeVisible()
   })
+  it('shows a servitor that came over from another god and the god it served', async () => {
+    serveBase()
+    onApi('GET', '/api/mythic/of/7', {
+      ...EMPTY_MYTHIC,
+      node: SON,
+      servitors: [
+        {
+          spirit: { id: 60, kind: 'entity', name: 'Gull' },
+          god: SON,
+          origin: 'defected',
+          role: 'messenger',
+          post: null,
+          loyalty: 40,
+          fallen_to: SON,
+          former_god: { id: 8, kind: 'son', name: 'Ondra' },
+          since_epoch: 5,
+          locked: [],
+        },
+        {
+          spirit: { id: 61, kind: 'entity', name: 'Tide-born' },
+          god: SON,
+          origin: 'born',
+          role: 'guard',
+          post: null,
+          loyalty: 70,
+          fallen_to: null,
+          former_god: null,
+          since_epoch: 6,
+          locked: [],
+        },
+      ],
+    })
+    onApi('GET', '/api/mythic/offices', [])
+    const { screen } = await renderApp(<MythicSection nodeId={7} />)
+    await expect
+      .element(screen.getByText(/come over from another god/).first())
+      .toBeVisible()
+    await expect
+      .element(screen.getByText(/born to its god/).first())
+      .toBeVisible()
+    await expect.element(screen.getByText('Ondra').first()).toBeVisible()
+    await expect.element(screen.getByText('no other god').first()).toBeVisible()
+  })
 })

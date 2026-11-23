@@ -7,6 +7,7 @@ import {
   Coins,
   Crown,
   DoorOpen,
+  EyeOff,
   Droplets,
   Flame,
   Footprints,
@@ -33,6 +34,7 @@ import {
   Wheat,
   Wind,
   Zap,
+  HandCoins,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -89,11 +91,14 @@ export const ALIGNMENTS: Record<Schema['PerceivedAlignment'], Named> = {
 export const WORSHIP_MODES: Record<Schema['WorshipMode'], Named> = {
   devotion: { label: 'Devotion', icon: Heart, tone: 'success' },
   appeasement: { label: 'Appeasement', icon: ShieldAlert, tone: 'warning' },
+  bargain: { label: 'Bargain', icon: Scale, tone: 'info' },
 }
 
 export const PRAYER_TONES: Record<Schema['PrayerTone'], Named> = {
   thanks: { label: 'Thanks', icon: HandHeart, tone: 'success' },
   mercy: { label: 'A plea for mercy', icon: Shield, tone: 'warning' },
+  request: { label: 'A request for a boon', icon: HandCoins, tone: 'info' },
+  praise: { label: 'Praise', icon: Sparkles, tone: 'gold' },
 }
 
 export const MANIFESTATIONS: Record<Schema['Manifestation'], Named> = {
@@ -101,6 +106,7 @@ export const MANIFESTATIONS: Record<Schema['Manifestation'], Named> = {
   serene: { label: 'Serene', icon: Wind, tone: 'info' },
   stern: { label: 'Stern', icon: Scale, tone: 'warning' },
   dreadful: { label: 'Dreadful', icon: Skull, tone: 'danger' },
+  veiled: { label: 'Veiled', icon: EyeOff, tone: 'muted' },
 }
 
 export const STANCES: Record<Schema['BeliefStance'], Named> = {

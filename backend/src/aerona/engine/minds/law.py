@@ -80,6 +80,8 @@ async def tend_status(ctx: TickContext, row: MindProfileRow, entity: EntityRow) 
         row.maker_bond = clamp_int(row.maker_bond + step * table.bond_by_status // 2 + lean, -PERCENT, PERCENT)
     if doctrine is not None and doctrine.made_mind_stance is MadeMindStance.ABOMINATION and "stability" not in row.locked:
         row.stability = clamp_percent(row.stability - 1)
+    if doctrine is not None and doctrine.made_mind_stance is MadeMindStance.REGULATED and "stability" not in row.locked:
+        row.stability = clamp_percent(row.stability + table.inspected_stability)
     wanted = 3 if await liberty_of(ctx.session, row.node_id) > 0 else 1
     if wanted - step < table.movement_gap or row.will not in {MindWill.FULL, MindWill.EXCEEDING}:
         return

@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.constructs import CommandToken, OrderCondition, OrderKind
+from aerona.domain.enums.constructs import CommandToken, OrderCondition, OrderKind, OrderTime
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.material import MaterialKind
 from aerona.engine.constructs import control
@@ -55,6 +55,7 @@ class OrderDraft(Command):
     priority: int = Field(default=1, ge=0, le=PRIORITIES)
     condition: OrderCondition = OrderCondition.ALWAYS
     until_epoch: int | None = Field(default=None, ge=0)
+    times: OrderTime | None = None
 
 
 class OrderTarget(Command):
@@ -166,6 +167,7 @@ async def instruction_order_create(scope: PlayerScope, command: OrderDraft) -> E
         priority=command.priority,
         condition=command.condition,
         until_epoch=command.until_epoch,
+        times=command.times,
     )
     return Effect("A new order is written.", command.target_id, values={"order_id": row.id})
 

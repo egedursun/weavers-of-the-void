@@ -13,5 +13,6 @@ MAKING_WEIGHTS: Mapping[MakingOutcome, WeightRule | None] = total(
         MakingOutcome.UNSTABLE: "unstable_weight",
         MakingOutcome.EMPTY_SEAT: "empty_weight",
         MakingOutcome.UNINTENDED_WILL: "unintended_weight",
+        MakingOutcome.EXCEEDED: None,
     },
 )

@@ -17,6 +17,8 @@ class SiteRoomKind(StrEnum):
     HOUSE = "house"
     STORE = "store"
     HEART = "heart"
+    CISTERN = "cistern"
+    FORGE = "forge"
 
 
 class SiteChallenge(StrEnum):
@@ -25,6 +27,8 @@ class SiteChallenge(StrEnum):
     GUARDIAN = "guardian"
     PUZZLE = "puzzle"
     HAZARD = "hazard"
+    SEAL = "seal"
+    MAZE = "maze"
 
 
 class RoomContentKind(StrEnum):
@@ -35,6 +39,7 @@ class RoomContentKind(StrEnum):
     MIND = "mind"
     RELIC = "relic"
     REALM_GATE = "realm_gate"
+    RECORDS = "records"
 
 
 class ExcavationStage(StrEnum):
@@ -58,6 +63,9 @@ class ExcavationRisk(StrEnum):
     CURSE = "curse"
     SPIRIT = "spirit"
     COLLAPSE = "collapse"
+    FLOODING = "flooding"
+    GAS = "gas"
+    DISEASE = "disease"
 
 
 class ExcavationFind(StrEnum):
@@ -68,9 +76,13 @@ class ExcavationFind(StrEnum):
     REGALIA = "regalia"
     ROUTE_MAP = "route_map"
     WAKING = "waking"
+    REMAINS = "remains"
+    RECORDS = "records"
 
 
 class BattlefieldFeature(StrEnum):
     MASS_GRAVE = "mass_grave"
     SALVAGE_FIELD = "salvage_field"
     EARTHWORKS = "earthworks"
+    ORDNANCE = "ordnance"
+    MEMORIAL = "memorial"

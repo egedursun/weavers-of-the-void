@@ -38,6 +38,10 @@ KNOWLEDGE_BRANCHES: dict[KnowledgeBranch, KeyedText[KnowledgeBranch]] = {
         KeyedText(B.BIOMANCY, "Biomancy", "Combines and alters living things: merges species into new ones and steers mutations."),
         KeyedText(B.FORBIDDEN, "Forbidden Knowledge", "Great power in war and magic, at the price of sanity and a leak into their world."),
         KeyedText(B.CIVICS, "Civics", "Their laws, offices, faith and thought grow into institutions that shape how the realm is run."),
+        KeyedText(B.LAW, "Law", "Their courts and codes grow; written and codified law come within reach sooner."),
+        KeyedText(B.NATURAL_HISTORY, "Natural History", "They know living kinds better: breeding, anatomy and new materials open to them."),
+        KeyedText(B.LANGUAGE_LORE, "Language Lore", "They read and translate other tongues; ciphers and interpreters come easier."),
+        KeyedText(B.MATHEMATICS, "Mathematics", "Their reckoning sharpens engineering, navigation and accounts, up to signs for unknowns."),
     )
 }
 

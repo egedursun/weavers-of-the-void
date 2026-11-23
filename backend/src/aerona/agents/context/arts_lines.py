@@ -4,9 +4,10 @@ from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.catalog.life.agents import OPEN
 from aerona.catalog.market_kinds import CLUBS, FORGERIES, ROLES, WAYS
+from aerona.catalog.orders import ORDER_CONDITIONS, ORDER_TIMES
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.arts import ArtPriceRow, ClubRow, CollectorRow, ForgeryRow, MatchRow
-from aerona.db.tables.constructs import ConstructRow, InstructionSetRow, RemadeRow
+from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow, RemadeRow
 from aerona.db.tables.contracts import MonsterContractRow
 from aerona.db.tables.crafts import IncorporealRightRow
 from aerona.db.tables.culture import ArtworkProfileRow
@@ -72,7 +73,18 @@ async def body_lines(scope: Scope, me: EntityRow) -> list[str]:
         mind = await session.get(MindProfileRow, body.id)
         will = spoken(mind.will) if mind is not None else "unknown"
         state = f": power {construct.power}, decay {construct.decay}, will {will}" if construct is not None else ""
-        found.append(f"{body.name} (construct {body.id}) answers you through its {spoken(rules.command_token)}{state}")
+        orders = await session.scalars(
+            select(InstructionOrderRow)
+            .where(InstructionOrderRow.set_id == rules.id, InstructionOrderRow.lapsed.is_(False))
+            .order_by(InstructionOrderRow.priority)
+        )
+        kept = "; ".join(
+            f"{spoken(order.kind)} {ORDER_CONDITIONS[order.condition].label.lower()}"
+            + (f" {ORDER_TIMES[order.times].label.lower()}" if order.times is not None else "")
+            for order in orders
+        )
+        orders_line = f"; its orders: {kept}" if kept else ""
+        found.append(f"{body.name} (construct {body.id}) answers you through its {spoken(rules.command_token)}{state}{orders_line}")
     return found
 
 

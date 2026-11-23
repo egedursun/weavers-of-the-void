@@ -2,7 +2,7 @@ from pydantic import Field
 
 from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.physics import CosmicFeatureKind, SurveyLevel, SystemRole, TerraformAim
+from aerona.domain.enums.physics import CosmicFeatureKind, ImpactBody, SurveyLevel, SystemRole, TerraformAim
 from aerona.engine.cosmos import physics_control as control
 from aerona.engine.phases.physics import world_physics
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -73,6 +73,7 @@ class ImpactCall(Command):
     world_id: int
     region_id: int | None = None
     size: int | None = None
+    body: ImpactBody = ImpactBody.CALLED
 
 
 class ImpactTarget(Command):
@@ -174,7 +175,7 @@ async def delete_feature(scope: PlayerScope, command: FeatureTarget) -> Effect:
 @player_action("impact:call", ActionKind.EDIT_RECORD)
 async def call_impact(scope: PlayerScope, command: ImpactCall) -> Effect:
     creator = await scope.creator()
-    row = await control.call(await scope.context("impact_call"), command.world_id, command.region_id, creator.id, size=command.size)
+    row = await control.call(await scope.context("impact_call"), command.world_id, command.region_id, creator.id, size=command.size, body=command.body)
     return Effect("A body falls toward the world.", command.world_id, values={"impact_id": row.id})
 
 

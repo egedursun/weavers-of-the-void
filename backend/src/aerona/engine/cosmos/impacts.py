@@ -1,5 +1,7 @@
 from sqlalchemy import select
 
+from aerona.catalog.impacts import IMPACT_BODIES, IMPACT_OUTCOMES
+from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondRepository
@@ -7,6 +9,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
+from aerona.db.tables.mass_weapons import WarRemnantRow
 from aerona.db.tables.physics import CosmicFeatureRow, ImpactEventRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
@@ -15,6 +18,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.environment import NotableYearKind, ScarKind, WeatherKind
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -23,7 +27,7 @@ from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.sea_waves import WaveOrigin
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.domain.models.entity_stats import LegendStats, PlaceStats
+from aerona.domain.models.entity_stats import ItemStats, LegendStats, PlaceStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.climate import cold_snap
 from aerona.engine.cosmos.features import live_features, returned_now, worlds_of
@@ -35,6 +39,7 @@ from aerona.engine.environment.years import world_years
 from aerona.engine.industry.stores import perishables
 from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.research import has_technique
+from aerona.engine.made.control import mark_relic, open_salvage
 from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.phases.environment import Notable, YearHarvest, record_notable
 from aerona.engine.primitives.distance import RegionAtlas
@@ -48,6 +53,7 @@ from aerona.engine.recording.record import FactInput, StepDraft, record
 PIETY_KEY = "piety"
 ABUNDANCE_KEY = "abundance"
 PENDING = ImpactOutcome.PENDING
+BROKEN_WORLDS = having(WORLD_TYPE_TRAITS, WorldTypeTrait.BROKEN_WORLDS)
 
 
 async def foreseers(ctx: TickContext, world_id: int) -> list[EntityRow]:
@@ -70,7 +76,15 @@ async def landing(ctx: TickContext, world: WorldRow, salt: str) -> EntityRow | N
 
 
 async def schedule(
-    ctx: TickContext, world: WorldRow, body: ImpactBody, *, feature: CosmicFeatureRow | None = None, size: int | None = None, called_by: int | None = None
+    ctx: TickContext,
+    world: WorldRow,
+    body: ImpactBody,
+    *,
+    feature: CosmicFeatureRow | None = None,
+    size: int | None = None,
+    called_by: int | None = None,
+    fragment_world_id: int | None = None,
+    wreck_remnant_id: int | None = None,
 ) -> ImpactEventRow:
     table = ctx.rules.impacts
     region = await landing(ctx, world, f"{body.value}.{ctx.epoch}")
@@ -80,6 +94,8 @@ async def schedule(
         world_id=world.id,
         region_entity_id=region.id if region is not None else None,
         feature_id=feature.id if feature is not None else None,
+        fragment_world_id=fragment_world_id,
+        wreck_remnant_id=wreck_remnant_id,
         body=body,
         size=clamp_percent(size if size is not None else ctx.rng(f"impact_size.{world.id}.{ctx.epoch}").die(table.size_die)),
         due_epoch=ctx.epoch + max(1, lead),
@@ -169,6 +185,46 @@ async def forecast(ctx: TickContext, cosmography: Cosmography) -> int:
             if ctx.rng(f"impact.{source.id}.{world.id}").chance(chance):
                 await schedule(ctx, world, body, feature=source)
                 made += 1
+    return made + await falls_from_rings(ctx, cosmography) + await falls_from_orbit(ctx)
+
+
+async def broken_moon_of(ctx: TickContext, world: WorldRow) -> int | None:
+    statement = select(WorldRow.id).where(WorldRow.parent_world_id == world.id, WorldRow.world_type.in_(sorted(BROKEN_WORLDS)))
+    found: int | None = await ctx.session.scalar(statement.order_by(WorldRow.id).limit(1))
+    return found
+
+
+async def orbiting_wreck(ctx: TickContext, world: WorldRow) -> int | None:
+    statement = select(WarRemnantRow.id).where(WarRemnantRow.orbit_world_id == world.id, WarRemnantRow.density > 0)
+    found: int | None = await ctx.session.scalar(statement.order_by(WarRemnantRow.id).limit(1))
+    return found
+
+
+async def falls_from_rings(ctx: TickContext, cosmography: Cosmography) -> int:
+    table = ctx.rules.impacts
+    made = 0
+    worlds = dict(cosmography.worlds)
+    for moon in sorted(worlds.values(), key=lambda row: row.id):
+        planet = worlds.get(moon.parent_world_id) if moon.parent_world_id is not None else None
+        if planet is None or moon.world_type not in BROKEN_WORLDS or held(planet.id) or await pending_on(ctx, planet.id) is not None:
+            continue
+        if ctx.rng(f"impact.fragment.{moon.id}.{ctx.epoch}").chance(table.fragment_rate):
+            await schedule(ctx, planet, ImpactBody.MOON_FRAGMENT, size=table.fragment_size, fragment_world_id=moon.id)
+            made += 1
+    return made
+
+
+async def falls_from_orbit(ctx: TickContext) -> int:
+    table = ctx.rules.impacts
+    made = 0
+    orbiting = select(WarRemnantRow).where(WarRemnantRow.orbit_world_id.is_not(None), WarRemnantRow.density > 0).order_by(WarRemnantRow.id)
+    for remnant in list(await ctx.session.scalars(orbiting)):
+        world = await ctx.session.get(WorldRow, remnant.orbit_world_id)
+        if world is None or held(world.id) or await pending_on(ctx, world.id) is not None:
+            continue
+        if ctx.rng(f"impact.wreck.{remnant.id}.{ctx.epoch}").chance(table.wreck_rate):
+            await schedule(ctx, world, ImpactBody.WRECK, size=table.wreck_size, wreck_remnant_id=remnant.id)
+            made += 1
     return made
 
 
@@ -234,6 +290,9 @@ async def strike(ctx: TickContext, impact: ImpactEventRow) -> bool:
     region = await ctx.session.get(EntityRow, impact.region_entity_id) if impact.region_entity_id is not None else None
     if world is None or held(world.id):
         return False
+    if impact.called_by_node_id is None and not IMPACT_BODIES[impact.body].made and ctx.rng(f"impact_airburst.{impact.id}").chance(table.airburst_pct):
+        await airburst(ctx, impact, world, region)
+        return True
     impact.outcome = ImpactOutcome.STRUCK
     spared = table.prepared_pct / PERCENT if impact.warned_epoch is not None else 0.0
     severity = impact.size * table.devastation_pct / PERCENT / PERCENT * (1 - spared)
@@ -242,6 +301,8 @@ async def strike(ctx: TickContext, impact: ImpactEventRow) -> bool:
         await apply_disaster(ctx, region, Disaster.EARTHQUAKE, min(1.0, severity), origin=WaveOrigin.IMPACT)
         place = await crater(ctx, impact, region)
         impact.crater_place_id = place.id
+        if IMPACT_BODIES[impact.body].made:
+            await strew_wreck(ctx, impact, place)
     impact.winter_epochs = impact.size // max(1, table.winter_per_size)
     for species in await canon(ctx.session, [EntityType.SPECIES], world.id):
         if held(species.id):
@@ -291,6 +352,63 @@ async def strike(ctx: TickContext, impact: ImpactEventRow) -> bool:
     return True
 
 
+async def strew_wreck(ctx: TickContext, impact: ImpactEventRow, place: EntityRow) -> None:
+    table = ctx.rules.impacts
+    await open_salvage(ctx, place.id, None, round_half_up(impact.size * table.wreck_salvage_pct / PERCENT))
+    remnant = await ctx.session.get(WarRemnantRow, impact.wreck_remnant_id) if impact.wreck_remnant_id is not None else None
+    if remnant is not None and "density" not in remnant.locked:
+        remnant.density = max(0, remnant.density - impact.size)
+    if not ctx.rng(f"impact_relic.{impact.id}").chance(table.wreck_relic_pct):
+        return
+    relic = await create_record(
+        ctx,
+        RecordSpec(
+            entity_type=EntityType.ITEM,
+            name=f"Relic of {place.name}",
+            body=f"A made thing that fell from the sky into {place.name} and still holds its working.",
+            stats=ItemStats(),
+            power=2,
+            world_id=place.world_id,
+            location_id=place.id,
+        ),
+    )
+    await mark_relic(ctx, relic.id, 0, 0)
+
+
+async def airburst(ctx: TickContext, impact: ImpactEventRow, world: WorldRow, region: EntityRow | None) -> None:
+    table = ctx.rules.impacts
+    impact.outcome = ImpactOutcome.AIRBURST
+    spared = table.prepared_pct / PERCENT if impact.warned_epoch is not None else 0.0
+    severity = impact.size * table.devastation_pct / PERCENT / PERCENT * (1 - spared)
+    struck: list[int] = []
+    if region is not None:
+        atlas = await RegionAtlas.load(ctx.session)
+        reach = {region.id}
+        for _step in range(table.airburst_reach):
+            reach |= {near for place in sorted(reach) for near in atlas.neighbours(place)}
+        for place_id in sorted(reach):
+            land = await ctx.session.get(EntityRow, place_id)
+            if land is None or land.entity_type is not EntityType.REGION or held(place_id):
+                continue
+            ground = await ctx.session.get(RegionEnvironmentRow, place_id)
+            if ground is not None and "forest_cover" not in ground.locked:
+                ground.forest_cover = clamp_percent(round_half_up(ground.forest_cover * (1 - min(1.0, severity))))
+            await apply_disaster(ctx, land, Disaster.STORM, min(1.0, severity), origin=WaveOrigin.IMPACT)
+            struck.append(place_id)
+    impact.winter_epochs = round_half_up(impact.size // max(1, table.winter_per_size) * (PERCENT - table.airburst_winter_cut_pct) / PERCENT)
+    written = await record(
+        ctx,
+        "impact.airburst",
+        roles={IncidentRole.SUBJECT: world.id, IncidentRole.PLACE: region.id if region is not None else None, IncidentRole.AUTHORITY: impact.called_by_node_id},
+        facts={"body": impact.body, "size": impact.size, "lands": len(struck), "winter": impact.winter_epochs},
+        steps=(StepDraft(StepAction.COLLIDE, locus_kind=StepLocus.REALM, locus_node=world.id),),
+        place=region.id if region is not None else None,
+        world_id=world.id,
+    )
+    impact.text = written.text
+    await remember_the_fall(ctx, world, region, impact)
+
+
 async def remember_the_fall(ctx: TickContext, world: WorldRow, region: EntityRow | None, impact: ImpactEventRow) -> NotableYearRow | None:
     years = world_years(ctx.environment, world.id, "impact")
     if not years:
@@ -333,7 +451,8 @@ async def pass_by(ctx: TickContext, impact: ImpactEventRow) -> None:
 
 async def impact_winters(ctx: TickContext) -> int:
     chilled = 0
-    statement = select(ImpactEventRow).where(ImpactEventRow.outcome == ImpactOutcome.STRUCK, ImpactEventRow.winter_epochs > 0).order_by(ImpactEventRow.id)
+    landed = [outcome for outcome, spec in IMPACT_OUTCOMES.items() if spec.landed]
+    statement = select(ImpactEventRow).where(ImpactEventRow.outcome.in_(landed), ImpactEventRow.winter_epochs > 0).order_by(ImpactEventRow.id)
     for impact in list(await ctx.session.scalars(statement)):
         if held(impact.world_id) or "winter_epochs" in impact.locked:
             continue
@@ -355,11 +474,28 @@ async def impact_winters(ctx: TickContext) -> int:
     return chilled
 
 
-async def call_impact(ctx: TickContext, world_id: int, region_id: int | None, by_node_id: int | None, *, size: int | None = None) -> ImpactEventRow:
+async def call_impact(
+    ctx: TickContext, world_id: int, region_id: int | None, by_node_id: int | None, *, size: int | None = None, body: ImpactBody = ImpactBody.CALLED
+) -> ImpactEventRow:
     world = await ctx.session.get(WorldRow, world_id)
     if world is None:
         raise NotFoundError("No such world.")
-    impact = await schedule(ctx, world, ImpactBody.CALLED, size=size if size is not None else ctx.rules.impacts.called_size, called_by=by_node_id)
+    spec = IMPACT_BODIES[body]
+    fragment = await broken_moon_of(ctx, world) if spec.from_ring else None
+    wreck = await orbiting_wreck(ctx, world) if spec.made else None
+    if spec.from_ring and fragment is None:
+        raise ValidationFailedError("A fragment falls only on a world circled by the ring of a broken moon.")
+    if spec.made and wreck is None:
+        raise ValidationFailedError("A made thing falls only where one circles the world.")
+    impact = await schedule(
+        ctx,
+        world,
+        body,
+        size=size if size is not None else ctx.rules.impacts.called_size,
+        called_by=by_node_id,
+        fragment_world_id=fragment,
+        wreck_remnant_id=wreck,
+    )
     if region_id is not None:
         region = await ctx.session.get(EntityRow, region_id)
         if region is None or region.world_id != world.id or region.entity_type is not EntityType.REGION:
@@ -369,7 +505,7 @@ async def call_impact(ctx: TickContext, world_id: int, region_id: int | None, by
         ctx,
         "impact.called",
         roles={IncidentRole.ACTOR: by_node_id, IncidentRole.SUBJECT: world.id, IncidentRole.PLACE: impact.region_entity_id},
-        facts={"size": impact.size, "due": impact.due_epoch - ctx.epoch},
+        facts={"size": impact.size, "due": impact.due_epoch - ctx.epoch, "body": impact.body},
         steps=(StepDraft(StepAction.INVOKE, actor=by_node_id, outcome=StepOutcome.SUCCESS),),
         place=impact.region_entity_id,
         world_id=world.id,

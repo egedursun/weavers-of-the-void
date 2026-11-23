@@ -198,6 +198,7 @@ class ExpeditionMemberView(ApiModel):
     hunger: int
     fatigue: int
     fallen: bool
+    departed: bool
     locked: list[str]
 
 
@@ -227,6 +228,7 @@ class ExpeditionView(ApiModel):
     legs_total: int
     provisions: int
     light: int
+    air: int
     tools: int
     medicine: int
     darkness: int

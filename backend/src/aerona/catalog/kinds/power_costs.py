@@ -5,7 +5,7 @@ from typing import Literal
 from aerona.core.total import total
 from aerona.domain.enums.powers import PowerCost
 
-Draw = Literal["stress", "age", "wealth", "renown", "mutation", "fortune", "surroundings", "patron", "souls", "nothing"]
+Draw = Literal["stress", "age", "wealth", "renown", "mutation", "fortune", "surroundings", "patron", "souls", "regard", "fertility", "nothing"]
 
 
 @dataclass(frozen=True)
@@ -38,6 +38,8 @@ POWER_COSTS: Mapping[PowerCost, CostDraw] = total(
         C.SURROUNDINGS: CostDraw("surroundings"),
         C.LUCK: CostDraw("fortune"),
         C.WARPING: CostDraw("mutation"),
+        C.REGARD: CostDraw("regard", mortals_only=True),
+        C.FERTILITY: CostDraw("fertility", mortals_only=True),
         C.NONE: CostDraw("nothing"),
     },
 )

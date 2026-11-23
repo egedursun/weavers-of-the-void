@@ -135,6 +135,7 @@ async def curse_decay(ctx: TickContext) -> None:
     "mortal.lifespan",
     "mortal.strength",
     "mortal.willpower",
+    "table.augments",
     "table.bonds",
     "table.conditions",
     "table.creator",

@@ -32,7 +32,7 @@ from aerona.domain.enums.body import Capacity, Consciousness, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.environment import MovementMode, RiverClass, ScarKind
+from aerona.domain.enums.environment import MovementMode, RiverClass, ScarKind, TerrainKind
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.life_traits import DuelContextTrait, StarvationStageTrait
@@ -43,6 +43,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarCause, WarEnding, WarStatus
+from aerona.domain.enums.world_view import WarTerrain
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.domain.models.moment import Moment
@@ -65,6 +66,7 @@ from aerona.engine.environment.battleground import (
     omen_morale,
     scar_battlefield,
     season_losses,
+    war_ground,
 )
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
@@ -171,6 +173,7 @@ from aerona.engine.services.war import (
 )
 from aerona.engine.services.war_geography import Neighbourhood
 from aerona.engine.services.war_resolution import WarSettlement, close_stale_wars, end_war, settle_peace
+from aerona.engine.settlement.modes import defence_pct
 from aerona.engine.urban.morphology import siege_of
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
@@ -227,7 +230,18 @@ class Theatre:
         chance = night_chance(ctx.rules, view.nights if view is not None else True, world.day_length_hours) if world is not None else 0.0
         night = ctx.environment.rng(f"night.{war.id}.{slot}").chance(chance)
         site_id = site.entity_id if site is not None else None
-        return BattleGround(region=region, place=place or site, season=season, weather=weather, year=year, night=night, urban=urban, site_id=site_id)
+        chosen = place or site
+        terrain = (
+            TerrainKind.URBAN
+            if urban
+            else chosen.terrain
+            if chosen is not None and chosen.terrain is not None
+            else region.dominant_terrain
+            if region is not None
+            else None
+        )
+        contested = war_ground(view.war if view is not None else WarTerrain.LAND, terrain)
+        return BattleGround(region=region, place=chosen, season=season, weather=weather, year=year, night=night, urban=urban, site_id=site_id, war=contested)
 
 
 @dataclass
@@ -661,7 +675,9 @@ def battle_field(rules: Rules, ground: BattleGround) -> Field:
     bridge = river and bridged(rules, region)
     ford = river and region is not None and region.river_class is RiverClass.RIVER
     weather = ground.weather.kind if ground.weather is not None else None
-    return Field(ground.terrain, weather, ground.night, river, bridge=bridge, ford=ford, cover=ground.cover, earthworks=earthworks_of(region))
+    return Field(
+        ground.terrain, weather, ground.night, river, bridge=bridge, ford=ford, cover=ground.cover, earthworks=earthworks_of(region), ground=ground.war
+    )
 
 
 def _besieged(rules: Rules, defender: EntityRow) -> EntityRow | None:
@@ -1079,6 +1095,7 @@ def _battle_row(
         weather=ground.weather.kind if ground.weather is not None else None,
         season_name=ground.season.name if ground.season is not None else None,
         terrain=ground.terrain,
+        ground=ground.war,
         year=ground.year,
         night=ground.night,
         tactics_attacker=None if result.refused else result.attacker.tactic,
@@ -1174,6 +1191,8 @@ async def _announce(
         facts["battle"] = report.record.id
     if ground is not None and ground.terrain is not None:
         facts["terrain"] = ground.terrain
+    if ground is not None:
+        facts["ground"] = ground.war
     if ground is not None and ground.weather is not None:
         facts["weather"] = ground.weather.kind
     write = await record(
@@ -1215,6 +1234,8 @@ async def _powers(
         walls = await ctx.session.get(SettlementInfrastructureRow, besieged.id)
         town = await ctx.session.get(SettlementProfileRow, besieged.id)
         rings = siege_of(ctx.rules, town.morphology) if town is not None else 0
+        if town is not None:
+            defender_power *= defence_pct(ctx.rules, town.settle_mode) / PERCENT
         siege = await open_siege(ctx, war, besieged, attacker)
         defender_power *= wall_defence(ctx, siege, walls, rings, people=stat_or(besieged, "population", 0)) * await warded(ctx, besieged.id)
         if walls is not None:

@@ -26,7 +26,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.dominion import DivineScale
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.life_traits import SourceLocusTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -46,7 +46,7 @@ from aerona.engine.faith.book import patron_node
 from aerona.engine.fortune.profiles import shift_fortune
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.memories import remember
-from aerona.engine.mortal.standing import add_renown
+from aerona.engine.mortal.standing import add_infamy, add_renown
 from aerona.engine.polity.laws import law_param
 from aerona.engine.powers.kinds import locus_factor, tide_wave
 from aerona.engine.primitives.distance import RegionAtlas
@@ -145,17 +145,15 @@ async def pay_costs(ctx: TickContext, user: EntityRow, source_id: int, strength:
 
 
 async def take_cost(ctx: TickContext, user: EntityRow, draws: str, amount: int) -> None:
-    if draws == "stress":
-        profile = await ctx.session.get(MortalProfileRow, user.id)
-        if profile is not None and "stress" not in (profile.locked or []):
-            profile.stress = clamp_percent(profile.stress + amount)
+    if draws in PROFILE_DRAWS:
+        await burden(ctx, user, draws, amount * PROFILE_DRAWS[draws])
     elif draws == "age":
         shift_stat(user, "age", amount // 2 or 1, 0)
     elif draws == "wealth":
         if await points_of(ctx.session, user) > 0:
             await shift_points(ctx.session, user, -amount)
-    elif draws == "renown":
-        await add_renown(ctx.session, user.id, -amount, ctx.epoch, rules=ctx.rules)
+    elif draws in STANDING_DRAWS:
+        await STANDING_DRAWS[draws](ctx.session, user.id, -amount if draws == "renown" else amount, ctx.epoch, rules=ctx.rules)
     elif draws == "mutation" and not held(user.id):
         await add_flag(ctx.session, user.id, EntityFlag.MUTATED, ctx.epoch)
     elif draws == "fortune" and not held(user.id):
@@ -168,6 +166,16 @@ async def take_cost(ctx: TickContext, user: EntityRow, draws: str, amount: int) 
         town = await ctx.session.get(EntityRow, user.location_id)
         if town is not None and town.entity_type is EntityType.SETTLEMENT and not held(town.id):
             shift_stat(town, "prosperity", -amount, 0)
+
+
+async def burden(ctx: TickContext, user: EntityRow, column: str, delta: int) -> None:
+    profile = await ctx.session.get(MortalProfileRow, user.id)
+    if profile is not None and column not in (profile.locked or []):
+        setattr(profile, column, clamp_percent(getattr(profile, column) + delta))
+
+
+PROFILE_DRAWS = {"stress": 1, "fertility": -1}
+STANDING_DRAWS = {"renown": add_renown, "regard": add_infamy}
 
 
 async def patron_of_user(ctx: TickContext, user: EntityRow) -> int | None:
@@ -276,6 +284,13 @@ async def renew(ctx: TickContext, row: SourceDensityRow, source: PowerSourceRow)
             select(func.count()).select_from(PowerRow).where(PowerRow.source_id == source.id, PowerRow.last_used_epoch == ctx.epoch)
         )
         gain = table.taking_renewal * int(users or 0)
+    elif kind == "offering":
+        shrines = await ctx.session.scalar(
+            select(func.count())
+            .select_from(EntityRow)
+            .where(EntityRow.location_id == row.region_entity_id, EntityRow.engine_kind == EngineKind.TEMPLE, EntityRow.status == EntityStatus.CANON)
+        )
+        gain = table.offering_renewal * int(shrines or 0)
     else:
         dominion = max(0, (await DominionBook.load(ctx.session)).scale_at(ctx.rules, row.region_entity_id, DivineScale.MAGIC))
         cults = await ctx.session.scalar(

@@ -17,7 +17,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, RiftState
+from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, RiftCause, RiftState
 from aerona.domain.enums.divine import OuterHunger
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
@@ -25,8 +25,10 @@ from aerona.domain.enums.outer import IncursionStage, OuterFate, OuterGoal, Oute
 from aerona.domain.enums.powers import PowerOrigin, PowerState
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.rifts import tear_toward
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.outer import found_outer_cult, outer_profile
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import shift_stat, stat_or
@@ -342,6 +344,16 @@ PRICES: Mapping[OuterPrice, Callable[[TickContext, EntityRow, EntityRow], Awaita
 )
 
 
+async def bargain_rift(ctx: TickContext, being: EntityRow, holder: EntityRow) -> None:
+    if holder.world_id is None or not ctx.rng(f"outer.bargain_rift.{being.id}.{holder.id}.{ctx.epoch}").chance(ctx.rules.rifts.bargain_pct):
+        return
+    world = await ctx.session.get(WorldRow, holder.world_id)
+    region_id = (await RegionAtlas.load(ctx.session)).top_region(holder.id)
+    region = await ctx.session.get(EntityRow, region_id) if region_id is not None else None
+    if world is not None:
+        await tear_toward(ctx, world, region if region is not None and region.world_id == world.id else None, RiftCause.OUTER_BARGAIN, by_node_id=being.id)
+
+
 async def strike_bargain(ctx: TickContext, being: EntityRow, holder: EntityRow, price: OuterPrice) -> OuterPactRow:
     profile = await outer_profile(ctx, being)
     power = PowerRow(
@@ -349,7 +361,7 @@ async def strike_bargain(ctx: TickContext, being: EntityRow, holder: EntityRow, 
         technique=HUNGER_TECHNIQUE[profile.hunger],
         form=SpellForm.VOID,
         strength=ctx.rules.outer_beings.bargain_strength,
-        origin=PowerOrigin.BONDED,
+        origin=PowerOrigin.BARGAIN,
         state=PowerState.ACTIVE,
         granted_by_node_id=being.id,
         gained_epoch=ctx.epoch,
@@ -360,6 +372,7 @@ async def strike_bargain(ctx: TickContext, being: EntityRow, holder: EntityRow, 
     row = OuterPactRow(outer_entity_id=being.id, holder_node_id=holder.id, price=price, paid=True, power_id=power.id, struck_epoch=ctx.epoch, locked=[])
     ctx.session.add(row)
     await pay_mortal_price(ctx, being, holder, price)
+    await bargain_rift(ctx, being, holder)
     await ctx.session.flush()
     return row
 

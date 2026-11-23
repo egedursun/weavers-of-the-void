@@ -11,8 +11,10 @@ from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfi
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.cosmography import PhenomenonKind
 from aerona.domain.enums.entity import EntityFlag, EntityType, MortalRole
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.cosmos.placement import world_pull
+from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import known_branches, known_levels
@@ -93,6 +95,7 @@ async def effective_lifespan(
             if healing is not None:
                 healing[home.id] = level
         medicine_bonus += round(base * MEDICINE[tier_of(rules.healing, level, 0, False)].lifespan_pct / PERCENT)
+        medicine_bonus += round(base * await tech_bonus(session, rules, home.id, EraChannel.HEALTH) / PERCENT)
     flags = await EntityRepository(session).flags(entity.id)
     notable_bonus = rules.world_engine.notable_lifespan_bonus if is_notable(rules, entity, flags) else 0
     return LifespanInfo(base=base, medicine=medicine_bonus, notable=notable_bonus)

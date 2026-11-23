@@ -11,6 +11,7 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
+from aerona.domain.enums.world_view import SettleMode
 from aerona.domain.models.entity_stats import LawStats
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -21,8 +22,9 @@ from aerona.engine.settlement.districts import CONDITION_KEY, DISTRICT_LOCKS, LE
 from aerona.engine.settlement.life import add_district
 
 PROFILE_NUMBERS = ("public_order", "crime", "unrest", "sanitation", "fire_risk", "prestige", "tax_rate")
-CHOICES: dict[str, tuple[str, type[SizeTier] | type[WaterSupply] | type[BuildMaterial]]] = {
+CHOICES: dict[str, tuple[str, type[SizeTier] | type[WaterSupply] | type[BuildMaterial] | type[SettleMode]]] = {
     "size_tier": ("profile", SizeTier),
+    "settle_mode": ("profile", SettleMode),
     "water": ("infrastructure", WaterSupply),
     "walls_material": ("infrastructure", BuildMaterial),
 }
@@ -44,7 +46,7 @@ INFRA_NUMBERS = {
     "bridges": (0, 100000000),
     "irrigation": (0, 5),
 }
-PROFILE_KEYS = (*PROFILE_NUMBERS, *POSITIVE_NUMBERS, "admin_capacity", "size_tier", "free_city", "rationing", GARRISON_KEY, FOREIGNERS_KEY)
+PROFILE_KEYS = (*PROFILE_NUMBERS, *POSITIVE_NUMBERS, "admin_capacity", "size_tier", "settle_mode", "free_city", "rationing", GARRISON_KEY, FOREIGNERS_KEY)
 INFRA_KEYS = (*INFRA_NUMBERS, "water", "walls_material", "sewers", WALL_STUFF_KEY)
 
 

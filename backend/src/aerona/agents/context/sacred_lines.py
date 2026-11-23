@@ -9,6 +9,7 @@ from aerona.db.tables.sacred import (
     DivinationRow,
     DivinationSystemRow,
     DoctrineAfterlifeRow,
+    DoctrineSacramentRow,
     FaithClimateRow,
     ForesightRow,
     GeniusLocusRow,
@@ -19,6 +20,7 @@ from aerona.db.tables.sacred import (
     SacramentRow,
     SpiritOfficeRow,
     TheodicyCrisisRow,
+    VisionRow,
 )
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -34,10 +36,12 @@ async def mystic_lines(scope: Scope, me: EntityRow) -> list[str]:
     row = await scope.session.get(MysticRow, me.id)
     if row is None:
         return []
+    last = await scope.session.scalar(select(VisionRow).where(VisionRow.mystic_entity_id == me.id).order_by(VisionRow.id.desc()).limit(1))
+    latest = f"; the last came as {spoken(last.kind)}" if last is not None else ""
     return [
         f"visions come to you ({spoken(row.state)} mystic): {several(row.visions, 'vision', 'visions')}, "
         f"{several(row.followers, 'follower', 'followers')}; "
-        f"reverence {row.reverence}, persecution {row.persecution}"
+        f"reverence {row.reverence}, persecution {row.persecution}{latest}"
     ]
 
 
@@ -45,7 +49,20 @@ async def sacrament_lines(scope: Scope, me: EntityRow) -> list[str]:
     rows = list(await scope.session.scalars(select(SacramentRow).where(SacramentRow.mortal_entity_id == me.id).order_by(SacramentRow.id)))
     if not rows:
         return []
-    return ["your sacraments: " + "; ".join(f"{spoken(row.kind)} {'missed' if row.missed else 'received'}" for row in rows)]
+    guards = {
+        kind: protection
+        for kind, protection in await scope.session.execute(
+            select(DoctrineSacramentRow.kind, DoctrineSacramentRow.protection).where(
+                DoctrineSacramentRow.cult_entity_id.in_([row.cult_entity_id for row in rows if row.cult_entity_id is not None])
+            )
+        )
+    }
+    told = [
+        f"{spoken(row.kind)} {'missed' if row.missed else 'received'}"
+        + (f", against {spoken(guards[row.kind])}" if not row.missed and row.kind in guards else "")
+        for row in rows
+    ]
+    return ["your sacraments: " + "; ".join(told)]
 
 
 async def town_lines(scope: Scope, town: EntityRow) -> list[str]:
@@ -58,7 +75,7 @@ async def town_lines(scope: Scope, town: EntityRow) -> list[str]:
         rank = f", an office of {spoken(office.rank)} rank" if office is not None and not office.dismissed else ""
         grievance = f", offended by {spoken(row.offended)}" if row.offended is not None else ""
         found.append(
-            f"{await named(scope, row.spirit_entity_id)} (spirit {row.spirit_entity_id}) keeps your town{rank}: "
+            f"{await named(scope, row.spirit_entity_id)} (spirit {row.spirit_entity_id}), a spirit of the {spoken(row.kind)}, keeps your town{rank}: "
             f"contentment {row.contentment}, favour {row.favour}{grievance}"
         )
     movement = await session.scalar(select(MillenarianRow).where(MillenarianRow.settlement_entity_id == town.id, MillenarianRow.stage.in_(LIVING)).limit(1))
@@ -81,7 +98,12 @@ async def petition_lines(scope: Scope, me: EntityRow) -> list[str]:
     rows = await scope.session.scalars(
         select(PetitionRow).where(PetitionRow.petitioner_node_id == me.id, PetitionRow.status.in_(OPEN)).order_by(PetitionRow.id).limit(LIST_LINES)
     )
-    return [f"your petition to {await named(scope, row.office_spirit_id)} for {spoken(row.kind)} waits until epoch {row.due_epoch}" for row in rows]
+    return [
+        f"your petition to {await named(scope, row.office_spirit_id)} for {spoken(row.kind)}"
+        + (f" against {await named(scope, row.target_node_id)}" if row.target_node_id is not None else "")
+        + f" waits until epoch {row.due_epoch}"
+        for row in rows
+    ]
 
 
 async def court_lines(scope: Scope, me: EntityRow) -> list[str]:

@@ -8,18 +8,22 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.constructs import ConstructRow, InstructionSetRow
+from aerona.db.tables.couplings import DeepSealRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.intrigue import IdentityRow
 from aerona.db.tables.made import AugmentRow, DataStoreContentRow, DataStoreRow, IntrusionRow
 from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.minds import MindProfileRow, MindStateRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkOutageRow, NetworkProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.concealment import BreachCause
 from aerona.domain.enums.eras import TechFamily
-from aerona.domain.enums.made import Attribution, Authenticity, IntrusionAim, IntrusionApproach, IntrusionOutcome, IntrusionTarget
+from aerona.domain.enums.made import Attribution, Authenticity, DataContent, IntrusionAim, IntrusionApproach, IntrusionOutcome, IntrusionTarget
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.networks import OutageCause
+from aerona.domain.enums.networks import NetworkRole, OutageCause
 from aerona.domain.enums.records import StepAction, StepOutcome
+from aerona.engine.concealment.truths import breach, truths_about
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.economy.routes import enemies_of
@@ -71,6 +75,16 @@ async def edge_of(ctx: TickContext, attempt: Attempt) -> int:
         select(SpyNetworkRow.depth).where(SpyNetworkRow.owner_entity_id == attempt.actor_id).order_by(SpyNetworkRow.depth.desc()).limit(1)
     )
     edge = round_half_up((skill + level * 10) * table.skill_pct / PERCENT) + int(spies or 0) // 4
+    unseen = await ctx.session.scalar(
+        select(IntrusionRow.id)
+        .where(
+            IntrusionRow.actor_node_id == attempt.actor_id,
+            IntrusionRow.target_node_id == attempt.target_node_id,
+            IntrusionRow.outcome == IntrusionOutcome.UNDETECTED,
+        )
+        .limit(1)
+    )
+    edge += table.undetected_edge if unseen is not None and attempt.target_node_id is not None else 0
     return edge + (table.insider_bonus if attempt.approach is IntrusionApproach.INSIDER else 0)
 
 
@@ -122,6 +136,15 @@ async def owner_of(ctx: TickContext, attempt: Attempt) -> EntityRow | None:
     return await ctx.session.get(EntityRow, node_id)
 
 
+async def locate(ctx: TickContext, subject_id: int) -> None:
+    identity = await ctx.session.get(IdentityRow, subject_id)
+    if identity is None or held(subject_id) or "exposure" in identity.locked:
+        return
+    identity.exposure = clamp_percent(identity.exposure + ctx.rules.intrusion.location_exposure)
+    if identity.exposure >= PERCENT and identity.exposed_epoch is None:
+        identity.exposed_epoch = ctx.epoch
+
+
 async def copy_contents(ctx: TickContext, store_id: int, actor_id: int) -> int:
     own = await ctx.session.scalar(select(DataStoreRow).where(DataStoreRow.owner_node_id == actor_id).order_by(DataStoreRow.id).limit(1))
     if own is None:
@@ -136,6 +159,8 @@ async def copy_contents(ctx: TickContext, store_id: int, actor_id: int) -> int:
         )
     ):
         worth += CONTENT_WORTH[row.content]
+        if row.content is DataContent.LOCATION and row.subject_node_id is not None:
+            await locate(ctx, row.subject_node_id)
         ctx.session.add(
             DataStoreContentRow(store_id=own.id, content=row.content, subject_node_id=row.subject_node_id, reference=row.reference, epoch=ctx.epoch, locked=[])
         )
@@ -163,6 +188,26 @@ async def land(ctx: TickContext, attempt: Attempt, victim: EntityRow | None) -> 
                 account.authenticity = Authenticity.ALTERED if attempt.aim is IntrusionAim.ALTER else Authenticity.FORGED
     elif attempt.aim is IntrusionAim.READ and attempt.target is IntrusionTarget.DATA_STORE and node_id is not None and attempt.actor_id is not None:
         await copy_contents(ctx, node_id, attempt.actor_id)
+    elif attempt.aim is IntrusionAim.EXPOSE and victim is not None:
+        await expose_secrets(ctx, victim)
+    if attempt.target is IntrusionTarget.SEAL and node_id is not None:
+        await break_seals(ctx, node_id)
+
+
+async def expose_secrets(ctx: TickContext, victim: EntityRow) -> int:
+    leaked = 0
+    for truth in await truths_about(ctx, victim.id):
+        leaked += int(await breach(ctx, truth, BreachCause.RECORD_LEAK, place_id=victim.location_id) is not None)
+    return leaked
+
+
+async def break_seals(ctx: TickContext, place_id: int) -> None:
+    for seal in await ctx.session.scalars(
+        select(DeepSealRow).where(DeepSealRow.place_entity_id == place_id, DeepSealRow.broken_epoch.is_(None)).order_by(DeepSealRow.id)
+    ):
+        seal.strength = max(0, seal.strength - ctx.rules.intrusion.seal_harm)
+        if seal.strength == 0:
+            seal.broken_epoch = ctx.epoch
 
 
 async def intrude(ctx: TickContext, attempt: Attempt) -> IntrusionRow:
@@ -184,7 +229,9 @@ async def intrude(ctx: TickContext, attempt: Attempt) -> IntrusionRow:
             attribution, blamed = Attribution.FALSE_FLAG, attempt.blamed_id
     elif found:
         attribution = Attribution.SUSPECTED
-    outcome = IntrusionOutcome.CAUGHT if found and not succeeded else IntrusionOutcome.SUCCEEDED if succeeded else IntrusionOutcome.FAILED
+    outcome = IntrusionOutcome.CAUGHT if found and not succeeded else IntrusionOutcome.FAILED
+    if succeeded:
+        outcome = IntrusionOutcome.SUCCEEDED if found else IntrusionOutcome.UNDETECTED
     victim = await owner_of(ctx, attempt)
     if succeeded:
         await land(ctx, attempt, victim)
@@ -229,6 +276,15 @@ async def intrude(ctx: TickContext, attempt: Attempt) -> IntrusionRow:
 
 
 async def target_of_foe(ctx: TickContext, foe: int) -> tuple[IntrusionTarget, int] | None:
+    owned = select(NetworkProfileRow.network_entity_id).where(NetworkProfileRow.owner_node_id == foe)
+    gateway = await ctx.session.scalar(
+        select(NetworkNodeRow.network_entity_id)
+        .where(NetworkNodeRow.network_entity_id.in_(owned), NetworkNodeRow.role == NetworkRole.GATEWAY)
+        .order_by(NetworkNodeRow.id)
+        .limit(1)
+    )
+    if gateway is not None and ctx.rng(f"intrusion.gateway.{foe}.{ctx.epoch}").chance(ctx.rules.intrusion.gateway_pull_pct):
+        return IntrusionTarget.NETWORK, int(gateway)
     network = await ctx.session.scalar(
         select(NetworkProfileRow.network_entity_id).where(NetworkProfileRow.owner_node_id == foe).order_by(NetworkProfileRow.network_entity_id).limit(1)
     )
@@ -240,7 +296,16 @@ async def target_of_foe(ctx: TickContext, foe: int) -> tuple[IntrusionTarget, in
     return None
 
 
-@reads("table.bonds", "table.data_store_contents", "table.data_stores", "table.holder_levels", "table.network_profiles", "table.skills", "table.spy_networks")
+@reads(
+    "table.bonds",
+    "table.data_store_contents",
+    "table.data_stores",
+    "table.holder_levels",
+    "table.network_nodes",
+    "table.network_profiles",
+    "table.skills",
+    "table.spy_networks",
+)
 @writes(
     "table.accounts",
     "table.data_store_contents",

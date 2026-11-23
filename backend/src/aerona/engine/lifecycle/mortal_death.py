@@ -156,7 +156,7 @@ async def die(
     if killer_id is not None and killer_kind is not None:
         await connect(session, killer_id, mortal.id, BondKind.KILLED, ctx.epoch, description=cause)
     await record_end(ctx, mortal, manner or (DeathCause.OLD_AGE if natural else DeathCause.UNKNOWN))
-    await avatar_slain(ctx, mortal.id)
+    await avatar_slain(ctx, mortal.id, killer_id)
     ctx.count("memories_inherited", await mourn(session, ctx.rules, mortal, killer_id, ctx.epoch))
     ctx.count("griefs", await bereave(ctx, mortal, killer_id))
     ctx.count("passions_bereaved", await bereaved(ctx, mortal, killer_id))

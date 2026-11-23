@@ -1,18 +1,22 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.life.sacred import TRUE_OMEN_DIVINATION_QUESTIONS
-from aerona.catalog.sacred import DIVINATION_LAWS
+from aerona.catalog.life.sacred import PERSONAL_QUESTIONS, TRUE_OMEN_DIVINATION_QUESTIONS
+from aerona.catalog.sacred import DIVINATION_ACCURACY, DIVINATION_LAWS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total as every
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cycles import PolityStressRow
 from aerona.db.tables.dominion import MiracleRecordRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.operations import ExpeditionRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.sacred import DivinationRow, DivinationSystemRow, ForecastModelRow, ForesightRow
 from aerona.db.tables.society import ArchiveHoldingRow
@@ -24,6 +28,7 @@ from aerona.domain.enums.cycles import LongPlanKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.faith import AfterlifeState, BindingKind
 from aerona.domain.enums.mind import SkillKind, ValueAxis, ValueHolder
 from aerona.domain.enums.minds import MindPurpose
 from aerona.domain.enums.modifier import IncidentRole
@@ -40,12 +45,12 @@ from aerona.engine.divine.laws import binds
 from aerona.engine.lore.prophecy import Foretelling, met, seer_power, typed_condition
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values
-from aerona.engine.primitives.folk import folk_among
+from aerona.engine.primitives.folk import folk_among, towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import shift_stock, stock
-from aerona.engine.primitives.stats import stat_or
+from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import members_of, ruler_of_realm
 from aerona.engine.sacred.astrology import real_sky
@@ -108,12 +113,31 @@ async def validity_of(ctx: TickContext, system: DivinationSystemRow) -> Divinati
         return DivinationValidity.GOD_ANSWERS
     if await seers_among(ctx, people.id):
         return DivinationValidity.SEER_GIFT
+    return DivinationValidity.NATURAL_LAW if await lawful(ctx, system, people) else DivinationValidity.NOISE
+
+
+async def lawful(ctx: TickContext, system: DivinationSystemRow, people: EntityRow) -> bool:
     law = DIVINATION_LAWS.get(system.kind)
     if law is not None and await binds(ctx, law, people):
-        return DivinationValidity.NATURAL_LAW
-    if system.kind is DivinationKind.ASTROLOGY and await real_sky(ctx, people.world_id):
-        return DivinationValidity.NATURAL_LAW
-    return DivinationValidity.NOISE
+        return True
+    if system.kind is DivinationKind.ASTROLOGY:
+        return await real_sky(ctx, people.world_id)
+    return system.kind is DivinationKind.SPIRIT_CONSULTATION and await restless_dead_among(ctx, people.id)
+
+
+async def restless_dead_among(ctx: TickContext, people_id: int) -> bool:
+    towns = await towns_of_people(ctx.session, people_id)
+    found = await ctx.session.scalar(
+        select(SpiritProfileRow.spirit_entity_id)
+        .join(EntityRow, EntityRow.id == SpiritProfileRow.spirit_entity_id)
+        .where(
+            EntityRow.location_id.in_(towns),
+            EntityRow.status == EntityStatus.CANON,
+            (SpiritProfileRow.state == AfterlifeState.WANDERING) | (SpiritProfileRow.binding != BindingKind.NONE),
+        )
+        .limit(1)
+    )
+    return found is not None
 
 
 async def take_up(ctx: TickContext, people: EntityRow, kind: DivinationKind) -> DivinationSystemRow:
@@ -175,10 +199,19 @@ async def true_omen(ctx: TickContext, question: DivinationQuestion, realm_id: in
         ours, theirs = await might_of(ctx, realm_id), await might_of(ctx, foe)
         return OmenVerdict.AUSPICIOUS if ours > theirs else OmenVerdict.INAUSPICIOUS if ours < theirs else OmenVerdict.UNCLEAR
     profile = await ctx.session.get(MortalProfileRow, ruler.id)
-    if question is DivinationQuestion.CORONATION:
-        return OmenVerdict.AUSPICIOUS if profile is not None and (profile.legitimacy or 0) >= MIDDLE else OmenVerdict.INAUSPICIOUS
-    if question is DivinationQuestion.WEDDING:
-        return OmenVerdict.AUSPICIOUS if profile is not None and profile.stress < MIDDLE else OmenVerdict.INAUSPICIOUS
+    personal = (
+        {
+            DivinationQuestion.CORONATION: (profile.legitimacy or 0) >= MIDDLE,
+            DivinationQuestion.WEDDING: profile.stress < MIDDLE,
+            DivinationQuestion.ILLNESS: profile.health >= MIDDLE // 2,
+        }
+        if profile is not None
+        else {}
+    )
+    if question in PERSONAL_QUESTIONS:
+        return OmenVerdict.AUSPICIOUS if personal.get(question, False) else OmenVerdict.INAUSPICIOUS
+    if question is DivinationQuestion.VOYAGE:
+        return OmenVerdict.INAUSPICIOUS if await ongoing_wars(ctx.session, realm_id) else OmenVerdict.AUSPICIOUS
     food = 0
     towns = 0
     for town_id in await members_of(ctx.session, realm_id):
@@ -190,37 +223,122 @@ async def true_omen(ctx: TickContext, question: DivinationQuestion, realm_id: in
 
 
 async def question_for(ctx: TickContext, realm_id: int, ruler: EntityRow) -> DivinationQuestion:
-    if await ongoing_wars(ctx.session, realm_id):
-        return DivinationQuestion.BATTLE
     office = await ctx.session.scalar(select(OfficeRow).where(OfficeRow.polity_entity_id == realm_id, OfficeRow.kind == OfficeKind.RULER).limit(1))
-    if office is not None and office.since_epoch == ctx.epoch:
-        return DivinationQuestion.CORONATION
     wed = await ctx.session.scalar(
         select(BondRow.id).where(BondRow.source_node_id == ruler.id, BondRow.kind == BondKind.SPOUSE_OF, BondRow.epoch == ctx.epoch).limit(1)
     )
-    if wed is not None:
-        return DivinationQuestion.WEDDING
-    if await foe_of(ctx, realm_id) is not None:
-        return DivinationQuestion.WAR
-    return DivinationQuestion.HARVEST
+    profile = await ctx.session.get(MortalProfileRow, ruler.id)
+    asked = (
+        (DivinationQuestion.BATTLE, bool(await ongoing_wars(ctx.session, realm_id))),
+        (DivinationQuestion.CORONATION, office is not None and office.since_epoch == ctx.epoch),
+        (DivinationQuestion.WEDDING, wed is not None),
+        (DivinationQuestion.ILLNESS, profile is not None and profile.health < MIDDLE),
+        (DivinationQuestion.FOUNDING, await newest_town(ctx, realm_id) is not None),
+        (DivinationQuestion.VOYAGE, await setting_out(ctx, realm_id)),
+        (DivinationQuestion.WAR, await foe_of(ctx, realm_id) is not None),
+    )
+    return next((question for question, met in asked if met), DivinationQuestion.HARVEST)
+
+
+async def newest_town(ctx: TickContext, realm_id: int) -> EntityRow | None:
+    towns = [town for town_id in await members_of(ctx.session, realm_id) if (town := await living_entity(ctx.session, town_id)) is not None]
+    founded = [town for town in towns if town.entity_type is EntityType.SETTLEMENT and town.birth_epoch == ctx.epoch]
+    return max(founded, key=lambda town: town.id, default=None)
+
+
+async def setting_out(ctx: TickContext, realm_id: int) -> bool:
+    towns = await members_of(ctx.session, realm_id)
+    leaders = select(EntityRow.id).where(EntityRow.location_id.in_(towns))
+    found = await ctx.session.scalar(
+        select(ExpeditionRow.id).where(ExpeditionRow.started_epoch == ctx.epoch, ExpeditionRow.leader_entity_id.in_(leaders)).limit(1)
+    )
+    return found is not None
+
+
+@dataclass(frozen=True)
+class Heeding:
+    ctx: TickContext
+    row: DivinationRow
+    realm_id: int
+    ruler: EntityRow
+
+    @property
+    def sign(self) -> int:
+        return 1 if self.row.verdict is OmenVerdict.AUSPICIOUS else -1 if self.row.verdict is OmenVerdict.INAUSPICIOUS else 0
+
+    async def profile(self, field: str) -> MortalProfileRow | None:
+        found = await self.ctx.session.get(MortalProfileRow, self.ruler.id)
+        return found if found is not None and field not in found.locked and self.sign else None
+
+
+async def crowned(heeding: Heeding) -> None:
+    profile = await heeding.profile("legitimacy")
+    if profile is not None:
+        profile.legitimacy = clamp_int((profile.legitimacy or 0) + heeding.sign * heeding.ctx.rules.divination.legitimacy, 0, PERCENT)
+
+
+async def wed(heeding: Heeding) -> None:
+    profile = await heeding.profile("stress")
+    if profile is not None:
+        profile.stress = max(0, profile.stress - heeding.sign * heeding.ctx.rules.divination.wedding_stress)
+
+
+async def sow(heeding: Heeding) -> None:
+    ctx = heeding.ctx
+    if heeding.sign >= 0:
+        return
+    for town_id in await members_of(ctx.session, heeding.realm_id):
+        if held(town_id):
+            continue
+        lost = min(ctx.rules.divination.harvest_food, await stock(ctx.session, ctx.rules, town_id, Commodity.FOOD))
+        if lost:
+            await shift_stock(ctx.session, ctx.rules, town_id, Commodity.FOOD, -lost, epoch=ctx.epoch, flow=GoodsFlow.LOSS)
+
+
+async def sail(heeding: Heeding) -> None:
+    ctx = heeding.ctx
+    for town_id in await members_of(ctx.session, heeding.realm_id):
+        town = await living_entity(ctx.session, town_id)
+        if town is not None and not held(town.id) and heeding.sign:
+            change = heeding.sign * ctx.rules.divination.voyage_prosperity
+            set_stats(town, prosperity=clamp_int(stat_or(town, "prosperity", 0) + change, 0, PERCENT))
+
+
+async def found_town(heeding: Heeding) -> None:
+    ctx = heeding.ctx
+    town = await newest_town(ctx, heeding.realm_id)
+    if town is not None and not held(town.id) and heeding.sign:
+        change = heeding.sign * ctx.rules.divination.founding_prosperity
+        set_stats(town, prosperity=clamp_int(stat_or(town, "prosperity", 0) + change, 0, PERCENT))
+
+
+async def tend_sick(heeding: Heeding) -> None:
+    profile = await heeding.profile("health")
+    if profile is not None:
+        profile.health = clamp_int(profile.health + heeding.sign * heeding.ctx.rules.divination.illness_health, 0, PERCENT)
+
+
+async def fought(_heeding: Heeding) -> None:
+    return None
+
+
+HEEDINGS: Mapping[DivinationQuestion, Callable[[Heeding], Awaitable[None]]] = every(
+    DivinationQuestion,
+    {
+        DivinationQuestion.BATTLE: fought,
+        DivinationQuestion.WAR: fought,
+        DivinationQuestion.WEDDING: wed,
+        DivinationQuestion.CORONATION: crowned,
+        DivinationQuestion.HARVEST: sow,
+        DivinationQuestion.VOYAGE: sail,
+        DivinationQuestion.FOUNDING: found_town,
+        DivinationQuestion.ILLNESS: tend_sick,
+    },
+)
 
 
 async def heed(ctx: TickContext, row: DivinationRow, realm_id: int, ruler: EntityRow) -> None:
-    table = ctx.rules.divination
-    sign = 1 if row.verdict is OmenVerdict.AUSPICIOUS else -1 if row.verdict is OmenVerdict.INAUSPICIOUS else 0
-    profile = await ctx.session.get(MortalProfileRow, ruler.id)
-    if row.question is DivinationQuestion.CORONATION and profile is not None and "legitimacy" not in profile.locked and sign:
-        profile.legitimacy = clamp_int((profile.legitimacy or 0) + sign * table.legitimacy, 0, PERCENT)
-    elif row.question is DivinationQuestion.WEDDING and profile is not None and "stress" not in profile.locked and sign:
-        profile.stress = max(0, profile.stress - sign * table.wedding_stress)
-    elif row.question is DivinationQuestion.HARVEST and sign < 0:
-        towns = await members_of(ctx.session, realm_id)
-        for town_id in towns:
-            if held(town_id):
-                continue
-            lost = min(table.harvest_food, await stock(ctx.session, ctx.rules, town_id, Commodity.FOOD))
-            if lost:
-                await shift_stock(ctx.session, ctx.rules, town_id, Commodity.FOOD, -lost, epoch=ctx.epoch, flow=GoodsFlow.LOSS)
+    await HEEDINGS[row.question](Heeding(ctx, row, realm_id, ruler))
 
 
 async def consult(
@@ -237,7 +355,7 @@ async def consult(
     rng = ctx.rng(f"reading.{system.id}.{ruler.id}")
     truth = await true_omen(ctx, question, realm_id, ruler)
     if verdict is None:
-        valid = system.validity is not DivinationValidity.NOISE and rng.chance(table.valid_truth)
+        valid = system.validity is not DivinationValidity.NOISE and rng.chance(table.valid_truth * DIVINATION_ACCURACY[system.kind](ctx.rules) / MIDDLE)
         verdict = truth if valid else rng.pick(list(OmenVerdict))
     values = await stored_values(ctx.session, ValueHolder.PERSONAL, ruler.id)
     heeded = values.get(ValueAxis.SUPERSTITION, 0) >= table.heed_superstition
@@ -265,6 +383,12 @@ async def consult(
         locked=[],
     )
     ctx.session.add(row)
+    await record(
+        ctx,
+        "omen.read",
+        roles={IncidentRole.SUBJECT: realm_id, IncidentRole.ACTOR: diviner},
+        facts={"method": system.kind, "question": question, "verdict": verdict},
+    )
     if heeded:
         await heed(ctx, row, realm_id, ruler)
         if "trust" not in system.locked:

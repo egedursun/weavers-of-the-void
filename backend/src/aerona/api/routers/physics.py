@@ -40,6 +40,7 @@ from aerona.db.tables.physics import (
 )
 from aerona.domain.enums.cosmography import StarAge
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.physics import LifeEnvironment
 from aerona.domain.enums.world import ClimateEra
 from aerona.engine.cosmos.eras import emergent_era
 from aerona.engine.cosmos.lifeforms import world_fit
@@ -293,7 +294,12 @@ async def world_physics(services: ServicesDep, world_id: int = Path(ge=1)) -> Wo
                 if inner.id in inner_refs
             ],
             physics=physics_record(physics) if physics is not None else None,
-            life=LifeRecord(complexity=life.complexity, environments=list(life.environments), biochemistries=chemistries, locked=list(life.locked))
+            life=LifeRecord(
+                complexity=life.complexity,
+                environments=[LifeEnvironment(place) for place in life.environments if place in set(LifeEnvironment)],
+                biochemistries=chemistries,
+                locked=list(life.locked),
+            )
             if life is not None
             else None,
             terraforming=await terraform_records(session, projects),

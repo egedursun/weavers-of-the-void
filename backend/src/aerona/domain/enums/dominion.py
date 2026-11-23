@@ -19,11 +19,14 @@ class PerceivedAlignment(StrEnum):
 class WorshipMode(StrEnum):
     DEVOTION = "devotion"
     APPEASEMENT = "appeasement"
+    BARGAIN = "bargain"
 
 
 class PrayerTone(StrEnum):
     THANKS = "thanks"
     MERCY = "mercy"
+    REQUEST = "request"
+    PRAISE = "praise"
 
 
 class Manifestation(StrEnum):
@@ -31,6 +34,7 @@ class Manifestation(StrEnum):
     SERENE = "serene"
     STERN = "stern"
     DREADFUL = "dreadful"
+    VEILED = "veiled"
 
 
 class BeliefStance(StrEnum):

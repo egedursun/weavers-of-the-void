@@ -595,6 +595,7 @@ def nearness(ctx: TickContext, dominion: DominionBook, atlas: RegionAtlas, commu
     "table.pressures",
     "table.region_dominion",
     "table.reverences",
+    "table.skills",
     "table.son_relations",
     "table.sons",
     "table.speaker_cohorts",

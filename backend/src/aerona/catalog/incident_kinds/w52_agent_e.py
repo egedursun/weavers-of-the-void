@@ -9,6 +9,7 @@ from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule, StepAction
 from aerona.domain.enums.records import ProcessClock as C
 from aerona.domain.enums.records import ProcessGroup as G
+from aerona.domain.enums.world_view import SettleMode
 
 GIFT_SIDES = (RoleSpec(R.GIVER), RoleSpec(R.RECEIVER))
 
@@ -429,6 +430,36 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "{actor} arranged that {beneficiary} would win its next contest.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.BENEFICIARY)),
         place=PlaceRule.WHEN_KNOWN,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "travel.embassy_received",
+        D,
+        "{target} received an embassy from {actor} at {destination}; {gift} in prosperity passed as a gift and their regard rose by {relation}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET), RoleSpec(R.DESTINATION)),
+        facts=(number("gift", FactUnit.WEALTH_POINTS), number("relation", FactUnit.STANDING)),
+        steps=frozenset({StepAction.MEET}),
+        place=PlaceRule.REQUIRED,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "settle_modes.canopy_fell",
+        G.MOVEMENT,
+        "The forest under {subject} fell to {cover} cover; the settlement came down to the ground and lost {lost:person|people}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(number("lost", FactUnit.PEOPLE), number("cover", FactUnit.PERCENT)),
+        steps=frozenset({StepAction.FALL}),
+        place=PlaceRule.REQUIRED,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "settle_modes.unfit",
+        G.MOVEMENT,
+        "{subject} keeps a way of settling, {mode}, that its people or its ground cannot bear; its folk grew restless.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("mode", FactValue.ENUM, enum=SettleMode),),
+        steps=frozenset({StepAction.LOSE}),
+        place=PlaceRule.REQUIRED,
         clock=C.INSTANT,
     ),
     *WAR_KINDS,

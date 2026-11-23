@@ -136,6 +136,10 @@ class RiftRules:
     sealed_epochs: int = rule(3, 0, 100, D, "Epochs a sealed rift stays in the records before it is gone")
     backlash_chance: int = rule(20, 0, 100, D, "Chance a rite whose backlash leaks tears a rift into another dimension (%)")
     ward_veil: int = rule(5, 0, 100, D, "Veil a ward rite of enough power returns to the dimension of a rift it seals")
+    mass_weapon_pct: int = rule(25, 0, 100, D, "Chance a weapon of mass harm that strikes a whole region or more tears a rift in each region it strikes (%)")
+    mass_weapon_size: int = rule(20, 0, 100, D, "Size a rift torn by a weapon of mass harm opens with beyond the usual")
+    bargain_pct: int = rule(15, 0, 100, D, "Chance an outer bargain opens a rift near the one who strikes it (%)")
+    bargain_instability: int = rule(15, 0, 100, D, "Stability a rift opened as the price of an outer bargain lacks against the usual")
 
 
 @dataclass(frozen=True)
@@ -150,6 +154,15 @@ class CosmicBeingRules:
     feed_brightness: int = rule(3, 0, 100, P, "Brightness a feeding star feeder takes from a star each epoch")
     feed_magic: int = rule(5, 0, 100, P, "Magic density a feeding being takes from each region of a world each epoch")
     guard_veil: int = rule(2, 0, 100, P, "Veil a guarding being adds each epoch")
+    wake_pct: int = rule(60, 0, 100, P, "Chance a slumbering being wakes when a battle, a sign in the sky or a calling rite stirs its world (%)")
+    world_wrath: int = rule(4, 0, 100, P, "Prosperity each town of a living world loses for each battle fought on it in an epoch")
+    world_wrath_max: int = rule(12, 0, 100, P, "Most prosperity a living world takes from one town in an epoch")
+    world_gift: int = rule(3, 0, 100, P, "Prosperity a living world gives each town that worships it in an epoch of peace")
+    ancient_lore_pct: int = rule(
+        40, 0, 100, P, "Chance an awake ancient made mind is studied by a town of its region in an epoch, raising a branch of its knowledge (%)"
+    )
+    ancient_lore_cap: int = rule(8, 0, 20, P, "Highest level of a branch a town can reach by studying an ancient made mind")
+    ancient_dread: int = rule(5, 0, 100, P, "Public order a town loses in an epoch an ancient made mind is awake in its region and the town does not study it")
     mend_brightness: int = rule(2, 0, 100, P, "Brightness a mending being returns to a dimmed star each epoch")
     mend_stability: int = rule(2, 0, 100, P, "Stability a mending being returns to a rift or dimension each epoch")
     trade_traffic: int = rule(20, 0, 1000, P, "Traffic a trading being adds to a route each epoch")

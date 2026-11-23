@@ -23,11 +23,13 @@ from aerona.domain.enums.ages import ArcOutcome, ArcRole, ArcStage, ArcTemplate
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.life_traits import LifeStageTrait
-from aerona.domain.enums.mind import TraitKind
+from aerona.domain.enums.mind import MemoryKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import PunishmentKind
 from aerona.domain.enums.polity import OathStatus, OfficeKind
 from aerona.engine.context import TickContext
+from aerona.engine.mind.memories import remember
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record as record_incident
@@ -333,12 +335,44 @@ async def open_arc(ctx: TickContext, subject_id: int, template: ArcTemplate, fig
     row = ArcRow(subject_node_id=subject_id, template=template, stage=first, echo_id=echo_id, started_epoch=ctx.epoch, last_beat_epoch=ctx.epoch, locked=[])
     ctx.session.add(row)
     await ctx.session.flush()
-    for node_id, role in figures:
+    cast = [*figures, *await bystanders(ctx, row, subject_id, figures)]
+    for node_id, role in cast:
         if node_id != subject_id and await ctx.session.get(ArcFigureRow, (row.id, node_id)) is None:
             ctx.session.add(ArcFigureRow(arc_id=row.id, node_id=node_id, role=role, locked=[]))
     ctx.session.add(ArcBeatRow(arc_id=row.id, stage=first, text=f"The tale of {spoken(template)} began.", epoch=ctx.epoch, locked=[]))
     await ctx.session.flush()
     return row
+
+
+async def bystanders(ctx: TickContext, row: ArcRow, subject_id: int, figures: tuple[Figure, ...]) -> list[Figure]:
+    table = ctx.rules.arcs
+    taken = {subject_id, *(node for node, _ in figures)}
+    found: list[Figure] = []
+    master = await ctx.session.scalar(
+        select(BondRow.target_node_id)
+        .where(BondRow.source_node_id == subject_id, BondRow.kind == BondKind.APPRENTICE_OF, BondRow.state == BondState.ACTIVE)
+        .order_by(BondRow.target_node_id)
+        .limit(1)
+    )
+    if master is not None and master not in taken and await living(ctx, master) and ctx.rng(f"arc.guide.{row.id}").chance(table.guide_chance):
+        found.append((int(master), ArcRole.GUIDE))
+        taken.add(int(master))
+    subject = await ctx.session.get(EntityRow, subject_id)
+    if subject is not None and subject.location_id is not None and ctx.rng(f"arc.witness.{row.id}").chance(table.witness_chance):
+        near = await ctx.session.scalar(
+            select(EntityRow.id)
+            .where(
+                await present_among(ctx.session, [subject.location_id]),
+                EntityRow.entity_type == EntityType.MORTAL,
+                EntityRow.status == EntityStatus.CANON,
+                EntityRow.id.not_in(taken),
+            )
+            .order_by(EntityRow.id)
+            .limit(1)
+        )
+        if near is not None:
+            found.append((int(near), ArcRole.WITNESS))
+    return found
 
 
 async def echo_weight(ctx: TickContext, template: ArcTemplate) -> int:
@@ -502,6 +536,18 @@ async def close(ctx: TickContext, arc: ArcRow, outcome: ArcOutcome, tally: ArcTa
     setattr(tally, outcome.value, getattr(tally, outcome.value) + 1)
     told = await record_incident(ctx, "arcs.ended", roles={IncidentRole.SUBJECT: arc.subject_node_id}, facts={"template": arc.template, "outcome": outcome})
     ctx.session.add(ArcBeatRow(arc_id=arc.id, stage=ArcStage.RESOLUTION, text=told.text, line_id=told.row.id, epoch=ctx.epoch, locked=[]))
+    for figure in await figures_of(ctx, arc.id):
+        if figure.role is ArcRole.WITNESS and await living(ctx, figure.node_id) and not held(figure.node_id):
+            await remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=figure.node_id,
+                subject_id=arc.subject_node_id,
+                kind=MemoryKind.FORMATIVE,
+                magnitude=ctx.rules.arcs.witness_memory,
+                epoch=ctx.epoch,
+                note=f"saw the tale of {spoken(arc.template)} end",
+            )
 
 
 async def advance(ctx: TickContext, arc: ArcRow, tally: ArcTally) -> bool:
@@ -520,7 +566,9 @@ async def advance(ctx: TickContext, arc: ArcRow, tally: ArcTally) -> bool:
     if "stage" in arc.locked:
         return False
     moved = resolving = False
-    for line in await shared_lines(ctx, arc, [row.node_id for row in figures], ctx.rules.arcs.beats_per_epoch):
+    guided = any([row.role is ArcRole.GUIDE and await living(ctx, row.node_id) for row in figures])
+    beats = ctx.rules.arcs.beats_per_epoch + (ctx.rules.arcs.guide_beats if guided else 0)
+    for line in await shared_lines(ctx, arc, [row.node_id for row in figures], beats):
         if reached_climax(arc):
             resolving = True
             break

@@ -17,6 +17,7 @@ class LineResult:
     drift_rule: DriftRule | None = None
     sterile: bool = False
     side_effects: bool = False
+    gifted: bool = False
 
 
 L = LineOutcome
@@ -29,5 +30,6 @@ LINE_OUTCOMES: Mapping[LineOutcome, LineResult] = total(
         L.SIDE_EFFECTS: LineResult("side_weight", side_effects=True),
         L.NON_VIABLE: LineResult("dead_weight"),
         L.ESCAPED: LineResult(),
+        L.EXCEEDED: LineResult(gifted=True),
     },
 )

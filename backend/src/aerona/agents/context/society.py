@@ -7,6 +7,7 @@ from aerona.agents.context.realm import statecraft
 from aerona.agents.context.society_depth import depth_lines
 from aerona.agents.context.wilds import crop_lines, pet_lines, wild_lines
 from aerona.catalog.kinds.motifs import MOTIF_LABELS
+from aerona.catalog.settle_modes import SETTLE_MODES
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow, PeopleCultureRow
@@ -113,6 +114,7 @@ async def home_for(session: AsyncSession, me: EntityRow, rules: Rules) -> HomeLi
         factions=state.factions,
         community=home.name,
         tier=town.size_tier.value if town is not None else "",
+        settled=SETTLE_MODES[town.settle_mode].label.lower() if town is not None else "",
         order=town.public_order if town is not None else None,
         crime=town.crime if town is not None else None,
         unrest=town.unrest if town is not None else None,

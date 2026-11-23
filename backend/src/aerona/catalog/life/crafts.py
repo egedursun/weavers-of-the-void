@@ -1,9 +1,10 @@
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 from aerona.core.total import total
 from aerona.domain.enums.crafts import AssistiveAid, ClockKind, LinkToken
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.mind import SkillKind
+from aerona.rules.registry import Rules
 
 FROM_SKILL = {
     SkillKind.ASTRONOMY: AssistiveAid.TELESCOPE,
@@ -57,10 +58,19 @@ LADDER = (
 SCHOOLING = (Technique.ALPHABET, Technique.BUREAUCRACY, Technique.UNIVERSITIES, Technique.DOUBLE_ENTRY)
 
 
-TOKEN_STRENGTH: Mapping[LinkToken, int] = total(
+TOKEN_STRENGTH: Mapping[LinkToken, Callable[[Rules], int]] = total(
     LinkToken,
-    {LinkToken.HAIR: 50, LinkToken.BLOOD: 65, LinkToken.NAME: 90, LinkToken.PORTRAIT: 40, LinkToken.FRAGMENT: 55},
+    {
+        LinkToken.HAIR: lambda rules: rules.links.hair_strength,
+        LinkToken.BLOOD: lambda rules: rules.links.blood_strength,
+        LinkToken.NAME: lambda rules: rules.links.name_strength,
+        LinkToken.PORTRAIT: lambda rules: rules.links.portrait_strength,
+        LinkToken.FRAGMENT: lambda rules: rules.links.fragment_strength,
+        LinkToken.TRUE_NAME: lambda rules: rules.links.true_name_strength,
+        LinkToken.POSSESSION: lambda rules: rules.links.possession_strength,
+    },
 )
+KNOWN_NAME_TOKENS = frozenset({LinkToken.TRUE_NAME})
 
 TOKENS_WITHIN_REACH_LINK_TOKENS = (LinkToken.HAIR, LinkToken.BLOOD)
 BURN_AND_FADE_LINK_TOKENS = frozenset({LinkToken.HAIR, LinkToken.BLOOD})

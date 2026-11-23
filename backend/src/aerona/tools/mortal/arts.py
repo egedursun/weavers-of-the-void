@@ -11,7 +11,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.arts import ClubKind, ForgeryKind
-from aerona.domain.enums.constructs import ContractStatus, OrderCondition, OrderKind
+from aerona.domain.enums.constructs import ContractStatus, OrderCondition, OrderKind, OrderTime
 from aerona.domain.enums.crafts import RightKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.modifier import IncidentRole
@@ -72,6 +72,9 @@ class CommandConstructInput(ToolInput):
     construct_id: int
     kind: OrderKind
     target_id: int | None = None
+    condition: OrderCondition = OrderCondition.ALWAYS
+    until_epoch: int | None = Field(default=None, ge=0)
+    times: OrderTime | None = None
 
 
 def reason_of(error: ValidationFailedError) -> str:
@@ -195,7 +198,20 @@ async def command_construct(call: MortalCall, args: CommandConstructInput) -> st
     target = await living_entity(call.session, args.target_id) if args.target_id is not None else None
     if args.target_id is not None and target is None:
         fail(MortalResult.COMMAND_DECLINED, why="there is no such target")
-    await constructs.give_order(call.tick, rules.id, args.kind, target_id=args.target_id, priority=FIRST, condition=OrderCondition.ALWAYS, until_epoch=None)
+    try:
+        await constructs.give_order(
+            call.tick,
+            rules.id,
+            args.kind,
+            target_id=args.target_id,
+            priority=FIRST,
+            condition=args.condition,
+            until_epoch=args.until_epoch,
+            times=args.times,
+            giver_id=call.me.id,
+        )
+    except ValidationFailedError as error:
+        fail(MortalResult.COMMAND_DECLINED, why=reason_of(error))
     call.target(body.id)
     await call.record(
         "tools.mortal.command_construct",

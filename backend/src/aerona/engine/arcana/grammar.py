@@ -1,15 +1,17 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.arcana import DURATION_EPOCHS, DURATION_STEP, FORM_COST, RANGE_STEP, SCHOOL_GRAMMAR, TARGET_STEP, TECHNIQUE_COST
+from aerona.catalog.arcana import DURATION_EPOCHS, DURATION_STEP, FORM_COST, RANGE_STEP, RANGES, SCHOOL_GRAMMAR, TARGET_STEP, TARGETS, TECHNIQUE_COST
 from aerona.constants.units import PERCENT
 from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.culture import RiteProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
+from aerona.domain.enums.arcana import RiteCondition, SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
+from aerona.domain.enums.mind import ActKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.rules.registry import Rules
@@ -22,6 +24,9 @@ class Shape:
     range: SpellRange = SpellRange.SIGHT
     duration: SpellDuration = SpellDuration.INSTANT
     target: SpellTarget = SpellTarget.ONE
+    condition: RiteCondition | None = None
+    condition_act: ActKind | None = None
+    condition_epoch: int | None = None
 
 
 def difficulty_of(rules: Rules, shape: Shape, power: int) -> int:
@@ -36,7 +41,7 @@ def difficulty_of(rules: Rules, shape: Shape, power: int) -> int:
 
 
 def shape_of(row: RiteGrammarRow) -> Shape:
-    return Shape(row.technique, row.form, row.range, row.duration, row.target)
+    return Shape(row.technique, row.form, row.range, row.duration, row.target, row.condition, row.condition_act, row.condition_epoch)
 
 
 async def ensure_grammar(session: AsyncSession, rules: Rules, profile: RiteProfileRow) -> RiteGrammarRow:
@@ -65,6 +70,7 @@ async def write_grammar(
 ) -> RiteGrammarRow:
     row = await ensure_grammar(session, rules, profile)
     row.technique, row.form, row.range, row.duration, row.target = shape.technique, shape.form, shape.range, shape.duration, shape.target
+    row.condition, row.condition_act, row.condition_epoch = shape.condition, shape.condition_act, shape.condition_epoch
     row.paradigm_entity_id, row.myth_entity_id = paradigm_id, myth_id
     row.difficulty = difficulty_of(rules, shape, profile.power)
     await session.flush()
@@ -72,7 +78,30 @@ async def write_grammar(
 
 
 def cost_factor(rules: Rules, row: RiteGrammarRow) -> float:
-    return 1 + row.difficulty * rules.spell_grammar.cost_per_difficulty_pct / PERCENT
+    beyond = rules.arcana.cosmos_cost_pct / PERCENT if RANGES[row.range].beyond_world else 1.0
+    return (1 + row.difficulty * rules.spell_grammar.cost_per_difficulty_pct / PERCENT) * beyond
+
+
+def link_factor(rules: Rules, row: RiteGrammarRow, linked: int) -> float:
+    return linked / PERCENT * rules.arcana.linked_strength_pct / PERCENT if RANGES[row.range].through_link else 1.0
+
+
+def power_suffices(rules: Rules, row: RiteGrammarRow, power: int) -> bool:
+    return not TARGETS[row.target].world or power >= rules.arcana.world_rite_power
+
+
+async def worlds_joined(session: AsyncSession, first: int | None, second: int | None) -> bool:
+    if first is None or second is None or first == second:
+        return first == second
+    found = await session.scalar(
+        select(RouteRow.id)
+        .where(
+            RouteRow.active.is_(True),
+            or_(and_(RouteRow.world_a_id == first, RouteRow.world_b_id == second), and_(RouteRow.world_a_id == second, RouteRow.world_b_id == first)),
+        )
+        .limit(1)
+    )
+    return found is not None
 
 
 def backlash_factor(rules: Rules, row: RiteGrammarRow) -> float:
@@ -83,7 +112,12 @@ def window_of(row: RiteGrammarRow | None) -> int:
     return DURATION_EPOCHS[row.duration] if row is not None else 1
 
 
-def reaches(atlas: RegionAtlas, row: RiteGrammarRow, caster: EntityRow, target: EntityRow | None) -> bool:
+def reaches(atlas: RegionAtlas, row: RiteGrammarRow, caster: EntityRow, target: EntityRow | None, *, linked: int = 0, joined: bool = False) -> bool:
+    spec = RANGES[row.range]
+    if spec.through_link:
+        return linked > 0
+    if spec.beyond_world:
+        return target is None or target.world_id == caster.world_id or joined
     if target is None or row.range is SpellRange.WORLD:
         return target is None or target.world_id == caster.world_id
     if row.range is SpellRange.TOUCH:

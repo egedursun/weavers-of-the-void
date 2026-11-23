@@ -14,6 +14,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.stats import stat
 from aerona.engine.settlement.circuit import circuit_gates, circuit_towers
 from aerona.engine.settlement.districts import DistrictEffects, designs_for, effects_of
+from aerona.engine.settlement.modes import choose_mode
 from aerona.engine.structures.megastructures import habitat_room
 from aerona.engine.urban.coverage import UrbanState, urban_state
 from aerona.rules.registry import Rules
@@ -137,6 +138,7 @@ async def town_of(ctx: TickContext, settlement: EntityRow, knowledge: KnowledgeM
             militia=0,
             free_city=False,
             foreigners={},
+            settle_mode=await choose_mode(session, ctx.rules, settlement),
             updated_epoch=ctx.epoch,
             locked=[],
         )

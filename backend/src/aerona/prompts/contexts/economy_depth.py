@@ -91,6 +91,7 @@ class RouteLine(ContextItem):
 
 class SettlementPlanLine(ContextItem):
     tier: str
+    settled: str = ""
     treasury: int
     tax_rate: int
     order: int

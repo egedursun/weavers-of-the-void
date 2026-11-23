@@ -17,18 +17,22 @@ from aerona.catalog.cosmography import (
     STAR_AGE_LABELS,
     WORLD_AGE_LABELS,
 )
+from aerona.catalog.impacts import IMPACT_BODIES
 from aerona.catalog.kinds.terraform import TERRAFORM_AIMS
 from aerona.catalog.life.domain import PERIODIC_BODIES
+from aerona.catalog.physics_life import AIR_NEEDS, LIFE_PLACES
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, WORLD_TYPES
-from aerona.core.grammar import an, several, spoken
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import CelestialReadingRow, CosmicBeingProfileRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.physics import CosmicFeatureRow, ImpactEventRow, TerraformingRow, WorldLifeRow, WorldPhysicsRow
+from aerona.db.tables.world_ends import WorldEndRow
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.physics import ImpactOutcome
+from aerona.domain.enums.physics import ImpactOutcome, LifeEnvironment
+from aerona.engine.cosmos.lifeforms import breath_of_world
 from aerona.engine.cosmos.orbits import eclipse_period, next_epoch
 from aerona.engine.cosmos.placement import Cosmography, cosmography_of
 from aerona.engine.phases.world_age import golden_age_status
@@ -95,6 +99,7 @@ async def body_lines(scope: Scope, world_id: int) -> list[str]:
             f"surface {round(physics.surface_temperature)} K, gravity {physics.gravity_g:g} g, air pressure {physics.pressure:g}, "
             f"water {physics.hydrosphere}/100, ice {physics.cryosphere}/100"
         )
+        lines.append(f"breathable for those who breathe {AIR_NEEDS[breath_of_world(scope.rules, physics)].label.lower()}")
         world = scope.worlds.get(world_id)
         star = await scope.session.get(StarRow, world.star_id) if world is not None and world.star_id is not None else None
         period = eclipse_period(scope.rules, physics, star)
@@ -102,12 +107,16 @@ async def body_lines(scope: Scope, world_id: int) -> list[str]:
             lines.append(f"the next great eclipse darkens its sky at age {next_epoch(scope.epoch, period, world.id)}")
     life = await scope.session.get(WorldLifeRow, world_id)
     if life is not None:
-        lines.append(f"life: {spoken(life.complexity)}")
+        places = ", ".join(LIFE_PLACES[LifeEnvironment(place)].label.lower() for place in life.environments if place in set(LifeEnvironment))
+        lines.append(f"life: {spoken(life.complexity)}" + (f", dwelling in {places}" if places else ""))
+    ended = await scope.session.get(WorldEndRow, world_id)
+    if ended is not None:
+        lines.append(f"it was {spoken(ended.state)} by {spoken(ended.cause)} at age {ended.epoch}")
     pending = select(ImpactEventRow).where(ImpactEventRow.world_id == world_id, ImpactEventRow.outcome == ImpactOutcome.PENDING)
     for impact in await scope.session.scalars(pending.order_by(ImpactEventRow.due_epoch, ImpactEventRow.id)):
         region = await scope.session.get(EntityRow, impact.region_entity_id) if impact.region_entity_id is not None else None
         lines.append(
-            f"impact#{impact.id}: {an(spoken(impact.body))} of size {impact.size}/100 strikes"
+            f"impact#{impact.id}: {IMPACT_BODIES[impact.body].label.lower()} of size {impact.size}/100 strikes"
             + (f" {region.name}" if region is not None else "")
             + f" at age {impact.due_epoch}"
         )

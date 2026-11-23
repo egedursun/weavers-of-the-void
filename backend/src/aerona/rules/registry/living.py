@@ -38,6 +38,21 @@ class LivingRules(Spanned):
     def seasons_in_epoch(self) -> int:
         return self.per_epoch(self.seasons_per_epoch)
 
+    regulated_escape_cut_pct: int = rule(
+        40, 0, 100, C, "Share of escapes and loosed designed disease a people that regulates living craft prevents by licence and inspection (%)"
+    )
+    wild_release_drift_pct: int = rule(20, 0, 100, C, "Drift a line released to be selected in the wild gains each generation beyond the usual")
+    wild_cross_pct: int = rule(10, 0, 100, C, "Chance each epoch a line that crosses with its wild kin spreads its traits into them (%)")
+    wild_cross_fit: int = rule(5, 0, 100, C, "Fit a crossing with a line moves its wild kin, toward the line's good or harm")
+    hybrid_vigour: int = rule(10, 0, 100, C, "Strength each trait of a crossed line gains when the cross gives vigour")
+    hybrid_sterile_pct: int = rule(30, 0, 100, C, "Chance a line crossed from two lines or kinds is born sterile (%)")
+    exceeded_gift: int = rule(20, 0, 100, C, "Strength of the gift a making that exceeds its design carries beyond what was asked")
+    exceeded_escape_pct: int = rule(50, 0, 400, C, "Added chance a line that exceeded its design slips its makers' control (%)")
+    light_order: int = rule(3, 0, 100, C, "Public order a town gains each epoch from a line it keeps that makes light, at full strength")
+    learning_stability: int = rule(2, 0, 100, C, "Stability a line that passes learning to its young keeps each epoch, at full strength")
+    filtering_clean: int = rule(3, 0, 100, C, "Air and water fouling a line that filters takes from its land each epoch, at full strength")
+    building_defense: int = rule(2, 0, 100, C, "Defence a town gains each epoch from a line it keeps that grows walls and shells, at full strength")
+
 
 @dataclass(frozen=True)
 class LivingMethodRules:
@@ -54,6 +69,7 @@ class LivingMethodRules:
     unstable_drift: int = rule(10, 0, 100, C, "Further drift an unstable line gains each generation")
     unstable_stability: int = rule(30, 0, 100, C, "Stability an unstable line loses when it is made")
     new_line_drift: int = rule(60, 0, 100, C, "Drift at which a line becomes a line of its own")
+    exceeded_pct: int = rule(8, 0, 100, C, "Chance a making done with full precision exceeds its design (%)")
 
 
 @dataclass(frozen=True)
@@ -82,6 +98,9 @@ class SymbiontRules:
     spread_chance: int = rule(5, 0, 100, C, "Chance each epoch a parasite spreads to another in its host's town")
     removal_harm: int = rule(10, 0, 100, C, "Harm removing a symbiont does to its host by placement")
     partner_loss: int = rule(10, 0, 100, C, "Prosperity and craft a people bonded to a symbiont line loses when the partnership ends")
+    gut_digestion: int = rule(
+        2, 0, 100, C, "Health a mortal, or prosperity a people, gains each epoch from a symbiont in the gut that widens what it can eat and digest"
+    )
 
 
 @dataclass(frozen=True)

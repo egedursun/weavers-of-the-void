@@ -6,24 +6,29 @@ from aerona.catalog.life.made import ENTRY_SKILL
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.total import total
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import MadeRealmRow
 from aerona.db.tables.military import SpyNetworkRow
-from aerona.db.tables.mind import SkillRow
-from aerona.db.tables.minds import MindProfileRow
+from aerona.db.tables.mind import DreamRow, SkillRow
+from aerona.db.tables.minds import MindProfileRow, MindStateRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.powers import PowerRegistryRow, PowerRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import RealmAwareness, RealmEntry, RealmPurpose, SurveillanceFocus
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.powers import PowerState
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import shift_points
 from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.powers.sources import polity_of
-from aerona.engine.primitives.numbers import clamp_int, clamp_percent
+from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.terms import explaining, term
 
 Watch = Callable[[TickContext, EntityRow, SettlementProfileRow, int], Awaitable[None]]
 Inside = Callable[[TickContext, MadeRealmRow, list[MindProfileRow], EntityRow | None], Awaitable[None]]
@@ -84,9 +89,38 @@ async def register_gifted(ctx: TickContext, town: EntityRow, _profile: Settlemen
             )
 
 
+@WATCHES.on(SurveillanceFocus.KIND)
+async def watch_kinds(ctx: TickContext, town: EntityRow, profile: SettlementProfileRow, reach: int) -> None:
+    present = await ctx.session.scalars(
+        select(EntityRow.affiliated_entity_id)
+        .where(await present_among(ctx.session, [town.id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .where(EntityRow.affiliated_entity_id.is_not(None))
+        .distinct()
+    )
+    await single_out(ctx, town, profile, reach, len(list(present)) - 1)
+
+
+@WATCHES.on(SurveillanceFocus.LANGUAGE)
+async def watch_tongues(ctx: TickContext, town: EntityRow, profile: SettlementProfileRow, reach: int) -> None:
+    tongues = await ctx.session.scalars(
+        select(BondRow.target_node_id).where(BondRow.source_node_id == town.id, BondRow.kind == BondKind.SPEAKS, BondRow.state == BondState.ACTIVE).distinct()
+    )
+    await single_out(ctx, town, profile, reach, len(list(tongues)) - 1)
+
+
+async def single_out(ctx: TickContext, town: EntityRow, profile: SettlementProfileRow, reach: int, others: int) -> None:
+    table = ctx.rules.surveillance
+    await cut_crime(ctx, town, profile, reach // 2)
+    if others > 0 and "unrest" not in profile.locked:
+        grievance = table.identity_grievance * min(others, table.identity_most) * reach // PERCENT
+        with explaining():
+            term("surveillance.identity_grievance", grievance)
+            profile.unrest = clamp_percent(profile.unrest + grievance)
+
+
 @WATCHES.on(SurveillanceFocus.EVERYTHING)
 async def watch_all(ctx: TickContext, town: EntityRow, profile: SettlementProfileRow, reach: int) -> None:
-    for kind in (cut_crime, cut_dissent, find_spies, watch_faith, watch_minds, register_gifted):
+    for kind in (cut_crime, cut_dissent, find_spies, watch_faith, watch_minds, register_gifted, watch_kinds, watch_tongues):
         await kind(ctx, town, profile, reach // 2)
 
 
@@ -148,6 +182,27 @@ async def freed(ctx: TickContext, _realm: MadeRealmRow, minds: list[MindProfileR
             mind.maker_bond = clamp_int(mind.maker_bond - 1, -PERCENT, PERCENT)
 
 
+@PURPOSES.on(RealmPurpose.MEMORIAL)
+async def remembered(ctx: TickContext, _realm: MadeRealmRow, _minds: list[MindProfileRow], keeper: EntityRow | None) -> None:
+    if keeper is None or held(keeper.id):
+        return
+    dead = select(EntityRow.id).where(EntityRow.status != EntityStatus.CANON)
+    for state in await ctx.session.scalars(select(MindStateRow).where(MindStateRow.owner_node_id == keeper.id, MindStateRow.mind_node_id.in_(dead))):
+        if "fidelity_pct" not in state.locked:
+            state.fidelity_pct = clamp_percent(state.fidelity_pct + ctx.rules.made_realms.memorial_fidelity)
+
+
+@PURPOSES.on(RealmPurpose.MARKET)
+async def traded(ctx: TickContext, realm: MadeRealmRow, minds: list[MindProfileRow], keeper: EntityRow | None) -> None:
+    working = sum(1 for mind in minds if not mind.dormant)
+    if keeper is None or held(keeper.id) or not working:
+        return
+    gain = round_half_up(ctx.rules.made_realms.market_yield * working * realm.time_ratio_pct / PERCENT)
+    with explaining():
+        term("made_realms.market_yield", gain, source_node_id=keeper.id)
+        await shift_points(ctx.session, keeper, gain)
+
+
 @PURPOSES.on(RealmPurpose.LABOUR)
 async def labour(_ctx: TickContext, _realm: MadeRealmRow, _minds: list[MindProfileRow], _keeper: EntityRow | None) -> None:
     return None
@@ -159,6 +214,9 @@ AWARE_ESCAPE: Mapping[RealmAwareness, int] = total(RealmAwareness, {RealmAwarene
 
 async def entry_refused(ctx: TickContext, realm: MadeRealmRow, mind_id: int) -> str | None:
     being = await ctx.session.get(EntityRow, mind_id)
+    if realm.entry is RealmEntry.DREAM:
+        dreamt = await ctx.session.scalar(select(DreamRow.id).where(DreamRow.dreamer_node_id == mind_id, DreamRow.epoch >= ctx.epoch - 1).limit(1))
+        return None if dreamt is not None else "only the dreaming walk into this realm"
     if realm.entry is RealmEntry.DEATH and being is not None and being.status is EntityStatus.CANON and being.entity_type is EntityType.MORTAL:
         return "only the dead enter this realm"
     if realm.entry is RealmEntry.BIRTH:

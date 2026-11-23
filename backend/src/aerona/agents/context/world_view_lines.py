@@ -1,4 +1,6 @@
 from aerona.agents.context.scope import Scope
+from aerona.catalog.settle_modes import SETTLE_MODES
+from aerona.catalog.war_grounds import WAR_GROUNDS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
@@ -26,9 +28,9 @@ def view_lines(view: WorldView) -> list[str]:
     if view.need is not BindingNeed.NONE:
         found.append(f"its towns are bound to {spoken(view.need)}")
     if view.settle is not SettleMode.GROUND:
-        found.append(f"its towns stand {spoken(view.settle.value)}")
+        found.append(f"its towns are settled {SETTLE_MODES[view.settle].label.lower()}")
     if view.war is not WarTerrain.LAND:
-        found.append(f"its wars are fought {spoken(view.war)}")
+        found.append(f"its wars are fought {WAR_GROUNDS[view.war].label.lower()}")
     found.extend(
         text
         for flag, text in (

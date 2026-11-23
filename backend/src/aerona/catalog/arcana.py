@@ -1,10 +1,14 @@
+from collections.abc import Callable
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.core.total import total
-from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
+from aerona.domain.enums.arcana import RechargeRule, RiteCondition, SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.cosmography import PhenomenonKind
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.society import CreatureTrait
+from aerona.domain.enums.world import SkyEventKind
+from aerona.rules.registry import Rules
 
 T = SpellTechnique
 F = SpellForm
@@ -29,6 +33,8 @@ SCHOOL_GRAMMAR = total(
         S.VOID: (T.DESTROY, F.VOID),
     },
 )
+
+COMMANDING_TECHNIQUES = frozenset({T.CONTROL, T.BIND})
 
 TECHNIQUE_COST = total(
     SpellTechnique, {T.CREATE: 3, T.PERCEIVE: 1, T.TRANSFORM: 3, T.DESTROY: 2, T.CONTROL: 3, T.BIND: 4, T.SUMMON: 4, T.WARD: 2, T.DRAIN: 3, T.MIMIC: 4}
@@ -61,10 +67,117 @@ FORM_COST = total(
     },
 )
 
-RANGE_STEP = total(SpellRange, {SpellRange.TOUCH: 0, SpellRange.SIGHT: 1, SpellRange.REGION: 2, SpellRange.WORLD: 4})
-DURATION_STEP = total(SpellDuration, {SpellDuration.INSTANT: 0, SpellDuration.SEASON: 1, SpellDuration.EPOCH: 2, SpellDuration.PERMANENT: 4})
-TARGET_STEP = total(SpellTarget, {SpellTarget.ONE: 0, SpellTarget.GROUP: 1, SpellTarget.STRUCTURE: 1, SpellTarget.REGION: 3})
-DURATION_EPOCHS = total(SpellDuration, {SpellDuration.INSTANT: 0, SpellDuration.SEASON: 1, SpellDuration.EPOCH: 1, SpellDuration.PERMANENT: 1000})
+
+@dataclass(frozen=True)
+class RangeSpec:
+    label: str
+    step: int
+    through_link: bool = False
+    beyond_world: bool = False
+
+
+RANGES = total(
+    SpellRange,
+    {
+        SpellRange.TOUCH: RangeSpec("Touch", 0),
+        SpellRange.SIGHT: RangeSpec("Sight", 1),
+        SpellRange.REGION: RangeSpec("Region", 2),
+        SpellRange.WORLD: RangeSpec("World", 4),
+        SpellRange.LINKED: RangeSpec("Through a link", 2, through_link=True),
+        SpellRange.COSMOS: RangeSpec("Beyond the world", 6, beyond_world=True),
+    },
+)
+RANGE_STEP = MappingProxyType({kind: spec.step for kind, spec in RANGES.items()})
+
+
+@dataclass(frozen=True)
+class DurationSpec:
+    label: str
+    step: int
+    epochs: int
+    sustained: bool = False
+    conditional: bool = False
+
+
+DURATIONS = total(
+    SpellDuration,
+    {
+        SpellDuration.INSTANT: DurationSpec("Instant", 0, 0),
+        SpellDuration.SEASON: DurationSpec("A season", 1, 1),
+        SpellDuration.EPOCH: DurationSpec("An epoch", 2, 1),
+        SpellDuration.PERMANENT: DurationSpec("Permanent", 4, 1000),
+        SpellDuration.SUSTAINED: DurationSpec("While sustained", 2, 1000, sustained=True),
+        SpellDuration.UNTIL_CONDITION: DurationSpec("Until a condition is met", 3, 1000, conditional=True),
+    },
+)
+DURATION_STEP = MappingProxyType({kind: spec.step for kind, spec in DURATIONS.items()})
+DURATION_EPOCHS = MappingProxyType({kind: spec.epochs for kind, spec in DURATIONS.items()})
+SUSTAINED_DURATIONS = frozenset(kind for kind, spec in DURATIONS.items() if spec.sustained)
+CONDITIONAL_DURATIONS = frozenset(kind for kind, spec in DURATIONS.items() if spec.conditional)
+
+
+@dataclass(frozen=True)
+class ConditionSpec:
+    label: str
+    needs_act: bool = False
+    needs_epoch: bool = False
+    by_anyone: bool = False
+
+
+RITE_CONDITIONS = total(
+    RiteCondition,
+    {
+        RiteCondition.ACT: ConditionSpec("Until its bearer does an act", needs_act=True),
+        RiteCondition.TIME: ConditionSpec("Until a set time", needs_epoch=True),
+        RiteCondition.WORD: ConditionSpec("Until its caster lifts it by word"),
+        RiteCondition.DEED: ConditionSpec("Until someone does a deed for its bearer", needs_act=True, by_anyone=True),
+    },
+)
+
+
+@dataclass(frozen=True)
+class TargetSpec:
+    label: str
+    step: int
+    item: bool = False
+    line: bool = False
+    world: bool = False
+
+
+TARGETS = total(
+    SpellTarget,
+    {
+        SpellTarget.ONE: TargetSpec("One", 0),
+        SpellTarget.GROUP: TargetSpec("A group", 1),
+        SpellTarget.STRUCTURE: TargetSpec("A structure", 1),
+        SpellTarget.REGION: TargetSpec("A region", 3),
+        SpellTarget.ITEM: TargetSpec("An item", 1, item=True),
+        SpellTarget.LINE: TargetSpec("A line of descent", 3, line=True),
+        SpellTarget.WORLD: TargetSpec("A whole world", 6, world=True),
+    },
+)
+TARGET_STEP = MappingProxyType({kind: spec.step for kind, spec in TARGETS.items()})
+
+SKY_SIGNS = frozenset({SkyEventKind.ECLIPSE, SkyEventKind.ALIGNMENT, SkyEventKind.COMET})
+
+
+@dataclass(frozen=True)
+class RechargeSpec:
+    label: str
+    fill: Callable[[Rules], int]
+
+
+RECHARGES = total(
+    RechargeRule,
+    {
+        RechargeRule.SITE: RechargeSpec("At a magic site", lambda rules: rules.arcana.site_fill),
+        RechargeRule.VIS: RechargeSpec("By vis", lambda rules: rules.arcana.vis_fill),
+        RechargeRule.MOON: RechargeSpec("At the full moon", lambda rules: rules.arcana.moon_fill),
+        RechargeRule.NONE: RechargeSpec("Never", lambda rules: rules.arcana.none_fill),
+        RechargeRule.SKY_EVENT: RechargeSpec("At a sign in the sky", lambda rules: rules.arcana.sky_event_fill),
+        RechargeRule.BODILY_OFFERING: RechargeSpec("By an offering of the body", lambda rules: rules.arcana.bodily_offering_fill),
+    },
+)
 
 RAIN_HELPED = frozenset({F.WATER, F.PLANT})
 RAIN_HINDERED = frozenset({F.FIRE, F.LIGHT})

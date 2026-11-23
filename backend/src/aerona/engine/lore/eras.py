@@ -3,17 +3,20 @@ from collections import defaultdict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.life.lore import SETTLE_AGES_AGE_KINDS
+from aerona.catalog.life.lore import LINGERING_AGES, PEACEFUL_ENDINGS, RECOVERING_DEEDS, SETTLE_AGES_AGE_KINDS
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderTechniqueRow, InstitutionRow
+from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.discovery import EraDeedRow, GreatPersonRow, PolityEraRow, WorldEraRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
+from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.db.tables.warfare import WarRow
+from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.discovery import AgeKind, EraDeed
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
@@ -103,6 +106,43 @@ async def wars_ended(ctx: TickContext) -> int:
             await record_deed(ctx, await polity_for(ctx.session, war.victor_entity_id), EraDeed.GREAT_VICTORY, table.victory_points, war.event_entity_id)
         )
         found += int(await record_deed(ctx, await polity_for(ctx.session, war.loser_entity_id), EraDeed.DEFEAT, -table.defeat_points, war.event_entity_id))
+        if war.ending in PEACEFUL_ENDINGS:
+            for side in await ctx.session.scalars(select(WarSideRow.entity_id).where(WarSideRow.war_id == war.id).order_by(WarSideRow.entity_id)):
+                found += int(await record_deed(ctx, await polity_for(ctx.session, side), EraDeed.GREAT_PEACE, table.peace_points, war.event_entity_id))
+    return found
+
+
+async def migrations(ctx: TickContext) -> int:
+    table = ctx.rules.discovery
+    moved: dict[int, int] = defaultdict(int)
+    rows = await ctx.session.execute(
+        select(CohortRow.community_entity_id, CohortRow.count).where(CohortRow.condition == CohortCondition.DISPLACED, CohortRow.count > 0)
+    )
+    for community, heads in rows.all():
+        polity = await realm_of(ctx.session, community)
+        if polity is not None:
+            moved[polity] += int(heads)
+    found = 0
+    for polity, heads in sorted(moved.items()):
+        if heads >= table.migration_heads:
+            found += int(await record_deed(ctx, polity, EraDeed.GREAT_MIGRATION, table.migration_points, polity))
+    return found
+
+
+async def charters(ctx: TickContext) -> int:
+    found = 0
+    first: dict[int | None, CompanyProfileRow] = {}
+    rows = await ctx.session.execute(
+        select(CompanyProfileRow, EntityRow.world_id)
+        .join(EntityRow, EntityRow.id == CompanyProfileRow.faction_entity_id)
+        .where(CompanyProfileRow.polity_entity_id.is_not(None))
+        .order_by(CompanyProfileRow.chartered_epoch, CompanyProfileRow.faction_entity_id)
+    )
+    for company, world in rows.all():
+        first.setdefault(world, company)
+    for company in first.values():
+        if company.chartered_epoch >= ctx.epoch - 1:
+            found += int(await record_deed(ctx, company.polity_entity_id, EraDeed.FIRST_CHARTER, ctx.rules.discovery.charter_points, company.faction_entity_id))
     return found
 
 
@@ -136,15 +176,23 @@ async def famines(ctx: TickContext) -> int:
     return len(by_polity)
 
 
-def next_age(row: PolityEraRow, rules: Rules) -> AgeKind:
+def next_age(row: PolityEraRow, rules: Rules, recent: frozenset[EraDeed] = frozenset()) -> AgeKind:
     table = rules.discovery
     if row.age is AgeKind.DARK and row.score - row.lowest >= table.heroic_rise:
-        return AgeKind.HEROIC
+        return AgeKind.REBORN if recent & RECOVERING_DEEDS else AgeKind.HEROIC
     if row.score <= table.dark_at:
         return AgeKind.DARK
-    if row.age is AgeKind.HEROIC and row.score < table.golden_at:
-        return AgeKind.HEROIC
+    if EraDeed.GREAT_MIGRATION in recent:
+        return AgeKind.WANDERING
+    if row.age in LINGERING_AGES and row.score < table.golden_at:
+        return row.age
     return AgeKind.GOLDEN if row.score >= table.golden_at else AgeKind.NORMAL
+
+
+async def recent_deeds(ctx: TickContext, polity_id: int) -> frozenset[EraDeed]:
+    since = ctx.epoch - ctx.rules.discovery.epochs(ctx.rules.discovery.age_memory_years)
+    found = await ctx.session.scalars(select(EraDeedRow.deed).where(EraDeedRow.polity_entity_id == polity_id, EraDeedRow.epoch >= since))
+    return frozenset(found)
 
 
 async def settle_ages(ctx: TickContext) -> int:
@@ -160,7 +208,7 @@ async def settle_ages(ctx: TickContext) -> int:
         if row.age is AgeKind.DARK and "lowest" not in row.locked:
             row.lowest = min(row.lowest, row.score)
         if "age" not in row.locked:
-            age = next_age(row, ctx.rules)
+            age = next_age(row, ctx.rules, await recent_deeds(ctx, polity.id))
             if age is not row.age:
                 if age is AgeKind.DARK and "lowest" not in row.locked:
                     row.lowest = row.score
@@ -182,7 +230,13 @@ async def era_factor(session: AsyncSession, rules: Rules, community_id: int) -> 
     if row is None:
         return 1.0
     table = rules.discovery
-    shifts = {AgeKind.GOLDEN: table.golden_research_pct, AgeKind.HEROIC: table.heroic_research_pct, AgeKind.DARK: -table.dark_research_pct}
+    shifts = {
+        AgeKind.GOLDEN: table.golden_research_pct,
+        AgeKind.HEROIC: table.heroic_research_pct,
+        AgeKind.DARK: -table.dark_research_pct,
+        AgeKind.WANDERING: -table.wandering_research_pct,
+        AgeKind.REBORN: table.reborn_research_pct,
+    }
     return 1 + shifts.get(row.age, 0) / PERCENT
 
 
@@ -224,5 +278,6 @@ async def advance_worlds(ctx: TickContext) -> int:
 
 async def eras(ctx: TickContext) -> dict[str, int]:
     deeds = await firsts(ctx) + await institutions_born(ctx) + await wars_ended(ctx) + await wonders_raised(ctx) + await great_risen(ctx) + await famines(ctx)
+    deeds += await migrations(ctx) + await charters(ctx)
     await ctx.session.flush()
     return {"era_deeds": deeds, "ages_changed": await settle_ages(ctx), "worlds_advanced": await advance_worlds(ctx)}

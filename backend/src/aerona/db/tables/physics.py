@@ -109,6 +109,8 @@ class WorldPhysicsRow(Base):
     oxygen: Mapped[int] = mapped_column(default=21)
     carbon_dioxide: Mapped[int] = mapped_column(default=1)
     methane: Mapped[int] = mapped_column(default=0)
+    ammonia: Mapped[int] = mapped_column(default=0, server_default="0")
+    hydrogen: Mapped[int] = mapped_column(default=0, server_default="0")
     water_vapour: Mapped[int] = mapped_column(default=0)
     exotic_gas: Mapped[int] = mapped_column(default=0)
     pressure: Mapped[float] = mapped_column(Float, default=1.0)
@@ -194,6 +196,8 @@ class ImpactEventRow(Base):
     world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
     region_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     feature_id: Mapped[int | None] = mapped_column(ForeignKey("cosmic_features.id", ondelete="SET NULL"))
+    fragment_world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
+    wreck_remnant_id: Mapped[int | None] = mapped_column(ForeignKey("war_remnants.id", ondelete="SET NULL"))
     body: Mapped[ImpactBody] = mapped_column(enum_type(ImpactBody, "body"))
     size: Mapped[int] = mapped_column(default=30)
     due_epoch: Mapped[int]

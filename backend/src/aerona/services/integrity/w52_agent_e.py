@@ -2,15 +2,21 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.war_w52 import DEFENCES
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow
 from aerona.db.tables.military import SpyNetworkRow
-from aerona.db.tables.settlement import SettlementInfrastructureRow
-from aerona.db.tables.warfare import SiegeRow
+from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
+from aerona.db.tables.warfare import BattleRow, SiegeRow, WarRow
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.settlement import WaterSupply
+from aerona.domain.enums.world_view import WarTerrain
+from aerona.engine.cosmos.world_views import view_of
+from aerona.engine.environment.battleground import war_ground
 from aerona.engine.military.engineering import RIVERS
+from aerona.engine.settlement.modes import MODE_KEY, choose_mode, fits, scene_of
+from aerona.rules.registry import Rules
 
 UNKNOWN_PLACE = "an unrecorded field"
 
@@ -59,3 +65,49 @@ async def place_honour(session: AsyncSession, key: int) -> None:
         return
     unit = await session.get(NamedUnitRow, row.named_unit_id)
     row.note = unit.name if unit is not None else UNKNOWN_PLACE
+
+
+async def world_rules(session: AsyncSession) -> Rules:
+    cosmos = CosmosRepository(session)
+    return await cosmos.rules() if await cosmos.get() is not None else Rules()
+
+
+async def unfit_settle_modes(session: AsyncSession) -> list[int]:
+    rules = await world_rules(session)
+    found: list[int] = []
+    for profile in await session.scalars(select(SettlementProfileRow).order_by(SettlementProfileRow.settlement_entity_id)):
+        town = await session.get(EntityRow, profile.settlement_entity_id)
+        if town is None or MODE_KEY in profile.locked:
+            continue
+        if not fits(rules, profile.settle_mode, await scene_of(session, rules, town)):
+            found.append(profile.settlement_entity_id)
+    return found
+
+
+async def refit_settle_mode(session: AsyncSession, key: int) -> None:
+    profile = await session.get(SettlementProfileRow, key)
+    town = await session.get(EntityRow, key)
+    if profile is not None and town is not None:
+        profile.settle_mode = await choose_mode(session, await world_rules(session), town)
+
+
+async def ground_allowed(session: AsyncSession, rules: Rules, battle: BattleRow) -> WarTerrain:
+    war = await session.get(WarRow, battle.war_id)
+    view = await view_of(session, rules, war.world_id if war is not None else None)
+    place = await session.get(RegionEnvironmentRow, battle.place_entity_id) if battle.place_entity_id is not None else None
+    return war_ground(view.war, place.dominant_terrain if place is not None else None)
+
+
+async def misplaced_grounds(session: AsyncSession) -> list[int]:
+    rules = await world_rules(session)
+    found: list[int] = []
+    for battle in await session.scalars(select(BattleRow).where(BattleRow.ground != WarTerrain.LAND).order_by(BattleRow.id)):
+        if battle.ground not in {await ground_allowed(session, rules, battle), WarTerrain.UNDERGROUND}:
+            found.append(battle.id)
+    return found
+
+
+async def reground_battle(session: AsyncSession, key: int) -> None:
+    battle = await session.get(BattleRow, key)
+    if battle is not None:
+        battle.ground = await ground_allowed(session, await world_rules(session), battle)

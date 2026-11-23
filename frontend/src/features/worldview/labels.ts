@@ -12,8 +12,11 @@ import {
   type LucideIcon,
   Moon,
   Mountain,
+  Orbit,
+  Pickaxe,
   Rocket,
   Ship,
+  Shovel,
   Sparkles,
   Sun,
   SunDim,
@@ -21,6 +24,7 @@ import {
   Swords,
   Tent,
   Thermometer,
+  TreePine,
   Waves,
   Wind,
 } from 'lucide-react'
@@ -60,6 +64,9 @@ export const SETTLES: Record<Schema['SettleMode'], Named> = {
   habitat: { label: 'In sealed habitats', icon: Building2, tone: 'verdigris' },
   band: { label: 'In a habitable band', icon: Layers, tone: 'gold' },
   deck: { label: 'On decks', icon: Ship, tone: 'info' },
+  burrow: { label: 'In burrows', icon: Shovel, tone: 'warning' },
+  submerged: { label: 'Beneath the water', icon: Waves, tone: 'verdigris' },
+  canopy: { label: 'In the canopy', icon: TreePine, tone: 'success' },
 }
 
 export const WARS: Record<Schema['WarTerrain'], Named> = {
@@ -68,6 +75,13 @@ export const WARS: Record<Schema['WarTerrain'], Named> = {
   sky: { label: 'In the sky', icon: Wind, tone: 'info' },
   boarding: { label: 'By boarding', icon: Rocket, tone: 'warning' },
   strata: { label: 'Between strata', icon: Layers, tone: 'danger' },
+  under_water: { label: 'Beneath the water', icon: Waves, tone: 'verdigris' },
+  space: { label: 'In open space', icon: Orbit, tone: 'info' },
+  underground: {
+    label: 'In tunnels and caverns',
+    icon: Pickaxe,
+    tone: 'warning',
+  },
 }
 
 export const SHARES = [

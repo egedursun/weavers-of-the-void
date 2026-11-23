@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.goods_traits import commodities_with
+from aerona.catalog.life.folkways import CHARM_EFFECTS
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memo_of
 from aerona.db.tables.bonds import BondRow
@@ -16,6 +17,7 @@ from aerona.rules.registry import Rules
 SCORE_TABLES = frozenset({NutritionScoreRow.__tablename__})
 KEEPING_FOODS = frozenset(commodities_with(CommodityTrait.KEEPING))
 CHARM_TABLES = frozenset({CharmRow.__tablename__, BondRow.__tablename__})
+CHARM_BASE = 50
 
 
 async def scores(session: AsyncSession) -> dict[int, int]:
@@ -54,11 +56,13 @@ async def charm_powers(session: AsyncSession) -> dict[int, dict[CharmPower, tupl
     return found
 
 
-async def real_charm(session: AsyncSession, bearer_id: int | None, powers: frozenset[CharmPower]) -> int:
+async def real_charm(session: AsyncSession, rules: Rules, bearer_id: int | None, powers: frozenset[CharmPower]) -> int:
     if bearer_id is None:
         return 0
     held_charms = (await charm_powers(session)).get(bearer_id, {})
-    return max((strength for power, (real, strength) in held_charms.items() if real and power in powers), default=0)
+    return max(
+        (round(strength * CHARM_EFFECTS[power](rules) / CHARM_BASE) for power, (real, strength) in held_charms.items() if real and power in powers), default=0
+    )
 
 
 async def battle_luck(session: AsyncSession, rules: Rules, community: EntityRow) -> int:
@@ -71,9 +75,9 @@ async def battle_luck(session: AsyncSession, rules: Rules, community: EntityRow)
 
 async def fed_fertility(session: AsyncSession, rules: Rules, node_id: int) -> float:
     hunger = await underfed(session, rules, node_id)
-    charm = await real_charm(session, node_id, frozenset({CharmPower.FERTILITY}))
+    charm = await real_charm(session, rules, node_id, frozenset({CharmPower.FERTILITY}))
     return max(0.0, 1 - hunger * rules.nutrition.fertility_pct / PERCENT / PERCENT) * (1 + charm * rules.mishaps.charm_fertility / PERCENT / PERCENT)
 
 
 async def healing_charm(session: AsyncSession, rules: Rules, node_id: int) -> int:
-    return await real_charm(session, node_id, frozenset({CharmPower.HEALING})) * rules.mishaps.charm_heal // PERCENT
+    return await real_charm(session, rules, node_id, frozenset({CharmPower.HEALING})) * rules.mishaps.charm_heal // PERCENT

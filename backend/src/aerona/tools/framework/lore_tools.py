@@ -35,7 +35,9 @@ async def commission(tick: TickContext, patron: EntityRow, args: CommissionInput
 
 async def design(tick: TickContext, holder: EntityRow, args: DesignRiteInput) -> str:
     technique, form = SCHOOL_GRAMMAR[args.school]
-    shape = Shape(args.technique or technique, args.form or form, args.range, args.duration, args.target)
+    shape = Shape(
+        args.technique or technique, args.form or form, args.range, args.duration, args.target, args.condition, args.condition_act, args.condition_epoch
+    )
     plan = rites.Design(
         name=args.name,
         school=args.school,

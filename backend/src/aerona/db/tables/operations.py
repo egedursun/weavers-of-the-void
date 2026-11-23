@@ -70,13 +70,14 @@ EXPEDITION_FIELDS = (
     "legs_total",
     "provisions",
     "light",
+    "air",
     "tools",
     "medicine",
     "darkness",
     "danger",
     "found",
 )
-MEMBER_FIELDS = ("role", "stress", "resolve", "cold", "wet", "hunger", "fatigue", "fallen")
+MEMBER_FIELDS = ("role", "stress", "resolve", "cold", "wet", "hunger", "fatigue", "fallen", "departed")
 LOG_FIELDS = ("event", "leg", "member_entity_id", "provisions_used", "light_used", "stress", "resolve", "quirk")
 QUIRK_FIELDS = ("kind", "source_entity_id", "strength")
 
@@ -308,6 +309,7 @@ class ExpeditionRow(Base):
         at_least("legs_total", 1),
         at_least("provisions", 0),
         at_least("light", 0),
+        at_least("air", 0),
         at_least("tools", 0),
         at_least("medicine", 0),
         between("darkness", PERCENT_MIN, PERCENT_MAX),
@@ -329,6 +331,7 @@ class ExpeditionRow(Base):
     legs_total: Mapped[int] = mapped_column(default=4)
     provisions: Mapped[int] = mapped_column(default=12)
     light: Mapped[int] = mapped_column(default=8)
+    air: Mapped[int] = mapped_column(default=0)
     tools: Mapped[int] = mapped_column(default=2)
     medicine: Mapped[int] = mapped_column(default=2)
     darkness: Mapped[int] = mapped_column(default=0)
@@ -363,6 +366,7 @@ class ExpeditionMemberRow(Base):
     hunger: Mapped[int] = mapped_column(default=0)
     fatigue: Mapped[int] = mapped_column(default=0)
     fallen: Mapped[bool] = mapped_column(default=False)
+    departed: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

@@ -1121,7 +1121,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "tools.mortal.petition_spirit",
         G.FAITH,
         "{actor} petitioned {subject}.",
-        roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False)),
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False), RoleSpec(R.TARGET, required=False)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.INSTANT,
         chronicle_kind=K.PRAYER,

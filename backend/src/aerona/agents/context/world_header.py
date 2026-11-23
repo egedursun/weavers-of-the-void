@@ -5,6 +5,7 @@ from aerona.agents.context.scope import Scope
 from aerona.catalog.climate import CLIMATES
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.genesis import TECHNOLOGY_MEANINGS, TECHNOLOGY_PHRASES
+from aerona.catalog.law_exceptions import LAW_EXCEPTIONS
 from aerona.catalog.law_grammar import LEGACY_GRAMMAR, Grammar, working_text
 from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
@@ -82,7 +83,25 @@ async def laws(scope: Scope, world: WorldRow | None) -> list[LawLine]:
         row.law_entity_id: row
         for row in await scope.session.scalars(select(NaturalLawProfileRow).where(NaturalLawProfileRow.law_entity_id.in_([law.id for law in found])))
     }
-    return [LawLine(id=law.id, name=law.name, description=law.description, working=working(law, profiles.get(law.id))) for law in found]
+    kinds = {
+        row.id: row.name
+        for row in await scope.session.scalars(
+            select(EntityRow).where(EntityRow.id.in_([row.exempt_kind_entity_id for row in profiles.values() if row.exempt_kind_entity_id is not None]))
+        )
+    }
+    return [
+        LawLine(id=law.id, name=law.name, description=law.description, working=working(law, profiles.get(law.id)), spares=spares(profiles.get(law.id), kinds))
+        for law in found
+    ]
+
+
+def spares(row: NaturalLawProfileRow | None, kinds: dict[int, str]) -> str:
+    if row is None:
+        return ""
+    spec = LAW_EXCEPTIONS[row.exception]
+    if spec.names_kind:
+        return kinds.get(row.exempt_kind_entity_id or 0, spec.spares)
+    return spec.spares
 
 
 def working(law: EntityRow, row: NaturalLawProfileRow | None) -> str:

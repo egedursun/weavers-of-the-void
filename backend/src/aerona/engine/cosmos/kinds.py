@@ -1577,5 +1577,17 @@ BEING_MECHANICS: MappingProxyType[BeingKind, BeingMechanics] = MappingProxyType(
             veil=lambda rules: rules.being_kinds.living_constellation_veil,
             doom=lambda rules: rules.being_kinds.living_constellation_doom,
         ),
+        BeingKind.LIVING_WORLD: BeingMechanics(
+            BeingKind.LIVING_WORLD,
+            might=lambda rules: rules.being_kinds.living_world_might,
+            veil=lambda rules: rules.being_kinds.living_world_veil,
+            doom=lambda rules: rules.being_kinds.living_world_doom,
+        ),
+        BeingKind.ANCIENT_MADE_MIND: BeingMechanics(
+            BeingKind.ANCIENT_MADE_MIND,
+            might=lambda rules: rules.being_kinds.ancient_made_mind_might,
+            veil=lambda rules: rules.being_kinds.ancient_made_mind_veil,
+            doom=lambda rules: rules.being_kinds.ancient_made_mind_doom,
+        ),
     }
 )

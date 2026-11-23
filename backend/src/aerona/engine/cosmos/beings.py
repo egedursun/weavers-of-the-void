@@ -11,23 +11,28 @@ from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionalEventRow, DimensionRow, RiftRow
+from aerona.db.tables.culture import RiteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import RouteRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingAgenda, BeingKind, BeingPhase, BeingScale, BeingSense, DimensionalEventKind, RiftCause
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.ecology import AwakeningTrigger
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.intrigue import IdentityReason
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import CosmicBeingStats, CultStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.being_wounds import can_roam, can_see, effective_might, wound_being
@@ -38,13 +43,15 @@ from aerona.engine.cosmos.rifts import tear_toward
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.interconnect.annotations import reads
 from aerona.engine.intrigue.identities import assume
+from aerona.engine.lore.research import raise_holder
 from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.primitives.numbers import clamp_percent
-from aerona.engine.primitives.queries import canon, connect
+from aerona.engine.primitives.queries import active_bonds, canon, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import POPULATION_KEY, scale_stat, shift_bounded, stat_or
+from aerona.engine.primitives.stats import POPULATION_KEY, scale_stat, shift_bounded, shift_stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.recording.scope import recording
+from aerona.engine.recording.terms import explaining, term
 
 
 async def create_being(
@@ -122,6 +129,7 @@ async def worlds_in_reach(ctx: TickContext, cosmography: Cosmography, being: Ent
             BeingScale.GALAXY: place.galaxy_id == here.galaxy_id,
             BeingScale.CLUSTER: place.top_cluster is not None and here.top_cluster is not None and place.top_cluster.id == here.top_cluster.id,
             BeingScale.DIMENSION: place.dimension_id == here.dimension_id,
+            BeingScale.REGION: world.id == being.world_id,
         }[profile.scale]
         if reach and not held(world.id):
             found.append(world)
@@ -283,6 +291,7 @@ async def answer_incursion(scene: Scene, region: EntityRow) -> bool:
 
 
 @AGENDA_ACTS.on(BeingAgenda.GUARD)
+@AGENDA_ACTS.on(BeingAgenda.SLUMBER)
 async def guard(scene: Scene) -> None:
     dimension = scene.placement.dimension
     if dimension is not None and not held(dimension.id) and "veil" not in dimension.locked:
@@ -388,6 +397,7 @@ async def wander(scene: Scene) -> None:
 
 
 TEARING_KINDS = frozenset({BeingKind.DIMENSION_TRAVELLER, BeingKind.RIFT_BORN})
+STIRRING = frozenset({EngineKind.BATTLE, EngineKind.SIEGE})
 
 
 async def mirror(scene: Scene) -> None:
@@ -426,6 +436,8 @@ async def act(ctx: TickContext, cosmography: Cosmography, being: EntityRow, prof
         return
     placement = cosmography.place_world(world)
     regions = [region for region in sorted(await canon(ctx.session, [EntityType.REGION], world.id), key=lambda row: row.id) if not held(region.id)]
+    if profile.scale is BeingScale.REGION:
+        regions = [region for region in regions if region.id == being.location_id] or regions[:1]
     scene = Scene(ctx, cosmography, being, profile, world, placement, regions, ctx.rng(f"being_act.{being.id}"))
     await AGENDA_ACTS[profile.agenda](scene)
     await mirror(scene)
@@ -434,6 +446,114 @@ async def act(ctx: TickContext, cosmography: Cosmography, being: EntityRow, prof
     dimension = placement.dimension
     if dimension is not None and kind.veil(ctx.rules) and not held(dimension.id) and "veil" not in dimension.locked:
         dimension.veil = clamp_percent(dimension.veil + kind.veil(ctx.rules))
+    if profile.being_kind is BeingKind.LIVING_WORLD:
+        await answer_world(scene)
+    elif profile.being_kind is BeingKind.ANCIENT_MADE_MIND:
+        await share_lore(scene)
+
+
+async def battles_on(ctx: TickContext, world_id: int) -> int:
+    fights = select(EntityRow.id).where(EntityRow.engine_kind.in_(sorted(STIRRING)), EntityRow.world_id == world_id, EntityRow.birth_epoch >= ctx.epoch - 1)
+    return len(list(await ctx.session.scalars(fights.order_by(EntityRow.id))))
+
+
+async def answer_world(scene: Scene) -> None:
+    ctx, world, being = scene.ctx, scene.world, scene.being
+    table = ctx.rules.cosmic_beings
+    battles = await battles_on(ctx, world.id)
+    communities = [row for row in sorted(await canon(ctx.session, COMMUNITY_TYPES, world.id), key=lambda row: row.id) if not held(row.id)]
+    if battles:
+        loss = min(table.world_wrath_max, table.world_wrath * battles)
+        with explaining():
+            term("cosmic_beings.world_wrath", -loss, source_node_id=being.id)
+            for community in communities:
+                shift_stat(community, "prosperity", -loss, ctx.rules.society.default_stat, high=PERCENT)
+        await record(
+            ctx,
+            "being.world_answered",
+            roles={IncidentRole.SUBJECT: being.id, IncidentRole.PLACE: world.id},
+            facts={"battles": battles, "loss": loss},
+            world_id=world.id,
+        )
+        return
+    worshippers = {bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.WORSHIPS], targets=[being.id])}
+    faithful = [community for community in communities if community.id in worshippers]
+    if not faithful:
+        return
+    with explaining():
+        term("cosmic_beings.world_gift", table.world_gift, source_node_id=being.id)
+        for community in faithful:
+            shift_stat(community, "prosperity", table.world_gift, ctx.rules.society.default_stat, high=PERCENT)
+    await record(
+        ctx,
+        "being.world_bargained",
+        roles={IncidentRole.SUBJECT: being.id, IncidentRole.PLACE: world.id},
+        facts={"communities": len(faithful), "gift": table.world_gift},
+        world_id=world.id,
+    )
+
+
+async def share_lore(scene: Scene) -> None:
+    ctx, being = scene.ctx, scene.being
+    table = ctx.rules.cosmic_beings
+    region_ids = {region.id for region in scene.regions}
+    towns = [row for row in sorted(await canon(ctx.session, [EntityType.SETTLEMENT], scene.world.id), key=lambda row: row.id) if not held(row.id)]
+    near = [town for town in towns if town.location_id in region_ids]
+    if not near:
+        return
+    town = scene.rng.pick(near)
+    if scene.rng.chance(table.ancient_lore_pct):
+        branch = scene.rng.pick(list(KnowledgeBranch))
+        level = await raise_holder(ctx, town.id, branch, table.ancient_lore_cap)
+        if level is not None:
+            await record(
+                ctx,
+                "being.lore_shared",
+                roles={IncidentRole.SUBJECT: being.id, IncidentRole.TARGET: town.id},
+                facts={"branch": branch, "level": level},
+                place=town.id,
+                world_id=scene.world.id,
+            )
+        return
+    settled = await ctx.session.get(SettlementProfileRow, town.id)
+    if settled is not None and "public_order" not in settled.locked:
+        with explaining():
+            term("cosmic_beings.ancient_dread", -table.ancient_dread, source_node_id=being.id)
+            settled.public_order = clamp_percent(settled.public_order - table.ancient_dread)
+
+
+async def stirring(ctx: TickContext, being: EntityRow) -> AwakeningTrigger | None:
+    if being.world_id is None:
+        return None
+    if await battles_on(ctx, being.world_id):
+        return AwakeningTrigger.DISTURBANCE
+    sign = await ctx.session.scalar(select(SkyEventRow.id).where(SkyEventRow.world_id == being.world_id, SkyEventRow.epoch >= ctx.epoch - 1).limit(1))
+    if sign is not None:
+        return AwakeningTrigger.SKY_SIGN
+    calling = (
+        select(EntityRow.id)
+        .join(RiteProfileRow, RiteProfileRow.rite_entity_id == EntityRow.id)
+        .where(RiteProfileRow.school == MagicSchool.SUMMONING, EntityRow.status == EntityStatus.CANON, EntityRow.world_id == being.world_id)
+        .limit(1)
+    )
+    return AwakeningTrigger.SUMMONS if await ctx.session.scalar(calling) is not None else None
+
+
+async def wake(ctx: TickContext, being: EntityRow, profile: CosmicBeingProfileRow, rng: SeededRandom) -> bool:
+    trigger = await stirring(ctx, being)
+    if trigger is None or not rng.chance(ctx.rules.cosmic_beings.wake_pct):
+        return False
+    profile.phase = BeingPhase.MANIFEST
+    profile.manifest_epochs = 0
+    profile.target_world_id = being.world_id
+    await record(
+        ctx,
+        "being.woke",
+        roles={IncidentRole.SUBJECT: being.id, IncidentRole.PLACE: being.world_id},
+        facts={"trigger": trigger, "might": profile.might},
+        world_id=being.world_id,
+    )
+    return True
 
 
 async def tear(scene: Scene) -> None:
@@ -550,7 +670,14 @@ async def live(ctx: TickContext, cosmography: Cosmography, being: EntityRow, pro
         return
     if await take_rule(ctx, cosmography, being, profile):
         ctx.count("beings_took_rule")
+    if profile.agenda is BeingAgenda.SLUMBER and profile.phase is BeingPhase.ROAMING:
+        profile.phase = BeingPhase.DORMANT
+        return
     if profile.phase is BeingPhase.DORMANT:
+        if profile.agenda is BeingAgenda.SLUMBER:
+            if await wake(ctx, being, profile, rng):
+                await manifest(ctx, cosmography, being, profile)
+            return
         if rng.chance(ctx.rules.cosmic_beings.manifest_chance // 2):
             profile.phase = BeingPhase.ROAMING
         return

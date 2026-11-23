@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.dominion import BARGAINING_MODES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.bonds import BondRow
@@ -15,12 +16,14 @@ from aerona.domain.enums.action import ActionPolarity
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import divine_of
 from aerona.engine.divine.prayer_window import judged_in_run
 from aerona.engine.gods.reputation import event_polarity
 from aerona.engine.gods.worship import creator_node_id
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 
 AXES = ("awe", "love", "fear", "neglect")
 
@@ -142,14 +145,24 @@ async def tend_standing(ctx: TickContext) -> int:
         tally = tallies.get((community_id, god_id), Tally())
         mercy, wrath = temper(god)
         here = await present(ctx, god, community)
+        bargains = row.mode in BARGAINING_MODES
+        haste = ctx.rules.worship.bargain_neglect_pct / PERCENT if bargains else 1.0
+        trust = tally.answered * ctx.rules.worship.bargain_trust if bargains else 0
         gains = {
             "awe": (tally.kind + tally.stern) * table.act_awe + (table.presence_awe if here else 0),
-            "love": (tally.answered * table.answer_love + tally.kind * table.kind_love) * mercy,
+            "love": (tally.answered * table.answer_love + tally.kind * table.kind_love) * mercy + trust,
             "fear": tally.stern * table.stern_fear * wrath,
-            "neglect": tally.unanswered * table.unanswered_neglect
+            "neglect": tally.unanswered * table.unanswered_neglect * haste
             + (0 if here or god_id == creator else table.absence_neglect)
             - tally.answered * table.answer_relief,
         }
+        if bargains and tally.answered + tally.unanswered:
+            await record(
+                ctx,
+                "worship.bargain",
+                roles={IncidentRole.SUBJECT: community_id, IncidentRole.PATRON: god_id},
+                facts={"answered": tally.answered, "unanswered": tally.unanswered},
+            )
         for axis in AXES:
             if axis not in row.locked:
                 setattr(row, axis, moved(getattr(row, axis), gains[axis], table.decay_pct))

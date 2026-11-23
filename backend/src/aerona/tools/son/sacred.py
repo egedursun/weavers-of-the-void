@@ -16,7 +16,16 @@ from aerona.domain.enums.culture import ProphecyPredicate
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import Emotion
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.sacred import BureauRank, DivinationQuestion, ForesightSource, OmenVerdict, SacramentKind, SacramentProtection
+from aerona.domain.enums.sacred import (
+    BureauRank,
+    DivinationQuestion,
+    ForesightSource,
+    GeniusLocusKind,
+    OmenVerdict,
+    SacramentKind,
+    SacramentProtection,
+    VisionKind,
+)
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.sacred import control
 from aerona.prompts import SonToolId
@@ -28,7 +37,7 @@ from aerona.tools.framework.validation import fail
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
-PLACES = frozenset({EntityType.PLACE, EntityType.SETTLEMENT, EntityType.HOUSE})
+PLACES = frozenset({EntityType.PLACE, EntityType.SETTLEMENT, EntityType.HOUSE, EntityType.REGION})
 SPIRITS = frozenset({EntityType.SPIRIT})
 MORTALS = frozenset({EntityType.MORTAL})
 TOWNS = frozenset({EntityType.SETTLEMENT})
@@ -39,6 +48,7 @@ MIDDLE = 50
 
 class BindGeniusLocusInput(ToolInput):
     place_id: int
+    kind: GeniusLocusKind | None = None
     reason: Reason
 
 
@@ -56,6 +66,7 @@ class AppointSpiritInput(ToolInput):
 
 class AnswerMysticInput(ToolInput):
     mortal_id: int
+    vision: VisionKind | None = None
     reason: Reason
 
 
@@ -110,9 +121,9 @@ def reason_of(error: ValidationFailedError) -> str:
 
 
 async def bind_genius_locus(call: SonCall, args: BindGeniusLocusInput) -> str:
-    place = await reached(call, args.place_id, PLACES, SonResult.GENIUS_REFUSED, "there is no such place, town or house")
+    place = await reached(call, args.place_id, PLACES, SonResult.GENIUS_REFUSED, "there is no such place, land, town or house")
     try:
-        row = await control.raise_spirit(call.tick, place.id, None, None, call.son.id)
+        row = await control.raise_spirit(call.tick, place.id, args.kind, None, call.son.id)
     except ValidationFailedError as error:
         fail(SonResult.GENIUS_REFUSED, why=reason_of(error))
     call.target(row.spirit_entity_id)
@@ -168,7 +179,7 @@ async def appoint_spirit(call: SonCall, args: AppointSpiritInput) -> str:
 async def answer_mystic(call: SonCall, args: AnswerMysticInput) -> str:
     mortal = await reached(call, args.mortal_id, MORTALS, SonResult.MYSTIC_REFUSED, "there is no such mortal")
     try:
-        row = await control.make_mystic(call.tick, mortal.id, call.son.id)
+        row = await control.make_mystic(call.tick, mortal.id, call.son.id, args.vision)
     except ValidationFailedError as error:
         fail(SonResult.MYSTIC_REFUSED, why=reason_of(error))
     call.target(mortal.id)

@@ -217,6 +217,8 @@ BEING_KINDS: MappingProxyType[BeingKind, KindSpec] = MappingProxyType(
         BeingKind.DIMENSION_RULER: KindSpec("Dimension ruler", "A being that rules a whole dimension."),
         BeingKind.SWARM_INTELLIGENCE: KindSpec("Swarm intelligence", "One mind made of countless small bodies."),
         BeingKind.STAR_PATTERN_MIND: KindSpec("Star-pattern mind", "A mind held in a pattern of stars."),
+        BeingKind.LIVING_WORLD: KindSpec("Living world", "A world that is itself a being, that thinks and answers what is done on it."),
+        BeingKind.ANCIENT_MADE_MIND: KindSpec("Ancient made mind", "A made mind of cosmic scale left by a people long gone, keeping their knowledge."),
     }
 )
 
@@ -298,6 +300,8 @@ RIFT_CAUSE_LABELS: MappingProxyType[RiftCause, str] = MappingProxyType(
         RiftCause.PHENOMENON: "A phenomenon",
         RiftCause.CREATOR: "The Creator",
         RiftCause.MADE_REALM_GATE: "The gate of a made realm",
+        RiftCause.MASS_WEAPON: "A weapon of mass harm",
+        RiftCause.OUTER_BARGAIN: "The price of an outer bargain",
     }
 )
 SCOPE_LABELS: MappingProxyType[RouteScope, str] = MappingProxyType(
@@ -318,6 +322,7 @@ BEING_SCALE_LABELS: MappingProxyType[BeingScale, str] = MappingProxyType(
         BeingScale.GALAXY: "Galaxy",
         BeingScale.CLUSTER: "Cluster",
         BeingScale.DIMENSION: "Dimension",
+        BeingScale.REGION: "Region",
     }
 )
 BEING_PHASE_LABELS: MappingProxyType[BeingPhase, str] = MappingProxyType(
@@ -341,6 +346,7 @@ BEING_AGENDA_LABELS: MappingProxyType[BeingAgenda, str] = MappingProxyType(
         BeingAgenda.SEEK_WORSHIP: "Seek worship",
         BeingAgenda.UNMAKE: "Unmake",
         BeingAgenda.MEND: "Mend",
+        BeingAgenda.SLUMBER: "Slumber",
     }
 )
 PHENOMENON_CAUSE_LABELS: MappingProxyType[PhenomenonCause, str] = MappingProxyType(
@@ -386,6 +392,8 @@ BEING_SCALES: MappingProxyType[BeingKind, BeingScale] = MappingProxyType(
         BeingKind.DIMENSION_RULER: BeingScale.DIMENSION,
         BeingKind.SWARM_INTELLIGENCE: BeingScale.GALAXY,
         BeingKind.STAR_PATTERN_MIND: BeingScale.GALAXY,
+        BeingKind.LIVING_WORLD: BeingScale.WORLD,
+        BeingKind.ANCIENT_MADE_MIND: BeingScale.REGION,
     }
 )
 BEING_AGENDAS: MappingProxyType[BeingKind, BeingAgenda] = MappingProxyType(
@@ -405,6 +413,8 @@ BEING_AGENDAS: MappingProxyType[BeingKind, BeingAgenda] = MappingProxyType(
         BeingKind.DIMENSION_RULER: BeingAgenda.CONQUER,
         BeingKind.SWARM_INTELLIGENCE: BeingAgenda.FEED,
         BeingKind.STAR_PATTERN_MIND: BeingAgenda.MEND,
+        BeingKind.LIVING_WORLD: BeingAgenda.GUARD,
+        BeingKind.ANCIENT_MADE_MIND: BeingAgenda.SLUMBER,
     }
 )
 DIMENSION_LAWS: MappingProxyType[DimensionKind, tuple[NaturalLaw, ...]] = MappingProxyType(
@@ -543,6 +553,8 @@ BEING_MODEL: Mapping[BeingKind, BeingModel] = total(
         BK.DIMENSION_RULER: BeingModel(MindSeat.REALM, BS.MIND),
         BK.SWARM_INTELLIGENCE: BeingModel(MindSeat.BODIES, BS.HEARING),
         BK.STAR_PATTERN_MIND: BeingModel(MindSeat.STRUCTURE, BS.SIGHT),
+        BK.LIVING_WORLD: BeingModel(MindSeat.PLACE, BS.TOUCH),
+        BK.ANCIENT_MADE_MIND: BeingModel(MindSeat.STRUCTURE, BS.MIND),
     },
 )
 SENSE_REACH: Mapping[BeingSense, int] = total(BeingSense, {BS.SIGHT: 100, BS.HEARING: 80, BS.TOUCH: 60, BS.MIND: 100, BS.DREAM: 50})

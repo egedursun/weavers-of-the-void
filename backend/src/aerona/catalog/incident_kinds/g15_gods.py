@@ -3,7 +3,7 @@ from aerona.domain.enums.chronicle import ChronicleKind as K
 from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.cycles import ChallengeKind
-from aerona.domain.enums.divine import CouncilMotion, DivineVerb, DivineWoundKind, EscalationStep, GoalState, GodGoalKind, OuterHunger
+from aerona.domain.enums.divine import CouncilMotion, DivineVerb, DivineWoundKind, EscalationStep, GoalState, GodGoalKind, OuterHunger, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import BeliefStance, CreatureDeed, MagicSiteKind
 from aerona.domain.enums.entity import ProphecyReading
@@ -306,12 +306,14 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "divine.wound_",
             G.GODS,
-            "{subject} suffered a divine wound: {wound_label}{tail}.",
-            roles=(RoleSpec(R.SUBJECT),),
+            "{subject} suffered a divine wound: {wound_label}{tail}, dealt by {cause_label}.",
+            roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR, required=False)),
             facts=(
                 FactSpec("wound", FactValue.ENUM, enum=DivineWoundKind),
                 FactSpec("wound_label", FactValue.NAME),
                 FactSpec("tail", FactValue.NAME),
+                FactSpec("cause", FactValue.ENUM, enum=WoundCause),
+                FactSpec("cause_label", FactValue.NAME),
             ),
             place=PlaceRule.WHEN_KNOWN,
             clock=ProcessClock.PHASE,

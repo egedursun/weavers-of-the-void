@@ -12,10 +12,12 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import ConditionKind, HarmCause, NerveDamage
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.conditions import condition_of, gain_condition
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
+from aerona.engine.primitives.augment_bonus import LIFESPAN_KEY, bonus
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat
 from aerona.engine.structures.readers import working
@@ -87,6 +89,7 @@ async def run_decline(ctx: TickContext) -> DeclineTally:
     )
     for mortal in list(mortals):
         age, lifespan = stat(mortal, "age"), stat(mortal, "lifespan")
+        lifespan = lifespan + await bonus(ctx.session, mortal.id, EffectTarget.LIFESPAN, LIFESPAN_KEY) if lifespan else lifespan
         if held(mortal.id) or age is None or not lifespan or age * PERCENT < lifespan * table.onset_pct:
             continue
         row = await condition_of(ctx, mortal.id, DECLINE)

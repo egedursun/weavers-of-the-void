@@ -473,6 +473,7 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
             entity_id=entity.id,
             world_id=entity.world_id,
             size_tier=profile.size_tier,
+            settle_mode=profile.settle_mode,
             treasury=profile.treasury,
             tax_rate=profile.tax_rate,
             public_order=profile.public_order,

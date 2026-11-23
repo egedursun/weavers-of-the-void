@@ -67,6 +67,7 @@ import { type Named } from '@/features/entity/economy/labels'
 import { ChoiceSelect } from '@/features/entity/economy/parts'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { SETTLES } from '@/features/worldview/labels'
 import { CityWorkings, DesignEditor, DistrictDesigns } from './CityWorks'
 import { SettlementStructures } from './Structures'
 import { useSettlementPlan } from './api'
@@ -375,6 +376,7 @@ function OpenPlots({ count }: { count: number }) {
 function CityHero({ plan }: { plan: Plan }) {
   const size = SIZE_SPEC[plan.size_tier]
   const water = WATER_SPEC[plan.infrastructure.water]
+  const settled = SETTLES[plan.settle_mode]
   return (
     <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={size.icon} tone={size.tone} />
@@ -404,6 +406,10 @@ function CityHero({ plan }: { plan: Plan }) {
           <Badge size='sm' variant='info'>
             <water.icon />
             {water.label}
+          </Badge>
+          <Badge size='sm' variant='secondary'>
+            <settled.icon />
+            {settled.label}
           </Badge>
           <Badge
             size='sm'
@@ -987,6 +993,15 @@ function PlanControls({
           held={locked.includes('size_tier')}
           blocked={busy}
           onPick={(value) => edit.mutate({ key: 'size_tier', value })}
+        />
+        <ChoiceEditor
+          label='Way of settling'
+          hint='How the city sits on its ground; it sets how hard the city is to take and how much weather it bears'
+          value={plan.settle_mode}
+          table={SETTLES}
+          held={locked.includes('settle_mode')}
+          blocked={busy}
+          onPick={(value) => edit.mutate({ key: 'settle_mode', value })}
         />
         <ChoiceEditor
           label='Water'

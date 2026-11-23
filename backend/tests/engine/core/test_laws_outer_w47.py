@@ -96,13 +96,13 @@ async def test_an_outer_being_takes_up_an_aim_and_a_seal_thwarts_it(session: Asy
     assert (await outer_profile(ctx, being)).fate is OuterFate.SEALED
 
 
-async def test_a_bargain_gives_a_bonded_power_and_an_unfed_being_starves(session: AsyncSession, world: CoreWorld) -> None:
+async def test_a_bargain_gives_a_bargained_power_and_an_unfed_being_starves(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await at(session, 4)
     being = await entity(session, "The Far Listener", EntityType.OUTER_BEING, OuterBeingStats(size=40, interest=50, influence=30), world_id=world.world.id)
     holder = await mortal(session, "Wren", world, world.regions[0].id)
     pact = await strike_bargain(ctx, being, holder, OuterPrice.OFFERING)
     power = await session.get(PowerRow, pact.power_id)
-    assert power is not None and power.origin is PowerOrigin.BONDED and power.granted_by_node_id == being.id
+    assert power is not None and power.origin is PowerOrigin.BARGAIN and power.granted_by_node_id == being.id
     profile = await outer_profile(ctx, being)
     profile.unfed_epochs = ctx.rules.outer_beings.starve_epochs
     await outer_agency(ctx)

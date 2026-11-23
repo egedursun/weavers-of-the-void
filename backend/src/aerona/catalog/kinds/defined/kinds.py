@@ -137,7 +137,9 @@ KIND_CONCEPT = total(
         ),
         KindConcept.FEAR: Defined("Fear", checked_by=(), used_by=("db.kind_concepts.culture.FEAR_SPEC", "engine.kinds.culture_life.fears_held")),
         KindConcept.DREAM_READING: Defined(
-            "Dream reading", checked_by=(), used_by=("db.kind_concepts.culture.READING_SPEC", "engine.kinds.culture_life.reading_kind_for")
+            "Dream reading",
+            checked_by=(),
+            used_by=("db.kind_concepts.culture.READING_SPEC", "engine.kinds.culture_life.reading_kind_for", "engine.sacred.mysteries.dream_read"),
         ),
         KindConcept.AIM: Defined("Aim", checked_by=(), used_by=("db.kind_concepts.culture.AIM_SPEC", "engine.kinds.culture_life.aims_held")),
     },

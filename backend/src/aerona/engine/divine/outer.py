@@ -1,20 +1,27 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass
 
 from sqlalchemy import delete, select
 
+from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.life.divine import HUNGER_LABELS
+from aerona.catalog.outer_bargains import BARGAIN_GAINS
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
+from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.culture import HolderLevelRow, LegendProfileRow
 from aerona.db.tables.divine import BreachPointRow, OuterBeingProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.faith import CultTenetRow, SpiritProfileRow
+from aerona.db.tables.foreign_gods import OuterBargainRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import BargainGain, BargainPrice, DivineWoundKind, OuterHunger, WoundCause
@@ -28,15 +35,19 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import PowerEffect
 from aerona.domain.enums.world import DARK_STAR_TYPES
 from aerona.domain.models.entity_stats import CultStats, revised
+from aerona.engine.body.afflictions import afflict
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
+from aerona.engine.divine.gods import faithful_communities
 from aerona.engine.divine.wounds import inflict
 from aerona.engine.lifecycle.states import ended_ids
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, open_record, retire_in
-from aerona.engine.primitives.stats import POPULATION_KEY, stat_or
+from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, put_stat, stat_or
 from aerona.engine.recording.record import record
+
+LINE_DEPTH = 3
 
 VOID_TENETS = (TenetKind.VOID_COMMUNION, TenetKind.FEEDING_THE_HUNGER, TenetKind.WHISPERED_SECRETS)
 
@@ -270,42 +281,222 @@ async def void_rites(ctx: TickContext) -> int:
     return done
 
 
-async def pay_price(ctx: TickContext, son: SonRow, being: EntityRow, price: BargainPrice, *, domain: Domain | None = None, world_id: int | None = None) -> str:
+@dataclass(frozen=True)
+class Bargain:
+    son: SonRow
+    being: EntityRow
+    domain: Domain | None = None
+    world_id: int | None = None
+
+
+async def give_domain(ctx: TickContext, deal: Bargain) -> str:
     table = ctx.rules.outer_beings
-    if price is BargainPrice.DOMAIN:
-        wound = await inflict(
-            ctx, son, DivineWoundKind.SEVERED_DOMAIN, WoundCause.OUTER_BARGAIN, severity=table.price_severity, cause_node_id=being.id, domain=domain
-        )
-        return f"gave up {wound.domain.value if wound is not None and wound.domain is not None else 'a domain'}"
-    if price is BargainPrice.TRUE_NAME:
-        await inflict(ctx, son, DivineWoundKind.STOLEN_NAME, WoundCause.OUTER_BARGAIN, severity=table.price_severity, cause_node_id=being.id)
-        return "gave up their true name"
-    target = world_id if world_id is not None else being.world_id
+    wound = await inflict(
+        ctx, deal.son, DivineWoundKind.SEVERED_DOMAIN, WoundCause.OUTER_BARGAIN, severity=table.price_severity, cause_node_id=deal.being.id, domain=deal.domain
+    )
+    return f"gave up {spoken(wound.domain) if wound is not None and wound.domain is not None else 'a domain'}"
+
+
+async def give_name(ctx: TickContext, deal: Bargain) -> str:
+    table = ctx.rules.outer_beings
+    await inflict(ctx, deal.son, DivineWoundKind.STOLEN_NAME, WoundCause.OUTER_BARGAIN, severity=table.price_severity, cause_node_id=deal.being.id)
+    return "gave up their true name"
+
+
+async def give_sanity(ctx: TickContext, deal: Bargain) -> str:
+    target = deal.world_id if deal.world_id is not None else deal.being.world_id
     for entity in await ctx.session.scalars(
         select(EntityRow).where(EntityRow.world_id == target, EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_(list(COMMUNITY_TYPES)))
     ):
         if not held(entity.id):
-            shift_sanity(ctx.rules, entity, -table.price_sanity)
+            shift_sanity(ctx.rules, entity, -ctx.rules.outer_beings.price_sanity)
     return "gave up a world's sanity"
 
 
+async def give_worshippers(ctx: TickContext, deal: Bargain) -> str:
+    table = ctx.rules.outer_bargains
+    taken = 0
+    for cult in await faithful_cults(ctx, deal.son.id):
+        followers = stat_or(cult, FOLLOWERS_KEY, 0)
+        lost = followers * table.worshippers_taken_pct // PERCENT
+        if lost and not held(cult.id):
+            put_stat(ctx.rules, cult, FOLLOWERS_KEY, followers - lost)
+            taken += lost
+    await inflict(
+        ctx, deal.son, DivineWoundKind.LOST_WORSHIPPERS, WoundCause.OUTER_BARGAIN, severity=ctx.rules.outer_beings.price_severity, cause_node_id=deal.being.id
+    )
+    await record(
+        ctx,
+        "outer.price_paid",
+        roles={IncidentRole.ACTOR: deal.son.id, IncidentRole.TARGET: deal.being.id},
+        facts={"price": BargainPrice.WORSHIPPERS, "souls": taken},
+    )
+    return f"gave up the souls of {taken} of their faithful"
+
+
+async def give_line(ctx: TickContext, deal: Bargain) -> str:
+    marked = await bind_line(ctx, deal.son, deal.being)
+    return f"bound their line, {marked} of it marked so far"
+
+
+Price = Callable[[TickContext, Bargain], Awaitable[str]]
+PRICES: Mapping[BargainPrice, Price] = total(
+    BargainPrice,
+    {
+        BargainPrice.WORLD_SANITY: give_sanity,
+        BargainPrice.DOMAIN: give_domain,
+        BargainPrice.TRUE_NAME: give_name,
+        BargainPrice.WORSHIPPERS: give_worshippers,
+        BargainPrice.DESCENDANTS: give_line,
+    },
+)
+
+
+async def pay_price(ctx: TickContext, son: SonRow, being: EntityRow, price: BargainPrice, *, domain: Domain | None = None, world_id: int | None = None) -> str:
+    return await PRICES[price](ctx, Bargain(son, being, domain, world_id))
+
+
+async def faithful_cults(ctx: TickContext, son_id: int) -> list[EntityRow]:
+    statement = (
+        select(EntityRow)
+        .join(BondRow, BondRow.source_node_id == EntityRow.id)
+        .where(BondRow.target_node_id == son_id, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, EntityRow.entity_type == EntityType.CULT)
+        .order_by(EntityRow.id)
+    )
+    return list(dict.fromkeys(await ctx.session.scalars(statement)))
+
+
+async def line_of(ctx: TickContext, son_id: int) -> list[EntityRow]:
+    found: dict[int, EntityRow] = {}
+    frontier = [son_id]
+    for _generation in range(LINE_DEPTH):
+        children = await ctx.session.scalars(
+            select(EntityRow)
+            .join(BondRow, BondRow.target_node_id == EntityRow.id)
+            .where(BondRow.source_node_id.in_(frontier), BondRow.kind == BondKind.PARENT_OF, BondRow.state == BondState.ACTIVE)
+            .order_by(EntityRow.id)
+        )
+        frontier = [child.id for child in children if child.id not in found and child.status is EntityStatus.CANON]
+        for child_id in frontier:
+            child = await ctx.session.get(EntityRow, child_id)
+            if child is not None:
+                found[child_id] = child
+    return [found[key] for key in sorted(found)]
+
+
+async def bind_line(ctx: TickContext, son: SonRow, being: EntityRow) -> int:
+    curses = sorted(kind for kind, spec in PACKAGES.items() if Transmission.CURSE in spec.transmissions)
+    if not curses:
+        return 0
+    package = SeededRandom.for_epoch(son.id, being.id, "outer_line_curse").pick(curses)
+    marked = 0
+    for child in await line_of(ctx, son.id):
+        if held(child.id):
+            continue
+        if await afflict(ctx, child, package, Transmission.CURSE, source_node_id=being.id) is not None:
+            marked += 1
+    return marked
+
+
+async def gain_essence(ctx: TickContext, deal: Bargain, essence: int) -> str:
+    gained = essence * BARGAIN_GAINS[BargainGain.ESSENCE].size(ctx.rules) // PERCENT
+    deal.son.essence += gained
+    return f"gained {gained} essence"
+
+
+async def gain_might(ctx: TickContext, deal: Bargain, _essence: int) -> str:
+    gained = ctx.rules.outer_beings.might_gain * BARGAIN_GAINS[BargainGain.MIGHT].size(ctx.rules) // PERCENT
+    deal.son.might = clamp_int(deal.son.might + gained, 0, PERCENT)
+    return f"gained {gained} might"
+
+
+async def gain_power(ctx: TickContext, deal: Bargain, essence: int) -> str:
+    used = set(await ctx.session.scalars(select(SonPowerRow.slot).where(SonPowerRow.son_id == deal.son.id)))
+    free = next((slot for slot in range(POWER_SLOTS) if slot not in used), None)
+    chance = BARGAIN_GAINS[BargainGain.POWER].size(ctx.rules)
+    if free is None or not ctx.rng(f"outer_power.{deal.son.id}.{deal.being.id}.{ctx.epoch}").chance(chance):
+        return await gain_essence(ctx, deal, essence)
+    ctx.session.add(
+        SonPowerRow(
+            son_id=deal.son.id,
+            slot=free,
+            name=f"Gift of {deal.being.name}",
+            description=f"A power given by {deal.being.name}.",
+            effect=PowerEffect.ESSENCE_SPRING,
+        )
+    )
+    return "gained a power"
+
+
+async def gain_knowledge(ctx: TickContext, deal: Bargain, essence: int) -> str:
+    homes = await faithful_communities(ctx.session, deal.son.id)
+    known = {
+        (row.holder_entity_id, row.branch)
+        for row in await ctx.session.scalars(select(HolderLevelRow).where(HolderLevelRow.holder_entity_id.in_([home.id for home in homes])))
+        if row.level > 0
+    }
+    reachable = [(home, branch) for home in homes for branch in KnowledgeBranch if (home.id, branch) not in known and not held(home.id)]
+    if not reachable:
+        return await gain_essence(ctx, deal, essence)
+    home, branch = ctx.rng(f"outer_knowledge.{deal.son.id}.{deal.being.id}.{ctx.epoch}").pick(reachable)
+    level = await ctx.session.get(HolderLevelRow, (home.id, branch))
+    if level is None:
+        level = HolderLevelRow(holder_entity_id=home.id, branch=branch, level=0, practitioners=0, progress=0, secret=True, updated_epoch=ctx.epoch, locked=[])
+        ctx.session.add(level)
+    if "progress" not in level.locked:
+        level.progress += BARGAIN_GAINS[BargainGain.KNOWLEDGE].size(ctx.rules)
+        if level.progress >= PERCENT and "level" not in level.locked:
+            level.level, level.progress = level.level + 1, level.progress - PERCENT
+    return f"gained knowledge of {spoken(branch)} for {home.name}"
+
+
+async def gain_span(ctx: TickContext, deal: Bargain, _essence: int) -> str:
+    restored = BARGAIN_GAINS[BargainGain.LONGEVITY].size(ctx.rules)
+    deal.son.existence = clamp_int(deal.son.existence + restored, 0, PERCENT)
+    deal.son.fading_epochs = 0
+    return f"gained {restored} existence and a longer span"
+
+
+Gain = Callable[[TickContext, Bargain, int], Awaitable[str]]
+GAINS: Mapping[BargainGain, Gain] = total(
+    BargainGain,
+    {
+        BargainGain.ESSENCE: gain_essence,
+        BargainGain.POWER: gain_power,
+        BargainGain.MIGHT: gain_might,
+        BargainGain.KNOWLEDGE: gain_knowledge,
+        BargainGain.LONGEVITY: gain_span,
+    },
+)
+
+
 async def take_gain(ctx: TickContext, son: SonRow, being: EntityRow, gain: BargainGain, essence: int) -> str:
-    table = ctx.rules.outer_beings
-    if gain is BargainGain.MIGHT:
-        son.might = clamp_int(son.might + table.might_gain, 0, PERCENT)
-        return f"gained {table.might_gain} might"
-    if gain is BargainGain.POWER:
-        used = set(await ctx.session.scalars(select(SonPowerRow.slot).where(SonPowerRow.son_id == son.id)))
-        free = next((slot for slot in range(POWER_SLOTS) if slot not in used), None)
-        if free is not None:
-            ctx.session.add(
-                SonPowerRow(
-                    son_id=son.id, slot=free, name=f"Gift of {being.name}", description=f"A power given by {being.name}.", effect=PowerEffect.ESSENCE_SPRING
-                )
-            )
-            return "gained a power"
-    son.essence += essence
-    return f"gained {essence} essence"
+    return await GAINS[gain](ctx, Bargain(son, being), essence)
+
+
+async def due_lines(ctx: TickContext) -> int:
+    table = ctx.rules.outer_bargains
+    settled = 0
+    rows = await ctx.session.scalars(
+        select(OuterBargainRow).where(OuterBargainRow.price == BargainPrice.DESCENDANTS, OuterBargainRow.paid.is_(False)).order_by(OuterBargainRow.son_id)
+    )
+    for row in list(rows):
+        son = await ctx.session.get(SonRow, row.son_id)
+        being = await ctx.session.get(EntityRow, row.outer_entity_id)
+        if son is None or being is None or held(son.id):
+            continue
+        if ctx.epoch - row.epoch < table.epochs(table.descendants_years):
+            await bind_line(ctx, son, being)
+            continue
+        row.paid = True
+        settled += 1
+        await record(
+            ctx,
+            "outer.price_paid",
+            roles={IncidentRole.ACTOR: son.id, IncidentRole.TARGET: being.id},
+            facts={"price": BargainPrice.DESCENDANTS, "souls": 0},
+        )
+    return settled
 
 
 async def found_outer_cult(ctx: TickContext, entity: EntityRow) -> EntityRow:

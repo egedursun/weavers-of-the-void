@@ -16,6 +16,7 @@ CARRIER_MEDIUM: Mapping[NetworkCarrier, Medium] = total(
         NetworkCarrier.MIND_LINK: Medium.MIND_LINK,
         NetworkCarrier.RITE_LINK: Medium.NETWORK,
         NetworkCarrier.GROWN_LINK: Medium.NETWORK,
+        NetworkCarrier.DREAM_LINK: Medium.DREAM,
     },
 )
 

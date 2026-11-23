@@ -36,6 +36,7 @@ PAYOFF_KIND = total(
             used_by=(
                 "engine.storyteller.drama.dream_paid",
                 "engine.storyteller.drama.foresight_paid",
+                "engine.storyteller.drama.inheritance_paid",
                 "engine.storyteller.drama.omen_paid",
                 "engine.storyteller.drama.portent_paid",
                 "engine.storyteller.drama.prophecy_paid",
@@ -48,6 +49,7 @@ PAYOFF_KIND = total(
             used_by=(
                 "engine.storyteller.drama.dream_paid",
                 "engine.storyteller.drama.foresight_paid",
+                "engine.storyteller.drama.inheritance_paid",
                 "engine.storyteller.drama.omen_paid",
                 "engine.storyteller.drama.prophecy_paid",
             ),
@@ -124,6 +126,9 @@ SETUP_KIND = total(
         ),
         SetupKind.PORTENT: Defined(
             "Portent of a god", checked_by=(), used_by=("engine.storyteller.drama.portent_paid", "services.player.ages.SetupDraft", "tools.son.ages.foreshadow")
+        ),
+        SetupKind.INHERITANCE: Defined(
+            "Inheritance", checked_by=(), used_by=("engine.storyteller.drama.inheritance_paid", "engine.storyteller.drama.log_setups")
         ),
     },
 )

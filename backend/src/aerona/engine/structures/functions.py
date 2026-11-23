@@ -11,6 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.entity import HERO_ROLES, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, InstrumentKind, StepAction, StepOutcome
@@ -20,6 +21,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import hidden_sky
+from aerona.engine.eras.effects import tech_factor
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.printing import printed
 from aerona.engine.mind.hooks import practised
@@ -151,6 +153,7 @@ async def school(ctx: TickContext, item: Working, host: EntityRow, tally: Tally)
         reach = table.school_literacy_pct + (
             round_half_up(table.school_literacy_pct * ctx.rules.technique_effects.press_literacy_pct / PERCENT) if pressed else 0
         )
+        reach = round_half_up(reach * await tech_factor(ctx.session, ctx.rules, host.id, EraChannel.LEARNING))
         floor = floor_of(item, reach)
         if culture.literacy < floor:
             culture.literacy = clamp_int(culture.literacy + min(table.school_literacy_step, floor - culture.literacy), 0, PERCENT)

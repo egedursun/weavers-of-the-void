@@ -158,6 +158,8 @@ class LuckSign(StrEnum):
     PLACE = "place"
     ACT = "act"
     PERSON = "person"
+    ANIMAL = "animal"
+    COLOUR = "colour"
 
 
 class LuckReach(StrEnum):
@@ -166,6 +168,9 @@ class LuckReach(StrEnum):
     BIRTH = "birth"
     JOURNEY = "journey"
     BATTLE = "battle"
+    TRADE = "trade"
+    UNION = "union"
+    BUILDING = "building"
 
 
 class CharmPower(StrEnum):
@@ -173,6 +178,8 @@ class CharmPower(StrEnum):
     FERTILITY = "fertility"
     LUCK = "luck"
     HEALING = "healing"
+    LOVE = "love"
+    TRAVEL = "travel"
 
 
 class AccusationOutcome(StrEnum):
@@ -181,6 +188,8 @@ class AccusationOutcome(StrEnum):
     PUNISHED = "punished"
     EXILED = "exiled"
     KILLED = "killed"
+    CONFESSED = "confessed"
+    FLED = "fled"
 
 
 class IdeaStrain(StrEnum):

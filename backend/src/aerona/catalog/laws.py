@@ -10,6 +10,7 @@ from aerona.domain.enums.justice import TrialKind
 from aerona.domain.enums.labour import LegalStanding
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import DebtRemedy, DecisionRule, GovernmentKind, LawKind, SexRule, SuccessionRule
+from aerona.domain.enums.powers import SourceLawLevel
 from aerona.domain.enums.unions import PluralSide, UnionForm
 
 
@@ -123,7 +124,7 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
             "level": pick("free", "registered", "licensed", "conscripted", "hunted", "banned", default="free"),
             "mind_powers": pick("allowed", "licensed", "banned", default="licensed"),
         },
-        LawKind.SOURCE_LAW: {"level": pick("free", "licensed", "banned", default="free")},
+        LawKind.SOURCE_LAW: {"level": pick(*(level.value for level in SourceLawLevel), default=SourceLawLevel.FREE.value)},
         LawKind.LIVING_CRAFT_LAW: {
             "level": pick("free", "licensed", "banned", default="licensed"),
             "engineering": pick("free", "licensed", "banned", default="licensed"),

@@ -9,6 +9,7 @@ from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.life.economy import CONVOY_WORDS, OPEN
 from aerona.catalog.means import AIDS
 from aerona.catalog.reproduction import SEX_KINDS
+from aerona.catalog.settle_modes import SETTLE_MODES
 from aerona.core.grammar import several, spoken
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
@@ -330,6 +331,7 @@ async def settlement_line(session: AsyncSession, settlement_id: int) -> Settleme
     )
     return SettlementPlanLine(
         tier=spoken(profile.size_tier),
+        settled=SETTLE_MODES[profile.settle_mode].label.lower(),
         treasury=profile.treasury,
         tax_rate=profile.tax_rate,
         order=profile.public_order,

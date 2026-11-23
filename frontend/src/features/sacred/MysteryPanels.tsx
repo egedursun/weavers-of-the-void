@@ -112,9 +112,14 @@ function MysticCard({ row, blocked }: { row: Mystic; blocked: string | null }) {
     blocked
   )
   const [god, setGod] = useState<number | null>(null)
+  const [vision, setVision] = useState('')
   const sending = useSacredAction(
     'vision:create',
-    (_: void) => ({ mystic_id: row.mortal.id, sender_id: god }),
+    (_: void) => ({
+      mystic_id: row.mortal.id,
+      sender_id: god,
+      kind: vision === '' ? null : (vision as Vision['kind']),
+    }),
     god === null
       ? 'Another vision comes of its own'
       : 'The god answers in a vision'
@@ -245,6 +250,14 @@ function MysticCard({ row, blocked }: { row: Mystic; blocked: string | null }) {
           onChange={setGod}
           blocked={blocked}
           kinds={GOD_KINDS}
+        />
+        <MindPicker
+          label='As'
+          value={vision}
+          table={table(VISION_KINDS)}
+          placeholder='As it comes'
+          blocked={blocked}
+          onPick={setVision}
         />
         <StepButton
           icon={Eye}

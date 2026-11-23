@@ -106,6 +106,7 @@ async def node_folkways(services: ServicesDep, node_id: NodeId) -> FolkwaysNodeV
                 *(item for row in mishaps for item in (row.settlement_entity_id, row.victim_node_id, row.cause_node_id)),
                 *(node for row in mishaps for node in row.witnesses),
                 *(row.item_entity_id for row in charms),
+                *(row.species_entity_id for row in beliefs),
                 *(item for row in accusations for item in (row.settlement_entity_id, row.accuser_node_id, row.accused_node_id)),
             ],
         )
@@ -139,7 +140,19 @@ async def node_folkways(services: ServicesDep, node_id: NodeId) -> FolkwaysNodeV
             )
             for row in mishaps
         ],
-        beliefs=[LuckBeliefView.model_validate(row, from_attributes=True) for row in beliefs],
+        beliefs=[
+            LuckBeliefView(
+                id=row.id,
+                sign=row.sign,
+                reach=row.reach,
+                lucky=row.lucky,
+                name=row.name,
+                species=at(refs, row.species_entity_id),
+                colour=row.colour,
+                locked=row.locked,
+            )
+            for row in beliefs
+        ],
         charms=[CharmView(item=ref(refs, row.item_entity_id), power=row.power, real=row.real, strength=row.strength, locked=row.locked) for row in charms],
         accusations=[
             AccusationView(

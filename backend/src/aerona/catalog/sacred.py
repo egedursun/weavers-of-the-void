@@ -1,10 +1,26 @@
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+
 from aerona.core.total import partial, total
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.faith import AfterlifeState, StratumKind
 from aerona.domain.enums.mind import Emotion
 from aerona.domain.enums.place import PlaceKind
-from aerona.domain.enums.sacred import AfterlifeModel, BureauRank, DivinationKind, GeniusLocusKind, SacramentKind, SacramentProtection
+from aerona.domain.enums.sacred import (
+    AfterlifeModel,
+    BureauRank,
+    DivinationKind,
+    GeniusLocusKind,
+    SacramentKind,
+    SacramentProtection,
+    SpiritOffence,
+    TheodicyCause,
+    VisionKind,
+)
 from aerona.domain.enums.society import NaturalLaw
+from aerona.rules.registry import Rules
+
+RuleRead = Callable[[Rules], int]
 
 G = GeniusLocusKind
 P = PlaceKind
@@ -49,19 +65,19 @@ PLACE_SPIRITS = partial(
         P.TAR_PIT: G.WILDS,
         P.MEADOW: G.FIELD,
         P.ISTHMUS: G.SHORE,
+        P.RUIN: G.RUIN,
+        P.MEGASTRUCTURE_RUIN: G.RUIN,
+        P.BATTLEFIELD: G.BATTLEFIELD,
+        P.WRECK_SITE: G.SEA,
     },
     without=(
-        P.RUIN,
         P.CRATER,
-        P.BATTLEFIELD,
         P.BURIAL_GROUND,
         P.LAIR,
         P.NEXUS,
         P.SHRINE_SITE,
         P.DEAD_GOD_SITE,
         P.MINE_SITE,
-        P.WRECK_SITE,
-        P.MEGASTRUCTURE_RUIN,
         P.ANOMALY,
         P.DEBRIS_FIELD,
     ),
@@ -84,10 +100,49 @@ SPIRIT_RANKS = total(
         G.FIELD: BureauRank.LOCAL,
         G.CITY: BureauRank.CITY,
         G.HEARTH: BureauRank.HEARTH,
+        G.SEA: BureauRank.PROVINCE,
+        G.RUIN: BureauRank.LOCAL,
+        G.BATTLEFIELD: BureauRank.LOCAL,
+    },
+)
+
+SPIRIT_MOODS: Mapping[GeniusLocusKind, RuleRead] = total(
+    GeniusLocusKind,
+    {
+        G.RIVER: lambda rules: rules.genius_loci.river_mood_rate,
+        G.SPRING: lambda rules: rules.genius_loci.spring_mood_rate,
+        G.LAKE: lambda rules: rules.genius_loci.lake_mood_rate,
+        G.WELL: lambda rules: rules.genius_loci.well_mood_rate,
+        G.SHORE: lambda rules: rules.genius_loci.shore_mood_rate,
+        G.GROVE: lambda rules: rules.genius_loci.grove_mood_rate,
+        G.FOREST: lambda rules: rules.genius_loci.forest_mood_rate,
+        G.MOUNTAIN: lambda rules: rules.genius_loci.mountain_mood_rate,
+        G.CAVE: lambda rules: rules.genius_loci.cave_mood_rate,
+        G.CROSSROADS: lambda rules: rules.genius_loci.crossroads_mood_rate,
+        G.WILDS: lambda rules: rules.genius_loci.wilds_mood_rate,
+        G.FIELD: lambda rules: rules.genius_loci.field_mood_rate,
+        G.CITY: lambda rules: rules.genius_loci.city_mood_rate,
+        G.HEARTH: lambda rules: rules.genius_loci.hearth_mood_rate,
+        G.SEA: lambda rules: rules.genius_loci.sea_mood_rate,
+        G.RUIN: lambda rules: rules.genius_loci.ruin_mood_rate,
+        G.BATTLEFIELD: lambda rules: rules.genius_loci.battlefield_mood_rate,
+    },
+)
+
+OFFENCE_WEIGHTS: Mapping[SpiritOffence, RuleRead] = total(
+    SpiritOffence,
+    {
+        SpiritOffence.POLLUTION: lambda rules: rules.genius_loci.pollution_weight,
+        SpiritOffence.CLEARING: lambda rules: rules.genius_loci.clearing_weight,
+        SpiritOffence.UNPAID: lambda rules: rules.genius_loci.unpaid_weight,
+        SpiritOffence.TABOO: lambda rules: rules.genius_loci.taboo_weight,
+        SpiritOffence.BLOODSHED: lambda rules: rules.genius_loci.bloodshed_weight,
+        SpiritOffence.OVERHARVEST: lambda rules: rules.genius_loci.overharvest_weight,
     },
 )
 
 WOODLAND_SPIRITS = frozenset({G.GROVE, G.FOREST})
+GREAT_PLACES = frozenset({G.BATTLEFIELD, G.RUIN})
 
 DOMAIN_FEEDINGS = total(
     Domain,
@@ -149,6 +204,52 @@ SACRAMENT_GUARDS = total(
         SacramentKind.INITIATION: SacramentProtection.ROUTING,
         SacramentKind.MARRIAGE: SacramentProtection.UNREST,
         SacramentKind.LAST_RITES: SacramentProtection.ROUTING,
+        SacramentKind.PURIFICATION: SacramentProtection.CURSE,
+        SacramentKind.ORDINATION: SacramentProtection.POSSESSION,
+    },
+)
+
+SACRAMENT_COSTS: Mapping[SacramentKind, RuleRead] = total(
+    SacramentKind,
+    {
+        SacramentKind.BIRTH_BLESSING: lambda rules: rules.sacraments.birth_blessing_cost,
+        SacramentKind.INITIATION: lambda rules: rules.sacraments.initiation_cost,
+        SacramentKind.MARRIAGE: lambda rules: rules.sacraments.marriage_cost,
+        SacramentKind.LAST_RITES: lambda rules: rules.sacraments.last_rites_cost,
+        SacramentKind.PURIFICATION: lambda rules: rules.sacraments.purification_cost,
+        SacramentKind.ORDINATION: lambda rules: rules.sacraments.ordination_cost,
+    },
+)
+
+
+@dataclass(frozen=True)
+class VisionSpec:
+    weight: RuleRead
+    asleep: bool = False
+    public: bool = False
+
+
+VISIONS: Mapping[VisionKind, VisionSpec] = total(
+    VisionKind,
+    {
+        VisionKind.VISION: VisionSpec(lambda rules: rules.mystics.vision_weight),
+        VisionKind.UNION: VisionSpec(lambda rules: rules.mystics.union_weight),
+        VisionKind.VOICE: VisionSpec(lambda rules: rules.mystics.voice_weight),
+        VisionKind.TRANCE: VisionSpec(lambda rules: rules.mystics.trance_weight),
+        VisionKind.DREAM: VisionSpec(lambda rules: rules.mystics.dream_weight, asleep=True),
+        VisionKind.ORACLE_SPEECH: VisionSpec(lambda rules: rules.mystics.oracle_speech_weight, public=True),
+    },
+)
+
+THEODICY_SUFFERING: Mapping[TheodicyCause, RuleRead] = total(
+    TheodicyCause,
+    {
+        TheodicyCause.PLAGUE: lambda rules: rules.theodicy.plague_suffering,
+        TheodicyCause.FAMINE: lambda rules: rules.theodicy.famine_suffering,
+        TheodicyCause.DEFEAT: lambda rules: rules.theodicy.defeat_suffering,
+        TheodicyCause.DISASTER: lambda rules: rules.theodicy.disaster_suffering,
+        TheodicyCause.PERSECUTION: lambda rules: rules.theodicy.persecution_suffering,
+        TheodicyCause.LONG_SEASON: lambda rules: rules.theodicy.long_season_suffering,
     },
 )
 
@@ -193,6 +294,23 @@ DIVINATION_LAWS = partial(
         DivinationKind.DREAM_READING: NaturalLaw.DREAMS_ARE_REAL,
         DivinationKind.ORACLE: NaturalLaw.THE_DEAD_SPEAK,
         DivinationKind.HARUSPICY: NaturalLaw.THE_DEAD_SPEAK,
+        DivinationKind.SPIRIT_CONSULTATION: NaturalLaw.THE_DEAD_SPEAK,
+        DivinationKind.SCRYING: NaturalLaw.DREAMS_ARE_REAL,
     },
-    without=(DivinationKind.AUGURY, DivinationKind.ASTROLOGY, DivinationKind.LOTS),
+    without=(DivinationKind.AUGURY, DivinationKind.ASTROLOGY, DivinationKind.LOTS, DivinationKind.EARTH_SIGNS),
+)
+
+DIVINATION_ACCURACY: Mapping[DivinationKind, RuleRead] = total(
+    DivinationKind,
+    {
+        DivinationKind.AUGURY: lambda rules: rules.divination.augury_accuracy,
+        DivinationKind.HARUSPICY: lambda rules: rules.divination.haruspicy_accuracy,
+        DivinationKind.ASTROLOGY: lambda rules: rules.divination.astrology_accuracy,
+        DivinationKind.ORACLE: lambda rules: rules.divination.oracle_accuracy,
+        DivinationKind.LOTS: lambda rules: rules.divination.lots_accuracy,
+        DivinationKind.DREAM_READING: lambda rules: rules.divination.dream_reading_accuracy,
+        DivinationKind.SCRYING: lambda rules: rules.divination.scrying_accuracy,
+        DivinationKind.SPIRIT_CONSULTATION: lambda rules: rules.divination.spirit_consultation_accuracy,
+        DivinationKind.EARTH_SIGNS: lambda rules: rules.divination.earth_signs_accuracy,
+    },
 )

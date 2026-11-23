@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
@@ -12,6 +13,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.disease.control import DiseaseDesign, create_disease
 from aerona.engine.living.lines import LineDraft, make_line
+from aerona.engine.living.society import regulated
 from aerona.engine.living.traits import traits_of
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.primitives.distance import RegionAtlas
@@ -63,7 +65,8 @@ async def loose_designed(ctx: TickContext) -> int:
         maker = await ctx.session.get(EntityRow, line.maker_node_id) if line is not None and line.maker_node_id is not None else None
         if disease is None or disease.status is not EntityStatus.CANON or maker is None or held(disease.id) or held(maker.id):
             continue
-        if not ctx.rng(f"living.loose.{disease.id}.{ctx.epoch}").chance(table.escape_chance):
+        chance = table.escape_chance * (PERCENT - (ctx.rules.living.regulated_escape_cut_pct if await regulated(ctx.session, maker) else 0)) // PERCENT
+        if not ctx.rng(f"living.loose.{disease.id}.{ctx.epoch}").chance(chance):
             continue
         await strike_plague(ctx, maker, table.escape_severity, disease=disease, path=SpreadPath.LOOSED)
         await record(

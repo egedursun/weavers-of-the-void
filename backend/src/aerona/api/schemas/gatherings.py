@@ -11,6 +11,7 @@ from aerona.domain.enums.gathering import (
     GuestRole,
     Milestone,
 )
+from aerona.domain.enums.mass_weapons import RemnantKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.site import (
     BattlefieldFeature,
@@ -240,6 +241,9 @@ class FeatureView(ApiModel):
     strength: int
     battle_id: int | None
     battle_name: str | None
+    remnant_id: int | None
+    remnant_kind: RemnantKind | None
+    remnant_cleared: int | None
     epoch: int
     locked: list[str]
 

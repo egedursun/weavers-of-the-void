@@ -40,6 +40,7 @@ from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import JourneyIntent
 from aerona.domain.enums.world import SkyEventKind
+from aerona.domain.enums.world_view import SettleMode
 from aerona.tools.framework.inputs import ToolInput
 
 Name = Annotated[str, Field(min_length=NAME_MIN, max_length=NAME_MAX)]
@@ -138,6 +139,7 @@ class SettleInput(ToolInput):
     description: Description
     location_id: int
     image_prompt: ImagePrompt | None = None
+    mode: SettleMode | None = None
 
 
 class TradeInput(ToolInput):

@@ -1172,3 +1172,11 @@ class BeingKindRules:
         0, -20, 20, RuleGroup.PHENOMENA, "Star-pattern mind: veil it adds each epoch to the dimension it is in (thins when below 0)"
     )
     living_constellation_doom: int = rule(-1, -10, 10, RuleGroup.PHENOMENA, "Star-pattern mind: doom it adds each epoch while manifest (eases when below 0)")
+    living_world_might: int = rule(70, 0, 100, RuleGroup.PHENOMENA, "Living world: might it is born with")
+    living_world_veil: int = rule(0, -20, 20, RuleGroup.PHENOMENA, "Living world: veil it adds each epoch to the dimension it is in (thins when below 0)")
+    living_world_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Living world: doom it adds each epoch while manifest (eases when below 0)")
+    ancient_made_mind_might: int = rule(50, 0, 100, RuleGroup.PHENOMENA, "Ancient made mind: might it is born with")
+    ancient_made_mind_veil: int = rule(
+        0, -20, 20, RuleGroup.PHENOMENA, "Ancient made mind: veil it adds each epoch to the dimension it is in (thins when below 0)"
+    )
+    ancient_made_mind_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Ancient made mind: doom it adds each epoch while manifest (eases when below 0)")

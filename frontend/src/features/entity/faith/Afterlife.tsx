@@ -78,6 +78,7 @@ import {
   DEEDS,
   GATES,
   JUDGEMENTS,
+  REBIRTH_PATHS,
   RITES,
   SOUL_STATES,
   STRATA,
@@ -486,7 +487,7 @@ function SoulBody({
         soul={soul}
         blocked={blocked}
       />
-      {(soul.bound || soul.reborn_as) && (
+      {(soul.bound || soul.reborn_as || soul.reborn_kind) && (
         <Panel title='Ties to the living' icon={Link2} tone='verdigris'>
           <div className='flex min-w-0 flex-col gap-2'>
             {soul.bound && (
@@ -506,6 +507,21 @@ function SoulBody({
                 />
                 <RefLink node={soul.reborn_as} />
               </div>
+            )}
+            {soul.reborn_kind && (
+              <div className='flex min-w-0 items-center gap-2'>
+                <Tag
+                  spec={named(REBIRTH_PATHS, soul.rebirth_path ?? 'kind')}
+                  text='Reborn as one of'
+                />
+                <RefLink node={soul.reborn_kind} />
+              </div>
+            )}
+            {soul.rebirth_path && !soul.reborn_kind && (
+              <Tag
+                spec={named(REBIRTH_PATHS, soul.rebirth_path)}
+                text='Path of its rebirth'
+              />
             )}
           </div>
         </Panel>

@@ -113,6 +113,7 @@ describe('spirits, mysteries, rites and omens', () => {
           office: SPIRIT,
           kind: 'healing',
           defendant: null,
+          target: null,
           bribe: 0,
           status: 'filed',
           filed_epoch: 5,
@@ -204,11 +205,68 @@ describe('spirits, mysteries, rites and omens', () => {
     expect(callsTo('POST', '/api/actions/vision:create')[0].body).toEqual({
       mystic_id: 32,
       sender_id: null,
+      kind: null,
     })
     await screen
       .getByRole('tab', { name: /Rites, afterlife and faith/ })
       .click()
     await expect.element(screen.getByText('Initiation of Orla')).toBeVisible()
+  })
+
+  it('names a sea spirit, its offence and the wrongdoer a petition for vengeance names', async () => {
+    serveBase()
+    onApi('GET', '/api/sacred/of/30', {
+      ...EMPTY,
+      node: TOWN,
+      spirits: [
+        {
+          spirit: SPIRIT,
+          place: TOWN,
+          community: TOWN,
+          kind: 'sea',
+          temperament: 40,
+          contentment: 30,
+          offerings: 0,
+          owed: 4,
+          favour: 0,
+          offended: 'overharvest',
+          last_offering_epoch: null,
+          bound_epoch: 2,
+          locked: [],
+        },
+      ],
+      petitions: [
+        {
+          id: 11,
+          petitioner: MORTAL,
+          office: SPIRIT,
+          kind: 'vengeance',
+          defendant: null,
+          target: TOWN,
+          bribe: 0,
+          status: 'filed',
+          filed_epoch: 5,
+          due_epoch: 6,
+          resolved_epoch: null,
+          appealed_to: null,
+          locked: [],
+        },
+      ],
+    })
+    const { screen } = await renderApp(<SacredSection nodeId={30} />)
+    await expect
+      .element(
+        screen.getByText(
+          'Wellbrook: contentment 30, favour 0, offended by more taken than its due'
+        )
+      )
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Orla asks for vengeance on a wrongdoer'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Vengeance sought on').first())
+      .toBeVisible()
   })
 
   it('shows what a god feeds on and sets a new feeling', async () => {

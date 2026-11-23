@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.discovery import BLUEPRINT_KINDS
+from aerona.catalog.methods import METHODS
 from aerona.constants.units import PERCENT
 from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
@@ -9,6 +10,7 @@ from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.discovery import BlueprintRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
@@ -70,10 +72,12 @@ async def has_design(session: AsyncSession, holder_id: int, kind: BlueprintKind,
     return found is not None
 
 
-async def draw(ctx: TickContext, holder: EntityRow, kind: BlueprintKind, subject: str) -> BlueprintRow | None:
+async def draw(
+    ctx: TickContext, holder: EntityRow, kind: BlueprintKind, subject: str, *, label: str | None = None, source: BlueprintSource = BlueprintSource.DRAWN
+) -> BlueprintRow | None:
     if held(holder.id) or await has_design(ctx.session, holder.id, kind, subject):
         return None
-    label = subject.replace("_", " ")
+    label = label or subject.replace("_", " ")
     shelf = sorted(await books_of(ctx.session, holder.id))
     row = BlueprintRow(
         book_entity_id=shelf[0] if shelf else None,
@@ -82,9 +86,9 @@ async def draw(ctx: TickContext, holder: EntityRow, kind: BlueprintKind, subject
         subject=subject,
         holder_node_id=holder.id,
         origin_node_id=holder.id,
-        source=BlueprintSource.DRAWN,
+        source=source,
         licensed_to=[],
-        quality=ctx.rules.discovery.blueprint_quality,
+        quality=ctx.rules.discovery.blueprint_quality if source is BlueprintSource.DRAWN else ctx.rules.discovery.found_blueprint_quality,
         since_epoch=ctx.epoch,
         locked=[],
     )
@@ -93,7 +97,7 @@ async def draw(ctx: TickContext, holder: EntityRow, kind: BlueprintKind, subject
         ctx,
         "discovery.design_drawn",
         roles={IncidentRole.MAKER: holder.id},
-        facts={"blueprint_kind": kind, "design": row.name, "quality": row.quality},
+        facts={"blueprint_kind": kind, "design": row.name, "quality": row.quality, "source": source},
         terms=[Term("rules.discovery.blueprint_quality", row.quality)],
     )
     return row
@@ -143,8 +147,25 @@ async def draw_designs(ctx: TickContext) -> int:
         maker = await community(ctx.session, item.maker_entity_id)
         if maker is not None:
             drawn += int(await draw(ctx, maker, BlueprintKind.ARTIFACT_PATTERN, item.item_class.value) is not None)
+    adopted = await ctx.session.scalars(
+        select(CommunityMethodRow)
+        .where(CommunityMethodRow.adopted_epoch >= ctx.epoch - 1)
+        .order_by(CommunityMethodRow.community_node_id, CommunityMethodRow.id)
+    )
+    for method in list(adopted):
+        works = await community(ctx.session, method.community_node_id)
+        if works is not None and (METHODS[method.method].technique is not None or METHODS[method.method].level >= ctx.rules.discovery.process_blueprint_level):
+            drawn += int(await draw(ctx, works, BlueprintKind.PROCESS, method.method.value, label=METHODS[method.method].label) is not None)
     await ctx.session.flush()
     return drawn
+
+
+def remedy_of(disease_id: int) -> str:
+    return f"disease_{disease_id}"
+
+
+async def found_design(ctx: TickContext, keeper: EntityRow, site: EntityRow, kind: BlueprintKind, subject: str) -> BlueprintRow | None:
+    return await draw(ctx, keeper, kind, subject, label=f"{subject.replace('_', ' ')} from {site.name}", source=BlueprintSource.FOUND)
 
 
 async def copy_design(ctx: TickContext, row: BlueprintRow, buyer_id: int, source: BlueprintSource) -> BlueprintRow:

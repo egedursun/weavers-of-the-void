@@ -10,6 +10,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.cycles import PolityStressRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
@@ -49,9 +50,9 @@ async def storyteller_of(ctx: TickContext, world_id: int) -> StorytellerRow:
     return row
 
 
-def aim(rules: Rules, row: StorytellerRow, epoch: int, chaos: int) -> int:
+def aim(rules: Rules, row: StorytellerRow, epoch: int, chaos: int, seasons: int = 0) -> int:
     table = rules.storyteller
-    deeper = deeper_aim(rules, row, epoch)
+    deeper = deeper_aim(rules, row, epoch, seasons)
     if deeper is not None:
         return deeper
     if row.profile is StorytellerProfile.STEADY:
@@ -159,7 +160,8 @@ async def measure(ctx: TickContext, world: WorldRow, tally: StorytellerTally) ->
     if "tension" not in row.locked:
         row.tension = clamp_int(row.tension * table.tension_carry_pct / PERCENT + fresh, 0, PERCENT)
     chaos = ctx.rng(f"storyteller.chaos.{world.id}.{ctx.epoch}").die(PERCENT)
-    row.target = aim(ctx.rules, row, ctx.epoch, chaos)
+    seasons = int(await ctx.session.scalar(select(func.count()).select_from(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id)) or 0)
+    row.target = aim(ctx.rules, row, ctx.epoch, chaos, seasons)
     felt = await lagged(ctx, BalanceLoop.STORYTELLER_PACING, world.id, row.tension)
     row.band = band_of(ctx.rules, felt, row.target)
     crises = await measure_parts(ctx, world.id)

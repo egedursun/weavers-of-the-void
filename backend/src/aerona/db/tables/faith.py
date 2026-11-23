@@ -223,5 +223,7 @@ class ReincarnationRow(Base):
     newborn_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     community_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     gate: Mapped[ReincarnationGate] = mapped_column(enum_type(ReincarnationGate, "gate"))
+    path: Mapped[RebirthPath] = mapped_column(enum_type(RebirthPath, "path"), default=RebirthPath.PEOPLE)
+    species_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     memory_pct: Mapped[int] = mapped_column(default=0)
     epoch: Mapped[int]

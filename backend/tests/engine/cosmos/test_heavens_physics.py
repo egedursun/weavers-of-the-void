@@ -77,7 +77,7 @@ async def test_a_called_body_strikes_and_leaves_a_crater(session: AsyncSession, 
     region = await make_region(session, "Low Plain", cosmos.home.id)
     impact = await call_impact(ctx, cosmos.home.id, region.id, None, size=60)
     assert impact.outcome is ImpactOutcome.PENDING and impact.due_epoch == EPOCH + 1
-    assert await resolve(tick(session, rules, epoch=EPOCH + 1)) == 1
+    assert await resolve(tick(session, tuned(rules, "impacts", airburst_pct=0), epoch=EPOCH + 1)) == 1
     assert impact.outcome is ImpactOutcome.STRUCK
     assert impact.crater_place_id is not None
     assert impact.winter_epochs == 60 // rules.impacts.winter_per_size
@@ -141,7 +141,7 @@ async def test_the_book_keeps_records_whose_owner_is_empty(session: AsyncSession
 
 async def test_peoples_can_arise_once_life_has_grown_complex(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
     far = await make_world(session, "Farhold", star_id=cosmos.star.id)
-    life = await life_of(session, far)
+    life = await life_of(session, rules, far)
     assert life.complexity is LifeComplexity.COMPLEX
     assert await may_arise(session, rules, far, people=True)
     life.complexity = LifeComplexity.SIMPLE
@@ -276,7 +276,7 @@ async def test_a_strike_is_remembered_and_spares_the_kinds_that_bear_the_cold(se
     session.add_all([SpeciesProfileRow(species_entity_id=hardy.id, temperature_min=-40), SpeciesProfileRow(species_entity_id=tender.id, temperature_min=10)])
     region = await make_region(session, "Low Plain", cosmos.home.id)
     await call_impact(ctx, cosmos.home.id, region.id, None, size=80)
-    await resolve(tick(session, rules, epoch=EPOCH + 1))
+    await resolve(tick(session, tuned(rules, "impacts", airburst_pct=0), epoch=EPOCH + 1))
     assert stat(hardy, "abundance") > stat(tender, "abundance")
     assert await session.scalar(select(NotableYearRow).where(NotableYearRow.world_id == cosmos.home.id)) is not None
 

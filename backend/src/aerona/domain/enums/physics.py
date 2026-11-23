@@ -14,12 +14,16 @@ class LifeEnvironment(StrEnum):
     TERRESTRIAL = "terrestrial"
     AERIAL = "aerial"
     SUBTERRANEAN = "subterranean"
+    UNDER_ICE = "under_ice"
+    CLOUD = "cloud"
 
 
 class AirNeed(StrEnum):
     OXYGEN = "oxygen"
     CARBON_DIOXIDE = "carbon_dioxide"
     METHANE = "methane"
+    AMMONIA = "ammonia"
+    HYDROGEN = "hydrogen"
     NONE = "none"
 
 
@@ -54,6 +58,8 @@ class ImpactBody(StrEnum):
     COMET = "comet"
     ROGUE_WORLD = "rogue_world"
     CALLED = "called"
+    MOON_FRAGMENT = "moon_fragment"
+    WRECK = "wreck"
 
 
 class ImpactOutcome(StrEnum):
@@ -61,6 +67,7 @@ class ImpactOutcome(StrEnum):
     STRUCK = "struck"
     DEFLECTED = "deflected"
     MISSED = "missed"
+    AIRBURST = "airburst"
 
 
 class TerraformAim(StrEnum):

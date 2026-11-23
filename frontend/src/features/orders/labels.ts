@@ -37,6 +37,7 @@ import {
   XCircle,
   Megaphone,
   Package,
+  Dices,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -75,6 +76,7 @@ export const ALLOCATION: Record<Schema['AllocationMode'], Named> = {
   gift: { label: 'Gift', icon: Gift, tone: 'verdigris' },
   need: { label: 'Need', icon: HandCoins, tone: 'success' },
   abundance: { label: 'Abundance', icon: Award, tone: 'success' },
+  lottery: { label: 'By lot', icon: Dices, tone: 'info' },
 }
 
 export const LABOUR: Record<Schema['OrderLabour'], Named> = {

@@ -107,6 +107,7 @@ async def correspondence(ctx: TickContext) -> None:
     "table.rumours",
     "table.satires",
     "table.settlement_profiles",
+    "table.skills",
     "table.speaker_cohorts",
     "table.tradition_profiles",
     "table.traits",

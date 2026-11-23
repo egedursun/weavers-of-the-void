@@ -18,6 +18,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.orders import AXES, EconomicOrderKindRow, EconomicOrderRow, OrderTransitionRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
@@ -47,11 +48,12 @@ from aerona.engine.loops.delay import lagged
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.knowledge import branch_level
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining, term
 from aerona.engine.structures.damage import open_siege
 
 C = SocialClass
@@ -267,6 +269,21 @@ async def afford_centre(ctx: TickContext, realm: PolityProfileRow, towns: int) -
     return True
 
 
+async def by_lot(ctx: TickContext, order: EconomicOrderRow, centre: int, towns: list[int]) -> int:
+    table = ctx.rules.economic_orders
+    gathered = await gather(ctx, centre, towns, PERCENT // 2, loss=0)
+    rng = ctx.rng(f"order.lot.{order.polity_entity_id}.{ctx.epoch}")
+    drawn = sorted(rng.sample(towns, max(1, len(towns) // 2))) if towns else []
+    given = await give_out(ctx, centre, drawn, gathered)
+    for town_id in towns:
+        settled = await ctx.session.get(SettlementProfileRow, town_id)
+        if settled is not None and not held(town_id) and "unrest" not in settled.locked:
+            with explaining():
+                term("economic_orders.lottery_calm", -table.lottery_calm, source_node_id=order.polity_entity_id)
+                settled.unrest = clamp_percent(settled.unrest - table.lottery_calm)
+    return given
+
+
 async def run_flows(ctx: TickContext, order: EconomicOrderRow, realm: PolityProfileRow, towns: list[int], tally: OrderTally) -> None:
     table = ctx.rules.economic_orders
     entity = await ctx.session.get(EntityRow, order.polity_entity_id)
@@ -284,6 +301,8 @@ async def run_flows(ctx: TickContext, order: EconomicOrderRow, realm: PolityProf
         tally.redistributed += await give_out(ctx, centre, towns, gathered)
     elif order.allocation is A.OBLIGATION and centre is not None:
         tally.dues += await gather(ctx, centre, towns, table.dues_share, loss=0)
+    elif order.allocation is A.LOTTERY and centre is not None:
+        tally.shared += await by_lot(ctx, order, centre, towns)
     elif order.allocation in SHARING and centre is not None:
         gathered = await gather(ctx, centre, towns, PERCENT // 2, loss=0)
         tally.shared += await give_out(ctx, centre, towns, gathered)

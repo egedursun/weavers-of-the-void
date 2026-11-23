@@ -238,6 +238,7 @@ import {
   ArrowRightLeft,
   TrendingUp,
   ShieldHalf,
+  Hand,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -948,6 +949,8 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   lift_affliction: ShieldCheck,
   choose_path: Signpost,
   improve_soil: Sprout,
+  lay_geas_on_kin: Users,
+  swear_geas: Hand,
   appoint_court: Crown,
   take_client: Handshake,
   set_rights: Scale,

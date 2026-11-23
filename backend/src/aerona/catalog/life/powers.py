@@ -4,7 +4,7 @@ from aerona.core.total import total
 from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.environment import WeatherKind
-from aerona.domain.enums.powers import GiftedAttitude, GiftedStance, PowerOrigin, PowerState, RestrictionKind, SourceRenewal
+from aerona.domain.enums.powers import GiftedAttitude, GiftedStance, PowerOrigin, PowerState, RestrictionKind, SourceLawLevel, SourceLocus, SourceRenewal
 
 HARM_TYPES = {
     SpellForm.FIRE: DamageType.FIRE,
@@ -30,6 +30,7 @@ STANCE_ATTITUDE: Mapping[GiftedStance, GiftedAttitude | None] = total(
         GiftedStance.SUSPECT: GiftedAttitude.FEARED,
         GiftedStance.TOOL: GiftedAttitude.REGULATED,
         GiftedStance.SILENT: None,
+        GiftedStance.PITIED: None,
     },
 )
 
@@ -47,6 +48,7 @@ RENEWAL_KINDS = {
     SourceRenewal.FEEDING: "taking",
     SourceRenewal.TAKING: "taking",
     SourceRenewal.WORSHIP: "worship",
+    SourceRenewal.OFFERING: "offering",
 }
 
 EFFECT_FOR_SPELL_TECHNIQUES = frozenset({SpellTechnique.CREATE, SpellTechnique.TRANSFORM})
@@ -60,5 +62,10 @@ TRAIN_POWER_STATES = frozenset({PowerState.ACTIVE, PowerState.LATENT})
 MOVE_LAWS_GIFTED_ATTITUDES = (GiftedAttitude.FEARED, GiftedAttitude.PERSECUTED)
 HEIRS_POWER_ORIGINS = (PowerOrigin.BLOODLINE, PowerOrigin.EXPOSURE)
 AT_DEATH_POWER_ORIGINS = frozenset({PowerOrigin.MADE, PowerOrigin.GROWN, PowerOrigin.HELD})
-KEEP_APART_GIFTED_ATTITUDES = frozenset({GiftedAttitude.FEARED, GiftedAttitude.PERSECUTED})
+KEEP_APART_GIFTED_ATTITUDES = frozenset({GiftedAttitude.FEARED, GiftedAttitude.PERSECUTED, GiftedAttitude.EXPLOITED})
 BROKEN_VOWS_RESTRICTION_KINDS = (RestrictionKind.SPOKEN_VOW, RestrictionKind.FORBIDDEN_ACT)
+FELT_LOCI = frozenset({SourceLocus.EMOTION, SourceLocus.DREAM})
+KEPT_LOCI = frozenset({SourceLocus.MEMORY, SourceLocus.NAME})
+BINDABLE = frozenset({PowerState.ACTIVE, PowerState.EMERGING, PowerState.STRAINED})
+REGISTERING_LEVELS = frozenset({SourceLawLevel.LICENSED, SourceLawLevel.CONSCRIPTED})
+PACT_ORIGINS = frozenset({PowerOrigin.BONDED, PowerOrigin.BARGAIN})

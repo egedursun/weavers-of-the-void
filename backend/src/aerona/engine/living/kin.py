@@ -16,7 +16,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.living import HostRelation
+from aerona.domain.enums.living import HostPlacement, HostRelation
 from aerona.domain.enums.mind import MemoryKind, SkillSource
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
@@ -32,6 +32,7 @@ from aerona.engine.primitives.queries import connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining, term
 from aerona.engine.services.community_relations import change_relation
 from aerona.rules.registry.living import SymbiontRules
 
@@ -99,6 +100,10 @@ async def host_effects(ctx: TickContext, row: SymbiontRow, host: EntityRow) -> N
     shift_stat(host, "hp", HOST_HEALTH[row.relation](table), 0)
     if row.relation is HostRelation.CONTROLLING and row.mind_node_id is not None:
         await change_relation(ctx, host.id, row.mind_node_id, table.control_pull, MemoryKind.GOODWILL, note="steered by what lives within")
+    if row.placement is HostPlacement.GUT:
+        with explaining():
+            term("symbionts.gut_digestion", table.gut_digestion)
+            shift_stat(host, "hp" if host.entity_type is EntityType.MORTAL else "prosperity", table.gut_digestion, 0)
     if row.mind_node_id is not None:
         profile = await ctx.session.get(MortalProfileRow, host.id)
         if profile is not None and "stress" not in (profile.locked or []) and row.relation is not HostRelation.MUTUAL:

@@ -51,6 +51,7 @@ def current_category(phase: str) -> FlowCategory:
 C = FlowCategory
 PHASE_FLOWS: dict[str, FlowCategory] = {
     "diplomacy": C.LEVY,
+    "settle_modes": C.DEATH,
     "war_upkeep": C.LEVY,
     "order_of_battle": C.LEVY,
     "gatherings": C.LEVY,

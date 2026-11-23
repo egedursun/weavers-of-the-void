@@ -28,6 +28,9 @@ class MadeRealmRules(Spanned):
     def freeze_epochs(self) -> int:
         return self.epochs(self.freeze_years)
 
+    memorial_fidelity: int = rule(2, 0, 100, M, "Fidelity a saved state of one of the dead regains each epoch in a memorial realm its keeper holds")
+    market_yield: int = rule(1, 0, 100, M, "Wealth each mind trading in a market realm brings its keeper each epoch at world time")
+
 
 @dataclass(frozen=True)
 class IntrusionRules:
@@ -38,6 +41,10 @@ class IntrusionRules:
     false_flag_chance: int = rule(15, 0, 100, C, "Chance a traced intrusion is blamed on another")
     extort_take: int = rule(10, 0, 1000, C, "Treasury an extortion takes from its victim")
     outage_severity: int = rule(60, 0, 100, C, "Severity of an outage an intrusion makes")
+    seal_harm: int = rule(20, 0, 100, C, "Strength an intrusion that strikes a seal held by a network takes from it")
+    undetected_edge: int = rule(15, 0, 100, C, "Edge an intruder keeps against a target it entered before without being noticed")
+    location_exposure: int = rule(30, 0, 100, C, "Exposure a hidden one under a false name gains when an intruder takes data of where it is")
+    gateway_pull_pct: int = rule(50, 0, 100, C, "Share of a foe's intrusions aimed at a town that joins two networks when there is one (%)")
 
 
 @dataclass(frozen=True)
@@ -51,6 +58,10 @@ class SurveillanceRules:
     trust_loss: int = rule(3, 0, 100, P, "Trust a fully watched people loses each epoch")
     privacy_cut_pct: int = rule(50, 0, 100, P, "Share of capacity a strict privacy law removes (%)")
     law_caps: int = rule(25, 0, 100, P, "Capacity each step of the watch law allows, from forbidden up")
+    identity_grievance: int = rule(
+        2, 0, 100, P, "Unrest a town gains each epoch at full reach for each other people or tongue among it that surveillance by kind or by tongue singles out"
+    )
+    identity_most: int = rule(5, 1, 50, P, "Most peoples or tongues a watch by kind or tongue singles out in one town")
 
 
 @dataclass(frozen=True)
@@ -70,6 +81,9 @@ class CompanyPowerRules:
     sovereignty_enclaves: int = rule(3, 1, 100, E, "Enclaves at which a company may become a realm of its own")
     capture_influence: int = rule(80, 0, 100, E, "Influence at which a company captures a realm's rule")
     influence_decay: int = rule(2, 0, 100, E, "Influence a company loses each epoch it holds nothing new")
+    guild_privilege_pct: int = rule(
+        50, 0, 200, E, "Added influence a company held by a guild draws from a holding in a town where a guild of its craft has its hall (%)"
+    )
 
 
 @dataclass(frozen=True)
@@ -106,6 +120,8 @@ class MadeRelicRules:
     recovery_at: int = rule(80, 0, 100, K, "Understanding at which study recovers a lost technique")
     salvage_yield: int = rule(5, 0, 1000, K, "Wealth each salvage takes from a site")
     revere_below: int = rule(25, 0, 100, K, "Understanding below which a people reveres the relics it keeps")
+    dismantle_yield: int = rule(20, 0, 1000, E, "Coin in treasury a holder gains from taking a relic apart for its parts")
+    dismantle_cap: int = rule(8, 0, 20, E, "Highest level of a branch of making a holder can reach by taking relics apart")
 
 
 @dataclass(frozen=True)
@@ -120,3 +136,5 @@ class MindLawRules:
     bond_by_status: int = rule(2, 0, 100, P, "Maker bond made minds gain each epoch for each step of status above property")
     edit_drift: int = rule(20, 0, 100, P, "Drift of values a mind carries after the law edits it by force")
     edit_stability: int = rule(25, 0, 100, P, "Stability a mind loses when the law edits it by force")
+
+    inspected_stability: int = rule(1, 0, 100, M, "Stability a made mind gains each epoch under a faith that licenses makers and inspects minds")

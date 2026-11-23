@@ -21,6 +21,9 @@ class SettleMode(StrEnum):
     HABITAT = "habitat"
     BAND = "band"
     DECK = "deck"
+    BURROW = "burrow"
+    SUBMERGED = "submerged"
+    CANOPY = "canopy"
 
 
 class WarTerrain(StrEnum):
@@ -29,6 +32,9 @@ class WarTerrain(StrEnum):
     SKY = "sky"
     BOARDING = "boarding"
     STRATA = "strata"
+    UNDER_WATER = "under_water"
+    SPACE = "space"
+    UNDERGROUND = "underground"
 
 
 class BindingNeed(StrEnum):

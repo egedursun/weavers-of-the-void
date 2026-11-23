@@ -22,6 +22,7 @@ from aerona.domain.enums.war import (
     WarSide,
     WarStatus,
 )
+from aerona.domain.enums.world_view import WarTerrain
 
 
 class WarRow(CreatedAtMixin, Base):
@@ -160,6 +161,7 @@ class BattleRow(Base):
     weather: Mapped[WeatherKind | None] = mapped_column(enum_type(WeatherKind, "weather"))
     season_name: Mapped[str | None] = mapped_column(String(NAME_MAX_LENGTH))
     terrain: Mapped[TerrainKind | None] = mapped_column(enum_type(TerrainKind, "terrain"))
+    ground: Mapped[WarTerrain] = mapped_column(enum_type(WarTerrain, "ground"), default=WarTerrain.LAND, server_default="land")
     year: Mapped[int | None]
     night: Mapped[bool] = mapped_column(default=False)
     tactics_attacker: Mapped[Tactic | None] = mapped_column(enum_type(Tactic, "tactics_attacker"))

@@ -41,3 +41,10 @@ class NetworkRules(Spanned):
     @property
     def outage_epochs(self) -> int:
         return self.epochs(self.outage_years)
+
+    dream_link_days: int = rule(0, 0, 1000, C, "Days a message takes across a network carried through dreams")
+    quake_outage: int = rule(40, 0, 100, C, "Chance a network with a member in a land struck by a quake goes down")
+    shutdown_pct: int = rule(20, 0, 100, C, "Chance each epoch an owner whose towns are restless cuts its own network to silence them (%)")
+    shutdown_unrest: int = rule(40, 0, 100, C, "Unrest of a member town at which its owner may cut the network")
+    shutdown_trust: int = rule(5, 0, 100, C, "Regard each member town loses for an owner that cuts its network")
+    gateway_reach_pct: int = rule(50, 0, 200, C, "Added spread of prices and techniques a network gains through each town it shares with another network (%)")

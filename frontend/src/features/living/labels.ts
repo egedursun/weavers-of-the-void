@@ -42,6 +42,13 @@ import {
   Wheat,
   Wind,
   Zap,
+  Apple,
+  BrickWall,
+  Filter,
+  GitBranch,
+  GraduationCap,
+  Lightbulb,
+  Trees,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/entity/environment/labels'
@@ -64,6 +71,8 @@ export const METHODS: Record<Schema['CultivationMethod'], Named> = {
   cloning: { label: 'Cloning', icon: Copy, tone: 'info' },
   merging: { label: 'Merging species', icon: Orbit, tone: 'warning' },
   induction: { label: 'Induction', icon: Zap, tone: 'gold' },
+  hybridising: { label: 'Hybridising', icon: GitMerge, tone: 'success' },
+  wild_release: { label: 'Release to the wild', icon: Trees, tone: 'warning' },
 }
 
 export const METABOLISMS: Record<Schema['Metabolism'], Named> = {
@@ -74,6 +83,7 @@ export const METABOLISMS: Record<Schema['Metabolism'], Named> = {
   source: { label: 'Draws on a source', icon: Sparkles, tone: 'gold' },
   partner: { label: 'Fed by a partner', icon: HandHeart, tone: 'success' },
   dormant: { label: 'Dormant', icon: Moon, tone: 'muted' },
+  heat: { label: 'Heat', icon: Flame, tone: 'warning' },
 }
 
 export const STAGES: Record<Schema['GrowthStage'], Named> = {
@@ -91,6 +101,11 @@ export const FERTILITIES: Record<Schema['Fertility'], Named> = {
   breeds_true: { label: 'Breeds true', icon: CircleCheck, tone: 'success' },
   breeds_wild: { label: 'Breeds wild', icon: Wind, tone: 'warning' },
   needs_maker: { label: 'Needs its maker', icon: Hand, tone: 'info' },
+  crosses_wild: {
+    label: 'Crosses with wild kin',
+    icon: GitBranch,
+    tone: 'warning',
+  },
 }
 
 export const PLACEMENTS: Record<Schema['HostPlacement'], Named> = {
@@ -99,6 +114,7 @@ export const PLACEMENTS: Record<Schema['HostPlacement'], Named> = {
   organ: { label: 'In an organ', icon: Heart, tone: 'warning' },
   nerve: { label: 'In the nerves', icon: Zap, tone: 'warning' },
   mind: { label: 'In the mind', icon: Brain, tone: 'gold' },
+  gut: { label: 'Gut', icon: Apple, tone: 'success' },
 }
 
 export const RELATIONS: Record<Schema['HostRelation'], Named> = {
@@ -113,6 +129,7 @@ export const STANCES: Record<Schema['LivingCraftStance'], Named> = {
   permitted: { label: 'Permitted', icon: CircleCheck, tone: 'info' },
   sacred_duty: { label: 'A sacred duty', icon: Sparkles, tone: 'gold' },
   silent: { label: 'Silent on it', icon: CircleDashed, tone: 'muted' },
+  regulated: { label: 'Regulated', icon: Scale, tone: 'info' },
 }
 
 export const TRAITS: Record<Schema['LineTrait'], Named> = {
@@ -143,6 +160,18 @@ export const TRAITS: Record<Schema['LineTrait'], Named> = {
   gift: { label: 'A gift of power', icon: Gift, tone: 'gold' },
   nervous_system: { label: 'Nervous system', icon: Brain, tone: 'warning' },
   sapience: { label: 'Thought', icon: BrainCircuit, tone: 'gold' },
+  light_making: { label: 'Makes light', icon: Lightbulb, tone: 'gold' },
+  inherited_learning: {
+    label: 'Passes learning on',
+    icon: GraduationCap,
+    tone: 'info',
+  },
+  filtering: { label: 'Filters water and air', icon: Filter, tone: 'success' },
+  secretes_building: {
+    label: 'Grows building matter',
+    icon: BrickWall,
+    tone: 'info',
+  },
 }
 
 export const OUTCOMES: Record<Schema['LineOutcome'], Named> = {
@@ -152,4 +181,5 @@ export const OUTCOMES: Record<Schema['LineOutcome'], Named> = {
   side_effects: { label: 'With side effects', icon: Bird, tone: 'warning' },
   non_viable: { label: 'Not viable', icon: Skull, tone: 'danger' },
   escaped: { label: 'Escaped', icon: Leaf, tone: 'danger' },
+  exceeded: { label: 'Beyond what was meant', icon: Sparkles, tone: 'gold' },
 }

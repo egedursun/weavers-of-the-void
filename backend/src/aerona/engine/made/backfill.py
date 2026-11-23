@@ -170,6 +170,8 @@ def stance(values: dict[ValueAxis, int]) -> MadeMindStance:
         return MadeMindStance.ABOMINATION
     if open_mind >= LEAN * 2:
         return MadeMindStance.KIN
+    if values.get(ValueAxis.LAW, 0) >= LEAN * 2:
+        return MadeMindStance.REGULATED
     if values.get(ValueAxis.CRAFTSMANSHIP, 0) >= LEAN:
         return MadeMindStance.TOOL
     return MadeMindStance.SILENT

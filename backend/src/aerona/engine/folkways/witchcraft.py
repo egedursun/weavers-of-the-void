@@ -35,6 +35,7 @@ from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import FaithBook
+from aerona.engine.law.outlawry import declare_outlaw
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.polity.laws import LawBook
@@ -343,17 +344,71 @@ async def run_hunts(ctx: TickContext, tally: WitchTally) -> None:
             await record(ctx, "witchcraft.hunt_over", roles={IncidentRole.PLACE: town.id}, facts={"accused": hunt.accused}, place=town.id)
 
 
+async def told(ctx: TickContext, row: AccusationRow) -> None:
+    town = row.settlement_entity_id
+    if town is not None:
+        await record(
+            ctx, "hunt.accusation", roles={IncidentRole.ACCUSED: row.accused_node_id, IncidentRole.PLACE: town}, facts={"outcome": row.outcome}, place=town
+        )
+
+
+def stir(hunt: WitchHuntRow | None, fervour: int) -> None:
+    if hunt is not None and "fervour" not in hunt.locked:
+        hunt.fervour = clamp_int(hunt.fervour + fervour, 0, PERCENT)
+
+
+async def confess(ctx: TickContext, row: AccusationRow, case: CrimeCaseRow, tally: WitchTally) -> None:
+    table = ctx.rules.hunts
+    row.outcome, row.closed_epoch = AccusationOutcome.CONFESSED, ctx.epoch
+    if "verdict" not in case.locked:
+        case.verdict = Verdict.GUILTY
+    hunt = await ctx.session.get(WitchHuntRow, row.hunt_id) if row.hunt_id is not None else None
+    stir(hunt, table.confession_spread_pct)
+    town = await living_entity(ctx.session, row.settlement_entity_id)
+    confessor = await living_entity(ctx.session, row.accused_node_id)
+    if town is not None and confessor is not None and ctx.rng(f"confession.names.{row.id}").chance(table.confession_spread_pct):
+        await accuse(ctx, town, confessor, tally, hunt=hunt)
+
+
+async def flee(ctx: TickContext, row: AccusationRow, case: CrimeCaseRow) -> None:
+    row.outcome, row.closed_epoch = AccusationOutcome.FLED, ctx.epoch
+    if "verdict" not in case.locked:
+        case.verdict = Verdict.FLED
+    hunt = await ctx.session.get(WitchHuntRow, row.hunt_id) if row.hunt_id is not None else None
+    stir(hunt, ctx.rules.hunts.flight_fervour)
+    accused = await living_entity(ctx.session, row.accused_node_id)
+    if accused is not None and accused.entity_type is EntityType.MORTAL:
+        await declare_outlaw(ctx, accused, await realm_of_town(ctx.session, row.settlement_entity_id) if row.settlement_entity_id is not None else None)
+
+
+async def before_judgement(ctx: TickContext, row: AccusationRow, case: CrimeCaseRow, tally: WitchTally) -> None:
+    table = ctx.rules.hunts
+    rng = ctx.rng(f"accusation.before.{row.id}.{ctx.epoch}")
+    if rng.chance(table.true_confession_pct if row.guilty_in_truth else ctx.rules.persuasion.false_confession_pct):
+        await confess(ctx, row, case, tally)
+    elif rng.chance(table.flight_pct):
+        await flee(ctx, row, case)
+    else:
+        return
+    await told(ctx, row)
+
+
 async def settle(ctx: TickContext, tally: WitchTally) -> None:
     pending = await ctx.session.scalars(select(AccusationRow).where(AccusationRow.outcome == AccusationOutcome.PENDING).order_by(AccusationRow.id))
     for row in list(pending):
         case = await ctx.session.get(CrimeCaseRow, row.case_id) if row.case_id is not None else None
-        if held(row.accused_node_id) or "outcome" in row.locked or case is None or case.verdict is None:
+        if held(row.accused_node_id) or "outcome" in row.locked or case is None:
+            continue
+        if case.verdict is None:
+            if row.opened_epoch < ctx.epoch:
+                await before_judgement(ctx, row, case, tally)
             continue
         if case.verdict is Verdict.GUILTY:
             row.outcome = PENALTY_OUTCOMES.get(case.penalty, AccusationOutcome.PUNISHED) if case.penalty is not None else AccusationOutcome.PUNISHED
         else:
-            row.outcome = AccusationOutcome.EXILED if case.verdict is Verdict.FLED else AccusationOutcome.CLEARED
+            row.outcome = AccusationOutcome.FLED if case.verdict is Verdict.FLED else AccusationOutcome.CLEARED
         row.closed_epoch = ctx.epoch
+        await told(ctx, row)
         tally.killed += row.outcome is AccusationOutcome.KILLED
         tally.cleared += row.outcome is AccusationOutcome.CLEARED
         hunt = await ctx.session.get(WitchHuntRow, row.hunt_id) if row.hunt_id is not None else None

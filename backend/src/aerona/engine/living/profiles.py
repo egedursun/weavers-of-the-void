@@ -12,6 +12,7 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.environment import TemperatureBand, TerrainKind
 from aerona.domain.enums.life_traits import MetabolismTrait
 from aerona.domain.enums.living import Fertility, GrowthStage, LineTrait, Metabolism
 from aerona.domain.enums.modifier import IncidentRole
@@ -27,6 +28,7 @@ from aerona.engine.recording.record import StepDraft, record
 
 SELF_FED = having(METABOLISM_TRAITS, MetabolismTrait.SELF_FED)
 STILL = frozenset({GrowthStage.DEAD})
+HOT_BANDS = frozenset({TemperatureBand.HOT, TemperatureBand.SEARING})
 UNGROWN = frozenset({GrowthStage.SEED, GrowthStage.YOUNG})
 BEINGS = frozenset({EntityType.BEAST, EntityType.MORTAL})
 
@@ -40,8 +42,14 @@ async def town_of(ctx: TickContext, thing: EntityRow) -> int | None:
     return await town_of(ctx, place) if place.entity_type is not EntityType.REGION else None
 
 
+async def hot_ground(ctx: TickContext, thing: EntityRow) -> bool:
+    region_id = (await RegionAtlas.load(ctx.session)).top_region(thing.id)
+    ground = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
+    return ground is not None and (ground.temperature_band in HOT_BANDS or ground.dominant_terrain is TerrainKind.VOLCANIC)
+
+
 async def fed(ctx: TickContext, row: LivingProfileRow, thing: EntityRow) -> bool:
-    if row.metabolism in SELF_FED or row.metabolism is Metabolism.DORMANT:
+    if row.metabolism in SELF_FED or row.metabolism is Metabolism.DORMANT or (row.metabolism is Metabolism.HEAT and await hot_ground(ctx, thing)):
         return True
     if row.metabolism is Metabolism.HOST:
         host = await ctx.session.get(EntityRow, row.bonded_to_node_id) if row.bonded_to_node_id is not None else None

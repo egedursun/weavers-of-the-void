@@ -13,6 +13,7 @@ CARRIER_DAYS = {
     NetworkCarrier.MIND_LINK: "mind_link_days",
     NetworkCarrier.RITE_LINK: "rite_link_days",
     NetworkCarrier.GROWN_LINK: "grown_link_days",
+    NetworkCarrier.DREAM_LINK: "dream_link_days",
 }
 
 
@@ -26,13 +27,14 @@ CARRIER_ENERGY = total(
         NetworkCarrier.MIND_LINK: EnergyKind.MAGIC,
         NetworkCarrier.RITE_LINK: EnergyKind.MAGIC,
         NetworkCarrier.GROWN_LINK: EnergyKind.FEED,
+        NetworkCarrier.DREAM_LINK: EnergyKind.BELIEF,
     },
 )
 
 
 ROLE_SHOCK: Mapping[NetworkRole, int] = total(
     NetworkRole,
-    {NetworkRole.HUB: 200, NetworkRole.STATION: 100, NetworkRole.END: 60, NetworkRole.RELAY: 80, NetworkRole.ARCHIVE: 40},
+    {NetworkRole.HUB: 200, NetworkRole.STATION: 100, NetworkRole.END: 60, NetworkRole.RELAY: 80, NetworkRole.ARCHIVE: 40, NetworkRole.GATEWAY: 150},
 )
 
 
@@ -46,6 +48,7 @@ CARRIER_FAILURE: Mapping[NetworkCarrier, OutageCause] = total(
         NetworkCarrier.MIND_LINK: OutageCause.RITE,
         NetworkCarrier.RITE_LINK: OutageCause.RITE,
         NetworkCarrier.GROWN_LINK: OutageCause.DECAY,
+        NetworkCarrier.DREAM_LINK: OutageCause.RITE,
     },
 )
 
@@ -64,6 +67,8 @@ CAUSE_EPOCHS: Mapping[OutageCause, int] = total(
         OutageCause.SHORTAGE: 150,
         OutageCause.DIVINE: 300,
         OutageCause.ICE_STORM: 100,
+        OutageCause.QUAKE: 150,
+        OutageCause.SHUTDOWN: 50,
     },
 )
 
@@ -80,6 +85,7 @@ TARGET_GUARD: Mapping[IntrusionTarget, int] = total(
         IntrusionTarget.STRUCTURE: 20,
         IntrusionTarget.LEDGER: 25,
         IntrusionTarget.SAVED_STATE: 15,
+        IntrusionTarget.SEAL: 30,
     },
 )
 
@@ -94,5 +100,7 @@ CONTENT_WORTH: Mapping[DataContent, int] = total(
         DataContent.LEDGER: 10,
         DataContent.IDENTITY: 0,
         DataContent.ORDERS: 0,
+        DataContent.LOCATION: 5,
     },
 )
+JOINING_ROLES = frozenset({NetworkRole.END, NetworkRole.STATION, NetworkRole.RELAY})

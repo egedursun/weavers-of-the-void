@@ -17,6 +17,7 @@ from aerona.engine.polity.trials import TrialTally, tend_cases
     "table.estate_profiles",
     "table.faction_goals",
     "table.faction_profiles",
+    "table.favours",
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -58,6 +59,7 @@ from aerona.engine.polity.trials import TrialTally, tend_cases
     "table.law_proposals",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.proposal_stances",
     "table.settlement_profiles",
 )

@@ -1,23 +1,21 @@
 import {
-  Sparkle,
-  Circle,
-  Bomb,
-  ArrowRight,
-  TrainFront,
-  Car,
-  Cable,
-  ArrowUpFromLine,
-  Rocket,
-  PawPrint,
-  Network,
   Anchor,
+  ArrowRight,
+  ArrowUpFromLine,
   Backpack,
+  Bomb,
   BookOpen,
+  Box,
   Brain,
+  Cable,
+  Car,
   Castle,
+  Circle,
+  Clover,
   Compass,
   Crosshair,
   Eye,
+  Fish,
   Flag,
   Flame,
   Footprints,
@@ -25,35 +23,48 @@ import {
   Ghost,
   Hand,
   HandHeart,
+  HeartHandshake,
   HeartPulse,
   Home,
   Landmark,
+  Languages,
   Link2,
-  type LucideIcon,
+  Map,
   Map as MapIcon,
   Moon,
   Mountain,
   Navigation,
+  Network,
+  Orbit,
   Package,
   PauseCircle,
+  PawPrint,
   Plane,
   Repeat,
+  Rocket,
   Route,
   Sailboat,
+  Search,
   Shield,
   ShieldAlert,
   Ship,
+  Shuffle,
   Skull,
   Snowflake,
+  Sparkle,
   Sparkles,
   Swords,
-  Tent,
   Target,
   Telescope,
+  Tent,
+  TrainFront,
   Truck,
+  type LucideIcon,
   Users,
   Utensils,
+  Waves,
   Wind,
+  Wrench,
   Zap,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
@@ -150,6 +161,10 @@ export const ROLES: Record<Schema['ExpeditionRole'], Named> = {
   fighter: { label: 'Fighter', icon: Swords, tone: 'danger' },
   scholar: { label: 'Scholar', icon: BookOpen, tone: 'gold' },
   porter: { label: 'Porter', icon: Backpack, tone: 'muted' },
+  warder: { label: 'Warder', icon: Shield, tone: 'verdigris' },
+  interpreter: { label: 'Interpreter', icon: Languages, tone: 'info' },
+  cartographer: { label: 'Cartographer', icon: Map, tone: 'gold' },
+  engineer: { label: 'Engineer', icon: Wrench, tone: 'warning' },
 }
 
 export const GROUNDS: Record<Schema['ExpeditionGround'], Named> = {
@@ -157,6 +172,13 @@ export const GROUNDS: Record<Schema['ExpeditionGround'], Named> = {
   wilds: { label: 'Into the wilds', icon: Mountain, tone: 'success' },
   underworld: { label: 'Into an underworld', icon: Ghost, tone: 'muted' },
   realm: { label: 'Into another realm', icon: Sparkles, tone: 'info' },
+  under_water: { label: 'Under the water', icon: Waves, tone: 'info' },
+  space: { label: 'Into the void', icon: Orbit, tone: 'muted' },
+  dimension: {
+    label: 'Into another dimension',
+    icon: Shuffle,
+    tone: 'verdigris',
+  },
 }
 
 export const EXPEDITION_STATUS: Record<Schema['ExpeditionStatus'], Named> = {
@@ -175,6 +197,14 @@ export const RESOLVES: Record<Schema['ResolveKind'], Named> = {
   courageous: { label: 'Courageous', icon: Flame, tone: 'gold' },
   focused: { label: 'Focused', icon: Target, tone: 'success' },
   stalwart: { label: 'Stalwart', icon: ShieldAlert, tone: 'verdigris' },
+  fearful: { label: 'Fearful', icon: Ghost, tone: 'danger' },
+  irrational: { label: 'Irrational', icon: Shuffle, tone: 'danger' },
+  compassionate: {
+    label: 'Compassionate',
+    icon: HeartHandshake,
+    tone: 'success',
+  },
+  inspired: { label: 'Inspired', icon: Sparkles, tone: 'gold' },
 }
 
 export const EVENTS: Record<Schema['ExpeditionEvent'], Named> = {
@@ -190,6 +220,8 @@ export const EVENTS: Record<Schema['ExpeditionEvent'], Named> = {
   fallen: { label: 'Fallen', icon: Skull, tone: 'danger' },
   return: { label: 'Returned', icon: Home, tone: 'success' },
   loss: { label: 'Lost', icon: Ghost, tone: 'danger' },
+  discovery: { label: 'Discovery', icon: Search, tone: 'success' },
+  quarrel: { label: 'Quarrel', icon: Swords, tone: 'warning' },
 }
 
 export const QUIRK_LABELS: Record<Schema['QuirkKind'], Named> = {
@@ -205,6 +237,10 @@ export const QUIRK_LABELS: Record<Schema['QuirkKind'], Named> = {
   homesick: { label: 'Homesick', icon: Home, tone: 'warning' },
   restless: { label: 'Restless', icon: Route, tone: 'info' },
   light_fingered: { label: 'Light-fingered', icon: Hand, tone: 'warning' },
+  claustrophobic: { label: 'Fears close places', icon: Box, tone: 'danger' },
+  cold_hardy: { label: 'Cold-hardy', icon: Snowflake, tone: 'success' },
+  swimmer: { label: 'Swimmer', icon: Fish, tone: 'success' },
+  lucky: { label: 'Lucky', icon: Clover, tone: 'success' },
 }
 
 export const QUIRK_EFFECTS: Record<Schema['QuirkKind'], string> = {
@@ -220,6 +256,10 @@ export const QUIRK_EFFECTS: Record<Schema['QuirkKind'], string> = {
   homesick: 'Sets out half as often and gains stress on the way.',
   restless: 'Sets out on expeditions twice as often.',
   light_fingered: 'Brings home an extra find and unsettles companions.',
+  claustrophobic: 'Gains twice the stress in a site or an underworld.',
+  cold_hardy: 'Takes no cold.',
+  swimmer: 'Needs no air under the water and takes half the wet.',
+  lucky: 'Often escapes a blow that would fall on it.',
 }
 
 export const COMPASS = [

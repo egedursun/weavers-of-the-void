@@ -119,7 +119,7 @@ async def pray_to_creator(call: MortalCall, args: PrayerInput) -> str:
             text=args.prayer,
             request=request,
             wish=args.request,
-            tone=await prayer_tone(call.session, call.me, creator.id),
+            tone=await prayer_tone(call.session, call.me, creator.id, call.rules),
         )
     )
     await call.bump(TurnCounter.PRAYERS)

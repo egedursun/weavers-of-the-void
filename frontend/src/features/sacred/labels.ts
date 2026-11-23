@@ -91,6 +91,9 @@ export const SPIRIT_KINDS: Record<Schema['GeniusLocusKind'], Named> = {
   field: { label: 'Field', icon: Wheat, tone: 'gold' },
   city: { label: 'Town', icon: Building2, tone: 'gold' },
   hearth: { label: 'Hearth', icon: Home, tone: 'danger' },
+  sea: { label: 'Open sea', icon: Waves, tone: 'info' },
+  ruin: { label: 'Ruin', icon: Castle, tone: 'muted' },
+  battlefield: { label: 'Battlefield', icon: Swords, tone: 'danger' },
 }
 
 export const OFFENCES: Record<Schema['SpiritOffence'], Named> = {
@@ -98,6 +101,16 @@ export const OFFENCES: Record<Schema['SpiritOffence'], Named> = {
   clearing: { label: 'Clearing of the woods', icon: Trees, tone: 'warning' },
   unpaid: { label: 'Offerings left unpaid', icon: Coins, tone: 'warning' },
   taboo: { label: 'A broken taboo', icon: Ban, tone: 'danger' },
+  bloodshed: {
+    label: 'Blood spilled in its place',
+    icon: Swords,
+    tone: 'danger',
+  },
+  overharvest: {
+    label: 'More taken than its due',
+    icon: Wheat,
+    tone: 'warning',
+  },
 }
 
 export const RANKS: Record<Schema['BureauRank'], Named> = {
@@ -115,6 +128,9 @@ export const PETITION_KINDS: Record<Schema['PetitionKind'], Named> = {
   safe_passage: { label: 'Safe passage', icon: Route, tone: 'info' },
   prosperity: { label: 'Prosperity', icon: Coins, tone: 'gold' },
   suit: { label: 'A suit against a spirit', icon: Gavel, tone: 'danger' },
+  rain: { label: 'Rain', icon: Droplets, tone: 'info' },
+  protection: { label: 'Protection', icon: ShieldCheck, tone: 'success' },
+  vengeance: { label: 'Vengeance on a wrongdoer', icon: Flame, tone: 'danger' },
 }
 
 export const PETITION_STATUS: Record<Schema['PetitionStatus'], Named> = {
@@ -140,6 +156,8 @@ export const VISION_KINDS: Record<Schema['VisionKind'], Named> = {
   union: { label: 'Union', icon: InfinityIcon, tone: 'gold' },
   voice: { label: 'A voice', icon: Mic, tone: 'info' },
   trance: { label: 'Trance', icon: Moon, tone: 'muted' },
+  dream: { label: 'A vision in sleep', icon: Moon, tone: 'verdigris' },
+  oracle_speech: { label: 'Words not its own', icon: Megaphone, tone: 'gold' },
 }
 
 export const STAGES: Record<Schema['MillenarianStage'], Named> = {
@@ -157,6 +175,12 @@ export const CAUSES: Record<Schema['TheodicyCause'], Named> = {
   famine: { label: 'Famine', icon: Wheat, tone: 'warning' },
   defeat: { label: 'Defeat in battle', icon: Swords, tone: 'danger' },
   disaster: { label: 'Disaster', icon: Flame, tone: 'warning' },
+  persecution: {
+    label: 'Persecution of the faithful',
+    icon: ShieldAlert,
+    tone: 'danger',
+  },
+  long_season: { label: 'A long season', icon: Hourglass, tone: 'warning' },
 }
 
 export const RESOLUTIONS: Record<Schema['TheodicyResolution'], Named> = {
@@ -173,12 +197,15 @@ export const SACRAMENTS: Record<Schema['SacramentKind'], Named> = {
   initiation: { label: 'Initiation', icon: Feather, tone: 'info' },
   marriage: { label: 'Marriage', icon: Heart, tone: 'danger' },
   last_rites: { label: 'Last rites', icon: Moon, tone: 'muted' },
+  purification: { label: 'Purification', icon: Droplets, tone: 'info' },
+  ordination: { label: 'Ordination', icon: Scroll, tone: 'gold' },
 }
 
 export const PROTECTIONS: Record<Schema['SacramentProtection'], Named> = {
   routing: { label: 'The soul’s way after death', icon: Route, tone: 'gold' },
   possession: { label: 'Possession', icon: ShieldCheck, tone: 'info' },
   unrest: { label: 'Unrest at death', icon: Ghost, tone: 'verdigris' },
+  curse: { label: 'Curses', icon: Shield, tone: 'danger' },
 }
 
 export const AFTERLIVES: Record<Schema['AfterlifeModel'], Named> = {
@@ -207,6 +234,9 @@ export const DIVINATIONS: Record<Schema['DivinationKind'], Named> = {
   oracle: { label: 'Oracle', icon: Megaphone, tone: 'verdigris' },
   lots: { label: 'Lots', icon: Dice5, tone: 'warning' },
   dream_reading: { label: 'Dream reading', icon: Moon, tone: 'muted' },
+  scrying: { label: 'Scrying', icon: Eye, tone: 'verdigris' },
+  spirit_consultation: { label: 'Asking the dead', icon: Ghost, tone: 'muted' },
+  earth_signs: { label: 'Signs in the earth', icon: Mountain, tone: 'warning' },
 }
 
 export const VALIDITIES: Record<Schema['DivinationValidity'], Named> = {
@@ -226,6 +256,9 @@ export const QUESTIONS: Record<Schema['DivinationQuestion'], Named> = {
   wedding: { label: 'Wedding', icon: Heart, tone: 'success' },
   coronation: { label: 'Accession', icon: Crown, tone: 'gold' },
   harvest: { label: 'Harvest', icon: Wheat, tone: 'gold' },
+  voyage: { label: 'Voyage', icon: Route, tone: 'info' },
+  founding: { label: 'Founding', icon: Landmark, tone: 'gold' },
+  illness: { label: 'Illness', icon: HeartPulse, tone: 'warning' },
 }
 
 export const VERDICTS: Record<Schema['OmenVerdict'], Named> = {

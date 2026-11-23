@@ -164,3 +164,4 @@ class RebirthPath(StrEnum):
     PEOPLE = "people"
     HOUSE = "house"
     MERIT = "merit"
+    KIND = "kind"

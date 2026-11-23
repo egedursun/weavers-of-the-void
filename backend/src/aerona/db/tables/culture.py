@@ -5,7 +5,7 @@ from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.db.profile_guard import register_profile_table
-from aerona.domain.enums.arcana import RechargeRule
+from aerona.domain.enums.arcana import RechargeRule, RiteEnd
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import (
     ArtMode,
@@ -292,6 +292,8 @@ class CastingRow(Base):
     succeeded: Mapped[bool] = mapped_column(default=True)
     backlash: Mapped[BacklashKind | None] = mapped_column(enum_type(BacklashKind, "backlash"))
     effect: Mapped[str] = mapped_column(Text, default="")
+    ended_epoch: Mapped[int | None]
+    end: Mapped[RiteEnd | None] = mapped_column(enum_type(RiteEnd, "end"))
 
 
 class ProphecyConditionRow(Base):

@@ -1,6 +1,9 @@
 from collections.abc import Mapping
+from dataclasses import dataclass
 
+from aerona.catalog.gravity import GRAVITY
 from aerona.catalog.life.domain import PERIODIC_BODIES
+from aerona.catalog.physics_life import AIR_NEEDS
 from aerona.core.total import partial, total
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.ecology import SizeClass
@@ -17,14 +20,17 @@ ARRIVALS: Mapping[JourneyIntent, ArrivalOutcome] = total(
         JourneyIntent.EXPLORATION: ArrivalOutcome.SETTLERS,
         JourneyIntent.CONQUEST: ArrivalOutcome.INVADERS,
         JourneyIntent.PILGRIMAGE: ArrivalOutcome.SETTLERS,
+        JourneyIntent.EXILE: ArrivalOutcome.SETTLERS,
+        JourneyIntent.FLIGHT: ArrivalOutcome.REFUGEES,
+        JourneyIntent.EMBASSY: ArrivalOutcome.SETTLERS,
     },
 )
 
 
-AIR_GAS = partial(AirNeed, {AirNeed.OXYGEN: "oxygen", AirNeed.CARBON_DIOXIDE: "carbon_dioxide", AirNeed.METHANE: "methane"}, without={AirNeed.NONE})
+AIR_GAS = partial(AirNeed, {need: spec.gas for need, spec in AIR_NEEDS.items() if spec.gas is not None}, without={AirNeed.NONE})
 
 
-GRAVITY_G: dict[Gravity, float] = {Gravity.LOW: 0.4, Gravity.NORMAL: 1.0, Gravity.HIGH: 1.8}
+GRAVITY_G: dict[Gravity, float] = {band: spec.g for band, spec in GRAVITY.items()}
 
 
 AIR: dict[Atmosphere, tuple[float, dict[str, int]]] = {
@@ -70,9 +76,50 @@ CAUSE_END: Mapping[WorldEndCause, WorldEnd] = total(
         WorldEndCause.VOID: WorldEnd.SUNK_INTO_VOID,
         WorldEndCause.OBLIVION: WorldEnd.FORGOTTEN,
         WorldEndCause.BELIEF_DRIFT: WorldEnd.TRANSFIGURED,
+        WorldEndCause.RUNAWAY_CLIMATE: WorldEnd.BURNED,
+        WorldEndCause.WAR: WorldEnd.BURNED,
+        WorldEndCause.OUTER_HUNGER: WorldEnd.DEVOURED,
     },
 )
 
-END_WORLD_WORLD_ENDS = frozenset({WorldEnd.SHATTERED, WorldEnd.TRANSFIGURED})
+END_REMNANT: Mapping[WorldEnd, WorldType | None] = total(
+    WorldEnd,
+    {
+        WorldEnd.SHATTERED: WorldType.SHATTERED,
+        WorldEnd.CONSUMED: None,
+        WorldEnd.FROZEN_DEAD: None,
+        WorldEnd.SUNK_INTO_VOID: None,
+        WorldEnd.FORGOTTEN: None,
+        WorldEnd.TRANSFIGURED: None,
+        WorldEnd.DROWNED: WorldType.OCEAN,
+        WorldEnd.BURNED: WorldType.DEAD,
+        WorldEnd.DEVOURED: WorldType.VOID_POCKET,
+    },
+)
+
+SOURCED_CAUSES = frozenset({WorldEndCause.WAR, WorldEndCause.OUTER_HUNGER})
+
+END_WORLD_WORLD_ENDS = frozenset(end for end, remnant in END_REMNANT.items() if remnant is not None) | {WorldEnd.TRANSFIGURED}
 
 LIFE_BARRING_WORLDS = frozenset({WorldType.VOID_POCKET, WorldType.ASTEROID_BELT, WorldType.SHATTERED})
+
+
+@dataclass(frozen=True)
+class ColonyOf:
+    kind: str
+    ruled: bool = True
+
+
+COLONIES: Mapping[JourneyIntent, ColonyOf] = total(
+    JourneyIntent,
+    {
+        JourneyIntent.COLONY: ColonyOf("colony"),
+        JourneyIntent.TRADE: ColonyOf("colony"),
+        JourneyIntent.EXPLORATION: ColonyOf("colony"),
+        JourneyIntent.CONQUEST: ColonyOf("conquest outpost"),
+        JourneyIntent.PILGRIMAGE: ColonyOf("colony"),
+        JourneyIntent.EXILE: ColonyOf("settlement of exiles", ruled=False),
+        JourneyIntent.FLIGHT: ColonyOf("refuge", ruled=False),
+        JourneyIntent.EMBASSY: ColonyOf("colony"),
+    },
+)

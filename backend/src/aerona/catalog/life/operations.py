@@ -23,6 +23,8 @@ EXPEDITION_STEPS: Mapping[ExpeditionEvent, StepAction] = MappingProxyType(
         ExpeditionEvent.FALLEN: StepAction.DIE,
         ExpeditionEvent.RETURN: StepAction.RETURN,
         ExpeditionEvent.LOSS: StepAction.LOSE_WAY,
+        ExpeditionEvent.DISCOVERY: StepAction.DISCOVER,
+        ExpeditionEvent.QUARREL: StepAction.QUARREL,
     }
 )
 

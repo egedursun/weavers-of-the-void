@@ -9,9 +9,11 @@ from aerona.core.grammar import spoken
 from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.divine import LawException
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.law_grammar import LawCondition, LawOperator
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.engine.divine.control import settle_exemption
 from aerona.engine.divine.law_grammar import grammar_of, set_grammar
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
@@ -30,6 +32,8 @@ class NaturalLawInput(ToolInput):
     operator: LawOperator
     value: int = Field(default=100, ge=0, le=1000)
     condition: LawCondition = LawCondition.ALWAYS
+    exception: LawException | None = None
+    exempt_kind_id: int | None = None
     reason: Reason
 
 
@@ -50,6 +54,10 @@ async def set_natural_law(call: SonCall, args: NaturalLawInput) -> str:
         row.author_node_id = call.son.id
     try:
         await set_grammar(call.tick, law, Grammar(current.target, args.operator, current.key, args.value), args.condition, None, hold=False)
+        if args.exception is not None and row is not None:
+            before = (row.exception, row.exempt_kind_entity_id)
+            row.exception, row.exempt_kind_entity_id = args.exception, args.exempt_kind_id
+            await settle_exemption(call.tick, law, row, before, call.son.id)
     except ValidationFailedError as error:
         fail(SonResult.LAW_REFUSED, why=str(error).rstrip("."))
     call.target(law.id)

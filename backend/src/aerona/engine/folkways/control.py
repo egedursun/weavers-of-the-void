@@ -34,6 +34,7 @@ from aerona.db.tables.folkways import (
 )
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.folkways import CharmPower, DecisionBias, ImpuritySource, LuckReach, LuckSign, MishapKind, Nutrient, Purification, PurityState
+from aerona.domain.enums.kind_crafts import ColourFocus
 from aerona.domain.enums.mind import Profession
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.control import of_type, saved
@@ -189,9 +190,35 @@ async def add_mishap(ctx: TickContext, town_id: int, kind: MishapKind, victim_id
     return row
 
 
-async def add_belief(ctx: TickContext, people_id: int, sign: LuckSign, reach: LuckReach, *, lucky: bool, name: str) -> LuckBeliefRow:
+async def add_belief(
+    ctx: TickContext,
+    people_id: int,
+    sign: LuckSign,
+    reach: LuckReach,
+    *,
+    lucky: bool,
+    name: str,
+    species_id: int | None = None,
+    colour: ColourFocus | None = None,
+) -> LuckBeliefRow:
     await of_type(ctx, people_id, PEOPLES, "a people")
-    return await saved(ctx, LuckBeliefRow(people_entity_id=people_id, sign=sign, reach=reach, lucky=lucky, name=name, locked=[]))
+    if sign is LuckSign.ANIMAL and species_id is None:
+        raise ValidationFailedError("A sign read in a creature names the kind of creature.")
+    if sign is LuckSign.COLOUR and colour is None:
+        raise ValidationFailedError("A sign read in a colour names the colour.")
+    if species_id is not None:
+        await node_exists(ctx, species_id, "kind of creature")
+    row = LuckBeliefRow(
+        people_entity_id=people_id,
+        sign=sign,
+        reach=reach,
+        lucky=lucky,
+        name=name,
+        species_entity_id=species_id if sign is LuckSign.ANIMAL else None,
+        colour=colour if sign is LuckSign.COLOUR else None,
+        locked=[],
+    )
+    return await saved(ctx, row)
 
 
 async def set_charm(ctx: TickContext, item_id: int, power: CharmPower, strength: int) -> CharmRow:

@@ -4,7 +4,8 @@ from sqlalchemy import select
 
 from aerona.agents.context.dominion_lines import god_called, place_name
 from aerona.agents.context.scope import Scope
-from aerona.catalog.mythic import REALM_PHRASES, trial_at
+from aerona.catalog.life.divine import SERVITOR_ORIGINS
+from aerona.catalog.mythic import GEAS_LAYERS, REALM_PHRASES, trial_at
 from aerona.core.grammar import agree, plural, several, spoken
 from aerona.db.tables.arcana import LawUpkeepRow, LongevityRow, VisStockRow, WarpingRow
 from aerona.db.tables.culture import LegendProfileRow
@@ -34,7 +35,9 @@ async def servant_lines(scope: Scope, son: SonRow) -> list[str]:
     roles = Counter(row.role for row in rows)
     loyal = round(sum(row.loyalty for row in rows) / len(rows))
     kinds = ", ".join(several(count, spoken(role), plural(spoken(role))) for role, count in sorted(roles.items()))
-    return [f"Your servitors: {kinds}; their loyalty averages {loyal}"]
+    origins = Counter(row.origin for row in rows)
+    came = ", ".join(f"{SERVITOR_ORIGINS[origin].label} ({count})" for origin, count in sorted(origins.items()))
+    return [f"Your servitors: {kinds}; their loyalty averages {loyal}; of them: {came}"]
 
 
 async def kept_lines(scope: Scope, son: SonRow) -> list[str]:
@@ -93,11 +96,11 @@ async def mortal_magic_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.append(f"longevity magic keeps you: {dose}, dependence {long_life.dependence}, {long_life.years_gained} years gained")
     for geas in await session.scalars(select(GeasRow).where(GeasRow.bearer_entity_id == me.id).order_by(GeasRow.id)):
         layer = await god_called(scope, geas.layer_node_id) if geas.layer_node_id is not None else "an unknown source"
-        found.append(f"a geas of {layer}: {spoken(geas.mode)} {spoken(geas.act.value)} ({spoken(geas.state)})")
+        found.append(f"a geas of {layer}, {GEAS_LAYERS[geas.layer].label.lower()}: {spoken(geas.mode)} {spoken(geas.act)} ({spoken(geas.state)})")
     quest = await session.scalar(select(HeroquestRow).where(HeroquestRow.quester_entity_id == me.id, HeroquestRow.state == HeroquestState.QUESTING).limit(1))
     if quest is not None:
         legend = await session.get(LegendProfileRow, quest.legend_entity_id) if quest.legend_entity_id is not None else None
-        trial = trial_at(legend.archetype if legend is not None else None, quest.step)
+        trial = quest.trial or trial_at(legend.archetype if legend is not None else None, quest.step)
         found.append(f"your heroquest into {REALM_PHRASES[quest.realm]} stands at step {quest.step} of {quest.steps}; next comes a trial of {spoken(trial)}")
     path = await session.get(MantlingRow, me.id)
     if path is not None and path.state is MantlingState.WALKING and path.god_node_id is not None:

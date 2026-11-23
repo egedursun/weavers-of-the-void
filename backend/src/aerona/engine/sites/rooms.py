@@ -3,8 +3,8 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
-from aerona.catalog.gatherings import GUARDED_ROOMS, ITEM_ROOMS, ROOM_PLACES, ROOM_SETTLEMENTS, ROOM_STRUCTURES
-from aerona.catalog.life.sites import CHALLENGES, FURNISH_SITE_ROOM_KINDS, FURNISH_SITE_ROOM_KINDS_2
+from aerona.catalog.gatherings import GUARDED_ROOMS, ITEM_ROOMS, RECORD_ROOMS, ROOM_PLACES, ROOM_SETTLEMENTS, ROOM_STRUCTURES, WET_ROOMS
+from aerona.catalog.life.sites import CHALLENGES, FURNISH_SITE_ROOM_KINDS, FURNISH_SITE_ROOM_KINDS_2, ROOM_CHALLENGES
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
@@ -20,6 +20,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemDeed
+from aerona.domain.enums.discovery import AnomalyKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.modifier import IncidentRole
@@ -27,6 +28,7 @@ from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.site import RoomContentKind, SiteChallenge, SiteRoomKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.couplings.deep import active_seal
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore import items
 from aerona.engine.mortal.standing import add_renown, shift_standing
@@ -36,6 +38,7 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import realm_of_community
+from aerona.engine.sites.accounts import unsettle_accounts
 
 LAYOUT_ENDS = 3
 
@@ -53,6 +56,7 @@ class Walk:
     cleared: int = 0
     reached_heart: bool = False
     harmed: bool = False
+    read: int = 0
     loot: list[int] = field(default_factory=list)
 
 
@@ -94,7 +98,7 @@ async def furnish(ctx: TickContext, site: EntityRow, layout: tuple[SiteRoomKind,
     draw = ctx.rng(f"site.rooms.{site.id}")
     rooms: list[SiteRoomRow] = []
     for position, kind in enumerate(layout):
-        challenge = SiteChallenge.GUARDIAN if kind in GUARDED_ROOMS else draw.pick(list(CHALLENGES))
+        challenge = SiteChallenge.GUARDIAN if kind in GUARDED_ROOMS else (SiteChallenge.HAZARD if kind in WET_ROOMS else draw.pick(list(CHALLENGES)))
         if kind is SiteRoomKind.GATE or not draw.chance(table.challenge_pct):
             challenge = SiteChallenge.NONE if kind not in GUARDED_ROOMS else challenge
         room = SiteRoomRow(
@@ -109,6 +113,7 @@ async def furnish(ctx: TickContext, site: EntityRow, layout: tuple[SiteRoomKind,
         rooms.append(room)
     await ctx.session.flush()
     last = rooms[-1]
+    await seal_and_shelve(ctx, site, rooms)
     for beast in await dwellers(ctx, site.id, EntityType.BEAST):
         lair = next((room for room in rooms if room.kind in FURNISH_SITE_ROOM_KINDS), last)
         ctx.session.add(RoomContentRow(room_id=lair.id, kind=RoomContentKind.BEAST, entity_id=beast))
@@ -132,6 +137,17 @@ async def furnish(ctx: TickContext, site: EntityRow, layout: tuple[SiteRoomKind,
             ctx.session.add(RoomContentRow(room_id=room.id, kind=RoomContentKind.TRAP, strength=table.trap_strength))
     await ctx.session.flush()
     return rooms
+
+
+async def seal_and_shelve(ctx: TickContext, site: EntityRow, rooms: list[SiteRoomRow]) -> None:
+    table = ctx.rules.sites
+    draw = ctx.rng(f"site.records.{site.id}")
+    last = rooms[-1]
+    if await active_seal(ctx.session, site.id) is not None and "challenge" not in last.locked:
+        last.challenge = SiteChallenge.SEAL
+    for room in rooms:
+        if room.kind in RECORD_ROOMS and draw.chance(table.room_item_pct):
+            ctx.session.add(RoomContentRow(room_id=room.id, kind=RoomContentKind.RECORDS, strength=table.records_strength))
 
 
 async def holder_of(ctx: TickContext, site: EntityRow) -> int | None:
@@ -249,6 +265,9 @@ async def loot(ctx: TickContext, delver: EntityRow, room: SiteRoomRow, walk: Wal
             await apply_hits(
                 ctx, target, Harm(table.beast_wound, HarmCause.QUEST, f"fell to {delver.name} in its lair", source_node_id=delver.id, killer_id=delver.id)
             )
+        elif content.kind is RoomContentKind.RECORDS:
+            walk.read += await unsettle_accounts(ctx, delver, AnomalyKind.CONTRARY_RECORD, room.site_entity_id)
+            await ctx.session.delete(content)
         elif (
             content.kind is RoomContentKind.SPIRIT and target is not None and ctx.rng(f"site.rest.{content.id}.{ctx.epoch}").chance(table.spirit_rest_pct)
         ) or content.kind is RoomContentKind.TRAP:
@@ -261,13 +280,40 @@ async def walk_room(ctx: TickContext, delver: EntityRow, room: SiteRoomRow, comp
         return True
     draw = ctx.rng(f"site.walk.{room.id}.{delver.id}.{ctx.epoch}")
     wits = (stat_or(delver, "strength", 0) + stat_or(delver, "cunning", 0)) / 2 * table.delve_skill_pct / PERCENT
-    if wits + company * table.delve_company_pct + draw.die(PERCENT) >= room.difficulty + draw.die(PERCENT):
+    passed = wits + company * table.delve_company_pct + draw.die(PERCENT) >= room.difficulty + draw.die(PERCENT)
+    if room.challenge is SiteChallenge.SEAL:
+        return await meet_seal(ctx, delver, room, passed=passed)
+    if passed:
         return True
+    if not ROOM_CHALLENGES[room.challenge].harms:
+        await record_incident(
+            ctx,
+            "site.challenge",
+            roles={IncidentRole.ACTOR: delver.id, IncidentRole.PLACE: room.site_entity_id},
+            facts={"challenge": room.challenge, "room": room.kind, "passed": 0},
+            place=room.site_entity_id,
+        )
+        return False
     beasts = [content for content in await contents_of(ctx, room.id) if content.kind is RoomContentKind.BEAST]
     harm = table.guardian_hp if room.challenge is SiteChallenge.GUARDIAN or beasts else table.delve_hp
     await apply_hits(ctx, delver, Harm(harm, HarmCause.QUEST, f"fell in the {spoken(room.kind)} of a site it walked"))
     walk.harmed = True
     return False
+
+
+async def meet_seal(ctx: TickContext, delver: EntityRow, room: SiteRoomRow, *, passed: bool) -> bool:
+    seal = await active_seal(ctx.session, room.site_entity_id)
+    broken = seal is not None and passed and not held(room.site_entity_id) and "broken_epoch" not in seal.locked
+    if seal is not None and broken:
+        seal.broken_epoch = ctx.epoch
+    await record_incident(
+        ctx,
+        "site.challenge",
+        roles={IncidentRole.ACTOR: delver.id, IncidentRole.PLACE: room.site_entity_id},
+        facts={"challenge": room.challenge, "room": room.kind, "passed": int(broken or seal is None)},
+        place=room.site_entity_id,
+    )
+    return broken or seal is None
 
 
 async def delve(ctx: TickContext, delver: EntityRow, site: EntityRow, companions: int = 0) -> Walk:

@@ -148,6 +148,7 @@ const PLAN = {
   militia: 496,
   garrison_id: null,
   free_city: false,
+  settle_mode: 'ground',
   charter_id: null,
   siege_supplies: 365,
   siege_water: 120,

@@ -18,6 +18,7 @@ import {
   CHARM_POWERS,
   LUCK_REACHES,
   LUCK_SIGNS,
+  COLOURS,
   MISHAP_KINDS,
   RESPONSES,
 } from './labels'
@@ -140,15 +141,20 @@ function BeliefCard({ row, blocked }: { row: Belief; blocked: string | null }) {
   )
   const sign = LUCK_SIGNS[row.sign]
   const reach = LUCK_REACHES[row.reach]
+  const mark = row.species
+    ? ` · read in ${row.species.name}`
+    : row.colour
+      ? ` · read in ${COLOURS[row.colour].label.toLowerCase()}`
+      : ''
   return (
     <Held
       icon={sign.icon}
       tone={row.lucky ? 'success' : 'warning'}
       title={row.name}
-      caption={`${row.lucky ? 'Lucky' : 'Unlucky'} · ${sign.label.toLowerCase()} · touches ${reach.label.toLowerCase()}`}
+      caption={`${row.lucky ? 'Lucky' : 'Unlucky'} · ${sign.label.toLowerCase()}${mark} · touches ${reach.label.toLowerCase()}`}
       removeLabel='Strike the belief'
       editTitle='Set the belief'
-      note='A belief about luck makes its people read misfortunes it touches as omens or fate and answer them with rites; a belief that touches battle steadies or shakes their armies.'
+      note='A belief about luck makes its people read misfortunes it touches as omens or fate and answer them with rites; a belief that touches battle steadies or shakes their armies, one that touches trade, unions or building sways deals, the newly wed and works under way when its sign is read.'
       fields={[
         { key: 'name', label: 'Belief', kind: 'text' },
         { key: 'sign', label: 'Sign', kind: 'pick', table: table(LUCK_SIGNS) },
@@ -159,12 +165,30 @@ function BeliefCard({ row, blocked }: { row: Belief; blocked: string | null }) {
           table: table(LUCK_REACHES),
         },
         { key: 'lucky', label: 'Lucky', kind: 'pick', table: YES_NO },
+        {
+          key: 'species_entity_id',
+          label: 'Kind of creature read',
+          kind: 'node',
+          types: ['species'],
+        },
+        {
+          key: 'colour',
+          label: 'Colour read',
+          kind: 'pick',
+          table: table(COLOURS),
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
       onEdit={action.onEdit}
       onRemove={action.onRemove}
-      extra={<Tag item={reach} />}
+      extra={
+        <div className='flex min-w-0 flex-wrap gap-2'>
+          <Tag item={reach} />
+          {row.colour && <Tag item={COLOURS[row.colour]} />}
+          {row.species && <Ref node={row.species} empty='no creature' />}
+        </div>
+      }
     />
   )
 }
@@ -241,6 +265,8 @@ export function MishapPanel({
   const [mishap, setMishap] = useState('bad_luck')
   const [sign, setSign] = useState('day')
   const [reach, setReach] = useState('harvest')
+  const [creature, setCreature] = useState<number | null>(null)
+  const [colour, setColour] = useState('red')
   const [belief, setBelief] = useState('')
   const [item, setItem] = useState<number | null>(
     kind === 'item' ? nodeId : null
@@ -264,6 +290,8 @@ export function MishapPanel({
       reach: reach as Belief['reach'],
       lucky: true,
       name: belief.trim(),
+      species_id: sign === 'animal' ? creature : null,
+      colour: sign === 'colour' ? (colour as Belief['colour']) : null,
     }),
     'The people believe it'
   )
@@ -282,7 +310,13 @@ export function MishapPanel({
   )
   const beliefBusy = why(
     blocked ??
-      (people === null ? NO_PEOPLE : !belief.trim() ? 'Name the belief' : null),
+      (people === null
+        ? NO_PEOPLE
+        : !belief.trim()
+          ? 'Name the belief'
+          : sign === 'animal' && creature === null
+            ? 'A sign read in a creature names the kind of creature'
+            : null),
     believing.isPending
   )
   const charmBusy = why(
@@ -419,6 +453,29 @@ export function MishapPanel({
           placeholder='Choose'
           blocked={blocked}
           onPick={setReach}
+        />
+        <NodePicker
+          label='Kind of creature read'
+          value={creature}
+          onChange={setCreature}
+          blocked={
+            sign === 'animal'
+              ? blocked
+              : 'Only a sign read in a creature names one'
+          }
+          types={['species']}
+        />
+        <MindPicker
+          label='Colour read'
+          value={colour}
+          table={table(COLOURS)}
+          placeholder='Choose'
+          blocked={
+            sign === 'colour'
+              ? blocked
+              : 'Only a sign read in a colour names one'
+          }
+          onPick={setColour}
         />
       </ForgeCard>
       <ForgeCard

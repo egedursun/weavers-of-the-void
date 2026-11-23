@@ -30,6 +30,7 @@ from aerona.engine.body.cohorts import tend_cohorts
 from aerona.engine.body.conditions import CONDITION_KEY, condition_of, end_condition, gain_condition
 from aerona.engine.body.customs import SUFFERING_DOMAINS, customs_of, ensure_customs, maimed_for_rule, people_of
 from aerona.engine.body.digits import backfill_digits, backfill_plan_counts, replan
+from aerona.engine.body.gravity import bear_gravity
 from aerona.engine.body.healing import heal_wounds
 from aerona.engine.body.hits import Harm, weighted
 from aerona.engine.body.package_fixups import backfill_packages
@@ -625,6 +626,7 @@ async def body_conditions(ctx: TickContext) -> None:
             await _addiction(ctx, mortal, addicted)
             await _pain(ctx, mortal)
     ctx.count("weather_wounds", exposed)
+    ctx.count("gravity_strained", await bear_gravity(ctx))
 
 
 async def _wholeness(ctx: TickContext) -> None:

@@ -10,6 +10,9 @@ P = RuleGroup.THE_GODS_POWER
 @dataclass(frozen=True)
 class DominionRules:
     temple_weight: int = rule(30, 0, 200, D, "Dominion a fully splendid, fully staffed temple of a god radiates over its region")
+    veiled_below: int = rule(20, 0, 100, D, "Strength of manifestation below which a god's peoples see it only veiled, in signs and dreams")
+    veiled_witness_pct: int = rule(50, 0, 100, D, "Share of the witnesses, awe and rival offence a veiled god's miracles count (%)")
+    rival_miracle_offence: int = rule(3, 0, 100, D, "Relation the god who rules a region loses with another god who works an open miracle there")
     holy_site_weight: int = rule(20, 0, 200, D, "Dominion a fully sacred place kept by a god's faithful radiates over its region")
     throne_weight: int = rule(25, 0, 200, D, "Dominion a throne of power radiates for the god who holds it")
     prophet_weight: int = rule(10, 0, 200, D, "Dominion each prophet or saint of a god radiates over the region they live in")

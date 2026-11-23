@@ -62,6 +62,7 @@ class PetitionView(ApiModel):
     office: NodeRef
     kind: PetitionKind
     defendant: NodeRef | None
+    target: NodeRef | None
     bribe: int
     status: PetitionStatus
     filed_epoch: int

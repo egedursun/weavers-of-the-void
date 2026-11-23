@@ -9,6 +9,7 @@ class NetworkCarrier(StrEnum):
     MIND_LINK = "mind_link"
     RITE_LINK = "rite_link"
     GROWN_LINK = "grown_link"
+    DREAM_LINK = "dream_link"
 
 
 class NetworkAccess(StrEnum):
@@ -24,6 +25,7 @@ class NetworkRole(StrEnum):
     END = "end"
     RELAY = "relay"
     ARCHIVE = "archive"
+    GATEWAY = "gateway"
 
 
 class OutageCause(StrEnum):
@@ -38,3 +40,5 @@ class OutageCause(StrEnum):
     SHORTAGE = "shortage"
     DIVINE = "divine"
     ICE_STORM = "ice_storm"
+    QUAKE = "quake"
+    SHUTDOWN = "shutdown"

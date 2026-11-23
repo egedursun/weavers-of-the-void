@@ -307,7 +307,7 @@ MORTAL_CASES: dict[str, Case] = {
     "create_culture": folk(plain(name="Lamp Night", description=TEXT[:200])),
     "discover_resource": folk(plain(name="Amber Seam", description=TEXT[:200], location_id=region)),
     "claim_resource": folk(plain(resource_id=resource)),
-    "found_settlement": folk(plain(name="Lanternford", description=TEXT[:200], location_id=region)),
+    "found_settlement": folk(plain(name="Lanternford", description=TEXT[:200], location_id=region, mode="ground")),
     "establish_trade": folk(plain(target_id=settlement, goods="lamps and grain")),
     "declare_war": folk(plain(target_id=created("settlement"), reason=REASON), second_settlement),
     "sabotage": Case(plain(target_id=people, how="loosen the mill gears"), actor=by_faction),
@@ -401,6 +401,8 @@ MORTAL_CASES: dict[str, Case] = {
     "lift_affliction": named(plain(affliction_id=created("affliction"), cure="medicine"), afflicted_healer),
     "choose_path": named(plain(path="trade")),
     "improve_soil": named(plain(nutrient="organic"), deep_land),
+    "lay_geas_on_kin": named(plain(child_id=lambda _realm, ids: ids["child"], mode="taboo", act="cowardice"), child_at_home),
+    "swear_geas": named(plain(mode="taboo", act="oathbreaking")),
     "appoint_court": named(plain(position="jester", mortal_id=created("mortal")), court_seat),
     "take_client": named(plain(client_id=created("mortal"), role="artist"), second_mortal),
     "set_rights": named(plain(category="resident_foreigner", right="vote", granted=True), ruler),
@@ -636,7 +638,7 @@ MORTAL_CASES: dict[str, Case] = {
     "release_debt": named(plain(gift_id=created("gift")), given_gift),
     "answer_gift": named(plain(gift_id=created("gift")), owed_gift),
     "refuse_gift": named(plain(gift_id=created("gift")), owed_gift),
-    "make_offering": named(plain(value=5), devout),
+    "make_offering": named(plain(value=5, mode="bargain"), devout),
     "free_bound": named(plain(town_id=settlement, share=50, path="purchase"), bound_town),
     "lay_corvee": named(plain(town_id=settlement, work_id=created("work"), share=20), raising_work),
     "begin_realm_plan": named(plain(kind="conversion", name="The Turning", target_id=settlement, steps=5, secrecy=40), ruled_realm),
@@ -671,7 +673,9 @@ MORTAL_CASES: dict[str, Case] = {
     "found_club": named(plain(kind="mind_games")),
     "fix_contest": named(plain(match_id=created("match"), side=created("home")), played_match),
     "take_contract": named(plain(contract_id=created("contract")), posted_contract),
-    "command_construct": named(plain(construct_id=created("construct"), kind="serve", target_id=settlement), built_construct),
+    "command_construct": named(
+        plain(construct_id=created("construct"), kind="carry", target_id=settlement, condition="at_set_times", times="day"), built_construct
+    ),
     "forecast_seasons": named(plain(long_season_id=lambda _realm, ids: ids["long_season"]), sky_scholar),
     "set_economic_order": named(
         plain(polity_id=created("polity"), ownership="state", allocation="redistribution", labour="corvee", distribution="by_office", reason=REASON),

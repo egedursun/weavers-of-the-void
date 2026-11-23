@@ -14,6 +14,7 @@ class WorldEndDeclare(Command):
     cause: WorldEndCause
     state: WorldEnd | None = None
     new_type: WorldType | None = None
+    source_id: int | None = None
 
 
 class WorldEndEdit(Edited):
@@ -29,7 +30,12 @@ async def world_end_declare(scope: PlayerScope, command: WorldEndDeclare) -> Eff
     creator = await scope.creator()
     guards.charge(creator, scope.rules.world_ends.end_cost, "world_ends.end_cost")
     row = await control.declare_end(
-        await scope.context("world_end_declare"), command.world_id, command.state or CAUSE_END[command.cause], command.cause, command.new_type
+        await scope.context("world_end_declare"),
+        command.world_id,
+        command.state or CAUSE_END[command.cause],
+        command.cause,
+        command.new_type,
+        source_node_id=command.source_id,
     )
     return Effect(f"The world is {spoken(row.state)}.", target_node_id=command.world_id, essence_spent=scope.rules.world_ends.end_cost)
 

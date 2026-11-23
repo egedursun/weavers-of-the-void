@@ -4,14 +4,14 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.body import BodyFunction
-from aerona.domain.enums.constructs import CommandToken, InstructionBinding, OrderCondition, OrderKind
+from aerona.domain.enums.constructs import CommandToken, InstructionBinding, OrderCondition, OrderKind, OrderTime
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
 
 CONSTRUCT_FIELDS = ("material", "power_source", "power", "upkeep", "maker_entity_id", "decay", "soul_entity_id")
 SET_FIELDS = ("binding", "command_token", "token_entity_id", "holder_node_id", "kill_switch", "kill_token_entity_id", "literalness")
-ORDER_FIELDS = ("kind", "target_node_id", "priority", "condition", "until_epoch", "lapsed")
+ORDER_FIELDS = ("kind", "target_node_id", "priority", "condition", "until_epoch", "times", "lapsed")
 REMADE_FIELDS = ("lost_function", "forced_function", "sentenced_by_entity_id", "grievance", "bound_to_entity_id")
 
 
@@ -63,6 +63,7 @@ class InstructionOrderRow(Base):
     priority: Mapped[int] = mapped_column(default=1)
     condition: Mapped[OrderCondition] = mapped_column(enum_type(OrderCondition, "condition"), default=OrderCondition.ALWAYS)
     until_epoch: Mapped[int | None]
+    times: Mapped[OrderTime | None] = mapped_column(enum_type(OrderTime, "times"))
     lapsed: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

@@ -16,6 +16,7 @@ from aerona.catalog.units import (
     UnitSpec,
     weapon_of,
 )
+from aerona.catalog.war_grounds import WAR_GROUNDS
 from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
@@ -39,12 +40,14 @@ from aerona.domain.enums.military import (
     UnitKind,
 )
 from aerona.domain.enums.mortal import HarshnessScale
+from aerona.domain.enums.world_view import WarTerrain
 from aerona.engine.economy.materials import MaterialProps, from_spec
 from aerona.engine.environment.battleground import cover_missile_pct
 from aerona.engine.military.command import family_factor
 from aerona.engine.military.tables import counters, defender_cell, matchup, terrain_cell, unit_terrain, weather_cell
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.recording.record import StepDraft
+from aerona.rules.model import keyed
 from aerona.rules.registry import Rules
 from aerona.rules.registry.scale import ScaleRules
 
@@ -100,6 +103,7 @@ class Stack:
     captured: int = 0
     missing: int = 0
     deserted: int = 0
+    barred: bool = False
     seen: tuple[int, int, bool, Formation] | None = None
 
     @property
@@ -286,6 +290,7 @@ class Field:
     ford: bool = False
     cover: PlaceCover | None = None
     earthworks: int = 0
+    ground: WarTerrain = WarTerrain.LAND
 
 
 MELEE_FIRST = (F.INFANTRY, F.EXOTIC, F.SPECIAL, F.BEAST, F.MOUNTED, F.VEHICLE, F.ENGINEER, F.MAGIC, F.MISSILE, F.AIR, F.SPACE, F.ELECTRONIC)
@@ -367,8 +372,16 @@ def hard_guard(rules: Rules, target: Stack, attackers: list[Stack] | None) -> fl
 
 
 def battle_width(rules: Rules, ground: Field, fog: bool) -> int:
-    width = TERRAIN[ground.terrain or TerrainKind.PLAIN].width * rules.battle_depth.width_scale
-    return round(width * (rules.battle_depth.fog_width_pct / PERCENT if fog or ground.weather is WeatherKind.FOG else 1.0))
+    spec = WAR_GROUNDS[ground.ground]
+    terrain = TerrainKind.PLAIN if spec.three_dimensional or ground.terrain is None else ground.terrain
+    width = TERRAIN[terrain].width * rules.battle_depth.width_scale * keyed(rules.war_grounds, ground.ground.value, "frontage") / PERCENT
+    blind = fog or ground.weather is WeatherKind.FOG or spec.blind
+    return round(width * (rules.battle_depth.fog_width_pct / PERCENT if blind else 1.0))
+
+
+def fights_here(stack: Stack, ground: Field) -> bool:
+    fighters = WAR_GROUNDS[ground.ground].fighters
+    return fighters is None or stack.spec.family in fighters
 
 
 def deploy(rules: Rules, side: Side, ground: Field) -> None:
@@ -378,7 +391,8 @@ def deploy(rules: Rules, side: Side, ground: Field) -> None:
     for stack in order:
         if not stack.alive:
             continue
-        stack.reserve = stack.hidden or filled >= side.width
+        stack.barred = not fights_here(stack, ground)
+        stack.reserve = stack.hidden or stack.barred or filled >= side.width
         if not stack.reserve:
             filled += stack.row.count
 
@@ -389,7 +403,10 @@ def front_room(side: Side) -> int:
 
 def refill(side: Side, *, everyone: bool = False) -> int:
     committed = 0
-    waiting = sorted((stack for stack in side.stacks if stack.alive and stack.reserve and not stack.hidden), key=lambda stack: (-stack.row.count, stack.row.id))
+    waiting = sorted(
+        (stack for stack in side.stacks if stack.alive and stack.reserve and not stack.hidden and not stack.barred),
+        key=lambda stack: (-stack.row.count, stack.row.id),
+    )
     for stack in waiting:
         if not everyone and front_room(side) <= 0:
             break

@@ -5,7 +5,18 @@ from sqlalchemy import Select, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.gatherings import EXCAVATION_FLAGS, EXCAVATION_PLACES, STAGE_ORDER, STAGE_SKILLS, STAGE_TECHNIQUES
-from aerona.catalog.life.sites import CURSES, FIND_CLASSES, FINDS, LOST_TECHNIQUES, RISKS
+from aerona.catalog.life.sites import (
+    CURSES,
+    DIG_RISKS,
+    EVERY_BATTLE_FEATURES,
+    FEATURES,
+    FIND_ANOMALIES,
+    FIND_CLASSES,
+    FINDS,
+    FOUND_PLANS,
+    LOST_TECHNIQUES,
+    RISKS,
+)
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -14,15 +25,19 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.gatherings import CollectionMemberRow
+from aerona.db.tables.mass_weapons import WarRemnantRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.place import PlaceProfileRow
+from aerona.db.tables.region import RegionMemoryRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sites import BattlefieldFeatureRow, ExcavationRow, ExcavationStageRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import BattleRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.culture import ItemDeed, Technique
+from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
@@ -31,6 +46,7 @@ from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.region import MemoryOrigin, RegionMemoryKind
 from aerona.domain.enums.site import BattlefieldFeature, ExcavationFind, ExcavationRisk, ExcavationStage, ExcavationStatus
 from aerona.domain.models.entity_stats import ItemStats, SpiritStats
 from aerona.engine.body.afflictions import afflict
@@ -38,11 +54,15 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.features import add_stock
 from aerona.engine.cosmos.routes import reveal_hidden_route
+from aerona.engine.disease.control import loose
 from aerona.engine.environment.book import add_scar
+from aerona.engine.environment.region_control import add_memory
 from aerona.engine.grave_goods.robbery import unearth_graves
 from aerona.engine.history.collections import open_collection
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore import items
+from aerona.engine.lore.blueprints import found_design
 from aerona.engine.lore.research_depth import add_progress
 from aerona.engine.means.containers import read_marks
 from aerona.engine.military.engineering import earthworks_of
@@ -52,9 +72,12 @@ from aerona.engine.orders.savings import unearth_hoards
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import FactInput
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import realm_of_community
+from aerona.engine.sites.accounts import ground_risks, remnant_near, sealed_disease, unsettle_accounts
+from aerona.rules.model import keyed
 
 
 @dataclass
@@ -118,7 +141,14 @@ async def plan_stages(ctx: TickContext, dig: ExcavationRow) -> None:
     table = ctx.rules.excavations
     draw = ctx.rng(f"dig.stages.{dig.id}")
     finds = (*FINDS, ExcavationFind.WAKING) if await sleepers_at(ctx, dig.site_entity_id) else FINDS
+    site = await ctx.session.get(EntityRow, dig.site_entity_id)
+    grounds = await ground_risks(ctx, site) if site is not None else []
     for index, stage in enumerate(STAGE_ORDER):
+        risk = draw.pick(list(RISKS)) if draw.chance(table.risk_pct) else ExcavationRisk.NONE
+        for ground in grounds:
+            rule = DIG_RISKS[ground].rule
+            if rule is not None and draw.chance(keyed(ctx.rules.sites, rule.removesuffix("_pct"), "pct")):
+                risk = ground
         ctx.session.add(
             ExcavationStageRow(
                 excavation_id=dig.id,
@@ -126,7 +156,7 @@ async def plan_stages(ctx: TickContext, dig: ExcavationRow) -> None:
                 skill=STAGE_SKILLS[stage],
                 technique=STAGE_TECHNIQUES.get(stage),
                 difficulty=clamp_int(table.difficulty_base + table.difficulty_step * index, 0, PERCENT),
-                risk=draw.pick(list(RISKS)) if draw.chance(table.risk_pct) else ExcavationRisk.NONE,
+                risk=risk,
                 find=draw.pick(list(finds)) if draw.chance(table.find_pct) else ExcavationFind.NOTHING,
                 locked=[],
             )
@@ -266,7 +296,43 @@ async def suffer(ctx: TickContext, dig: ExcavationRow, risk: ExcavationRisk, sit
         if ctx.rng(f"dig.collapse.{dig.id}.{dig.stage.value}").chance(table.collapse_end_pct) and "status" not in dig.locked:
             dig.status, dig.ended_epoch = ExcavationStatus.COLLAPSED, ctx.epoch
         return {"risk": risk, "harm": table.collapse_hp}
+    return await suffer_ground(ctx, dig, risk, site, leader)
+
+
+async def suffer_ground(ctx: TickContext, dig: ExcavationRow, risk: ExcavationRisk, site: EntityRow, leader: EntityRow) -> dict[str, FactInput]:
+    table = ctx.rules.excavations
+    if risk is ExcavationRisk.FLOODING:
+        await apply_hits(ctx, leader, Harm(table.collapse_hp // 2, HarmCause.ACCIDENT, f"was caught when water broke into the dig at {site.name}"))
+        if "progress" not in dig.locked:
+            dig.progress = dig.progress // 2
+        if "status" not in dig.locked:
+            dig.status = ExcavationStatus.STALLED
+        await tell_risk(ctx, dig, risk, site, leader)
+        return {"risk": risk, "harm": table.collapse_hp // 2}
+    if risk is ExcavationRisk.GAS:
+        await apply_hits(ctx, leader, Harm(table.collapse_hp, HarmCause.ACCIDENT, f"breathed the bad air of the dig at {site.name}"))
+        if ctx.rng(f"dig.gas.{dig.id}.{dig.stage.value}").chance(table.collapse_end_pct) and "status" not in dig.locked:
+            dig.status, dig.ended_epoch = ExcavationStatus.COLLAPSED, ctx.epoch
+        await tell_risk(ctx, dig, risk, site, leader)
+        return {"risk": risk, "harm": table.collapse_hp}
+    if risk is ExcavationRisk.DISEASE:
+        atlas = await RegionAtlas.load(ctx.session)
+        region_id = atlas.top_region(site.id)
+        if region_id is not None and not held(region_id):
+            await loose(ctx, region_id, disease_id=await sealed_disease(ctx, site), severity=table.find_power, son_id=None)
+        await tell_risk(ctx, dig, risk, site, leader)
+        return {"risk": risk}
     return {}
+
+
+async def tell_risk(ctx: TickContext, dig: ExcavationRow, risk: ExcavationRisk, site: EntityRow, leader: EntityRow) -> None:
+    await record_incident(
+        ctx,
+        "dig.risk",
+        roles={IncidentRole.ACTOR: leader.id, IncidentRole.PLACE: site.id, IncidentRole.PATRON: dig.sponsor_node_id},
+        facts={"risk": risk, "stage": dig.stage},
+        place=site.id,
+    )
 
 
 async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRow, site: EntityRow, leader: EntityRow) -> dict[str, FactInput]:
@@ -284,6 +350,12 @@ async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRo
     if stage.find is ExcavationFind.WAKING:
         woken = await wake_sleepers(ctx, site, leader)
         return {**found, **({"find": stage.find, "woken": woken} if woken else {})}
+    shaken = await unsettle_accounts(ctx, leader, FIND_ANOMALIES[stage.find], site.id) if stage.find in FIND_ANOMALIES else 0
+    if stage.find is ExcavationFind.REMAINS:
+        mourners = await gleaner_of(ctx, site)
+        if mourners is not None and not held(mourners.id):
+            shift_stat(mourners, "piety", ctx.rules.sites.remains_piety)
+        return {**found, "find": stage.find, "shaken": shaken}
     keeper = dig.sponsor_node_id or leader.id
     technique = ctx.rng(f"dig.technique.{dig.id}.{stage.id}").pick(list(LOST_TECHNIQUES))
     if stage.find is ExcavationFind.TECHNIQUE:
@@ -303,13 +375,18 @@ async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRo
     await items.profile_of(ctx, item, FIND_CLASSES[stage.find])
     await items.give(ctx, item, keeper, ItemDeed.OWNED, f"unearthed at {site.name}")
     stage.find_entity_id = item.id
+    if stage.find in FOUND_PLANS:
+        work = await ctx.session.get(StructureProfileRow, site.id)
+        holder = await ctx.session.get(EntityRow, keeper) or leader
+        plan = BlueprintKind.STRUCTURE if work is not None else BlueprintKind.ARTIFACT_PATTERN
+        await found_design(ctx, holder, site, plan, work.kind.value if work is not None else FIND_CLASSES[stage.find].value)
     if stage.find is ExcavationFind.ROUTE_MAP:
         hidden = await ctx.session.scalar(
             select(RouteRow.id).where(RouteRow.known.is_(False), (RouteRow.world_a_id == site.world_id) | (RouteRow.world_b_id == site.world_id)).limit(1)
         )
         if hidden is not None:
             await reveal_hidden_route(ctx, int(hidden), site.id)
-    return {**found, "find": stage.find, "item": item.id}
+    return {**found, "find": stage.find, "item": item.id, "shaken": shaken}
 
 
 async def dig_on(ctx: TickContext, dig: ExcavationRow, tally: DigTally) -> None:
@@ -386,11 +463,24 @@ async def mark_battlefields(ctx: TickContext, tally: DigTally) -> None:
         place = await ctx.session.get(EntityRow, place_id)
         region = await ctx.session.get(RegionEnvironmentRow, place.location_id) if place is not None and place.location_id is not None else None
         fortified = battle.siege_id is not None or earthworks_of(region) > 0
-        for feature in BattlefieldFeature:
-            if feature is BattlefieldFeature.EARTHWORKS and not fortified:
-                continue
+        remnant = await remnant_near(ctx, place) if place is not None else None
+        features = [
+            *EVERY_BATTLE_FEATURES,
+            *([BattlefieldFeature.EARTHWORKS] if fortified else []),
+            *([BattlefieldFeature.ORDNANCE] if remnant is not None else []),
+            *([BattlefieldFeature.MEMORIAL] if dead >= ctx.rules.sites.memorial_dead else []),
+        ]
+        for feature in features:
             ctx.session.add(
-                BattlefieldFeatureRow(place_entity_id=place_id, feature=feature, strength=strength, battle_id=battle.id, epoch=ctx.epoch, locked=[])
+                BattlefieldFeatureRow(
+                    place_entity_id=place_id,
+                    feature=feature,
+                    strength=strength,
+                    battle_id=battle.id,
+                    remnant_id=remnant.id if feature is BattlefieldFeature.ORDNANCE and remnant is not None else None,
+                    epoch=ctx.epoch,
+                    locked=[],
+                )
             )
         tally.graves += 1
 
@@ -432,5 +522,48 @@ async def tend_battlefields(ctx: TickContext, tally: DigTally) -> None:
                 if taken:
                     await add_stock(ctx, gleaner, CommodityKind.WEAPONS, taken)
                     tally.gleaned += taken
-        if "strength" not in row.locked:
+        if row.feature is BattlefieldFeature.ORDNANCE:
+            await ordnance_harms(ctx, row, place)
+        if row.feature is BattlefieldFeature.MEMORIAL:
+            await memorial_draws(ctx, row, place)
+        if "strength" not in row.locked and FEATURES[row.feature].decays:
             row.strength = clamp_int(row.strength - table.feature_decay, 0, PERCENT)
+
+
+async def ordnance_harms(ctx: TickContext, row: BattlefieldFeatureRow, place: EntityRow) -> None:
+    remnant = await ctx.session.get(WarRemnantRow, row.remnant_id) if row.remnant_id is not None else None
+    if remnant is not None and "strength" not in row.locked:
+        row.strength = clamp_int(remnant.density * (PERCENT - remnant.cleared) // PERCENT, 0, PERCENT)
+    elif remnant is None and "strength" not in row.locked:
+        row.strength = clamp_int(row.strength - ctx.rules.excavations.feature_decay, 0, PERCENT)
+    crossers = await gleaner_of(ctx, place)
+    if crossers is None or held(crossers.id) or not ctx.rng(f"ordnance.{row.id}.{ctx.epoch}").chance(row.strength):
+        return
+    population = stat(crossers, "population") or 0
+    dead = min(max(0, population - 1), round_half_up(ctx.rules.sites.ordnance_harm * row.strength / PERCENT))
+    if dead <= 0:
+        return
+    with flowing(FlowCategory.DISASTER):
+        shift_stat(crossers, "population", -dead)
+    await record_incident(
+        ctx,
+        "battlefield.ordnance",
+        roles={IncidentRole.VICTIM: crossers.id, IncidentRole.PLACE: place.id},
+        facts={"feature": row.feature, "dead": dead, "strength": row.strength},
+        place=place.id,
+    )
+
+
+async def memorial_draws(ctx: TickContext, row: BattlefieldFeatureRow, place: EntityRow) -> None:
+    pilgrims = await gleaner_of(ctx, place)
+    if pilgrims is not None and not held(pilgrims.id):
+        shift_stat(pilgrims, "piety", round_half_up(ctx.rules.sites.memorial_piety * row.strength / PERCENT))
+    atlas = await RegionAtlas.load(ctx.session)
+    region_id = atlas.top_region(place.id)
+    if region_id is None or held(region_id):
+        return
+    key = f"memorial.{row.id}"
+    if await ctx.session.scalar(select(RegionMemoryRow.id).where(RegionMemoryRow.region_entity_id == region_id, RegionMemoryRow.source_key == key)) is not None:
+        return
+    memory = await add_memory(ctx.session, region_id, RegionMemoryKind.BATTLE, row.strength, f"the memorial at {place.name}", epoch=ctx.epoch, held=False)
+    memory.source_key, memory.origin = key, MemoryOrigin.DERIVED

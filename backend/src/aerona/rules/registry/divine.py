@@ -84,6 +84,12 @@ class DivineWoundRules:
     wider_weight: int = rule(15, 0, 100, G, "Weight of each of drained essence, lost worshippers, binding, split aspect and forgotten name among divine wounds")
     worshippers_per_severity: int = rule(5, 0, 100, G, "Worshipping communities a god loses per hundred points of a wound of lost worshippers")
     drain_pct: int = rule(10, 0, 100, G, "Share of a drained essence wound's severity the god loses from its essence or faith each epoch (%)")
+    neglect_severity: int = rule(30, 1, 100, G, "Severity of the wound of neglect a god takes when no people worships it any more")
+    neglect_pct: int = rule(20, 0, 100, G, "Chance each epoch a god whose worship has thinned below its threshold takes a wound of neglect (%)")
+    neglect_share: int = rule(10, 0, 100, G, "Share of the peoples that regard a god who must still worship it before neglect wounds it (%)")
+    betrayal_severity: int = rule(35, 1, 100, G, "Severity of the wound a god takes when one in its service turns on it")
+    betrayal_pct: int = rule(50, 0, 100, G, "Chance a servitor or ally that turns on its god wounds it (%)")
+    mortal_slayer_severity: int = rule(45, 1, 100, G, "Severity of the wound a mortal deals a god by a deed of god-bane, a true name or a rite")
 
 
 @dataclass(frozen=True)

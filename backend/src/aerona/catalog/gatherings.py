@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.core.total import total
@@ -263,11 +265,11 @@ ROOM_PLACES = MappingProxyType(
         PlaceKind.LAIR: (R.GATE, R.HALL, R.LAIR, R.STORE),
         PlaceKind.CAVE: (R.GATE, R.CHAMBER, R.LAIR),
         PlaceKind.CAVERN_SYSTEM: (R.GATE, R.STAIR, R.CHAMBER, R.CHAMBER, R.LAIR, R.HEART),
-        PlaceKind.RUIN: (R.GATE, R.HALL, R.CELL, R.LIBRARY, R.VAULT),
+        PlaceKind.RUIN: (R.GATE, R.HALL, R.CISTERN, R.CELL, R.LIBRARY, R.VAULT),
         PlaceKind.SHRINE_SITE: (R.GATE, R.HALL, R.SHRINE),
         PlaceKind.DEAD_GOD_SITE: (R.GATE, R.CHAMBER, R.CRYPT, R.HEART),
         PlaceKind.BURIAL_GROUND: (R.GATE, R.CRYPT, R.CRYPT, R.VAULT),
-        PlaceKind.MINE_SITE: (R.GATE, R.STAIR, R.CHAMBER, R.STORE),
+        PlaceKind.MINE_SITE: (R.GATE, R.STAIR, R.CHAMBER, R.FORGE, R.STORE),
         PlaceKind.WRECK_SITE: (R.GATE, R.HALL, R.STORE, R.VAULT),
         PlaceKind.MEGASTRUCTURE_RUIN: (R.GATE, R.STAIR, R.HALL, R.LABORATORY, R.VAULT, R.HEART),
         PlaceKind.CANYON: (R.GATE, R.CHAMBER, R.LAIR),
@@ -280,7 +282,11 @@ ROOM_STRUCTURES = MappingProxyType(
         StructureKind.WATCHTOWER: (R.GATE, R.STAIR, R.ARMOURY),
         StructureKind.MONASTERY: (R.GATE, R.HALL, R.CELL, R.LIBRARY, R.SHRINE),
         StructureKind.CITADEL: (R.GATE, R.HALL, R.ARMOURY, R.VAULT, R.CHAMBER),
-        StructureKind.FORT: (R.GATE, R.HALL, R.ARMOURY, R.STORE),
+        StructureKind.FORT: (R.GATE, R.HALL, R.ARMOURY, R.CISTERN, R.STORE),
+        StructureKind.CISTERN: (R.GATE, R.STAIR, R.CISTERN, R.CISTERN),
+        StructureKind.RESERVOIR: (R.GATE, R.STAIR, R.CISTERN),
+        StructureKind.FORGE: (R.GATE, R.FORGE, R.STORE),
+        StructureKind.FOUNDRY: (R.GATE, R.HALL, R.FORGE, R.FORGE, R.STORE),
         StructureKind.PALACE: (R.GATE, R.HALL, R.CHAMBER, R.VAULT),
         StructureKind.PRISON: (R.GATE, R.CELL, R.CELL, R.HALL),
         StructureKind.TEMPLE: (R.GATE, R.HALL, R.SHRINE, R.VAULT),
@@ -366,8 +372,41 @@ ROOM_SETTLEMENTS = total(
     },
 )
 
-ITEM_ROOMS = frozenset({R.VAULT, R.STORE, R.ARMOURY, R.LIBRARY, R.CRYPT, R.HEART})
-GUARDED_ROOMS = frozenset({R.LAIR, R.HEART, R.VAULT, R.CRYPT})
+
+@dataclass(frozen=True)
+class RoomSpec:
+    items: bool = False
+    guarded: bool = False
+    records: bool = False
+    wet: bool = False
+
+
+ROOMS: Mapping[SiteRoomKind, RoomSpec] = total(
+    SiteRoomKind,
+    {
+        R.GATE: RoomSpec(),
+        R.HALL: RoomSpec(),
+        R.STAIR: RoomSpec(),
+        R.CELL: RoomSpec(),
+        R.CHAMBER: RoomSpec(),
+        R.VAULT: RoomSpec(items=True, guarded=True),
+        R.SHRINE: RoomSpec(records=True),
+        R.LAIR: RoomSpec(guarded=True),
+        R.LIBRARY: RoomSpec(items=True, records=True),
+        R.ARMOURY: RoomSpec(items=True),
+        R.CRYPT: RoomSpec(items=True, guarded=True),
+        R.LABORATORY: RoomSpec(records=True),
+        R.HOUSE: RoomSpec(),
+        R.STORE: RoomSpec(items=True),
+        R.HEART: RoomSpec(items=True, guarded=True),
+        R.CISTERN: RoomSpec(wet=True),
+        R.FORGE: RoomSpec(items=True),
+    },
+)
+ITEM_ROOMS = frozenset(kind for kind, spec in ROOMS.items() if spec.items)
+GUARDED_ROOMS = frozenset(kind for kind, spec in ROOMS.items() if spec.guarded)
+RECORD_ROOMS = frozenset(kind for kind, spec in ROOMS.items() if spec.records)
+WET_ROOMS = frozenset(kind for kind, spec in ROOMS.items() if spec.wet)
 
 EXCAVATION_PLACES = frozenset(
     {

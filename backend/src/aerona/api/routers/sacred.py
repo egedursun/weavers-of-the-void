@@ -110,6 +110,7 @@ def petition_view(row: PetitionRow, refs: dict[int, NodeRef]) -> PetitionView:
         office=ref(refs, row.office_spirit_id),
         kind=row.kind,
         defendant=at(refs, row.defendant_spirit_id),
+        target=at(refs, row.target_node_id),
         bribe=row.bribe,
         status=row.status,
         filed_epoch=row.filed_epoch,
@@ -430,7 +431,11 @@ async def node_sacred(services: ServicesDep, node_id: NodeId) -> SacredNodeView:
                 node_id,
                 *(item for row in spirits for item in (row.spirit_entity_id, row.place_entity_id, row.community_entity_id)),
                 *(item for row in offices for item in (row.spirit_entity_id, row.superior_spirit_id, row.overseer_node_id, row.jurisdiction_entity_id)),
-                *(item for row in petitions for item in (row.petitioner_node_id, row.office_spirit_id, row.defendant_spirit_id, row.appealed_to_id)),
+                *(
+                    item
+                    for row in petitions
+                    for item in (row.petitioner_node_id, row.office_spirit_id, row.defendant_spirit_id, row.target_node_id, row.appealed_to_id)
+                ),
                 *(item for row in all_mystics for item in (row.mortal_entity_id, row.answered_by_node_id, row.cult_entity_id, row.founded_entity_id)),
                 *(row.sender_node_id for row in visions),
                 *(

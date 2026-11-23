@@ -679,6 +679,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.assistive_aids",
     "table.augment_effects",
     "table.augments",
+    "table.blueprints",
     "table.bodies",
     "table.body_customs",
     "table.bonds",

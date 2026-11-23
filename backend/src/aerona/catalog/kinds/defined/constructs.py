@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.constructs import MindWill, OrderCondition
+from aerona.domain.enums.constructs import MindWill
 
 MIND_WILL = total(
     MindWill,
@@ -67,6 +67,7 @@ MIND_WILL = total(
                 "engine.constructs.orders.FREE_WILLS",
                 "engine.constructs.orders.WILL_LADDER",
                 "engine.minds.crimes.WILLED",
+                "engine.minds.kinds.FREE_WILLS",
                 "engine.minds.phase.grow_will",
                 "engine.minds.profiles.WILL_ORDER",
                 "engine.minds.profiles.born",
@@ -95,36 +96,10 @@ MIND_WILL = total(
                 "engine.constructs.orders.FREE_WILLS",
                 "engine.constructs.orders.WILL_LADDER",
                 "engine.minds.crimes.WILLED",
+                "engine.minds.kinds.FREE_WILLS",
                 "engine.minds.phase.exceed",
                 "engine.minds.profiles.WILL_ORDER",
             ),
         ),
-    },
-)
-
-ORDER_CONDITION = total(
-    OrderCondition,
-    {
-        OrderCondition.ALWAYS: Defined(
-            "Always",
-            checked_by=("engine.constructs.orders.holds",),
-            used_by=(
-                "db.tables.constructs.InstructionOrderRow",
-                "engine.constructs.making.make_construct",
-                "services.player.constructs.OrderDraft",
-                "tools.mortal.arts.command_construct",
-                "tools.son.arts.order_construct",
-            ),
-        ),
-        OrderCondition.WHILE_MAKER_LIVES: Defined(
-            "While its maker lives", checked_by=("engine.constructs.orders.holds", "engine.constructs.orders.lapses"), used_by=()
-        ),
-        OrderCondition.UNTIL_DATE: Defined(
-            "Until an epoch",
-            checked_by=("engine.constructs.control.give_order", "engine.constructs.orders.holds", "engine.constructs.orders.lapses"),
-            used_by=(),
-        ),
-        OrderCondition.WHEN_ATTACKED: Defined("When attacked", checked_by=("engine.constructs.orders.holds",), used_by=()),
-        OrderCondition.WHEN_TOKEN_SHOWN: Defined("When the token is shown", checked_by=("engine.constructs.orders.holds",), used_by=()),
     },
 )

@@ -3,6 +3,8 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.law_exceptions import LAW_EXCEPTIONS
+from aerona.catalog.life.divine import WOUND_CAUSES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import spoken
@@ -26,11 +28,24 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, DomainHook, GoalSource, GoalState, GodGoalKind, SonPunishment, VotingRule, WoundCause
+from aerona.domain.enums.divine import (
+    CouncilMotion,
+    DivineWoundKind,
+    DomainHook,
+    GoalSource,
+    GoalState,
+    GodGoalKind,
+    LawException,
+    PenanceDeed,
+    SonPunishment,
+    VotingRule,
+    WoundCause,
+)
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.context import TickContext
 from aerona.engine.divine.avatars import manifest, withdraw
@@ -38,7 +53,7 @@ from aerona.engine.divine.creator import attention_row
 from aerona.engine.divine.foreign import seal_pact
 from aerona.engine.divine.goals import SON_ONLY, TARGET_TYPES
 from aerona.engine.divine.gods import God, divine_of, god_of
-from aerona.engine.divine.laws import profile_for
+from aerona.engine.divine.laws import KIND_TYPES, profile_for
 from aerona.engine.divine.motions import Motion
 from aerona.engine.divine.outer import outer_profile
 from aerona.engine.divine.rulings import enact, record
@@ -48,6 +63,7 @@ from aerona.engine.lifecycle.states import state_of
 from aerona.engine.polity.control import lock
 from aerona.engine.primitives.edits import bounds, coerce
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record as tell
 
 
 def apply[Row: Base](row: Row, values: Mapping[str, Any], release: list[str]) -> Row:
@@ -178,9 +194,23 @@ async def clear_standing(ctx: TickContext, community_id: int, god_id: int) -> No
     await ctx.session.flush()
 
 
-async def wound_god(ctx: TickContext, god_id: int, kind: DivineWoundKind, severity: int, domain: Domain | None) -> DivineWoundRow:
+async def wound_god(
+    ctx: TickContext,
+    god_id: int,
+    kind: DivineWoundKind,
+    severity: int,
+    domain: Domain | None,
+    *,
+    cause: WoundCause = WoundCause.CREATOR,
+    cause_node_id: int | None = None,
+) -> DivineWoundRow:
     god = await require_god(ctx, god_id)
-    row = await inflict(ctx, god, kind, WoundCause.CREATOR, severity=severity, domain=domain)
+    dealer = await ctx.session.get(EntityRow, cause_node_id) if cause_node_id is not None else None
+    if WOUND_CAUSES[cause].by_mortal and (dealer is None or dealer.entity_type is not EntityType.MORTAL):
+        raise ValidationFailedError("A wound dealt by a mortal's deed names the mortal who dealt it.")
+    if cause_node_id is not None and dealer is None and await god_of(ctx.session, cause_node_id) is None:
+        raise NotFoundError("No such dealer of the wound.")
+    row = await inflict(ctx, god, kind, cause, severity=severity, domain=domain, cause_node_id=cause_node_id)
     if row is None:
         raise ValidationFailedError(f"{god.name} has no domain left to sever." if kind is DivineWoundKind.SEVERED_DOMAIN else f"{god.name} is held.")
     return row
@@ -282,10 +312,13 @@ async def decree(
     school: MagicSchool | None = None,
     punishment: SonPunishment | None = None,
     voting_rule: VotingRule | None = None,
+    penance_deed: PenanceDeed | None = None,
 ) -> tuple[CouncilRulingRow, list[str]]:
     if motion is CouncilMotion.NONE:
         raise ValidationFailedError("Choose a decision for the council to carry.")
-    row = await record(ctx, Motion(motion, target_id, world_id, school, punishment, voting_rule), council_id=None, note_text="by the Creator's word")
+    row = await record(
+        ctx, Motion(motion, target_id, world_id, school, punishment, voting_rule, penance_deed), council_id=None, note_text="by the Creator's word"
+    )
     members = list(await ctx.session.scalars(select(SonRow).order_by(SonRow.id)))
     return row, await enact(ctx, row, members)
 
@@ -320,11 +353,36 @@ async def edit_law(ctx: TickContext, law_id: int, values: Mapping[str, Any], rel
     row = await profile_for(ctx, law)
     if row is None:
         raise ValidationFailedError(f"{law.name} has no working yet; give it one first.")
+    before = (row.exception, row.exempt_kind_entity_id)
     apply(row, values, release)
     if "effect" in values:
         law.natural_law = row.effect
+    await settle_exemption(ctx, law, row, before, None)
     await ctx.session.flush()
     return row
+
+
+async def settle_exemption(
+    ctx: TickContext, law: EntityRow, row: NaturalLawProfileRow, before: tuple[LawException, int | None], by_node_id: int | None
+) -> bool:
+    if not LAW_EXCEPTIONS[row.exception].names_kind:
+        row.exempt_kind_entity_id = None
+    elif row.exempt_kind_entity_id is None:
+        raise ValidationFailedError("A law that spares a named kind must name the species or people it spares.")
+    else:
+        kind = await living_entity(ctx.session, row.exempt_kind_entity_id)
+        if kind is None or kind.entity_type not in KIND_TYPES:
+            raise ValidationFailedError("A law spares a living species or people.")
+    if (row.exception, row.exempt_kind_entity_id) == before:
+        return False
+    await tell(
+        ctx,
+        "law.exempted",
+        roles={IncidentRole.SUBJECT: law.id, IncidentRole.BENEFICIARY: row.exempt_kind_entity_id, IncidentRole.ACTOR: by_node_id},
+        facts={"exception": row.exception},
+        world_id=law.world_id,
+    )
+    return True
 
 
 async def edit_outer(ctx: TickContext, being_id: int, values: Mapping[str, Any], release: list[str]) -> OuterBeingProfileRow:

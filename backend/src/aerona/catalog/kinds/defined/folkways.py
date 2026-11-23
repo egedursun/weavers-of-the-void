@@ -1,17 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.folkways import LuckReach, Purification
-
-LUCK_REACH = total(
-    LuckReach,
-    {
-        LuckReach.HARVEST: Defined("Harvest", checked_by=(), used_by=("engine.folkways.mishaps.HARVEST", "services.player.folkways.BeliefDraft")),
-        LuckReach.HEALTH: Defined("Health", checked_by=(), used_by=("engine.folkways.mishaps.HEALTH",)),
-        LuckReach.BIRTH: Defined("Birth", checked_by=(), used_by=("engine.folkways.mishaps.REACHES",)),
-        LuckReach.JOURNEY: Defined("Journeys", checked_by=(), used_by=("engine.folkways.mishaps.JOURNEY",)),
-        LuckReach.BATTLE: Defined("Battle", checked_by=("engine.folkways.fed.battle_luck",), used_by=("engine.folkways.mishaps.REACHES",)),
-    },
-)
+from aerona.domain.enums.folkways import Purification
 
 PURIFICATION = total(
     Purification,

@@ -38,6 +38,7 @@ class AllocationMode(StrEnum):
     GIFT = "gift"
     NEED = "need"
     ABUNDANCE = "abundance"
+    LOTTERY = "lottery"
 
 
 class OrderLabour(StrEnum):

@@ -66,6 +66,19 @@ class TravelRules:
     contact_trade_relation: int = rule(15, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Relation gain of a first contact that turns into trade")
     alliance_relation: int = rule(15, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Relation gain of an inter-world alliance")
     uneasy_relation_loss: int = rule(5, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Relation loss of an uneasy first contact")
+    exile_unrest: int = rule(
+        60, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Unrest of a settlement from which it sends those it will not keep into exile across the worlds"
+    )
+    exile_intent_chance: int = rule(40, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Chance an unruly community's journey is one of exile (%)")
+    flight_intent_chance: int = rule(
+        30, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Chance a community at war or under plague sends its people in flight to another world (%)"
+    )
+    embassy_intent_chance: int = rule(15, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Chance a journey to a peopled world is an embassy (%)")
+    embassy_relation: int = rule(20, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Relation gain when an embassy from another world is received")
+    embassy_gift_prosperity: int = rule(3, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Prosperity the gifts of an embassy carry from its senders to its hosts")
+    flight_sickness_pct: int = rule(
+        200, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "How much more readily refugees in flight carry the sicknesses of their home to where they land (%)"
+    )
     exploration_charisma: int = rule(8, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Charisma gain from an exploration or pilgrimage expedition")
     trade_prosperity: int = rule(8, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Prosperity gain from a trade expedition")
     route_knowledge_cap: int = rule(

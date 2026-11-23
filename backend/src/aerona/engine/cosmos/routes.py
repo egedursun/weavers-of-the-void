@@ -45,7 +45,7 @@ from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyS
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.records import CargoLine, JourneyEvent, PassengerLine
 from aerona.engine.body.hits import Harm
-from aerona.engine.climes.windows import window_delay
+from aerona.engine.climes.windows import PHYSICAL, window_delay
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.journey_record import JOURNEY_STEPS, journey_step
 from aerona.engine.cosmos.placement import Cosmography, cosmography_of, within_reach
@@ -62,6 +62,7 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.research import has_technique
 from aerona.engine.primitives.knowledge import branch_level, knows
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.physics import launch_delay
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, stat, stat_or
 from aerona.engine.recording.record import FactInput, StepDraft, kind_of, record
@@ -626,6 +627,8 @@ async def start_journey(ctx: TickContext, spec: JourneySpec) -> JourneyRow:
     fit = vessel_fit(rules, spec.vehicle, route.duration_epochs, carried)
     carried = min(fit.carried, rules.cosmography.ark_capacity) if route.method is TravelMethod.VOID_ARK else fit.carried
     waiting = await window_delay(session, rules, route.method, (origin, destination), ctx.epoch)
+    if route.method in PHYSICAL:
+        waiting = max(0, waiting + launch_delay(await session.get(WorldRow, origin)))
     remaining = max(1, 1 if folding else route.duration_epochs - shortened + fit.extra_epochs + waiting)
     leaving = carried
     carried, sacrifice = await _gate_sacrifice(ctx, spec, carried)

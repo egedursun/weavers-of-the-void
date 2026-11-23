@@ -89,6 +89,9 @@ async def grammar_view(session: AsyncSession, row: RiteGrammarRow | None) -> Gra
         range=row.range,
         duration=row.duration,
         target=row.target,
+        condition=row.condition,
+        condition_act=row.condition_act,
+        condition_epoch=row.condition_epoch,
         difficulty=row.difficulty,
         paradigm=at(refs, row.paradigm_entity_id),
         myth=at(refs, row.myth_entity_id),
@@ -163,7 +166,8 @@ async def quest_views(session: AsyncSession, rows: list[HeroquestRow]) -> list[H
             state=row.state,
             boon=row.boon,
             interference=row.interference,
-            next_trial=trial_at(archetypes.get(row.legend_entity_id) if row.legend_entity_id is not None else None, row.step)
+            trial=row.trial,
+            next_trial=row.trial or trial_at(archetypes.get(row.legend_entity_id) if row.legend_entity_id is not None else None, row.step)
             if row.state is HeroquestState.QUESTING
             else None,
             members=[refs[item.entity_id] for item in members if item.heroquest_id == row.id and item.entity_id in refs],
@@ -195,7 +199,9 @@ async def mantling_views(session: AsyncSession, rows: list[MantlingRow]) -> list
 
 
 async def servitor_views(session: AsyncSession, rows: list[ServitorRow]) -> list[ServitorView]:
-    refs = await refs_for(session, [value for row in rows for value in (row.spirit_entity_id, row.god_node_id, row.post_entity_id, row.fallen_to_node_id)])
+    refs = await refs_for(
+        session, [value for row in rows for value in (row.spirit_entity_id, row.god_node_id, row.post_entity_id, row.fallen_to_node_id, row.former_god_node_id)]
+    )
     return [
         ServitorView(
             spirit=at(refs, row.spirit_entity_id),
@@ -205,6 +211,7 @@ async def servitor_views(session: AsyncSession, rows: list[ServitorRow]) -> list
             post=at(refs, row.post_entity_id),
             loyalty=row.loyalty,
             fallen_to=at(refs, row.fallen_to_node_id),
+            former_god=at(refs, row.former_god_node_id),
             since_epoch=row.since_epoch,
             locked=list(row.locked),
         )

@@ -8,6 +8,7 @@ from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapper, class_mapper
 
+from aerona.catalog.war_grounds import WAR_GROUNDS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -30,6 +31,7 @@ from aerona.db.tables.military import (
 from aerona.db.tables.warfare import BattleRow, CaptiveRow, CasusBelliRow, SiegeRow, WarProductionRow, WarRow
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.military import UnitKind
+from aerona.domain.enums.world_view import WarTerrain
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import key_parts, set_node_material
 from aerona.engine.military.units import stacks_of, sync
@@ -314,7 +316,7 @@ async def delete_record(ctx: TickContext, key: str, record_id: int) -> int | Non
 
 
 def battle_field(battle: BattleRow, names: dict[int, str]) -> str:
-    notes: list[str] = []
+    notes: list[str] = [] if battle.ground is WarTerrain.LAND else [f"fought {WAR_GROUNDS[battle.ground].label.lower()}"]
     if battle.width:
         notes.append(f"front of {battle.width:,}")
     if battle.reserves_committed:

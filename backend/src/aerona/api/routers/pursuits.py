@@ -88,6 +88,7 @@ def set_view(row: InstructionSetRow, orders: list[InstructionOrderRow], refs: di
                 priority=order.priority,
                 condition=order.condition,
                 until_epoch=order.until_epoch,
+                times=order.times,
                 lapsed=order.lapsed,
                 locked=order.locked,
             )

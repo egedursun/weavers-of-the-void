@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Amphora,
   Atom,
   Axe,
@@ -112,6 +111,7 @@ import {
   Theater,
   Tornado,
   Trees,
+  type LucideIcon,
   Unlink,
   UserCog,
   Users,
@@ -689,6 +689,10 @@ export const BRANCH_TONE: Record<Schemas['KnowledgeBranch'], KpiTone> = {
   biomancy: 'verdigris',
   forbidden: 'danger',
   civics: 'gold',
+  law: 'gold',
+  natural_history: 'success',
+  language_lore: 'verdigris',
+  mathematics: 'info',
 }
 
 const BRANCH_LABEL: Partial<Record<Schemas['KnowledgeBranch'], string>> = {

@@ -2,6 +2,7 @@ from pydantic import Field
 
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.arcana import RiteEnd
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import (
     ArtMode,
@@ -280,6 +281,8 @@ class CastingView(ApiModel):
     succeeded: bool
     backlash: BacklashKind | None
     effect: str
+    ended_epoch: int | None
+    end: RiteEnd | None
 
 
 class RiteCard(ApiModel):

@@ -15,6 +15,7 @@ from aerona.db.record_context import Term
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, ResearchProgressRow
 from aerona.db.tables.discovery import ResearchIncidentRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
@@ -98,6 +99,7 @@ async def strike(
         for scholar in await scholars_of(ctx, holder.id):
             harm = Harm(table.incident_hp * severity / PERCENT, cause, "died of what the work let loose", damage_type=damage)
             await apply_hits(ctx, scholar, harm, lethal=False)
+    await fortune_follows(ctx, holder, kind, technique)
     if kind is ResearchIncident.LEAK and technique is not None:
         for other in sorted(await neighbours(ctx.session, atlas, holder.id))[:1]:
             if not held(other) and not await has_technique(ctx.session, other, technique):
@@ -192,6 +194,37 @@ async def dangerous_arts(ctx: TickContext) -> int:
     return struck
 
 
+async def fortune_follows(ctx: TickContext, holder: EntityRow, kind: ResearchIncident, technique: Technique | None) -> None:
+    table = ctx.rules.discovery
+    if technique is None:
+        return
+    if kind is ResearchIncident.STOLEN:
+        thief = await thief_of(ctx, holder.id)
+        if thief is not None and not await has_technique(ctx.session, thief, technique):
+            await add_progress(ctx, thief, technique, table.stolen_progress)
+    if kind is ResearchIncident.CHANCE_FIND:
+        await add_progress(ctx, holder.id, technique, table.chance_find_progress)
+
+
+async def thief_of(ctx: TickContext, holder_id: int) -> int | None:
+    owners = await ctx.session.scalars(
+        select(SpyNetworkRow.owner_entity_id).where(SpyNetworkRow.target_entity_id == holder_id).order_by(SpyNetworkRow.owner_entity_id)
+    )
+    return next((owner for owner in owners if owner != holder_id and not held(owner)), None)
+
+
+async def turns_of_fortune(ctx: TickContext, holder: EntityRow, technique: Technique, branch: KnowledgeBranch) -> int:
+    table = ctx.rules.discovery
+    rng = ctx.rng(f"research.fortune.{holder.id}.{technique.value}.{ctx.epoch}")
+    if rng.chance(table.chance_find_pct):
+        await strike(ctx, holder, ResearchIncident.CHANCE_FIND, technique=technique, branch=branch)
+        return 1
+    if rng.chance(table.stolen_pct) and await thief_of(ctx, holder.id) is not None:
+        await strike(ctx, holder, ResearchIncident.STOLEN, technique=technique, branch=branch)
+        return 1
+    return 0
+
+
 async def accidents(ctx: TickContext) -> int:
     table = ctx.rules.discovery
     struck = 0
@@ -201,10 +234,11 @@ async def accidents(ctx: TickContext) -> int:
     for row in list(active):
         branch = TECHNIQUES[row.technique].branch
         incidents = ACCIDENT_BRANCHES.get(branch) or (ACCIDENTS_RESEARCH_INCIDENTS if row.technique is Technique.ALCHEMY else ())
-        if not incidents:
-            continue
         holder = await ctx.session.get(EntityRow, row.holder_entity_id)
         if holder is None or holder.status is not EntityStatus.CANON or held(holder.id):
+            continue
+        struck += await turns_of_fortune(ctx, holder, row.technique, branch)
+        if not incidents:
             continue
         rng = ctx.rng(f"research.accident.{holder.id}.{row.technique.value}.{ctx.epoch}")
         if rng.chance(table.accident_pct):

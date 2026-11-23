@@ -48,13 +48,19 @@ def along_curve(points: list[list[int]], epoch: int) -> int | None:
     return clamp_int(ordered[-1][1], 0, PERCENT)
 
 
-def deeper_aim(rules: Rules, row: StorytellerRow, epoch: int) -> int | None:
+def deeper_aim(rules: Rules, row: StorytellerRow, epoch: int, seasons: int = 0) -> int | None:
     table = rules.storyteller_depth
     shaped = along_curve(row.target_points or [], epoch)
     if shaped is not None:
         return shaped
     if row.profile is StorytellerProfile.SLOW_BURN:
         return clamp_int(table.slow_burn_step * epoch, 0, PERCENT)
+    if row.profile is StorytellerProfile.GENTLE:
+        return clamp_int(rules.storyteller.steady_target * table.gentle_pct // PERCENT, 0, PERCENT)
+    if row.profile is StorytellerProfile.SEASONAL:
+        turn = max(2, seasons)
+        rising = (epoch + row.cycle_offset) % turn < turn // 2
+        return clamp_int(rules.storyteller.steady_target + (table.seasonal_swing if rising else -table.seasonal_swing), 0, PERCENT)
     if row.profile is StorytellerProfile.EPISODIC:
         return table.episode_peak if (epoch + row.cycle_offset) % table.episode_epochs == table.episode_epochs - 1 else rules.storyteller.steady_target // 2
     return None

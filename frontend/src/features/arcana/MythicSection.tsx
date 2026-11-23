@@ -231,6 +231,11 @@ function QuestCard({
             ? `${quest.realm_kind_name} · ${realm.label}`
             : realm.label}
         </Chip>
+        {quest.trial && (
+          <Chip icon={TRIALS[quest.trial].icon}>
+            {`Held by a god to ${TRIALS[quest.trial].label.toLowerCase()}`}
+          </Chip>
+        )}
         {quest.next_trial && (
           <Chip icon={TRIALS[quest.next_trial].icon}>
             {`Next: ${TRIALS[quest.next_trial].label.toLowerCase()}`}
@@ -278,6 +283,12 @@ function QuestCard({
             table: realmKinds,
           },
           { key: 'boon', label: 'Boon', kind: 'pick', table: table(BOONS) },
+          {
+            key: 'trial',
+            label: 'Trial it must meet',
+            kind: 'pick',
+            table: table(TRIALS),
+          },
           { key: 'steps', label: 'Steps', kind: 'number', min: 1 },
           { key: 'step', label: 'Step reached', kind: 'number', min: 0 },
           {
@@ -574,6 +585,14 @@ function ServitorCard({
             'Post',
             <Ref key='post' node={servitor.post} empty='no fixed post' />,
           ],
+          [
+            'Served before',
+            <Ref
+              key='former'
+              node={servitor.former_god}
+              empty='no other god'
+            />,
+          ],
         ]}
       />
       <RecordEditor
@@ -604,6 +623,12 @@ function ServitorCard({
           {
             key: 'fallen_to_node_id',
             label: 'Fallen to (god id)',
+            kind: 'number',
+            min: 1,
+          },
+          {
+            key: 'former_god_node_id',
+            label: 'God it served before (id)',
             kind: 'number',
             min: 1,
           },

@@ -16,6 +16,9 @@ class GeniusLocusKind(StrEnum):
     FIELD = "field"
     CITY = "city"
     HEARTH = "hearth"
+    SEA = "sea"
+    RUIN = "ruin"
+    BATTLEFIELD = "battlefield"
 
 
 class SpiritOffence(StrEnum):
@@ -23,6 +26,8 @@ class SpiritOffence(StrEnum):
     CLEARING = "clearing"
     UNPAID = "unpaid"
     TABOO = "taboo"
+    BLOODSHED = "bloodshed"
+    OVERHARVEST = "overharvest"
 
 
 class BureauRank(StrEnum):
@@ -40,6 +45,9 @@ class PetitionKind(StrEnum):
     SAFE_PASSAGE = "safe_passage"
     PROSPERITY = "prosperity"
     SUIT = "suit"
+    RAIN = "rain"
+    PROTECTION = "protection"
+    VENGEANCE = "vengeance"
 
 
 class PetitionStatus(StrEnum):
@@ -65,6 +73,8 @@ class VisionKind(StrEnum):
     UNION = "union"
     VOICE = "voice"
     TRANCE = "trance"
+    DREAM = "dream"
+    ORACLE_SPEECH = "oracle_speech"
 
 
 class MillenarianStage(StrEnum):
@@ -82,6 +92,8 @@ class TheodicyCause(StrEnum):
     FAMINE = "famine"
     DEFEAT = "defeat"
     DISASTER = "disaster"
+    PERSECUTION = "persecution"
+    LONG_SEASON = "long_season"
 
 
 class TheodicyResolution(StrEnum):
@@ -98,12 +110,15 @@ class SacramentKind(StrEnum):
     INITIATION = "initiation"
     MARRIAGE = "marriage"
     LAST_RITES = "last_rites"
+    PURIFICATION = "purification"
+    ORDINATION = "ordination"
 
 
 class SacramentProtection(StrEnum):
     ROUTING = "routing"
     POSSESSION = "possession"
     UNREST = "unrest"
+    CURSE = "curse"
 
 
 class AfterlifeModel(StrEnum):
@@ -124,6 +139,9 @@ class DivinationKind(StrEnum):
     ORACLE = "oracle"
     LOTS = "lots"
     DREAM_READING = "dream_reading"
+    SCRYING = "scrying"
+    SPIRIT_CONSULTATION = "spirit_consultation"
+    EARTH_SIGNS = "earth_signs"
 
 
 class DivinationValidity(StrEnum):
@@ -139,6 +157,9 @@ class DivinationQuestion(StrEnum):
     WEDDING = "wedding"
     CORONATION = "coronation"
     HARVEST = "harvest"
+    VOYAGE = "voyage"
+    FOUNDING = "founding"
+    ILLNESS = "illness"
 
 
 class OmenVerdict(StrEnum):

@@ -1,24 +1,31 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
-from aerona.catalog.arcana import SCHOOL_GRAMMAR
+from aerona.catalog.arcana import RECHARGES, SCHOOL_GRAMMAR, SKY_SIGNS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.culture import ItemEnchantmentRow, ItemProfileRow, RiteProfileRow
 from aerona.db.tables.dominion import MagicSiteRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.arcana import RechargeRule, SpellForm
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.mind import ActKind
 from aerona.engine.arcana.vis import take_vis
 from aerona.engine.arcana.warping import expose
 from aerona.engine.body.afflictions import first_moon
 from aerona.engine.context import TickContext
+from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.stats import stat_or
+from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.stats import set_stats, stat_or
 
 FULL_MOON = PERCENT // 2
 
@@ -67,20 +74,75 @@ async def full_moon(ctx: TickContext, world_id: int | None) -> bool:
     return moon is not None and stat_or(moon, "brightness", FULL_MOON) >= FULL_MOON
 
 
+@dataclass(frozen=True)
+class Filling:
+    ctx: TickContext
+    atlas: RegionAtlas
+    spell: ItemEnchantmentRow
+    item: EntityRow
+
+
+async def by_site(fill: Filling) -> bool:
+    return await near_site(fill.ctx, fill.atlas, fill.item)
+
+
+async def by_vis(fill: Filling) -> bool:
+    owner = await owner_of(fill.ctx, fill.item.id)
+    return owner is not None and await take_vis(fill.ctx, owner, await form_of(fill.ctx, fill.spell), fill.ctx.rules.enchanted_items.vis_recharge_cost)
+
+
+async def by_moon(fill: Filling) -> bool:
+    return await full_moon(fill.ctx, fill.item.world_id)
+
+
+async def never(fill: Filling) -> bool:
+    return False
+
+
+async def by_sky(fill: Filling) -> bool:
+    if fill.item.world_id is None:
+        return False
+    sign = await fill.ctx.session.scalar(
+        select(SkyEventRow.id)
+        .where(
+            SkyEventRow.world_id == fill.item.world_id,
+            SkyEventRow.kind.in_(sorted(SKY_SIGNS)),
+            SkyEventRow.epoch <= fill.ctx.epoch,
+            or_(SkyEventRow.until_epoch.is_(None), SkyEventRow.until_epoch >= fill.ctx.epoch),
+        )
+        .limit(1)
+    )
+    return sign is not None
+
+
+async def by_offering(fill: Filling) -> bool:
+    owner_id = await owner_of(fill.ctx, fill.item.id)
+    owner = await living_entity(fill.ctx.session, owner_id) if owner_id is not None else None
+    if owner is None or owner.entity_type is not EntityType.MORTAL or held(owner.id) or stat_or(owner, "hp", 0) <= fill.ctx.rules.arcana.bodily_offering_harm:
+        return False
+    set_stats(owner, hp=stat_or(owner, "hp", 0) - fill.ctx.rules.arcana.bodily_offering_harm)
+    await judged(fill.ctx, owner.id, owner.id, ActKind.BLOOD_MAGIC, note="gave of its body to an enchanted thing")
+    return True
+
+
+FILLERS: Mapping[RechargeRule, Callable[[Filling], Awaitable[bool]]] = total(
+    RechargeRule,
+    {
+        RechargeRule.SITE: by_site,
+        RechargeRule.VIS: by_vis,
+        RechargeRule.MOON: by_moon,
+        RechargeRule.NONE: never,
+        RechargeRule.SKY_EVENT: by_sky,
+        RechargeRule.BODILY_OFFERING: by_offering,
+    },
+)
+
+
 async def recharge(ctx: TickContext, atlas: RegionAtlas, spell: ItemEnchantmentRow, item: EntityRow) -> int:
-    table = ctx.rules.enchanted_items
     room = spell.capacity - spell.charges
-    if room <= 0 or spell.recharge is RechargeRule.NONE:
+    if room <= 0 or not await FILLERS[spell.recharge](Filling(ctx, atlas, spell, item)):
         return 0
-    if spell.recharge is RechargeRule.SITE and await near_site(ctx, atlas, item):
-        gained = min(room, table.site_recharge)
-    elif spell.recharge is RechargeRule.MOON and await full_moon(ctx, item.world_id):
-        gained = min(room, table.moon_recharge)
-    elif spell.recharge is RechargeRule.VIS:
-        owner = await owner_of(ctx, item.id)
-        gained = 1 if owner is not None and await take_vis(ctx, owner, await form_of(ctx, spell), table.vis_recharge_cost) else 0
-    else:
-        gained = 0
+    gained = min(room, RECHARGES[spell.recharge].fill(ctx.rules))
     spell.charges += gained
     return gained
 

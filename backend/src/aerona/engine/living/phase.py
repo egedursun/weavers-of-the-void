@@ -3,6 +3,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.living.backfill import keep_kinds_alive, legacy_backfill
 from aerona.engine.living.disease import loose_designed
 from aerona.engine.living.kin import keep_banks, keep_symbionts
+from aerona.engine.living.line_works import trait_works
 from aerona.engine.living.lines import keep_lines
 from aerona.engine.living.production import blight_monocultures, heal_living_links, keep_living_works, seed_dues
 from aerona.engine.living.profiles import keep_profiles
@@ -49,4 +50,5 @@ async def keep_living(ctx: TickContext) -> None:
     ctx.count("clone_peoples", await clone_peoples(ctx))
     ctx.count("living_risings", await keep_standing(ctx))
     ctx.count("lands_shaped_by_life", await shape_lands(ctx))
+    ctx.count("line_traits_at_work", await trait_works(ctx))
     await ctx.session.flush()

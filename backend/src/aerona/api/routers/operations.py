@@ -239,6 +239,7 @@ def member_view(row: ExpeditionMemberRow, refs: dict[int, NodeRef]) -> Expeditio
         hunger=row.hunger,
         fatigue=row.fatigue,
         fallen=row.fallen,
+        departed=row.departed,
         locked=row.locked,
     )
 
@@ -260,7 +261,7 @@ def log_view(row: ExpeditionLogRow, refs: dict[int, NodeRef]) -> ExpeditionLogVi
 
 
 def expedition_view(row: ExpeditionRow, members: list[ExpeditionMemberRow], log: list[ExpeditionLogRow], refs: dict[int, NodeRef]) -> ExpeditionView:
-    held = {member.role for member in members if not member.fallen}
+    held = {member.role for member in members if not member.fallen and not member.departed}
     return ExpeditionView(
         id=row.id,
         name=row.name,
@@ -273,6 +274,7 @@ def expedition_view(row: ExpeditionRow, members: list[ExpeditionMemberRow], log:
         legs_total=row.legs_total,
         provisions=row.provisions,
         light=row.light,
+        air=row.air,
         tools=row.tools,
         medicine=row.medicine,
         darkness=row.darkness,

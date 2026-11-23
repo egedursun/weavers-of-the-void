@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.divine import SERVITOR_ORIGINS
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.grammar import an, spoken
@@ -24,6 +25,7 @@ from aerona.domain.models.entity_stats import SpiritStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, god_of, living_gods
+from aerona.engine.divine.wounds import betrayed
 from aerona.engine.faith.book import patron_node
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
@@ -82,14 +84,26 @@ async def make_servitor(
     return await enrol(ctx, spirit.id, god_id, role=role, post_id=post_id, origin=origin)
 
 
-async def enrol(ctx: TickContext, spirit_id: int, god_id: int, *, role: ServitorRole, post_id: int | None, origin: ServitorOrigin) -> ServitorRow:
+async def enrol(
+    ctx: TickContext, spirit_id: int, god_id: int, *, role: ServitorRole, post_id: int | None, origin: ServitorOrigin, former_god_id: int | None = None
+) -> ServitorRow:
     row = await ctx.session.get(ServitorRow, spirit_id)
     if row is None:
         row = ServitorRow(spirit_entity_id=spirit_id, god_node_id=god_id, locked=[])
         ctx.session.add(row)
+    spec = SERVITOR_ORIGINS[origin]
     row.god_node_id, row.role, row.post_entity_id, row.origin = god_id, role, post_id, origin
-    row.loyalty, row.since_epoch = ctx.rules.servitors.fall_at + PERCENT // 2, ctx.epoch
+    row.former_god_node_id = former_god_id if spec.names_former_god else None
+    row.loyalty = spec.loyalty(ctx.rules) if spec.loyalty is not None else ctx.rules.servitors.fall_at + PERCENT // 2
+    row.since_epoch = ctx.epoch
     await ctx.session.flush()
+    await record(
+        ctx,
+        "servitor.joined",
+        roles={IncidentRole.SUBJECT: spirit_id, IncidentRole.PATRON: god_id, IncidentRole.ORIGIN: row.former_god_node_id},
+        facts={"origin": origin, "origin_label": spec.label},
+        kind=ChronicleKind.WORLD,
+    )
     return row
 
 
@@ -116,13 +130,17 @@ async def new_master(ctx: TickContext, god: God | None, stream: str) -> int | No
 
 async def fall(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:
     table = ctx.rules.servitors
-    if row.loyalty >= table.fall_at or "god_node_id" in row.locked or not ctx.rng(f"servitor.fall.{row.spirit_entity_id}.{ctx.epoch}").chance(table.fall_pct):
+    chance = table.fall_pct * (table.defected_fall_pct / PERCENT if row.origin is ServitorOrigin.DEFECTED else 1)
+    if row.loyalty >= table.fall_at or "god_node_id" in row.locked or not ctx.rng(f"servitor.fall.{row.spirit_entity_id}.{ctx.epoch}").chance(chance):
         return
     master = await new_master(ctx, await god_of(ctx.session, row.god_node_id), f"servitor.master.{row.spirit_entity_id}")
     if master is None:
         return
     old = row.god_node_id
-    row.god_node_id, row.fallen_to_node_id, row.loyalty = master, master, PERCENT // 2
+    row.god_node_id, row.fallen_to_node_id, row.loyalty = master, master, table.defected_loyalty
+    if "origin" not in row.locked:
+        row.origin, row.former_god_node_id = ServitorOrigin.DEFECTED, old
+    await betrayed(ctx, old, row.spirit_entity_id)
     profile = await ctx.session.get(SpiritProfileRow, row.spirit_entity_id)
     if profile is not None and "alignment" not in profile.locked:
         profile.alignment = SpiritAlignment.VENGEFUL
@@ -248,9 +266,27 @@ async def raise_saints(ctx: TickContext, tally: ServitorTally) -> None:
         tally.raised += 1
 
 
+async def raise_offspring(ctx: TickContext, tally: ServitorTally) -> None:
+    table = ctx.rules.servitors
+    serving = set(await ctx.session.scalars(select(ServitorRow.spirit_entity_id)))
+    children = select(EntityRow.id).where(EntityRow.creator_son_id.is_not(None), EntityRow.entity_type == EntityType.MORTAL)
+    for spirit in list(
+        await ctx.session.scalars(select(SpiritProfileRow).where(SpiritProfileRow.origin_mortal_id.in_(children)).order_by(SpiritProfileRow.spirit_entity_id))
+    ):
+        if spirit.spirit_entity_id in serving or held(spirit.spirit_entity_id) or spirit.origin_mortal_id is None:
+            continue
+        child = await ctx.session.get(EntityRow, spirit.origin_mortal_id)
+        parent = await ctx.session.get(SonRow, child.creator_son_id) if child is not None and child.creator_son_id is not None else None
+        if parent is None or held(parent.id) or not ctx.rng(f"servitor.born.{spirit.spirit_entity_id}.{ctx.epoch}").chance(table.born_rise_pct):
+            continue
+        await enrol(ctx, spirit.spirit_entity_id, parent.id, role=ServitorRole.GUARD, post_id=None, origin=ServitorOrigin.BORN)
+        tally.raised += 1
+
+
 async def tend_servitors(ctx: TickContext, tally: ServitorTally) -> None:
     table = ctx.rules.servitors
     await raise_saints(ctx, tally)
+    await raise_offspring(ctx, tally)
     for row in list(await ctx.session.scalars(select(ServitorRow).order_by(ServitorRow.spirit_entity_id))):
         spirit = await ctx.session.get(EntityRow, row.spirit_entity_id)
         if spirit is None or spirit.status is not EntityStatus.CANON or held(row.spirit_entity_id, row.god_node_id):

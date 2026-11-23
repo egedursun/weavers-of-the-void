@@ -4,7 +4,10 @@ from types import MappingProxyType
 
 from aerona.catalog.carriers import CARRIERS
 from aerona.core.total import total
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.economy import TradeMode
+from aerona.domain.enums.environment import MovementMode
+from aerona.domain.enums.mind import SkillKind, TraitKind
 from aerona.domain.enums.operations import (
     CarrierKind,
     CrewStation,
@@ -117,35 +120,99 @@ CLASSIC_STATIONS = frozenset(station for station, spec in CREW_STATIONS.items() 
 STORM_CARE = frozenset(station for station, spec in CREW_STATIONS.items() if spec.storm_care)
 FIGHTING_STATIONS = frozenset(station for station, spec in CREW_STATIONS.items() if spec.fights)
 
-GROUND_LABELS: dict[ExpeditionGround, str] = {
-    ExpeditionGround.SITE: "a site",
-    ExpeditionGround.WILDS: "the wilds",
-    ExpeditionGround.UNDERWORLD: "an underworld stratum",
-    ExpeditionGround.REALM: "a mythic realm",
-}
 
-ROLE_CAPACITY: dict[ExpeditionRole, str] = {
-    ExpeditionRole.SCOUT: "scouting",
-    ExpeditionRole.GUIDE: "finding the way",
-    ExpeditionRole.HEALER: "healing",
-    ExpeditionRole.FIGHTER: "fighting",
-    ExpeditionRole.SCHOLAR: "reading inscriptions",
-    ExpeditionRole.PORTER: "carrying",
-}
+@dataclass(frozen=True)
+class GroundSpec:
+    label: str
+    air: bool = False
+    breathed_by: MovementMode | None = None
+    harm: HarmCause = HarmCause.QUEST
+    close: bool = False
+    placed: bool = False
 
-AFFLICTIONS = frozenset({ResolveKind.PARANOID, ResolveKind.HOPELESS, ResolveKind.SELFISH, ResolveKind.ABUSIVE})
-VIRTUES = frozenset({ResolveKind.COURAGEOUS, ResolveKind.FOCUSED, ResolveKind.STALWART})
 
-RESOLVE_EFFECTS: dict[ResolveKind, str] = {
-    ResolveKind.STEADY: "holds steady",
-    ResolveKind.PARANOID: "will not rest at camp",
-    ResolveKind.HOPELESS: "lingers, eating a companion's share, and gains more stress",
-    ResolveKind.SELFISH: "eats a companion's provisions",
-    ResolveKind.ABUSIVE: "raises the stress of every companion",
-    ResolveKind.COURAGEOUS: "lifts the stress of every companion",
-    ResolveKind.FOCUSED: "lowers the danger of every leg",
-    ResolveKind.STALWART: "sheds stress and shrugs off exposure",
-}
+GROUNDS: Mapping[ExpeditionGround, GroundSpec] = total(
+    ExpeditionGround,
+    {
+        ExpeditionGround.SITE: GroundSpec("a site", close=True),
+        ExpeditionGround.WILDS: GroundSpec("the wilds"),
+        ExpeditionGround.UNDERWORLD: GroundSpec("an underworld stratum", close=True),
+        ExpeditionGround.REALM: GroundSpec("a mythic realm"),
+        ExpeditionGround.UNDER_WATER: GroundSpec("the waters below", air=True, breathed_by=MovementMode.SUBMERGED, harm=HarmCause.EXPOSURE, placed=True),
+        ExpeditionGround.SPACE: GroundSpec("the void between worlds", air=True, harm=HarmCause.DECOMPRESSION, placed=True),
+        ExpeditionGround.DIMENSION: GroundSpec("another dimension", placed=True),
+    },
+)
+GROUND_LABELS: Mapping[ExpeditionGround, str] = MappingProxyType({ground: spec.label for ground, spec in GROUNDS.items()})
+AIRLESS = frozenset(ground for ground, spec in GROUNDS.items() if spec.air)
+CLOSE_GROUNDS = frozenset(ground for ground, spec in GROUNDS.items() if spec.close)
+PLACED_GROUNDS = frozenset(ground for ground, spec in GROUNDS.items() if spec.placed)
+
+
+@dataclass(frozen=True)
+class RoleSpec:
+    capacity: str
+    skill: SkillKind | None
+
+
+ROLES: Mapping[ExpeditionRole, RoleSpec] = total(
+    ExpeditionRole,
+    {
+        ExpeditionRole.SCOUT: RoleSpec("scouting", SkillKind.TRACKING),
+        ExpeditionRole.GUIDE: RoleSpec("finding the way", SkillKind.NAVIGATION),
+        ExpeditionRole.HEALER: RoleSpec("healing", SkillKind.MEDICINE),
+        ExpeditionRole.FIGHTER: RoleSpec("fighting", SkillKind.TACTICS),
+        ExpeditionRole.SCHOLAR: RoleSpec("reading inscriptions", SkillKind.LORE),
+        ExpeditionRole.PORTER: RoleSpec("carrying", None),
+        ExpeditionRole.WARDER: RoleSpec("warding against spirits, curses and workings", SkillKind.RITUAL),
+        ExpeditionRole.INTERPRETER: RoleSpec("speaking with those the party meets", SkillKind.LANGUAGES),
+        ExpeditionRole.CARTOGRAPHER: RoleSpec("mapping what is crossed", SkillKind.ASTRONOMY),
+        ExpeditionRole.ENGINEER: RoleSpec("shoring collapses and opening seals", SkillKind.ENGINEERING),
+    },
+)
+ROLE_CAPACITY: Mapping[ExpeditionRole, str] = MappingProxyType({role: spec.capacity for role, spec in ROLES.items()})
+ROLE_SKILLS: tuple[tuple[ExpeditionRole, SkillKind], ...] = tuple((role, spec.skill) for role, spec in ROLES.items() if spec.skill is not None)
+
+AFFLICTIONS = frozenset({ResolveKind.PARANOID, ResolveKind.HOPELESS, ResolveKind.SELFISH, ResolveKind.ABUSIVE, ResolveKind.FEARFUL, ResolveKind.IRRATIONAL})
+VIRTUES = frozenset({ResolveKind.COURAGEOUS, ResolveKind.FOCUSED, ResolveKind.STALWART, ResolveKind.COMPASSIONATE, ResolveKind.INSPIRED})
+
+RESOLVE_EFFECTS: Mapping[ResolveKind, str] = total(
+    ResolveKind,
+    {
+        ResolveKind.STEADY: "holds steady",
+        ResolveKind.PARANOID: "will not rest at camp",
+        ResolveKind.HOPELESS: "lingers, eating a companion's share, and gains more stress",
+        ResolveKind.SELFISH: "eats a companion's provisions",
+        ResolveKind.ABUSIVE: "raises the stress of every companion",
+        ResolveKind.COURAGEOUS: "lifts the stress of every companion",
+        ResolveKind.FOCUSED: "lowers the danger of every leg",
+        ResolveKind.STALWART: "sheds stress and shrugs off exposure",
+        ResolveKind.FEARFUL: "flees from blows and will not enter rooms",
+        ResolveKind.IRRATIONAL: "acts at random and stirs up danger",
+        ResolveKind.COMPASSIONATE: "tends every companion, easing stress and exposure",
+        ResolveKind.INSPIRED: "lifts the resolve of every companion",
+    },
+)
+RESOLVE_LEANINGS: Mapping[TraitKind, ResolveKind] = MappingProxyType(
+    {
+        TraitKind.CRAVEN: ResolveKind.FEARFUL,
+        TraitKind.ANXIOUS: ResolveKind.FEARFUL,
+        TraitKind.IMPULSIVE: ResolveKind.IRRATIONAL,
+        TraitKind.SCATTERBRAINED: ResolveKind.IRRATIONAL,
+        TraitKind.PARANOID: ResolveKind.PARANOID,
+        TraitKind.CRUEL: ResolveKind.ABUSIVE,
+        TraitKind.GREEDY: ResolveKind.SELFISH,
+        TraitKind.PESSIMISTIC: ResolveKind.HOPELESS,
+        TraitKind.BRAVE: ResolveKind.COURAGEOUS,
+        TraitKind.DISCIPLINED: ResolveKind.FOCUSED,
+        TraitKind.RESILIENT: ResolveKind.STALWART,
+        TraitKind.COMPASSIONATE: ResolveKind.COMPASSIONATE,
+        TraitKind.KIND: ResolveKind.COMPASSIONATE,
+        TraitKind.IDEALISTIC: ResolveKind.INSPIRED,
+        TraitKind.OPTIMISTIC: ResolveKind.INSPIRED,
+    }
+)
+QUARRELSOME = frozenset({TraitKind.WRATHFUL, TraitKind.STUBBORN, TraitKind.COMPETITIVE, TraitKind.RUDE, TraitKind.PROUD, TraitKind.BLUNT})
 
 
 @dataclass(frozen=True)
@@ -156,30 +223,41 @@ class QuirkSpec:
     effect: str
 
 
-QUIRKS: dict[QuirkKind, QuirkSpec] = {
-    spec.kind: spec
-    for spec in (
-        QuirkSpec(Q.FEARS_DARK, "Fears the dark", False, "gains twice the stress on a leg in the dark"),
-        QuirkSpec(Q.DARK_SIGHTED, "Sees in the dark", True, "darkness adds no danger to a party it walks with"),
-        QuirkSpec(Q.KNOWS_WAYS, "Knows the ways", True, "a party it leads needs one leg fewer"),
-        QuirkSpec(Q.EATS_ANYTHING, "Eats anything", True, "eats no provisions on a leg"),
-        QuirkSpec(Q.HARDY, "Hardy", True, "takes half the exposure"),
-        QuirkSpec(Q.FRAIL, "Frail", False, "takes half again the exposure"),
-        QuirkSpec(Q.JUMPY, "Jumpy", False, "gains twice the stress from an ambush"),
-        QuirkSpec(Q.STEADY_NERVES, "Steady nerves", True, "gains half the stress on a leg"),
-        QuirkSpec(Q.KEEN_EYED, "Keen-eyed", True, "scouts for the party whatever its role"),
-        QuirkSpec(Q.HOMESICK, "Homesick", False, "sets out on expeditions half as often and gains stress on the way"),
-        QuirkSpec(Q.RESTLESS, "Restless", True, "sets out on expeditions twice as often"),
-        QuirkSpec(Q.LIGHT_FINGERED, "Light-fingered", False, "brings home an extra find and unsettles its companions"),
-    )
-}
+QUIRKS: Mapping[QuirkKind, QuirkSpec] = total(
+    QuirkKind,
+    {
+        spec.kind: spec
+        for spec in (
+            QuirkSpec(Q.FEARS_DARK, "Fears the dark", False, "gains twice the stress on a leg in the dark"),
+            QuirkSpec(Q.DARK_SIGHTED, "Sees in the dark", True, "darkness adds no danger to a party it walks with"),
+            QuirkSpec(Q.KNOWS_WAYS, "Knows the ways", True, "a party it leads needs one leg fewer"),
+            QuirkSpec(Q.EATS_ANYTHING, "Eats anything", True, "eats no provisions on a leg"),
+            QuirkSpec(Q.HARDY, "Hardy", True, "takes half the exposure"),
+            QuirkSpec(Q.FRAIL, "Frail", False, "takes half again the exposure"),
+            QuirkSpec(Q.JUMPY, "Jumpy", False, "gains twice the stress from an ambush"),
+            QuirkSpec(Q.STEADY_NERVES, "Steady nerves", True, "gains half the stress on a leg"),
+            QuirkSpec(Q.KEEN_EYED, "Keen-eyed", True, "scouts for the party whatever its role"),
+            QuirkSpec(Q.HOMESICK, "Homesick", False, "sets out on expeditions half as often and gains stress on the way"),
+            QuirkSpec(Q.RESTLESS, "Restless", True, "sets out on expeditions twice as often"),
+            QuirkSpec(Q.LIGHT_FINGERED, "Light-fingered", False, "brings home an extra find and unsettles its companions"),
+            QuirkSpec(Q.CLAUSTROPHOBIC, "Fears close places", False, "gains twice the stress on a leg through a site or an underworld"),
+            QuirkSpec(Q.COLD_HARDY, "Cold-hardy", True, "takes no cold"),
+            QuirkSpec(Q.SWIMMER, "Swimmer", True, "needs no air under the water and takes half the wet"),
+            QuirkSpec(Q.LUCKY, "Lucky", True, "often escapes a blow that would fall on it"),
+        )
+    },
+)
 
-QUIRK_ORIGINS: dict[ExpeditionEvent, tuple[QuirkKind, QuirkKind]] = {
-    ExpeditionEvent.LEG: (Q.KNOWS_WAYS, Q.KEEN_EYED),
-    ExpeditionEvent.ROOM: (Q.FEARS_DARK, Q.DARK_SIGHTED),
-    ExpeditionEvent.EXPOSURE: (Q.FRAIL, Q.HARDY),
-    ExpeditionEvent.AMBUSH: (Q.JUMPY, Q.STEADY_NERVES),
-    ExpeditionEvent.CAMP: (Q.EATS_ANYTHING, Q.STEADY_NERVES),
-    ExpeditionEvent.RETURN: (Q.HOMESICK, Q.RESTLESS),
-    ExpeditionEvent.SETOUT: (Q.RESTLESS, Q.LIGHT_FINGERED),
-}
+QUIRK_ORIGINS: Mapping[ExpeditionEvent, tuple[QuirkKind, ...]] = MappingProxyType(
+    {
+        ExpeditionEvent.LEG: (Q.KNOWS_WAYS, Q.KEEN_EYED, Q.SWIMMER),
+        ExpeditionEvent.ROOM: (Q.FEARS_DARK, Q.DARK_SIGHTED, Q.CLAUSTROPHOBIC),
+        ExpeditionEvent.EXPOSURE: (Q.FRAIL, Q.HARDY, Q.COLD_HARDY),
+        ExpeditionEvent.AMBUSH: (Q.JUMPY, Q.STEADY_NERVES),
+        ExpeditionEvent.CAMP: (Q.EATS_ANYTHING, Q.STEADY_NERVES),
+        ExpeditionEvent.RETURN: (Q.HOMESICK, Q.RESTLESS),
+        ExpeditionEvent.SETOUT: (Q.RESTLESS, Q.LIGHT_FINGERED),
+        ExpeditionEvent.DISCOVERY: (Q.LUCKY, Q.KEEN_EYED),
+        ExpeditionEvent.QUARREL: (Q.JUMPY, Q.STEADY_NERVES),
+    }
+)

@@ -384,6 +384,8 @@ async def trade_flow(ctx: TickContext) -> None:
     "table.credit_profiles",
     "table.culture_values",
     "table.currencies",
+    "table.deed_claims",
+    "table.deeds",
     "table.entities",
     "table.faction_profiles",
     "table.forced_weather",
@@ -444,6 +446,8 @@ async def trade_flow(ctx: TickContext) -> None:
     "table.community_relations",
     "table.community_societies",
     "table.credit_profiles",
+    "table.deed_claims",
+    "table.deeds",
     "table.entities",
     "table.incident_facts",
     "table.incident_participants",
@@ -453,6 +457,7 @@ async def trade_flow(ctx: TickContext) -> None:
     "table.memories",
     "table.polity_profiles",
     "table.polity_treasury",
+    "table.reputations",
     "table.settlement_profiles",
 )
 async def banking(ctx: TickContext) -> None:

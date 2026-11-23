@@ -25,3 +25,9 @@ class AugmentRules:
     rejection_at: int = rule(20, 0, 100, B, "Integration at or below which a body may reject an augment")
     rejection_chance: int = rule(25, 0, 100, B, "Chance each epoch a body rejects such an augment")
     removal_harm: int = rule(10, 0, 100, B, "Health a body loses when an augment that replaces a part is taken out")
+
+    life_support_pct: int = rule(
+        60, 0, 200, B, "Share of an augment's quality and integration by which one that keeps a body alive covers what its air, pressure or gravity lacks (%)"
+    )
+    plating_pct: int = rule(50, 0, 200, B, "Share of an augment's quality and integration that armours the torso and limbs before the tissues take a blow (%)")
+    power_bound_loss: int = rule(10, 0, 100, B, "Integration a power-bound augment loses each epoch its bearer holds no awake power")

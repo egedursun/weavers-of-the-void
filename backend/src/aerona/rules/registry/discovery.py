@@ -1,16 +1,31 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 K = RuleGroup.CIVILIZATION
 
 
 @dataclass(frozen=True)
-class DiscoveryRules:
+class DiscoveryRules(Spanned):
     skill_divisor: int = rule(20, 1, 100, K, "Skill levels that make one point toward a great person each epoch")
     skilled_counted: int = rule(10, 1, 1000, K, "Most skilled mortals of a field whose skill counts toward a great person")
     structure_points: int = rule(2, 0, 50, K, "Points toward a great person each working structure of the field adds each epoch")
+    peace_points: int = rule(15, 0, 200, K, "Era score each side gains when a war ends in peace")
+    migration_heads: int = rule(2000, 0, 10000000, K, "Displaced heads among a realm's communities that make a great migration")
+    migration_points: int = rule(5, 0, 200, K, "Era score for a great migration")
+    charter_points: int = rule(10, 0, 200, K, "Era score for the first company chartered on a world")
+    age_memory_years: int = span(100, 0, 1000, K, "Years a deed still shapes the age a realm turns to")
+    wandering_research_pct: int = rule(10, 0, 100, K, "Research a realm in an age of wandering loses (%)")
+    reborn_research_pct: int = rule(20, 0, 100, K, "Research a realm in an age reborn gains as it recovers what was lost (%)")
+    found_blueprint_quality: int = rule(40, 0, 100, K, "Quality of a plan found in a ruin")
+    process_blueprint_level: int = rule(
+        2, 0, 10, K, "Level of its branch from which a newly taken up way of working is drawn into a plan; one that needs a technique always is"
+    )
+    chance_find_pct: int = rule(3, 0, 100, K, "Chance each epoch a holder at work on a technique makes a find by chance (%)")
+    chance_find_progress: int = rule(25, 0, 100, K, "Progress toward its technique a find by chance gives")
+    stolen_pct: int = rule(4, 0, 100, K, "Chance each epoch a holder at work on a technique has it stolen by a rival that spies on it (%)")
+    stolen_progress: int = rule(40, 0, 100, K, "Progress toward the technique a rival gains from stolen work")
     great_threshold: int = rule(60, 1, 10000, K, "Points a community gathers in a field before a great person rises")
     threshold_growth: int = rule(20, 0, 1000, K, "Points every living great person of the world adds to the next threshold")
     great_skill: int = rule(25, 0, 100, K, "Skill a great person gains in their field on rising")

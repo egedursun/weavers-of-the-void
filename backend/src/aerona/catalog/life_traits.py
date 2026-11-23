@@ -252,6 +252,7 @@ ALLOCATION_MODE_TRAITS: Mapping[AllocationMode, frozenset[AllocationModeTrait]] 
         AllocationMode.GIFT: frozenset(),
         AllocationMode.NEED: frozenset({AllocationModeTrait.SHARING}),
         AllocationMode.ABUNDANCE: frozenset({AllocationModeTrait.SHARING}),
+        AllocationMode.LOTTERY: frozenset(),
     },
 )
 
@@ -314,6 +315,9 @@ BREACH_CAUSE_TRAITS: Mapping[BreachCause, frozenset[BreachCauseTrait]] = total(
         BreachCause.RECORD_LEAK: frozenset(),
         BreachCause.INTRUSION: frozenset(),
         BreachCause.REVELATION_BY_GOD: frozenset(),
+        BreachCause.CHILDREN: frozenset(),
+        BreachCause.DREAMS: frozenset(),
+        BreachCause.EXCAVATION: frozenset(),
     },
 )
 
@@ -392,6 +396,8 @@ CHARM_POWER_TRAITS: Mapping[CharmPower, frozenset[CharmPowerTrait]] = total(
         CharmPower.FERTILITY: frozenset(),
         CharmPower.LUCK: frozenset({CharmPowerTrait.WARDS}),
         CharmPower.HEALING: frozenset(),
+        CharmPower.LOVE: frozenset(),
+        CharmPower.TRAVEL: frozenset(),
     },
 )
 
@@ -439,6 +445,7 @@ COMMAND_TOKEN_TRAITS: Mapping[CommandToken, frozenset[CommandTokenTrait]] = tota
         CommandToken.BLOODLINE: frozenset(),
         CommandToken.OFFICE: frozenset(),
         CommandToken.NETWORK_KEY: frozenset({CommandTokenTrait.OWNED_TOKENS}),
+        CommandToken.TRUE_NAME: frozenset(),
     },
 )
 
@@ -567,6 +574,8 @@ CULTIVATION_METHOD_TRAITS: Mapping[CultivationMethod, frozenset[CultivationMetho
         CultivationMethod.CLONING: frozenset({CultivationMethodTrait.RITE_PATHS}),
         CultivationMethod.MERGING: frozenset({CultivationMethodTrait.RITE_PATHS}),
         CultivationMethod.INDUCTION: frozenset(),
+        CultivationMethod.HYBRIDISING: frozenset(),
+        CultivationMethod.WILD_RELEASE: frozenset(),
     },
 )
 
@@ -640,6 +649,9 @@ EXPEDITION_GROUND_TRAITS: Mapping[ExpeditionGround, frozenset[ExpeditionGroundTr
         ExpeditionGround.WILDS: frozenset(),
         ExpeditionGround.UNDERWORLD: frozenset({ExpeditionGroundTrait.DARK_GROUNDS}),
         ExpeditionGround.REALM: frozenset({ExpeditionGroundTrait.DARK_GROUNDS}),
+        ExpeditionGround.UNDER_WATER: frozenset({ExpeditionGroundTrait.DARK_GROUNDS}),
+        ExpeditionGround.SPACE: frozenset({ExpeditionGroundTrait.DARK_GROUNDS}),
+        ExpeditionGround.DIMENSION: frozenset({ExpeditionGroundTrait.DARK_GROUNDS}),
     },
 )
 
@@ -872,6 +884,8 @@ HIDDEN_TRUTH_KIND_TRAITS: Mapping[HiddenTruthKind, frozenset[HiddenTruthKindTrai
         HiddenTruthKind.AWAKENING: frozenset(),
         HiddenTruthKind.PROGRAMME: frozenset(),
         HiddenTruthKind.COSMIC: frozenset(),
+        HiddenTruthKind.LOCATION: frozenset(),
+        HiddenTruthKind.LINEAGE: frozenset(),
     },
 )
 
@@ -1007,6 +1021,9 @@ JOURNEY_INTENT_TRAITS: Mapping[JourneyIntent, frozenset[JourneyIntentTrait]] = t
         JourneyIntent.EXPLORATION: frozenset({JourneyIntentTrait.SURVEYING}),
         JourneyIntent.CONQUEST: frozenset({JourneyIntentTrait.CROWD_INTENTS, JourneyIntentTrait.PASSENGER_INTENTS, JourneyIntentTrait.SURVEYING}),
         JourneyIntent.PILGRIMAGE: frozenset({JourneyIntentTrait.PASSENGER_INTENTS, JourneyIntentTrait.SURVEYING}),
+        JourneyIntent.EXILE: frozenset({JourneyIntentTrait.CROWD_INTENTS, JourneyIntentTrait.PASSENGER_INTENTS}),
+        JourneyIntent.FLIGHT: frozenset({JourneyIntentTrait.CROWD_INTENTS, JourneyIntentTrait.PASSENGER_INTENTS}),
+        JourneyIntent.EMBASSY: frozenset({JourneyIntentTrait.PASSENGER_INTENTS, JourneyIntentTrait.SURVEYING}),
     },
 )
 
@@ -1049,6 +1066,10 @@ KNOWLEDGE_BRANCH_TRAITS: Mapping[KnowledgeBranch, frozenset[KnowledgeBranchTrait
         KnowledgeBranch.BIOMANCY: frozenset(),
         KnowledgeBranch.FORBIDDEN: frozenset(),
         KnowledgeBranch.CIVICS: frozenset(),
+        KnowledgeBranch.LAW: frozenset(),
+        KnowledgeBranch.NATURAL_HISTORY: frozenset({KnowledgeBranchTrait.NATURAL_BRANCHES}),
+        KnowledgeBranch.LANGUAGE_LORE: frozenset(),
+        KnowledgeBranch.MATHEMATICS: frozenset({KnowledgeBranchTrait.RECKONED}),
     },
 )
 
@@ -1130,6 +1151,10 @@ LINE_TRAIT_TRAITS: Mapping[LineTrait, frozenset[LineTraitTrait]] = total(
         LineTrait.GIFT: frozenset(),
         LineTrait.NERVOUS_SYSTEM: frozenset(),
         LineTrait.SAPIENCE: frozenset(),
+        LineTrait.LIGHT_MAKING: frozenset(),
+        LineTrait.INHERITED_LEARNING: frozenset(),
+        LineTrait.FILTERING: frozenset({LineTraitTrait.SHAPING_TRAITS}),
+        LineTrait.SECRETES_BUILDING: frozenset(),
     },
 )
 
@@ -1142,6 +1167,7 @@ MADE_MIND_STANCE_TRAITS: Mapping[MadeMindStance, frozenset[MadeMindStanceTrait]]
         MadeMindStance.KIN: frozenset({MadeMindStanceTrait.KEEPING_STANCES}),
         MadeMindStance.SACRED: frozenset({MadeMindStanceTrait.KEEPING_STANCES}),
         MadeMindStance.SILENT: frozenset(),
+        MadeMindStance.REGULATED: frozenset({MadeMindStanceTrait.KEEPING_STANCES}),
     },
 )
 
@@ -1217,6 +1243,7 @@ METABOLISM_TRAITS: Mapping[Metabolism, frozenset[MetabolismTrait]] = total(
         Metabolism.SOURCE: frozenset({MetabolismTrait.SELF_FED}),
         Metabolism.PARTNER: frozenset({MetabolismTrait.SELF_FED}),
         Metabolism.DORMANT: frozenset(),
+        Metabolism.HEAT: frozenset(),
     },
 )
 
@@ -1233,6 +1260,7 @@ MIND_UPKEEP_TRAITS: Mapping[MindUpkeep, frozenset[MindUpkeepTrait]] = total(
         MindUpkeep.HOST: frozenset(),
         MindUpkeep.PLACE: frozenset({MindUpkeepTrait.REALMS_SELF_KEPT}),
         MindUpkeep.NONE: frozenset({MindUpkeepTrait.REALMS_SELF_KEPT, MindUpkeepTrait.SELF_KEPT}),
+        MindUpkeep.ATTENTION: frozenset(),
     },
 )
 
@@ -1373,6 +1401,8 @@ ORDER_KIND_TRAITS: Mapping[OrderKind, frozenset[OrderKindTrait]] = total(
         OrderKind.HOLD_STILL: frozenset(),
         OrderKind.FOLLOW: frozenset({OrderKindTrait.TARGETED_ORDERS}),
         OrderKind.FORBID: frozenset(),
+        OrderKind.CARRY: frozenset(),
+        OrderKind.TEND: frozenset(),
     },
 )
 
@@ -1457,6 +1487,8 @@ POWER_ORIGIN_TRAITS: Mapping[PowerOrigin, frozenset[PowerOriginTrait]] = total(
         PowerOrigin.GROWN: frozenset(),
         PowerOrigin.BLOODLINE: frozenset({PowerOriginTrait.BORN_ORIGINS, PowerOriginTrait.GIFTED_ORIGINS}),
         PowerOrigin.HELD: frozenset(),
+        PowerOrigin.BARGAIN: frozenset(),
+        PowerOrigin.TRANSFER: frozenset(),
     },
 )
 
@@ -1471,6 +1503,7 @@ POWER_STATE_TRAITS: Mapping[PowerState, frozenset[PowerStateTrait]] = total(
         PowerState.EXHAUSTED: frozenset({PowerStateTrait.QUIET}),
         PowerState.SUPPRESSED: frozenset({PowerStateTrait.QUIET}),
         PowerState.LOST: frozenset({PowerStateTrait.QUIET}),
+        PowerState.BOUND: frozenset({PowerStateTrait.QUIET}),
     },
 )
 
@@ -1651,6 +1684,9 @@ SETTLE_MODE_TRAITS: Mapping[SettleMode, frozenset[SettleModeTrait]] = total(
         SettleMode.HABITAT: frozenset({SettleModeTrait.UPKEPT}),
         SettleMode.BAND: frozenset(),
         SettleMode.DECK: frozenset(),
+        SettleMode.BURROW: frozenset(),
+        SettleMode.SUBMERGED: frozenset({SettleModeTrait.UPKEPT}),
+        SettleMode.CANOPY: frozenset(),
     },
 )
 
@@ -1756,6 +1792,8 @@ SOURCE_LOCUS_TRAITS: Mapping[SourceLocus, frozenset[SourceLocusTrait]] = total(
         SourceLocus.DEATH: frozenset({SourceLocusTrait.LAND_LOCI}),
         SourceLocus.DREAM: frozenset(),
         SourceLocus.EMOTION: frozenset(),
+        SourceLocus.MEMORY: frozenset(),
+        SourceLocus.NAME: frozenset(),
     },
 )
 
@@ -2032,6 +2070,16 @@ TECHNIQUE_TRAITS: Mapping[Technique, frozenset[TechniqueTrait]] = total(
         Technique.MONASTICISM: frozenset(),
         Technique.THEOLOGY_SCHOOLS: frozenset(),
         Technique.LOGIC: frozenset(),
+        Technique.ANATOMY: frozenset(),
+        Technique.CHRONOMETRY: frozenset({TechniqueTrait.ENGINEERING}),
+        Technique.QUAKE_BUILDING: frozenset({TechniqueTrait.ENGINEERING}),
+        Technique.SANITATION: frozenset({TechniqueTrait.ENGINEERING}),
+        Technique.EVAPORATION_WORKS: frozenset(),
+        Technique.ROPEMAKING: frozenset(),
+        Technique.LACQUER_WORK: frozenset(),
+        Technique.RUBBER_WORKING: frozenset(),
+        Technique.POSITIONAL_RECKONING: frozenset({TechniqueTrait.PLACE_VALUE_RECKONING}),
+        Technique.PILOTAGE: frozenset(),
         Technique.NATURAL_PHILOSOPHY: frozenset(),
         Technique.EMPIRICISM: frozenset(),
         Technique.HUMANIST_IDEALS: frozenset(),
@@ -2405,6 +2453,9 @@ WAR_TERRAIN_TRAITS: Mapping[WarTerrain, frozenset[WarTerrainTrait]] = total(
         WarTerrain.SKY: frozenset({WarTerrainTrait.LAND_UNFIT}),
         WarTerrain.BOARDING: frozenset({WarTerrainTrait.LAND_UNFIT}),
         WarTerrain.STRATA: frozenset(),
+        WarTerrain.UNDER_WATER: frozenset({WarTerrainTrait.LAND_UNFIT}),
+        WarTerrain.SPACE: frozenset({WarTerrainTrait.LAND_UNFIT}),
+        WarTerrain.UNDERGROUND: frozenset(),
     },
 )
 
@@ -2470,6 +2521,9 @@ WORLD_END_TRAITS: Mapping[WorldEnd, frozenset[WorldEndTrait]] = total(
         WorldEnd.SUNK_INTO_VOID: frozenset({WorldEndTrait.GONE_FROM_SKY, WorldEndTrait.LIFELESS}),
         WorldEnd.FORGOTTEN: frozenset({WorldEndTrait.GONE_FROM_SKY}),
         WorldEnd.TRANSFIGURED: frozenset(),
+        WorldEnd.DROWNED: frozenset({WorldEndTrait.LIFELESS}),
+        WorldEnd.BURNED: frozenset({WorldEndTrait.LIFELESS}),
+        WorldEnd.DEVOURED: frozenset({WorldEndTrait.GONE_FROM_SKY, WorldEndTrait.LIFELESS}),
     },
 )
 

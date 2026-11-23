@@ -141,18 +141,18 @@ async def life_seed(ctx: TickContext) -> None:
         top = regions[: rules.deep_life.life_region_pick]
         has_people = bool(await canon(ctx.session, [EntityType.PEOPLE], world.id))
         guarantee = rules.empty_world.native_guarantee_epochs
-        life = await life_of(ctx.session, world)
+        life = await life_of(ctx.session, ctx.rules, world)
         promised = guarantee > 0 and rank(life.complexity) >= rank(LifeComplexity.COMPLEX) and await empty_for(ctx, world) >= guarantee
         if not has_people and ((rng.chance(rules.deep_world.native_people_chance) and await may_arise(ctx.session, rules, world, people=True)) or promised):
             await native_people(ctx, world, rng.pick(top))
-            await raise_life(ctx.session, world, LifeComplexity.SAPIENT)
+            await raise_life(ctx.session, ctx.rules, world, LifeComplexity.SAPIENT)
         if (
             not await canon(ctx.session, [EntityType.SPECIES], world.id)
             and rng.chance(rules.deep_world.native_species_chance)
             and await may_arise(ctx.session, rules, world, people=False)
         ):
             await native_species(ctx, world, rng.pick(top))
-            await raise_life(ctx.session, world, LifeComplexity.COMPLEX)
+            await raise_life(ctx.session, ctx.rules, world, LifeComplexity.COMPLEX)
 
 
 async def seed_life(ctx: TickContext, world_id: int, people: bool) -> EntityRow:
@@ -163,7 +163,7 @@ async def seed_life(ctx: TickContext, world_id: int, people: bool) -> EntityRow:
     if not regions:
         raise NotFoundError(f"{world.name} has no land where life could take hold.")
     region = ctx.rng(f"seed_life.{world.id}").pick(regions[: ctx.rules.deep_life.life_region_pick])
-    await raise_life(ctx.session, world, LifeComplexity.SAPIENT if people else LifeComplexity.COMPLEX)
+    await raise_life(ctx.session, ctx.rules, world, LifeComplexity.SAPIENT if people else LifeComplexity.COMPLEX)
     return await native_people(ctx, world, region) if people else await native_species(ctx, world, region)
 
 

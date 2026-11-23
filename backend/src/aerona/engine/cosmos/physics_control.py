@@ -23,7 +23,7 @@ from aerona.db.tables.physics import (
 )
 from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.physics import CosmicFeatureKind, LifeEnvironment, SurveyLevel, SystemRole, TerraformAim
+from aerona.domain.enums.physics import CosmicFeatureKind, ImpactBody, LifeEnvironment, SurveyLevel, SystemRole, TerraformAim
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
@@ -158,7 +158,7 @@ async def edit_life(ctx: TickContext, world_id: int, values: Values, release: li
     places = values.get("environments")
     if places is not None and (not isinstance(places, list) or any(item not in set(LifeEnvironment) for item in places)):
         raise ValidationFailedError(f"Life dwells in {', '.join(sorted(LifeEnvironment))}; name only those.")
-    row = apply(await life_of(ctx.session, world), values, release)
+    row = apply(await life_of(ctx.session, ctx.rules, world), values, release)
     await ctx.session.flush()
     return row
 
@@ -208,8 +208,10 @@ async def delete_feature(ctx: TickContext, feature_id: int) -> None:
     await ctx.session.flush()
 
 
-async def call(ctx: TickContext, world_id: int, region_id: int | None, by_node_id: int | None, *, size: int | None) -> ImpactEventRow:
-    return await call_impact(ctx, world_id, region_id, by_node_id, size=size)
+async def call(
+    ctx: TickContext, world_id: int, region_id: int | None, by_node_id: int | None, *, size: int | None, body: ImpactBody = ImpactBody.CALLED
+) -> ImpactEventRow:
+    return await call_impact(ctx, world_id, region_id, by_node_id, size=size, body=body)
 
 
 async def deflect(ctx: TickContext, impact_id: int, by_node_id: int | None) -> ImpactEventRow:

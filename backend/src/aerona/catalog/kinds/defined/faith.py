@@ -12,6 +12,7 @@ BINDING_KIND = total(
                 "engine.faith.control.bind_spirit",
                 "engine.lore.rites.pay_souls",
                 "engine.lore.rites.wandering_near",
+                "engine.sacred.foresight.restless_dead_among",
                 "services.player.faith.bind_spirit",
             ),
             used_by=(
@@ -100,10 +101,22 @@ REBIRTH_PATH = total(
         RebirthPath.PEOPLE: Defined(
             "People",
             checked_by=(),
-            used_by=("api.routers.faith.doctrine", "db.tables.faith.CultDoctrineRow", "engine.faith.doctrine.rebirth_path_of", "engine.faith.souls.cradle"),
+            used_by=(
+                "api.routers.faith.doctrine",
+                "db.tables.faith.CultDoctrineRow",
+                "db.tables.faith.ReincarnationRow",
+                "engine.faith.doctrine.rebirth_path_of",
+                "engine.faith.souls.cradle",
+                "services.integrity.w52_agent_g.rebirth_by_people",
+            ),
         ),
         RebirthPath.HOUSE: Defined("House", checked_by=("engine.faith.souls.cradle",), used_by=("engine.faith.doctrine.rebirth_path_of",)),
         RebirthPath.MERIT: Defined("Merit", checked_by=("engine.faith.souls.cradle",), used_by=("engine.faith.doctrine.rebirth_path_of",)),
+        RebirthPath.KIND: Defined(
+            "Kind",
+            checked_by=("engine.faith.souls.rebirth", "services.integrity.w52_agent_g.kindless_rebirths"),
+            used_by=("engine.faith.doctrine.rebirth_path_of", "engine.faith.souls.reborn_as_kind"),
+        ),
     },
 )
 

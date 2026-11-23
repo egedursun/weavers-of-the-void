@@ -4,12 +4,15 @@ from types import MappingProxyType
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.demography import CohortRow
-from aerona.db.tables.dominion import MiracleRecordRow
+from aerona.db.tables.dominion import GodImageRow, MiracleRecordRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
+from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.dominion import Manifestation
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
 from aerona.domain.enums.gathering import GatheringStatus
 from aerona.domain.enums.intervention import Miracle
@@ -93,8 +96,26 @@ def belief_of(ctx: TickContext, *, magnitude: int, witnesses: int, need: int, no
     return max(0, round_half_up(value))
 
 
+async def veiled(ctx: TickContext, god_id: int) -> bool:
+    image = await ctx.session.get(GodImageRow, god_id)
+    return image is not None and image.manifestation is Manifestation.VEILED
+
+
+async def offend_ruler(ctx: TickContext, god_id: int, region: int | None, book: DominionBook, share: float) -> None:
+    ruler = book.ruler(ctx.rules, region)
+    if ruler is None or ruler == god_id or held(ruler, god_id):
+        return
+    if await ctx.session.get(SonRow, ruler) is None or await ctx.session.get(SonRow, god_id) is None:
+        return
+    offence = round_half_up(ctx.rules.dominion.rival_miracle_offence * share)
+    if offence:
+        await SonRepository(ctx.session).change_relation(god_id, ruler, -offence, "worked a miracle in its land")
+
+
 async def impress(ctx: TickContext, god_id: int, target: EntityRow, *, kind: str, magnitude: int, witnesses: int) -> MiracleRecordRow:
     table = ctx.rules.miracle_impression
+    share = ctx.rules.dominion.veiled_witness_pct / PERCENT if await veiled(ctx, god_id) else 1.0
+    witnesses = max(1, round_half_up(witnesses * share))
     atlas = await RegionAtlas.load(ctx.session)
     region = atlas.top_region(target.id)
     community = await community_of(ctx, target)
@@ -102,7 +123,8 @@ async def impress(ctx: TickContext, god_id: int, target: EntityRow, *, kind: str
     legibility = PERCENT if legible else PERCENT // 2
     need = await need_at(ctx, target, community)
     novelty = await novelty_of(ctx, god_id, kind, region)
-    power = (await DominionBook.load(ctx.session)).power_factor(ctx.rules, god_id, region, ctx.rules.dominion.miracle_power_pct)
+    book = await DominionBook.load(ctx.session)
+    power = book.power_factor(ctx.rules, god_id, region, ctx.rules.dominion.miracle_power_pct)
     belief = round_half_up(
         belief_of(ctx, magnitude=clamp_int(magnitude, 0, PERCENT), witnesses=witnesses, need=need, novelty=novelty, legibility=legibility) * power
     )
@@ -129,7 +151,8 @@ async def impress(ctx: TickContext, god_id: int, target: EntityRow, *, kind: str
     if community is not None and not held(community.id, credit):
         standing = await standing_row(ctx, community.id, credit)
         if "awe" not in standing.locked:
-            standing.awe = clamp_int(standing.awe + round_half_up(belief * table.awe_per_belief_pct / PERCENT), 0, PERCENT)
+            standing.awe = clamp_int(standing.awe + round_half_up(belief * table.awe_per_belief_pct / PERCENT * share), 0, PERCENT)
+    await offend_ruler(ctx, god_id, region, book, share)
     await ctx.session.flush()
     return row
 

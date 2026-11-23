@@ -4,7 +4,7 @@ from collections.abc import Iterable, Mapping
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.eras import ERA_EFFECTS, ERA_FLOORS, ERA_MARKERS, POWDER, TECHNIQUE_ERAS
+from aerona.catalog.eras import COPPER_FROM, ERA_EFFECTS, ERA_FLOORS, ERA_MARKERS, POWDER, TECHNIQUE_ERAS
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -19,7 +19,7 @@ from aerona.domain.enums.eras import EraChannel, ProgrammeStage, TechFamily
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.world import TechnologyEra
 from aerona.engine.belonging.values import own_people
-from aerona.engine.primitives.knowledge import LawBook
+from aerona.engine.primitives.knowledge import LawBook, known_levels
 from aerona.rules.registry import Rules
 
 
@@ -155,7 +155,13 @@ def era_of(known: Iterable[Technique], floor: TechnologyEra = TechnologyEra.STON
 
 
 async def era_at(session: AsyncSession, node_id: int | None) -> TechnologyEra:
-    return era_of(await era_techniques(session, node_id), await world_start(session))
+    reached = era_of(await era_techniques(session, node_id), await world_start(session))
+    if era_order(reached) < era_order(TechnologyEra.COPPER) and node_id is not None:
+        levels = (await known_levels(session, [node_id])).get(node_id, {})
+        branch, level = COPPER_FROM
+        if levels.get(branch, 0) >= level:
+            return TechnologyEra.COPPER
+    return reached
 
 
 async def programme_pressure(session: AsyncSession, rules: Rules) -> dict[int, int]:

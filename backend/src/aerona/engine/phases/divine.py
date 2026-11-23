@@ -9,12 +9,12 @@ from aerona.engine.divine.goals import pursue_goals
 from aerona.engine.divine.grammar import keep_powers
 from aerona.engine.divine.laws import tend_laws
 from aerona.engine.divine.old_gods import old_gods_act
-from aerona.engine.divine.outer import outer_feeding, void_rites
+from aerona.engine.divine.outer import due_lines, outer_feeding, void_rites
 from aerona.engine.divine.outer_agency import outer_agency
 from aerona.engine.divine.pantheon import keep_pantheons
 from aerona.engine.divine.rulings import enforce_rulings
 from aerona.engine.divine.standing import tend_standing
-from aerona.engine.divine.wounds import heal_wounds
+from aerona.engine.divine.wounds import heal_wounds, mark_neglect, neglect_wounds
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 
@@ -120,6 +120,7 @@ async def divine_standing(ctx: TickContext) -> None:
     "table.castings",
     "table.culture_values",
     "table.divine_powers",
+    "table.divine_standing",
     "table.divine_wounds",
     "table.entities",
     "table.foreign_god_powers",
@@ -130,6 +131,7 @@ async def divine_standing(ctx: TickContext) -> None:
     "table.sons",
 )
 @writes(
+    "table.applied_fixups",
     "table.chronicle",
     "table.community_stocks",
     "table.culture_values",
@@ -151,6 +153,8 @@ async def divine_standing(ctx: TickContext) -> None:
     "table.world_attention",
 )
 async def divine_wounds(ctx: TickContext) -> None:
+    ctx.count("neglect_marked", await mark_neglect(ctx))
+    ctx.count("neglected", await neglect_wounds(ctx))
     ctx.count("healed", await heal_wounds(ctx))
     await keep_powers(ctx)
 
@@ -351,6 +355,7 @@ async def natural_laws(ctx: TickContext) -> None:
     "table.lifecycle_states",
     "table.natural_law_profiles",
     "table.nodes",
+    "table.outer_bargains",
     "table.outer_being_profiles",
     "table.outer_heralds",
     "table.outer_incursions",
@@ -392,6 +397,7 @@ async def outer_hunger(ctx: TickContext) -> None:
     ctx.count("fed", await outer_feeding(ctx))
     ctx.count("void_rites", await void_rites(ctx))
     ctx.count("outer_aims", await outer_agency(ctx))
+    ctx.count("lines_freed", await due_lines(ctx))
 
 
 PHASES = (

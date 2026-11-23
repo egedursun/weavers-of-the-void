@@ -128,6 +128,7 @@ async def admiralty(ctx: TickContext) -> None:
     "table.site_rooms",
     "table.skills",
     "table.traits",
+    "table.vessel_profiles",
 )
 @writes(
     "mortal.hp",

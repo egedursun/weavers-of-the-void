@@ -4,11 +4,13 @@ from aerona.domain.enums.collective import CrowdFeeling
 from aerona.domain.enums.communication import DispatchContent, SignalKind
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.customs import MarkKind, MarkMeaning, RevivalGoal, RevivalWay
+from aerona.domain.enums.divine import BargainPrice, LawException
 from aerona.domain.enums.entity import EntityType as E
 from aerona.domain.enums.faction import MovementCause
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand, IdentityReason
 from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.modifier import IncidentRole as R
+from aerona.domain.enums.physics import ImpactBody
 from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule, StepAction
 from aerona.domain.enums.records import ProcessClock as C
 from aerona.domain.enums.records import ProcessGroup as G
@@ -350,6 +352,37 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "{actor} spoke up about a deed of {victim}: {claim}.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.VICTIM)),
         facts=(FactSpec("claim", FactValue.ENUM, enum=ClaimKind),),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "law.exempted",
+        G.COSMOS,
+        "{subject} now spares {exception} ({beneficiary}).",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.NATURAL_LAW})), RoleSpec(R.BENEFICIARY, required=False), RoleSpec(R.ACTOR, required=False)),
+        facts=(FactSpec("exception", FactValue.ENUM, enum=LawException),),
+        clock=C.INSTANT,
+        direct=True,
+    ),
+    IncidentKindSpec(
+        "outer.price_paid",
+        G.GODS,
+        "{actor} paid {target} the price of {price}: {souls:no souls were|# soul was|# souls were} handed over.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, frozenset({E.OUTER_BEING}))),
+        facts=(FactSpec("price", FactValue.ENUM, enum=BargainPrice), FactSpec("souls", FactValue.NUMBER, FactUnit.COUNT)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "impact.airburst",
+        G.COSMOS,
+        "A body of the heavens ({body}) of size {size} burst in the air above {subject}, laying waste {lands:no land|# land|# lands} by blast and fire.",
+        roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False), RoleSpec(R.AUTHORITY, required=False)),
+        facts=(
+            FactSpec("body", FactValue.ENUM, enum=ImpactBody),
+            FactSpec("size", FactValue.NUMBER, FactUnit.STRENGTH),
+            FactSpec("lands", FactValue.NUMBER, FactUnit.COUNT),
+            FactSpec("winter", FactValue.NUMBER, FactUnit.COUNT),
+        ),
+        steps=frozenset({StepAction.COLLIDE}),
         clock=C.INSTANT,
     ),
 )

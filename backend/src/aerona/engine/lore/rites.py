@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.arcana import SCHOOL_GRAMMAR
+from aerona.catalog.arcana import COMMANDING_TECHNIQUES, SCHOOL_GRAMMAR, TARGETS
 from aerona.catalog.lore import DESPERATE_SCHOOLS, DOMAIN_SCHOOLS, RITE_TEMPLATES
 from aerona.catalog.mythic import GEAS_ACTS
 from aerona.constants.units import PERCENT
@@ -68,7 +68,7 @@ from aerona.domain.enums.structure import ConstructionState
 from aerona.domain.enums.world import SkyEventKind
 from aerona.domain.models.entity_stats import RiteStats, SpiritStats
 from aerona.engine.arcana.casting import corrupted_effect, shape_casting
-from aerona.engine.arcana.grammar import Shape, ensure_grammar, reaches, window_of, write_grammar
+from aerona.engine.arcana.grammar import Shape, ensure_grammar, link_factor, power_suffices, reaches, window_of, worlds_joined, write_grammar
 from aerona.engine.arcana.grammar import cost_factor as grammar_cost
 from aerona.engine.arcana.labs import write_lab_text
 from aerona.engine.arcana.longevity import begin_longevity
@@ -84,7 +84,7 @@ from aerona.engine.cosmos.rifts import seal_near, tear_toward
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.couplings.rite_body import component_bar, components_of
 from aerona.engine.crafts.haunting import bind_spirit
-from aerona.engine.crafts.linking import affinity_boost, link_boost, link_strength
+from aerona.engine.crafts.linking import affinity_boost, link_boost, link_strength, true_named
 from aerona.engine.divine.decrees import outlawed_schools
 from aerona.engine.divine.laws import binds
 from aerona.engine.dominion.book import DominionBook
@@ -115,6 +115,7 @@ from aerona.engine.lore.truth import theory_factor
 from aerona.engine.military.control import add_stack
 from aerona.engine.mind.book import set_skill, values_for
 from aerona.engine.mind.hooks import judged
+from aerona.engine.mortal.kin import children_of
 from aerona.engine.mortal.learning import practise_subject, school_level
 from aerona.engine.mythic.geasa import lay_geas
 from aerona.engine.mythic.offices import office_power
@@ -565,7 +566,7 @@ async def do_heal(ctx: TickContext, work: Working) -> str | None:
 
 
 async def lasting(ctx: TickContext, casting: CastingRow) -> bool:
-    return casting.epoch >= ctx.epoch - max(1, window_of(await ctx.session.get(RiteGrammarRow, casting.rite_entity_id)))
+    return casting.ended_epoch is None and casting.epoch >= ctx.epoch - max(1, window_of(await ctx.session.get(RiteGrammarRow, casting.rite_entity_id)))
 
 
 async def countered(ctx: TickContext, region_id: int, caster_id: int | None, power: int) -> EntityRow | None:
@@ -1114,8 +1115,8 @@ async def cast(
     shield = await warded(ctx, target.location_id or target.id) if target is not None else 1.0
     shaping = await shape_casting(ctx, caster, target, row, effects=[item.effect for item in effects], mastery=mastery, caster_god=patron, warded=shield)
     atlas = await RegionAtlas.load(ctx.session)
-    linked = await link_strength(ctx.session, caster.id, target.id if target is not None else None)
-    if not forced and not linked and not reaches(atlas, shaping.grammar, caster, target):
+    reach = await reach_factor(ctx, atlas, caster, target, grammar=shaping.grammar, row=row, forced=forced)
+    if reach is None:
         return None
     genome = await ctx.session.get(GenomeRow, caster.id)
     steadiness, strength = gift_factors(ctx.rules, genome, row.school)
@@ -1126,7 +1127,7 @@ async def cast(
     strength *= await ctx.hook_factor(caster.id, DomainHook.BLOOD_RITE)
     strength *= await magic_factor(ctx, caster) * await tech_relief(ctx.session, ctx.rules, caster.id, EraChannel.RITES)
     strength *= await site_factor(ctx, caster, row) * await rite_draw(ctx, caster, row.source, row.power)
-    strength *= await divine_power(ctx, patron, caster.id, ctx.rules.dominion.rite_power_pct)
+    strength *= await divine_power(ctx, patron, caster.id, ctx.rules.dominion.rite_power_pct) * reach
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
     understood = await theory_factor(ctx.session, ctx.rules, caster.location_id or caster.id, TheoryDomain.MAGIC)
     await expose(ctx, caster.id, round_half_up(ctx.rules.warping.per_cast * row.power / RITE_POWER_MAX))
@@ -1135,7 +1136,7 @@ async def cast(
         casting.effect = f"the rite turned on {caster.name} ({spoken(casting.backlash)})"
     else:
         damp = await dampening(ctx, caster, row)
-        works = [await working(ctx, caster, target, effect, row) for effect in effects]
+        works = [await working(ctx, caster, aim, effect, row) for aim in await aims_of(ctx, shaping.grammar, target) for effect in effects]
         if shaping.resisted:
             works = [work for work in works if work.effect.effect not in HOSTILE]
         if shaping.corrupted:
@@ -1210,11 +1211,50 @@ async def design(ctx: TickContext, plan: Design, holder: EntityRow) -> tuple[Ent
     return rite, row
 
 
+async def reach_factor(
+    ctx: TickContext, atlas: RegionAtlas, caster: EntityRow, target: EntityRow | None, *, grammar: RiteGrammarRow, row: RiteProfileRow, forced: bool
+) -> float | None:
+    target_id = target.id if target is not None else None
+    linked = await link_strength(ctx.session, caster.id, target_id)
+    joined = await worlds_joined(ctx.session, caster.world_id, target.world_id if target is not None else caster.world_id)
+    if not forced and not linked and not reaches(atlas, grammar, caster, target, linked=linked, joined=joined):
+        return None
+    if not forced and not power_suffices(ctx.rules, grammar, row.power):
+        return None
+    factor = link_factor(ctx.rules, grammar, linked)
+    if grammar.technique in COMMANDING_TECHNIQUES and await true_named(ctx.session, caster.id, target_id):
+        factor *= ctx.rules.links.true_name_command_pct / PERCENT
+    return factor
+
+
+async def aims_of(ctx: TickContext, grammar: RiteGrammarRow, target: EntityRow | None) -> list[EntityRow | None]:
+    spec = TARGETS[grammar.target]
+    if target is None or not spec.line or target.entity_type is not EntityType.MORTAL:
+        return [target]
+    line: list[EntityRow | None] = [target]
+    frontier = [target.id]
+    while frontier and len(line) <= ctx.rules.arcana.line_reach:
+        child_ids = [child for parent in frontier for child in await children_of(ctx.session, parent)]
+        frontier = []
+        for child_id in child_ids:
+            child = await living_entity(ctx.session, child_id)
+            if child is not None and child not in line and len(line) <= ctx.rules.arcana.line_reach:
+                line.append(child)
+                frontier.append(child.id)
+    return line
+
+
 async def beyond_reach(ctx: TickContext, caster: EntityRow, row: RiteProfileRow, target: EntityRow | None) -> str | None:
+    grammar = await ensure_grammar(ctx.session, ctx.rules, row)
+    if not power_suffices(ctx.rules, grammar, row.power):
+        return f"a rite of power {row.power} cannot touch a whole world"
     if target is None:
         return None
-    grammar = await ensure_grammar(ctx.session, ctx.rules, row)
-    if reaches(await RegionAtlas.load(ctx.session), grammar, caster, target):
+    if TARGETS[grammar.target].item and target.entity_type is not EntityType.ITEM:
+        return f"{target.name} is not a thing the rite is shaped for"
+    linked = await link_strength(ctx.session, caster.id, target.id)
+    joined = await worlds_joined(ctx.session, caster.world_id, target.world_id)
+    if linked or reaches(await RegionAtlas.load(ctx.session), grammar, caster, target, linked=linked, joined=joined):
         return None
     return f"{target.name} lies beyond its range ({spoken(grammar.range)})"
 

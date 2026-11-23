@@ -19,6 +19,8 @@ class EraChannel(StrEnum):
     RITES = "rites"
     SPOILAGE = "spoilage"
     DOOM = "doom"
+    LEARNING = "learning"
+    HEALTH = "health"
 
 
 class ProgrammeStage(StrEnum):
@@ -27,6 +29,7 @@ class ProgrammeStage(StrEnum):
     TESTING = "testing"
     COMPLETE = "complete"
     ABANDONED = "abandoned"
+    SUSPENDED = "suspended"
 
 
 class TechFamily(StrEnum):
@@ -43,3 +46,4 @@ class TechFamily(StrEnum):
     ADMINISTRATION = "administration"
     SPACE = "space"
     MIND = "mind"
+    KNOWLEDGE = "knowledge"

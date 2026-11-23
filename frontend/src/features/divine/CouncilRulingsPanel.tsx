@@ -24,6 +24,7 @@ import { VetoButton } from './CouncilOrderPanel'
 import { type RulingView, useDivineAction, useRulings } from './api'
 import {
   MOTIONS,
+  PENANCE_DEEDS,
   PUNISHMENTS,
   SCHOOLS,
   VOTING_RULES,
@@ -95,6 +96,11 @@ function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
             {row.punishment && row.motion === 'punish_son' && (
               <Badge size='sm' variant='outline'>
                 {PUNISHMENTS[row.punishment]}
+              </Badge>
+            )}
+            {row.penance_deed && row.punishment === 'penance' && (
+              <Badge size='sm' variant='outline'>
+                {`Penance: ${PENANCE_DEEDS[row.penance_deed]}`}
               </Badge>
             )}
           </div>
@@ -169,6 +175,7 @@ export function CouncilRulingsPanel() {
   const [school, setSchool] = useState('')
   const [punishment, setPunishment] = useState('chain')
   const [rule, setRule] = useState('majority')
+  const [deed, setDeed] = useState('restore_world')
   const decree = useDivineAction('ruling:decree', (_: void) => ({
     motion: motion as ActionBody<'ruling:decree'>['motion'],
     target_id: HERO_TARGETS.has(motion)
@@ -186,6 +193,10 @@ export function CouncilRulingsPanel() {
     voting_rule:
       motion === 'set_council_rules'
         ? (rule as ActionBody<'ruling:decree'>['voting_rule'])
+        : null,
+    penance_deed:
+      motion === 'punish_son' && punishment === 'penance'
+        ? (deed as ActionBody<'ruling:decree'>['penance_deed'])
         : null,
   }))
   const busy = busyOf(reason(), decree.isPending)
@@ -287,6 +298,17 @@ export function CouncilRulingsPanel() {
                   motion === 'punish_son' ? busy : 'Only a punishment names one'
                 }
                 onPick={setPunishment}
+              />
+              <PickRow
+                label='Deed of penance'
+                table={PENANCE_DEEDS}
+                value={deed}
+                blocked={
+                  motion === 'punish_son' && punishment === 'penance'
+                    ? busy
+                    : 'Only a penance names a deed'
+                }
+                onPick={setDeed}
               />
               <PickRow
                 label='How the council decides'

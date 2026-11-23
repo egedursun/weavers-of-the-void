@@ -153,6 +153,8 @@ def rebirth_path_of(rules: Rules, values: dict[ValueAxis, int], judgement: Judge
     threshold = rules.doctrine.value_tenet
     if values.get(ValueAxis.KINSHIP, 0) >= threshold:
         return RebirthPath.HOUSE
+    if values.get(ValueAxis.NATURE, 0) >= threshold:
+        return RebirthPath.KIND
     if judgement in REBIRTH_PATH_OF_JUDGEMENT_DOCTRINES and values.get(ValueAxis.HIERARCHY, 0) >= threshold:
         return RebirthPath.MERIT
     return RebirthPath.PEOPLE

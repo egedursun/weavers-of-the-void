@@ -14,6 +14,7 @@ import {
   Telescope,
   Undo2,
   UserPlus,
+  Wind,
   Wrench,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
@@ -84,10 +85,10 @@ function MemberCard({ row, blocked }: { row: Member; blocked: string | null }) {
       icon={role.icon}
       tone={row.fallen ? 'danger' : resolve.tone}
       title={row.mortal.name}
-      caption={`${role.label} · ${resolve.label}${row.fallen ? ' · fallen' : ''}`}
+      caption={`${role.label} · ${resolve.label}${row.fallen ? ' · fallen' : ''}${row.departed ? ' · left the party' : ''}`}
       removeLabel='Send home'
       editTitle='Set the member'
-      note='Stress gathers on every leg, more in the dark and from harm. Past its limit a member breaks into an affliction that harms the party (paranoid, hopeless, selfish, abusive) or rises to a virtue that helps it (courageous, focused, stalwart). Cold, wet, hunger and fatigue gather too, and past their limit they harm.'
+      note='Stress gathers on every leg, more in the dark, in close places for some, and from harm. Past its limit a member breaks into an affliction that harms the party (paranoid, hopeless, selfish, abusive, fearful, irrational) or rises to a virtue that helps it (courageous, focused, stalwart, compassionate, inspired); its traits lean it one way. Quarrelsome members under strain may fall out and leave. Cold, wet, hunger and fatigue gather too, and past their limit they harm.'
       fields={[
         {
           key: 'role',
@@ -113,6 +114,12 @@ function MemberCard({ row, blocked }: { row: Member; blocked: string | null }) {
         { key: 'hunger', label: 'Hunger', kind: 'number', min: 0, max: SPAN },
         { key: 'fatigue', label: 'Fatigue', kind: 'number', min: 0, max: SPAN },
         { key: 'fallen', label: 'Fallen', kind: 'pick', table: YES_NO },
+        {
+          key: 'departed',
+          label: 'Left the party',
+          kind: 'pick',
+          table: YES_NO,
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -306,7 +313,7 @@ function ExpeditionCard({
       caption={`${status.label} · ${ground.label.toLowerCase()} · set out in epoch ${row.started_epoch}${row.ended_epoch !== null ? `, ended in epoch ${row.ended_epoch}` : ''}`}
       removeLabel='Strike the expedition'
       editTitle='Set the expedition'
-      note='An expedition goes leg by leg into a site, the wilds, an underworld or another realm. Each leg eats provisions and burns light; without light it walks in the dark, where danger and stress rise. Scouts and guides lower the danger, healers spend medicine on exposure, fighters turn aside ambushes, scholars read finds from inscriptions and porters carry more. Camps rest the party at the cost of provisions and may be ambushed at night.'
+      note='An expedition goes leg by leg into a site, the wilds, an underworld, another realm, the waters below, the void between worlds or another dimension. Each leg eats provisions and burns light; without light it walks in the dark, where danger and stress rise. Under the water and in the void those who cannot breathe use air, and harm comes when it runs out. Scouts and guides lower the danger, healers spend medicine on exposure, fighters turn aside ambushes, scholars read finds from inscriptions, porters carry more, warders ward the dark, interpreters turn ambushes into bargains, cartographers chart what is crossed and engineers shore close places. Camps rest the party at the cost of provisions and may be ambushed at night.'
       fields={[
         { key: 'name', label: 'Expedition name', kind: 'text' },
         {
@@ -356,6 +363,7 @@ function ExpeditionCard({
           max: MANY,
         },
         { key: 'light', label: 'Light', kind: 'number', min: 0, max: MANY },
+        { key: 'air', label: 'Air', kind: 'number', min: 0, max: MANY },
         { key: 'tools', label: 'Tools', kind: 'number', min: 0, max: MANY },
         {
           key: 'medicine',
@@ -407,7 +415,7 @@ function ExpeditionCard({
           icon={Compass}
         />
         <div className='@container/tiles min-w-0'>
-          <div className='grid min-w-0 grid-cols-2 gap-2 @lg/tiles:grid-cols-5'>
+          <div className='grid min-w-0 grid-cols-2 gap-2 @lg/tiles:grid-cols-6'>
             <KpiTile
               label='Provisions'
               value={row.provisions}
@@ -420,6 +428,7 @@ function ExpeditionCard({
               icon={Flame}
               tone='warning'
             />
+            <KpiTile label='Air' value={row.air} icon={Wind} tone='info' />
             <KpiTile
               label='Tools'
               value={row.tools}
@@ -562,7 +571,7 @@ function ExpeditionForge({
       icon={Compass}
       tone='success'
       title='Send an expedition'
-      note='Choose a mortal to lead it, where it goes, how it travels and up to two companions. Its ground (a site, the wilds, an underworld or another realm), legs, provisions and light follow from where it goes and who it takes; a way of travel that finds little passage there adds legs, and your hand carries them by a way their bodies could not take alone.'
+      note='Choose a mortal to lead it, where it goes, how it travels and up to two companions. Its ground (a site, the wilds, an underworld, another realm, the waters below, the void or another dimension), legs, provisions and light follow from where it goes and who it takes; a way of travel that finds little passage there adds legs, and your hand carries them by a way their bodies could not take alone.'
 
       columns={4}
       action={

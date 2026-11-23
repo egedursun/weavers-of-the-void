@@ -3,7 +3,7 @@ from pydantic import Field
 from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, DomainHook, GodGoalKind, SonPunishment, VotingRule
+from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, DomainHook, GodGoalKind, PenanceDeed, SonPunishment, VotingRule, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.mind import ActKind
 from aerona.engine.divine import control
@@ -62,6 +62,8 @@ class WoundDraft(Command):
     kind: DivineWoundKind
     severity: int = 50
     domain: Domain | None = None
+    cause: WoundCause = WoundCause.CREATOR
+    cause_node_id: int | None = None
 
 
 class WoundEdit(Edited):
@@ -115,6 +117,7 @@ class RulingDraft(Command):
     school: MagicSchool | None = None
     punishment: SonPunishment | None = None
     voting_rule: VotingRule | None = None
+    penance_deed: PenanceDeed | None = None
 
 
 class RulingEdit(Edited):
@@ -199,7 +202,15 @@ async def clear_standing(scope: PlayerScope, command: StandingTarget) -> Effect:
 
 @player_action("divine_wound:inflict", ActionKind.EDIT_RECORD)
 async def inflict_wound(scope: PlayerScope, command: WoundDraft) -> Effect:
-    row = await control.wound_god(await scope.context("divine_wound_inflict"), command.god_id, command.kind, command.severity, command.domain)
+    row = await control.wound_god(
+        await scope.context("divine_wound_inflict"),
+        command.god_id,
+        command.kind,
+        command.severity,
+        command.domain,
+        cause=command.cause,
+        cause_node_id=command.cause_node_id,
+    )
     return Effect("The god is wounded.", command.god_id, values={"wound_id": row.id})
 
 
@@ -273,6 +284,7 @@ async def decree(scope: PlayerScope, command: RulingDraft) -> Effect:
         school=command.school,
         punishment=command.punishment,
         voting_rule=command.voting_rule,
+        penance_deed=command.penance_deed,
     )
     return Effect("; ".join(lines) or "The ruling stands.", command.target_id, values={"ruling_id": row.id})
 

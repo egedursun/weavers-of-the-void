@@ -2,7 +2,7 @@ from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.cosmography import StarAge
 from aerona.domain.enums.ecology import Biochemistry
-from aerona.domain.enums.physics import CosmicFeatureKind, ImpactBody, ImpactOutcome, LifeComplexity, SurveyLevel, SystemRole, TerraformAim
+from aerona.domain.enums.physics import CosmicFeatureKind, ImpactBody, ImpactOutcome, LifeComplexity, LifeEnvironment, SurveyLevel, SystemRole, TerraformAim
 from aerona.domain.enums.world import StarType
 
 
@@ -141,7 +141,7 @@ class WorldPhysicsRecord(ApiModel):
 
 class LifeRecord(ApiModel):
     complexity: LifeComplexity
-    environments: list[str]
+    environments: list[LifeEnvironment]
     biochemistries: list[Biochemistry]
     locked: list[str]
 

@@ -1,3 +1,4 @@
+from collections import Counter
 from collections.abc import Awaitable, Callable
 
 from sqlalchemy import select
@@ -33,15 +34,29 @@ from aerona.agents.context.tongue_lines import son_tongue_lines
 from aerona.agents.context.world_view_lines import son_world_lines
 from aerona.catalog.domain_effects import ACTIVITY_LABELS, DOMAIN_EFFECTS, HOOKS, SYNERGY_OF
 from aerona.catalog.domains import DOMAIN_LABELS
-from aerona.catalog.life.divine import MOTION_LABELS, WOUND_LABELS
+from aerona.catalog.dominion import PRAYER_TONES, WORSHIP_MODES
+from aerona.catalog.life.divine import MOTION_LABELS, PENANCE_DEEDS, PUNISHMENTS, WOUND_CAUSES, WOUND_LABELS
+from aerona.catalog.outer_bargains import BARGAIN_GAINS, BARGAIN_PRICES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.db.tables.divine import AvatarRow, CouncilRulingRow, DivineStandingRow, DivineWoundRow, DomainActivityRow, GodGoalRow, WorldAttentionRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import OuterBargainRow
+from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.divine import GoalState
 from aerona.engine.divine.goals import aim_text
+
+
+def penalty_words(ruling: CouncilRulingRow) -> str:
+    if ruling.punishment is None:
+        return ""
+    words = f", by {PUNISHMENTS[ruling.punishment].label}"
+    if ruling.penance_deed is not None:
+        words += f": to {PENANCE_DEEDS[ruling.penance_deed].label} by epoch {ruling.until_epoch}"
+    return words
 
 
 async def name_of(scope: Scope, node_id: int | None) -> str | None:
@@ -105,6 +120,19 @@ SON_BLOCKS: tuple[Callable[[Scope, SonRow], Awaitable[list[str]]], ...] = (
 )
 
 
+async def bargain_lines(scope: Scope, son: SonRow) -> list[str]:
+    found = []
+    table = scope.rules.outer_bargains
+    for row in await scope.session.scalars(select(OuterBargainRow).where(OuterBargainRow.son_id == son.id).order_by(OuterBargainRow.outer_entity_id)):
+        being = await scope.session.get(EntityRow, row.outer_entity_id)
+        owed = "" if row.paid else f", your line bound until age {row.epoch + table.epochs(table.descendants_years)}"
+        found.append(
+            f"Bargain with {being.name if being is not None else 'an outer being'} (age {row.epoch}): took "
+            f"{BARGAIN_GAINS[row.gain].label.lower()}, paid {BARGAIN_PRICES[row.price].label.lower()}{owed}"
+        )
+    return found
+
+
 async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     session = scope.session
     lines = await goal_lines(scope, son)
@@ -113,7 +141,12 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     lines.extend(await hook_lines(son, severed))
     for row in wounds:
         tail = f" ({DOMAIN_LABELS[row.domain]})" if row.domain is not None else ""
-        lines.append(f"Divine wound #{row.id}: {WOUND_LABELS[row.kind].lower()}{tail}, {row.healed}% healed")
+        dealer = await name_of(scope, row.cause_node_id)
+        lines.append(
+            f"Divine wound #{row.id}: {WOUND_LABELS[row.kind].lower()}{tail}, dealt by {WOUND_CAUSES[row.cause].label}"
+            f"{f' ({dealer})' if dealer else ''}, {row.healed}% healed"
+        )
+    lines.extend(await bargain_lines(scope, son))
     activity = list(
         await session.scalars(
             select(DomainActivityRow).where(DomainActivityRow.god_node_id == son.id, DomainActivityRow.epoch >= scope.epoch - 1).order_by(DomainActivityRow.id)
@@ -126,7 +159,16 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     for regard in standings[: scope.rules.context.son_standing_lines]:
         place = await session.get(EntityRow, regard.community_entity_id)
         if place is not None:
-            lines.append(f"{place.name} regards you: awe {regard.awe}, love {regard.love}, fear {regard.fear}, neglect {regard.neglect}")
+            way = f", worshipping in {WORSHIP_MODES[regard.mode].label.lower()}" if regard.mode is not None else ""
+            lines.append(f"{place.name} regards you: awe {regard.awe}, love {regard.love}, fear {regard.fear}, neglect {regard.neglect}{way}")
+    tones = await session.scalars(
+        select(MessageRow.tone).where(
+            MessageRow.recipient_node_id == son.id, MessageRow.epoch >= scope.epoch - 1, MessageRow.intent == MessageIntent.PRAYER, MessageRow.tone.is_not(None)
+        )
+    )
+    told = Counter(tone for tone in tones if tone is not None)
+    if told:
+        lines.append("Prayers that reached you: " + ", ".join(f"{PRAYER_TONES[tone].label.lower()} {count}" for tone, count in sorted(told.items())))
     for avatar in await session.scalars(select(AvatarRow).where(AvatarRow.god_node_id == son.id)):
         lines.append(f"Your mortal form #{several(avatar.avatar_entity_id, 'walk', 'walks')} the world")
     attention = await session.get(WorldAttentionRow, son.current_world_id) if son.current_world_id is not None else None
@@ -134,7 +176,7 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
         lines.append("The Creator pays your world little attention")
     for ruling in await session.scalars(select(CouncilRulingRow).where(CouncilRulingRow.active.is_(True)).order_by(CouncilRulingRow.id)):
         target = await name_of(scope, ruling.target_node_id)
-        lines.append(f"Council ruling in force: {MOTION_LABELS[ruling.motion].lower()}{f' ({target})' if target else ''}")
+        lines.append(f"Council ruling in force: {MOTION_LABELS[ruling.motion].lower()}{f' ({target})' if target else ''}{penalty_words(ruling)}")
     for more in SON_BLOCKS:
         lines.extend(await more(scope, son))
     return lines

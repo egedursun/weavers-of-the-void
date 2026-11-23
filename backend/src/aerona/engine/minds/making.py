@@ -53,9 +53,9 @@ def quality_of(ctx: TickContext, making: Making) -> int:
 
 def outcome_of(ctx: TickContext, node_id: int, quality: int) -> MakingOutcome:
     table = ctx.rules.mind_making
-    if quality >= table.failure_below:
-        return MakingOutcome.AS_MEANT
     rng = ctx.rng(f"mind.making.{node_id}.{ctx.epoch}")
+    if quality >= table.failure_below:
+        return MakingOutcome.EXCEEDED if quality >= PERCENT and rng.chance(table.exceeded_pct) else MakingOutcome.AS_MEANT
     if not rng.chance((table.failure_below - quality) * PERCENT / max(1, table.failure_below)):
         return MakingOutcome.AS_MEANT
     weights = {outcome: int(getattr(table, rule_name)) for outcome, rule_name in MAKING_WEIGHTS.items() if rule_name is not None}
@@ -84,6 +84,8 @@ def apply_outcome(ctx: TickContext, row: MindProfileRow, outcome: MakingOutcome,
         change_will(ctx, row, MindWill.NONE, WillCause.DAMAGE)
         if "affect" not in row.locked:
             row.affect = MindAffect.NONE
+    elif outcome is MakingOutcome.EXCEEDED and "capacity" not in row.locked:
+        row.capacity = clamp_percent(row.capacity + ctx.rules.mind_making.exceeded_capacity)
     elif outcome is MakingOutcome.UNINTENDED_WILL:
         shift = 1 if ctx.rng(f"mind.unintended.{row.node_id}.{ctx.epoch}").chance(PERCENT // 2) else -1
         change_will(ctx, row, WILL_ORDER[max(0, min(len(WILL_ORDER) - 2, will_rank(meant) + shift))], WillCause.DAMAGE)

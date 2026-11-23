@@ -20,6 +20,8 @@ KIND_LIFT: Mapping[AugmentKind, Lift] = total(
         AugmentKind.SENSE: (EffectTarget.SENSE, "sight"),
         AugmentKind.STORAGE: (EffectTarget.ATTRIBUTE, "memory"),
         AugmentKind.COSMETIC: (EffectTarget.ATTRIBUTE, "social_awareness"),
+        AugmentKind.LIFE_SUPPORT: None,
+        AugmentKind.ARMOUR: None,
     },
 )
 SLOT_LIFT: Mapping[AugmentSlot, Lift] = total(
@@ -34,6 +36,7 @@ SLOT_LIFT: Mapping[AugmentSlot, Lift] = total(
     },
 )
 LIFT_SHARE = 10
+LIFESPAN_KEY = "years"
 
 
 async def bonus(session: AsyncSession, node_id: int | None, target: EffectTarget, key: str) -> int:
@@ -51,6 +54,11 @@ async def bonus(session: AsyncSession, node_id: int | None, target: EffectTarget
             if lift == (target, key):
                 implied += row.quality * row.integration // PERCENT // LIFT_SHARE
     return explicit + implied
+
+
+async def kind_strength(session: AsyncSession, node_id: int, kind: AugmentKind) -> int:
+    rows = await session.scalars(select(AugmentRow).where(AugmentRow.bearer_node_id == node_id, AugmentRow.kind == kind).order_by(AugmentRow.id))
+    return max((row.quality * row.integration // PERCENT for row in rows), default=0)
 
 
 async def lifts_of(session: AsyncSession, node_id: int, target: EffectTarget) -> dict[str, int]:

@@ -80,6 +80,10 @@ class ExpeditionRole(StrEnum):
     FIGHTER = "fighter"
     SCHOLAR = "scholar"
     PORTER = "porter"
+    WARDER = "warder"
+    INTERPRETER = "interpreter"
+    CARTOGRAPHER = "cartographer"
+    ENGINEER = "engineer"
 
 
 class ExpeditionGround(StrEnum):
@@ -87,6 +91,9 @@ class ExpeditionGround(StrEnum):
     WILDS = "wilds"
     UNDERWORLD = "underworld"
     REALM = "realm"
+    UNDER_WATER = "under_water"
+    SPACE = "space"
+    DIMENSION = "dimension"
 
 
 class ExpeditionStatus(StrEnum):
@@ -105,6 +112,10 @@ class ResolveKind(StrEnum):
     COURAGEOUS = "courageous"
     FOCUSED = "focused"
     STALWART = "stalwart"
+    FEARFUL = "fearful"
+    IRRATIONAL = "irrational"
+    COMPASSIONATE = "compassionate"
+    INSPIRED = "inspired"
 
 
 class ExpeditionEvent(StrEnum):
@@ -120,6 +131,8 @@ class ExpeditionEvent(StrEnum):
     FALLEN = "fallen"
     RETURN = "return"
     LOSS = "loss"
+    DISCOVERY = "discovery"
+    QUARREL = "quarrel"
 
 
 class QuirkKind(StrEnum):
@@ -135,3 +148,7 @@ class QuirkKind(StrEnum):
     HOMESICK = "homesick"
     RESTLESS = "restless"
     LIGHT_FINGERED = "light_fingered"
+    CLAUSTROPHOBIC = "claustrophobic"
+    COLD_HARDY = "cold_hardy"
+    SWIMMER = "swimmer"
+    LUCKY = "lucky"

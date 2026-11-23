@@ -309,6 +309,7 @@ async def council_rulings(services: ServicesDep) -> CouncilRulings:
                     world=ref(refs, row.world_id),
                     school=row.school,
                     punishment=row.punishment,
+                    penance_deed=row.penance_deed,
                     voting_rule=row.voting_rule,
                     epoch=row.epoch,
                     until_epoch=row.until_epoch,
@@ -332,7 +333,8 @@ async def law_profile(entity_id: Id, services: ServicesDep) -> NaturalLawProfile
         found = await session.get(NaturalLawProfileRow, entity_id)
         cosmos = await CosmosRepository(session).require_cosmos()
         row = found or await drafted_profile(session, await world_rules(services, session), law, cosmos.epoch)
-        refs = await node_refs(session, [item for item in (entity_id, row.world_id, row.region_entity_id, row.author_node_id) if item is not None])
+        linked = (entity_id, row.world_id, row.region_entity_id, row.author_node_id, row.exempt_kind_entity_id)
+        refs = await node_refs(session, [item for item in linked if item is not None])
         effect = law.natural_law or NaturalLaw.NONE
         spec = NATURAL_LAWS[effect]
         return NaturalLawProfileView(
@@ -347,6 +349,7 @@ async def law_profile(entity_id: Id, services: ServicesDep) -> NaturalLawProfile
             stability=row.stability,
             author=ref(refs, row.author_node_id),
             exception=row.exception,
+            exempt_kind=ref(refs, row.exempt_kind_entity_id),
             contested=row.contested,
             updated_epoch=row.updated_epoch,
             drafted=found is None,

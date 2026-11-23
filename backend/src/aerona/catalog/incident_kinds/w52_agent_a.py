@@ -1,7 +1,9 @@
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleSpec
 from aerona.domain.enums.affliction import ChangeSign, CharmKind, CureKind, PackageKind
 from aerona.domain.enums.agrarian import NutrientKind
+from aerona.domain.enums.arcana import RiteEnd
 from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.constructs import OrderCondition, OrderKind
 from aerona.domain.enums.customs import CoopPurpose, EvidenceKind, MemberRight, Membership, Naturalisation
 from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.entity import EntityType as E
@@ -10,9 +12,10 @@ from aerona.domain.enums.evolution import SuccessionStage
 from aerona.domain.enums.faction import FactionActionKind, FactionGoalKind
 from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.law_depth import CourtLevel
-from aerona.domain.enums.mind import Emotion, GriefStage
+from aerona.domain.enums.mind import ActKind, Emotion, GriefStage
 from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.mortal import CareerPath
+from aerona.domain.enums.mythic import GeasLayer, GeasMode, QuestTrial
 from aerona.domain.enums.polity import ClaimBasis, OathKind, OfficeKind
 from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule
 from aerona.domain.enums.records import ProcessClock as C
@@ -417,4 +420,85 @@ STATECRAFT: tuple[IncidentKindSpec, ...] = (
     ),
 )
 
-KINDS: tuple[IncidentKindSpec, ...] = (*CAREERS, *DEATHS, *PACKAGES, *MINDS, *TOOLS, *LAND, *TRAVEL, *STATECRAFT)
+
+ARCANA: tuple[IncidentKindSpec, ...] = (
+    IncidentKindSpec(
+        "rite.ended",
+        G.KNOWLEDGE,
+        "The working of {subject} on {target} came to its end: {end}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.RITE})), RoleSpec(R.TARGET, required=False)),
+        facts=(FactSpec("end", FactValue.ENUM, enum=RiteEnd),),
+        clock=C.PHASE,
+    ),
+    IncidentKindSpec(
+        "quest.trial",
+        G.FAITH,
+        "{actor} met a trial of {trial} on the path of the myth {passed:and failed it|and passed it|and passed it}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})),),
+        facts=(FactSpec("trial", FactValue.ENUM, enum=QuestTrial), FactSpec("passed", FactValue.NUMBER, FactUnit.COUNT)),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "geas.laid",
+        G.FAITH,
+        "A geas was laid on {subject} by {origin}, {layer}: {mode} of {act}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})), RoleSpec(R.ORIGIN, required=False)),
+        facts=(
+            FactSpec("layer", FactValue.ENUM, enum=GeasLayer),
+            FactSpec("mode", FactValue.ENUM, enum=GeasMode),
+            FactSpec("act", FactValue.ENUM, enum=ActKind),
+        ),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "orders.given",
+        G.MAKING,
+        "{subject} was given an order by {authority}: {order}, aimed at {target}, kept {condition}.",
+        roles=(RoleSpec(R.SUBJECT), RoleSpec(R.AUTHORITY, required=False), RoleSpec(R.TARGET, required=False)),
+        facts=(FactSpec("order", FactValue.ENUM, enum=OrderKind), FactSpec("condition", FactValue.ENUM, enum=OrderCondition)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "orders.lapsed",
+        G.MAKING,
+        "An order of {subject} lapsed: {order}, kept {condition}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("order", FactValue.ENUM, enum=OrderKind), FactSpec("condition", FactValue.ENUM, enum=OrderCondition)),
+        clock=C.PHASE,
+    ),
+    IncidentKindSpec(
+        "orders.seized",
+        G.MAKING,
+        "{owner} spoke the true name of {subject} and it answered to no other.",
+        roles=(RoleSpec(R.SUBJECT), RoleSpec(R.OWNER)),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "worship.bargain",
+        G.FAITH,
+        "{subject} bargained with {patron} by offering; {answered:no bargain was|# bargain was|# bargains were} answered and "
+        "{unanswered:none went|# went|# went} unanswered.",
+        roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PATRON)),
+        facts=(FactSpec("answered", FactValue.NUMBER, FactUnit.COUNT), FactSpec("unanswered", FactValue.NUMBER, FactUnit.COUNT)),
+        clock=C.PHASE,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.lay_geas_on_kin",
+        G.FAITH,
+        "{actor} laid a geas on {target} by the word of kin: {mode} of {act}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.TARGET, frozenset({E.MORTAL}))),
+        facts=(FactSpec("mode", FactValue.ENUM, enum=GeasMode), FactSpec("act", FactValue.ENUM, enum=ActKind)),
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
+        "tools.mortal.swear_geas",
+        G.FAITH,
+        "{actor} swore a geas upon itself: {mode} of {act}.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})),),
+        facts=(FactSpec("mode", FactValue.ENUM, enum=GeasMode), FactSpec("act", FactValue.ENUM, enum=ActKind)),
+        clock=C.INSTANT,
+    ),
+)
+
+KINDS: tuple[IncidentKindSpec, ...] = (*CAREERS, *DEATHS, *PACKAGES, *MINDS, *TOOLS, *LAND, *TRAVEL, *STATECRAFT, *ARCANA)

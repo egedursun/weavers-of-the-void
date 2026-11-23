@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from aerona.catalog.life.made import DECLINE, STANCE_USE
+from aerona.catalog.life.made import DECLINE, RESTORABLE, STANCE_USE
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import MadeRelicRow, SalvageSiteRow
 from aerona.db.tables.networks import NetworkProfileRow
@@ -9,10 +9,12 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.made import RelicStance, RelicState, RelicUse
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.augments import seek_enhancements
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.research import raise_holder
 from aerona.engine.made.backfill import keep_made_kinds, legacy_backfill
 from aerona.engine.made.doctrine import doctrine_here
 from aerona.engine.primitives.numbers import clamp_percent
@@ -76,15 +78,9 @@ async def keep_relic(ctx: TickContext, relic: MadeRelicRow, thing: EntityRow) ->
         relic.function_state = DECLINE[relic.function_state]
     if relic.use is RelicUse.REPURPOSED and "understood_pct" not in relic.locked:
         relic.understood_pct = clamp_percent(relic.understood_pct + table.study_gain)
-    if relic.understood_pct >= table.recovery_at and not repairable and "repair_knowledge" not in relic.locked:
-        relic.repair_knowledge = level
-        await record(
-            ctx,
-            "relic.recovered",
-            roles={IncidentRole.SUBJECT: thing.id, IncidentRole.OWNER: holder.id if holder is not None else None},
-            facts={"understood": relic.understood_pct, "repair_knowledge": level},
-            place=thing.location_id,
-        )
+    if await restore_or_dismantle(ctx, relic, thing, holder, repairable=repairable):
+        return
+    await recover_making(ctx, relic, thing, holder, repairable=repairable, level=level)
     misused = relic.use is RelicUse.AS_MADE or (
         relic.use is RelicUse.REPURPOSED and ctx.rng(f"relic.misuse.{relic.thing_node_id}.{ctx.epoch}").chance(table.wear)
     )
@@ -111,6 +107,47 @@ async def keep_relic(ctx: TickContext, relic: MadeRelicRow, thing: EntityRow) ->
         elif relic.use is not RelicUse.IGNORED and relic.function_state is RelicState.DORMANT:
             relic.function_state = RelicState.WORKING
     relic.updated_epoch = ctx.epoch
+
+
+async def recover_making(ctx: TickContext, relic: MadeRelicRow, thing: EntityRow, holder: EntityRow | None, *, repairable: bool, level: int) -> None:
+    table = ctx.rules.made_relics
+    if relic.understood_pct >= table.recovery_at and not repairable and "repair_knowledge" not in relic.locked:
+        relic.repair_knowledge = level
+        await record(
+            ctx,
+            "relic.recovered",
+            roles={IncidentRole.SUBJECT: thing.id, IncidentRole.OWNER: holder.id if holder is not None else None},
+            facts={"understood": relic.understood_pct, "repair_knowledge": level},
+            place=thing.location_id,
+        )
+
+
+async def restore_or_dismantle(ctx: TickContext, relic: MadeRelicRow, thing: EntityRow, holder: EntityRow | None, *, repairable: bool) -> bool:
+    restorable = relic.function_state in RESTORABLE and "function_state" not in relic.locked
+    if relic.understood_pct >= ctx.rules.made_relics.recovery_at and repairable and restorable:
+        relic.function_state = RelicState.RESTORED
+        owner = holder.id if holder is not None else None
+        await record(ctx, "relic.restored", roles={IncidentRole.SUBJECT: thing.id, IncidentRole.OWNER: owner}, place=thing.location_id)
+    if relic.use is RelicUse.DISMANTLED and relic.is_relic:
+        await dismantle(ctx, relic, thing, holder)
+        return True
+    return False
+
+
+async def dismantle(ctx: TickContext, relic: MadeRelicRow, thing: EntityRow, holder: EntityRow | None) -> None:
+    table = ctx.rules.made_relics
+    if holder is not None and not held(holder.id):
+        await give_coin(ctx.session, ctx.rules, holder, table.dismantle_yield)
+        await raise_holder(ctx, holder.id, KnowledgeBranch.METALLURGY, table.dismantle_cap)
+    relic.is_relic = False
+    relic.function_state = RelicState.BROKEN
+    relic.updated_epoch = ctx.epoch
+    await record(
+        ctx,
+        "relic.dismantled",
+        roles={IncidentRole.SUBJECT: thing.id, IncidentRole.OWNER: holder.id if holder is not None else None},
+        facts={"salvage": table.dismantle_yield},
+    )
 
 
 async def salvage(ctx: TickContext) -> int:

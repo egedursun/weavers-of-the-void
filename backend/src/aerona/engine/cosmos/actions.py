@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.outer_bargains import BARGAIN_PRICES
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.celestial import WorldRow
@@ -96,9 +97,17 @@ class BargainTerms:
     price_world_id: int | None = None
 
 
+def asked_price(ctx: TickContext, son_id: int, outer_id: int) -> BargainPrice:
+    prices = list(BARGAIN_PRICES)
+    weights = [float(BARGAIN_PRICES[price].weight(ctx.rules)) for price in prices]
+    if not any(weights):
+        return BargainPrice.WORLD_SANITY
+    return ctx.rng(f"outer_price.{son_id}.{outer_id}.{ctx.epoch}").weighted(prices, weights)
+
+
 async def bargain_with_outer(ctx: TickContext, son_id: int, outer_id: int, request: str, terms: BargainTerms | None = None) -> int:
     pantheon = ctx.rules.pantheon
-    deal = terms if terms is not None else BargainTerms()
+    deal = terms if terms is not None else BargainTerms(price=asked_price(ctx, son_id, outer_id))
     son = await SonRepository(ctx.session).require_son(son_id)
     being = await ctx.session.get(EntityRow, outer_id)
     if being is None or being.entity_type is not EntityType.OUTER_BEING or being.status is not EntityStatus.CANON:
@@ -127,7 +136,7 @@ async def bargain_with_outer(ctx: TickContext, son_id: int, outer_id: int, reque
         deal.price,
         deal.price_domain,
         deal.price_world_id,
-        True,
+        not BARGAIN_PRICES[deal.price].lasting,
     )
     thread = ThreadRow(epoch=ctx.epoch, text=f"{son.name} bargained with {being.name} ({request}): {gained}, and {paid}.", status=ThreadStatus.OPEN)
     ctx.session.add(thread)

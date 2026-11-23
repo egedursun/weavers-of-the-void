@@ -30,6 +30,8 @@ class PowerSourceRules:
     start_density: int = rule(50, 0, 100, P, "Density a land starts with for a source that reaches it")
     contention_draw: int = rule(2, 0, 50, P, "Density each further user strips from an overdrawn land as they race to draw before the others")
     contention_rivals: int = rule(6, 0, 100, P, "Most pairs of users of one overdrawn land who come to resent each other in an epoch")
+    bought_price: int = rule(10, 0, 10000, P, "Coin in treasury a user pays the keepers of a source open to those who buy their way in, each time it draws")
+    offering_renewal: int = rule(3, 0, 100, P, "Density a source renewed by offerings regains each epoch for each holy place in its land")
 
 
 @dataclass(frozen=True)
@@ -88,6 +90,14 @@ class PowerRules:
     siege_breach: int = rule(6, 1, 10, H, "Strength at which a power of force, earth or space can breach or cross walls")
     bloodline_chance: int = rule(50, 0, 100, H, "Chance a child of a line with a bloodline power inherits it by the line's rule")
     discipline_gain: int = rule(1, 0, 100, H, "Strength in tenths a power of discipline gains each epoch of training")
+    transfer_loss_pct: int = rule(30, 0, 100, H, "Share of its strength a power loses when it is taken from one being into another (%)")
+    memory_source_rate: int = rule(5, 0, 50, H, "Strength a power drawn from memory gains for each ten memories its holder's people keep, until its full sway")
+    transfer_device_pct: int = rule(
+        10, 0, 100, H, "Chance each epoch the holder of a device that moves powers takes a power from a gifted one in its place (%)"
+    )
+    store_recovery: int = rule(4, 0, 100, H, "Strain each device that stores power takes from its holder's powers each epoch")
+    sleep_stress: int = rule(40, 0, 100, H, "Stress under which a dream of the night can wake a power that wakes in sleep")
+    danger_hp_pct: int = rule(30, 0, 100, H, "Share of full health below which a near kin, friend or charge is in danger enough to wake a power (%)")
 
 
 @dataclass(frozen=True)
@@ -134,3 +144,18 @@ class ConcealmentRules(Spanned):
     @property
     def legend_after(self) -> int:
         return self.epochs(self.legend_after_years)
+
+    children_breach: int = rule(
+        4, 0, 100, K, "Chance each epoch a truth whose keepers or subject have young children is let slip by the children, against its strength"
+    )
+    dream_breach: int = rule(3, 0, 100, K, "Chance each epoch a truth breaks through dreams on a world whose laws make dreams real, against its strength")
+    dig_breach: int = rule(15, 0, 100, K, "Chance each epoch an open dig in the land of a truth's subject brings it up, against its strength")
+    relocate_at: int = rule(40, 0, 100, K, "Knowledge of a hidden place or presence at which its keepers move the hidden to a new refuge")
+    relocate_cost: int = rule(10, 0, 100, K, "Wealth points keepers spend to move the hidden to a new refuge")
+    bargain_cut_pct: int = rule(40, 0, 100, K, "Share of knowledge a go-between's bargain takes back by turning finders into keepers (%)")
+    archivist_seek_pct: int = rule(50, 0, 200, K, "Added progress a seeker makes on a truth kept by archivists, whose records are its first target (%)")
+    protected_seek_cut: int = rule(20, 0, 100, K, "Progress each seeker of a truth a people protects by law loses each epoch")
+    bargained_trade: int = rule(3, 0, 100, K, "Prosperity the towns of a hidden people gain each epoch a population trades with them by open treaty")
+    lineage_renown: int = rule(15, 0, 100, K, "Renown a mortal of a hidden line gains when its lineage is revealed")
+    location_seek_chance: int = rule(5, 0, 100, K, "Chance each epoch a hidden place with no seekers draws one from its world")
+    faith_initiates: int = rule(2, 0, 50, K, "Adherents of a faith that keeps a truth initiated into keeping it each epoch")

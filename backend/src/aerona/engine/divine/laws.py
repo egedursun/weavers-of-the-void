@@ -1,8 +1,11 @@
+from collections.abc import Awaitable, Callable, Mapping
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.knowledge import NATURAL_LAWS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -18,6 +21,8 @@ from aerona.domain.enums.entity import HERO_ROLES, EntityOrigin, EntityStatus, E
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.arcana.enchantments import keep_law
+from aerona.engine.body.book import species_of
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.placement import cosmography_of
@@ -166,6 +171,62 @@ async def tend_laws(ctx: TickContext) -> int:
     return len(rows)
 
 
+KIND_TYPES = frozenset({EntityType.SPECIES, EntityType.PEOPLE})
+
+
+async def of_kind(session: AsyncSession, entity: EntityRow, kind_id: int) -> bool:
+    if entity.id == kind_id or await people_id_of(session, entity) == kind_id:
+        return True
+    species = await species_of(session, entity)
+    return species is not None and species.id == kind_id
+
+
+async def spares_none(_ctx: TickContext, _row: NaturalLawProfileRow, _entity: EntityRow) -> bool:
+    return False
+
+
+async def spares_heroes(_ctx: TickContext, _row: NaturalLawProfileRow, entity: EntityRow) -> bool:
+    return entity.mortal_role in HERO_ROLES
+
+
+async def spares_avatars(ctx: TickContext, _row: NaturalLawProfileRow, entity: EntityRow) -> bool:
+    return await ctx.session.get(AvatarRow, entity.id) is not None
+
+
+async def spares_chosen(ctx: TickContext, _row: NaturalLawProfileRow, entity: EntityRow) -> bool:
+    marked = await ctx.session.scalar(
+        select(ConditionRow.id).where(
+            ConditionRow.bearer_node_id == entity.id, ConditionRow.kind == ConditionKind.CHOSEN_MARK, ConditionRow.ended_epoch.is_(None)
+        )
+    )
+    return marked is not None or entity.mortal_role is MortalRole.CHOSEN
+
+
+async def spares_faithful(ctx: TickContext, row: NaturalLawProfileRow, entity: EntityRow) -> bool:
+    if row.author_node_id is None:
+        return False
+    gods, _ = await (await ctx.divine()).faithful_of(ctx.session, entity.id)
+    return row.author_node_id in gods
+
+
+async def spares_kind(ctx: TickContext, row: NaturalLawProfileRow, entity: EntityRow) -> bool:
+    return row.exempt_kind_entity_id is not None and await of_kind(ctx.session, entity, row.exempt_kind_entity_id)
+
+
+Spares = Callable[[TickContext, NaturalLawProfileRow, EntityRow], Awaitable[bool]]
+SPARES: Mapping[LawException, Spares] = total(
+    LawException,
+    {
+        LawException.NONE: spares_none,
+        LawException.CREATOR_CHOSEN: spares_chosen,
+        LawException.AUTHOR_WORSHIPPERS: spares_faithful,
+        LawException.HEROES: spares_heroes,
+        LawException.AVATARS: spares_avatars,
+        LawException.NAMED_KIND: spares_kind,
+    },
+)
+
+
 async def exempt(ctx: TickContext, entity: EntityRow, law: NaturalLaw) -> bool:
     for law_id in list(await ctx.session.scalars(select(NaturalLawProfileRow.law_entity_id).where(NaturalLawProfileRow.effect == law))):
         if await spared(ctx, law_id, entity):
@@ -173,24 +234,7 @@ async def exempt(ctx: TickContext, entity: EntityRow, law: NaturalLaw) -> bool:
     rows = await ctx.session.scalars(
         select(NaturalLawProfileRow).where(NaturalLawProfileRow.effect == law, NaturalLawProfileRow.exception != LawException.NONE)
     )
-    for row in rows:
-        if row.exception is LawException.HEROES and entity.mortal_role in HERO_ROLES:
-            return True
-        if row.exception is LawException.AVATARS and await ctx.session.get(AvatarRow, entity.id) is not None:
-            return True
-        if row.exception is LawException.CREATOR_CHOSEN:
-            marked = await ctx.session.scalar(
-                select(ConditionRow.id).where(
-                    ConditionRow.bearer_node_id == entity.id, ConditionRow.kind == ConditionKind.CHOSEN_MARK, ConditionRow.ended_epoch.is_(None)
-                )
-            )
-            if marked is not None or entity.mortal_role is MortalRole.CHOSEN:
-                return True
-        if row.exception is LawException.AUTHOR_WORSHIPPERS and row.author_node_id is not None:
-            gods, _ = await (await ctx.divine()).faithful_of(ctx.session, entity.id)
-            if row.author_node_id in gods:
-                return True
-    return False
+    return any([await SPARES[row.exception](ctx, row, entity) for row in list(rows)])
 
 
 async def binds(ctx: TickContext, law: NaturalLaw, entity: EntityRow) -> bool:

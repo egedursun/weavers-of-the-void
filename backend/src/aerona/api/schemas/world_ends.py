@@ -13,6 +13,7 @@ class WorldEndNodeView(ApiModel):
     epoch: int | None
     former_type: WorldType | None
     new_type: WorldType | None
+    source: NodeRef | None = None
     lives_ended: int
     homeless: int
     anchors_lost: int

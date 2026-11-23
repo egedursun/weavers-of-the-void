@@ -1,10 +1,12 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.life.divine import STRUCK_KINDS, WOUND_LABELS
+from aerona.catalog.life.divine import NEGLECT_KINDS, STRUCK_KINDS, WOUND_CAUSES, WOUND_LABELS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import CastingRow
-from aerona.db.tables.divine import AvatarRow, DivineWoundRow
+from aerona.db.tables.divine import AvatarRow, DivineStandingRow, DivineWoundRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
@@ -18,12 +20,13 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import ExistenceMode, SonDeathCause
 from aerona.domain.models.profiles import ExistenceProfile
 from aerona.engine.context import TickContext
-from aerona.engine.divine.gods import God, domains_of, god_of, living_gods
+from aerona.engine.divine.gods import God, domains_of, faithful_communities, god_of, living_gods
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.recording.record import record
 
 W = DivineWoundKind
+NEGLECT_FIXUP = "divine_wounds.w52"
 
 
 async def open_wounds(session: AsyncSession, god_id: int, kind: DivineWoundKind | None = None) -> list[DivineWoundRow]:
@@ -91,12 +94,12 @@ async def inflict(
             await ctx.session.delete(avatar)
         await scatter(ctx.session, god, row)
         await ctx.session.flush()
-    tail = f" ({row.domain.value})" if row.domain is not None else ""
+    tail = f" ({spoken(row.domain)})" if row.domain is not None else ""
     await record(
         ctx,
         f"divine.wound_{kind.value}",
-        roles={IncidentRole.SUBJECT: god.id},
-        facts={"wound": kind, "wound_label": WOUND_LABELS[kind].lower(), "tail": tail},
+        roles={IncidentRole.SUBJECT: god.id, IncidentRole.ACTOR: cause_node_id},
+        facts={"wound": kind, "wound_label": WOUND_LABELS[kind].lower(), "tail": tail, "cause": cause, "cause_label": WOUND_CAUSES[cause].label},
         kind=ChronicleKind.CHALLENGE,
         son_id=god.id if isinstance(god, SonRow) else None,
     )
@@ -215,7 +218,7 @@ async def heal_wounds(ctx: TickContext) -> int:
     return closed
 
 
-async def avatar_slain(ctx: TickContext, avatar_id: int) -> DivineWoundRow | None:
+async def avatar_slain(ctx: TickContext, avatar_id: int, slayer_id: int | None = None) -> DivineWoundRow | None:
     row = await ctx.session.get(AvatarRow, avatar_id)
     if row is None:
         return None
@@ -223,5 +226,58 @@ async def avatar_slain(ctx: TickContext, avatar_id: int) -> DivineWoundRow | Non
     await ctx.session.delete(row)
     if god is None:
         return None
+    slayer = await ctx.session.get(EntityRow, slayer_id) if slayer_id is not None else None
+    cause = WoundCause.MORTAL_SLAYER if slayer is not None and slayer.entity_type is EntityType.MORTAL else WoundCause.AVATAR_SLAIN
+    return await inflict(ctx, god, W.SHATTERED_MANIFESTATION, cause, severity=cause_severity(ctx, cause), cause_node_id=slayer_id)
+
+
+def cause_severity(ctx: TickContext, cause: WoundCause, fallback: int = PERCENT // 2) -> int:
+    found = WOUND_CAUSES[cause].severity
+    return found(ctx.rules) if found is not None else fallback
+
+
+async def neglect_wounds(ctx: TickContext) -> int:
     table = ctx.rules.divine_wounds
-    return await inflict(ctx, god, W.SHATTERED_MANIFESTATION, WoundCause.AVATAR_SLAIN, severity=table.avatar_severity)
+    wounded = 0
+    for god in await living_gods(ctx.session):
+        if held(god.id):
+            continue
+        regard = int(await ctx.session.scalar(select(func.count()).select_from(DivineStandingRow).where(DivineStandingRow.god_node_id == god.id)) or 0)
+        if not regard:
+            continue
+        faithful = len(await faithful_communities(ctx.session, god.id))
+        kind = W.FORGOTTEN_NAME if not faithful else W.LOST_WORSHIPPERS if faithful * PERCENT < regard * table.neglect_share else None
+        if kind is None or await open_wounds(ctx.session, god.id, kind):
+            continue
+        if faithful and not ctx.rng(f"divine_wound.neglect.{god.id}.{ctx.epoch}").chance(table.neglect_pct):
+            continue
+        if await inflict(ctx, god, kind, WoundCause.NEGLECT, severity=table.neglect_severity) is not None:
+            wounded += 1
+    return wounded
+
+
+async def betrayed(ctx: TickContext, god_id: int, traitor_id: int) -> DivineWoundRow | None:
+    god = await god_of(ctx.session, god_id)
+    if god is None or not ctx.rng(f"divine_wound.betrayal.{god_id}.{traitor_id}.{ctx.epoch}").chance(ctx.rules.divine_wounds.betrayal_pct):
+        return None
+    return await inflict(ctx, god, W.STOLEN_NAME, WoundCause.BETRAYAL, severity=ctx.rules.divine_wounds.betrayal_severity, cause_node_id=traitor_id)
+
+
+async def mark_neglect(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, NEGLECT_FIXUP) is not None:
+        return 0
+    rows = list(
+        await ctx.session.scalars(
+            select(DivineWoundRow)
+            .where(DivineWoundRow.kind.in_(sorted(NEGLECT_KINDS)), DivineWoundRow.cause_node_id.is_(None), DivineWoundRow.cause != WoundCause.CREATOR)
+            .order_by(DivineWoundRow.id)
+        )
+    )
+    moved = 0
+    for row in rows:
+        if "cause" not in row.locked and not held(row.god_node_id):
+            row.cause = WoundCause.NEGLECT
+            moved += 1
+    ctx.session.add(AppliedFixupRow(key=NEGLECT_FIXUP, result={"wounds": moved}))
+    await ctx.session.flush()
+    return moved

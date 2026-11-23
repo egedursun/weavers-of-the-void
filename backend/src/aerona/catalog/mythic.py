@@ -1,9 +1,11 @@
+from dataclasses import dataclass
+
 from aerona.core.total import total
 from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.culture import LegendArchetype
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.mind import ActKind, SkillKind
-from aerona.domain.enums.mythic import CosmicOffice, GeasMode, MythicRealm, QuestTrial
+from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, MythicRealm, QuestTrial
 
 C = CosmicOffice
 F = SpellForm
@@ -89,10 +91,10 @@ ARCHETYPE_TRIALS = total(
     LegendArchetype,
     {
         A.HERO_QUEST: (Q.SKILL, Q.PASSION, Q.FAITH),
-        A.MONSTER: (Q.SKILL, Q.CONVICTION, Q.SKILL),
-        A.TRICKSTER: (Q.SKILL, Q.SKILL, Q.CONVICTION),
+        A.MONSTER: (Q.SKILL, Q.CONVICTION, Q.ENDURANCE),
+        A.TRICKSTER: (Q.CUNNING, Q.SKILL, Q.CUNNING),
         A.CREATION: (Q.FAITH, Q.SKILL, Q.FAITH),
-        A.WORLD_DISASTER: (Q.CONVICTION, Q.SKILL, Q.FAITH),
+        A.WORLD_DISASTER: (Q.ENDURANCE, Q.SKILL, Q.FAITH),
         A.BETRAYAL: (Q.PASSION, Q.CONVICTION, Q.SKILL),
         A.LOST_GOLDEN_AGE: (Q.FAITH, Q.PASSION, Q.SKILL),
         A.CHOSEN_ONE: (Q.FAITH, Q.CONVICTION, Q.SKILL),
@@ -100,18 +102,21 @@ ARCHETYPE_TRIALS = total(
         A.RETURN_OF_A_RULER: (Q.CONVICTION, Q.SKILL, Q.PASSION),
         A.HAUNTED_PLACE: (Q.CONVICTION, Q.SKILL, Q.FAITH),
         A.FOUNDING: (Q.SKILL, Q.CONVICTION, Q.FAITH),
-        A.EXILE: (Q.CONVICTION, Q.PASSION, Q.SKILL),
+        A.EXILE: (Q.ENDURANCE, Q.PASSION, Q.SKILL),
         A.TRANSFORMATION: (Q.FAITH, Q.SKILL, Q.PASSION),
-        A.BARGAIN: (Q.CONVICTION, Q.SKILL, Q.FAITH),
-        A.SACRIFICE: (Q.FAITH, Q.PASSION, Q.CONVICTION),
+        A.BARGAIN: (Q.CONVICTION, Q.CUNNING, Q.FAITH),
+        A.SACRIFICE: (Q.FAITH, Q.ENDURANCE, Q.CONVICTION),
         A.RIVALRY: (Q.SKILL, Q.PASSION, Q.SKILL),
-        A.DISCOVERY: (Q.SKILL, Q.SKILL, Q.CONVICTION),
-        A.DECEPTION: (Q.SKILL, Q.CONVICTION, Q.SKILL),
+        A.DISCOVERY: (Q.SKILL, Q.CUNNING, Q.CONVICTION),
+        A.DECEPTION: (Q.CUNNING, Q.CONVICTION, Q.SKILL),
         A.UNION: (Q.PASSION, Q.FAITH, Q.SKILL),
-        A.ASCENT: (Q.CONVICTION, Q.FAITH, Q.SKILL),
+        A.ASCENT: (Q.ENDURANCE, Q.FAITH, Q.SKILL),
         A.FALL: (Q.PASSION, Q.CONVICTION, Q.FAITH),
     },
 )
+
+
+CUNNING_SKILLS = frozenset({SkillKind.DECEPTION, SkillKind.INTRIGUE})
 
 
 def trial_at(archetype: LegendArchetype | None, step: int) -> QuestTrial:
@@ -228,3 +233,24 @@ SKILL_DOMAINS = total(
         S.ADMINISTRATION: frozenset({D.CITIES, D.KNOWLEDGE}),
     },
 )
+
+
+@dataclass(frozen=True)
+class GeasLayerSpec:
+    label: str
+    passes_to_line: bool = False
+    sworn: bool = False
+    dooms: bool = True
+
+
+GEAS_LAYERS = total(
+    GeasLayer,
+    {
+        GeasLayer.SEER: GeasLayerSpec("Laid by a seer"),
+        GeasLayer.GOD: GeasLayerSpec("Laid by a god"),
+        GeasLayer.RITE: GeasLayerSpec("Laid by a rite"),
+        GeasLayer.KIN: GeasLayerSpec("Laid by kin", passes_to_line=True),
+        GeasLayer.SELF: GeasLayerSpec("Sworn by its bearer", sworn=True, dooms=False),
+    },
+)
+LINE_LAYERS = frozenset(layer for layer, spec in GEAS_LAYERS.items() if spec.passes_to_line)

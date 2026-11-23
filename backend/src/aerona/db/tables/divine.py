@@ -16,6 +16,7 @@ from aerona.domain.enums.divine import (
     LawException,
     LawScope,
     OuterHunger,
+    PenanceDeed,
     SonPunishment,
     VotingRule,
     WoundCause,
@@ -172,6 +173,7 @@ class CouncilRulingRow(Base):
     world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
     school: Mapped[MagicSchool | None] = mapped_column(enum_type(MagicSchool, "school"))
     punishment: Mapped[SonPunishment | None] = mapped_column(enum_type(SonPunishment, "punishment"))
+    penance_deed: Mapped[PenanceDeed | None] = mapped_column(enum_type(PenanceDeed, "penance_deed"))
     voting_rule: Mapped[VotingRule | None] = mapped_column(enum_type(VotingRule, "voting_rule"))
     epoch: Mapped[int] = mapped_column(default=0)
     until_epoch: Mapped[int | None]
@@ -199,6 +201,7 @@ class NaturalLawProfileRow(Base):
     stability: Mapped[int] = mapped_column(default=80)
     author_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     exception: Mapped[LawException] = mapped_column(enum_type(LawException, "exception"), default=LawException.NONE)
+    exempt_kind_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     contested: Mapped[bool] = mapped_column(default=False)
     target: Mapped[LawTarget | None] = mapped_column(enum_type(LawTarget, "target"))
     operator: Mapped[LawOperator | None] = mapped_column(enum_type(LawOperator, "operator"))

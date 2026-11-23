@@ -498,6 +498,7 @@ PHASE_NAMES: tuple[str, ...] = (
     "world_materials",
     "world_physics",
     "world_views",
+    "settle_modes",
     "works_in_age",
     "worship_views",
     "writing_systems",

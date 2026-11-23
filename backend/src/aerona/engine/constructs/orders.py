@@ -1,4 +1,4 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -6,14 +6,17 @@ from sqlalchemy import select
 from aerona.catalog.life.constructs import DO_BUILD_CONSTRUCTION_STATES, DO_MAINTAIN_CONSTRUCTION_STATES
 from aerona.catalog.life_traits import COMMAND_TOKEN_TRAITS, having
 from aerona.catalog.materials import MATERIALS
+from aerona.catalog.orders import DONE_CONDITIONS, ORDER_LITERALNESS, ORDER_TIMES
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.celestial import SkyEventRow, WorldRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.intrigue import SchemeRow
+from aerona.db.tables.intrigue import SchemeRow, TrueNameRow
 from aerona.db.tables.living import LivingProfileRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -102,8 +105,25 @@ async def holder_of(ctx: TickContext, rules: InstructionSetRow) -> int | None:
     return current.id if current is not None and await living_entity(ctx.session, current.id) is not None else None
 
 
+async def name_knower(ctx: TickContext, construct: EntityRow, rules: InstructionSetRow) -> int | None:
+    if rules.command_token is not CommandToken.TRUE_NAME and not ctx.rules.instructions.true_name_override:
+        return None
+    name = await ctx.session.get(TrueNameRow, construct.id)
+    if name is None:
+        return None
+    if rules.holder_node_id in name.known_by and await living_entity(ctx.session, rules.holder_node_id) is not None:
+        return rules.holder_node_id
+    for knower in sorted(name.known_by):
+        if knower != construct.id and await living_entity(ctx.session, knower) is not None:
+            return int(knower)
+    return None
+
+
 async def resolve_holder(ctx: TickContext, construct: EntityRow, rules: InstructionSetRow, tally: OrderTally) -> EntityRow | None:
-    found = await holder_of(ctx, rules)
+    named = await name_knower(ctx, construct, rules)
+    found = named if named is not None else await holder_of(ctx, rules)
+    if named is not None and named != rules.holder_node_id and "holder_node_id" not in rules.locked:
+        await record(ctx, "orders.seized", roles={IncidentRole.SUBJECT: construct.id, IncidentRole.OWNER: named}, place=construct.location_id)
     if found != rules.holder_node_id and "holder_node_id" not in rules.locked:
         if found is not None and rules.holder_node_id is not None:
             tally.seized += 1
@@ -117,23 +137,67 @@ async def resolve_holder(ctx: TickContext, construct: EntityRow, rules: Instruct
     return await living_entity(ctx.session, rules.holder_node_id)
 
 
+async def always(ctx: TickContext, charge: Charge) -> bool:
+    return True
+
+
+async def maker_lives(ctx: TickContext, charge: Charge) -> bool:
+    return await living_entity(ctx.session, charge.row.maker_entity_id) is not None
+
+
+async def before_date(ctx: TickContext, charge: Charge) -> bool:
+    return charge.order.until_epoch is None or ctx.epoch <= charge.order.until_epoch
+
+
+async def under_attack(ctx: TickContext, charge: Charge) -> bool:
+    ward = charge.target or charge.holder
+    town = await town_of(ctx.session, ward) if ward is not None else None
+    realm = await realm_of_town(ctx.session, town.id) if town is not None else None
+    return realm is not None and await at_war(ctx.session, realm)
+
+
+async def token_shown(ctx: TickContext, charge: Charge) -> bool:
+    if charge.rules.holder_node_id is None or charge.holder is None:
+        return False
+    return await town_of(ctx.session, charge.holder) == await town_of(ctx.session, charge.construct)
+
+
+async def at_its_time(ctx: TickContext, charge: Charge) -> bool:
+    time = charge.order.times
+    if time is None:
+        return False
+    spec = ORDER_TIMES[time]
+    if spec.sky:
+        world = charge.construct.world_id
+        sign = (
+            await ctx.session.scalar(select(SkyEventRow.id).where(SkyEventRow.world_id == world, SkyEventRow.epoch == ctx.epoch).limit(1))
+            if world is not None
+            else None
+        )
+        return sign is not None
+    share = spec.share_pct
+    if spec.by_season:
+        world_row = await ctx.session.get(WorldRow, charge.construct.world_id) if charge.construct.world_id is not None else None
+        share = PERCENT // max(1, world_row.season_count or 1) if world_row is not None else share
+    return ctx.rng(f"order.time.{charge.order.id}.{ctx.epoch}").chance(share)
+
+
+HOLDS: Mapping[OrderCondition, Callable[[TickContext, Charge], Awaitable[bool]]] = total(
+    OrderCondition,
+    {
+        OrderCondition.ALWAYS: always,
+        OrderCondition.WHILE_MAKER_LIVES: maker_lives,
+        OrderCondition.UNTIL_DATE: before_date,
+        OrderCondition.WHEN_ATTACKED: under_attack,
+        OrderCondition.WHEN_TOKEN_SHOWN: token_shown,
+        OrderCondition.UNTIL_DONE: always,
+        OrderCondition.AT_SET_TIMES: at_its_time,
+    },
+)
+
+
 async def holds(ctx: TickContext, charge: Charge) -> bool:
-    order, rules = charge.order, charge.rules
-    if order.condition is OrderCondition.ALWAYS:
-        return True
-    if order.condition is OrderCondition.WHILE_MAKER_LIVES:
-        return await living_entity(ctx.session, charge.row.maker_entity_id) is not None
-    if order.condition is OrderCondition.UNTIL_DATE:
-        return order.until_epoch is None or ctx.epoch <= order.until_epoch
-    if order.condition is OrderCondition.WHEN_ATTACKED:
-        ward = charge.target or charge.holder
-        town = await town_of(ctx.session, ward) if ward is not None else None
-        realm = await realm_of_town(ctx.session, town.id) if town is not None else None
-        return realm is not None and await at_war(ctx.session, realm)
-    shown = rules.holder_node_id is not None and charge.holder is not None
-    if order.condition is OrderCondition.WHEN_TOKEN_SHOWN and shown and charge.holder is not None:
-        return await town_of(ctx.session, charge.holder) == await town_of(ctx.session, charge.construct)
-    return False
+    return await HOLDS[charge.order.condition](ctx, charge)
 
 
 def lapses(ctx: TickContext, order: InstructionOrderRow, maker_alive: bool) -> bool:
@@ -326,6 +390,22 @@ async def do_forbid(ctx: TickContext, charge: Charge) -> bool:
     return hurt
 
 
+@EFFECTS.on(OrderKind.CARRY)
+async def do_carry(ctx: TickContext, charge: Charge) -> bool:
+    town = await town_target(ctx, charge)
+    if town is None or held(town.id):
+        return False
+    return await shift_stock(ctx.session, ctx.rules, town.id, Commodity.GOODS, ctx.rules.instructions.carry_goods, epoch=ctx.epoch, flow=GoodsFlow.PRODUCTION)
+
+
+@EFFECTS.on(OrderKind.TEND)
+async def do_tend(ctx: TickContext, charge: Charge) -> bool:
+    town = await town_target(ctx, charge)
+    if town is None or held(town.id):
+        return False
+    return await shift_stock(ctx.session, ctx.rules, town.id, Commodity.FOOD, ctx.rules.instructions.tend_food, epoch=ctx.epoch, flow=GoodsFlow.HARVEST)
+
+
 @EFFECTS.on(OrderKind.OBEY_HOLDER)
 @EFFECTS.on(OrderKind.HOLD_STILL)
 async def do_nothing(ctx: TickContext, charge: Charge) -> bool:
@@ -337,7 +417,8 @@ async def target_for(ctx: TickContext, rules: InstructionSetRow, order: Instruct
         found = await living_entity(ctx.session, order.target_node_id)
         if found is not None:
             return found
-    return holder if order.target_node_id is not None and rules.literalness < LITERAL else None
+    literal = rules.literalness * ORDER_LITERALNESS[order.kind](ctx.rules) / PERCENT
+    return holder if order.target_node_id is not None and literal < LITERAL else None
 
 
 async def obey(ctx: TickContext, construct: EntityRow, row: ConstructRow, rules: InstructionSetRow, tally: OrderTally) -> None:
@@ -359,8 +440,7 @@ async def obey(ctx: TickContext, construct: EntityRow, row: ConstructRow, rules:
     )
     for order in orders:
         if lapses(ctx, order, maker_alive) and "lapsed" not in order.locked:
-            order.lapsed = True
-            tally.lapsed += 1
+            await lapse(ctx, construct, order, tally)
             continue
         if order.kind is OrderKind.OBEY_HOLDER and will in FREE_WILLS:
             continue
@@ -372,6 +452,14 @@ async def obey(ctx: TickContext, construct: EntityRow, row: ConstructRow, rules:
         if await EFFECTS[order.kind](ctx, charge):
             tally.acted += 1
             tally.replicated += order.kind is OrderKind.REPLICATE
+        elif order.condition in DONE_CONDITIONS and "lapsed" not in order.locked:
+            await lapse(ctx, construct, order, tally)
+
+
+async def lapse(ctx: TickContext, construct: EntityRow, order: InstructionOrderRow, tally: OrderTally) -> None:
+    order.lapsed = True
+    tally.lapsed += 1
+    await record(ctx, "orders.lapsed", roles={IncidentRole.SUBJECT: construct.id}, facts={"order": order.kind, "condition": order.condition})
 
 
 async def grow_will(ctx: TickContext, construct: EntityRow, row: ConstructRow, tally: OrderTally) -> None:

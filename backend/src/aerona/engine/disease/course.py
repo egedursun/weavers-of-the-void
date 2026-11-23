@@ -17,7 +17,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.travel import JourneyStatus
+from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
 from aerona.domain.enums.war import SiegeStatus
 from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.context import TickContext
@@ -340,7 +340,8 @@ async def carry_by_journeys(ctx: TickContext, book: DiseaseBook) -> int:
             pressure = spread_factor(
                 book, disease.id, landed, ground, source_region=origin, path=SpreadPath.JOURNEY, hidden=book.unseen(outbreak), sealed=outbreak.quarantined
             )
-            chance = table.journey_spread_chance * pressure
+            fleeing = ctx.rules.travel.flight_sickness_pct / PERCENT if journey.intent is JourneyIntent.FLIGHT else 1.0
+            chance = table.journey_spread_chance * pressure * fleeing
             if not ctx.rng(f"journey_spread.{journey.id}.{outbreak.id}").chance(min(PERCENT, chance)):
                 continue
             await strike_plague(ctx, landed, outbreak.severity, disease=disease, path=SpreadPath.JOURNEY, source=outbreak)

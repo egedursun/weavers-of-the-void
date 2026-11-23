@@ -9,7 +9,10 @@ from aerona.db.tables.body_systems import BodySystemRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.body_systems import BodySystem
+from aerona.domain.enums.made import AugmentKind
 from aerona.domain.enums.world import Atmosphere
+from aerona.engine.primitives.augment_bonus import kind_strength
+from aerona.rules.registry import Rules
 
 TOXIC = 80
 CLEAN = 10
@@ -42,7 +45,9 @@ def excess(row: BodySystemRow, ground: Ground) -> int:
     return max(0, *over)
 
 
-async def world_excess(session: AsyncSession, holder_id: int, world: WorldRow) -> int:
+async def world_excess(session: AsyncSession, rules: Rules, holder_id: int, world: WorldRow, *, bearer_id: int | None = None) -> int:
     rows = await session.scalars(select(BodySystemRow).where(BodySystemRow.holder_entity_id == holder_id).order_by(BodySystemRow.id))
     ground = ground_of(world, None)
-    return max((excess(row, ground) for row in rows), default=0)
+    worst = max((excess(row, ground) for row in rows), default=0)
+    support = await kind_strength(session, bearer_id, AugmentKind.LIFE_SUPPORT) * rules.augments.life_support_pct // PERCENT if bearer_id is not None else 0
+    return max(0, worst - support)

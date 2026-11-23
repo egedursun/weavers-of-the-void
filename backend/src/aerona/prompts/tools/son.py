@@ -231,6 +231,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "range": "How far it reaches: {{ spell_ranges }}",
             "duration": "How long it lasts: {{ spell_durations }}",
             "target": "What it touches: {{ spell_targets }}",
+            "condition": "For a rite that lasts until a condition: what ends it ({{ rite_conditions }})",
+            "condition_act": "For a condition of an act or a deed: the act that ends it",
+            "condition_epoch": "For a condition of time: the epoch it ends",
             "paradigm_id": "The theory of magic it is designed under (a theory id), if any; a truer theory makes it more reliable",
             "myth_id": "A legend it re-enacts (a legend id), if any; a believed myth gives it strength",
             "holder_id": "The worshipping community or follower who will keep the rite",
@@ -372,9 +375,10 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.CALL_IMPACT: ToolText(
         "You call a body from the sky down upon a region of a world. It strikes next epoch unless someone turns it aside: it ruins the region, "
-        "leaves a crater, can bring a winter over the whole world and can leave metal from the sky. "
+        "leaves a crater, can bring a winter over the whole world and can leave metal from the sky. Bodies: {{ impact_bodies }}; a fragment "
+        "falls only where the ring of a broken moon circles the world, a made thing only where one circles it, and a made thing leaves salvage. "
         "{{ rules.impacts.call_essence }} essence, 1 action.",
-        {"region_id": "The id of the region it falls on", "reason": "Why you call it"},
+        {"region_id": "The id of the region it falls on", "body": "What falls", "reason": "Why you call it"},
     ),
     T.DEFLECT_IMPACT: ToolText(
         "You turn aside a body that is due to strike a world. {{ rules.impacts.deflect_essence }} essence, 1 action.",
@@ -925,7 +929,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "a place, agents work your will in their post, avengers bring fear to those who scorn you, guides of souls take your faithful's souls to your afterlife, "
         "worshippers deepen the awe of your faithful, wardens keep order at their post and keepers of accounts spread your teachings among your peoples. "
         "Its loyalty follows how your peoples regard you and how you treat it: each new command and each defeat of its host wears on it, and a disloyal "
-        "servitor may fall to another master. {{ rules.servitors.make_cost }} essence, 1 action.",
+        "servitor may fall to another master. Servitors come to a god in five ways ({{ servitor_origins }}): one you make is made; one that came over "
+        "from another god brings what it knew of that god and is readier to turn again; one born to a god is its own child in its service. "
+        "{{ rules.servitors.make_cost }} essence, 1 action.",
         {
             "name": "Its name",
             "role": "What it does: {{ servitor_roles }}",
@@ -1290,9 +1296,10 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"god_id": "The foreign god's id", "reason": "Why you make war"},
     ),
     T.BARGAIN_WITH_OUTSIDER: ToolText(
-        "FORBIDDEN: you bargain with a being from outside the cosmos. You choose what you take and what you pay; the price is paid at once. "
-        "Leakage rises, your siblings think less of you and your loyalty to the Creator falls. "
-        "Does not spend an action, {{ rules.son_tools.outer_bargain_per_epoch }} per age.",
+        "FORBIDDEN: you bargain with a being from outside the cosmos. You choose what you take ({{ bargain_gains }}) and what you pay "
+        "({{ bargain_prices }}). Most prices are paid at once; a line given as a price stays bound, each child of it marked by a curse, "
+        "for {{ rules.outer_bargains.descendants_years | several('year', 'years') }}. Leakage rises, your siblings think less of you and your loyalty to the "
+        "Creator falls. Does not spend an action, {{ rules.son_tools.outer_bargain_per_epoch }} per age.",
         {
             "outsider_id": "The outer being's id",
             "request": "What you ask of it",
@@ -1653,10 +1660,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"being_id": "The being you strike", "force": "How hard you strike, 1 to 10", "reason": "Why you strike it"},
     ),
     T.SEND_EXPEDITION: ToolText(
-        "You move a mortal in your reach to lead an expedition, with its companions, into a site, a land, an underworld or another realm; "
-        "each leg uses provisions, and light on dark ground; running short raises danger and stress, members may break or rise to the test and come home with "
-        "quirks, and those who return bring finds and renown. It travels by one way its leader's people can use ({{ movement_modes }}); "
-        "a way that finds little passage in the land it seeks adds legs. 1 action.",
+        "You move a mortal in your reach to lead an expedition, with its companions, into the ground its target lies in ({{ expedition_grounds }}); "
+        "each member takes the role its skills fit best ({{ expedition_roles }}), and a role nobody fills is a weakness. "
+        "Each leg uses provisions, light on dark ground and air where some cannot breathe; running short raises danger and stress, members may break, "
+        "rise to the test or fall out with each other and come home with quirks, and those who return bring finds and renown. "
+        "It travels by one way its leader's people can use ({{ movement_modes }}); a way that finds little passage in the land it seeks adds legs. 1 action.",
         {
             "leader_id": "The mortal who leads it",
             "target_id": "Where it goes",
@@ -1691,9 +1699,10 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.BIND_GENIUS_LOCUS: ToolText(
-        "You raise a spirit to dwell in a place, a town or a house in your reach; its community brings it offerings, a content spirit "
-        "grants favour and an offended one brings misfortune, and it takes an office under your oversight among the spirit offices. 1 action.",
-        {"place_id": "The place, town or house", "reason": "Why you raise it"},
+        "You raise a spirit to dwell in a place, a land, a town or a house in your reach, of a kind ({{ spirit_kinds }}) or of the kind "
+        "its place calls for; its community brings it offerings, a content spirit grants favour and an offended one brings misfortune, "
+        "and it takes an office under your oversight among the spirit offices. 1 action.",
+        {"place_id": "The place, land, town or house", "kind": "The kind of spirit, or empty for the kind its place calls for", "reason": "Why you raise it"},
     ),
     T.JUDGE_PETITION: ToolText(
         "You judge a petition waiting before a spirit office in your reach, granting or denying it; the work of judging raises your "
@@ -1706,9 +1715,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"spirit_id": "The spirit", "rank": "Its new rank, or empty to dismiss it", "reason": "Why you appoint it"},
     ),
     T.ANSWER_MYSTIC: ToolText(
-        "You answer a mortal in your reach with a direct experience of you, real contact rather than its own imagining; a mystic draws "
-        "followers outside the clergy and may found an order or, when persecuted, a heresy. 1 action.",
-        {"mortal_id": "The mortal you answer", "reason": "Why you answer"},
+        "You answer a mortal in your reach with a direct experience of you ({{ vision_kinds }}), real contact rather than its own "
+        "imagining; a mystic draws followers outside the clergy and may found an order or, when persecuted, a heresy. 1 action.",
+        {"mortal_id": "The mortal you answer", "vision": "The kind of experience, or empty to let it come as it will", "reason": "Why you answer"},
     ),
     T.EASE_THEODICY: ToolText(
         "You answer a crisis of faith in a suffering town in your reach so that the faithful see it; the crisis ends and their love for you grows. 1 action.",
@@ -1760,8 +1769,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"construct_id": "The construct", "kind": "The order", "target_id": "Whom or what the order aims at, or empty", "reason": "Why you give it"},
     ),
     T.SEIZE_CONSTRUCT: ToolText(
-        "You take command of a construct in your reach: from now on it answers your word, whoever holds the thing that commanded it before. 1 action.",
-        {"construct_id": "The construct", "reason": "Why you take it"},
+        "You take command of a construct in your reach: from now on it answers your word, whoever holds the thing that commanded it before. "
+        "Knowing its true name, you may take it by that name, which no other token can then overrule. 1 action.",
+        {"construct_id": "The construct", "by_true_name": "True to take it by its true name, which you then know", "reason": "Why you take it"},
     ),
     T.EXPOSE_FORGERY: ToolText(
         "You show a forgery in your reach for what it is: its price falls to nothing, a forged relic loses its sanctity, a forged charter "
@@ -1921,8 +1931,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"people_id": "The people", "source": "What they count impure", "reason": "Why"},
     ),
     T.BLESS_CHARM: ToolText(
-        "You give an item within your reach the true power of a charm (protection, fertility, luck or healing); its bearer is warded, made "
-        "fruitful, spared or mended by it. 1 action.",
+        "You give an item within your reach the true power of a charm ({{ charm_powers }}); its bearer is warded, made fruitful, spared, "
+        "mended, loved or kept safe on the road by it, as its power is. 1 action.",
         {"item_id": "The item", "power": "The charm's power", "reason": "Why you bless it"},
     ),
     T.SEND_MISFORTUNE: ToolText(
@@ -2246,9 +2256,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {
             "name": "Its name",
             "place_id": "The place where it can be drawn on",
-            "locus": "What it is drawn from: self, others, place, sky, surroundings, made_things, patron, bond, story, void, substance, life, death, dream or emotion",
-            "renewal": "How it renews: rest, time, season, sky_cycle, worship, feeding, taking, vows_kept, return_to_place or none",
-            "access": "Who may draw on it: anyone, gifted, trained, granted, bloodline, bonded or made",
+            "locus": "What it is drawn from: self, others, place, sky, surroundings, made_things, patron, bond, story, void, substance, life, death, dream, emotion, memory or name",
+            "renewal": "How it renews: rest, time, season, sky_cycle, worship, feeding, taking, vows_kept, return_to_place, offering or none",
+            "access": "Who may draw on it: anyone, gifted, trained, granted, bloodline, bonded, made or bought",
             "visibility": "How plainly its use is seen: overt, subtle or hidden",
             "reason": "Why you bring it forth",
         },
@@ -2288,8 +2298,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {
             "title": "What the truth is",
             "subject_id": "What it is about",
-            "kind": "What kind of truth: existence, nature, presence, power, event, origin, awakening, programme or cosmic",
-            "hidden_from": "From whom: everyone, a_people, a_polity, the_uninitiated, a_world or the_cosmos",
+            "kind": "What kind of truth: existence, nature, presence, power, event, origin, awakening, programme, cosmic, location or lineage",
+            "hidden_from": "From whom: everyone, a_people, a_polity, the_uninitiated, a_world, the_cosmos, a_house or a_faith",
             "reason": "Why you hide it",
         },
     ),
@@ -2307,13 +2317,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"power_id": "Which of your powers", "target_id": "Whom or what it acts on, if not your faithful", "reason": "Why"},
     ),
     T.SET_NATURAL_LAW: ToolText(
-        "You reshape how a natural law in your reach works: what it does to the thing it governs, the amount, and when it holds. "
-        "A law you did not write costs essence to take up and becomes yours to keep. 1 action.",
+        "You reshape how a natural law in your reach works: what it does to the thing it governs, the amount, when it holds, and whom it "
+        "spares ({{ law_exceptions }}). A law that spares a named kind names the species or people it does not touch. A law you did not "
+        "write costs essence to take up and becomes yours to keep. 1 action.",
         {
             "law_id": "The natural law",
             "operator": "What the law does to the thing it governs",
             "value": "The amount it works with, where 100 leaves the thing as it is",
             "condition": "When the law holds",
+            "exception": "Whom the law spares; leave empty to keep it as it is",
+            "exempt_kind_id": "The species or people the law spares, when it spares a named kind",
             "reason": "Why",
         },
     ),

@@ -12,6 +12,7 @@ FERTILITY = total(
                 "catalog.life.living.BREED_FERTILITYS",
                 "catalog.life.living.SEED_DUES_FERTILITYS",
                 "engine.living.backfill.alive",
+                "engine.living.lines.cross_or_release",
                 "engine.living.lines.make_line",
             ),
         ),
@@ -34,5 +35,6 @@ FERTILITY = total(
         Fertility.NEEDS_MAKER: Defined(
             "Needs its maker", checked_by=(), used_by=("catalog.life.living.BREED_FERTILITYS", "catalog.life.living.SEED_DUES_FERTILITYS")
         ),
+        Fertility.CROSSES_WILD: Defined("Crosses with wild kin", checked_by=("engine.living.lines.cross_wild",), used_by=()),
     },
 )

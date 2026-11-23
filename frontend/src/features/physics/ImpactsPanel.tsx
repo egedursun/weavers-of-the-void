@@ -12,6 +12,7 @@ import {
   RecordPick,
   RecordRow,
 } from '@/features/cosmography/parts'
+import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/wilds/parts'
 import { type ImpactRecord, physicsKeys, usePhysicsAction } from './api'
 import { IMPACT_BODIES, IMPACT_OUTCOMES, table } from './labels'
@@ -22,7 +23,12 @@ type Edit = {
   values?: EditValues
   release?: string[]
 }
-type Call = { world: number; region: number | null; size: number | null }
+type Call = {
+  world: number
+  region: number | null
+  size: number | null
+  body: ImpactRecord['body']
+}
 
 export function ImpactsPanel({
   worldId,
@@ -36,6 +42,7 @@ export function ImpactsPanel({
   const [world, setWorld] = useState('')
   const [region, setRegion] = useState<number | null>(null)
   const [size, setSize] = useState('')
+  const [body, setBody] = useState('called')
   const target = worldId ?? (world === '' ? null : Number(world))
   const refresh = target !== null ? [physicsKeys.world(target)] : []
   const call = usePhysicsAction(
@@ -44,6 +51,7 @@ export function ImpactsPanel({
       world_id: vars.world,
       region_id: vars.region,
       size: vars.size,
+      body: vars.body,
     }),
     'A body falls toward the world',
     refresh
@@ -234,8 +242,8 @@ export function ImpactsPanel({
         icon={Zap}
         tone='danger'
         title='Call a body down'
-        note='It strikes next epoch unless turned aside: it ruins the region, leaves a crater and can bring a winter over the world.'
-        columns={worldId === null ? 3 : 2}
+        note='It strikes next epoch unless turned aside: it ruins the region, leaves a crater and can bring a winter over the world. A fragment falls only where the ring of a broken moon circles the world, a made thing only where one circles it and leaves salvage.'
+        columns={worldId === null ? 4 : 3}
         meta={
           <Chip icon={Zap}>{`${plural(coming, 'body', 'bodies')} coming`}</Chip>
         }
@@ -253,6 +261,7 @@ export function ImpactsPanel({
                 world: target,
                 region,
                 size: size === '' ? null : Number(size),
+                body: body as ImpactRecord['body'],
               })
             }
           >
@@ -270,6 +279,13 @@ export function ImpactsPanel({
           value={region}
           onChange={setRegion}
           worldId={target ?? undefined}
+        />
+        <MindPicker
+          label='What falls'
+          value={body}
+          table={table(IMPACT_BODIES)}
+          blocked={busy}
+          onPick={setBody}
         />
         <NumberField
           label='Size'

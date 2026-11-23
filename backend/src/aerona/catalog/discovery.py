@@ -77,6 +77,34 @@ FIELDS: MappingProxyType[GreatField, FieldSpec] = total(
             (S.HARBOUR, S.WATCHTOWER),
             "a discovery charts the lands around their realm",
         ),
+        GreatField.HEALER: FieldSpec(
+            "Great healer",
+            (K.MEDICINE, K.SURGERY),
+            SocialClass.PROFESSIONAL,
+            (S.HOSPITAL, S.APOTHECARY, S.QUARANTINE_HOUSE),
+            "a school of healing raises the medicine of their people",
+        ),
+        GreatField.LAWGIVER: FieldSpec(
+            "Great lawgiver",
+            (K.LAW, K.ADMINISTRATION, K.ORATORY),
+            SocialClass.OFFICIAL,
+            (S.COURTHOUSE, S.COURT, S.ARCHIVE),
+            "a code of laws raises the legitimacy of their realm",
+        ),
+        GreatField.TEACHER: FieldSpec(
+            "Great teacher",
+            (K.TEACHING, K.WRITING, K.LORE),
+            SocialClass.SCRIBE,
+            (S.SCHOOL, S.UNIVERSITY, S.SEMINARY),
+            "pupils carry their learning to the people",
+        ),
+        GreatField.REFORMER: FieldSpec(
+            "Great reformer",
+            (K.ORATORY, K.LAW, K.THEOLOGY, K.LEADERSHIP),
+            SocialClass.CITIZEN,
+            (S.TOWN_HALL, S.PLAZA),
+            "a movement eases the grievances of their people",
+        ),
     },
 )
 
@@ -91,6 +119,8 @@ AGES: MappingProxyType[AgeKind, str] = total(
         AgeKind.DECLINING: "A declining age",
         AgeKind.TRANSFORMING: "An age of change",
         AgeKind.STAGNANT: "A still age",
+        AgeKind.WANDERING: "An age of wandering",
+        AgeKind.REBORN: "An age reborn",
     },
 )
 
@@ -109,6 +139,9 @@ DEEDS: MappingProxyType[EraDeed, str] = total(
         EraDeed.FIRST_LINE: "First to shape a living line",
         EraDeed.REVELATION: "A hidden truth came to light",
         EraDeed.COLLAPSE: "Its order collapsed",
+        EraDeed.GREAT_PEACE: "Made a great peace",
+        EraDeed.GREAT_MIGRATION: "Its people moved in a great migration",
+        EraDeed.FIRST_CHARTER: "First to charter a company",
     },
 )
 
@@ -123,6 +156,8 @@ INCIDENTS: MappingProxyType[ResearchIncident, str] = total(
         R.EXPLOSION: "An explosion",
         R.POISONING: "A poisoning",
         R.SUMMONING_GONE_WRONG: "A summoning gone wrong",
+        R.STOLEN: "The work was stolen by a rival",
+        R.CHANCE_FIND: "A find by chance",
     },
 )
 
@@ -164,6 +199,7 @@ ACCIDENT_BRANCHES: MappingProxyType[KnowledgeBranch, tuple[ResearchIncident, ...
         B.METALLURGY: (R.FIRE, R.EXPLOSION),
         B.ARCHITECTURE: (R.EXPLOSION, R.FIRE),
         B.MEDICINE: (R.POISONING,),
+        B.NATURAL_HISTORY: (R.RELEASED_BEAST, R.POISONING),
     }
 )
 
@@ -214,6 +250,8 @@ BLUEPRINT_KINDS: MappingProxyType[BlueprintKind, str] = total(
         BlueprintKind.LINE: "Pattern of a living line",
         BlueprintKind.NETWORK: "Plan of a network",
         BlueprintKind.RITE_PATTERN: "Pattern of a rite",
+        BlueprintKind.PROCESS: "Plan of a way of working",
+        BlueprintKind.REMEDY: "Recipe of a remedy",
     },
 )
 BLUEPRINT_SOURCES: MappingProxyType[BlueprintSource, str] = total(
@@ -224,6 +262,7 @@ BLUEPRINT_SOURCES: MappingProxyType[BlueprintSource, str] = total(
         BlueprintSource.TRADED: "Bought in trade",
         BlueprintSource.LICENSED: "Used under licence",
         BlueprintSource.GRANTED: "Granted by a god",
+        BlueprintSource.FOUND: "Found in a ruin",
     },
 )
 

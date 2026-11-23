@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.death_causes import DEATH_CAUSES
-from aerona.catalog.life.folkways import ANSWER_MISHAP_RESPONSES, EXPLAINERS, LEANINGS, RESPONSES, SIGN_WORDS, WEIGHTS_FOR_MISHAP_ATTRIBUTIONS
+from aerona.catalog.life.folkways import ANSWER_MISHAP_RESPONSES, CHARM_EFFECTS, EXPLAINERS, LEANINGS, RESPONSES, SIGN_WORDS, WEIGHTS_FOR_MISHAP_ATTRIBUTIONS
 from aerona.catalog.life_traits import CHARM_POWER_TRAITS, LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
@@ -20,6 +20,7 @@ from aerona.db.tables.folkways import CharmRow, LuckBeliefRow, MishapRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -31,9 +32,11 @@ from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis
 from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
-from aerona.engine.folkways.fed import charm_powers, real_charm
+from aerona.engine.folkways.fed import CHARM_BASE, charm_powers, real_charm
+from aerona.engine.folkways.luck import mark_of, read_luck, weighted_signs
 from aerona.engine.folkways.purity import purity_of, sources_of
 from aerona.engine.fortune.everyday import everyday
 from aerona.engine.fortune.profiles import shift_fortune
@@ -100,6 +103,7 @@ class MishapTally:
     charms: int = 0
     beliefs: int = 0
     warded: int = 0
+    readings: int = 0
 
 
 @dataclass
@@ -184,7 +188,7 @@ async def bad_luck(ctx: TickContext, town: EntityRow, folk: list[int], tally: Mi
     if not folk or not rng.chance(chance):
         return []
     victim = rng.pick(folk)
-    ward = await real_charm(ctx.session, victim, WARDS)
+    ward = await real_charm(ctx.session, ctx.rules, victim, WARDS)
     if ward and rng.chance(table.charm_ward * ward / PERCENT):
         tally.warded += 1
         return []
@@ -323,9 +327,28 @@ async def keep_charms(ctx: TickContext) -> None:
         real, strength = powers.get(CharmPower.LUCK, (False, 0))
         if real and strength:
             await shift_fortune(ctx, bearer, strength * ctx.rules.fortune.charm_pct // PERCENT, FortuneSourceKind.CHARM, epochs=0)
+        await bind_affection(ctx, bearer, powers.get(CharmPower.LOVE))
         profile = await ctx.session.get(MortalProfileRow, bearer)
         if profile is not None and not held(bearer) and not is_held(profile, "stress"):
-            profile.stress = clamp_int(profile.stress - table.charm_calm, 0, PERCENT)
+            unreal = sum(1 for real, _ in powers.values() if not real)
+            profile.stress = clamp_int(profile.stress - table.charm_calm - unreal * ctx.rules.charms.comfort, 0, PERCENT)
+
+
+async def bind_affection(ctx: TickContext, bearer: int, love: tuple[bool, int] | None) -> None:
+    if love is None or not love[0] or held(bearer):
+        return
+    beloved = await ctx.session.scalar(
+        select(BondRow.target_node_id)
+        .where(BondRow.source_node_id == bearer, BondRow.kind == BondKind.LOVES, BondRow.state == BondState.ACTIVE)
+        .order_by(BondRow.id)
+        .limit(1)
+    )
+    target = await ctx.session.get(EntityRow, beloved) if beloved is not None else None
+    force = love[1] * CHARM_EFFECTS[CharmPower.LOVE](ctx.rules) / CHARM_BASE
+    if target is None or held(target.id) or target.status is not EntityStatus.CANON:
+        return
+    if ctx.rng(f"charm.love.{bearer}.{target.id}.{ctx.epoch}").chance(force):
+        await afflict(ctx, target, PackageKind.CHARM, Transmission.RITE, source_node_id=bearer)
 
 
 async def seed_luck(ctx: TickContext, people: EntityRow, tally: MishapTally) -> None:
@@ -333,10 +356,24 @@ async def seed_luck(ctx: TickContext, people: EntityRow, tally: MishapTally) -> 
     if (await values_for(ctx.session, people.id)).get(ValueAxis.SUPERSTITION, 0) < table.luck_from or await beliefs_of(ctx, people.id):
         return
     rng = ctx.rng(seed_of("luck.seed", people.id))
-    for sign in rng.sample(list(LuckSign), min(len(LuckSign), table.beliefs_per_people)):
+    for sign in weighted_signs(ctx, rng, min(len(LuckSign), table.beliefs_per_people)):
         lucky = rng.chance(50)
         name = f"{'A lucky' if lucky else 'An unlucky'} {SIGN_WORDS[sign]} of {people.name}"
-        ctx.session.add(LuckBeliefRow(people_entity_id=people.id, sign=sign, reach=rng.pick(list(LuckReach)), lucky=lucky, name=name, locked=[]))
+        species, colour = await mark_of(ctx, people, sign, rng)
+        if sign is LuckSign.ANIMAL and species is None:
+            continue
+        ctx.session.add(
+            LuckBeliefRow(
+                people_entity_id=people.id,
+                sign=sign,
+                reach=rng.pick(list(LuckReach)),
+                lucky=lucky,
+                name=name,
+                species_entity_id=species,
+                colour=colour,
+                locked=[],
+            )
+        )
         tally.beliefs += 1
 
 
@@ -393,5 +430,6 @@ async def keep_mishaps(ctx: TickContext, tally: MishapTally) -> None:
             tally.befell += 1
             tally.explained += row.explained
             tally.accusations += row.response is MishapResponse.ACCUSATION
+        tally.readings += await read_luck(ctx, town, folk_people)
     await keep_charms(ctx)
     await ctx.session.flush()

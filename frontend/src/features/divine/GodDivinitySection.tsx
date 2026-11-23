@@ -30,6 +30,7 @@ import {
 import { LineChart } from '@/components/domain/LineChart'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
+import { NodePicker } from '@/features/dominion/parts'
 import { busyOf } from '@/features/entity/lore/model'
 import {
   AdjustPanel,
@@ -558,6 +559,8 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
   )
 }
 
+const MORTAL_TYPES = ['mortal'] as const
+
 function WoundsCard({
   view,
   busy,
@@ -568,6 +571,9 @@ function WoundsCard({
   const [kind, setKind] = useState('')
   const [domain, setDomain] = useState('')
   const [severity, setSeverity] = useState('50')
+  const [cause, setCause] = useState('creator')
+  const [slayer, setSlayer] = useState<number | null>(null)
+  const byMortal = cause === 'mortal_slayer'
   const inflict = useDivineAction('divine_wound:inflict', (_: void) => ({
     god_id: view.god.id,
     kind: kind as ActionBody<'divine_wound:inflict'>['kind'],
@@ -576,9 +582,16 @@ function WoundsCard({
       domain === ''
         ? null
         : (domain as ActionBody<'divine_wound:inflict'>['domain']),
+    cause: cause as ActionBody<'divine_wound:inflict'>['cause'],
+    cause_node_id: byMortal ? slayer : null,
   }))
   const pending = busyOf(busy, inflict.isPending)
-  const problem = kind === '' ? 'Choose a wound' : null
+  const problem =
+    kind === ''
+      ? 'Choose a wound'
+      : byMortal && slayer === null
+        ? 'Choose the mortal who dealt it'
+        : null
   return (
     <Card
       title='Divine body'
@@ -591,7 +604,7 @@ function WoundsCard({
         <EmptyState
           icon={HeartCrack}
           title='Unwounded'
-          description='Gods are wounded in duels, wars of gods, by the death of a mortal form, by outer bargains or by you.'
+          description='Gods are wounded in duels and wars of gods, by the death of a mortal form, by outer bargains, by neglect, by betrayal, by the deeds of mortals or by you.'
         />
       ) : (
         <ul className='flex min-w-0 flex-col gap-2'>
@@ -629,6 +642,20 @@ function WoundsCard({
             max={100}
             disabled={pending !== null}
             onChange={setSeverity}
+          />
+          <PickRow
+            label='Dealt by'
+            table={WOUND_CAUSES}
+            value={cause}
+            blocked={pending}
+            onPick={setCause}
+          />
+          <NodePicker
+            label='Mortal who dealt it'
+            value={slayer}
+            onChange={setSlayer}
+            blocked={byMortal ? pending : "Only a mortal's deed names a mortal"}
+            types={MORTAL_TYPES}
           />
         </div>
         <Button

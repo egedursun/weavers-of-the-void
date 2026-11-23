@@ -1,5 +1,6 @@
 import {
   Atom,
+  BookOpen,
   Brain,
   Building2,
   Cpu,
@@ -32,4 +33,5 @@ export const FAMILIES: Record<components['schemas']['TechFamily'], Named> = {
   administration: { label: 'Administration', icon: Landmark, tone: 'gold' },
   space: { label: 'Space', icon: Rocket, tone: 'gold' },
   mind: { label: 'Minds', icon: Brain, tone: 'verdigris' },
+  knowledge: { label: 'Knowledge', icon: BookOpen, tone: 'info' },
 }

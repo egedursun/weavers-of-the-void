@@ -9,7 +9,7 @@ from aerona.domain.enums.concealment import BreachCause, HiddenTruthKind
 from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.couplings import SignCause
 from aerona.domain.enums.culture import ArtMode, BoostTrigger, SpeakerKind, Technique
-from aerona.domain.enums.discovery import AgeKind, BlueprintKind, GreatField, ResearchIncident, TheoryDomain
+from aerona.domain.enums.discovery import AgeKind, BlueprintKind, BlueprintSource, GreatField, ResearchIncident, TheoryDomain
 from aerona.domain.enums.entity import EntityType as E
 from aerona.domain.enums.eras import ProgrammeStage
 from aerona.domain.enums.industry import MethodKind, ProcessKind
@@ -37,6 +37,7 @@ PROGRAMME_STEPS: Mapping[ProgrammeStage, str] = total(
         ProgrammeStage.TESTING: "{subject} began to test its programme of {technique}.",
         ProgrammeStage.COMPLETE: "{subject} completed its programme of {technique}.",
         ProgrammeStage.ABANDONED: "{subject} abandoned its programme of {technique}.",
+        ProgrammeStage.SUSPENDED: "{subject} suspended its programme of {technique}.",
     },
 )
 
@@ -140,6 +141,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             FactSpec("blueprint_kind", FactValue.ENUM, enum=BlueprintKind),
             FactSpec("design", FactValue.NAME),
             FactSpec("quality", FactValue.NUMBER, FactUnit.PERCENT),
+            FactSpec("source", FactValue.ENUM, enum=BlueprintSource, required=False),
         ),
         terms=True,
         chronicle_kind=K.KNOWLEDGE,

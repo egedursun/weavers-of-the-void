@@ -115,6 +115,9 @@ class WoundCause(StrEnum):
     CREATOR = "creator"
     AVATAR_SLAIN = "avatar_slain"
     OUTER_BARGAIN = "outer_bargain"
+    NEGLECT = "neglect"
+    BETRAYAL = "betrayal"
+    MORTAL_SLAYER = "mortal_slayer"
 
 
 class CouncilMotion(StrEnum):
@@ -172,6 +175,14 @@ class SonPunishment(StrEnum):
     EXILE = "exile"
     STRIP_POWER = "strip_power"
     STRIP_DIVINITY = "strip_divinity"
+    PENANCE = "penance"
+    ESSENCE_FINE = "essence_fine"
+
+
+class PenanceDeed(StrEnum):
+    RESTORE_WORLD = "restore_world"
+    RAISE_HERO = "raise_hero"
+    UNDO_CURSE = "undo_curse"
 
 
 class LawScope(StrEnum):
@@ -187,6 +198,7 @@ class LawException(StrEnum):
     AUTHOR_WORSHIPPERS = "author_worshippers"
     HEROES = "heroes"
     AVATARS = "avatars"
+    NAMED_KIND = "named_kind"
 
 
 class OuterHunger(StrEnum):
@@ -201,12 +213,16 @@ class BargainGain(StrEnum):
     ESSENCE = "essence"
     POWER = "power"
     MIGHT = "might"
+    KNOWLEDGE = "knowledge"
+    LONGEVITY = "longevity"
 
 
 class BargainPrice(StrEnum):
     WORLD_SANITY = "world_sanity"
     DOMAIN = "domain"
     TRUE_NAME = "true_name"
+    WORSHIPPERS = "worshippers"
+    DESCENDANTS = "descendants"
 
 
 class DivineVerb(StrEnum):

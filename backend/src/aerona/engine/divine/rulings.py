@@ -1,12 +1,13 @@
 from collections import Counter
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 
-from aerona.catalog.life.divine import LEANING_COUNCIL_MOTIONS, MOTION_LABELS, RULING_LASTING
+from aerona.catalog.life.divine import LEANING_COUNCIL_MOTIONS, MOTION_LABELS, PENANCE_DEEDS, PUNISHMENTS, RULING_LASTING
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.core.total import total
 from aerona.db.repositories.sons import COUNCIL_SEATING, SonRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
@@ -14,6 +15,7 @@ from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.divine import CouncilRulingRow, GodGoalRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow, GodConflictRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import CouncilRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.db.write_guard import held
@@ -21,7 +23,7 @@ from aerona.domain.enums.agent import CouncilCaller, CouncilVote
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.divine import CouncilMotion, GoalState, SonPunishment
+from aerona.domain.enums.divine import CouncilMotion, GoalState, PenanceDeed, SonPunishment
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
@@ -104,24 +106,117 @@ async def enact_war(ctx: TickContext, ruling: CouncilRulingRow, members: list[So
     return [text] if text else []
 
 
+async def chain_son(ctx: TickContext, son: SonRow, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    son.chained = True
+    return [f"{son.name} was chained"]
+
+
+async def exile_son(ctx: TickContext, son: SonRow, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    son.status = SonStatus.EXILED
+    return [f"{son.name} was exiled"]
+
+
+async def strip_power(ctx: TickContext, son: SonRow, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    power = await ctx.session.scalar(select(SonPowerRow).where(SonPowerRow.son_id == son.id).order_by(SonPowerRow.slot.desc()).limit(1))
+    if power is None:
+        return []
+    await ctx.session.delete(power)
+    return [f"{son.name} was stripped of {power.name}"]
+
+
+async def strip_divinity(ctx: TickContext, son: SonRow, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    await order(ctx, TransformKind.FALL, son.id, TransformTrigger.COUNCIL)
+    return [f"{son.name} will be stripped of divinity unless the Creator stays it"]
+
+
+async def bind_penance(ctx: TickContext, son: SonRow, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    deed = ruling.penance_deed or PenanceDeed.RESTORE_WORLD
+    return [f"{son.name} must {PENANCE_DEEDS[deed].label} by epoch {ruling.until_epoch}"]
+
+
+async def fine_son(ctx: TickContext, son: SonRow, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    return [await fine_essence(ctx, son, members)]
+
+
+Penalty = Callable[[TickContext, SonRow, CouncilRulingRow, list[SonRow]], Awaitable[list[str]]]
+PENALTIES: Mapping[SonPunishment, Penalty] = total(
+    SonPunishment,
+    {
+        SonPunishment.CHAIN: chain_son,
+        SonPunishment.EXILE: exile_son,
+        SonPunishment.STRIP_POWER: strip_power,
+        SonPunishment.STRIP_DIVINITY: strip_divinity,
+        SonPunishment.PENANCE: bind_penance,
+        SonPunishment.ESSENCE_FINE: fine_son,
+    },
+)
+
+
 async def enact_punishment(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
     son = await ctx.session.get(SonRow, ruling.target_node_id) if ruling.target_node_id is not None else None
     if son is None or held(son.id):
         return []
-    if ruling.punishment is SonPunishment.STRIP_POWER:
-        power = await ctx.session.scalar(select(SonPowerRow).where(SonPowerRow.son_id == son.id).order_by(SonPowerRow.slot.desc()).limit(1))
-        if power is None:
-            return []
-        await ctx.session.delete(power)
-        return [f"{son.name} was stripped of {power.name}"]
-    if ruling.punishment is SonPunishment.EXILE:
-        son.status = SonStatus.EXILED
-        return [f"{son.name} was exiled"]
-    if ruling.punishment is SonPunishment.STRIP_DIVINITY:
-        await order(ctx, TransformKind.FALL, son.id, TransformTrigger.COUNCIL)
-        return [f"{son.name} will be stripped of divinity unless the Creator stays it"]
+    penalty = ruling.punishment or SonPunishment.CHAIN
+    await record_incident(
+        ctx,
+        "council.penalty",
+        roles={IncidentRole.TARGET: son.id},
+        facts={"penalty": penalty, "penalty_label": PUNISHMENTS[penalty].label},
+        kind=ChronicleKind.COUNCIL,
+        world_id=ruling.world_id,
+    )
+    cost = PUNISHMENTS[penalty].renown
+    if cost is not None:
+        son.fame = max(0, son.fame - cost(ctx.rules))
+    return await PENALTIES[penalty](ctx, son, ruling, members)
+
+
+async def fine_essence(ctx: TickContext, son: SonRow, members: list[SonRow]) -> str:
+    fine = son.essence * ctx.rules.council.essence_fine_share_pct // PERCENT
+    son.essence -= fine
+    takers = [member for member in members if member.id != son.id and not held(member.id)]
+    for member in takers:
+        member.essence += fine // len(takers)
+    return f"{son.name} paid {fine} essence to the council"
+
+
+async def penance_done(ctx: TickContext, ruling: CouncilRulingRow) -> bool:
+    if ruling.target_node_id is None:
+        return False
+    deed = ruling.penance_deed or PenanceDeed.RESTORE_WORLD
+    found = await ctx.session.scalar(
+        select(func.count())
+        .select_from(IncidentParticipantRow)
+        .join(IncidentRow, IncidentRow.id == IncidentParticipantRow.incident_id)
+        .where(
+            IncidentParticipantRow.node_id == ruling.target_node_id,
+            IncidentRow.kind.in_(sorted(PENANCE_DEEDS[deed].deeds)),
+            IncidentRow.epoch >= ruling.epoch,
+        )
+    )
+    return bool(found)
+
+
+async def keep_penance(ctx: TickContext, ruling: CouncilRulingRow) -> bool:
+    son = await ctx.session.get(SonRow, ruling.target_node_id) if ruling.target_node_id is not None else None
+    if son is None or held(son.id) or "active" in ruling.locked:
+        return False
+    deed = ruling.penance_deed or PenanceDeed.RESTORE_WORLD
+    facts = {"deed": deed, "deed_label": PENANCE_DEEDS[deed].label}
+    if await penance_done(ctx, ruling):
+        ruling.active = False
+        son.fame += ctx.rules.council.penance_kept_renown
+        await record_incident(
+            ctx, "council.penance_kept", roles={IncidentRole.TARGET: son.id}, facts=facts, kind=ChronicleKind.COUNCIL, world_id=ruling.world_id
+        )
+        return True
+    if ruling.until_epoch is None or ctx.epoch < ruling.until_epoch:
+        return False
+    ruling.punishment = SonPunishment.CHAIN
+    ruling.until_epoch = ctx.epoch + (await procedure_of(ctx)).term_epochs
     son.chained = True
-    return [f"{son.name} was chained"]
+    await record_incident(ctx, "council.penance_failed", roles={IncidentRole.TARGET: son.id}, facts=facts, kind=ChronicleKind.COUNCIL, world_id=ruling.world_id)
+    return True
 
 
 async def enact_blessing(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
@@ -188,6 +283,20 @@ async def enact(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow
     return lines
 
 
+def penance_of(ctx: TickContext, motion: Motion) -> PenanceDeed | None:
+    if motion.punishment is not SonPunishment.PENANCE:
+        return None
+    if motion.penance_deed is not None:
+        return motion.penance_deed
+    return ctx.rng(f"council.penance.{'none' if motion.target_node_id is None else motion.target_node_id}.{ctx.epoch}").pick(list(PenanceDeed))
+
+
+async def until_of(ctx: TickContext, motion: Motion) -> int | None:
+    if motion.motion is M.PUNISH_SON and motion.punishment is SonPunishment.PENANCE:
+        return ctx.epoch + ctx.rules.council.penance_epochs
+    return ctx.epoch + (await procedure_of(ctx)).term_epochs if motion.motion in LASTING else None
+
+
 async def record(ctx: TickContext, motion: Motion, *, council_id: int | None, note_text: str | None = None) -> CouncilRulingRow:
     row = CouncilRulingRow(
         council_id=council_id,
@@ -196,8 +305,9 @@ async def record(ctx: TickContext, motion: Motion, *, council_id: int | None, no
         world_id=motion.world_id,
         school=motion.school,
         punishment=motion.punishment,
+        penance_deed=penance_of(ctx, motion),
         epoch=ctx.epoch,
-        until_epoch=ctx.epoch + (await procedure_of(ctx)).term_epochs if motion.motion in LASTING else None,
+        until_epoch=await until_of(ctx, motion),
         voting_rule=motion.voting_rule,
         active=True,
         enacted=False,
@@ -212,6 +322,9 @@ async def record(ctx: TickContext, motion: Motion, *, council_id: int | None, no
 async def enforce_rulings(ctx: TickContext) -> int:
     kept = 0
     for row in await active_rulings(ctx):
+        if row.motion is M.PUNISH_SON and row.punishment is SonPunishment.PENANCE and await keep_penance(ctx, row):
+            kept += 1
+            continue
         if row.until_epoch is not None and ctx.epoch >= row.until_epoch and "active" not in row.locked:
             row.active = False
             if row.motion is M.PUNISH_SON and row.punishment is SonPunishment.EXILE and row.target_node_id is not None:

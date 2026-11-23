@@ -1,5 +1,6 @@
 import {
   Ban,
+  BookOpen,
   Castle,
   Church,
   CircleCheck,
@@ -12,9 +13,9 @@ import {
   Gauge,
   Hammer,
   HeartPulse,
-  type LucideIcon,
   Megaphone,
   Package,
+  Pause,
   PencilRuler,
   Pickaxe,
   RadioTower,
@@ -22,6 +23,7 @@ import {
   Ship,
   Skull,
   Sparkles,
+  type LucideIcon,
   Wheat,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
@@ -43,6 +45,7 @@ export const TAB_ICONS = {
 
 const ERA_NAMES: Record<Schema['TechnologyEra'], [string, Named['tone']]> = {
   stone: ['Stone', 'muted'],
+  copper: ['Copper', 'warning'],
   bronze: ['Bronze', 'warning'],
   iron: ['Iron', 'muted'],
   medieval: ['Medieval', 'verdigris'],
@@ -142,6 +145,18 @@ export const CHANNELS: Record<Schema['EraChannel'], Named & { unit: string }> =
       unit: '%',
     },
     doom: { label: 'Doom each epoch', icon: Skull, tone: 'danger', unit: '' },
+    learning: {
+      label: 'Literacy reach',
+      icon: BookOpen,
+      tone: 'info',
+      unit: '%',
+    },
+    health: {
+      label: 'Life span',
+      icon: HeartPulse,
+      tone: 'success',
+      unit: '%',
+    },
   }
 
 export const STAGES: Record<Schema['ProgrammeStage'], Named> = {
@@ -150,6 +165,7 @@ export const STAGES: Record<Schema['ProgrammeStage'], Named> = {
   testing: { label: 'Testing', icon: FlaskConical, tone: 'warning' },
   complete: { label: 'Complete', icon: CircleCheck, tone: 'success' },
   abandoned: { label: 'Abandoned', icon: CircleX, tone: 'muted' },
+  suspended: { label: 'Suspended', icon: Pause, tone: 'warning' },
 }
 
 export const BARRED_ICON: LucideIcon = Ban

@@ -53,6 +53,7 @@ CORRUPT_FROM = PERCENT // 2
     "people.population",
     "settlement.population",
     "table.army_profiles",
+    "table.blueprints",
     "table.bonds",
     "table.calendars",
     "table.community_industry",

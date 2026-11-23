@@ -41,6 +41,7 @@ from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.mass_weapons import WarRemnantRow
 from aerona.db.tables.sites import BattlefieldFeatureRow, ExcavationRow, ExcavationStageRow, RoomContentRow, SiteHolderRow, SiteRoomRow
 from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.tables.storyteller_depth import RegionalTensionRow, SubsystemTensionRow
@@ -393,6 +394,12 @@ async def site(services: ServicesDep, entity_id: Id) -> SiteView:
         )
         histories = await collection_names(session, [dig.collection_id for dig in digs])
         battles = await battle_names(session, [row.battle_id for row in features])
+        remnant_ids = sorted({row.remnant_id for row in features if row.remnant_id is not None})
+        remnants = (
+            {row.id: row for row in await session.scalars(select(WarRemnantRow).where(WarRemnantRow.id.in_(remnant_ids)).order_by(WarRemnantRow.id))}
+            if remnant_ids
+            else {}
+        )
         layout = await layout_of(await manual_context(session, "site_view"), found)
         return SiteView(
             site_id=entity_id,
@@ -461,6 +468,9 @@ async def site(services: ServicesDep, entity_id: Id) -> SiteView:
                     strength=row.strength,
                     battle_id=row.battle_id,
                     battle_name=battles.get(row.battle_id or 0),
+                    remnant_id=row.remnant_id,
+                    remnant_kind=remnants[row.remnant_id].kind if row.remnant_id in remnants else None,
+                    remnant_cleared=remnants[row.remnant_id].cleared if row.remnant_id in remnants else None,
                     epoch=row.epoch,
                     locked=list(row.locked or []),
                 )

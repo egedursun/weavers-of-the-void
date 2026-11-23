@@ -22,5 +22,7 @@ ERA_CHANNEL = total(
         EraChannel.RITES: Defined("Power rites lose", checked_by=(), used_by=("catalog.eras.ERA_EFFECTS", "engine.lore.rites.cast")),
         EraChannel.SPOILAGE: Defined("Spoilage spared", checked_by=(), used_by=("catalog.eras.ERA_EFFECTS", "engine.economy.routes.haul")),
         EraChannel.DOOM: Defined("Doom each epoch", checked_by=(), used_by=("catalog.eras.ERA_EFFECTS", "engine.eras.progress.era_doom")),
+        EraChannel.LEARNING: Defined("Literacy reach", checked_by=(), used_by=("catalog.eras.ERA_EFFECTS", "engine.structures.functions.school")),
+        EraChannel.HEALTH: Defined("Life span", checked_by=(), used_by=("catalog.eras.ERA_EFFECTS", "engine.lifecycle.aging.effective_lifespan")),
     },
 )

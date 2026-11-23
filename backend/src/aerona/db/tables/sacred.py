@@ -35,7 +35,7 @@ FORTUNE_MIN = -20
 FORTUNE_MAX = 20
 GENIUS_FIELDS = ("place_entity_id", "community_entity_id", "kind", "temperament", "contentment", "offerings", "owed", "favour", "offended")
 OFFICE_FIELDS = ("rank", "superior_spirit_id", "overseer_node_id", "jurisdiction_entity_id", "merit", "corruption", "resolved", "neglected", "dismissed")
-PETITION_FIELDS = ("office_spirit_id", "kind", "defendant_spirit_id", "bribe", "status", "due_epoch", "appealed_to_id")
+PETITION_FIELDS = ("office_spirit_id", "kind", "defendant_spirit_id", "target_node_id", "bribe", "status", "due_epoch", "appealed_to_id")
 MYSTIC_FIELDS = (
     "state",
     "visions",
@@ -155,6 +155,7 @@ class PetitionRow(Base):
     office_spirit_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     kind: Mapped[PetitionKind] = mapped_column(enum_type(PetitionKind, "kind"))
     defendant_spirit_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     bribe: Mapped[int] = mapped_column(default=0)
     status: Mapped[PetitionStatus] = mapped_column(enum_type(PetitionStatus, "status"), default=PetitionStatus.FILED)
     filed_epoch: Mapped[int] = mapped_column(default=0)

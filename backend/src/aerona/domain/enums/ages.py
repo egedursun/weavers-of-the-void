@@ -106,6 +106,8 @@ class ArcRole(StrEnum):
     HEIR = "heir"
     FOE = "foe"
     ALLY = "ally"
+    WITNESS = "witness"
+    GUIDE = "guide"
 
 
 class SetupKind(StrEnum):
@@ -115,6 +117,7 @@ class SetupKind(StrEnum):
     FORESIGHT = "foresight"
     INCIDENT_ARC = "incident_arc"
     PORTENT = "portent"
+    INHERITANCE = "inheritance"
 
 
 class PayoffKind(StrEnum):

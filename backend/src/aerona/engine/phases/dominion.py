@@ -146,7 +146,16 @@ async def dominion(ctx: TickContext) -> None:
     count(ctx, "dominion", tally)
 
 
-@reads("people.piety", "settlement.piety", "table.divine_standing", "table.entities", "table.nodes", "table.structure_profiles")
+@reads(
+    "people.piety",
+    "settlement.piety",
+    "table.culture_values",
+    "table.divine_standing",
+    "table.entities",
+    "table.messages",
+    "table.nodes",
+    "table.structure_profiles",
+)
 @writes("people.piety", "settlement.piety", "table.divine_standing", "table.entities")
 async def worship_views(ctx: TickContext) -> None:
     tally = WorshipTally()

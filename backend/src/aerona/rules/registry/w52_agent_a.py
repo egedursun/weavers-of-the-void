@@ -182,3 +182,69 @@ class CoopRules:
     credit_gain: int = rule(10, 0, 100, CIV, "How much a credit cooperative lends each member out of its pool (tenths of the usual)")
     granary_gain: int = rule(10, 0, 100, CIV, "Grain a granary cooperative gives out from its stores for each member in a hungry epoch, in tenths")
     herding_gain: int = rule(10, 0, 100, CIV, "Beasts a herding cooperative's shared herders add for each member each epoch, in tenths")
+
+
+ARC = RuleGroup.HEROES_AND_MORTALS
+DIV = RuleGroup.THE_DIVINE
+
+
+@dataclass(frozen=True)
+class ArcanaRules:
+    linked_strength_pct: int = rule(70, 0, 100, ARC, "Strength a rite cast through a link keeps of the link's own strength (%)")
+    cosmos_cost_pct: int = rule(300, 100, 1000, ARC, "Price of a rite that reaches beyond its world, against the same rite cast at home (%)")
+    world_rite_power: int = rule(9, 1, 10, ARC, "Power a rite needs to touch a whole world")
+    line_reach: int = rule(8, 1, 50, ARC, "Most living descendants a rite cast on a line of descent reaches with its holder")
+    site_fill: int = rule(1, 0, 100, ARC, "Charges an item bound to a site regains each epoch at a found magic site")
+    vis_fill: int = rule(1, 0, 100, ARC, "Charges an item bound to vis regains each epoch its holder pays the vis")
+    moon_fill: int = rule(1, 0, 100, ARC, "Charges an item bound to the moon regains each epoch its world's first moon is full")
+    none_fill: int = rule(0, 0, 100, ARC, "Charges an item that never refills regains each epoch")
+    sky_event_fill: int = rule(2, 0, 100, ARC, "Charges an item bound to the sky regains in an epoch that brings an eclipse, alignment or comet to its world")
+    bodily_offering_fill: int = rule(2, 0, 100, ARC, "Charges an item fed of a body regains each epoch its holder gives of a body")
+    bodily_offering_harm: int = rule(5, 0, 100, ARC, "Hit points a holder gives of its body to fill an item fed so")
+    sustained_struck_pct: int = rule(50, 0, 100, ARC, "Chance a fresh wound on the caster breaks a rite it sustains (%)")
+
+
+@dataclass(frozen=True)
+class LinkRules:
+    hair_strength: int = rule(50, 0, 100, ARC, "Strength of a link made with a target's hair")
+    blood_strength: int = rule(65, 0, 100, ARC, "Strength of a link made with a target's blood")
+    name_strength: int = rule(90, 0, 100, ARC, "Strength of a link made with a target's name")
+    portrait_strength: int = rule(40, 0, 100, ARC, "Strength of a link made with a likeness of the target")
+    fragment_strength: int = rule(55, 0, 100, ARC, "Strength of a link made with a thing the target once held")
+    true_name_strength: int = rule(100, 0, 100, ARC, "Strength of a link made with a target's true name")
+    possession_strength: int = rule(30, 0, 100, ARC, "Strength of a link made with a thing the target wears or keeps")
+    true_name_command_pct: int = rule(150, 100, 400, ARC, "Strength a rite that commands or binds draws from a true name it is cast through (%)")
+
+
+@dataclass(frozen=True)
+class InstructionRules:
+    guard_literalness: int = rule(70, 0, 100, MIND, "How literally a made thing reads an order to guard")
+    serve_literalness: int = rule(60, 0, 100, MIND, "How literally a made thing reads an order to serve")
+    obey_holder_literalness: int = rule(80, 0, 100, MIND, "How literally a made thing reads an order to obey whoever holds it")
+    build_literalness: int = rule(75, 0, 100, MIND, "How literally a made thing reads an order to build")
+    gather_literalness: int = rule(75, 0, 100, MIND, "How literally a made thing reads an order to gather")
+    protect_literalness: int = rule(65, 0, 100, MIND, "How literally a made thing reads an order to protect")
+    destroy_literalness: int = rule(85, 0, 100, MIND, "How literally a made thing reads an order to destroy")
+    report_literalness: int = rule(70, 0, 100, MIND, "How literally a made thing reads an order to report")
+    maintain_literalness: int = rule(75, 0, 100, MIND, "How literally a made thing reads an order to maintain")
+    replicate_literalness: int = rule(90, 0, 100, MIND, "How literally a made thing reads an order to make more of itself")
+    hold_still_literalness: int = rule(95, 0, 100, MIND, "How literally a made thing reads an order to hold still")
+    follow_literalness: int = rule(70, 0, 100, MIND, "How literally a made thing reads an order to follow")
+    forbid_literalness: int = rule(85, 0, 100, MIND, "How literally a made thing reads an order that forbids")
+    carry_literalness: int = rule(80, 0, 100, MIND, "How literally a made thing reads an order to carry")
+    tend_literalness: int = rule(60, 0, 100, MIND, "How literally a made thing reads an order to tend")
+    true_name_override: int = rule(1, 0, 1, MIND, "Whether one who knows a made thing's true name commands it over any other token (1 yes, 0 no)")
+    carry_goods: int = rule(4, 0, 100, MIND, "Goods a made thing set to carry brings to the stores of its town each epoch")
+    tend_food: int = rule(4, 0, 100, MIND, "Food a made thing set to tend keeps for its town each epoch")
+
+
+@dataclass(frozen=True)
+class WorshipRules:
+    bargain_neglect_pct: int = rule(150, 0, 500, DIV, "How much faster a people that bargains with a god turns to neglect when its bargain goes unanswered (%)")
+    bargain_offering_pct: int = rule(60, 0, 400, DIV, "Faith a bargaining people offers for its named return, against what an appeasing people offers (%)")
+    bargain_trust: int = rule(5, 0, 100, DIV, "Love a bargaining people gains when its god answers the bargain")
+    thanks_essence: int = rule(2, 0, 100, DIV, "Essence a prayer of thanks gives its god")
+    mercy_essence: int = rule(1, 0, 100, DIV, "Essence a prayer for mercy gives its god")
+    request_essence: int = rule(1, 0, 100, DIV, "Essence a prayer that asks a boon gives its god")
+    praise_essence: int = rule(3, 0, 100, DIV, "Essence a prayer of praise gives its god")
+    praise_renown: int = rule(1, 0, 100, DIV, "Awe a people gains of its god for each epoch its prayers praise it")

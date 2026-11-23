@@ -164,9 +164,11 @@ export const DISCOVERY_LABEL: Record<Discovery, string> = {
 }
 
 export const GRAVITY_LABEL: Record<Gravity, string> = {
+  micro: 'Micro, things drift',
   low: 'Low',
   normal: 'Normal',
   high: 'High',
+  crushing: 'Crushing',
 }
 
 export const ATMOSPHERE_LABEL: Record<Atmosphere, string> = {
@@ -197,6 +199,9 @@ export const JOURNEY_INTENT_LABEL: Record<JourneyIntent, string> = {
   exploration: 'Exploration',
   conquest: 'Conquest',
   pilgrimage: 'Pilgrimage',
+  exile: 'Exile',
+  flight: 'Flight',
+  embassy: 'Embassy',
 }
 
 export const JOURNEY_STATUS_LABEL: Record<JourneyStatus, string> = {

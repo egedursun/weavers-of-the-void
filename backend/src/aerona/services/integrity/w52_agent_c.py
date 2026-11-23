@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.crafts import AID_NEEDS
@@ -8,17 +8,22 @@ from aerona.db.tables.agrarian import ReconstructionRow
 from aerona.db.tables.belonging import SanctuaryRow
 from aerona.db.tables.crafts import AssistiveAidRow
 from aerona.db.tables.culture import HolderTechniqueRow
+from aerona.db.tables.divine import CouncilRulingRow, DivineWoundRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.means import SecurityRow, WaterLiftRow
 from aerona.db.tables.museums import MuseumPieceRow
+from aerona.db.tables.mythic import ServitorRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.agrarian import RebuildPlan
 from aerona.domain.enums.belonging import SanctuaryKind, SanctuaryState
+from aerona.domain.enums.divine import PenanceDeed, SonPunishment, WoundCause
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.museum import PieceKind
+from aerona.domain.enums.mythic import ServitorOrigin
 from aerona.engine.body.customs import people_of
 from aerona.engine.eras.effects import era_techniques
+from aerona.rules.registry import Rules
 
 
 async def known(session: AsyncSession, holder_id: int | None) -> frozenset[object]:
@@ -127,3 +132,49 @@ async def unknown_aids(session: AsyncSession) -> list[int]:
 async def drop_aid(session: AsyncSession, key: int) -> None:
     for row in await bare_aids(session, key):
         await session.delete(row)
+
+
+async def unnamed_slayers(session: AsyncSession) -> list[int]:
+    rows = await session.scalars(select(DivineWoundRow).where(DivineWoundRow.cause == WoundCause.MORTAL_SLAYER).order_by(DivineWoundRow.id))
+    found: list[int] = []
+    for row in rows:
+        slayer = await session.get(EntityRow, row.cause_node_id) if row.cause_node_id is not None else None
+        if slayer is None or slayer.entity_type is not EntityType.MORTAL:
+            found.append(row.id)
+    return found
+
+
+async def unknown_dealer(session: AsyncSession, key: int) -> None:
+    row = await session.get(DivineWoundRow, key)
+    if row is not None:
+        row.cause, row.cause_node_id = WoundCause.CREATOR, None
+
+
+async def open_penances(session: AsyncSession) -> list[int]:
+    rows = await session.scalars(
+        select(CouncilRulingRow.id).where(
+            CouncilRulingRow.punishment == SonPunishment.PENANCE,
+            or_(CouncilRulingRow.penance_deed.is_(None), CouncilRulingRow.until_epoch.is_(None)),
+        )
+    )
+    return sorted(rows)
+
+
+async def set_penance(session: AsyncSession, key: int) -> None:
+    row = await session.get(CouncilRulingRow, key)
+    if row is not None:
+        row.penance_deed = row.penance_deed or PenanceDeed.RESTORE_WORLD
+        row.until_epoch = row.until_epoch if row.until_epoch is not None else row.epoch + Rules().council.penance_epochs
+
+
+async def masterless_defectors(session: AsyncSession) -> list[int]:
+    rows = await session.scalars(
+        select(ServitorRow.spirit_entity_id).where(ServitorRow.origin == ServitorOrigin.DEFECTED, ServitorRow.former_god_node_id.is_(None))
+    )
+    return sorted(rows)
+
+
+async def made_servitor(session: AsyncSession, key: int) -> None:
+    row = await session.get(ServitorRow, key)
+    if row is not None:
+        row.origin = ServitorOrigin.MADE

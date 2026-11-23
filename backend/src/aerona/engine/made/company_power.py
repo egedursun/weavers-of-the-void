@@ -2,13 +2,17 @@ from sqlalchemy import func, select
 
 from aerona.catalog.life.made import CHARTER_REACH, HOLDING_WEIGHT
 from aerona.constants.units import PERCENT
+from aerona.db.faction_kinds import of_kinds
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.made import CompanyHoldingRow, CompanyPresenceRow, EnclaveRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.made import CompanyCharter, CompanyHoldingKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import GovernmentKind
 from aerona.engine.context import TickContext
@@ -24,10 +28,35 @@ async def holding_places(ctx: TickContext, company_id: int) -> list[tuple[int, i
         thing = await ctx.session.get(EntityRow, holding.holding_node_id)
         if thing is None:
             continue
+        if holding.kind is CompanyHoldingKind.LAND and thing.entity_type is EntityType.REGION:
+            places += [(town, HOLDING_WEIGHT[holding.kind]) for town in await towns_on(ctx, thing.id)]
+            continue
         town = thing if thing.entity_type is EntityType.SETTLEMENT else await ctx.session.get(EntityRow, thing.location_id) if thing.location_id else None
         if town is not None and town.entity_type is EntityType.SETTLEMENT:
             places.append((town.id, HOLDING_WEIGHT[holding.kind]))
     return places
+
+
+async def towns_on(ctx: TickContext, region_id: int) -> list[int]:
+    return list(
+        await ctx.session.scalars(
+            select(EntityRow.id)
+            .where(EntityRow.location_id == region_id, EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON)
+            .order_by(EntityRow.id)
+        )
+    )
+
+
+async def guild_weight(ctx: TickContext, row: CompanyProfileRow, town: int, weight: int) -> int:
+    if row.charter is not CompanyCharter.GUILD:
+        return weight
+    homed = await ctx.session.scalar(
+        select(FactionProfileRow.faction_entity_id)
+        .join(EntityRow, EntityRow.id == FactionProfileRow.faction_entity_id)
+        .where(of_kinds([FactionKind.CRAFT_GUILD]), FactionProfileRow.home_entity_id == town)
+        .limit(1)
+    )
+    return weight * (PERCENT + ctx.rules.company_power.guild_privilege_pct) // PERCENT if homed is not None else weight
 
 
 async def presence_in(ctx: TickContext, company_id: int, polity_id: int) -> CompanyPresenceRow:
@@ -78,7 +107,7 @@ async def grow(ctx: TickContext, company: EntityRow, row: CompanyProfileRow) -> 
     for town, weight in held_places:
         realm = await realm_of(ctx, town)
         if realm is not None:
-            realms[realm] = realms.get(realm, 0) + weight
+            realms[realm] = realms.get(realm, 0) + await guild_weight(ctx, row, town, weight)
     for realm, weight in realms.items():
         presence = await presence_in(ctx, company.id, realm)
         if "influence" not in presence.locked:

@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 
 from aerona.catalog.life.powers import (
     AT_DEATH_POWER_ORIGINS,
@@ -18,8 +18,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import PurityRankRow, PurityRow
 from aerona.db.tables.intrigue import IdentityRow, SecretRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, PolityMemberRow
-from aerona.db.tables.powers import GiftedAttitudeRow, PowerRegistryRow, PowerRestrictionRow, PowerRow
+from aerona.db.tables.powers import GiftedAttitudeRow, PowerRegistryRow, PowerRestrictionRow, PowerRow, SourceLawRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -30,7 +31,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind
-from aerona.domain.enums.powers import BloodlineRule, GiftedAttitude, PowerDeviceEffect, PowerOrigin, PowerState, PowerVisibility
+from aerona.domain.enums.powers import BloodlineRule, GiftedAttitude, GiftedStance, PowerDeviceEffect, PowerOrigin, PowerState, PowerVisibility, SourceLawLevel
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -44,12 +45,16 @@ from aerona.engine.powers.devices import devices_of
 from aerona.engine.powers.kinds import teachable
 from aerona.engine.powers.war import field_gifted
 from aerona.engine.primitives.folk import present_among, towns_of_people
+from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining, term
 
 CASTE_NAME = "those born with powers"
 BORN_ORIGINS = having(POWER_ORIGIN_TRAITS, PowerOriginTrait.BORN_ORIGINS)
+MOST_EXPLOITED = 5
 GIFTED_LAWS = frozenset({"registered", "licensed", "conscripted"})
 HUNTING_LAWS = frozenset({"hunted", "banned"})
 LEAN = 25
@@ -92,16 +97,18 @@ async def attitude_for(ctx: TickContext, people: EntityRow, holders: set[int]) -
     memory = await harmed_by_gifted(ctx, people.id, holders) * ctx.rules.powered_society.attitude_shift
     hiding = select(func.count()).select_from(IdentityRow).where(IdentityRow.mortal_node_id.in_(holders), IdentityRow.reason == IdentityReason.HIDDEN_POWER)
     fear = int(await ctx.session.scalar(hiding) or 0) * ctx.rules.powered_society.hidden_fear
-    lean = values.get(ValueAxis.TRADITION, 0) + values.get(ValueAxis.PURITY, 0) + memory + fear
-    if lean >= LEAN * 3:
-        return GiftedAttitude.PERSECUTED
-    if lean >= LEAN * 2:
-        return GiftedAttitude.FEARED
-    if values.get(ValueAxis.LAW, 0) >= LEAN:
-        return GiftedAttitude.REGULATED
-    if values.get(ValueAxis.KNOWLEDGE, 0) + values.get(ValueAxis.PIETY, 0) - memory >= LEAN * 2:
-        return GiftedAttitude.HONOURED
-    return GiftedAttitude.ORDINARY
+    pity = ctx.rules.gifted.pity_fear_cut if doctrine is not None and doctrine.power_stance is GiftedStance.PITIED else 0
+    lean = values.get(ValueAxis.TRADITION, 0) + values.get(ValueAxis.PURITY, 0) + memory + fear - pity
+    mercy = values.get(ValueAxis.MERCY, 0)
+    leans = (
+        (lean >= LEAN * 3, GiftedAttitude.PERSECUTED),
+        (lean >= LEAN * 2, GiftedAttitude.FEARED),
+        (values.get(ValueAxis.WEALTH, 0) + values.get(ValueAxis.HIERARCHY, 0) - mercy - pity >= LEAN * 2, GiftedAttitude.EXPLOITED),
+        (values.get(ValueAxis.COMPETITION, 0) - mercy >= LEAN * 2, GiftedAttitude.ENVIED),
+        (values.get(ValueAxis.LAW, 0) >= LEAN, GiftedAttitude.REGULATED),
+        (values.get(ValueAxis.KNOWLEDGE, 0) + values.get(ValueAxis.PIETY, 0) - memory >= LEAN * 2, GiftedAttitude.HONOURED),
+    )
+    return next((attitude for met, attitude in leans if met), GiftedAttitude.ORDINARY)
 
 
 async def keep_attitudes(ctx: TickContext) -> int:
@@ -180,10 +187,66 @@ async def keep_registries(ctx: TickContext) -> int:
                 await report_crime(ctx, holder.location_id, holder.id, CrimeKind.WITCHCRAFT)
                 hunted += 1
                 acted += 1
+        drafted += await conscript_by_source(ctx, polity, towns)
         await field_gifted(ctx, polity.id, UnitKind.GIFTED, drafted)
         await field_gifted(ctx, polity.id, UnitKind.DAMPENERS, hunted)
         await field_gifted(ctx, polity.id, UnitKind.DETECTORS, hunted // 2)
     return acted
+
+
+async def conscript_by_source(ctx: TickContext, polity: EntityRow, towns: list[int]) -> int:
+    sources = list(
+        await ctx.session.scalars(
+            select(SourceLawRow.source_id).where(SourceLawRow.polity_entity_id == polity.id, SourceLawRow.level == SourceLawLevel.CONSCRIPTED)
+        )
+    )
+    if str(await law_param(ctx.session, polity.id, LawKind.SOURCE_LAW, "level") or "") == SourceLawLevel.CONSCRIPTED.value:
+        sources += [power.source_id for power in await powered_in(ctx, towns) if power.source_id is not None]
+    if not sources:
+        return 0
+    drafted = 0
+    for power in await powered_in(ctx, towns):
+        if power.source_id not in sources or held(power.holder_node_id):
+            continue
+        entry = await register(ctx, polity.id, power.holder_node_id, "licensed")
+        if entry.conscripted or "conscripted" in entry.locked:
+            continue
+        if ctx.rng(f"power.source_conscript.{polity.id}.{power.id}.{ctx.epoch}").chance(ctx.rules.gifted.conscript_share_pct):
+            entry.conscripted = True
+            drafted += 1
+            await record(
+                ctx, "gifted.conscripted", roles={IncidentRole.SUBJECT: power.holder_node_id, IncidentRole.ACTOR: polity.id}, facts={"strength": power.strength}
+            )
+    return drafted
+
+
+async def bear_exploitation(ctx: TickContext) -> int:
+    table = ctx.rules.gifted
+    borne = 0
+    for row in list(
+        await ctx.session.scalars(
+            select(GiftedAttitudeRow).where(GiftedAttitudeRow.attitude == GiftedAttitude.EXPLOITED).order_by(GiftedAttitudeRow.people_entity_id)
+        )
+    ):
+        if held(row.people_entity_id):
+            continue
+        towns = await towns_of(ctx, row.people_entity_id)
+        holders = sorted({power.holder_node_id for power in await powered_in(ctx, towns)})
+        for holder_id in holders:
+            profile = await ctx.session.get(MortalProfileRow, holder_id)
+            if profile is not None and not held(holder_id) and "stress" not in (profile.locked or []):
+                with explaining():
+                    term("gifted.exploited_grievance", table.exploited_grievance, source_node_id=row.people_entity_id)
+                    profile.stress = clamp_percent(profile.stress + table.exploited_grievance)
+                borne += 1
+        gain = table.exploited_profit * min(MOST_EXPLOITED, len(holders))
+        for town_id in towns:
+            town = await ctx.session.get(EntityRow, town_id)
+            if town is not None and gain and not held(town.id):
+                with explaining():
+                    term("gifted.exploited_profit", gain, source_node_id=row.people_entity_id)
+                    shift_stat(town, "prosperity", gain, ctx.rules.society.default_stat, high=PERCENT)
+    return borne
 
 
 async def form_bands(ctx: TickContext) -> int:
@@ -301,6 +364,8 @@ async def heirs(ctx: TickContext) -> int:
         )
         if rule is BloodlineRule.ELDEST and int(siblings or 0) > 0:
             continue
+        if rule is BloodlineRule.YOUNGEST:
+            await pass_from_elders(ctx, parents, child)
         for power in list(await ctx.session.scalars(select(PowerRow).where(PowerRow.holder_node_id.in_(parents), PowerRow.origin.in_(HEIRS_POWER_ORIGINS)))):
             if power.origin is PowerOrigin.BLOODLINE and not housed:
                 continue
@@ -329,6 +394,15 @@ async def heirs(ctx: TickContext) -> int:
             )
             inherited += 1
     return inherited
+
+
+async def pass_from_elders(ctx: TickContext, parents: Select[int], child: EntityRow) -> None:
+    elders = select(BondRow.target_node_id).where(BondRow.kind == BondKind.PARENT_OF, BondRow.source_node_id.in_(parents), BondRow.target_node_id != child.id)
+    inherited = select(PowerRow).where(PowerRow.holder_node_id.in_(elders), PowerRow.origin.in_(HEIRS_POWER_ORIGINS), PowerRow.state == PowerState.LATENT)
+    for power in list(await ctx.session.scalars(inherited.order_by(PowerRow.id))):
+        if held(power.holder_node_id) or "state" in power.locked:
+            continue
+        power.state = PowerState.LOST
 
 
 async def at_death(ctx: TickContext) -> int:
@@ -473,6 +547,7 @@ async def broken_vows(ctx: TickContext) -> int:
     "table.purity",
     "table.purity_ranks",
     "table.secrets",
+    "table.source_laws",
 )
 @writes(
     "table.bonds",
@@ -499,4 +574,5 @@ async def keep_powered_society(ctx: TickContext) -> None:
     ctx.count("gifted_keeping_apart", await keep_apart(ctx))
     ctx.count("gifted_trained_in_bands", await train_in_bands(ctx))
     ctx.count("gifted_placed_in_castes", await power_castes(ctx))
+    ctx.count("gifted_exploited", await bear_exploitation(ctx))
     await ctx.session.flush()

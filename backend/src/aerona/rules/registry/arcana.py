@@ -88,9 +88,7 @@ class WarpingRules:
 class EnchantedItemRules:
     capacity: int = rule(3, 1, 100, H, "Charges a new enchantment holds")
     crack: int = rule(10, 0, 100, H, "Condition an item loses each time it is used with no charge left")
-    site_recharge: int = rule(1, 0, 100, H, "Charges an item regains each epoch at a found magic site")
     vis_recharge_cost: int = rule(1, 0, 100, H, "Vis of the item's form a charge costs to restore")
-    moon_recharge: int = rule(1, 0, 100, H, "Charges an item bound to the moon regains each epoch its world's first moon is full")
 
 
 @dataclass(frozen=True)

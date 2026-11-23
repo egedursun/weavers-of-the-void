@@ -5,6 +5,7 @@ from aerona.catalog.civilization import unlocked
 from aerona.catalog.domains import match_domain
 from aerona.catalog.life.tools import BUILD_STRUCTURE_SKILL_KINDS
 from aerona.catalog.mind import CRAFT_SKILLS
+from aerona.catalog.settle_modes import SETTLE_MODES
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import fill, spoken
@@ -35,14 +36,17 @@ from aerona.engine.environment.ley_works import ley_row
 from aerona.engine.factions.privileges import landed_class
 from aerona.engine.lore import legends, traditions
 from aerona.engine.polity.laws import attach_profile, validate
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.mechanics import assign_mechanics
-from aerona.engine.primitives.queries import spoken_language
+from aerona.engine.primitives.queries import living_entity, spoken_language
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.strength import military_strength
 from aerona.engine.recording.record import StepDraft
 from aerona.engine.recording.terms import explaining, term
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
+from aerona.engine.settlement.control import town
+from aerona.engine.settlement.modes import fits, founding_scene
 from aerona.engine.structures.profiles import ensure_profile as structure_profile
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -500,6 +504,9 @@ async def found_settlement(call: MortalCall, args: SettleInput) -> str:
     if migrants < minimum:
         kind = "disciples" if key == "followers" else "people"
         fail(MortalResult.TOO_FEW_MIGRANTS, minimum=minimum, available=available, kind=kind)
+    region = await living_entity(call.session, (await RegionAtlas.load(call.session)).top_region(location.id))
+    if args.mode is not None and (region is None or not fits(call.rules, args.mode, await founding_scene(call.session, call.rules, call.me, region))):
+        fail(MortalResult.SETTLE_MODE_UNFIT, mode=SETTLE_MODES[args.mode].label.lower())
     set_stats(call.me, **{key: current - migrants})
     stats = {
         "population": migrants,
@@ -530,10 +537,13 @@ async def found_settlement(call: MortalCall, args: SettleInput) -> str:
     patron = await bonds.patron(call.me.id)
     if patron is not None:
         await bonds.connect(BondDraft(settlement.id, patron, BondKind.WORSHIPS, call.epoch))
+    founded = await town(call.tick, settlement.id)
+    if args.mode is not None:
+        founded.profile.settle_mode = args.mode
     await call.record(
         "tools.mortal.migrated",
         roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: settlement.id, IncidentRole.PLACE: location.id},
-        facts={"migrants": migrants},
+        facts={"migrants": migrants, "mode": founded.profile.settle_mode},
         place=location.id,
     )
     return result(MortalResult.SETTLED, id=settlement.id, name=settlement.name, count=migrants)

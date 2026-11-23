@@ -1,16 +1,29 @@
+from collections.abc import Awaitable, Callable, Mapping
+
 from sqlalchemy import Select, select
 
+from aerona.catalog.sacred import SACRAMENT_COSTS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultOfficeRow
+from aerona.db.tables.folkways import PurityRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sacred import DoctrineSacramentRow, SacramentRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.mind import ThoughtKind
+from aerona.domain.enums.economy import GoodsFlow
+from aerona.domain.enums.folkways import PurityState
+from aerona.domain.enums.mind import ThoughtKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import SacramentKind, SacramentProtection
+from aerona.domain.enums.society import Commodity
 from aerona.engine.context import TickContext
+from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.mind.thoughts import think
-from aerona.engine.primitives.numbers import round_half_up
-from aerona.engine.sacred.places import at_war, church_of, plagued_regions, realm_of_town, region_of, town_of
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.society import shift_stock, stock
+from aerona.engine.recording.record import record
+from aerona.engine.sacred.places import at_war, church_of, patron_of, plagued_regions, realm_of_town, region_of, town_of
 
 
 async def hardship(ctx: TickContext, town: EntityRow, plagued: set[int]) -> bool:
@@ -56,8 +69,63 @@ async def perform(ctx: TickContext, mortal: EntityRow, kind: SacramentKind, plag
     ctx.session.add(row)
     if missed:
         await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.FAITH_UNMET, ctx.epoch, intensity=table.missed_anxiety, subject_id=cult.id)
+    else:
+        await keep_rite(ctx, mortal, kind, town, cult_id=cult.id, priest=priest)
     await ctx.session.flush()
     return row
+
+
+async def keep_rite(ctx: TickContext, mortal: EntityRow, kind: SacramentKind, town: EntityRow, *, cult_id: int, priest: int | None) -> None:
+    cost = min(SACRAMENT_COSTS[kind](ctx.rules), await stock(ctx.session, ctx.rules, town.id, Commodity.GOODS)) if not held(town.id) else 0
+    if cost > 0:
+        await shift_stock(ctx.session, ctx.rules, town.id, Commodity.GOODS, -cost, epoch=ctx.epoch, flow=GoodsFlow.OFFERING)
+    await RITE_EFFECTS[kind](ctx, mortal)
+    await record(
+        ctx,
+        "sacrament.given",
+        roles={IncidentRole.PATIENT: mortal.id, IncidentRole.SUBJECT: cult_id, IncidentRole.OFFICIANT: priest},
+        facts={"rite": kind},
+    )
+
+
+async def cleanse(ctx: TickContext, mortal: EntityRow) -> None:
+    purity = await ctx.session.get(PurityRow, mortal.id)
+    if purity is not None and "state" not in purity.locked:
+        purity.state, purity.source, purity.until_epoch = PurityState.PURE, None, None
+    profile = await ctx.session.get(MortalProfileRow, mortal.id)
+    if profile is not None and "stress" not in profile.locked:
+        profile.stress = max(0, profile.stress - ctx.rules.sacraments.purification_guilt)
+
+
+async def ordain(ctx: TickContext, mortal: EntityRow) -> None:
+    values = await stored_values(ctx.session, ValueHolder.PERSONAL, mortal.id)
+    values[ValueAxis.PIETY] = clamp_int(values.get(ValueAxis.PIETY, 0) + ctx.rules.sacraments.ordination_piety, -PERCENT, PERCENT)
+    await write_values(ctx.session, ValueHolder.PERSONAL, mortal.id, values)
+
+
+async def no_more(_ctx: TickContext, _mortal: EntityRow) -> None:
+    return None
+
+
+RITE_EFFECTS: Mapping[SacramentKind, Callable[[TickContext, EntityRow], Awaitable[None]]] = total(
+    SacramentKind,
+    {
+        SacramentKind.BIRTH_BLESSING: no_more,
+        SacramentKind.INITIATION: no_more,
+        SacramentKind.MARRIAGE: no_more,
+        SacramentKind.LAST_RITES: no_more,
+        SacramentKind.PURIFICATION: cleanse,
+        SacramentKind.ORDINATION: ordain,
+    },
+)
+
+
+async def curse_ward(ctx: TickContext, bearer_id: int) -> int:
+    rows = await ctx.session.execute(
+        received(SacramentProtection.CURSE, missed=False).add_columns(SacramentRow.cult_entity_id).where(SacramentRow.mortal_entity_id == bearer_id)
+    )
+    strengths = [strength for _, strength, cult_id in rows if cult_id is not None and await patron_of(ctx, cult_id) is not None]
+    return round_half_up(ctx.rules.sacraments.curse_ward_pct * max(strengths, default=0) / PERCENT)
 
 
 def received(protection: SacramentProtection, *, missed: bool) -> Select[int, int]:

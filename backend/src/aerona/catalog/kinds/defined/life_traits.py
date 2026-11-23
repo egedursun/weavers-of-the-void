@@ -771,7 +771,14 @@ POWER_STATE_TRAIT = total(
     {
         PowerStateTrait.QUIET: Defined("Quiet", checked_by=(), used_by=("catalog.life_traits.POWER_STATE_TRAITS", "engine.powers.phase.QUIET")),
         PowerStateTrait.USABLE: Defined(
-            "Usable", checked_by=(), used_by=("catalog.life_traits.POWER_STATE_TRAITS", "engine.couplings.deep.USABLE_POWERS", "engine.powers.use.USABLE")
+            "Usable",
+            checked_by=(),
+            used_by=(
+                "catalog.life_traits.POWER_STATE_TRAITS",
+                "engine.augments.USABLE_POWER",
+                "engine.couplings.deep.USABLE_POWERS",
+                "engine.powers.use.USABLE",
+            ),
         ),
     },
 )
@@ -1154,7 +1161,13 @@ WORLD_TYPE_TRAIT = total(
         WorldTypeTrait.BROKEN_WORLDS: Defined(
             "Broken worlds",
             checked_by=(),
-            used_by=("catalog.life_traits.WORLD_TYPE_TRAITS", "engine.cosmos.physics_control.BROKEN_WORLDS", "engine.phases.physics.BROKEN"),
+            used_by=(
+                "catalog.life_traits.WORLD_TYPE_TRAITS",
+                "engine.cosmos.impacts.BROKEN_WORLDS",
+                "engine.cosmos.physics_control.BROKEN_WORLDS",
+                "engine.phases.physics.BROKEN",
+                "services.integrity.w52_agent_d.BROKEN_WORLDS",
+            ),
         ),
         WorldTypeTrait.BURIED_WORLDS: Defined(
             "Buried worlds", checked_by=(), used_by=("catalog.life_traits.WORLD_TYPE_TRAITS", "engine.cosmos.lifeforms.BURIED_WORLDS")

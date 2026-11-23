@@ -9,6 +9,10 @@ class GreatField(StrEnum):
     ENGINEER = "engineer"
     MERCHANT = "merchant"
     EXPLORER = "explorer"
+    HEALER = "healer"
+    LAWGIVER = "lawgiver"
+    TEACHER = "teacher"
+    REFORMER = "reformer"
 
 
 class AgeKind(StrEnum):
@@ -20,6 +24,8 @@ class AgeKind(StrEnum):
     DECLINING = "declining"
     TRANSFORMING = "transforming"
     STAGNANT = "stagnant"
+    WANDERING = "wandering"
+    REBORN = "reborn"
 
 
 class EraDeed(StrEnum):
@@ -35,6 +41,9 @@ class EraDeed(StrEnum):
     FIRST_LINE = "first_line"
     REVELATION = "revelation"
     COLLAPSE = "collapse"
+    GREAT_PEACE = "great_peace"
+    GREAT_MIGRATION = "great_migration"
+    FIRST_CHARTER = "first_charter"
 
 
 class ResearchIncident(StrEnum):
@@ -46,6 +55,8 @@ class ResearchIncident(StrEnum):
     EXPLOSION = "explosion"
     POISONING = "poisoning"
     SUMMONING_GONE_WRONG = "summoning_gone_wrong"
+    STOLEN = "stolen"
+    CHANCE_FIND = "chance_find"
 
 
 class TheoryDomain(StrEnum):
@@ -57,6 +68,8 @@ class TheoryDomain(StrEnum):
     MAGIC = "magic"
     HISTORY = "history"
     SOCIETY = "society"
+    LANGUAGE = "language"
+    LAW = "law"
 
 
 class AnomalyKind(StrEnum):
@@ -64,6 +77,8 @@ class AnomalyKind(StrEnum):
     CONTRARY_CURE = "contrary_cure"
     OBSERVATION = "observation"
     DIVINE_SIGN = "divine_sign"
+    CONTRARY_RECORD = "contrary_record"
+    OUT_OF_PLACE_FIND = "out_of_place_find"
 
 
 class BlueprintKind(StrEnum):
@@ -76,6 +91,8 @@ class BlueprintKind(StrEnum):
     LINE = "line"
     NETWORK = "network"
     RITE_PATTERN = "rite_pattern"
+    PROCESS = "process"
+    REMEDY = "remedy"
 
 
 class BlueprintSource(StrEnum):
@@ -84,3 +101,4 @@ class BlueprintSource(StrEnum):
     TRADED = "traded"
     LICENSED = "licensed"
     GRANTED = "granted"
+    FOUND = "found"

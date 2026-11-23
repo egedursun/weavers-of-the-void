@@ -176,6 +176,11 @@ class NumeracyRules:
     milestone_pct: int = rule(10, 0, 100, V, "Numeracy the zero and positional notation each add at once")
     research_pct: int = rule(10, 0, 100, V, "Research the zero and positional notation each add to astronomy, architecture, trade and seafaring (%)")
     forecast_pct: int = rule(40, 0, 100, V, "Error a fully numerate people's scholars no longer make when they forecast the turn of a long season (%)")
+    tally_reckoning_pct: int = rule(60, 0, 200, V, "Share of its numeracy a people reckons with when it keeps counts in tallies (%)")
+    additive_reckoning_pct: int = rule(100, 0, 200, V, "Share of its numeracy a people reckons with when it writes numbers by adding signs (%)")
+    positional_reckoning_pct: int = rule(130, 0, 200, V, "Share of its numeracy a people reckons with when it writes numbers by place (%)")
+    symbolic_reckoning_pct: int = rule(160, 0, 200, V, "Share of its numeracy a people reckons with when it writes unknowns with signs (%)")
+    symbolic_level: int = rule(3, 0, 10, V, "Level of mathematics a people needs before it writes unknowns with signs")
 
 
 @dataclass(frozen=True)

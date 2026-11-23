@@ -110,6 +110,8 @@ class ClockKind(StrEnum):
 class Notation(StrEnum):
     ADDITIVE = "additive"
     POSITIONAL = "positional"
+    TALLY = "tally"
+    SYMBOLIC = "symbolic"
 
 
 class NumberMilestone(StrEnum):
@@ -130,3 +132,5 @@ class LinkToken(StrEnum):
     NAME = "name"
     PORTRAIT = "portrait"
     FRAGMENT = "fragment"
+    TRUE_NAME = "true_name"
+    POSSESSION = "possession"

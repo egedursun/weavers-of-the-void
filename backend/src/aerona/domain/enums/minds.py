@@ -45,6 +45,8 @@ class MindPurpose(StrEnum):
     ARCHIVE = "archive"
     GUARDIAN = "guardian"
     FREE = "free"
+    SOLDIER = "soldier"
+    TEACHER = "teacher"
 
 
 class MindUpkeep(StrEnum):
@@ -56,6 +58,7 @@ class MindUpkeep(StrEnum):
     MAINTENANCE = "maintenance"
     HOST = "host"
     PLACE = "place"
+    ATTENTION = "attention"
     NONE = "none"
 
 
@@ -83,6 +86,7 @@ class MakingOutcome(StrEnum):
     UNSTABLE = "unstable"
     EMPTY_SEAT = "empty_seat"
     UNINTENDED_WILL = "unintended_will"
+    EXCEEDED = "exceeded"
 
 
 class ArchiveAccess(StrEnum):
@@ -125,6 +129,8 @@ class WillCause(StrEnum):
     DAMAGE = "damage"
     OATH = "oath"
     EXCEEDING = "exceeding"
+    KINSHIP = "kinship"
+    FAITH = "faith"
 
 
 class DisputeOutcome(StrEnum):

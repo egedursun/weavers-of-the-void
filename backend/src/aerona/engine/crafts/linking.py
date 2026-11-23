@@ -5,7 +5,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import MaterialAffinityRow, SympatheticLinkRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.crafts import AffinityMode
+from aerona.domain.enums.crafts import AffinityMode, LinkToken
 from aerona.domain.enums.culture import MagicSchool
 from aerona.rules.registry import Rules
 
@@ -17,6 +17,17 @@ async def link_strength(session: AsyncSession, caster_id: int, target_id: int | 
         select(func.max(SympatheticLinkRow.strength)).where(SympatheticLinkRow.holder_node_id == caster_id, SympatheticLinkRow.target_node_id == target_id)
     )
     return int(found or 0)
+
+
+async def true_named(session: AsyncSession, caster_id: int, target_id: int | None) -> bool:
+    if target_id is None:
+        return False
+    found = await session.scalar(
+        select(SympatheticLinkRow.id)
+        .where(SympatheticLinkRow.holder_node_id == caster_id, SympatheticLinkRow.target_node_id == target_id, SympatheticLinkRow.token == LinkToken.TRUE_NAME)
+        .limit(1)
+    )
+    return found is not None
 
 
 async def link_boost(session: AsyncSession, rules: Rules, caster_id: int, target_id: int | None) -> float:

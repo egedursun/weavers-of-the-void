@@ -20,6 +20,7 @@ from aerona.domain.enums.settlement import DistrictHarm, DistrictKind, SizeTier
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import ExplorationReason, JourneyEventKind, JourneyIntent, RefugeeCause, RouteClosure, RouteState, TravelMethod
 from aerona.domain.enums.world import Atmosphere, Discovery
+from aerona.domain.enums.world_view import SettleMode
 
 KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
@@ -315,7 +316,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         G.MOVEMENT,
         "",
         roles=(RoleSpec(R.LEADER, required=False), RoleSpec(R.DESTINATION, required=False), RoleSpec(R.PATRON, required=False)),
-        steps=frozenset({A.DEPART, A.TRAVEL, A.ENTER, A.REST, A.MEET_DANGER, A.WORSEN, A.RALLY, A.LEARN, A.DIE, A.RETURN, A.LOSE_WAY}),
+        steps=frozenset({A.DEPART, A.TRAVEL, A.ENTER, A.REST, A.MEET_DANGER, A.WORSEN, A.RALLY, A.LEARN, A.DIE, A.RETURN, A.LOSE_WAY, A.DISCOVER, A.QUARREL}),
         place=PlaceRule.NONE,
         clock=C.MARCH,
         told=False,
@@ -345,6 +346,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             FactSpec("legs", FactValue.NUMBER, FactUnit.COUNT),
             FactSpec("provisions", FactValue.NUMBER, FactUnit.COUNT),
             FactSpec("light", FactValue.NUMBER, FactUnit.COUNT),
+            FactSpec("air", FactValue.NUMBER, FactUnit.COUNT, required=False),
             FactSpec("mode", FactValue.ENUM, enum=MovementMode),
         ),
         place=PlaceRule.REQUIRED,
@@ -814,9 +816,9 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.migrated",
         G.MOVEMENT,
-        "{migrants:person|people} from among {actor} migrated and founded {product} in {place}.",
+        "{migrants:person|people} from among {actor} migrated and founded {product} in {place}; its way of settling is {mode}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PRODUCT), RoleSpec(R.PLACE)),
-        facts=(FactSpec("migrants", FactValue.NUMBER, FactUnit.PEOPLE),),
+        facts=(FactSpec("migrants", FactValue.NUMBER, FactUnit.PEOPLE), FactSpec("mode", FactValue.ENUM, enum=SettleMode)),
         steps=frozenset({A.DEPART, A.FOUND}),
         chronicle_kind=K.MIGRATION,
         place=PlaceRule.REQUIRED,

@@ -5,16 +5,21 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.discovery import FIELDS
+from aerona.catalog.life.lore import CODES, HEALING_BRANCHES, RETITLED, TAKEN_SKILLS, TEACHING_BRANCHES
+from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import HolderTechniqueRow, LanguageStandingRow, ResearchFocusRow, ResearchProgressRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.discovery import GreatPersonRow, GreatPointsRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.region import PolityMapKnowledgeRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
@@ -23,6 +28,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind, SkillSource
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import ConstructionState
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.customs import people_of
@@ -31,7 +37,7 @@ from aerona.engine.economy.purse import give_coin
 from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.learning import realm_of
 from aerona.engine.lore.research import holder_levels
-from aerona.engine.lore.research_depth import open_techniques
+from aerona.engine.lore.research_depth import add_progress, open_techniques
 from aerona.engine.mind.book import set_skill
 from aerona.engine.mind.ethics import church_of
 from aerona.engine.mortal.standing import add_renown
@@ -45,6 +51,7 @@ from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
 from aerona.engine.structures.readers import working
+from aerona.rules.model import keyed
 from aerona.rules.registry import Rules
 
 
@@ -100,6 +107,7 @@ async def gather_points(ctx: TickContext) -> int:
             levels = sorted((field_level(skills.get(mortal, {}), field) for mortal in homes.get(community.id, [])), reverse=True)
             structures = sum(1 for kind in built.get(community.id, []) if kind in {item.value for item in spec.structures})
             gain = sum(levels[: table.skilled_counted]) // table.skill_divisor + structures * table.structure_points
+            gain = gain * keyed(ctx.rules.great_persons, field.value, "weight") // (PERCENT // 2)
             if gain <= 0:
                 continue
             row = rows.get((community.id, field))
@@ -292,6 +300,60 @@ async def discovery(ctx: TickContext, community: EntityRow) -> bool:
     return True
 
 
+async def push_branch(ctx: TickContext, community: EntityRow, branches: frozenset[KnowledgeBranch], amount: int) -> bool:
+    open_now = await open_techniques(ctx.session, community.id, (await holder_levels(ctx.session)).get(community.id, {}))
+    chosen = next((technique for technique in open_now if TECHNIQUES[technique].branch in branches), None)
+    if chosen is None:
+        return False
+    await add_progress(ctx, community.id, chosen, amount)
+    return True
+
+
+@DEEDS.on(GreatField.HEALER)
+async def school_of_healing(ctx: TickContext, community: EntityRow) -> bool:
+    return await push_branch(ctx, community, HEALING_BRANCHES, ctx.rules.great_persons.healer_progress)
+
+
+@DEEDS.on(GreatField.LAWGIVER)
+async def code_of_laws(ctx: TickContext, community: EntityRow) -> bool:
+    realm = await realm_of(ctx.session, community.id)
+    profile = await ctx.session.get(PolityProfileRow, realm) if realm is not None else None
+    if profile is not None and "legitimacy" not in profile.locked and not held(profile.polity_entity_id):
+        profile.legitimacy = clamp_int(profile.legitimacy + ctx.rules.great_persons.lawgiver_legitimacy, 0, PERCENT)
+    known = set(await ctx.session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == community.id)))
+    code = next((technique for technique in CODES if technique not in known), None)
+    if code is not None:
+        await add_progress(ctx, community.id, code, ctx.rules.great_persons.lawgiver_progress)
+    return profile is not None or code is not None
+
+
+@DEEDS.on(GreatField.TEACHER)
+async def pupils(ctx: TickContext, community: EntityRow) -> bool:
+    people = await people_of(ctx.session, community)
+    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+    if culture is not None and "literacy" not in culture.locked and not held(culture.people_entity_id):
+        culture.literacy = clamp_int(culture.literacy + ctx.rules.great_persons.teacher_literacy, 0, PERCENT)
+    taught = await push_branch(
+        ctx,
+        community,
+        TEACHING_BRANCHES,
+        ctx.rules.great_persons.teacher_progress,
+    )
+    return culture is not None or taught
+
+
+@DEEDS.on(GreatField.REFORMER)
+async def movement(ctx: TickContext, community: EntityRow) -> bool:
+    town = await ctx.session.get(SettlementProfileRow, community.id)
+    if town is not None and "unrest" not in town.locked:
+        town.unrest = clamp_int(town.unrest - ctx.rules.great_persons.reformer_calm, 0, PERCENT)
+    realm = await realm_of(ctx.session, community.id)
+    profile = await ctx.session.get(PolityProfileRow, realm) if realm is not None else None
+    if profile is not None and "legitimacy" not in profile.locked and not held(profile.polity_entity_id):
+        profile.legitimacy = clamp_int(profile.legitimacy - ctx.rules.great_persons.reformer_shaken, 0, PERCENT)
+    return town is not None or profile is not None
+
+
 async def perform_deed(ctx: TickContext, great: GreatPersonRow) -> bool:
     if great.deed_done or "deed_done" in great.locked or great.holder_entity_id is None:
         return False
@@ -339,8 +401,33 @@ async def great_envy(ctx: TickContext) -> int:
     return wars
 
 
+GREAT_FIXUP = "great_persons.w52"
+
+
+async def retitle_scholars(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, GREAT_FIXUP) is not None:
+        return 0
+    moved = 0
+    for great in list(
+        await ctx.session.scalars(select(GreatPersonRow).where(GreatPersonRow.field == GreatField.SCHOLAR).order_by(GreatPersonRow.mortal_entity_id))
+    ):
+        if held(great.mortal_entity_id) or "field" in great.locked:
+            continue
+        skills = (await skill_book(ctx.session, [great.mortal_entity_id])).get(great.mortal_entity_id, {})
+        lore = max((skills.get(skill.value, 0) for skill in FIELDS[GreatField.SCHOLAR].skills if skill not in TAKEN_SKILLS), default=0)
+        for field, kinds in RETITLED:
+            if max(skills.get(skill.value, 0) for skill in kinds) > lore:
+                great.field = field
+                moved += 1
+                break
+    ctx.session.add(AppliedFixupRow(key=GREAT_FIXUP, result={"retitled": moved}))
+    await ctx.session.flush()
+    return moved
+
+
 async def great_people(ctx: TickContext) -> dict[str, int]:
     return {
+        "great_retitled": await retitle_scholars(ctx),
         "great_points": await gather_points(ctx),
         "great_people": await promote_great(ctx),
         "great_deeds": await pending_deeds(ctx),

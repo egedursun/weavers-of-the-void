@@ -28,6 +28,7 @@ from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.structure import AbandonCause, BuildScale, ConstructionState, ConstructionStatus, StructureKind
+from aerona.domain.enums.world import Gravity
 from aerona.domain.models.entity_stats import LegendStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.reckoning import reckoned
@@ -125,6 +126,9 @@ async def begin(ctx: TickContext, order: Commission) -> tuple[EntityRow, Constru
         order = replace(order, design=await builders_type(ctx, order.builder, order.site, order.kind))
     resolved = resolve(order.kind, order.design)
     rules = ctx.rules
+    world = await ctx.session.get(WorldRow, order.site.world_id) if order.site.world_id is not None else None
+    if world is not None and world.gravity is Gravity.CRUSHING:
+        order = replace(order, level=min(order.level, rules.physics.crushing_height_cap))
     builder = order.builder or order.site
     rng = ctx.rng(seed_of("construction", order.site.id, order.kind.value, ctx.epoch))
     if order.name:
@@ -178,7 +182,7 @@ async def begin(ctx: TickContext, order: Commission) -> tuple[EntityRow, Constru
         kind=order.kind,
         design_id=order.design.id if order.design is not None else None,
         status=ConstructionStatus.ACTIVE,
-        cost=round(build_cost(rules, resolved, order.level) * gravity_build_pct(rules, await ctx.session.get(WorldRow, order.site.world_id)) / PERCENT),
+        cost=round(build_cost(rules, resolved, order.level) * gravity_build_pct(rules, world) / PERCENT),
         progress=0,
         funds=max(0, order.funds),
         workers=0,

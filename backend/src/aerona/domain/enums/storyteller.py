@@ -8,6 +8,8 @@ class StorytellerProfile(StrEnum):
     CHAOTIC = "chaotic"
     SLOW_BURN = "slow_burn"
     EPISODIC = "episodic"
+    GENTLE = "gentle"
+    SEASONAL = "seasonal"
 
 
 class TensionBand(StrEnum):

@@ -19,6 +19,7 @@ from aerona.domain.enums.folkways import (
     Purification,
     PurityState,
 )
+from aerona.domain.enums.kind_crafts import ColourFocus
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
 DIET_FIELDS = ("staple", "protein", "fat", "fresh", "mineral", "preserved", "special", "energy")
@@ -30,7 +31,7 @@ IMPURITY_FIELDS = ("weight", "lasts")
 PURIFICATION_FIELDS = ("epochs", "cost", "success")
 RANK_FIELDS = ("name", "standing", "endogamous", "commensal")
 MISHAP_FIELDS = ("kind", "true_cause", "explained", "attribution", "response", "victim_node_id", "cause_node_id", "severity", "died")
-LUCK_FIELDS = ("sign", "reach", "lucky", "name")
+LUCK_FIELDS = ("sign", "reach", "lucky", "name", "species_entity_id", "colour")
 CHARM_FIELDS = ("power", "real", "strength")
 ACCUSATION_FIELDS = ("settlement_entity_id", "accuser_node_id", "accused_node_id", "outcome", "guilty_in_truth")
 HUNT_FIELDS = ("fervour", "accused", "killed", "ended_epoch")
@@ -175,6 +176,8 @@ class LuckBeliefRow(Base):
     reach: Mapped[LuckReach] = mapped_column(enum_type(LuckReach, "reach"))
     lucky: Mapped[bool] = mapped_column(default=True)
     name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
+    species_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    colour: Mapped[ColourFocus | None] = mapped_column(enum_type(ColourFocus, "colour"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

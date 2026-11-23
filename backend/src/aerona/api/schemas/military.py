@@ -28,6 +28,7 @@ from aerona.domain.enums.military import (
 )
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import BattleOutcome, CasusBelliKind, SiegeStatus, WarSide
+from aerona.domain.enums.world_view import WarTerrain
 
 
 class UnitKindSpec(ApiModel):
@@ -155,6 +156,7 @@ class BattleReportView(ApiModel):
     siege_id: int | None
     weather: WeatherKind | None
     terrain: TerrainKind | None
+    ground: WarTerrain
     season_name: str | None
     year: int | None
     night: bool

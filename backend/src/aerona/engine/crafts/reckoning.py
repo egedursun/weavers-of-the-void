@@ -1,16 +1,17 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life_traits import KNOWLEDGE_BRANCH_TRAITS, having
+from aerona.catalog.notations import NOTATIONS
 from aerona.catalog.tongues import BASES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import NumberSystemRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
-from aerona.domain.enums.crafts import Notation
 from aerona.domain.enums.life_traits import KnowledgeBranchTrait
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.tongues import NumeralBase
 from aerona.engine.body.customs import people_of
 from aerona.engine.primitives.queries import spoken_language
+from aerona.rules.model import keyed
 from aerona.rules.registry import Rules
 
 RECKONED = having(KNOWLEDGE_BRANCH_TRAITS, KnowledgeBranchTrait.RECKONED)
@@ -52,7 +53,8 @@ async def numeracy_of(session: AsyncSession, rules: Rules, holder_id: int | None
     row = await system_of(session, holder_id)
     if row is None:
         return 0
-    return min(PERCENT, round(row.numeracy * await base_factor(session, rules, holder_id)))
+    reckoning = keyed(rules.numeracy, row.notation.value, "reckoning_pct") / PERCENT
+    return min(PERCENT, round(row.numeracy * await base_factor(session, rules, holder_id) * reckoning))
 
 
 async def reckoned(session: AsyncSession, rules: Rules, holder_id: int | None, pct: int) -> float:
@@ -65,7 +67,7 @@ async def notation_boost(session: AsyncSession, rules: Rules, community_id: int,
     row = await system_of(session, community_id)
     if row is None:
         return 1.0
-    steps = int(row.zero) + int(row.notation is Notation.POSITIONAL)
+    steps = int(row.zero) + max(0, NOTATIONS[row.notation].rank - 1)
     sky = await fine_division(session, rules, community_id) if branch is KnowledgeBranch.ASTRONOMY else 1.0
     return (1 + steps * rules.numeracy.research_pct / PERCENT) * sky * await base_factor(session, rules, community_id)
 

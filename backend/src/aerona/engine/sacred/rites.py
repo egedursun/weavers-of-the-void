@@ -8,7 +8,8 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.discovery import TheoryProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, CultTenetRow, ReincarnationRow, SoulJudgementRow, SpiritProfileRow
+from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, CultOfficeRow, CultTenetRow, ReincarnationRow, SoulJudgementRow, SpiritProfileRow
+from aerona.db.tables.folkways import PurityRow
 from aerona.db.tables.mind import DreamRow
 from aerona.db.tables.sacred import DoctrineAfterlifeRow, DoctrineSacramentRow, FaithClimateRow, SacramentRow
 from aerona.db.write_guard import held
@@ -16,6 +17,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faith import AfterlifeState, JudgementDoctrine, TenetKind
+from aerona.domain.enums.folkways import PurityState
 from aerona.domain.enums.mind import DreamKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import AfterlifeModel, SacramentKind
@@ -96,6 +98,18 @@ async def due_rites(ctx: TickContext) -> list[tuple[EntityRow, SacramentKind]]:
     for row in await ctx.session.scalars(mortals.where(EntityRow.id.not_in(initiated), EntityRow.birth_epoch < ctx.epoch).order_by(EntityRow.id)):
         if stat_or(row, "age", 0) >= table.initiation_age:
             found.append((row, SacramentKind.INITIATION))
+    cleansed = select(SacramentRow.mortal_entity_id).where(SacramentRow.kind == SacramentKind.PURIFICATION, SacramentRow.epoch == ctx.epoch)
+    impure = select(PurityRow.holder_node_id).where(PurityRow.state != PurityState.PURE)
+    found.extend(
+        (row, SacramentKind.PURIFICATION)
+        for row in await ctx.session.scalars(mortals.where(EntityRow.id.in_(impure), EntityRow.id.not_in(cleansed)).order_by(EntityRow.id))
+    )
+    ordained = select(SacramentRow.mortal_entity_id).where(SacramentRow.kind == SacramentKind.ORDINATION, SacramentRow.missed.is_(False))
+    clergy = select(CultOfficeRow.holder_entity_id).where(CultOfficeRow.holder_entity_id.is_not(None))
+    found.extend(
+        (row, SacramentKind.ORDINATION)
+        for row in await ctx.session.scalars(mortals.where(EntityRow.id.in_(clergy), EntityRow.id.not_in(ordained)).order_by(EntityRow.id))
+    )
     return found
 
 

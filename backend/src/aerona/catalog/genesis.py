@@ -11,6 +11,7 @@ T = GenesisTemplate
 TECHNOLOGY_LABELS: MappingProxyType[TechnologyEra, str] = MappingProxyType(
     {
         TechnologyEra.STONE: "Stone age",
+        TechnologyEra.COPPER: "Copper age",
         TechnologyEra.BRONZE: "Bronze age",
         TechnologyEra.IRON: "Iron age",
         TechnologyEra.MEDIEVAL: "Medieval",
@@ -27,6 +28,7 @@ TECHNOLOGY_LABELS: MappingProxyType[TechnologyEra, str] = MappingProxyType(
 TECHNOLOGY_PHRASES: MappingProxyType[TechnologyEra, str] = MappingProxyType(
     {
         TechnologyEra.STONE: "the stone age",
+        TechnologyEra.COPPER: "the copper age",
         TechnologyEra.BRONZE: "the bronze age",
         TechnologyEra.IRON: "the iron age",
         TechnologyEra.MEDIEVAL: "the medieval age",
@@ -43,6 +45,7 @@ TECHNOLOGY_PHRASES: MappingProxyType[TechnologyEra, str] = MappingProxyType(
 TECHNOLOGY_MEANINGS: MappingProxyType[TechnologyEra, str] = MappingProxyType(
     {
         TechnologyEra.STONE: "when tools are shaped by hand and nothing is yet smelted",
+        TechnologyEra.COPPER: "when the first metal is smelted into tools and ore is traded",
         TechnologyEra.BRONZE: "when copper and tin are smelted into bronze",
         TechnologyEra.IRON: "when iron is smelted and forged",
         TechnologyEra.MEDIEVAL: "when iron tools, mills and written law are common",
@@ -98,6 +101,8 @@ STORYTELLER_LABELS: MappingProxyType[StorytellerProfile, str] = MappingProxyType
         StorytellerProfile.CHAOTIC: "Chaotic",
         StorytellerProfile.SLOW_BURN: "Slow burn",
         StorytellerProfile.EPISODIC: "Episodic",
+        StorytellerProfile.GENTLE: "Gentle",
+        StorytellerProfile.SEASONAL: "Seasonal",
     }
 )
 AGE_CYCLE_LABELS: MappingProxyType[AgeCycle, str] = MappingProxyType(
@@ -333,7 +338,7 @@ TEMPLATES: MappingProxyType[GenesisTemplate, WizardTemplate] = MappingProxyType(
                 "intimate, organic, watchful",
                 70,
                 45,
-                TechnologyEra.BRONZE,
+                TechnologyEra.COPPER,
                 LanguageTexture.FLOWING,
                 3,
                 CosmosSize.SINGLE,

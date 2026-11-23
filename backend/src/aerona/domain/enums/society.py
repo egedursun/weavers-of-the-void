@@ -45,6 +45,10 @@ class KnowledgeBranch(StrEnum):
     BIOMANCY = "biomancy"
     FORBIDDEN = "forbidden"
     CIVICS = "civics"
+    LAW = "law"
+    NATURAL_HISTORY = "natural_history"
+    LANGUAGE_LORE = "language_lore"
+    MATHEMATICS = "mathematics"
 
 
 class NaturalLaw(StrEnum):

@@ -115,6 +115,8 @@ export const RIFT_CAUSES: Record<Schema['RiftCause'], string> = {
   phenomenon: 'A phenomenon',
   creator: 'The Creator',
   made_realm_gate: 'The gate of a made realm',
+  outer_bargain: 'The price of an outer bargain',
+  mass_weapon: 'A weapon of mass harm',
 }
 
 export const SCOPES: Record<Schema['RouteScope'], Named> = {
@@ -136,6 +138,7 @@ export const BEING_SCALES: Record<Schema['BeingScale'], string> = {
   galaxy: 'Galaxy',
   cluster: 'Cluster',
   dimension: 'Dimension',
+  region: 'Region',
 }
 
 export const BEING_PHASES: Record<Schema['BeingPhase'], Named> = {
@@ -157,6 +160,7 @@ export const BEING_AGENDAS: Record<Schema['BeingAgenda'], string> = {
   seek_worship: 'Seek worship',
   unmake: 'Unmake',
   mend: 'Mend',
+  slumber: 'Slumber',
 }
 
 export const BEING_SENSES: Record<Schema['BeingSense'], string> = {

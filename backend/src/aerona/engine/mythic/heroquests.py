@@ -1,12 +1,15 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
 from aerona.catalog.life.mythic import QUEST_SKILLS
-from aerona.catalog.mythic import ARCHETYPE_REALMS, ARCHETYPE_SKILLS, REALM_PHRASES, trial_at
+from aerona.catalog.mythic import ARCHETYPE_REALMS, ARCHETYPE_SKILLS, CUNNING_SKILLS, REALM_PHRASES, trial_at
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several, spoken
+from aerona.core.total import total
 from aerona.db.tables.afflictions import AfflictionRow
+from aerona.db.tables.body import BodyRow
 from aerona.db.tables.culture import LegendProfileRow, RiteProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.dominion import DominionRow
@@ -48,7 +51,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.transform.bodies import lift_fallen
 
@@ -87,21 +90,64 @@ def realm_of(legend: LegendProfileRow) -> MythicRealm:
 
 
 async def trial_of(ctx: TickContext, row: HeroquestRow) -> QuestTrial:
+    if row.trial is not None:
+        return row.trial
     legend = await ctx.session.get(LegendProfileRow, row.legend_entity_id) if row.legend_entity_id is not None else None
     return trial_at(legend.archetype if legend is not None else None, row.step)
 
 
-async def trial_value(ctx: TickContext, row: HeroquestRow, quester: EntityRow, trial: QuestTrial, piety: int) -> int:
-    if trial is QuestTrial.FAITH:
-        return piety
-    if trial is QuestTrial.CONVICTION:
-        profile = await ctx.session.get(MortalProfileRow, quester.id)
-        return profile.conviction if profile is not None else 0
-    if trial is QuestTrial.PASSION:
-        return int(await ctx.session.scalar(select(func.max(PassionRow.strength)).where(PassionRow.holder_node_id == quester.id)) or 0)
-    legend = await ctx.session.get(LegendProfileRow, row.legend_entity_id) if row.legend_entity_id is not None else None
+@dataclass(frozen=True)
+class Trial:
+    ctx: TickContext
+    row: HeroquestRow
+    quester: EntityRow
+    piety: int
+
+
+async def by_faith(trial: Trial) -> int:
+    return trial.piety
+
+
+async def by_conviction(trial: Trial) -> int:
+    profile = await trial.ctx.session.get(MortalProfileRow, trial.quester.id)
+    return profile.conviction if profile is not None else 0
+
+
+async def by_passion(trial: Trial) -> int:
+    return int(await trial.ctx.session.scalar(select(func.max(PassionRow.strength)).where(PassionRow.holder_node_id == trial.quester.id)) or 0)
+
+
+async def by_skill(trial: Trial) -> int:
+    legend = await trial.ctx.session.get(LegendProfileRow, trial.row.legend_entity_id) if trial.row.legend_entity_id is not None else None
     skills = ARCHETYPE_SKILLS[legend.archetype] if legend is not None else frozenset(QUEST_SKILLS)
-    return max([await skill_level(ctx.session, quester.id, kind) for kind in sorted(skills)])
+    return max([await skill_level(trial.ctx.session, trial.quester.id, kind) for kind in sorted(skills)])
+
+
+async def by_cunning(trial: Trial) -> int:
+    trickery = max([await skill_level(trial.ctx.session, trial.quester.id, kind) for kind in sorted(CUNNING_SKILLS)])
+    return (stat_or(trial.quester, "intellect", 0) + trickery) // 2
+
+
+async def by_endurance(trial: Trial) -> int:
+    body = await trial.ctx.session.get(BodyRow, trial.quester.id)
+    return ((body.endurance if body is not None else PERCENT) + stat_or(trial.quester, "willpower", 0)) // 2
+
+
+TRIALS: Mapping[QuestTrial, Callable[[Trial], Awaitable[int]]] = total(
+    QuestTrial,
+    {
+        QuestTrial.SKILL: by_skill,
+        QuestTrial.PASSION: by_passion,
+        QuestTrial.CONVICTION: by_conviction,
+        QuestTrial.FAITH: by_faith,
+        QuestTrial.CUNNING: by_cunning,
+        QuestTrial.ENDURANCE: by_endurance,
+    },
+)
+
+
+async def trial_value(ctx: TickContext, row: HeroquestRow, quester: EntityRow, trial: QuestTrial, piety: int) -> int:
+    return await TRIALS[trial](Trial(ctx, row, quester, piety))
 
 
 async def begin_quest(ctx: TickContext, quester: EntityRow, legend: LegendProfileRow, members: list[int]) -> HeroquestRow:
@@ -372,7 +418,10 @@ async def advance(ctx: TickContext, row: HeroquestRow, tally: QuestTally) -> Non
     if "interference" not in row.locked:
         row.interference = await interference_of(ctx, row, quester.world_id)
     piety = (stat(community, "piety") or 0) if community is not None else 0
-    if await score_of(ctx, row, quester, piety) >= table.step_pass:
+    trial = await trial_of(ctx, row)
+    passed = await score_of(ctx, row, quester, piety) >= table.step_pass
+    await record(ctx, "quest.trial", roles={IncidentRole.ACTOR: quester.id}, facts={"trial": trial, "passed": int(passed)})
+    if passed:
         row.step += 1
     elif ctx.rng(f"heroquest.deviate.{row.id}.{row.step}").chance(table.deviation_pct):
         row.deviated = True

@@ -51,6 +51,10 @@ BRANCH_GRAPH = MappingProxyType(
         B.BIOMANCY: Gate(all_of=((B.MAGIC, 2), (B.MEDICINE, 2), (B.AGRICULTURE, 2))),
         B.FORBIDDEN: Gate(all_of=((B.MAGIC, 3),)),
         B.CIVICS: Gate(),
+        B.LAW: Gate(any_of=((B.CIVICS, 1), (B.WRITING, 1))),
+        B.NATURAL_HISTORY: Gate(any_of=((B.AGRICULTURE, 1), (B.MEDICINE, 1))),
+        B.LANGUAGE_LORE: Gate(any_of=((B.WRITING, 1), (B.TRADE, 1))),
+        B.MATHEMATICS: Gate(any_of=((B.TRADE, 1), (B.ASTRONOMY, 1), (B.WRITING, 1))),
     }
 )
 
@@ -74,7 +78,14 @@ TECHNIQUES = MappingProxyType(
             TechniqueSpec(T.DRAINAGE, B.AGRICULTURE, 2, "Drainage", "Watered fields are drained so salt does not gather."),
             TechniqueSpec(T.TERRACING, B.AGRICULTURE, 2, "Terracing", "Hills are cut into fields.", Gate(all_of=((B.ARCHITECTURE, 1),))),
             TechniqueSpec(T.PLOUGH, B.AGRICULTURE, 1, "The plough", "Beasts turn the soil.", Gate(any_of=((B.METALLURGY, 1),))),
-            TechniqueSpec(T.SELECTIVE_BREEDING, B.AGRICULTURE, 3, "Selective breeding", "Herds and crops are bred for strength."),
+            TechniqueSpec(
+                T.SELECTIVE_BREEDING,
+                B.AGRICULTURE,
+                3,
+                "Selective breeding",
+                "Herds and crops are bred for strength.",
+                Gate(any_of=((B.NATURAL_HISTORY, 1), (B.AGRICULTURE, 3))),
+            ),
             TechniqueSpec(T.BRONZE, B.METALLURGY, 1, "Bronze", "Copper and tin are cast into arms."),
             TechniqueSpec(T.IRON, B.METALLURGY, 2, "Iron", "Iron is smelted and forged."),
             TechniqueSpec(T.STEEL, B.METALLURGY, 3, "Steel", "Iron is hardened into steel."),
@@ -87,7 +98,12 @@ TECHNIQUES = MappingProxyType(
             TechniqueSpec(T.PAPER, B.WRITING, 2, "Paper", "Writing is cheap and books multiply."),
             TechniqueSpec(T.PRINTING, B.WRITING, 4, "Printing", "Books are made by the hundred.", Gate(all_of=((B.METALLURGY, 2),))),
             TechniqueSpec(
-                T.CRYPTOGRAPHY, B.WRITING, 3, "Cryptography", "Letters are written in ciphers only their readers can break.", Gate(all_of=((B.TRADE, 2),))
+                T.CRYPTOGRAPHY,
+                B.WRITING,
+                3,
+                "Cryptography",
+                "Letters are written in ciphers only their readers can break.",
+                Gate(all_of=((B.TRADE, 2),), any_of=((B.LANGUAGE_LORE, 1), (B.MATHEMATICS, 1), (B.WRITING, 3))),
             ),
             TechniqueSpec(T.CALENDAR, B.ASTRONOMY, 1, "The calendar", "Seasons and holy days are counted."),
             TechniqueSpec(T.NAVIGATION_STARS, B.ASTRONOMY, 2, "Star navigation", "Ships steer by the stars.", Gate(all_of=((B.SEAFARING, 1),))),
@@ -112,13 +128,27 @@ TECHNIQUES = MappingProxyType(
             TechniqueSpec(T.CARTOGRAPHY, B.SEAFARING, 2, "Cartography", "Lands and coasts are drawn true on maps.", Gate(all_of=((B.WRITING, 1),))),
             TechniqueSpec(T.ORAL_LAW, B.CIVICS, 1, "Oral law", "Customs are recited and judged by elders."),
             TechniqueSpec(T.WRITTEN_LAW, B.CIVICS, 2, "Written law", "Laws are written down and read aloud.", Gate(all_of=((B.WRITING, 1),))),
-            TechniqueSpec(T.CODIFIED_LAW, B.CIVICS, 3, "Codified law", "The laws are gathered into one code.", Gate(all_of=((B.WRITING, 2),))),
+            TechniqueSpec(
+                T.CODIFIED_LAW,
+                B.CIVICS,
+                3,
+                "Codified law",
+                "The laws are gathered into one code.",
+                Gate(all_of=((B.WRITING, 2),), any_of=((B.LAW, 1), (B.CIVICS, 2))),
+            ),
             TechniqueSpec(T.BUREAUCRACY, B.CIVICS, 3, "Bureaucracy", "Clerks and offices run the realm.", Gate(all_of=((B.WRITING, 2),)), institution=True),
             TechniqueSpec(T.CENSUS, B.CIVICS, 2, "Census", "The people are counted."),
             TechniqueSpec(T.POSTAL_SERVICE, B.CIVICS, 3, "Postal service", "Couriers carry letters along set roads."),
             TechniqueSpec(T.DIPLOMATIC_CORPS, B.CIVICS, 3, "Diplomatic corps", "Envoys are trained and kept abroad."),
             TechniqueSpec(T.STANDING_ARMY_ADMIN, B.CIVICS, 3, "Standing army administration", "Soldiers are paid and kept.", Gate(all_of=((B.WARFARE, 1),))),
-            TechniqueSpec(T.DOUBLE_ENTRY, B.CIVICS, 3, "Double entry", "Every sum is booked twice and balanced.", Gate(all_of=((B.TRADE, 2),))),
+            TechniqueSpec(
+                T.DOUBLE_ENTRY,
+                B.CIVICS,
+                3,
+                "Double entry",
+                "Every sum is booked twice and balanced.",
+                Gate(all_of=((B.TRADE, 2),), any_of=((B.MATHEMATICS, 1), (B.TRADE, 3))),
+            ),
             TechniqueSpec(T.JOINT_STOCK, B.CIVICS, 4, "Joint stock", "Many share the cost and gain of a venture.", Gate(all_of=((B.TRADE, 3),))),
             TechniqueSpec(T.INSURANCE, B.CIVICS, 4, "Insurance", "Losses at sea and on the road are shared.", Gate(all_of=((B.TRADE, 3),))),
             TechniqueSpec(T.GUILDS, B.CIVICS, 1, "Guilds", "Crafts bind themselves into sworn bodies."),
@@ -132,6 +162,20 @@ TECHNIQUES = MappingProxyType(
             TechniqueSpec(T.MONASTICISM, B.CIVICS, 2, "Monasticism", "Communities withdraw to pray, copy and work."),
             TechniqueSpec(T.THEOLOGY_SCHOOLS, B.CIVICS, 3, "Schools of theology", "Doctrine is taught and argued.", Gate(all_of=((B.WRITING, 1),))),
             TechniqueSpec(T.LOGIC, B.CIVICS, 1, "Logic", "Arguments are tested by rule."),
+            TechniqueSpec(T.ANATOMY, B.MEDICINE, 3, "Anatomy", "The body is opened and its parts named.", Gate(all_of=((B.NATURAL_HISTORY, 1),))),
+            TechniqueSpec(
+                T.CHRONOMETRY, B.MATHEMATICS, 3, "Chronometry", "Clocks keep time well enough to find a place at sea.", Gate(all_of=((B.METALLURGY, 3),))
+            ),
+            TechniqueSpec(T.QUAKE_BUILDING, B.ARCHITECTURE, 3, "Building against quakes", "Walls are framed and footed to ride a shaking ground."),
+            TechniqueSpec(T.SANITATION, B.MEDICINE, 3, "Sanitation", "Clean water is kept apart from waste.", Gate(all_of=((B.ARCHITECTURE, 2),))),
+            TechniqueSpec(T.EVAPORATION_WORKS, B.TRADE, 1, "Evaporation works", "Brine is led into pans and left to give up its salt."),
+            TechniqueSpec(T.ROPEMAKING, B.AGRICULTURE, 1, "Ropemaking", "Fibres are laid and twisted into rope and cord."),
+            TechniqueSpec(T.LACQUER_WORK, B.METALLURGY, 2, "Lacquer work", "Sap and resin are laid in coats that harden and seal."),
+            TechniqueSpec(
+                T.RUBBER_WORKING, B.METALLURGY, 5, "Rubber working", "Gum is cured into a lasting, springing stuff.", Gate(all_of=((B.NATURAL_HISTORY, 2),))
+            ),
+            TechniqueSpec(T.POSITIONAL_RECKONING, B.MATHEMATICS, 2, "Positional reckoning", "Numbers are written by place and reckoned with a zero."),
+            TechniqueSpec(T.PILOTAGE, B.SEAFARING, 2, "Pilotage", "Pilots who know the shoals bring ships in and out of harbour."),
             TechniqueSpec(T.NATURAL_PHILOSOPHY, B.CIVICS, 2, "Natural philosophy", "The workings of the world are reasoned out."),
             TechniqueSpec(T.EMPIRICISM, B.CIVICS, 3, "Empiricism", "What is claimed is tried and observed.", Gate(all_of=((B.ASTRONOMY, 1),))),
             TechniqueSpec(T.HUMANIST_IDEALS, B.CIVICS, 4, "Humanist ideals", "The worth of each person is honoured.", Gate(all_of=((B.WRITING, 3),))),
@@ -337,5 +381,9 @@ BRANCH_SKILLS: MappingProxyType[KnowledgeBranch, tuple[SkillKind, ...]] = Mappin
         KnowledgeBranch.IMMORTALITY: (SkillKind.MEDICINE, SkillKind.ALCHEMY),
         KnowledgeBranch.BIOMANCY: (SkillKind.MEDICINE, SkillKind.ALCHEMY),
         KnowledgeBranch.FORBIDDEN: (SkillKind.SPELLCRAFT, SkillKind.LORE),
+        KnowledgeBranch.LAW: (SkillKind.LAW, SkillKind.ORATORY),
+        KnowledgeBranch.NATURAL_HISTORY: (SkillKind.FORAGING, SkillKind.HUNTING),
+        KnowledgeBranch.LANGUAGE_LORE: (SkillKind.LANGUAGES, SkillKind.WRITING),
+        KnowledgeBranch.MATHEMATICS: (SkillKind.ACCOUNTING, SkillKind.ASTRONOMY),
     }
 )

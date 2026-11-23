@@ -45,7 +45,7 @@ STAR OF THE AGE{% if age_star.sky_world %} ({{ age_star.sky_world }} sky){% endi
 {% if laws %}
 LAWS OF NATURE (inviolable):
 {% for law in laws %}
-- #{{ law.id }} {{ law.name }}: {{ law.description }}{% if law.working %} {{ law.working }}{% endif %}
+- #{{ law.id }} {{ law.name }}: {{ law.description }}{% if law.working %} {{ law.working }}{% endif %}{% if law.spares %} It spares {{ law.spares }}.{% endif %}
 
 {% endfor %}
 {% else %}

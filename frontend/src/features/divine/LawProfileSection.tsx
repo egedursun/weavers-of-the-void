@@ -43,6 +43,7 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
   const [strength, setStrength] = useState('')
   const [stability, setStability] = useState('')
   const [exception, setException] = useState('')
+  const [kind, setKind] = useState<number | null>(null)
   const [author, setAuthor] = useState('')
   const state = useWorldState()
   const authors = useGodTable(
@@ -59,6 +60,7 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
   if (strength !== '') values.strength = Number(strength)
   if (stability !== '') values.stability = Number(stability)
   if (exception !== '') values.exception = exception
+  if (kind !== null) values.exempt_kind_entity_id = kind
   if (author !== '') values.author_node_id = Number(author)
   const nothing =
     Object.keys(values).length === 0 ? 'Change something first' : null
@@ -110,6 +112,9 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
               <Badge variant='outline'>
                 {LAW_EXCEPTIONS[view.data.exception]}
               </Badge>
+              {view.data.exempt_kind && (
+                <NodeName item={view.data.exempt_kind} />
+              )}
               {view.data.drafted && (
                 <Badge variant='outline'>
                   Not yet set by the world; what you set holds at once
@@ -184,6 +189,12 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
                   value={author}
                   blocked={busy}
                   onPick={setAuthor}
+                />
+                <EntityPicker
+                  types={['species', 'people']}
+                  value={kind}
+                  onChange={setKind}
+                  placeholder='Kind of being it spares'
                 />
                 <EntityPicker
                   types={['world']}
