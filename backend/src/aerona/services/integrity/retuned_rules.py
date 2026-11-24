@@ -6,7 +6,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from aerona.db.repositories.cosmos import CosmosRepository
 
 RETUNED: Mapping[tuple[str, str], tuple[float, float]] = {
-    ("demography", "endemic_baseline"): (30.0, 45.0),
+    ("demography", "endemic_baseline"): (45.0, 30.0),
     ("apocalypse", "restless_cap"): (6.0, 5.0),
     ("survey", "colony_level"): (3.0, 4.0),
     ("survey", "conquest_level"): (4.0, 5.0),

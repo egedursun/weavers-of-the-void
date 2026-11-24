@@ -136,6 +136,8 @@ async def grow_community(
         crowding=max(0.0, load.population * footprint(rules, biology) / max(1.0, capacity)),
         disease=max(0.0, diseases.of(community) + disease_load(rules, fit) - rules.demography.endemic_baseline / PERCENT) * nature.factor("disease_pct"),
         stress=await stress_of(ctx, community),
+        calm_disease=max(0.0, diseases.lasting(community) + disease_load(rules, fit) - rules.demography.endemic_baseline / PERCENT)
+        * nature.factor("disease_pct"),
         mortality=mortality,
         time=model.physics.of(community.world_id).time,
     )

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from aerona.catalog.life.demography import BEARING_BANDS, DEATH_RATES
 from aerona.catalog.reproduction import SexSpec
@@ -31,6 +31,10 @@ class Pressures:
     stress: float
     mortality: float
     time: float = 1.0
+    calm_disease: float | None = None
+
+    def calm(self) -> "Pressures":
+        return replace(self, disease=self.disease if self.calm_disease is None else self.calm_disease)
 
 
 @dataclass(frozen=True)
@@ -106,6 +110,17 @@ async def give_births(ctx: TickContext, community: EntityRow, rows: dict[CohortK
     return placed
 
 
+def yearly_rate(year: VitalYear, people: int) -> float:
+    return 1 + (year.births - sum(year.deaths.values())) / people if people > 0 else 1.0
+
+
+def easing(rules: Rules, rows: dict[CohortKey, CohortRow], biology: PeopleBiologyRow | None, pressures: Pressures, spec: SexSpec) -> float:
+    people = total(rows)
+    pressed = yearly_rate(one_year(rules, rows, biology, pressures, spec), people)
+    calm = yearly_rate(one_year(rules, rows, biology, pressures.calm(), spec), people)
+    return calm / pressed if pressed > 0 else 1.0
+
+
 async def demographic_step(ctx: TickContext, community: EntityRow, biology: PeopleBiologyRow | None, pressures: Pressures) -> int:
     rows = await seed(ctx.session, ctx.rules, community, ctx.epoch)
     if not rows:
@@ -127,7 +142,7 @@ async def demographic_step(ctx: TickContext, community: EntityRow, biology: Peop
         remaining = round_half_up(ctx.rules.time.years_per_epoch * pressures.time) - sampled
         after = total(rows)
         if remaining > 0 and sampled > 0 and before > 0 and after > 0:
-            yearly = (after / before) ** (1 / sampled)
+            yearly = (after / before) ** (1 / sampled) * easing(ctx.rules, rows, biology, pressures, spec)
             factor = yearly**remaining
             term("demography.unsampled_years", remaining, source_node_id=community.id)
             term("demography.yearly_growth", factor, ModifierOp.MULTIPLY, source_node_id=community.id)

@@ -8289,7 +8289,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-demography-hunger_death_pct"></a>Extra deaths at the worst hunger (%) | 150% | 0% to 1,000% | — |
 | <a id="r-demography-crowding_death_pct"></a>Extra deaths where a land holds more people than its capacity (%) | 60% | 0% to 1,000% | — |
 | <a id="r-demography-disease_death_pct"></a>Extra deaths at the heaviest disease load (%) | 80% | 0% to 1,000% | Disease load slows births and raises deaths |
-| <a id="r-demography-endemic_baseline"></a>Disease load the ordinary death rates already carry; only the load above it adds deaths | 45 | 0 to 100 | — |
+| <a id="r-demography-endemic_baseline"></a>Disease load the ordinary death rates already carry; only the load above it adds deaths | 30 | 0 to 100 | — |
 | <a id="r-demography-stress_birth_pct"></a>Births lost at war or in deep unrest (%) | 30% | 0% to 100% | — |
 | <a id="r-demography-immortality_death_pct"></a>Deaths kept under the immortality law (%) | 10% | 0% to 1,000% | — |
 | <a id="r-demography-short_life_death_pct"></a>Deaths under the short-life law (%) | 200% | 0% to 1,000% | — |

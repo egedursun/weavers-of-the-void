@@ -13,7 +13,6 @@ from aerona.db.tables.changes import StateChangeRow
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.pipeline import all_phases, current_environment, simulate
-from aerona.engine.recording.scope import phase_scope
 from tests.engine.core.stirring import eager, stir
 from tests.engine.integration.factories import seed_rich_cosmos
 
@@ -67,9 +66,8 @@ async def recorded_gaps(database: Database, phase_name: str) -> tuple[list[str],
         for name, listener in listeners:
             event.listen(session.sync_session, name, listener)
         try:
-            with phase_scope(environment, phase.name):
-                await run_guarded(phase, TickContext(environment, session, phase.name))
-                await session.flush()
+            await run_guarded(phase, TickContext(environment, session, phase.name))
+            await session.flush()
         except Exception as failure:
             error = f"{type(failure).__name__}: {failure}"
         finally:

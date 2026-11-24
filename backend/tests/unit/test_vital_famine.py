@@ -3,7 +3,8 @@ from aerona.db.tables.demography import CohortRow
 from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.demography import AgeBand, CohortCondition, SexKind
 from aerona.domain.enums.society import SocialClass
-from aerona.engine.demography.vital import Pressures, one_year
+from aerona.engine.demography.vital import Pressures, easing, one_year
+from aerona.engine.disease.load import joined
 from aerona.rules.registry import Rules
 
 
@@ -36,3 +37,18 @@ def test_a_lean_year_kills_few_while_a_true_famine_still_kills_many() -> None:
     starved = deaths_at(1.0)
     assert lean < fed * (1 + 0.25 * rules.demography.hunger_death_pct / 100 / 2)
     assert starved >= fed * (1 + rules.demography.hunger_death_pct / 100) * 0.95
+
+
+def test_a_crisis_presses_only_the_years_it_lasts_and_the_rest_of_the_epoch_eases() -> None:
+    rules = Rules()
+    spec = SEX_SYSTEMS[ReproductiveSystem.TWO_SEX]
+    war = Pressures(fertility=1.0, hunger=0.0, crowding=0.0, disease=0.6, stress=1.0, mortality=1.0)
+    passing = Pressures(fertility=1.0, hunger=0.0, crowding=0.0, disease=0.6, stress=1.0, mortality=1.0, calm_disease=0.1)
+    assert easing(rules, cohorts(), None, war, spec) == 1.0
+    assert easing(rules, cohorts(), None, passing, spec) > 1.0
+
+
+def test_independent_sicknesses_join_rather_than_add_past_every_body() -> None:
+    assert joined([50, 50]) == 75
+    assert joined([60, 60, 60]) < 100
+    assert joined([]) == 0 and joined([100, 10]) == 100

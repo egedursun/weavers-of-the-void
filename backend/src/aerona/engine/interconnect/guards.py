@@ -21,7 +21,7 @@ from aerona.engine.interconnect.flows import current_category
 from aerona.engine.interconnect.registry import mechanic_keys_for_phase, suppression_key
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.modifiers import GUARD_SOURCES, ModifierIndex, live_modifiers
-from aerona.engine.recording.scope import reason_rows
+from aerona.engine.recording.scope import phase_scope, reason_rows
 
 MODIFIER_TABLES = table_names((ModifierRow,))
 
@@ -165,6 +165,15 @@ async def step_reasons(ctx: TickContext, reasons: TermsCollector) -> None:
 
 
 async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None, inside: set[int] | None = None) -> None:
+    scope = current_scope()
+    if scope is not None and scope.phase == phase.name:
+        await run_scoped(phase, ctx, only=only, inside=inside)
+        return
+    with phase_scope(ctx.environment, phase.name):
+        await run_scoped(phase, ctx, only=only, inside=inside)
+
+
+async def run_scoped(phase: Phase, ctx: TickContext, *, only: int | None, inside: set[int] | None) -> None:
     ctx.session.info.pop(LAST_INCIDENT, None)
     guard_index, index = await phase_indexes(ctx)
     state = GuardState(guard_index, mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows, only, inside=inside)

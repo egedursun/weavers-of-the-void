@@ -18,6 +18,6 @@ async def test_an_untouched_old_default_moves_and_a_chosen_value_stays(session: 
     world.cosmos.rules_snapshot = snapshot
     await session.flush()
     assert await move_retuned_rules(session) == len(RETUNED) - 1
-    assert world.cosmos.rules_snapshot["demography"]["endemic_baseline"] == 45.0
+    assert world.cosmos.rules_snapshot["demography"]["endemic_baseline"] == 30.0
     assert world.cosmos.rules_snapshot["survey"]["conquest_level"] == 2.0
     assert await move_retuned_rules(session) == 0
