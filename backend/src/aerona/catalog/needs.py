@@ -53,7 +53,7 @@ SHORTFALL_EFFECTS: Mapping[CommodityKind, ShortfallEffect] = total(
         C.HERBS: E.SICKNESS,
         C.BREW_BASE: E.STATUS,
         C.POISON: E.INSECURITY,
-        C.HALITE: E.HUNGER,
+        C.HALITE: E.HERDS,
         C.OIL: E.HUNGER,
         C.SUGAR: E.HUNGER,
         C.HONEY: E.HUNGER,

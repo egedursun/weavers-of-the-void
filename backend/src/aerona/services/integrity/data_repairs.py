@@ -53,6 +53,7 @@ from aerona.services.integrity.operations_links import mend_operations_links, ow
 from aerona.services.integrity.orders_links import mend_orders_links
 from aerona.services.integrity.prehistory import mend_prehistories
 from aerona.services.integrity.regime_links import mend_regime_links
+from aerona.services.integrity.retuned_rules import move_retuned_rules
 from aerona.services.integrity.rite_needs import keep_war_needs
 from aerona.services.integrity.sacred_links import mend_sacred_links
 from aerona.services.integrity.season_positions import mend_season_positions
@@ -173,6 +174,7 @@ class DataRepairs:
             ("pending_dialect_names", refit_pending_names),
             ("engine_drafts", lambda session, rules, epoch: requeue_engine_drafts(session)),
             ("value_axes", lambda session, rules, epoch: complete_value_axes(session)),
+            ("retuned_rules", lambda session, rules, epoch: move_retuned_rules(session)),
             ("schema_repairs", lambda session, rules, epoch: schema_repairs(session)),
         ]
 

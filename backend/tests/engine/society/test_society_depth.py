@@ -128,6 +128,18 @@ def test_needs_basket_by_class_and_typed_effects() -> None:
     assert got == want > 0
 
 
+def test_a_fed_community_is_not_hungry_whatever_else_it_lacks() -> None:
+    meal = Meal(100, {CommodityKind.GRAIN: 500}, {}, {CommodityKind.GRAIN: 500})
+    worn = Wear({kind: 10 for kind in SHORTFALL_EFFECTS if kind not in FOOD_KINDS}, {})
+    basket = build_basket(EVEN, meal, worn, staples=(), order=SERVE_ORDER, held={}, luxuries_left=0)
+    assert basket.effects[ShortfallEffect.HUNGER] == 0
+    assert all(need.fed_pct == 100 for need in basket.classes.values())
+
+
+def test_only_food_counts_toward_hunger() -> None:
+    assert [kind.value for kind, effect in SHORTFALL_EFFECTS.items() if effect is ShortfallEffect.HUNGER and kind not in FOOD_KINDS] == []
+
+
 def test_staple_shortfall_and_luxury_plenty_move_satisfaction() -> None:
     missing = basket_for(100, 100, staples=(CommodityKind.FISH,), fish=0)
     assert missing.classes[SocialClass.FARMER].staple_short_pct > 0
