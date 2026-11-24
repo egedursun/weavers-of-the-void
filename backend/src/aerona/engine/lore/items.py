@@ -46,6 +46,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import WORLD_KEY_PREFIX, MaterialBook, MaterialProps, battle_wear, enchantment_cap, node_material, slot_key, worth_factor
 from aerona.engine.economy.stocks import GoodsLedger
+from aerona.engine.environment.harvest_harm import shift_harvest
 from aerona.engine.faith.book import patron_node
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.arms import GUARDS
@@ -379,7 +380,7 @@ async def enchant_year(ctx: TickContext, atlas: RegionAtlas, item: EntityRow, sp
         elif effect in {E.HARVEST_BLESSING, E.WEATHER_CHANGE}:
             land = await ctx.session.get(RegionEnvironmentRow, atlas.top_region(holder.id) or 0)
             if land is not None:
-                land.harvest_pct = clamp_int(land.harvest_pct + round_half_up(size * table.harvest_pct / PERCENT), 0, PERCENT * HALF)
+                shift_harvest(land, round_half_up(size * table.harvest_pct / PERCENT))
                 worked += 1
         elif effect is E.CURSE and holder.entity_type is EntityType.MORTAL:
             harm = Harm(

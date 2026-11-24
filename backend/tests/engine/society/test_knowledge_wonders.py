@@ -71,3 +71,19 @@ async def test_wonders_reward_owners_and_stir_envy(realm: Realm) -> None:
     assert await bonded(realm.session, rival.id, owner.id, BondKind.ENEMY)
     relation = await realm.session.get(CommunityRelationRow, (first, second))
     assert relation is not None and relation.value == -90 - RULES.wonders.envy_relation_loss
+
+
+async def test_a_mighty_work_without_splendor_joins_the_wonders_for_its_might(realm: Realm) -> None:
+    owner = await settlement(realm, "Bastion")
+    await make(
+        realm.session,
+        "Iron Wall",
+        EntityType.STRUCTURE,
+        StructureStats(splendor=0),
+        world_id=realm.world.id,
+        location_id=owner.id,
+        power_level=RULES.wonders.min_power,
+    )
+    await wonders(context(realm.session))
+    keys = await chronicle_keys(realm.session)
+    assert "wonders.promoted_for_might" in keys and "wonders.promoted" not in keys

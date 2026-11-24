@@ -30,6 +30,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import unfit_for_land_war, view_of
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.environment.book import EnvironmentBook, add_scar
+from aerona.engine.environment.harvest_harm import harm_harvest
 from aerona.engine.environment.perils import Peril, Wandering, danger_toll, navigate
 from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -257,7 +258,7 @@ def feed(
     fed = supply_limit(ctx.rules, region, season)
     if profile.stance in FEED_STANCES:
         profile.supply_days = min(table.supply_days, profile.supply_days + round_half_up(table.forage_days * min(1.0, fed / max(1, size))))
-        region.harvest_pct = clamp_int(region.harvest_pct - table.forage_scar, 0, PERCENT)
+        harm_harvest(region, table.forage_scar)
         log.foraged = True
         if profile.stance in FEED_STANCES_2 or march.attacking:
             plunder(ctx.rules, region)

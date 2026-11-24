@@ -70,6 +70,19 @@ DEATHS: tuple[IncidentKindSpec, ...] = (
         clock=C.SEASON,
     ),
     IncidentKindSpec(
+        "death.funeral_unpaid",
+        G.FAITH,
+        "{subject} laid {dead:body|bodies} to rest by {custom}, with nothing spent.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.PEOPLE})),),
+        facts=(
+            FactSpec("custom", FactValue.ENUM, enum=FuneralCustom),
+            FactSpec("dead", FactValue.NUMBER, FactUnit.COUNT),
+        ),
+        steps=frozenset({A.SETTLE}),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
         "death.second_rite",
         G.FAITH,
         "{subject} gathered the bones of {dead:none of its dead|# of its dead|# of its dead} in a second rite; its cohesion stands at {cohesion}.",

@@ -1100,7 +1100,7 @@ SPECIES: tuple[IncidentKindSpec, ...] = (
     happening(
         "life.decay_stalled",
         N,
-        "The dead of {subject} lay undecayed: of {dead} fallen, only {worked} broke down, and the soil thinned.",
+        "Decay slowed in {subject}: of {dead} parts of dead matter, {worked} broke down, and the soil thinned.",
         roles=(one(R.SUBJECT),),
         facts=(amount("dead", U.COUNT), amount("worked", U.COUNT)),
         clock=C.SEASON,

@@ -23,7 +23,7 @@ class EventsRules(Spanned):
     famine_onset_prosperity: int = rule(5, 0, 100, G, "Prosperity lost by the hungry communities when a famine begins")
     famine_peak_death_pct: int = rule(10, 0, 100, G, "Share of the hungry who die in each epoch a famine stays at its height (%)")
     famine_aftermath_disease: int = rule(8, 0, 100, G, "Disease load left in the land by the weakened survivors of a famine")
-    plague_peak_death_pct: int = rule(25, 0, 100, G, "Share of the struck communities who die in each epoch a plague stays at its height (%)")
+    plague_peak_death_pct: int = rule(15, 0, 100, G, "Share of the struck communities who die in each epoch a plague stays at its height (%)")
     plague_aftermath_prosperity_pct: int = rule(
         40, 0, 1000, G, "Prosperity gained after a plague per point of the adult workforce it killed (%), as the survivors' labour grows dear"
     )

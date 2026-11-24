@@ -38,6 +38,15 @@ async def test_the_dead_of_a_watery_land_sink_and_a_change_of_rest_is_told(sessi
     assert held_row.rest is CarrionRest.ROTTING
 
 
+async def test_a_change_of_rest_with_no_dead_left_is_not_told(session: AsyncSession, world: CoreWorld) -> None:
+    region = world.regions[0]
+    ctx = await manual_context(session, "carrion")
+    row = CarrionPulseRow(region_entity_id=region.id, carrion=0, rest=CarrionRest.ROTTING, locked=[])
+    session.add(row)
+    await settle_rest(ctx, row, region, None, CarrionRest.BURIED)
+    assert row.rest is CarrionRest.BURIED and not await told(session, "carrion.laid")
+
+
 async def test_buried_dead_lay_one_bed_of_remains(session: AsyncSession, world: CoreWorld) -> None:
     region = world.regions[0]
     ctx = await manual_context(session, "carrion", tuned_rules(carrion={"buried_fossil": 100}))

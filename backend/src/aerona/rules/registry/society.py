@@ -116,9 +116,11 @@ class SocietyRules(Spanned):
         0,
         1000,
         RuleGroup.POPULATION_AND_GROWTH,
-        "Food stores at or below which famine can strike (supply index, 100 = one epoch of its needs)",
+        "Food stores at or below which famine can strike once the meal also falls short (supply index, 100 = one epoch of its needs)",
     )
-    famine_fed_pct: int = rule(70, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Share of its food needs a community must fail to eat for famine to strike (%)")
+    famine_fed_pct: int = rule(
+        70, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Share of its food needs a community must fail to eat, with its stores spent, for famine to strike (%)"
+    )
     famine_population_kept_pct: int = rule(92, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Population remaining after famine (%)")
     famine_prosperity_loss: int = rule(6, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Prosperity reduced by famine")
     weapon_warrior_pct: int = rule(12, 0, 100, RuleGroup.ECONOMY, "Warrior share required to forge weapons (%)")

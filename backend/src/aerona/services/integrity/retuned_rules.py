@@ -10,6 +10,9 @@ RETUNED: Mapping[tuple[str, str], tuple[float, float]] = {
     ("apocalypse", "restless_cap"): (6.0, 5.0),
     ("survey", "colony_level"): (3.0, 4.0),
     ("survey", "conquest_level"): (4.0, 5.0),
+    ("events", "plague_peak_death_pct"): (25.0, 15.0),
+    ("logistics", "forage_scar"): (6.0, 25.0),
+    ("siege", "flood_field_harm"): (15.0, 40.0),
 }
 
 

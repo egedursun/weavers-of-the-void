@@ -34,6 +34,7 @@ from aerona.engine.body.variants import fear_of, fear_of_id
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.environment.book import add_scar
+from aerona.engine.environment.harvest_harm import harm_harvest
 from aerona.engine.folkways.biases import lean
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.clash import traits_of
@@ -173,7 +174,7 @@ def plunder(rules: Rules, region: RegionEnvironmentRow | None) -> int:
     table = rules.campaign_depth
     add_scar(region, ScarKind.PLUNDERED, table.plunder_depth)
     depth = region.scars.get(ScarKind.PLUNDERED.value, 0)
-    region.harvest_pct = clamp_int(region.harvest_pct - round_half_up(depth * table.plunder_harvest_pct / PERCENT / 4), 0, PERCENT)
+    harm_harvest(region, depth * table.plunder_harvest_pct / PERCENT)
     return depth
 
 
@@ -390,7 +391,7 @@ async def scorch(ctx: TickContext, owner: EntityRow, army_row: ArmyRow, region: 
         return False
     if not ctx.rng(f"scorch.{owner.id}.{ctx.epoch}.{region.entity_id}").chance(ctx.rules.campaign_depth.scorched_chance):
         return False
-    region.harvest_pct = clamp_int(region.harvest_pct - ctx.rules.campaign_depth.scorched_harvest_pct, 0, PERCENT)
+    harm_harvest(region, ctx.rules.campaign_depth.scorched_harvest_pct)
     add_scar(region, ScarKind.BURNED, ctx.rules.campaign_depth.plunder_depth)
     land = await ctx.session.get(EntityRow, region.entity_id)
     if land is not None:

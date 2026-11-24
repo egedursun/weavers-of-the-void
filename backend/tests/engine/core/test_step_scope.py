@@ -26,3 +26,15 @@ async def test_a_step_run_without_an_open_scope_still_writes_its_changes_to_its_
     rows = list(await session.scalars(select(StateChangeRow).where(StateChangeRow.id > mark)))
     assert rows
     assert {(row.actor_kind, row.phase, row.epoch) for row in rows} == {(ActorKind.ENGINE, "scope_probe_step", 4)}
+
+
+async def test_a_write_outside_every_scope_carries_the_present_epoch_of_the_world(session: AsyncSession, world: CoreWorld) -> None:
+    cosmos = await CosmosRepository(session).require_cosmos()
+    cosmos.epoch = 6
+    await session.flush()
+    mark = int(await session.scalar(select(func.coalesce(func.max(StateChangeRow.id), 0))) or 0)
+    shift_stat(world.people, "piety", 2)
+    await session.flush()
+    rows = list(await session.scalars(select(StateChangeRow).where(StateChangeRow.id > mark)))
+    assert rows
+    assert {(row.actor_kind, row.epoch) for row in rows} == {(ActorKind.SYSTEM, 6)}

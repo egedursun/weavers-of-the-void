@@ -26,6 +26,7 @@ from aerona.engine.phases.society_economy import (
     class_targets,
     default_society,
     food_rate,
+    in_famine,
     incite_class_uprising,
     normalized_shares,
     order_forge,
@@ -120,13 +121,23 @@ async def test_phase_creates_societies_and_moves_stocks(realm: Realm) -> None:
     assert ctx.environment.stats.counters["test.communities"] == 1
 
 
-async def test_famine_strikes_empty_granaries(realm: Realm) -> None:
-    town = await settlement(realm, "Gaunt", population=4000)
-    rules = tuned(society={"famine_food": 1000, "famine_rate_pct": 1000}, consumption={"cold_death_pct": 0})
+def test_famine_needs_spent_stores_and_a_short_meal() -> None:
+    settings = RULES.society
+    low = settings.famine_food
+    short = settings.famine_fed_pct - 1
+    assert in_famine(RULES, low, short, 0.5)
+    assert not in_famine(RULES, low, settings.famine_fed_pct, 0.5)
+    assert not in_famine(RULES, low + 1, short, 0.5)
+    assert not in_famine(RULES, low, short, settings.famine_rate_pct / 100)
+
+
+async def test_low_stores_alone_bring_no_famine_to_a_fed_town(realm: Realm) -> None:
+    town = await settlement(realm, "Plenty", population=4000)
+    rules = tuned(society={"famine_food": 1000, "famine_rate_pct": 1000, "famine_fed_pct": 0}, consumption={"cold_death_pct": 0})
     ctx = context(realm.session, rules)
     await society_economy(ctx)
-    assert stat(town, "population") == 4000 * rules.society.famine_population_kept_pct // 100
-    assert "society.famine" in await chronicle_keys(realm.session)
+    assert stat(town, "population") == 4000
+    assert "society.famine" not in await chronicle_keys(realm.session)
 
 
 async def test_forges_and_ore_mines(realm: Realm) -> None:

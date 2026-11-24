@@ -1289,6 +1289,11 @@ def default_method(process: ProcessKind) -> MethodSpec:
     return PROCESS_METHODS[process][0]
 
 
+def worked_output_pct(spec: MethodSpec, powered: float) -> float:
+    share = min(1.0, max(0.0, powered))
+    return spec.output_pct * share + default_method(spec.process).output_pct * (1 - share)
+
+
 PROCESS_OUTPUT: MappingProxyType[ProcessKind, CommodityKind] = MappingProxyType(
     {
         P.FARMING: CommodityKind.GRAIN,

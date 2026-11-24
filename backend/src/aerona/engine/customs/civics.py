@@ -395,7 +395,7 @@ async def adopt_relief(ctx: TickContext) -> None:
         budget = max(1, round_half_up(cost * await realm_people(ctx.session, realm.id) / PER_MILLE))
         if profile.treasury >= budget:
             ctx.session.add(PoorReliefRow(polity_entity_id=realm.id, kind=kind, budget=budget, reach=table.adopt_reach, locked=[]))
-            await record(ctx, "relief.given", roles={IncidentRole.AUTHORITY: realm.id}, facts={"kind": kind, "helped": 0})
+            await record(ctx, "relief.funded", roles={IncidentRole.AUTHORITY: realm.id}, facts={"kind": kind, "budget": budget})
 
 
 async def keep_measures(ctx: TickContext, tally: CivicsTally) -> None:

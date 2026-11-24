@@ -169,7 +169,7 @@ SPEC_PALETTE: tuple[PaletteEntry, ...] = tuple(
         ("fair_held", "palette_fair_held", P.ECONOMY, D.RECOVERY, ("tradition.fair_held",), E.SETTLEMENT),
         ("seasons_settled", "palette_seasons_settled", P.CLIMATE, D.RECOVERY, ("seasons.spell_ended", "seasons.settled"), E.SETTLEMENT),
         ("sanitation", "palette_sanitation", P.DISEASE, D.RECOVERY, ("disease.sanitation_ordered",), E.SETTLEMENT),
-        ("relief_given", "palette_relief_given", P.ECONOMY, D.RECOVERY, ("relief.given", "relief.sent"), E.SETTLEMENT),
+        ("relief_given", "palette_relief_given", P.ECONOMY, D.RECOVERY, ("relief.given", "relief.funded", "relief.sent"), E.SETTLEMENT),
         ("crisis_mediated", "palette_crisis_mediated", P.WAR, D.RECOVERY, ("crisis.mediated", "treaty.mediated"), E.POLITY),
         ("gift_released", "palette_gift_released", P.HOUSEHOLDS, D.RECOVERY, ("gift.released", "gifts.returned"), E.MORTAL),
     )

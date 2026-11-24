@@ -345,13 +345,15 @@ async def resolve(ctx: TickContext, convoy: ConvoyRow, tally: ConvoyTally, book:
         if carriers is not None:
             struck = await raid_carriers(ctx, carriers.group, 2 if status is ConvoyStatus.LOST else 1, f"convoy.{convoy.id}")
             tally.carriers_lost += struck.lost
+        fate = "raided" if status is ConvoyStatus.RAIDED else "lost"
+        carried = {"cargo_lost": cargo_lost} if cargo_lost > 0 else {}
         await record(
             ctx,
-            "trade.convoy_raided" if status is ConvoyStatus.RAIDED else "trade.convoy_lost",
+            f"trade.convoy_{fate}" if cargo_lost > 0 else f"trade.convoy_{fate}_unladen",
             roles={IncidentRole.SUBJECT: convoy.route_entity_id, IncidentRole.OWNER: convoy.owner_entity_id, IncidentRole.OPPONENT: theirs if war else None},
             facts={
                 "mode": profile.mode,
-                "cargo_lost": cargo_lost,
+                **carried,
                 "roll": round(roll),
                 "at_war": int(war),
                 "carriers_lost": struck.lost if carriers is not None else 0,

@@ -38,6 +38,6 @@ async def test_a_second_burial_gathers_last_epochs_dead_and_binds_the_people(rea
     await realm.session.flush()
     await keep_custom(context(realm.session, tuned(funerals={"secondary_rite_years": 3}), epoch=3), folk, culture, [town.id], 1)
     kinds = set(await realm.session.scalars(select(IncidentRow.kind)))
-    assert "death.funeral" in kinds
+    assert "death.funeral_unpaid" in kinds and "death.funeral" not in kinds
     assert "death.second_rite" in kinds
     assert culture.cohesion > before

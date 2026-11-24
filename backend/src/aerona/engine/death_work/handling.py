@@ -139,12 +139,15 @@ async def keep_custom(ctx: TickContext, people: EntityRow, culture: PeopleCultur
     spec = FUNERALS[culture.funeral_rite]
     table = ctx.rules.funerals
     cost = table.mummification_cost * dead if spec.preserves else 0
+    paid = 0
     if cost:
         payer = await ctx.session.get(EntityRow, towns[0])
-        if payer is not None:
-            await take_coin(ctx.session, ctx.rules, payer, cost)
-    if dead:
-        await record(ctx, "death.funeral", roles={IncidentRole.SUBJECT: people.id}, facts={"custom": culture.funeral_rite, "dead": dead, "cost": cost})
+        if payer is not None and await take_coin(ctx.session, ctx.rules, payer, cost):
+            paid = cost
+    if dead and paid:
+        await record(ctx, "death.funeral", roles={IncidentRole.SUBJECT: people.id}, facts={"custom": culture.funeral_rite, "dead": dead, "cost": paid})
+    elif dead:
+        await record(ctx, "death.funeral_unpaid", roles={IncidentRole.SUBJECT: people.id}, facts={"custom": culture.funeral_rite, "dead": dead})
     if not spec.second_rite or table.epochs(table.secondary_rite_years) <= 0:
         return
     gathered = await ctx.session.scalar(

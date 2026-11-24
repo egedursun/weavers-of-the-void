@@ -28,12 +28,20 @@ def test_five_trophic_levels_and_decomposers_take_their_own() -> None:
 async def test_decomposers_return_the_dead_to_the_soil_and_their_absence_stalls_decay(session: AsyncSession, world: CoreWorld) -> None:
     rich, barren = world.regions[0], world.regions[1]
     fed = await land(session, world, rich, soil_fertility=40, temperature_band=TemperatureBand.TEMPERATE)
-    starved = await land(session, world, barren, soil_fertility=40, temperature_band=TemperatureBand.TEMPERATE)
+    starved = await land(session, world, barren, soil_fertility=5, forest_cover=0, wetland=0, temperature_band=TemperatureBand.TEMPERATE)
     ctx = await manual_context(session, "trophic", tuned_rules(trophic={"decomposer_share_pct": 50, "decomposer_return_pct": 100}))
     await decompose_dead(ctx, rich.id, levels(rich.id, 100, 100), fed, TrophicTally())
     await decompose_dead(ctx, barren.id, levels(barren.id, 100, 0), starved, TrophicTally())
-    assert fed.soil_fertility > 40 and starved.soil_fertility < 40
+    assert fed.soil_fertility > 40 and starved.soil_fertility <= 5
     assert await told(session, "life.decay_stalled")
+
+
+async def test_the_life_of_a_fertile_soil_breaks_down_the_dead_where_no_decomposer_is_known(session: AsyncSession, world: CoreWorld) -> None:
+    ground = await land(session, world, world.regions[0], soil_fertility=60, temperature_band=TemperatureBand.TEMPERATE)
+    ctx = await manual_context(session, "trophic", tuned_rules(trophic={"decomposer_share_pct": 10}))
+    await decompose_dead(ctx, world.regions[0].id, levels(world.regions[0].id, 100, 0), ground, TrophicTally())
+    assert ground.soil_fertility >= 60
+    assert not await told(session, "life.decay_stalled")
 
 
 async def test_cold_slows_the_work_of_decomposers(session: AsyncSession, world: CoreWorld) -> None:

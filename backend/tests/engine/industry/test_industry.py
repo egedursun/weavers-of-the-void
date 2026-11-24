@@ -2,7 +2,7 @@ from collections import Counter
 
 from sqlalchemy import select
 
-from aerona.catalog.methods import METHODS
+from aerona.catalog.methods import METHODS, default_method, worked_output_pct
 from aerona.catalog.production import STEPS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import HolderTechniqueRow, IdeologyAdherentRow, IdeologyTenetRow
@@ -379,6 +379,20 @@ async def test_a_place_never_chooses_a_method_it_cannot_run_for_want_of_power_or
     await realm.session.flush()
     await choose_methods(ctx, book, town, MethodTally())
     assert book.methods[town.id][ProcessKind.FARMING].method is MethodKind.DIVINE_HARVEST
+    row.divine = 0
+    set_stats(town, wealth=0)
+    await realm.session.flush()
+    await choose_methods(ctx, book, town, MethodTally())
+    assert book.methods[town.id][ProcessKind.FARMING].method is not MethodKind.DIVINE_HARVEST
+
+
+def test_the_unpowered_share_of_a_method_is_worked_the_oldest_way() -> None:
+    terraces = METHODS[MethodKind.IRRIGATED_TERRACES]
+    oldest = default_method(ProcessKind.FARMING)
+    assert worked_output_pct(terraces, 0.0) == oldest.output_pct
+    assert worked_output_pct(terraces, 1.0) == terraces.output_pct
+    divine = METHODS[MethodKind.DIVINE_HARVEST]
+    assert oldest.output_pct < worked_output_pct(divine, 0.5) < divine.output_pct
 
 
 async def modern_town(realm: Realm, name: str, techniques: tuple[Technique, ...]) -> EntityRow:

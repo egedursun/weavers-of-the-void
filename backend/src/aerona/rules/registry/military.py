@@ -36,7 +36,7 @@ class LogisticsRules:
     supply_days: int = rule(120, 0, 10000, W, "Days of food an army carries when raised")
     season_days: int = rule(90, 1, 1000, W, "Days in a campaign season")
     forage_days: int = rule(40, 0, 1000, W, "Days of food an army forages in a season from a fed land")
-    forage_scar: int = rule(6, 0, 100, W, "Plunder a foraging army leaves on the land")
+    forage_scar: int = rule(25, 0, 100, W, "Share of one year's harvest of the land a foraging army eats or spoils (%)")
     supply_per_farmed: int = rule(80, 0, 100000, W, "Soldiers a point of farmed land feeds in a season")
     over_supply_attrition_pct: int = rule(4, 0, 100, W, "Soldiers lost in a season per doubling above what the land feeds (%)")
     raid_line_chance: int = rule(15, 0, 100, W, "A long supply line is raided in a season (%)")

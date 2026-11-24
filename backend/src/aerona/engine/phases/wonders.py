@@ -52,7 +52,11 @@ async def promote_wonders(ctx: TickContext, works: Sequence[EntityRow], wonders:
         await repository.add_flag(work.id, EntityFlag.WONDER, ctx.epoch)
         wonders.add(work.id)
         promoted += 1
-        await record(ctx, "wonders.promoted", roles={IncidentRole.SUBJECT: work.id}, facts={"splendor": stat_or(work, "splendor", 0)}, place=work.location_id)
+        splendor = stat_or(work, "splendor", 0)
+        if splendor >= ctx.rules.wonders.min_splendor:
+            await record(ctx, "wonders.promoted", roles={IncidentRole.SUBJECT: work.id}, facts={"splendor": splendor}, place=work.location_id)
+        else:
+            await record(ctx, "wonders.promoted_for_might", roles={IncidentRole.SUBJECT: work.id}, facts={"power": work.power_level}, place=work.location_id)
     return promoted
 
 

@@ -11,6 +11,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.ecology.flora import host_share
 from aerona.engine.ecology.ranges import Wilds
 from aerona.engine.economy.stocks import GoodsLedger
+from aerona.engine.environment.harvest_harm import shift_harvest
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
 
@@ -66,7 +67,7 @@ async def plague_of_pests(ctx: TickContext, wilds: Wilds) -> dict[str, int]:
             if T.CROP_PEST in traits and land is not None and ctx.rng(f"pest.{species_id}.{region}.{ctx.epoch}").chance(table.pest_year_chance):
                 loss = round_half_up(await crop_loss(ctx, species_id, region, weight))
                 if loss > 0 and "harvest_pct" not in land.locked:
-                    land.harvest_pct = clamp_int(land.harvest_pct - loss, 0, PERCENT * 2)
+                    shift_harvest(land, -loss)
                     counts["blighted"] += 1
             if T.IRON_EATING in traits:
                 counts["ore_gnawed"] += await gnaw_ore(ctx, wilds, region, round_half_up(table.ore_loss * weight))

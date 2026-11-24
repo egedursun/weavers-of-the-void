@@ -11,9 +11,9 @@ from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.models.entity_stats import TheoryStats
 from aerona.engine.disease.control import DiseaseDesign, create_disease
-from aerona.engine.disease.responses import cleaning_backed, take_up
+from aerona.engine.disease.responses import build_cleaning, cleaning_backed, take_up
 from aerona.rules.registry import Rules
-from tests.engine.society.factories import Realm, context, make, settlement, tuned
+from tests.engine.society.factories import Realm, context, make, people, settlement, tuned
 
 RULES = Rules()
 
@@ -42,3 +42,15 @@ async def test_cleaning_needs_a_medical_theory_behind_it_and_leaves_lasting_work
     kinds = set(await realm.session.scalars(select(IncidentRow.kind)))
     assert works is not None and works.sanitation == 20 + RULES.plague_responses.sanitation_works
     assert {"disease.sanitation_ordered", "disease.route_found", "disease.route_blocked"} <= kinds
+
+
+async def test_a_people_with_no_town_to_clean_spends_nothing_and_tells_nothing(realm: Realm) -> None:
+    folk = await people(realm, "Wanderers")
+    ctx = context(realm.session, tuned(plague_responses={"sanitation_cost": 0}))
+    disease = await create_disease(
+        ctx, realm.region.id, DiseaseDesign(name=None, values={"primary_route": "water", "target_functions": ["vital"]}, hold=True), son_id=None
+    )
+    await build_cleaning(ctx, folk, disease.id)
+    await realm.session.flush()
+    kinds = set(await realm.session.scalars(select(IncidentRow.kind)))
+    assert "disease.sanitation_ordered" not in kinds

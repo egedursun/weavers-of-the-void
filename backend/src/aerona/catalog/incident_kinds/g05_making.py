@@ -66,7 +66,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "art.commissioned",
         G.MAKING,
-        "{authority} commissioned {product}, a work of {medium}, of quality {quality}.",
+        "{authority} commissioned {product}, a work of {medium} art of quality {quality}.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.PRODUCT), RoleSpec(R.MAKER, required=False), RoleSpec(R.SUBJECT, required=False)),
         facts=(
             FactSpec("medium", FactValue.ENUM, enum=ArtMode),
@@ -694,7 +694,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "structures.abandoned",
         G.MAKING,
-        "{subject} was abandoned {progress} in a hundred raised: {cause}.",
+        "Work on {subject} was given up with {progress:%} of it raised; the cause: {cause}.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.OWNER, required=False),
@@ -703,6 +703,25 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         facts=(
             FactSpec("cause", FactValue.ENUM, enum=AbandonCause),
             FactSpec("progress", FactValue.NUMBER, unit=FactUnit.PERCENT),
+            FactSpec("structure", FactValue.ENUM, enum=StructureKind),
+            FactSpec("reason", FactValue.NAME, required=False),
+        ),
+        steps=frozenset({StepAction.ABANDON}),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.BUILDING,
+        chronicle_kind=K.CONSTRUCTION,
+    ),
+    IncidentKindSpec(
+        "structures.abandoned_unbegun",
+        G.MAKING,
+        "Work on {subject} was given up before any of it was raised; the cause: {cause}.",
+        roles=(
+            RoleSpec(R.SUBJECT),
+            RoleSpec(R.OWNER, required=False),
+            RoleSpec(R.PRODUCT, required=False),
+        ),
+        facts=(
+            FactSpec("cause", FactValue.ENUM, enum=AbandonCause),
             FactSpec("structure", FactValue.ENUM, enum=StructureKind),
             FactSpec("reason", FactValue.NAME, required=False),
         ),
@@ -1093,6 +1112,16 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "{subject} joined the wonders of the world at a splendor of {splendor}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("splendor", FactValue.NUMBER, unit=FactUnit.PERCENT),),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.INSTANT,
+        chronicle_kind=K.CONSTRUCTION,
+    ),
+    IncidentKindSpec(
+        "wonders.promoted_for_might",
+        G.MAKING,
+        "{subject} joined the wonders of the world for its might, at power {power}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("power", FactValue.NUMBER, unit=FactUnit.STRENGTH),),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.INSTANT,
         chronicle_kind=K.CONSTRUCTION,

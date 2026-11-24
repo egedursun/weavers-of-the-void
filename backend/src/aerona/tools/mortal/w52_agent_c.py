@@ -278,7 +278,7 @@ async def give_relief(call: MortalCall, args: GiveReliefInput) -> str:
     else:
         fail(MortalResult.RELIEF_REFUSED, why="only a ruler sets the realm's relief; others may give to it only as it already stands")
     call.target(realm)
-    await call.record("relief.given", roles={IncidentRole.AUTHORITY: realm}, facts={"kind": args.kind, "helped": args.budget})
+    await call.record("relief.funded", roles={IncidentRole.AUTHORITY: realm}, facts={"kind": args.kind, "budget": args.budget})
     return result(MortalResult.RELIEF_SET, kind=RELIEF_KINDS[args.kind].label.lower(), budget=args.budget)
 
 

@@ -2,6 +2,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 
+from aerona.catalog.incident_kinds.amounts import NEVER_ZERO
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec
 from aerona.core.errors import ValidationFailedError
@@ -154,6 +155,9 @@ def typed_facts(spec: IncidentKindSpec, facts: Mapping[str, FactInput]) -> list[
         if declared is None:
             raise ValidationFailedError(f"A happening of kind {spec.key} has no fact {key}.")
         rows.extend(fact_rows(declared, value, spec.key))
+    empty = sorted({row.key for row in rows if (spec.key, row.key) in NEVER_ZERO and (row.number or 0) <= 0})
+    if empty:
+        raise ValidationFailedError(f"A happening of kind {spec.key} tells what it moved, so it cannot be told with no {', '.join(empty)}.")
     given = {row.key for row in rows}
     missing = [declared.key for declared in spec.facts if declared.required and declared.key not in given]
     if missing:

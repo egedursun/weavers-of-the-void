@@ -220,6 +220,18 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=C.SEASON,
     ),
     IncidentKindSpec(
+        "relief.funded",
+        G.SOCIAL,
+        "{authority} set aside {budget} for relief by {kind}.",
+        roles=(RoleSpec(R.AUTHORITY),),
+        facts=(
+            FactSpec("kind", FactValue.ENUM, enum=ReliefKind),
+            FactSpec("budget", FactValue.NUMBER, FactUnit.COIN),
+        ),
+        place=PlaceRule.NONE,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
         "relief.given",
         G.SOCIAL,
         "{authority} gave relief by {kind}, reaching {helped}.",

@@ -33,6 +33,7 @@ from aerona.engine.economy.purse import take_coin
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.faith.judgement import funeral_custom
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import has_stat, shift_bounded, shift_stat, stat
@@ -123,18 +124,27 @@ async def cleaning_backed(ctx: TickContext, community: EntityRow) -> bool:
     return belief is not None
 
 
+async def cleaned_towns(ctx: TickContext, community: EntityRow) -> list[SettlementProfileRow]:
+    found: list[SettlementProfileRow] = []
+    for town_id in await towns_of_people(ctx.session, community.id):
+        works = None if held(town_id) else await ctx.session.get(SettlementProfileRow, town_id)
+        if works is not None and "sanitation" not in works.locked:
+            found.append(works)
+    return found
+
+
 async def build_cleaning(ctx: TickContext, community: EntityRow, disease_id: int) -> None:
     table = ctx.rules.plague_responses
-    if not await take_coin(ctx.session, ctx.rules, community, table.sanitation_cost):
+    towns = await cleaned_towns(ctx, community)
+    if not towns or not await take_coin(ctx.session, ctx.rules, community, table.sanitation_cost):
         return
-    works = await ctx.session.get(SettlementProfileRow, community.id)
-    if works is not None and "sanitation" not in works.locked:
+    for works in towns:
         works.sanitation = clamp_int(works.sanitation + table.sanitation_works, 0, PERCENT)
     await record(
         ctx,
         "disease.sanitation_ordered",
         roles={IncidentRole.ACTOR: community.id, IncidentRole.TARGET: disease_id},
-        facts={"cost": table.sanitation_cost, "sanitation": works.sanitation if works is not None else 0},
+        facts={"cost": table.sanitation_cost, "sanitation": round_half_up(sum(works.sanitation for works in towns) / len(towns))},
     )
 
 

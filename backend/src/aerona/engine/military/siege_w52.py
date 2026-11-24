@@ -35,6 +35,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
 from aerona.engine.environment.book import add_scar
+from aerona.engine.environment.harvest_harm import harm_harvest
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import has_technique
 from aerona.engine.military.engineering import RIVERS
@@ -233,8 +234,7 @@ async def flood(ctx: TickContext, siege: SiegeRow) -> int:
             halted += cut
     siege.works = built
     ground = await ground_of(ctx, siege.besieged_entity_id)
-    if ground is not None and not held(ground.entity_id):
-        ground.harvest_pct = clamp_int(ground.harvest_pct - table.flood_field_harm, 0, PERCENT)
+    harm_harvest(ground, table.flood_field_harm)
     return halted
 
 
@@ -242,7 +242,7 @@ async def scorch(ctx: TickContext, siege: SiegeRow, march: Besieging) -> int:
     table = ctx.rules.siege
     ground = await ground_of(ctx, siege.besieged_entity_id)
     if ground is not None and not held(ground.entity_id):
-        ground.harvest_pct = clamp_int(ground.harvest_pct - table.scorch_forage_cut_pct, 0, PERCENT)
+        harm_harvest(ground, table.scorch_forage_cut_pct)
         add_scar(ground, ScarKind.BURNED, table.scorch_forage_cut_pct // 2)
     cut = round_half_up(march.profile.supply_days * table.scorch_forage_cut_pct / PERCENT)
     if "supply_days" not in march.profile.locked:

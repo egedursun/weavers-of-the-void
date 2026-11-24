@@ -113,8 +113,10 @@ class SiegeRules:
     suborn_cost: int = rule(20, 0, 1000, W, "Coin a besieger spends on bribes each season it suborns")
     suborn_harden: int = rule(10, 0, 100, W, "Wall repair and morale a defence gains when a plot to open a gate is found out")
     flood_halt_pct: int = rule(60, 0, 100, W, "Share of the progress of the besiegers' works that flooding the approaches undoes (%)")
-    flood_field_harm: int = rule(15, 0, 100, W, "Harvest a land loses when its approaches are flooded")
-    scorch_forage_cut_pct: int = rule(50, 0, 100, W, "Share of the forage around a besieged place that burning the land destroys (%)")
+    flood_field_harm: int = rule(40, 0, 100, W, "Share of one year's harvest a land loses when its approaches are flooded (%)")
+    scorch_forage_cut_pct: int = rule(
+        50, 0, 100, W, "Share of the forage around a besieged place, and of that year's harvest of its land, that burning the land destroys (%)"
+    )
     expel_food_gain_pct: int = rule(20, 0, 100, W, "Share of its stores a besieged place saves by driving out those who cannot fight (%)")
     expel_share_pct: int = rule(15, 0, 100, W, "Share of a besieged place's people driven out as mouths that cannot fight (%)")
     expel_let_through_pct: int = rule(50, 0, 100, W, "Chance the besiegers let the expelled through rather than leaving them between the lines (%)")

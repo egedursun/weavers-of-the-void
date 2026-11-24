@@ -34,6 +34,7 @@ from aerona.engine.ecology.control import spawn_beast
 from aerona.engine.economy.materials import material_kind
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.environment.book import add_scar
+from aerona.engine.environment.harvest_harm import shift_harvest
 from aerona.engine.environment.places import KIND_LOCK, write_kind
 from aerona.engine.lore.rites import devise, rite_of
 from aerona.engine.phases.society_support.knowledge import teach
@@ -347,7 +348,7 @@ async def open_spring(ctx: TickContext, secret: PlaceSecretRow, place: EntityRow
         ground.water_source = WaterSource.SPRING
     land = await ctx.session.get(RegionEnvironmentRow, ground.region_entity_id) if ground is not None and ground.region_entity_id is not None else None
     if land is not None and "harvest_pct" not in land.locked:
-        land.harvest_pct = clamp_int(land.harvest_pct + ctx.rules.secrets.hidden_spring_harvest, 0, PERCENT * 2)
+        shift_harvest(land, ctx.rules.secrets.hidden_spring_harvest)
     return None
 
 

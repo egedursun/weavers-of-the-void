@@ -41,6 +41,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import holding, holdings
 from aerona.engine.environment.dangers import ease_danger
+from aerona.engine.environment.harvest_harm import shift_harvest
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.calendar_slots import slot_open
@@ -313,7 +314,7 @@ async def bless_harvest(ctx: TickContext, community: EntityRow, atlas: RegionAtl
     land = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
     if land is None:
         return False
-    land.harvest_pct = clamp_int(land.harvest_pct + amount, 0, PERCENT * 2)
+    shift_harvest(land, amount)
     return True
 
 

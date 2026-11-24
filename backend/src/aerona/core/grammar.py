@@ -4,6 +4,7 @@ from typing import Any
 
 VOWELS = "aeiou"
 ARTICLE_SPECS = {"an": False, "An": True}
+PERCENT_SPEC = "%"
 
 
 VOWEL_NUMBER_PREFIXES = ("11", "18")
@@ -94,8 +95,8 @@ COUNT_MARK = "#"
 
 class ArticleFormatter(Formatter):
     def format_field(self, value: Any, format_spec: str) -> str:
-        if format_spec in ARTICLE_SPECS:
-            return an(str(value), capital=ARTICLE_SPECS[format_spec])
+        if format_spec in ARTICLE_SPECS or format_spec == PERCENT_SPEC:
+            return f"{value}%" if format_spec == PERCENT_SPEC else an(str(value), capital=ARTICLE_SPECS[format_spec])
         if "|" in format_spec and isinstance(value, str) and NUMBER_TEXT.fullmatch(value.strip()):
             value = float(value)
         if "|" in format_spec and isinstance(value, (int, float)) and not isinstance(value, bool):

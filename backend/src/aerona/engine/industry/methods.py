@@ -244,6 +244,10 @@ async def runnable_share(ctx: TickContext, book: EconomyBook, community: EntityR
     return max(0.0, share)
 
 
+async def stranded(ctx: TickContext, book: EconomyBook, community: EntityRow, spec: MethodSpec) -> bool:
+    return await runnable_share(ctx, book, community, spec) <= 0
+
+
 async def expected_profit(ctx: TickContext, book: EconomyBook, community: EntityRow, spec: MethodSpec, *, nature: bool) -> float:
     price = local_price(book, community.id, PROCESS_OUTPUT[spec.process])
     believed = await BeliefView(ctx.session, ctx.rules, community.id).of(community.id, price_key(PROCESS_OUTPUT[spec.process].value), round_half_up(price))
@@ -393,7 +397,14 @@ async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityR
         best = min(options, key=lambda spec: (-worth[spec.kind], spec.kind.value))
         if current is not None and current in options and worth[best.kind] <= worth[current.kind] * margin:
             continue
-        if row is not None and current is not None and current is not best and not founded_past(current, best, start) and not refit(ctx, community):
+        if (
+            row is not None
+            and current is not None
+            and current is not best
+            and not founded_past(current, best, start)
+            and not await stranded(ctx, book, community, current)
+            and not refit(ctx, community)
+        ):
             if row.obsolete_since is None and "obsolete_since" not in row.locked:
                 row.obsolete_since = ctx.epoch
             continue

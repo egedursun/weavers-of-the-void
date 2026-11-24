@@ -7,7 +7,7 @@ from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
 from aerona.catalog.good_builtins import SEED_STOCK
 from aerona.catalog.goods_tables import COMMONS_MATERIAL, EATING_ORDER
 from aerona.catalog.goods_traits import commodities_with
-from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT
+from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT, worked_output_pct
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.body import MaimedCohortRow
@@ -37,6 +37,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import tools_factor
 from aerona.engine.economy.good_kinds import good_book
 from aerona.engine.economy.stocks import DEFAULT_QUALITY, aggregate_need, epoch_need, goods_of, holdings, nourishment_need
+from aerona.engine.environment.harvest_harm import shift_harvest
 from aerona.engine.environment.profile import CropMix, crop_mix
 from aerona.engine.folk_knowledge.factor import folk_factor
 from aerona.engine.industry.energy import warm_from_power, worked_by_hand
@@ -125,17 +126,21 @@ async def harvest_goods(
     fishing = method_for(book, community.id, ProcessKind.FISHING)
     crews = round_half_up(farmers * ctx.rules.energy.extraction_per_100_workers / PERCENT)
     powered = worked_by_hand(book, ctx.rules, community.id, farming.energy, need=farming.energy_need * crews, workers=farmers)
-    land = units * farming.output_pct / PERCENT * powered
+    land = units * worked_output_pct(farming, powered) / PERCENT
     land *= outdated(book, ctx.rules, community.id, ProcessKind.FARMING)
     land *= await feed(ctx, community.id, farming, crews)
     land *= await folk_factor(ctx.session, ctx.rules, community, FolkDomain.WEATHER)
     catch = farmers * table.farm_units_per_1000_farmers / THOUSAND * table.sea_catch_pct / PERCENT * labour * tools
-    sea = catch * fishing.output_pct / PERCENT * fish_factor(ctx.rules, book.pollution.get(region_id_of(book, community.id) or -1))
+    sea = catch * fish_factor(ctx.rules, book.pollution.get(region_id_of(book, community.id) or -1))
     sea *= outdated(book, ctx.rules, community.id, ProcessKind.FISHING)
     sea *= await ctx.hook_factor(community.id, DomainHook.CATCH)
     sea *= await folk_factor(ctx.session, ctx.rules, community, FolkDomain.WATERS)
-    if mix.fish > 0:
-        sea *= worked_by_hand(book, ctx.rules, community.id, fishing.energy, need=round_half_up(fishing.energy_need * crews * mix.fish), workers=farmers)
+    hauled = (
+        worked_by_hand(book, ctx.rules, community.id, fishing.energy, need=round_half_up(fishing.energy_need * crews * mix.fish), workers=farmers)
+        if mix.fish > 0
+        else 1.0
+    )
+    sea *= worked_output_pct(fishing, hauled) / PERCENT
     fodder = round_half_up(land * mix.pasture * table.fodder_share_pct / PERCENT)
     chain = ctx.rules.food_chain
     herds = round_half_up(land * mix.pasture * await folk_factor(ctx.session, ctx.rules, community, FolkDomain.ANIMALS)) - fodder
@@ -270,7 +275,7 @@ async def eat_seed(
     if region is not None and not held(region.entity_id) and "harvest_pct" not in region.locked:
         with explaining_alone():
             term("goods.seed_harvest_cut", -cut, source_node_id=community.id)
-            region.harvest_pct = max(0, region.harvest_pct - cut)
+            shift_harvest(region, -cut)
     await record(ctx, "goods.seed_eaten", roles={IncidentRole.VICTIM: community.id}, facts={"eaten": gone, "cut": cut}, place=community.id)
     return left
 

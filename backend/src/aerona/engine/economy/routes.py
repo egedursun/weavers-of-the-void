@@ -628,6 +628,8 @@ async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = Fa
 
 
 async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, *, delivered: int, tally: RouteTally) -> tuple[int, int]:
+    if delivered <= 0:
+        return 0, 0
     rate = ctx.rules.markets.seller_wealth_per_value
     flow = ctx.rules.market
     value = round_half_up(lane.landed * delivered / PERCENT)

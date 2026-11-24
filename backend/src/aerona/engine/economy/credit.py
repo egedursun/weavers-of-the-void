@@ -26,7 +26,7 @@ def commodity_word(commodity: CommodityKind) -> str:
 
 async def sell_on_credit(ctx: TickContext, buyer: EntityRow, seller: EntityRow, commodity: CommodityKind, moved: int) -> bool:
     table = ctx.rules.market
-    if await open_debt(ctx.session, buyer.id, seller.id) is not None:
+    if moved <= 0 or await open_debt(ctx.session, buyer.id, seller.id) is not None:
         return False
     amount = max(1, round(moved / table.credit_divisor))
     due = ctx.epoch + table.credit_term

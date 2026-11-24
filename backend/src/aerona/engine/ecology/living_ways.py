@@ -27,6 +27,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.ecology.domestication import heads_kept_for
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.environment.book import add_scar
+from aerona.engine.environment.harvest_harm import shift_harvest
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
@@ -176,7 +177,7 @@ async def colonies_and_swarms(ctx: TickContext, living: Living, tally: WaysTally
                 continue
             if ground is not None and "harvest_pct" not in ground.locked:
                 harm = round_half_up(table.swarm_crop_harm * row.abundance / PERCENT)
-                ground.harvest_pct = clamp_int(ground.harvest_pct - harm, 0, PERCENT * 2)
+                shift_harvest(ground, -harm)
                 tally.swarmed += 1
                 await record(
                     ctx,
@@ -255,7 +256,7 @@ async def plant_ways(ctx: TickContext, living: Living, tally: WaysTally) -> None
                 tally.thinned += int(thin(row, table.epiphyte_host_need // 10))
             if form is PlantForm.PARASITIC and "harvest_pct" not in ground.locked:
                 harm = round_half_up(table.parasitic_host_harm * row.abundance / PERCENT)
-                ground.harvest_pct = clamp_int(ground.harvest_pct - harm, 0, PERCENT * 2)
+                shift_harvest(ground, -harm)
                 if harm > 0:
                     await record(
                         ctx,

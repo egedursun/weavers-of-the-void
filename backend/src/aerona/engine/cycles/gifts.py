@@ -167,11 +167,12 @@ async def give(
     await raise_standing(ctx, giver_id, value * table.give_prestige / PERCENT * spec.standing / PERCENT)
     await regard(ctx, (receiver_id, giver_id), table.gift_regard, MemoryKind.GIFTED_ME, occasion.value)
     if tell:
+        owed = round_half_up(value * spec.debt(ctx.rules) / PERCENT)
         await record(
             ctx,
-            "gift.given",
+            "gift.given" if owed > 0 else "gift.given_freely",
             roles={IncidentRole.GIVER: giver_id, IncidentRole.RECEIVER: receiver_id},
-            facts={"value": value, "occasion": occasion, "owed": round_half_up(value * spec.debt(ctx.rules) / PERCENT)},
+            facts={"value": value, "occasion": occasion, "owed": owed} if owed > 0 else {"value": value, "occasion": occasion},
             steps=(StepDraft(StepAction.GIVE, actor=giver_id, target=receiver_id, amount=value, unit=FactUnit.COIN),),
         )
     if obliging and await refuses(ctx, giver_id, receiver_id):

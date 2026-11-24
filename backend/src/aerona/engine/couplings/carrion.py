@@ -95,7 +95,7 @@ async def settle_rest(ctx: TickContext, row: CarrionPulseRow, region: EntityRow,
         return
     was = row.rest
     row.rest = rest or await rest_of(ctx, region, ground)
-    if row.rest is not was:
+    if row.rest is not was and row.carrion > 0:
         await record(ctx, "carrion.laid", roles={IncidentRole.PLACE: region.id}, facts={"rest": row.rest, "dead": row.carrion}, place=region.id)
 
 

@@ -1005,7 +1005,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-events-famine_onset_prosperity"></a>Prosperity lost by the hungry communities when a famine begins | 5 | 0 to 100 | — |
 | <a id="r-events-famine_peak_death_pct"></a>Share of the hungry who die in each epoch a famine stays at its height (%) | 10% | 0% to 100% | Events: kinds, years and seasons, footprint, phases and the toll by cohort |
 | <a id="r-events-famine_aftermath_disease"></a>Disease load left in the land by the weakened survivors of a famine | 8 | 0 to 100 | Events: kinds, years and seasons, footprint, phases and the toll by cohort |
-| <a id="r-events-plague_peak_death_pct"></a>Share of the struck communities who die in each epoch a plague stays at its height (%) | 25% | 0% to 100% | — |
+| <a id="r-events-plague_peak_death_pct"></a>Share of the struck communities who die in each epoch a plague stays at its height (%) | 15% | 0% to 100% | — |
 | <a id="r-events-plague_aftermath_prosperity_pct"></a>Prosperity gained after a plague per point of the adult workforce it killed (%), as the survivors' labour grows dear | 40% | 0% to 1,000% | Events: kinds, years and seasons, footprint, phases and the toll by cohort |
 | <a id="r-events-plague_aftermath_prosperity_cap"></a>Most prosperity a community gains in a plague's aftermath | 12 | 0 to 100 | — |
 | <a id="r-events-siege_peak_rounds"></a>Siege rounds after which a siege reaches its height | 2 | 1 to 50 | — |
@@ -4703,7 +4703,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-logistics-supply_days"></a>Days of food an army carries when raised | 120 | 0 to 10,000 | An army carries food from home |
 | <a id="r-logistics-season_days"></a>Days in a campaign season | 90 | 1 to 1,000 | A season of war eats the stores |
 | <a id="r-logistics-forage_days"></a>Days of food an army forages in a season from a fed land | 40 | 0 to 1,000 | Foraging armies feed from fed lands |
-| <a id="r-logistics-forage_scar"></a>Plunder a foraging army leaves on the land | 6 | 0 to 100 | Marches along the region graph, supply, foraging, pay, attrition and desertion |
+| <a id="r-logistics-forage_scar"></a>Share of one year's harvest of the land a foraging army eats or spoils (%) | 25 | 0 to 100 | Marches along the region graph, supply, foraging, pay, attrition and desertion |
 | <a id="r-logistics-supply_per_farmed"></a>Soldiers a point of farmed land feeds in a season | 80 | 0 to 100,000 | Lands feed only so many soldiers |
 | <a id="r-logistics-over_supply_attrition_pct"></a>Soldiers lost in a season per doubling above what the land feeds (%) | 4% | 0% to 100% | Armies above the land's limit waste away; Each region feeds only so many soldiers: farmed land, the season, its harvest, what plunder left and its roads set the limit |
 | <a id="r-logistics-raid_line_chance"></a>A long supply line is raided in a season (%) | 15 | 0 to 100 | Long supply lines are raided |
@@ -5102,7 +5102,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-campaign_depth-satisfaction_desertion_pct"></a>Soldiers of a bitter class who desert in a hard season (%) | 6% | 0% to 100% | March speed from passability, weather, roads and season; fodder, class desertion, plunder, mutiny, sanitation and drills |
 | <a id="r-campaign_depth-bitter_satisfaction"></a>Class satisfaction below which its soldiers desert in a hard season | 35 | 0 to 100 | — |
 | <a id="r-campaign_depth-plunder_depth"></a>Plunder scar a foraging or raiding army leaves in a season | 8 | 0 to 100 | — |
-| <a id="r-campaign_depth-plunder_harvest_pct"></a>Harvest lost on a fully plundered land (%) | 40% | 0% to 100% | March speed from passability, weather, roads and season; fodder, class desertion, plunder, mutiny, sanitation and drills |
+| <a id="r-campaign_depth-plunder_harvest_pct"></a>Share of one year's harvest lost on a fully plundered land, and of its fertility while the scar lasts (%) | 40% | 0% to 100% | March speed from passability, weather, roads and season; fodder, class desertion, plunder, mutiny, sanitation and drills |
 | <a id="r-campaign_depth-plunder_heal"></a>Plunder scar a land heals in an epoch | 4 | 0 to 100 | — |
 | <a id="r-campaign_depth-mutiny_gain"></a>Mutiny pressure a hungry or unpaid season adds | 20 | 0 to 100 | — |
 | <a id="r-campaign_depth-mutiny_cohesion"></a>Cohesion below which mutiny pressure grows | 30 | 0 to 100 | — |
@@ -5133,7 +5133,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-campaign_depth-home_news_pct"></a>Weight of kinship in news from home (%) | 100% | 0% to 300% | — |
 | <a id="r-campaign_depth-home_news_morale"></a>Morale a stack loses when its home community is sacked or occupied | 10 | 0 to 100 | — |
 | <a id="r-campaign_depth-scorched_chance"></a>A ruthless defender burns its own fields before an invader (%) | 40 | 0 to 100 | — |
-| <a id="r-campaign_depth-scorched_harvest_pct"></a>Harvest lost to scorched earth (%) | 50% | 0% to 100% | — |
+| <a id="r-campaign_depth-scorched_harvest_pct"></a>Share of one year's harvest scorched earth destroys (%) | 50% | 0% to 100% | — |
 | <a id="r-campaign_depth-raid_supply_days"></a>Days of food a supply raid takes from the enemy | 30 | 0 to 1,000 | — |
 | <a id="r-campaign_depth-retreat_supply_days"></a>Days of food a retreating army regains nearer home | 20 | 0 to 1,000 | — |
 | <a id="r-campaign_depth-sub_commander_pct"></a>Strength a sub-commander's leadership lends the wings at full skill (%) | 10% | 0% to 100% | — |
@@ -5482,8 +5482,8 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-siege-suborn_cost"></a>Coin a besieger spends on bribes each season it suborns | 20 | 0 to 1,000 | — |
 | <a id="r-siege-suborn_harden"></a>Wall repair and morale a defence gains when a plot to open a gate is found out | 10 | 0 to 100 | — |
 | <a id="r-siege-flood_halt_pct"></a>Share of the progress of the besiegers' works that flooding the approaches undoes (%) | 60% | 0% to 100% | — |
-| <a id="r-siege-flood_field_harm"></a>Harvest a land loses when its approaches are flooded | 15 | 0 to 100 | — |
-| <a id="r-siege-scorch_forage_cut_pct"></a>Share of the forage around a besieged place that burning the land destroys (%) | 50% | 0% to 100% | — |
+| <a id="r-siege-flood_field_harm"></a>Share of one year's harvest a land loses when its approaches are flooded (%) | 40 | 0 to 100 | — |
+| <a id="r-siege-scorch_forage_cut_pct"></a>Share of the forage around a besieged place, and of that year's harvest of its land, that burning the land destroys (%) | 50% | 0% to 100% | — |
 | <a id="r-siege-expel_food_gain_pct"></a>Share of its stores a besieged place saves by driving out those who cannot fight (%) | 20% | 0% to 100% | — |
 | <a id="r-siege-expel_share_pct"></a>Share of a besieged place's people driven out as mouths that cannot fight (%) | 15% | 0% to 100% | — |
 | <a id="r-siege-expel_let_through_pct"></a>Chance the besiegers let the expelled through rather than leaving them between the lines (%) | 50% | 0% to 100% | — |
@@ -8498,8 +8498,8 @@ The rules counted in years here follow your world's epoch length.
 | Rule | Starts at | Range | Tied to |
 |---|---:|---|---|
 | <a id="r-society-famine_rate_pct"></a>Value the production rate must stay below for famine (%) | 90% | 0% to 1,000% | — |
-| <a id="r-society-famine_food"></a>Food stores at or below which famine can strike (supply index, 100 = one epoch of its needs) | 60 | 0 to 1,000 | — |
-| <a id="r-society-famine_fed_pct"></a>Share of its food needs a community must fail to eat for famine to strike (%) | 70% | 0% to 100% | Commodities, stores and consumption per head |
+| <a id="r-society-famine_food"></a>Food stores at or below which famine can strike once the meal also falls short (supply index, 100 = one epoch of its needs) | 60 | 0 to 1,000 | — |
+| <a id="r-society-famine_fed_pct"></a>Share of its food needs a community must fail to eat, with its stores spent, for famine to strike (%) | 70% | 0% to 100% | Commodities, stores and consumption per head |
 | <a id="r-society-famine_population_kept_pct"></a>Population remaining after famine (%) | 92% | 0% to 100% | — |
 | <a id="r-society-famine_prosperity_loss"></a>Prosperity reduced by famine | 6 | 0 to 100 | — |
 

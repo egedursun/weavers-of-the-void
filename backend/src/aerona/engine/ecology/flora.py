@@ -31,6 +31,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.ecology.biochemistry import bearable, tolerated
 from aerona.engine.ecology.profiles import PEST_HUNTERS, SHELLED, Nature, SpeciesSpec, add_plant_profile, cycle_of, plant_products, profile_of
 from aerona.engine.ecology.uses import give_use
+from aerona.engine.environment.harvest_harm import shift_harvest
 from aerona.engine.environment.weather import Weather
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
@@ -463,7 +464,7 @@ async def blight(ctx: TickContext, book: CropBook) -> int:
             continue
         loss = sum(row.share for row in rows if hosts.get(row.plant_entity_id, set()) & raging.get(region_id, set())) / PERCENT
         if loss > 0:
-            land.harvest_pct = clamp_int(land.harvest_pct - round_half_up(ctx.rules.flora.blight_loss * loss), 0, PERCENT * 2)
+            shift_harvest(land, -round_half_up(ctx.rules.flora.blight_loss * loss))
             struck += 1
     return struck
 

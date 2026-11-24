@@ -1785,6 +1785,25 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         chronicle_kind=K.TRADE,
     ),
     IncidentKindSpec(
+        "trade.convoy_lost_unladen",
+        G.EXCHANGE,
+        "A convoy on {subject} was lost; it carried no goods.",
+        roles=(
+            RoleSpec(R.SUBJECT),
+            RoleSpec(R.OWNER, required=False),
+            RoleSpec(R.OPPONENT, required=False),
+        ),
+        facts=(
+            FactSpec("mode", FactValue.ENUM, enum=TradeMode),
+            FactSpec("roll", FactValue.NUMBER, unit=FactUnit.PERCENT),
+            FactSpec("at_war", FactValue.NUMBER, unit=FactUnit.COUNT),
+            FactSpec("carriers_lost", FactValue.NUMBER, unit=FactUnit.COUNT),
+        ),
+        place=PlaceRule.NONE,
+        clock=ProcessClock.VOYAGE,
+        chronicle_kind=K.TRADE,
+    ),
+    IncidentKindSpec(
         "trade.convoy_raided",
         G.EXCHANGE,
         "A convoy on {subject} was raided and {cargo_lost} loads taken.",
@@ -1796,6 +1815,25 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         facts=(
             FactSpec("mode", FactValue.ENUM, enum=TradeMode),
             FactSpec("cargo_lost", FactValue.NUMBER, unit=FactUnit.COUNT),
+            FactSpec("roll", FactValue.NUMBER, unit=FactUnit.PERCENT),
+            FactSpec("at_war", FactValue.NUMBER, unit=FactUnit.COUNT),
+            FactSpec("carriers_lost", FactValue.NUMBER, unit=FactUnit.COUNT),
+        ),
+        place=PlaceRule.NONE,
+        clock=ProcessClock.VOYAGE,
+        chronicle_kind=K.TRADE,
+    ),
+    IncidentKindSpec(
+        "trade.convoy_raided_unladen",
+        G.EXCHANGE,
+        "A convoy on {subject} was raided; it carried no goods.",
+        roles=(
+            RoleSpec(R.SUBJECT),
+            RoleSpec(R.OWNER, required=False),
+            RoleSpec(R.OPPONENT, required=False),
+        ),
+        facts=(
+            FactSpec("mode", FactValue.ENUM, enum=TradeMode),
             FactSpec("roll", FactValue.NUMBER, unit=FactUnit.PERCENT),
             FactSpec("at_war", FactValue.NUMBER, unit=FactUnit.COUNT),
             FactSpec("carriers_lost", FactValue.NUMBER, unit=FactUnit.COUNT),

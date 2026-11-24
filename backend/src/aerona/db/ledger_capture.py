@@ -451,6 +451,8 @@ class PendingChange:
 
 
 INCIDENT_AT = CHANGE_COLUMNS.index("incident_id")
+EPOCH_AT = CHANGE_COLUMNS.index("epoch")
+PRESENT_EPOCH_SQL = "SELECT epoch FROM cosmos ORDER BY id LIMIT 1"
 SYSTEM_ACTOR = ActorKind.SYSTEM.value
 
 
@@ -693,6 +695,11 @@ def write_pending(session: Session, connection: Connection) -> None:
     rows = session.info.pop(PENDING_CHANGES, None)
     if not rows:
         return
+    if any(row.scope is None for row in rows):
+        present = connection.exec_driver_sql(PRESENT_EPOCH_SQL).scalar()
+        for row in rows:
+            if row.scope is None and present is not None:
+                row.values[EPOCH_AT] = int(present)
     for row in rows:
         scope = row.scope
         if scope is not None and row.values[INCIDENT_AT] is None:

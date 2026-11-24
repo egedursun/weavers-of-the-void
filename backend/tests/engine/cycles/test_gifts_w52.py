@@ -43,7 +43,7 @@ async def test_occasions_set_what_is_owed_and_a_funeral_gift_waits_for_the_giver
     assert funeral is not None and funeral.state is GiftState.OPEN and funeral.due_epoch is None
     birth = await give(ctx, first.id, second.id, 40, GiftOccasion.BIRTH)
     assert birth is not None and owed_back(ctx.rules, birth) == 40 * ctx.rules.gifts.birth_debt // 100
-    assert "gift.given" in await kinds(session)
+    assert {"gift.given", "gift.given_freely"} <= await kinds(session)
 
 
 async def test_an_answer_of_far_more_exceeds_the_gift_and_outgiving_drains_both_houses(session: AsyncSession, world: CoreWorld) -> None:

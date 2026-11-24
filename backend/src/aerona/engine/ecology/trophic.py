@@ -31,6 +31,10 @@ def ground_biomass(land: RegionEnvironmentRow | None) -> int:
     return land.forest_cover + land.soil_fertility + land.wetland
 
 
+def soil_life(land: RegionEnvironmentRow | None) -> int:
+    return 0 if land is None else land.soil_fertility
+
+
 def appetite(rules: Rules, profile: SpeciesProfileRow | None) -> float:
     return 1 - rules.dormancy.torpor_food_cut_pct / PERCENT if profile is not None and profile.dormancy is Dormancy.TORPOR else 1.0
 
@@ -92,7 +96,7 @@ async def decompose_dead(
     table = ctx.rules.trophic
     living = sum(row.abundance for level, rows in levels.items() if level is not TrophicLevel.DECOMPOSER for row in rows)
     dead = round_half_up((living + ground_biomass(land)) * table.decomposer_share_pct / PERCENT)
-    workers = sum(row.abundance for row in levels.get(TrophicLevel.DECOMPOSER, []))
+    workers = sum(row.abundance for row in levels.get(TrophicLevel.DECOMPOSER, [])) + soil_life(land)
     cold = land is not None and land.temperature_band in COLD
     worked = min(dead, workers) * (1 - table.decomposer_cold_cut_pct / PERCENT if cold else 1)
     ctx.session.add(TrophicLevelRow(region_entity_id=region_id, level=TrophicLevel.DECOMPOSER, biomass=workers, cap=dead, epoch=ctx.epoch))

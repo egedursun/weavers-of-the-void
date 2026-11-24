@@ -415,6 +415,11 @@ def apply_class_effects(rules: Rules, entity: EntityRow, society: Society) -> No
         shift_stat(entity, "martiality", round_half_up(warrior_delta / settings.effect_martiality_divisor))
 
 
+def in_famine(rules: Rules, food: int, fed_pct: int, rate: float) -> bool:
+    settings = rules.society
+    return food <= settings.famine_food and fed_pct < settings.famine_fed_pct and rate < fraction(settings.famine_rate_pct)
+
+
 async def strike_famine(ctx: TickContext, entity: EntityRow, society: Society) -> None:
     settings = ctx.rules.society
     floor, ceiling = population_bounds(ctx.rules, entity)
@@ -619,8 +624,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     )
     society.satisfaction = drift_satisfaction(rules, society.satisfaction, targets)
     apply_class_effects(rules, entity, society)
-    hungry = society.stocks[Commodity.FOOD] <= settings.famine_food or meal.fed_pct < settings.famine_fed_pct
-    if hungry and rate < fraction(settings.famine_rate_pct):
+    if in_famine(rules, society.stocks[Commodity.FOOD], meal.fed_pct, rate):
         counters.famines += 1
         await strike_famine(ctx, entity, society)
     weapons = await holding(ctx.session, entity.id, CommodityKind.WEAPONS)

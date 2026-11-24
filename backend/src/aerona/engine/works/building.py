@@ -22,6 +22,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import WATER_ORDER
 from aerona.domain.enums.works import LabourRegime, WorksKind, WorksStatus
 from aerona.engine.context import TickContext
+from aerona.engine.environment.harvest_harm import shift_harvest
 from aerona.engine.numbers.book import towns_in
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -145,11 +146,11 @@ async def shape_land(ctx: TickContext, works: PublicWorksRow, sign: int) -> None
                 land.erosion = clamp_int(land.erosion - sign * table.terracing_erosion, 0, PERCENT)
             if "harvest_pct" not in land.locked:
                 term("public_works.terracing_harvest", sign * table.terracing_harvest, source_node_id=works.polity_entity_id)
-                land.harvest_pct = clamp_int(land.harvest_pct + sign * table.terracing_harvest, 0, PERCENT * 2)
+                shift_harvest(land, sign * table.terracing_harvest)
             return
         if "harvest_pct" not in land.locked:
             term("public_works.irrigation_harvest", sign * table.irrigation_harvest, source_node_id=works.polity_entity_id)
-            land.harvest_pct = clamp_int(land.harvest_pct + sign * table.irrigation_harvest, 0, PERCENT * 2)
+            shift_harvest(land, sign * table.irrigation_harvest)
         if sign > 0 and not await drained(ctx.session, works.place_node_id) and "soil_fertility" not in land.locked:
             term("public_works.irrigation_salt", -table.irrigation_salt, source_node_id=works.polity_entity_id)
             land.soil_fertility = clamp_int(land.soil_fertility - table.irrigation_salt, 0, PERCENT)

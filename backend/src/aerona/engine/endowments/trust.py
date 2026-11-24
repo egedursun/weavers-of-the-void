@@ -236,12 +236,13 @@ async def pay(ctx: TickContext, row: EndowmentRow, tally: EndowmentTally) -> Non
         tally.skimmed += 1
     await serve(ctx, row, income - kept)
     await raise_renown(ctx, row.founder_node_id, table.renown_per_epoch, "endowments.renown_per_epoch")
-    await record(
-        ctx,
-        "endowment.paid",
-        roles=parties(row),
-        facts={"amount": income - kept, "purpose": row.purpose},
-    )
+    if income - kept > 0:
+        await record(
+            ctx,
+            "endowment.paid",
+            roles=parties(row),
+            facts={"amount": income - kept, "purpose": row.purpose},
+        )
     tally.paid += 1
 
 

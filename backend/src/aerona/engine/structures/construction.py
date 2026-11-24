@@ -430,7 +430,7 @@ async def abandon(ctx: TickContext, construction: ConstructionRow, cause: Abando
             RecordSpec(
                 entity_type=EntityType.LEGEND,
                 name=f"The Unfinished {resolved.label} of {work.name}",
-                body=f"They say {work.name} was left {percent}% raised: {reason or spoken(cause)}.",
+                body=f"They say {work.name} was left {f'{percent}% raised' if percent > 0 else 'before any of it was raised'}: {reason or spoken(cause)}.",
                 stats=LegendStats(spread=clamp_int(percent // 2 + scale_index(resolved.scale) * 10, 0, PERCENT)),
                 power=LEGEND_POWER,
                 location_id=work.location_id,
@@ -439,12 +439,17 @@ async def abandon(ctx: TickContext, construction: ConstructionRow, cause: Abando
             ),
         )
         await connect(ctx.session, legend.id, work.id, BondKind.TELLS_OF, ctx.epoch, description="tells of the unfinished work")
+    begun = percent > 0
     await record(
         ctx,
-        "structures.abandoned",
+        "structures.abandoned" if begun else "structures.abandoned_unbegun",
         roles={IncidentRole.SUBJECT: work.id, IncidentRole.OWNER: construction.site_entity_id, IncidentRole.PRODUCT: legend.id if legend is not None else None},
-        facts={"cause": cause, "progress": percent, "structure": construction.kind, "reason": reason},
-        steps=(StepDraft(StepAction.ABANDON, actor=construction.site_entity_id, target=work.id, amount=percent, unit=FactUnit.PERCENT),),
+        facts={"cause": cause, "structure": construction.kind, "reason": reason, **({"progress": percent} if begun else {})},
+        steps=(
+            StepDraft(StepAction.ABANDON, actor=construction.site_entity_id, target=work.id, amount=percent, unit=FactUnit.PERCENT)
+            if begun
+            else StepDraft(StepAction.ABANDON, actor=construction.site_entity_id, target=work.id),
+        ),
         place=work.location_id,
     )
     ctx.count("constructions_abandoned")

@@ -20,6 +20,7 @@ from aerona.engine.body.cohorts import cohort
 from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.environment.dangers import dangers_by_region, harm_weight, weighted
+from aerona.engine.environment.harvest_harm import shift_harvest
 from aerona.engine.environment.knowledge import knowledge_of, polity_of
 from aerona.engine.environment.memory import darkness
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -128,7 +129,7 @@ async def harm_works(ctx: TickContext, dangers: dict[int, list[RegionDangerRow]]
         await note_works_harm(ctx, region_id, rows)
         crops = weighted(ctx.rules, rows, DangerHarm.CROPS)
         if ground is not None and crops > 0 and "harvest_pct" not in ground.locked:
-            ground.harvest_pct = clamp_int(ground.harvest_pct - round_half_up(crops * table.crops_harm_pct / PERCENT), 0, PERCENT * 2)
+            shift_harvest(ground, -round_half_up(crops * table.crops_harm_pct / PERCENT))
             tally.fields += 1
         buildings = round_half_up(weighted(ctx.rules, rows, DangerHarm.STRUCTURES) * table.structures_harm / PERCENT)
         if buildings > 0:

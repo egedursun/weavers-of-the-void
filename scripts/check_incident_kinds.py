@@ -12,6 +12,7 @@ from incident_sites import SOURCE, Site, write_sites
 
 sys.path.insert(0, str(SOURCE.parent))
 
+from aerona.catalog.incident_kinds.amounts import amount_problems
 from aerona.catalog.incident_kinds.phases import PHASE_NAMES
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import IncidentKindSpec
@@ -441,6 +442,8 @@ def collect(families: set[str] | None) -> dict[str, list[str]]:
         problems["step_flow"].append(line)
     for line in helper_step_problems():
         problems["step_flow"].append(line)
+    for line in amount_problems(dict(INCIDENT_KINDS)):
+        problems[family_of(line.split(":", 1)[0])].append(line)
     from aerona.engine.pipeline import PHASE_REGISTRY
 
     if set(PHASE_NAMES) != set(PHASE_REGISTRY):

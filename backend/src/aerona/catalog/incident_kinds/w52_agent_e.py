@@ -289,6 +289,19 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=C.INSTANT,
     ),
     IncidentKindSpec(
+        "gift.given_freely",
+        G.EXCHANGE,
+        "{giver} gave {receiver} a gift worth {value} for {occasion}, with nothing owed back.",
+        roles=GIFT_SIDES,
+        facts=(
+            FactSpec("value", FactValue.NUMBER, unit=FactUnit.COIN),
+            FactSpec("occasion", FactValue.ENUM, enum=GiftOccasion),
+        ),
+        steps=frozenset({StepAction.GIVE}),
+        place=PlaceRule.NONE,
+        clock=C.INSTANT,
+    ),
+    IncidentKindSpec(
         "gift.exceeded",
         G.EXCHANGE,
         "{receiver} answered the gift of {giver}, worth {value}, with one worth {answered}, and put {giver} in its debt.",

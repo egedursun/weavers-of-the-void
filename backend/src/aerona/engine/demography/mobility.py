@@ -114,7 +114,9 @@ async def desertion(ctx: TickContext) -> int:
         army = await living_entity(ctx.session, row.entity_id)
         owner = await living_entity(ctx.session, row.owner_entity_id)
         society = await ctx.session.get(CommunitySocietyRow, row.owner_entity_id)
-        if army is None or owner is None or society is None or society.satisfaction(SocialClass.WARRIOR) >= table.bitter_satisfaction:
+        if army is None or owner is None or society is None or held(army.id) or held(owner.id):
+            continue
+        if society.satisfaction(SocialClass.WARRIOR) >= table.bitter_satisfaction:
             continue
         size = stat(army, "size") or 0
         leaving = round_half_up(size * table.desertion_pct / PERCENT)
