@@ -1,27 +1,11 @@
 import { useId } from 'react'
 import type { components } from '@/api/generated/schema'
 import { cn } from '@/lib/utils'
+import { INK_FILLS } from './inks'
 
 type Schema = components['schemas']
 type Ink = Schema['ArmsInk']
 export type ArmsDrawing = Schema['ArmsDrawingView']
-
-const FILLS: Record<Ink, string> = {
-  gold: 'fill-tincture-gold',
-  silver: 'fill-tincture-silver',
-  red: 'fill-tincture-red',
-  blue: 'fill-tincture-blue',
-  green: 'fill-tincture-green',
-  black: 'fill-tincture-black',
-  purple: 'fill-tincture-purple',
-  orange: 'fill-tincture-orange',
-  celeste: 'fill-tincture-celeste',
-  murrey: 'fill-tincture-murrey',
-  rose: 'fill-tincture-rose',
-  brown: 'fill-tincture-brown',
-  grey: 'fill-tincture-grey',
-  line: 'fill-tincture-line',
-}
 
 const STROKES: Record<Ink, string> = {
   gold: 'stroke-tincture-gold',
@@ -102,7 +86,7 @@ export function ArmsShield({
             clipPath={
               layer.clip === null ? undefined : `url(#${layer.key}-clip)`
             }
-            className={layer.filled ? FILLS[layer.ink] : STROKES[layer.ink]}
+            className={layer.filled ? INK_FILLS[layer.ink] : STROKES[layer.ink]}
           />
         </g>
       ))}

@@ -186,6 +186,12 @@ li::marker{color:var(--gold)}
 .arms{margin:12px 0;display:flex;gap:12px;align-items:center;break-inside:avoid}
 .arms .shield svg{width:28mm;height:auto;display:block}
 .arms figcaption{font-style:italic}
+.family{margin:14px 0}
+.family .tree{overflow-x:auto;border:1px solid var(--rule,#d8c9a3);border-radius:8px}
+.family .tree svg{display:block;height:auto;max-width:none}
+.family figcaption{font-style:italic;margin-top:6px}
+.family table.kin{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92em}
+.family table.kin th,.family table.kin td{text-align:left;padding:3px 8px;border-bottom:1px solid var(--rule,#e4d8bc)}
 .plan figcaption{font-style:italic;color:var(--faint);font-size:.8em;margin-top:4px;text-align:center}
 .heaven figcaption{font-style:italic;color:var(--faint);font-size:.8em;margin-top:4px;text-align:center}
 .legend{display:inline-flex;align-items:center;gap:5px}
@@ -251,7 +257,7 @@ h1{font-size:2.5em}
 table{display:block;overflow-x:auto}
 }
 @media screen{article,.register,ul.changes,ul.log{content-visibility:auto;contain-intrinsic-size:auto 480px}}
-@media print{
+@media print{.family .tree{overflow:visible;border:none}.family .tree svg{width:100%!important}
 :root{--warn:#8a5208;--paper:#fffdf8;--paper-deep:#f6f0e2;--card:#fbf7ee;--ink:#1d1710;--soft:#3d3226;--faint:#6b5c46;--accent:#4a1a7d;--gold:#8f6510;--rule:#d8c9aa;--rule-strong:#a8926a;--secret:#2f2638;--secret-ink:#f2ebf8;--danger:#8d2618;--good:#3b5a32;--shadow:none}
 @page{size:A4;margin:19mm 16mm 21mm 19mm;background:var(--paper);
 @top-center{content:string(chapter);font-family:var(--caps);font-size:7.5pt;letter-spacing:.18em;color:#8f6a22;text-transform:lowercase}

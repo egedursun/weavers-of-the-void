@@ -121,6 +121,8 @@
 <dl class="facts">{% for label, value in article.plan.facts %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
 {% if article.arms %}<figure class="arms"><div class="shield">{{ article.arms.figure }}</div><figcaption>{{ article.arms.caption }}</figcaption></figure>
 <dl class="facts">{% for label, value in article.arms.facts %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
+{% if article.family %}<section class="family"><h4>Family</h4><figure><div class="tree">{{ article.family.figure }}</div><figcaption>{{ article.family.caption }}</figcaption></figure>
+<table class="kin"><thead><tr><th>Kin</th><th>Relation</th><th>Generation</th><th>Life</th><th>House</th></tr></thead><tbody>{% for row in article.family.rows %}<tr><td>{{ row.name }}</td><td>{{ row.relation }}</td><td>{{ row.generation }}</td><td>{{ row.life }}</td><td>{{ row.house }}</td></tr>{% endfor %}</tbody></table></section>{% endif %}
 {% if article.festivals %}<figure class="plan"><div class="ground">{{ article.festivals.figure }}</div><figcaption>{{ article.festivals.caption }}</figcaption></figure>
 <dl class="facts">{% for label, value in article.festivals.facts %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
 {% if article.made %}{{ made_kind(article.made) }}{% endif %}

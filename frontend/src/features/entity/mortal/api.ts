@@ -7,6 +7,10 @@ import { loreKeys } from '../api/keys'
 export type MortalProfile = components['schemas']['MortalProfileView']
 export type FamilyTree = components['schemas']['FamilyTreeView']
 export type TreePerson = components['schemas']['TreePerson']
+export type TreeUnion = components['schemas']['TreeUnion']
+export type TreeTie = components['schemas']['TreeTie']
+export type TreeHouse = components['schemas']['TreeHouse']
+export type ArmsInk = components['schemas']['ArmsInk']
 export type KinLink = components['schemas']['KinLink']
 export type Marriage = components['schemas']['MarriageView']
 export type Slot = components['schemas']['SlotView']
@@ -39,26 +43,26 @@ export function useMortalProfile(mortalId: number) {
   })
 }
 
-export function useFamilyTree(mortalId: number) {
+export type FamilyReach = { up: number; down: number }
+export type CareBond = 'fostered_by' | 'godparent_of' | 'sworn_kin'
+
+export function useFamilyTree(
+  mortalId: number,
+  reach: FamilyReach,
+  hide: CareBond[] = []
+) {
   return useQuery({
-    queryKey: familyKey(mortalId),
+    queryKey: [...familyKey(mortalId), reach.up, reach.down, ...hide],
     queryFn: () =>
       unwrap(
         api.GET('/api/mortals/{mortal_id}/family', {
-          params: { path: { mortal_id: mortalId } },
+          params: {
+            path: { mortal_id: mortalId },
+            query: { up: reach.up, down: reach.down, hide },
+          },
         })
       ),
+    placeholderData: (previous) => previous,
     retry: false,
   })
-}
-
-export function generationsOf(people: TreePerson[]): TreePerson[][] {
-  const levels = [...new Set(people.map((person) => person.generation))].sort(
-    (first, second) => first - second
-  )
-  return levels.map((level) =>
-    people
-      .filter((person) => person.generation === level)
-      .sort((first, second) => first.id - second.id)
-  )
 }

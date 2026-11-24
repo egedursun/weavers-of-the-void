@@ -39,6 +39,7 @@ import {
   Link2,
   Lock,
   Medal,
+  CircleDashed,
   Minus,
   Mountain,
   Orbit,
@@ -103,10 +104,12 @@ export const STAGES: Record<string, Named> = {
   ancient: { label: 'Ancient', icon: Ghost, tone: 'muted' },
 }
 
-export const SEXES: Record<string, Named> = {
-  female: { label: 'Female', icon: User, tone: 'verdigris' },
-  male: { label: 'Male', icon: User, tone: 'info' },
-  other: { label: 'Other', icon: Sparkles, tone: 'gold' },
+export const SEXES: Record<components['schemas']['SexKind'], Named> = {
+  bearer: { label: 'Bearer', icon: User, tone: 'verdigris' },
+  begetter: { label: 'Begetter', icon: User, tone: 'info' },
+  both: { label: 'Both', icon: Sparkles, tone: 'gold' },
+  neither: { label: 'Neither', icon: CircleDashed, tone: 'muted' },
+  none: { label: 'Without sex', icon: Minus, tone: 'muted' },
 }
 
 export const CAREERS: Record<components['schemas']['CareerPath'], Named> = {

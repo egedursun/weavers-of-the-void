@@ -103,6 +103,7 @@ run integrity_coverage "$PYTHON" scripts/check_integrity_coverage.py
 run kind_layers "$PYTHON" scripts/check_kind_layers.py
 run kind_definitions "$PYTHON" scripts/check_kind_definitions.py
 run raw_enums sh -c 'cd frontend && node scripts/check_raw_enums.mjs'
+run enum_lookups sh -c 'cd frontend && node scripts/check_enum_lookups.mjs'
 run panel_stacks sh -c 'cd frontend && node scripts/check_panel_stacks.mjs'
 run value_frames sh -c 'cd frontend && node scripts/check_value_frames.mjs'
 run spec_coverage "$PYTHON" scripts/spec_coverage.py check

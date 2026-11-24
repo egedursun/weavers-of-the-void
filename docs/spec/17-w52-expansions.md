@@ -20488,6 +20488,41 @@ The batch is built in W52.1 after batch 3 (52.29–52.37) and its deepening rows
 
 ---
 
+## Part 113. The family tree of a mortal
+
+### 52.669 The family tree of a mortal
+
+**What it is.** Every mortal's entry window draws its family as a genealogy: parents above, children below, spouses side by side, with every kind of kin bond the world keeps. It reads the typed bonds `parent_of`, `concubine_of`, `betrothed_to`, `fostered_by`, `godparent_of` and `sworn_kin` and the `marriages` table; it adds no table.
+
+**Tracing.** `services/kinship/tree.py` climbs `up` generations of parents from the mortal, then walks down from every ancestor to `down` generations, so siblings, cousins and their lines come with it. A child sits one row below the lower of its parents, so a marriage across generations never puts a child beside its own parent. Spouses, concubines and the promised of everyone traced join on their partner's row, then their other spouses and the children they had with them. Fosterers, godparents and sworn kin join one row above, below or beside the kin they are bound to. `deeper_up` and `deeper_down` say whether anyone further is recorded. The reach is 3 each way by default and 12 at most.
+
+**Words.** `services/kinship/naming.py` names each kin by their place relative to the mortal, by the nearest shared ancestor: parent, grandparent, great-grandparent, the ordinal great-grandparents beyond, sibling and half-sibling, a sibling's child, a parent's sibling, cousins by degree and removal; then a spouse, a former spouse, a concubine, the promised, a step-parent, a stepchild, a step-sibling, a spouse's parent, and the kin of kin (a sibling's spouse); then fosterer, fosterling, godparent, godchild and sworn kin. Every word is neutral; no word says a sex.
+
+**Drawing.** `services/kinship/layout.py` lays the tree out once for the screen and the book alike: spouses in one cluster with the most binding union beside the mortal, rows ordered by sweeps that pull each cluster towards its parents and children, places settled by ordered least squares, family lines dropped from the marriage knot to a bus in lanes that never overlap. A marriage that holds is a double line, one that held until a death a muted one, one that was broken a dashed one; concubines, the promised and the bonds of care each have a line of their own.
+
+**Rules.** None: the tree reads the world and changes nothing in it; the reach of 3 and the bound of 12 are bounds of the view, not rules of the world.
+
+**API.** `GET /api/mortals/{mortal_id}/family?up&down&hide` returns the kin with their relation word, house and its tincture, portrait, life and blood; the marriages and bonds with their ids; and the drawn layout. `hide` leaves out bonds of care and the kin they alone bring; any other bond kind is refused.
+
+**Screen.** The Kin section draws the tree: counts of kin, generations, the living, the dead, marriages and houses; steppers for ancestors and descendants; switches for each bond of care; a search that centres on a match; a full view. The canvas pans, zooms with a held key or a pinch, shows a minimap, simplifies its cards when far away, and traces the line of whoever is chosen or hovered. The chosen mortal's panel lists their marriages and bonds in the tree, ends or strikes a marriage, undoes a bond, and binds them to another as parent, child, spouse, promised, concubine, fosterling, sworn kin or godparent.
+
+**God levers.** `kin:bond` (every kin bond kind, `godparent_of` included), `kin:marry`, `kin:betroth`, `kin:end_marriage`, `kin:edit_marriage`, `kin:delete_marriage`, `kin:unbond`.
+
+**Codex and book.** Every mortal with kin has a Family section: the same drawing as a figure, and a table of every kin with relation, generation, life and house.
+
+**Guards.**
+
+- `frontend/scripts/check_enum_lookups.mjs`: a label map looked up by an enum must name that enum's values;
+- `tests/unit/test_enum_text_fields.py` also flags a shown text field fed by a stats field typed as a literal of enum values.
+
+**Proving tests.**
+
+- `tests/services/player/test_family_tree.py`: a tangled family built through the god levers is traced, named and laid out; the reach and the bonds of care bound it; the book draws and lists it;
+- `tests/api/test_family_tree.py`: the endpoint serves kin, relations and a layout, and refuses hiding a bond that is not of care;
+- `frontend/src/features/entity/mortal/tree/familyTree.test.tsx` and `mortal.test.ts`.
+
+---
+
 ## Appendix 17.A Every value this spec adds
 
 This is the list integration works from. Withdrawn sections (52.254, 52.417) add nothing; values renamed by D30 and by the closing audit (17.C) appear under their final names. No value here is held by spec 13 or 16 (`check_spec_duplicates.py`).

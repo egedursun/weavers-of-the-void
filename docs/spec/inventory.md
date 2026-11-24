@@ -7177,6 +7177,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/languages/AddWordsForm | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/Dictionary | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/FamilyChart | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/entity/mortal/tree/FamilyTreeCanvas | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/entity/mortal/tree/FamilyTreePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/KnowledgeTree | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/LanguageSeal | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/LanguageShaper | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |

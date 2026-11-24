@@ -1,7 +1,9 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.collective import ArmsInk
 from aerona.domain.enums.demography import SexKind
+from aerona.domain.enums.entity import MortalRole
 from aerona.domain.enums.mind import KindFamily, Profession
 from aerona.domain.enums.mortal import CareerPath, DeathCause, EquipmentSlot, LifeStage, MarriageEnd, StressBreak
 from aerona.domain.enums.society import SocialClass
@@ -76,16 +78,105 @@ class VariantView(ApiModel):
     held: list[str]
 
 
+class TreeHouse(ApiModel):
+    house: NodeRef
+    ink: ArmsInk | None
+
+
 class TreePerson(ApiModel):
     id: int
     name: str
+    title: str | None
+    relation: str
     living: bool
     sex: SexKind | None
-    parents: list[int]
-    spouses: list[int]
+    role: MortalRole | None
     generation: int
+    birth_epoch: int
+    end_epoch: int | None
+    cover: str | None
+    house_id: int | None
+    blood: bool
+
+
+class TreeUnion(ApiModel):
+    marriage_id: int
+    first_id: int
+    second_id: int
+    form: UnionForm
+    purpose: UnionPurpose
+    start_epoch: int
+    end_epoch: int | None
+    cause_end: MarriageEnd | None
+    forced: bool
+
+
+class TreeTie(ApiModel):
+    bond_id: int
+    kind: BondKind
+    source_id: int
+    target_id: int
+    past: bool
+    epoch: int
+
+
+class TreeCard(ApiModel):
+    person_id: int
+    x: float
+    y: float
+
+
+class TreePartner(ApiModel):
+    key: str
+    first_id: int
+    second_id: int
+    kind: BondKind
+    ended: bool
+    widowed: bool
+    marriage_id: int | None
+    bond_id: int | None
+    path: str
+    knot_x: float
+    knot_y: float
+
+
+class TreeFamily(ApiModel):
+    key: str
+    parent_ids: list[int]
+    child_ids: list[int]
+    path: str
+
+
+class TreeCare(ApiModel):
+    bond_id: int
+    path: str
+
+
+class TreeRow(ApiModel):
+    generation: int
+    y: float
+
+
+class TreeLayout(ApiModel):
+    width: float
+    height: float
+    card_width: int
+    card_height: int
+    cards: list[TreeCard]
+    partners: list[TreePartner]
+    families: list[TreeFamily]
+    care: list[TreeCare]
+    rows: list[TreeRow]
 
 
 class FamilyTreeView(ApiModel):
     root: int
+    up: int
+    down: int
+    deeper_up: bool
+    deeper_down: bool
     people: list[TreePerson]
+    houses: list[TreeHouse]
+    unions: list[TreeUnion]
+    ties: list[TreeTie]
+    layout: TreeLayout

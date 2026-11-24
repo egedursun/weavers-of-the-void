@@ -757,11 +757,6 @@ export const REALM_FIELDS: Record<string, string> = {
   standing: 'Standing',
 }
 
-export const SEXES: Record<string, string> = {
-  male: 'Man',
-  female: 'Woman',
-}
-
 export type Band = { label: string; tone: KpiTone }
 
 const QUARTERS = [25, 50, 75]

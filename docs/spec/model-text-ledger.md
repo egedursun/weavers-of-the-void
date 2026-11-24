@@ -1277,6 +1277,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/books/command.py` | 1 | 2026-11-16 | `c26a4fe7d0e814df` |
 | `backend/src/aerona/services/books/deeds.py` | 1 | 2026-11-16 | `82f8d6ea99f3ed47` |
 | `backend/src/aerona/services/books/deepsvg.py` | 5 | 2026-11-23 | `883bfbee47faa780` |
+| `backend/src/aerona/services/books/familysvg.py` | 25 | 2026-11-25 | `e3d7544d2ee5978d` |
 | `backend/src/aerona/services/books/heavensvg.py` | 10 | 2026-11-16 | `de42b0ccf7803b11` |
 | `backend/src/aerona/services/books/history.py` | 5 | 2026-11-16 | `91469e32905cbfa0` |
 | `backend/src/aerona/services/books/kinds.py` | 3 | 2026-11-16 | `8e26312c8c3b7c11` |
@@ -1286,11 +1287,11 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/books/records.py` | 7 | 2026-11-17 | `ed6deef434b0c5d8` |
 | `backend/src/aerona/services/books/seasons.py` | 14 | 2026-11-23 | `807a497e46a49a58` |
 | `backend/src/aerona/services/books/templates/book.html.j2` | 219 | 2026-11-23 | `8c6a103d23f71f9a` |
-| `backend/src/aerona/services/books/templates/codex.md.j2` | 409 | 2026-11-23 | `e863e952ca376a5e` |
+| `backend/src/aerona/services/books/templates/codex.md.j2` | 413 | 2026-11-25 | `af82b66e1663d14b` |
 | `backend/src/aerona/services/books/templates/empty.html.j2` | 3 | 2026-11-16 | `fb62253fdc00812e` |
 | `backend/src/aerona/services/books/templates/entry.html.j2` | 6 | 2026-11-18 | `7f1335c9cd560b4b` |
-| `backend/src/aerona/services/books/templates/layout.html.j2` | 332 | 2026-11-19 | `cf4d14336831c08f` |
-| `backend/src/aerona/services/books/templates/macros.html.j2` | 125 | 2026-11-23 | `da0fa5518d7cbfb3` |
+| `backend/src/aerona/services/books/templates/layout.html.j2` | 339 | 2026-11-25 | `f440e900d7d0cc60` |
+| `backend/src/aerona/services/books/templates/macros.html.j2` | 127 | 2026-11-25 | `9e82fe6a263738e2` |
 | `backend/src/aerona/services/books/typed.py` | 11 | 2026-11-21 | `822dadbada92cf63` |
 | `backend/src/aerona/services/books/typeset.py` | 2 | 2026-11-19 | `80b6661985e24ab0` |
 | `backend/src/aerona/services/bulk_deepen.py` | 15 | 2026-11-16 | `e6ba12e5fc751475` |
@@ -1322,6 +1323,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/integrity/transformations.py` | 2 | 2026-11-16 | `d62ed19a608fbb24` |
 | `backend/src/aerona/services/integrity/w52_agent_b.py` | 1 | 2026-11-23 | `46ee4af9b4e5dba0` |
 | `backend/src/aerona/services/integrity/w52_agent_e.py` | 1 | 2026-11-23 | `2b7393fe2583f92f` |
+| `backend/src/aerona/services/kinship/naming.py` | 1 | 2026-11-25 | `40880fc2dad7009d` |
 | `backend/src/aerona/services/ledger.py` | 3 | 2026-11-17 | `2f28c806ebee63bf` |
 | `backend/src/aerona/services/ledger_narration.py` | 1 | 2026-11-16 | `69711226ca59d84d` |
 | `backend/src/aerona/services/live_log.py` | 1 | 2026-11-16 | `492d23d48750db00` |
@@ -1812,6 +1814,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `frontend/src/features/entity/mechanics/ModifierForge.tsx` | 7 | 2026-11-16 | `1ad1a9da6139f323` |
 | `frontend/src/features/entity/mind/parts.tsx` | 1 | 2026-11-16 | `eea119b0003ced66` |
 | `frontend/src/features/entity/mortal/MortalSections.tsx` | 4 | 2026-11-16 | `bd2469df5d9702f7` |
+| `frontend/src/features/entity/mortal/tree/FamilyTreePanel.tsx` | 1 | 2026-11-25 | `0b7fbdb32a8bb3a8` |
 | `frontend/src/features/entity/realm/Covenants.tsx` | 1 | 2026-11-16 | `241d62a04069517d` |
 | `frontend/src/features/entity/realm/HouseTreaty.tsx` | 4 | 2026-11-16 | `9333430ed67eeb34` |
 | `frontend/src/features/entity/realm/Realm.tsx` | 1 | 2026-11-16 | `b842f414074b0c52` |

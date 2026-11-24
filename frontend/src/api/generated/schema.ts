@@ -62961,7 +62961,15 @@ export interface components {
     }
     FamilyTreeView: {
       root: number
+      up: number
+      down: number
+      deeper_up: boolean
+      deeper_down: boolean
       people: components['schemas']['TreePerson'][]
+      houses: components['schemas']['TreeHouse'][]
+      unions: components['schemas']['TreeUnion'][]
+      ties: components['schemas']['TreeTie'][]
+      layout: components['schemas']['TreeLayout']
     }
     FamineLoreDeleteInput: {
       people_id: number
@@ -66700,7 +66708,7 @@ export interface components {
       id: number
       name: string
       alive: boolean
-      sex: string | null
+      sex: components['schemas']['SexKind'] | null
       age: number | null
       parents: number[]
       by_marriage: boolean
@@ -69124,6 +69132,7 @@ export interface components {
         | 'concubine_of'
         | 'fostered_by'
         | 'sworn_kin'
+        | 'godparent_of'
     }
     KinDeleteMarriageInput: {
       marriage_id: number
@@ -92943,14 +92952,86 @@ export interface components {
       locked: string[]
       proposed_by_id: number | null
     }
+    TreeCard: {
+      person_id: number
+      x: number
+      y: number
+    }
+    TreeCare: {
+      bond_id: number
+      path: string
+    }
+    TreeFamily: {
+      key: string
+      parent_ids: number[]
+      child_ids: number[]
+      path: string
+    }
+    TreeHouse: {
+      house: components['schemas']['NodeRef']
+      ink: components['schemas']['ArmsInk'] | null
+    }
+    TreeLayout: {
+      width: number
+      height: number
+      card_width: number
+      card_height: number
+      cards: components['schemas']['TreeCard'][]
+      partners: components['schemas']['TreePartner'][]
+      families: components['schemas']['TreeFamily'][]
+      care: components['schemas']['TreeCare'][]
+      rows: components['schemas']['TreeRow'][]
+    }
+    TreePartner: {
+      key: string
+      first_id: number
+      second_id: number
+      kind: components['schemas']['BondKind']
+      ended: boolean
+      widowed: boolean
+      marriage_id: number | null
+      bond_id: number | null
+      path: string
+      knot_x: number
+      knot_y: number
+    }
     TreePerson: {
       id: number
       name: string
+      title: string | null
+      relation: string
       living: boolean
       sex: components['schemas']['SexKind'] | null
-      parents: number[]
-      spouses: number[]
+      role: components['schemas']['MortalRole'] | null
       generation: number
+      birth_epoch: number
+      end_epoch: number | null
+      cover: string | null
+      house_id: number | null
+      blood: boolean
+    }
+    TreeRow: {
+      generation: number
+      y: number
+    }
+    TreeTie: {
+      bond_id: number
+      kind: components['schemas']['BondKind']
+      source_id: number
+      target_id: number
+      past: boolean
+      epoch: number
+    }
+    TreeUnion: {
+      marriage_id: number
+      first_id: number
+      second_id: number
+      form: components['schemas']['UnionForm']
+      purpose: components['schemas']['UnionPurpose']
+      start_epoch: number
+      end_epoch: number | null
+      cause_end: components['schemas']['MarriageEnd'] | null
+      forced: boolean
     }
     TrialKind:
       | 'judge'
@@ -108760,7 +108841,11 @@ export interface operations {
   }
   family_tree_api_mortals__mortal_id__family_get: {
     parameters: {
-      query?: never
+      query?: {
+        up?: number
+        down?: number
+        hide?: components['schemas']['BondKind'][] | null
+      }
       header?: never
       path: {
         mortal_id: number
@@ -197508,6 +197593,7 @@ export const kinBondInputKindValues: ReadonlyArray<
   'concubine_of',
   'fostered_by',
   'sworn_kin',
+  'godparent_of',
 ]
 export const kinMatchValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['KinMatch']

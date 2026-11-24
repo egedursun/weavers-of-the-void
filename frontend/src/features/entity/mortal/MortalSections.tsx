@@ -52,9 +52,7 @@ import {
   type MortalSex,
   type PunishmentKind,
   familyKey,
-  generationsOf,
   profileKey,
-  useFamilyTree,
   useMortalProfile,
 } from './api'
 import {
@@ -77,6 +75,7 @@ import {
   STAGES,
   STANDING_FIELDS,
 } from './labels'
+import { FamilyTreePanel } from './tree/FamilyTreePanel'
 
 const PERCENT = 100
 const WORKING = 'Working on it.'
@@ -105,13 +104,6 @@ function postAction(
     init: { body: Record<string, unknown> }
   ) => Parameters<typeof unwrap>[0]
   return unwrap(post(path, { body })) as Promise<ActionResponse>
-}
-
-function generationLabel(generation: number): string {
-  if (generation === 0) return 'Their generation'
-  const steps = Math.abs(generation)
-  const word = steps === 1 ? 'generation' : 'generations'
-  return `${steps} ${word} ${generation < 0 ? 'up' : 'down'}`
 }
 
 function heldLabel(field: string): string {
@@ -716,10 +708,8 @@ export function KinSection({
 }) {
   const { reason } = useGodGate()
   const profile = useMortalProfile(mortalId).data
-  const tree = useFamilyTree(mortalId).data
   const blocked = readOnlyReason ?? reason()
   const action = useMortalAction(mortalId)
-  const rows = tree ? generationsOf(tree.people) : []
   return (
     <Section
       id='section-kin'
@@ -727,7 +717,7 @@ export function KinSection({
       description='Parents, children, spouses, the promised, wards and sworn kin, read from typed bonds of blood and marriage.'
       icon={KIN_ICON}
     >
-      {!profile || !tree ? (
+      {!profile ? (
         <EmptyState
           icon={KIN_ICON}
           title='No kin recorded'
@@ -735,56 +725,7 @@ export function KinSection({
         />
       ) : (
         <div className='@container/kin flex min-w-0 flex-col gap-4'>
-          <Panel
-            title='Family tree'
-            icon={KIN_ICON}
-            tone='verdigris'
-            count={tree.people.length}
-            hint={`${rows.length} ${rows.length === 1 ? 'generation' : 'generations'}`}
-          >
-            <Paged items={rows}>
-              {(row) => (
-                <div
-                  key={row[0]?.generation ?? 0}
-                  className='flex min-w-0 flex-col gap-1.5'
-                >
-                  <Label variant='overline'>
-                    {generationLabel(row[0]?.generation ?? 0)}
-                  </Label>
-                  <ul className='grid min-w-0 grid-cols-1 gap-2 @md/kin:grid-cols-2 @2xl/kin:grid-cols-3'>
-                    <Paged items={row} as='li'>
-                      {(person) => (
-                        <li
-                          key={person.id}
-                          className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2 py-1.5'
-                        >
-                          <span className='min-w-0 flex-1 truncate'>
-                            <RefLink
-                              node={{
-                                id: person.id,
-                                kind: 'entity',
-                                name: person.name,
-                              }}
-                            />
-                          </span>
-                          {person.sex && (
-                            <Badge size='sm' variant='outline'>
-                              {named(SEXES, person.sex).label}
-                            </Badge>
-                          )}
-                          {!person.living && (
-                            <Badge size='sm' variant='secondary'>
-                              Dead
-                            </Badge>
-                          )}
-                        </li>
-                      )}
-                    </Paged>
-                  </ul>
-                </div>
-              )}
-            </Paged>
-          </Panel>
+          <FamilyTreePanel mortalId={mortalId} blocked={blocked} />
           <div className='grid min-w-0 grid-cols-1 gap-3 @xl/kin:grid-cols-2'>
             <Panel
               title='Marriages'

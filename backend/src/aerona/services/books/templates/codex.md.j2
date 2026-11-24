@@ -215,6 +215,16 @@
 {% endfor %}
 
 {% endif %}
+{% if article.family %}**Family**
+
+![{{ article.family.caption | cell }}]({{ links.heaven(article.anchor ~ "-family", article.family.figure) }})
+
+| Kin | Relation | Generation | Life | House |
+|---|---|---|---|---|
+{% for row in article.family.rows %}| {{ row.name | cell }} | {{ row.relation | cell }} | {{ row.generation | cell }} | {{ row.life | cell }} | {{ row.house | cell }} |
+{% endfor %}
+
+{% endif %}
 {% if article.festivals %}{% if article.festivals.figure %}![{{ article.festivals.caption | cell }}]({{ links.heaven(article.anchor ~ "-festivals", article.festivals.figure) }})
 
 {% endif %}**{{ article.festivals.caption }}**

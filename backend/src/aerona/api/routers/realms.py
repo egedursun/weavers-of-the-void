@@ -62,6 +62,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.body.marks import marked
 from aerona.engine.factions.balance import power_balance
+from aerona.engine.mortal.life import sex_of_stats
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.offices import powers_of, succession_line
@@ -357,7 +358,7 @@ async def house(services: ServicesDep, house_id: int = Path(ge=1)) -> HouseView:
                     id=row.mortal_entity_id,
                     name=names.get(row.mortal_entity_id, ""),
                     alive=mortals[row.mortal_entity_id].status is EntityStatus.CANON if row.mortal_entity_id in mortals else False,
-                    sex=getattr(mortals[row.mortal_entity_id].stats, "sex", None) if row.mortal_entity_id in mortals else None,
+                    sex=sex_of_stats(mortals[row.mortal_entity_id]) if row.mortal_entity_id in mortals else None,
                     age=stat(mortals[row.mortal_entity_id], "age") if row.mortal_entity_id in mortals else None,
                     parents=[parent for parent in parents.get(row.mortal_entity_id, []) if parent in mortals],
                     by_marriage=row.by_marriage,

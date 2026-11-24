@@ -86,7 +86,7 @@ class EditMarriage(MarriageTarget):
 class KinBond(Command):
     source_id: int
     target_id: int
-    kind: Literal["parent_of", "spouse_of", "betrothed_to", "concubine_of", "fostered_by", "sworn_kin"]
+    kind: Literal["parent_of", "spouse_of", "betrothed_to", "concubine_of", "fostered_by", "sworn_kin", "godparent_of"]
 
 
 class KinBondTarget(Command):

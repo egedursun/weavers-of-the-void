@@ -7,7 +7,7 @@ MARRIAGE_END = total(
     {
         MarriageEnd.DEATH: Defined(
             "Death",
-            checked_by=("engine.collective.demography.bereaved_among", "engine.cycles.kinship.keep_kinship"),
+            checked_by=("engine.collective.demography.bereaved_among", "engine.cycles.kinship.keep_kinship", "services.kinship.layout.partnerships_of"),
             used_by=("engine.mortal.kinship.backfill_kin", "engine.mortal.kinship.widow"),
         ),
         MarriageEnd.DIVORCE: Defined(

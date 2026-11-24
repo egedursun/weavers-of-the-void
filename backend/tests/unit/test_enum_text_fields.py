@@ -19,7 +19,33 @@ def module_of(path: Path) -> str:
     return ".".join(("aerona", *path.relative_to(SOURCE).with_suffix("").parts))
 
 
+def literal_fields() -> frozenset[str]:
+    found: set[str] = set()
+    for path in sorted((SOURCE / "domain" / "models").rglob("*.py")):
+        module = importlib.import_module(module_of(path))
+        for value in vars(module).values():
+            if not (isinstance(value, type) and issubclass(value, BaseModel)):
+                continue
+            for name, field in value.model_fields.items():
+                parts = typing.get_args(field.annotation) if typing.get_origin(field.annotation) in {typing.Union, types.UnionType} else (field.annotation,)
+                if any(typing.get_origin(part) is typing.Literal and len(typing.get_args(part)) > 1 for part in parts):
+                    found.add(name)
+    return frozenset(found)
+
+
+LITERAL_FIELDS = literal_fields()
+
+
+def literal_read(node: ast.expr) -> bool:
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "getattr" and len(node.args) >= 2:
+        name = node.args[1]
+        return isinstance(name, ast.Constant) and name.value in LITERAL_FIELDS
+    return isinstance(node, ast.Attribute) and isinstance(node.value, ast.Attribute) and node.value.attr == "stats" and node.attr in LITERAL_FIELDS
+
+
 def enum_text(node: ast.expr) -> bool:
+    if literal_read(node):
+        return True
     if isinstance(node, ast.IfExp):
         return enum_text(node.body) or enum_text(node.orelse)
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):

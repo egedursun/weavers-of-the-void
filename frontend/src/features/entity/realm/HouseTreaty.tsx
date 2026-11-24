@@ -54,6 +54,7 @@ import { frameTable } from '@/features/madeKinds/labels'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { RowAction } from '../actions/RowAction'
+import { SEXES } from '../mortal/labels'
 import { HouseEditor, TreatyBuilder } from './Covenants'
 import { useHouse, useOaths, useTreaty } from './api'
 import {
@@ -64,12 +65,10 @@ import {
   OATH_STATUSES,
   OFFICES,
   PARTY_ROLES,
-  SEXES,
   TINCTURES,
   TREATY_KINDS,
   TREATY_STATUSES,
   named,
-  plain,
   sentence,
 } from './labels'
 import {
@@ -134,7 +133,7 @@ function generations(members: Member[]): Member[][] {
 
 function MemberCard({ member }: { member: Member }) {
   const facts = [
-    member.sex ? plain(SEXES, member.sex) : null,
+    member.sex ? SEXES[member.sex].label : null,
     member.age !== null ? `age ${member.age}` : null,
   ].filter(Boolean)
   return (

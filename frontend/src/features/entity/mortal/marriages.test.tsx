@@ -26,7 +26,44 @@ function serve() {
     { kind: 'entity', id: 5, name: 'Iska', type: 'mortal', world_id: 1 },
     { kind: 'entity', id: 6, name: 'Oru', type: 'mortal', world_id: 1 },
   ])
-  onApi('GET', '/api/mortals/5/family', { root: 5, people: [] })
+  onApi('GET', '/api/mortals/5/family', {
+    root: 5,
+    up: 3,
+    down: 3,
+    deeper_up: false,
+    deeper_down: false,
+    people: [
+      {
+        id: 5,
+        name: 'Iska',
+        title: null,
+        relation: 'This mortal',
+        living: true,
+        sex: 'bearer',
+        role: null,
+        generation: 0,
+        birth_epoch: 3,
+        end_epoch: null,
+        cover: null,
+        house_id: null,
+        blood: true,
+      },
+    ],
+    houses: [],
+    unions: [],
+    ties: [],
+    layout: {
+      width: 376,
+      height: 342,
+      card_width: 232,
+      card_height: 84,
+      cards: [{ person_id: 5, x: 72, y: 98 }],
+      partners: [],
+      families: [],
+      care: [],
+      rows: [{ generation: 0, y: 98 }],
+    },
+  })
   onApi('GET', '/api/mortals/5/profile', {
     mortal: ME,
     sex: 'bearer',

@@ -1,4 +1,5 @@
 from aerona.api.schemas.common import ApiModel
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
@@ -207,7 +208,7 @@ class HouseMemberView(ApiModel):
     id: int
     name: str
     alive: bool
-    sex: str | None
+    sex: SexKind | None
     age: int | None
     parents: list[int]
     by_marriage: bool

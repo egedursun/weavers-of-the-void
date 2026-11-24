@@ -43,11 +43,12 @@ from aerona.db.tables.faith import AfterlifeStratumRow
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lore import CanonFactRow, ChronicleEntityRow, ChronicleRow, CouncilRow, FolkBeliefRow, HistorianViewRow, LexemeRow, MessageRow, ThreadRow
+from aerona.db.tables.mortal import MarriageRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonPowerRow, SonRelationRow, SonRow
 from aerona.db.tables.warfare import BattleRow, SiegeRow, WarRow, WarSideRow
-from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadStatus
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.son import Passion, SonStatus, Stat
@@ -67,6 +68,7 @@ from aerona.services.books.citysvg import Plan, city_plan, land_plan, type_table
 from aerona.services.books.command import add_command_areas
 from aerona.services.books.deeds import DeedsChapter, deeds_chapter
 from aerona.services.books.deepsvg import DeepStratum, world_below
+from aerona.services.books.familysvg import FamilyPlan, family_plan
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.kinds import add_kind_sections
@@ -182,6 +184,7 @@ class EntityArticle:
     typed: list[TypedSection] = field(default_factory=list)
     plan: Plan | None = None
     arms: Plan | None = None
+    family: FamilyPlan | None = None
     festivals: Plan | None = None
     made: KindArticle | None = None
 
@@ -463,6 +466,7 @@ class BookBuilder:
         self.made: dict[int, KindArticle] = {}
         self.ledger = Ledger({})
         self.wheels: dict[int, Markup] = {}
+        self.kin: set[int] = set()
 
     async def load_common(self) -> None:
         rows = await self.session.execute(select(EntityRow.id, EntityRow.name))
@@ -482,6 +486,10 @@ class BookBuilder:
             self.tags[entity_id].append(tag)
         for bond in await self.session.scalars(select(BondRow).where(BondRow.state.in_([BondState.ACTIVE, BondState.PAST])).order_by(BondRow.id)):
             self.bonds[bond.source_node_id].append(bond)
+            if bond.kind in KIN_BOND_KINDS:
+                self.kin.update((bond.source_node_id, bond.target_node_id))
+        for first, second in await self.session.execute(select(MarriageRow.first_id, MarriageRow.second_id)):
+            self.kin.update((first, second))
         self.typed = await TypedIndex.load(self.session, self.names)
         self.made = await made_kinds(self.session, self.names)
         await add_command_areas(self.session, self.typed)
@@ -531,6 +539,7 @@ class BookBuilder:
             typed=self.typed.of(entity.id),
             plan=await self.plan_of(entity),
             arms=await arms_plan(self.session, entity),
+            family=await family_plan(self.session, entity.id, entity.name) if entity.id in self.kin else None,
             festivals=await festival_plan(self.session, entity) if entity.entity_type is EntityType.PEOPLE else None,
             made=self.made.get(entity.id),
         )
