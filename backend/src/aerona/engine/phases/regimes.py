@@ -130,6 +130,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.house_profiles",
     "table.household_members",
     "table.households",
+    "table.incident_participants",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.membership_categories",

@@ -9,6 +9,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.engine.crafts.works import soap_relief
+from aerona.engine.demography.cohorts import pyramid
+from aerona.engine.environment.profile import climate_disease
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.rules.registry import Rules
@@ -21,42 +23,80 @@ def joined(loads: list[int]) -> int:
     return round_half_up(PERCENT * (1 - spared))
 
 
+NO_COMMUNITY = -1
+
+
+def native_disease(rules: Rules, ground: RegionEnvironmentRow) -> int:
+    return min(PERCENT, round_half_up(climate_disease(rules, temperature=ground.temperature, wetland=ground.wetland)))
+
+
 @dataclass(frozen=True)
 class DiseaseLoads:
     atlas: RegionAtlas
-    regions: dict[int, int]
-    acute: dict[int, int] = field(default_factory=dict)
+    grounds: dict[int, int]
+    acute: dict[int, list[int]] = field(default_factory=dict)
+    endemic: dict[int, list[tuple[int, int]]] = field(default_factory=dict)
+    relief: dict[int, int] = field(default_factory=dict)
+    guarded: dict[tuple[int, int], float] = field(default_factory=dict)
+    carried_loads: dict[int, int] = field(default_factory=dict)
+    baseline: int = 0
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules) -> "DiseaseLoads":
         atlas = await RegionAtlas.load(session)
-        lasting: dict[int, list[int]] = {row.entity_id: [row.disease_load] for row in await session.scalars(select(RegionEnvironmentRow))}
+        ground_rows = list(await session.scalars(select(RegionEnvironmentRow)))
+        grounds = {row.entity_id: row.disease_load for row in ground_rows}
+        endemic: dict[int, list[tuple[int, int]]] = {}
         for row in await session.scalars(select(EndemicDiseaseRow)):
-            lasting.setdefault(row.region_entity_id, []).append(row.load)
+            endemic.setdefault(row.region_entity_id, []).append((row.disease_entity_id, row.load))
         acute: dict[int, list[int]] = {}
         for outbreak in await session.scalars(select(OutbreakRow).where(OutbreakRow.status != OutbreakStatus.ENDED, OutbreakRow.event_entity_id.is_(None))):
             acute.setdefault(outbreak.region_entity_id, []).append(outbreak.severity // 2)
-        relief = await soap_relief(session, rules)
-        regions: dict[int, int] = {}
-        sudden: dict[int, int] = {}
-        for region in sorted(set(lasting) | set(acute)):
-            kept = joined(lasting.get(region, []))
-            whole = joined([kept, *acute.get(region, [])])
-            eased = relief.get(region, 0)
-            regions[region] = max(0, whole - eased)
-            if whole > kept:
-                sudden[region] = min(regions[region], whole - kept)
-        return cls(atlas, regions, sudden)
+        weights = pyramid(rules)
+        strength = rules.epidemiology.immunity_strength_pct / PERCENT
+        guarded: dict[tuple[int, int], float] = {}
+        for immunity in await session.scalars(select(ImmunityRow)):
+            key = (immunity.community_entity_id, immunity.disease_entity_id)
+            guarded[key] = guarded.get(key, 0.0) + weights.get(immunity.age_band, 0.0) * immunity.immune_pct / PERCENT * strength
+        baseline = rules.demography.endemic_baseline
+        carried = {row.entity_id: max(baseline, native_disease(rules, row)) for row in ground_rows}
+        return cls(atlas, grounds, acute, endemic, await soap_relief(session, rules), guarded, carried, baseline)
+
+    def kept(self, community_id: int, region_id: int) -> int:
+        exposed = [
+            round_half_up(load * max(0.0, 1 - self.guarded.get((community_id, disease_id), 0.0))) for disease_id, load in self.endemic.get(region_id, [])
+        ]
+        return joined([self.grounds.get(region_id, 0), *exposed])
 
     def of_region(self, region_id: int | None) -> int:
-        return self.regions.get(region_id, 0) if region_id is not None else 0
+        if region_id is None:
+            return 0
+        whole = joined([self.kept(NO_COMMUNITY, region_id), *self.acute.get(region_id, [])])
+        return max(0, whole - self.relief.get(region_id, 0))
+
+    @property
+    def regions(self) -> dict[int, int]:
+        return {region_id: self.of_region(region_id) for region_id in sorted(set(self.grounds) | set(self.endemic) | set(self.acute))}
+
+    def parts(self, community: EntityRow) -> tuple[int, int]:
+        region = self.atlas.top_region(community.id)
+        if region is None:
+            return 0, 0
+        kept = self.kept(community.id, region)
+        whole = joined([kept, *self.acute.get(region, [])])
+        eased = max(0, whole - self.relief.get(region, 0))
+        return eased, min(eased, max(0, whole - kept))
 
     def of(self, community: EntityRow) -> float:
-        return self.of_region(self.atlas.top_region(community.id)) / PERCENT
+        return self.parts(community)[0] / PERCENT
+
+    def carried(self, community: EntityRow) -> float:
+        region = self.atlas.top_region(community.id)
+        return (self.carried_loads.get(region, self.baseline) if region is not None else self.baseline) / PERCENT
 
     def lasting(self, community: EntityRow) -> float:
-        region = self.atlas.top_region(community.id)
-        return (self.of_region(region) - (self.acute.get(region, 0) if region is not None else 0)) / PERCENT
+        whole, sudden = self.parts(community)
+        return (whole - sudden) / PERCENT
 
 
 async def endemic_regions(session: AsyncSession) -> set[int]:

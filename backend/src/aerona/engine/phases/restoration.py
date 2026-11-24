@@ -6,7 +6,9 @@ from aerona.engine.phase import Phase
 from aerona.engine.restoration.rise import tend_restorations
 
 
-@reads("table.accounts", "table.claims", "table.entities", "table.nodes", "table.restorations", "table.titles")
+@reads(
+    "table.accounts", "table.claims", "table.entities", "table.nodes", "table.restorations", "table.settlement_profiles", "table.title_profiles", "table.titles"
+)
 @writes("table.applied_fixups", "table.bonds", "table.claims", "table.polity_profiles", "table.restorations", "table.titles")
 async def restoration(ctx: TickContext) -> None:
     for key, value in asdict(await tend_restorations(ctx)).items():

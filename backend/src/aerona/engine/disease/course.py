@@ -194,7 +194,7 @@ def fade_immunity(ctx: TickContext, book: DiseaseBook) -> None:
         profile = book.profiles.get(disease_id)
         keep = 1 - 1 / max(1, profile.immunity_epochs if profile is not None else 1)
         region = book.atlas.top_region(community_id)
-        endemic = next((row.load for row in book.endemic.get(region or -1, []) if row.disease_entity_id == disease_id), 0)
+        endemic = table.survivor_immunity_pct if any(row.disease_entity_id == disease_id and row.load > 0 for row in book.endemic.get(region or -1, [])) else 0
         for band, row in rows.items():
             if row.locked:
                 continue
@@ -229,7 +229,7 @@ async def settle_endemic(ctx: TickContext, book: DiseaseBook) -> None:
                             community_entity_id=community_id,
                             disease_entity_id=row.disease_entity_id,
                             age_band=band,
-                            immune_pct=row.load if band not in MINOR_BANDS else row.load // 2,
+                            immune_pct=table.survivor_immunity_pct if band not in MINOR_BANDS else table.survivor_immunity_pct // 2,
                             since_epoch=ctx.epoch,
                         )
                         ctx.session.add(immune)

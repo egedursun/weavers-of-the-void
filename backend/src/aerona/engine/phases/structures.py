@@ -28,6 +28,7 @@ from aerona.engine.structures.upkeep import upkeep_all
     "table.nodes",
     "table.people_culture",
     "table.region_environment",
+    "table.region_geology",
     "table.sons",
     "table.structure_designs",
     "table.structure_profiles",

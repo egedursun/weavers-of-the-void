@@ -153,6 +153,7 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.spirit_profiles",
     "table.stars",
     "table.structure_profiles",
+    "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
     "table.transform_prospects",
@@ -165,6 +166,7 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
 @writes(
     "mortal.charisma",
     "mortal.death_year",
+    "mortal.lifespan",
     "settlement.defense",
     "settlement.population",
     "settlement.prosperity",

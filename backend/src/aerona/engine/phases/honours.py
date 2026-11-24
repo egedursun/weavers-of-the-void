@@ -26,6 +26,7 @@ from aerona.engine.phases.dominion import count
     "table.holder_techniques",
     "table.incident_participants",
     "table.incidents",
+    "table.lexemes",
     "table.mind_profiles",
     "table.minds",
     "table.name_registry",

@@ -76,6 +76,7 @@ async def husbandry_cycles(ctx: TickContext) -> None:
     "species.intelligence",
     "species.strength",
     "table.applied_fixups",
+    "table.beast_grudges",
     "table.beast_profiles",
     "table.bodies",
     "table.bonds",
@@ -83,6 +84,7 @@ async def husbandry_cycles(ctx: TickContext) -> None:
     "table.creature_anatomy",
     "table.creature_attacks",
     "table.currencies",
+    "table.deep_passages",
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
@@ -206,7 +208,7 @@ async def pet_cycles(ctx: TickContext) -> None:
         ctx.count(f"pets_{key}", getattr(tally, key))
 
 
-@reads("table.bonds")
+@reads("table.bonds", "table.deep_passages")
 async def necromancy_cycles(ctx: TickContext) -> None:
     tally = await necromancy(ctx)
     for key in ("towers", "hosts", "sieges"):

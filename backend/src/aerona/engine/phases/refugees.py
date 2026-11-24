@@ -158,6 +158,7 @@ async def flee(
     "table.community_cohorts",
     "table.creator",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.foreign_gods",

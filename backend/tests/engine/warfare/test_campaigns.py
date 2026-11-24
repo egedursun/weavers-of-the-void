@@ -47,6 +47,21 @@ async def test_new_war_mobilises_then_clashes_next_epoch(session: AsyncSession, 
     assert any(text.startswith("War broke out between Iron Folk and Reed Folk") for text in texts)
 
 
+async def test_a_war_takes_the_field_after_its_first_epoch_even_when_its_armies_never_meet(session: AsyncSession, world_id: int) -> None:
+    rules = tune(Rules(), campaigns={**QUIET, "battle_chance": 100})
+    strong = await make(session, "Iron Folk", EntityType.PEOPLE, world_id, population=9000, martiality=90)
+    weak = await make(session, "Reed Folk", EntityType.PEOPLE, world_id, population=6000, martiality=60)
+    first_ctx = make_ctx(session, rules, epoch=10)
+    await declare_war(first_ctx, strong.id, weak.id, "old grudge")
+    await campaigns(first_ctx)
+    war = await session.scalar(select(WarRow))
+    assert war is not None and war.status is WarStatus.MOBILIZING
+    quiet = tune(Rules(), campaigns={**QUIET, "battle_chance": 0})
+    await campaigns(make_ctx(session, quiet, epoch=11))
+    await session.refresh(war)
+    assert war.status.value == WarStatus.ONGOING.value and war.battles == 0
+
+
 async def test_rout_ends_war_with_tribute(session: AsyncSession, world_id: int) -> None:
     rules = tune(Rules(), campaigns={**QUIET, "disband_morale": 100, "tribute_conversion_chance": 0})
     ctx = make_ctx(session, rules)

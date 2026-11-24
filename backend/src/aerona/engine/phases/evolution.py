@@ -99,8 +99,17 @@ async def trophic_flow(ctx: TickContext) -> None:
     count(ctx, "trophic", tally)
 
 
-@reads("table.ecosystem_services", "table.entity_traits", "table.species_profiles", "table.species_ranges")
-@writes("table.ecosystem_services", "table.species_profiles")
+@reads("table.ecosystem_services", "table.entity_traits", "table.node_births", "table.species_profiles", "table.species_ranges")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.ecosystem_services",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.region_environment",
+    "table.species_profiles",
+)
 async def keystones(ctx: TickContext) -> None:
     tally = KeystoneTally()
     await keep_services(ctx, tally)

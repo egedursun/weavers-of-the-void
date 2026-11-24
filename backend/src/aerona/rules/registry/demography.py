@@ -48,7 +48,13 @@ class DemographyRules:
     hunger_death_pct: int = rule(150, 0, 1000, G, "Extra deaths at the worst hunger (%)")
     crowding_death_pct: int = rule(60, 0, 1000, G, "Extra deaths where a land holds more people than its capacity (%)")
     disease_death_pct: int = rule(80, 0, 1000, G, "Extra deaths at the heaviest disease load (%)")
-    endemic_baseline: int = rule(30, 0, 100, G, "Disease load the ordinary death rates already carry; only the load above it adds deaths")
+    endemic_baseline: int = rule(
+        30,
+        0,
+        100,
+        G,
+        "Disease load the ordinary death rates already carry in a mild land; in a warmer or wetter land they carry the disease its own climate brings, and only the load above it adds deaths",
+    )
     stress_birth_pct: int = rule(30, 0, 100, G, "Births lost at war or in deep unrest (%)")
     immortality_death_pct: int = rule(10, 0, 1000, G, "Deaths kept under the immortality law (%)")
     short_life_death_pct: int = rule(200, 0, 1000, G, "Deaths under the short-life law (%)")

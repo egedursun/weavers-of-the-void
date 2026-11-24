@@ -1757,6 +1757,17 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     return bouts
 
 
+def take_the_field(ctx: TickContext, ongoing: list[OngoingWar]) -> int:
+    moved = 0
+    for item in ongoing:
+        war = item.war
+        if war.status is WarStatus.MOBILIZING and war.started_epoch < ctx.epoch and not held(war.event_entity_id):
+            war.status = WarStatus.ONGOING
+            moved += 1
+    ctx.count("wars_in_the_field", moved)
+    return moved
+
+
 @reads(
     "army.equipment",
     "army.experience",
@@ -2113,6 +2124,7 @@ async def campaigns(ctx: TickContext) -> None:
     rules = ctx.rules
     theatre = await Theatre.load(ctx)
     ongoing = await ongoing_wars(ctx.session)
+    take_the_field(ctx, ongoing)
     by_pair = {item.pair(): item for item in ongoing}
     pairs = ctx.rng("pairs").shuffled([(first, second) for first, second, _ in await hostile_pairs(ctx.session)])
     pairs.sort(key=lambda pair: unordered(*pair) not in by_pair)

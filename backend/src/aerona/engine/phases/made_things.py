@@ -301,6 +301,7 @@ async def item_cycles(ctx: TickContext) -> None:
     "table.speaker_cohorts",
     "table.spirit_profiles",
     "table.traits",
+    "table.transform_prospects",
 )
 @writes(
     "artwork.renown",
@@ -316,9 +317,11 @@ async def item_cycles(ctx: TickContext) -> None:
     "table.incidents",
     "table.memories",
     "table.name_registry",
+    "table.node_births",
     "table.polity_profiles",
     "table.sons",
     "table.spirit_profiles",
+    "table.transformations",
     "table.value_profiles",
 )
 async def artwork_cycles(ctx: TickContext) -> None:

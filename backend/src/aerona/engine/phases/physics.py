@@ -272,6 +272,7 @@ async def settle_heavens(session: AsyncSession, rules: Rules) -> int:
     "table.reconstructions",
     "table.region_environment",
     "table.structure_profiles",
+    "table.traits",
     "table.world_cycles",
     "table.world_physics",
     "table.worlds",

@@ -227,6 +227,7 @@ async def social_norms(ctx: TickContext) -> None:
     "table.data_stores",
     "table.deed_claims",
     "table.deeds",
+    "table.deep_passages",
     "table.entities",
     "table.held_identities",
     "table.house_members",

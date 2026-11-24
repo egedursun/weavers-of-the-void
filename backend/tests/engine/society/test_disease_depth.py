@@ -392,3 +392,16 @@ async def test_pins_on_the_sick_hold_a_community(realm: Realm) -> None:
     assert sum(row.count for key, row in rows.items() if key[3] is CohortCondition.SICK) == 0
     assert (await RegionAtlas.load(realm.session)).top_region(town.id) == realm.region.id
     assert await realm.session.scalar(select(CohortRow).where(CohortRow.community_entity_id == town.id)) is not None
+
+
+async def test_an_endemic_sickness_leaves_its_grown_folk_immune_as_survivors_and_not_by_its_load(realm: Realm) -> None:
+    town = await settlement(realm, "Marshgate", population=3000)
+    disease = await forge(realm, primary_route="inhalation", target_functions=["breath"])
+    realm.session.add(EndemicDiseaseRow(region_entity_id=realm.region.id, disease_entity_id=disease.id, load=20, since_epoch=1, locked=False))
+    await realm.session.flush()
+    await settle_endemic(context(realm.session), await book_of(realm))
+    await realm.session.flush()
+    adult = await realm.session.get(ImmunityRow, (town.id, disease.id, AgeBand.ADULT))
+    child = await realm.session.get(ImmunityRow, (town.id, disease.id, AgeBand.CHILD))
+    assert adult is not None and adult.immune_pct == RULES.epidemiology.survivor_immunity_pct
+    assert child is not None and child.immune_pct == RULES.epidemiology.survivor_immunity_pct // 2

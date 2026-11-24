@@ -20,6 +20,7 @@ from aerona.engine.phase import Phase
     "table.routes",
     "table.war_sides",
     "table.wars",
+    "table.worlds",
 )
 @writes("table.interworld_campaigns", "table.interworld_migrations", "table.journeys", "table.network_outages", "table.orbital_control", "table.routes")
 async def interworld(ctx: TickContext) -> None:

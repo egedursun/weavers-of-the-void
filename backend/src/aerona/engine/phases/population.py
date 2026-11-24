@@ -134,10 +134,9 @@ async def grow_community(
         )
         * await ration_share(ctx, community.id),
         crowding=max(0.0, load.population * footprint(rules, biology) / max(1.0, capacity)),
-        disease=max(0.0, diseases.of(community) + disease_load(rules, fit) - rules.demography.endemic_baseline / PERCENT) * nature.factor("disease_pct"),
+        disease=max(0.0, diseases.of(community) + disease_load(rules, fit) - diseases.carried(community)) * nature.factor("disease_pct"),
         stress=await stress_of(ctx, community),
-        calm_disease=max(0.0, diseases.lasting(community) + disease_load(rules, fit) - rules.demography.endemic_baseline / PERCENT)
-        * nature.factor("disease_pct"),
+        calm_disease=max(0.0, diseases.lasting(community) + disease_load(rules, fit) - diseases.carried(community)) * nature.factor("disease_pct"),
         mortality=mortality,
         time=model.physics.of(community.world_id).time,
     )
@@ -180,12 +179,14 @@ async def grow_community(
     "table.divine_wounds",
     "table.endemic_diseases",
     "table.entities",
+    "table.event_profiles",
     "table.fertility_means",
     "table.foreign_gods",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
     "table.holder_levels",
+    "table.immunities",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.mandates",

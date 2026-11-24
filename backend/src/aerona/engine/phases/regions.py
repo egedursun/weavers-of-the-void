@@ -135,6 +135,7 @@ async def region_survey(ctx: TickContext) -> None:
     "people.population",
     "settlement.population",
     "table.creator",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.foreign_gods",

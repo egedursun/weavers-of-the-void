@@ -5,6 +5,7 @@ from aerona.catalog.reproduction import SexSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.happenings import EventProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.modifier import ModifierOp
@@ -15,6 +16,7 @@ from aerona.engine.environment.years import world_years
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.numbers import apportion, round_half_up
 from aerona.engine.primitives.society import class_shares
+from aerona.engine.recording.moments import epoch_span
 from aerona.engine.recording.terms import explaining, term
 from aerona.engine.services.war import ongoing_wars
 from aerona.rules.registry import Rules
@@ -43,9 +45,21 @@ class VitalYear:
     deaths: dict[AgeBand, int]
 
 
+async def war_share(ctx: TickContext, community_id: int) -> float:
+    start, span = epoch_span(ctx)
+    end = start + span
+    share = 0.0
+    for found in await ongoing_wars(ctx.session, community_id):
+        profile = await ctx.session.get(EventProfileRow, found.war.event_entity_id) if found.war.event_entity_id is not None else None
+        began = max(start, profile.start_year) if profile is not None and profile.start_year is not None else start
+        ended = min(end, profile.end_year) if profile is not None and profile.end_year is not None else end
+        share = max(share, max(0, ended - began) / span)
+    return min(1.0, share)
+
+
 async def stress_of(ctx: TickContext, community: EntityRow) -> float:
     rules = ctx.rules
-    war = 1.0 if await ongoing_wars(ctx.session, community.id) else 0.0
+    war = await war_share(ctx, community.id)
     profile = await ctx.session.get(SettlementProfileRow, community.id)
     unrest = (profile.unrest if profile is not None else 0) / PERCENT
     return max(war, min(1.0, unrest * rules.mobility.inequality_crime_pct / PERCENT))

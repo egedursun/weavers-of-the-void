@@ -119,6 +119,7 @@ async def belonging(ctx: TickContext) -> None:
     "table.structure_profiles",
     "table.thoughts",
     "table.traits",
+    "table.vessel_profiles",
 )
 @writes(
     "cult.influence",

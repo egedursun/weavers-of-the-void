@@ -96,6 +96,7 @@ async def world_ends(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.incubating_ideas",
+    "table.mandates",
 )
 async def affairs_of_the_ended(ctx: TickContext) -> None:
     closed = AffairTally()

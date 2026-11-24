@@ -318,14 +318,18 @@ def soil_for(fertility: int, factor: float) -> int:
     return clamp_int(fertility / factor if factor > 0 else fertility, 0, PERCENT)
 
 
+def climate_disease(rules: Rules, *, temperature: int, wetland: int) -> float:
+    settings = rules.environment
+    return max(0.0, temperature * settings.disease_warmth_pct / PERCENT + wetland * settings.disease_wetland_pct / PERCENT)
+
+
 def disease_load_of(rules: Rules, *, temperature: int, wetland: int, built: int, density_pct: int, sanitation_pct: int, scars: Mapping[str, int]) -> int:
     settings = rules.environment
-    warmth = temperature * settings.disease_warmth_pct / PERCENT
-    wet = wetland * settings.disease_wetland_pct / PERCENT
+    native = climate_disease(rules, temperature=temperature, wetland=wetland)
     crowd = (density_pct + built) * settings.disease_density_pct / PERCENT
     plague = scars.get(ScarKind.PLAGUE_GROUND.value, 0) * rules.scars.plague_ground_disease_pct / PERCENT
     battle = scars.get(ScarKind.BATTLEFIELD.value, 0) * rules.scars.battlefield_disease_pct / PERCENT
-    return clamp_int((warmth + wet + crowd + plague + battle) * (1 - sanitation_pct / PERCENT), 0, PERCENT)
+    return clamp_int((native + crowd + plague + battle) * (1 - sanitation_pct / PERCENT), 0, PERCENT)
 
 
 COAST_BOATING: dict[CoastKind, Callable[[Rules], int]] = {

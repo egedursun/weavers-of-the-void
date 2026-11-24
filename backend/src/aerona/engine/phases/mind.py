@@ -1443,6 +1443,7 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
     "table.incident_participants",
     "table.incidents",
     "table.memories",
+    "table.professions_of_value",
     "table.reputations",
 )
 async def famine_aid(ctx: TickContext) -> None:

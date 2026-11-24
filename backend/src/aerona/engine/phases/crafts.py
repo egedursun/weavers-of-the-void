@@ -119,6 +119,7 @@ from aerona.engine.phases.dominion import count
     "table.chronicle_entities",
     "table.community_relations",
     "table.community_stocks",
+    "table.conditions",
     "table.entities",
     "table.goods_flows",
     "table.incident_facts",
